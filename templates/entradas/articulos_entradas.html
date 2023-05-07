@@ -1,7 +1,6 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
-{% load djmoney %}
 {% load widget_tweaks %}
 <html>
 <head>
@@ -38,7 +37,7 @@
 
 
 <div class="row">
-    <div class="col-lg-6">
+    <div class="col-lg-8">
         <div class="box-element" id="form-wrapper">
             <div class="card-header mt-3 mb-4">
             <form method="POST">
@@ -46,7 +45,7 @@
         </div>
 
 
-            <table class='table table-dark table striped'>
+            <table class='table table-dark table-striped'>
                 <thead>
                     <tr>
                         <th scope="col">Proveedor:</th>
@@ -91,9 +90,21 @@
                 <div class="col-sm-4">
                     {{form.cantidad|add_class:"form-control"}}
                 </div>
+                <div class="form-check form-switch col-auto mx-4" id="referencia">
+                    <input class="form-check-input" type="checkbox" role="switch" id="SwitchReferencia">
+                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelReferencia"><strong>Referencia</strong></label>
+                </div>
+                <div id="referencialbl" class="col-sm-1 d-none">
+                    <label for="form.referencia" class="col"><strong>Referencia:</strong></label>
+                </div>
+                <div class="col-sm">    
+                    {{form.referencia|add_class:"form-control d-none"}}
+                </div>
+            </div>
+            <div class="row">    
                 <div class="col-sm-1">
                     <a class="btn btn-success" id='update-entrada' type="submit" name="entrada_articulo">
-                        <i class="fa-solid fa-circle-plus"></i>
+                       Agregar
                     </a>
                 </div>
             </div>
@@ -106,6 +117,7 @@
                             <th scope="col">Producto</th>
                             <th scope="col">Cantidad</th>
                             <th scope="col">Unidad</th>
+                            <th scope="col">Referencia</th>
                             <th scope="col" class="col-sm-2">Eliminar</th>
                         </tr>
                     </thead>
@@ -113,16 +125,20 @@
                     <tbody id="mytbl">
                     {% for producto in articulos_entrada %}
                     <tr>
-                        <td scope="col" id=>#</td>
+                        <td scope="col" id=>{{producto.articulo_comprado.get_entradas}}</td>
                         <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
                         <td scope="col">{{producto.cantidad}}</td>
                         <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
+                        {% if  producto.referencia %}
+                        <td scope="col">{{producto.referencia}}</td>
+                        {% else %}
+                        <td></td>
+                        {% endif %}
                         <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id}}" entrada="{{producto.entrada.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                     </tr>
                     {% endfor %}
                     </tbody>
                 </table>
-
 
             <button id="Crear" type="submit" class="btn btn-success">Crear</button>
             <a id="cerrar" type="button" class="btn btn-secondary cerrar"  href="{% url 'pendientes_entrada' %}">Cerrar</a>
@@ -192,6 +208,23 @@ CrearBtn.addEventListener('click',function(){
 
 })
 
+
+document.getElementById('id_cantidad').addEventListener('change', function(){
+var cantidad = document.getElementById('id_cantidad');
+var checkref = document.getElementById("SwitchReferencia");
+
+if (checkref.checked){
+    if (cantidad.value > 1){
+        Swal.fire({
+                "title":"Error",
+                "text":"Cuando tienes seleccionada la referencia la cantidad no puede ser mayor a 1",
+                "icon":"error",
+            })
+        cantidad.value = 1
+    } 
+}
+})
+
 var updateBtn = document.getElementById('update-entrada')
     let count=0;
     let suma=0;
@@ -204,6 +237,7 @@ updateBtn.addEventListener('click',function(){
         var select = document.getElementById('producto');
         var current_option = select.options[select.selectedIndex];
         var current_cantidad = current_option.getAttribute('cantidad')
+        var referencia_div = document.getElementById('id_referencia')
         producto = current_option.getAttribute('target');
         console.log('current_option',current_option)
         producto_id = current_option.getAttribute('producto');
@@ -212,7 +246,9 @@ updateBtn.addEventListener('click',function(){
         var value = select.options[select.selectedIndex].value;
         var default_op = document.getElementById('default_sel');
         cantidad_ingresada = cantidad_form.value;
-        console.log(cantidad_ingresada)
+        
+        var referencia = referencia_div.value
+        console.log(referencia)
         action = "add"
 
 
@@ -240,8 +276,8 @@ updateBtn.addEventListener('click',function(){
             current_option.setAttribute("class","d-none");
             select.value = default_sel;
 
-
-            ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id);
+            console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id':entrada_id, 'referencia': new String(referencia)}));
+            ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id, referencia);
 
 
             }
@@ -249,9 +285,34 @@ updateBtn.addEventListener('click',function(){
 
 
 
+
+
+document.getElementById("SwitchReferencia").addEventListener("change", function(element){
+    var checkref = document.getElementById("SwitchReferencia");    
+	console.log('referencia check:'+checkref.checked);
+	var lbl_referencia = document.getElementById('referencialbl');
+    var referencia = document.getElementById('id_referencia')
+    var cantidad = document.getElementById('id_cantidad')
+    
+
+
+	if (checkref.checked){
+	    lbl_referencia.setAttribute('class','col-sm-1')
+        referencia.setAttribute('class','form-control')
+        cantidad.value = 1
+	} else {
+	    lbl_referencia.setAttribute('class','col-sm-1 d-none')
+        referencia.setAttribute('class','form-control d-none')
+        cantidad.value = 0
+        referencia.value = ""
+	}
+});
+
+
+
 //ActualizarArticulos(array_id_prod)
 
-    function ActualizarArticulos(array_id_prod){
+    function ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id, referencia){
         console.log('User is logged in, sending data...' )
 
     var url = '/entradas/update_entrada/'
@@ -262,7 +323,7 @@ updateBtn.addEventListener('click',function(){
             'Content-Type':'application/json',
             'X-CSRFToken': csrftoken,
         },
-        body:JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id':entrada_id})
+        body:JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id': entrada_id, 'referencia': new String(referencia)})
     })
     .then((response)=>{
         return response.json()
@@ -282,11 +343,12 @@ function deleteRow(element) {
     cantidad_ingresada = btn_delete.getAttribute('cantidad');
     //cantidad_ingresada = cantidad.value
     entrada_id= btn_delete.getAttribute('entrada');
+    referencia = ""
     action = "remove" ;
-    console.log(producto, cantidad_ingresada, action, entrada_id);
-    console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id':entrada_id}))
+    console.log(producto, cantidad_ingresada, action, entrada_id, referencia);
+    console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id':entrada_id, 'referencia':referencia}))
 
-    ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id);
+    ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id,referencia);
 }
 
 </script>

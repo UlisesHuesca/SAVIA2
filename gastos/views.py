@@ -146,6 +146,7 @@ def detalle_gastos(request, pk):
 
     context= {
         'productos':productos,
+        'pk':pk,
         }
 
     return render(request, 'gasto/detalle_gasto.html', context)

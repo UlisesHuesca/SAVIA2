@@ -5,7 +5,7 @@ from tesoreria.models import Pago
 class Solicitud_GastoForm(forms.ModelForm):
     class Meta:
         model = Solicitud_Gasto
-        fields = ['proyecto','subproyecto','superintendente','colaborador']
+        fields = ['proyecto','subproyecto','superintendente','colaborador','tipo']
 
 class Articulo_GastoForm(forms.ModelForm):
 

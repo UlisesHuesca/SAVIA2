@@ -84,9 +84,6 @@ def compras_pagos(request, pk):
     remanente = compra.costo_oc - suma_pago
 
 
-
-
-
     if request.method == 'POST':
         form = PagoForm(request.POST, request.FILES or None, instance = pago)
         if form.is_valid():
@@ -133,14 +130,14 @@ def compras_pagos(request, pk):
                                 f'Compra Autorizada {compra.get_folio}',
                                 f'Estimado(a) {compra.proveedor.contacto} | Proveedor {compra.proveedor.nombre}:\n\nEstás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.get_folio} y referencia: {compra.referencia}.\n\n Atte. {compra.creada_por.staff.first_name} {compra.creada_por.staff.last_name} \nGrupo Vordcab S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                                 'savia@vordtec.com',
-                                ['ulises_huesc@hotmail.com'],[compra.proveedor.email],
+                                ['ulises_huesc@hotmail.com'],#[compra.proveedor.email],
                                 )
                         else:
                             email = EmailMessage(
                                 f'Compra Autorizada {compra.get_folio}',
                                 f'Estimado(a) {compra.proveedor.contacto} | Proveedor {compra.proveedor.nombre}:\n\nEstás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.get_folio}.\n\n Atte. {compra.creada_por.staff.first_name} {compra.creada_por.staff.last_name} \nGrupo Vordcab S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                                 'savia@vordtec.com',
-                                ['ulises_huesc@hotmail.com'],[compra.proveedor.email],
+                                ['ulises_huesc@hotmail.com'],#[compra.proveedor.email],
                                 )
                         email.attach(f'OC_folio_{compra.get_folio}.pdf',archivo_oc,'application/pdf')
                         email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
@@ -157,7 +154,7 @@ def compras_pagos(request, pk):
                                 'savia@vordtec.com',
                                 ['ulises_huesc@hotmail.com'],
                                 )
-                                email.attach(f'OC_folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
+                                email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
                                 email.send()
                 pago.save()
                 compra.save()
@@ -348,5 +345,4 @@ def mis_viaticos(request):
         'myfilter':myfilter,
         }
 
-    return render(request, 'tesoreria/mis_viaticos.html',context)
     return render(request, 'tesoreria/mis_viaticos.html',context)

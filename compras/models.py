@@ -151,6 +151,14 @@ class ArticuloComprado(models.Model):
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
     @property
+    def get_entradas(self):
+        entradas = self.entradaarticulo_set.all()
+        #entradas = entradas.filter(entrada__oc = self.oc)
+        cant_entradas = sum([entrada.cantidad for entrada in entradas]) 
+        return cant_entradas
+
+
+    @property
     def subtotal_parcial(self):
         total = self.cantidad * self.precio_unitario
         return total

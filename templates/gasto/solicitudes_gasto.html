@@ -47,10 +47,10 @@
             <div class = "row mt-2 bg-white">
                 <form method=POST>
                     {% csrf_token %}
-                <ul class="nav nav-pills">
-                    <!--<li class="nav-item mx-2">
+                <!--<ul class="nav nav-pills">
+                    <li class="nav-item mx-2">
                         <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
-                    </li> -->
+                    </li> 
                     <li class="nav-item mx-2">
                         <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
                     </li>
@@ -60,7 +60,7 @@
                     <li class="nav-item mx-2">
                         <a class="btn btn-outline-info" href="{% url 'solicitud-matriz-productos' %}">Productos</a>
                     </li>
-                </ul>
+                </ul>-->
                 </form>
             </div>
         </div>
@@ -90,7 +90,7 @@
                     <th scope="col">Autorización N1</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
-                    <th scope="col">Área</th>
+                    <th scope="col">Tipo</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Costo Total</th>
                     <th scope="col">Acción</th>
@@ -101,17 +101,17 @@
                 <tr>
                     <th scope="row">{{orden.id}}</th>
                     <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
-                    <td>{{orden.superintendente}}</td>
+                    <td>{{orden.superintendente.staff.first_name}} {{orden.superintendente.staff.last_name}}</td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
-                    <td>{{orden.area}}</td>
+                    <td>{{orden.tipo.tipo}}</td>
                     <td>{{orden.created_at}}</td>
-                    <td>{{orden.get_total_solicitud}}</td>
+                    <td>${{orden.get_total_solicitud|floatformat:2}}</td>
                     <td>
-                    <a class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'detalle-gastos' orden.id %}">Productos</a>
-                    <!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
-                    <!--<a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>-->
-                    <!--<a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>-->
+                    <a class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'detalle-gastos' orden.id %}">Conceptos</a>
+                    <!--<a class="btn btn-outline-info" href="">Actualizar</a>
+                    <a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>-->
                     </td>
                 </tr>
                 {% endfor %}

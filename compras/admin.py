@@ -5,6 +5,10 @@ class CompraAdmin(admin.ModelAdmin):
     list_display = ('id','folio', 'req','proveedor','autorizado1','autorizado2')
     list_filter = ('proveedor',)
 
+class ArticuloComprado_Admin(admin.ModelAdmin):
+    list_display = ('oc','producto','cantidad')
+    search_fields = ('oc',)
+
 class ProveedorAdmin(admin.ModelAdmin):
     search_fields = ('razon_social',)
 
@@ -13,7 +17,7 @@ class Proveedor_direccionesAdmin(admin.ModelAdmin):
 # Register your models here.
 admin.site.register(Compra, CompraAdmin)
 
-admin.site.register(ArticuloComprado)
+admin.site.register(ArticuloComprado, ArticuloComprado_Admin)
 
 admin.site.register(Proveedor, ProveedorAdmin)
 

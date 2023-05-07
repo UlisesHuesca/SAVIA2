@@ -26,6 +26,7 @@ class EntradaArticulo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     agotado = models.BooleanField(default=False)
     liberado = models.BooleanField(default=True)
+    referencia = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):
         return f'{self.id} - {self.entrada} - {self.cantidad} - {self.articulo_comprado}'

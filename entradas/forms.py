@@ -4,7 +4,7 @@ from .models import Entrada, EntradaArticulo, Reporte_Calidad
 class EntradaArticuloForm(forms.ModelForm):
     class Meta:
         model = EntradaArticulo
-        fields = ['cantidad']
+        fields = ['cantidad','referencia']
 
 class Reporte_CalidadForm(forms.ModelForm):
     class Meta:

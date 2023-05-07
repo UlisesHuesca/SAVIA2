@@ -129,7 +129,11 @@
                     <td>{{compra.req.orden.proyecto.nombre}}</td>
                     <td>{{compra.req.orden.subproyecto.nombre}}</td>
                     <td>{{compra.autorizado_date2}} </td>
+                    {% if compra.proveedor.nombre.razon_social == "COLABORADOR" %}
+                    <td>{{compra.deposito_comprador.staff.first_name}} {{compra.deposito_comprador.staff.last_name}}</td>
+                    {% else %}
                     <td>{{compra.proveedor}}</td>
+                    {% endif %}
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">
