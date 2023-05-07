@@ -1,29 +1,84 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
+{% load widget_tweaks %}
 {% load static %}
+{% load tt_extras %}
 <html>
 <head>
-{% block title %}Solicitudes pendientes{% endblock %}
+{% block title %}Solicitudes | Vista: Por orden{% endblock %}
 </head>
 <body>
 {% block content %}
 <hr>
 <hr>
 <hr>
-<hr>
-<div>
-<div class = "row mt-2 bg-white">
-    <ul class="nav nav-pills">
-        <li class="nav-item ml-2 mr-2">
-            <a class="btn btn-outline-secondary" href="{% url 'solicitud-matriz' %}">&#x2190;Volver a Matriz Solicitud</a>
-        </li>
-        <li class="nav-item mr-2">
-            <button type="button" class="btn btn-outline-success">Reporte en Excel</button>
-        </li>
-        <li class="nav-item mr-2">
-            <button type="button" class="btn btn-outline-danger">Reporte en PDF</button>
-        </li>
-    </ul>
+<div class="row my-4">
+        <div class="col-md-12">
+        <div class="card card-body">
+            <h5>Filtro de solicitudes</h5>
+            <hr>
+            <form method="GET" class="row g-7">
+                {% csrf_token %}
+                <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right"><strong>Solicitado por:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.staff|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.proyecto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.proyecto|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.folio" class="col-sm-auto col-form-label text-right"><strong>Folio:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.folio|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.start_date" class="col-sm-auto col-form-label text-right"><strong>Desde:</strong></label>
+                <div class="col-auto">
+                     {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                </div>
+                 <label for="myfilter.form.end_date" class="col-sm-auto col-form-label text-right"><strong>Hasta:</strong></label>
+                <div class="col-auto">
+                     {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                </div>
+                <div class="col-auto">
+                <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            </form>
+            <hr>
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <!--<li class="nav-item mx-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
+                    </li> -->
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="btn btn-outline-info" href="{% url 'solicitud-matriz-productos' %}">Productos</a>
+                    </li>
+                </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                var m = "{{ message }}";
+                swal("Excelente !", m, "success")
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
 </div>
 <div class = "row mt-2">
     <div class="col-md-10">
@@ -32,28 +87,59 @@
                 <tr>
                     <th scope="col">Folio</th>
                     <th scope="col">Solicitado por</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">Producto</th>
+                    <th scope="col">Autorización N1</th>
+                    <th scope="col">Autorización N2</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Subproyecto</th>
+                    <th scope="col">Operación</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Acción</th>
                 </tr>
             </thead>
             <tbody>
-                {% for producto in productos %}
+                {% for orden in ordenes_list %}
                 <tr>
-                    <th scope="row">{{producto.orden.folio}}</th>
-                    <td>{{producto.orden.staff.staff.first_name}} {{producto.orden.staff.staff.last_name}}</td>
-                    <td>{{producto.cantidad}}</td>
-                    <td>{{producto.producto}}</td>
-                    <td>{{producto.orden.created_at}}</td>
-                    <td><a class="btn btn-outline-info" href="{% url 'solicitud-checkout-editar' producto.orden.id %}">Actualizar</a>
-                    <a class="btn btn-light" href="">Detalle</a></td>
+                    <th scope="row">{{orden.folio}}</th>
+                    <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
+                    <td>{{orden.superintendente}}</td>
+                    <td>{{orden.supervisor}}</td>
+                    <td>{{orden.proyecto.nombre}}</td>
+                    <td>{{orden.subproyecto.nombre}}</td>
+                    <td>{{orden.operacion}}</td>
+                    <td>{{orden.created_at}}</td>
+                    <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
+                    <a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if ordenes_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+                {% for page in ordenes_list.paginator  %}
+                {% if ordenes_list.number == page.number %}
+                <li class="page-item active" aria-current="page"><a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if ordenes_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 </div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
 </div>
 
 {% endblock %}

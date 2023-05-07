@@ -1,0 +1,141 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load djmoney %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Facturas{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+
+<div class="modal-dialog modal-lg"  id="document" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Facturas de Compra: {{compra.get_folio}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+                <table class='table table-dark table striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col">Proveedor:</th>
+                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
+                        </tr>
+                    </thead>
+                </table>
+                <hr>
+                <table class='table table-dark table striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col">Importe Compra</th>
+                        <th id="importe" value={{compra.costo_oc}} moneda={{compra.moneda.nombre}} scope="col">{{compra.costo_oc}}</th>
+                        </tr>
+                    </thead>
+                </table>
+
+                <table class='table table-dark table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col-3">#</th>
+                            <th scope="col-2">Fecha</th>
+                            <th scope="col-3">Hora</th>
+                            <th scope="col-3">Comentario</th>
+                            <th scope="col-2">PDF</th>
+                            <th scope="col-2">XML</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in facturas %}
+                        <tr>
+                            <th scope="row">{{p.id}}</th>
+                            <td>{{p.fecha_subido}}</td>
+                            <td>{{p.hora_subido}}</td>
+                            <td>{{p.comentario}}</td>
+                            {% if p.factura_pdf %}
+                            <td>
+                                <a href="{{p.factura_pdf.url}}" download class="btn btn-outline-danger">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                            {% else %}
+                            <td> </td>
+                            {% endif %}
+                            {% if p.factura_xml %}
+                            <td>
+                                <a href="{{p.factura_xml.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                            {% else %}
+                            <td> </td>
+                            {% endif %}
+                        </tr>
+                   {% endfor %}
+                   </tbody>
+                </table>
+        </div>
+
+        <form hx-post="{{ request.path }}" class="modal-content" hx-encoding='multipart/form-data'>
+            <div>
+                {% csrf_token %}
+                    <label for="form.cuenta" class="col-auto col-form-label"><strong>Factura pdf:</strong></label>
+                    <div class="col-sm-12">
+                        {{form.factura_pdf|add_class:'form-control'}}
+                    </div>
+                    <label for="form.monto_pagado" class="col-auto col-form-label my-1"><strong>Factura xml:</strong></label>
+                    <div class="col-12">
+                        {{form.factura_xml|add_class:'form-control'}}
+                    </div>
+                    <label for="form.monto_pagado" id="lbl_tipo" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
+                    <div class="col-12">
+                        {{form.comentario|add_class:'form-control'}}
+                    </div>
+            </div>
+
+            <div class="modal-footer">
+                <h6>Registrar factura de la OC: {{compra.folio}}</h6>
+                <button name="btn_factura" id="myBtn2" type = "submit" class="btn btn-success">Registrar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+</script>
+{% endblock %}
+</body>
+</html>

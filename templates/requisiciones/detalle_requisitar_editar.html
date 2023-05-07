@@ -1,0 +1,275 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Requisción {% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="box-element" id="form-wrapper">
+            <div class="card-header mt-3 mb-4">
+            <!-- Aqui es el encabezado de los filtros -->
+                <h5 id="requi" orden={{orden.id}} target={{requi.id}}>Requisición: {{requi.id}}</h5>
+            </div>
+            <form method="POST">
+            {% csrf_token %}
+            <div class="form-check form-switch col-auto mx-4" id="c_super" valor = "{{tag}}">
+                <input class="form-check-input" type="checkbox" role="switch" id="Comment_Super">
+                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Superintendente</label>
+            </div>
+
+            {{form.comentario_super | add_class:"form-control my-2 d-none" }}
+
+             <div class="form-check form-switch col-auto mx-4" id="Dof" valor = "{{tag}}">
+                <input class="form-check-input" type="checkbox" role="switch" id="Comment_Compras">
+                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Comprador</label>
+            </div>
+             {{form.comentario_compras | add_class:"form-control my-2 d-none" }}
+
+
+
+
+            <div class="text-end">
+                <button type="submit" id="crear" name="crear" class="btn btn-success col-2">Crear</button>
+                <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
+            </div>
+            </form>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="box-element">
+            <div class="row">
+                <label class="col-auto col-form-label"><strong>Productos:</strong></label>
+                <div class="col-sm-4">
+                    <div class="selector">
+                        <select class="form-select form-select-sm" id="producto">
+                            <option id="default_sel">      </option>
+                            {% for producto in productos %}
+                            <option id="js" target="{{producto.id}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar}}">
+                                {{producto.articulos.producto.producto.nombre}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <label class="col-auto col-form-label"><strong>Solicitado:</strong></label>
+                </div>
+                <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
+                <div class="col-sm-1">
+                    <a class="btn btn-success update-purchase" id="update-requi" name="requi">
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </a>
+                </div>
+            </div>
+            <hr>
+            <table class="table table-light table-striped table-hover mx-2">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col" class="col-sm-2">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for product in productos_requisitados%}
+                <tr>
+                    <td scope="col">{{product.producto.articulos.producto.producto.codigo}}</td>
+                    <td scope="col">{{product.producto.articulos.producto.producto.nombre}}</td>
+                    <td scope="col">{{product.cantidad}}</td>
+                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var format = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+
+var crear = document.getElementById("crear")
+var precio_mod = document.getElementById("id_precio_unitario")
+
+
+document.getElementById("crear").addEventListener("click", function(element){
+    let array_id_oc=[];
+    let requi_tag = document.getElementById('requi');
+    let requi = requi_tag.getAttribute('target')
+
+    //Cuenta el número de filas dentro de la tabla
+    var rows = document.getElementById("mytbl").rows.length;
+    console.log('rows',rows)
+    if (rows<=0) {
+        Swal.fire({
+                "title":"Error",
+                "text":"No tienes productos en tu listado",
+                "icon":"error",
+            })
+    } else if (rows>0) {
+        Swal.fire({
+                "title":"Success",
+                "text":"La requisición será creada en un momento",
+                "icon":"success",
+            })
+
+            }
+});
+
+
+document.getElementById("producto").addEventListener("change", function(element){
+    var select = document.getElementById('producto');
+    var current_option = select.options[select.selectedIndex];
+    let cantidad = current_option.getAttribute('cantidad');
+
+    console.log(cantidad);
+    var solicitado = document.getElementById('solicitado');
+    solicitado.innerHTML = cantidad;
+});
+
+
+var updateBtn = document.getElementById('update-requi')
+let count=0;
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let requi_tag = document.getElementById('requi');
+        let requi = requi_tag.getAttribute('target');
+        let orden = requi_tag.getAttribute('orden')
+        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
+        var select = document.getElementById('producto');
+        var current_option = select.options[select.selectedIndex];
+        let value = current_option.value
+        var id = current_option.getAttribute('target');
+        var producto = current_option.getAttribute('producto');
+        //Esta es la cantidad establecida en la requisición
+        var cantidad = current_option.getAttribute('cantidad');
+        //Esta es la cantidad comprada de acuerdo a la requisición
+        var default_op = document.getElementById('default_sel');
+        console.log('cantidad',cantidad)
+        console.log('requi',requi)
+        console.log('id',id)
+
+        var action = "add";
+
+        if (!value) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de seleccionar algún valor de la lista",
+                    "icon":"error",
+                })
+        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
+        } else if (cantidad <=0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            ActualizarArticulos(requi,id,cantidad,action);
+
+        }
+})
+
+//ActualizarArticulos(array_id_prod)
+
+function ActualizarArticulos(requi,id,cantidad,action){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/requisiciones/update_requi/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'requi':requi, 'id':id, 'cantidad':cantidad, 'action':action})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+//This is the function that remove any product from render product table and remove the specific element from the array
+function deleteRow(element) {
+    let btn_delete = document.getElementById('delete');
+    let requi_tag = document.getElementById('requi');
+    let requi = requi_tag.getAttribute('target');
+    let id = btn_delete.getAttribute('producto');
+    let cantidad = btn_delete.getAttribute('cantidad');
+
+    console.log(id)
+    var action = "remove";
+    ActualizarArticulos(requi, id, cantidad, action);
+
+    var select = document.getElementById('producto');
+
+    var rows = document.getElementById("mytbl").rows.length;
+}
+
+var checkdof = document.getElementById("SwitchDof");
+
+
+document.getElementById("Comment_Super").addEventListener("change", function(element){
+	console.log('CommentSuper:'+Comment_Super.checked);
+
+
+	let comentario_super = document.getElementById('id_comentario_super')
+
+	if (Comment_Super.checked){
+	    comentario_super.setAttribute('class','form-control my-2');
+	} else{
+	    comentario_super.setAttribute('class','form-control my-2 d-none');
+	}
+});
+
+document.getElementById("Comment_Compras").addEventListener("change", function(element){
+	console.log('CommentSuper:'+Comment_Compras.checked);
+
+
+	let comentario_compras = document.getElementById('id_comentario_compras')
+
+	if (Comment_Compras.checked){
+	    comentario_compras.setAttribute('class','form-control my-2');
+	} else{
+	    comentario_compras.setAttribute('class','form-control my-2 d-none');
+	}
+});
+
+</script>
+{% endblock %}
+</body>
+</html>

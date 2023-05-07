@@ -20,7 +20,107 @@
 					<hr>
 					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
                         {% csrf_token %}
-                        {{ form|crispy }}
+                            <div class="row my-2">
+                                <label for="form.proyecto" class="col-auto col-form-label my-1"><strong>Proyecto*</strong></label>
+                                <div class="col-4">
+                                    <div class="input-group">
+                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
+                                    {{form.proyecto|add_class:"form-select"}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <label for="form.subproyecto" class="col-auto col-form-label my-1"><strong>Subproyecto*</strong></label>
+                                <div class="col-8">
+                                <div class="input-group">
+                                <div class="selector">
+                                    <select class="form-select form-select-sm my-1 d-none" style="height:35px" id="subproyecto">
+                                        <option id="default_sel">      </option>
+                                        {% for subproyecto in subproyectos %}
+                                        <option id="js" target="{{subproyecto.proyecto.id}}">
+                                        {{subproyecto.nombre}}
+                                        </option>
+                                        {% endfor %}
+                                    </select>
+                                </div>
+                                </div>
+                            </div>
+                                <div class="col-4 d-none">
+                                    <div class="input-group">
+                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
+                                    {{form.subproyecto|add_class:"form-select"}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2 d-none">
+                                <label for="form.operacion" class="col-auto col-form-label my-1"><strong>Área*</strong></label>
+                                <div class="col-4">
+                                    <div class="input-group">
+                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
+                                    {{form.area|add_class:"form-select"}}
+                                    </div>
+                                </div>
+                            </div>
+                            <!--<div class="row my-2">
+                                <label for="form.activo" class="col-auto col-form-label my-1"><strong>Activo*</strong></label>
+                                <div class="col-3">
+                                    <div class="input-group">
+                                    {{form.activo|add_class:"form-select"}}
+                                    </div>
+                                </div>
+                            </div> -->
+                            <div class="row my-2 d-none">
+                            <label class="col-auto col-form-label" supervisores='{{supervisores}}'><strong>Supervisor*</strong></label>
+                            <div class="col-4">
+                                <div class="input-group">
+                                <span class="input-group-text my-1" style="height:35px"><i class="fa-solid fa-user"></i></span>
+                                <div class="selector">
+                                    <select class="form-select form-select-sm my-1" style="height:35px" id="supervisores">
+                                    {% for supervisor in supervisores %}
+                                    <option id="js" target="{{supervisor.id}}">
+                                    {{supervisor.staff.first_name}} {{supervisor.staff.last_name}}
+                                    </option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
+
+                            <div class="row my-2">
+                            <label class="col-auto col-form-label" superintendentes='{{superintendentes}}'><strong>Superintendente*</strong></label>
+                            <div class="col-4">
+                                <div class="input-group">
+                                <span class="input-group-text my-1" style="height:35px"><i class="fa-solid fa-user"></i></span>
+                                <div class="selector">
+                                    <select class="form-select form-select-sm my-1" style="height:35px" id="superintendentes">
+                                    <option id="default_sel">      </option>
+                                    {% for superintendente in superintendentes %}
+                                    <option id="js" target="{{superintendente.id}}">
+                                    {{superintendente.staff.first_name}} {{superintendente.staff.last_name}}
+                                    </option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="row my-2 d-none">
+                                <label for="form.superintendente" class="col-auto col-form-label my-1"><strong>Superintendente*</strong></label>
+                                <div class="col-3">
+                                <!--<div class="input-group mb-3">-->
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    {{form.superintendente|add_class:"form-control"}}
+                                </div>
+                            </div>
+                            <div class="row my-2 d-none">
+                                <label for="form.supervisor" class="col-auto col-form-label my-1"><strong>Supervisor*</strong></label>
+                                <div class="col-3">
+                                <!--<div class="input-group mb-3">-->
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    {{form.supervisor|add_class:"form-control"}}
+                                </div>
+                            </div>
                         <input class="btn btn-outline-info btn-block my-2" name="agregar" type="submit" value="Agregar Solicitud">
                     </form>
             </div>
@@ -29,9 +129,9 @@
     </div>
     <div class="col-lg-6">
         <div class="box-element">
-            <a class="btn btn-outline-dark" href="{% url 'solicitud-checkout-resurtimiento' %}"><i class="fa-solid fa-arrow-left">Agregar productos</i></a>
+            <a class="btn btn-outline-dark" href="{% url 'product_selection_resurtimiento' %}"><i class="fa-solid fa-arrow-left">Agregar productos</i></a>
             <hr>
-            <h3>Resumen de solicitud</h3>
+            <h3>Resumen de Solicitud</h3>
             <hr>
             {% for producto in productos %}
             <div class='cart-row'>
@@ -44,6 +144,7 @@
                         <th scope="col">Código</th>
                         <th scope="col">Producto</th>
                         <th scope="col">Cantidad</th>
+                        <th scope="col">Unidad</th>
                         <th scope="col"></th>
                         </tr>
                 </thead>
@@ -53,6 +154,7 @@
                             <th scope="col">{{producto.producto.producto.codigo}}</th>
                             <th scope="col">{{producto.producto.producto.nombre}}</th>
                             <th scope="col">{{producto.cantidad}}</th>
+                            <th scope="col">{{producto.producto.producto.unidad}}</th>
                             <th scope="col">
                             <td>
                                 <a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'product-quantity-edit' producto.id %}">
@@ -81,21 +183,44 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
-    $("#id_proyecto").change(function () {
-      const url = $("#OrderForm").attr("data-subproyecto-url");  // get the url of the `load_subproyectos` view
-      const proyectoId = $(this).val();  // get the selected proyecto ID from the HTML input
+   document.getElementById("id_proyecto").addEventListener("change", function(event){
+    var select = document.getElementById("id_proyecto");
+    var text_subproyectos = document.getElementById("subproyecto")
+    var subproyectos = text_subproyectos.children;
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.value
+    var sub = document.getElementById('id_subproyecto')
+    console.log(target)
 
-      $.ajax({                       // initialize an AJAX request
-        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
-        data: {
-          'proyecto_id': proyectoId       // add the proyecto id to the GET parameters
-        },
-        success: function (data) {   // `data` is the return of the `load_subproyectos` view function
-          $("#id_subproyecto").html(data);  // replace the contents of the subproyectos input with the data that came from the server
-        }
-      });
+    text_subproyectos.setAttribute('class','form-select form-select-sm my-1')
+
+
+    text_subproyectos.value = ""
+    sub.value =""
+
+
+     for(let i = 0; i < subproyectos.length; i++){
+        proyecto_num  = subproyectos[i].getAttribute('target')
+
+
+        if (proyecto_num === target) {
+            subproyectos[i].setAttribute('class','')
+        } else {
+            subproyectos[i].setAttribute('class','d-none')
+     }
+     }
 
     });
+
+    document.getElementById("subproyecto").addEventListener("change", function(event){
+        var select = document.getElementById("subproyecto");
+        var current_option = select.options[select.selectedIndex];
+        var target = current_option.getAttribute('target')
+        console.log(target)
+        var other_select = document.getElementById('id_subproyecto')
+        other_select.value = target
+    });
+
 
     ;(function(){
     const modal = new bootstrap.Modal(document.getElementById('dialog'))
@@ -105,6 +230,20 @@
         modal.hide()
     })
     })()
+      document.getElementById("supervisores").addEventListener("change", function(event){
+    var select = document.getElementById("supervisores");
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target')
+    var other_select = document.getElementById('id_supervisor')
+    other_select.value = target
+    });
+    document.getElementById("superintendentes").addEventListener("change", function(event){
+    var select = document.getElementById("superintendentes");
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target')
+    var other_select = document.getElementById('id_superintendente')
+    other_select.value = target
+    });
 
     var myModal = document.getElementById('dialog')
 

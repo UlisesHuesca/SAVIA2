@@ -1,0 +1,1 @@
+[{"model": "solicitudes.st_entrega", "pk": 1, "fields": {"status": "PROCESO"}}, {"model": "solicitudes.st_entrega", "pk": 2, "fields": {"status": "TERMINADO"}}]

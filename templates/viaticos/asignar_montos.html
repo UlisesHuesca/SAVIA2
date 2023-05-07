@@ -1,0 +1,244 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Asignar Montos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<hr>
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="box-element" id="form-wrapper">
+            <h3 id='viatico' solicitud={{viatico.id}}>Viáticos Folio: {{viatico.id}}</h3>
+            <div id="Solicitud-info">
+                <table class='table table striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viatico para:</th>
+                        <th scope="col">{{viatico.colaborador.staff.first_name}} {{viatico.colaborador.staff.last_name}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
+                        <th scope="col">{{viatico.proyecto.nombre}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-diagram-project"></i> Subproyecto:</th>
+                        <th scope="col">{{viatico.subproyecto.nombre}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Partida:</th>
+                        <th scope="col">{{viatico.fecha_partida}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Retorno:</th>
+                        <th scope="col">{{viatico.fecha_retorno}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-location-dot"></i> Lugar de Partida:</th>
+                        <th scope="col">{{viatico.lugar_partida}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-route"></i> Lugar de Comisión:</th>
+                        <th scope="col">{{viatico.lugar_comision}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-car-side"></i> Transporte:</th>
+                        <th scope="col">{{viatico.transporte}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-hotel"></i> Hospedaje:</th>
+                        {% if viatico.hospedaje %}
+                        <th scope="col">Sí</th>
+                        {% else %}
+                        <th>No</th>
+                        {% endif %}
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
+                        <th scope="col">{{viatico.comentario}}</th>
+                    </tr>
+                    </tbody> 
+                </table>
+                <form method="post">
+                    {% csrf_token %}
+                <input class="btn btn-outline-info btn-lg btn-block my-2" name="btn_asignar" id="btn_asignar" type="submit" value="Asignar"> 
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="box-element">
+            <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row-3">
+                    <label for="form.producto" id="lbl_producto"><strong>Concepto:*</strong></label>
+                    {{form.producto|add_class:"form-control"}}
+            </div>
+            <div class="row-3">
+                    <label for="form.cantidad" id="lbl_cantidad"><strong>Cantidad:*</strong></label>
+                    {{form.cantidad|add_class:"form-control"}}
+            </div>
+            <div class="row-3">
+                <label for="form.precio" id="lbl_precio"><strong>Precio Unitario:*</strong></label>
+                {{form.precio|add_class:"form-control"}}
+            </div>
+            <div id="rendimiento" class="row-3 d-none">
+                <label for="id_lugar_partida"><strong>Rendimiento(km/l):*</strong></label>
+                {{form.rendimiento|add_class:"form-control"}}
+            </div>
+            <div id="rendimiento" class="row-3">
+                <label for="id_lugar_partida"><strong>Comentario:</strong></label>
+                {{form.comentario|add_class:"form-control"}}
+            </div>
+            <div id="rendimiento" class="row-3 d-none">
+                <label for="id_lugar_partida"><strong>Viatico:</strong></label>
+                {{form.viatico|add_class:"form-control"}}
+            </div>
+            <div  class="row">
+                <div class="col-sm-1">
+                    <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit" value="Agregar"> 
+                </div>
+            </div>
+            </form>
+            <hr>
+            <table class="table table-light table-striped table-hover mx-2">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">P.U.</th>
+                    <th scope="col">Total</th>
+                    <th scope="col" class="col-sm-2">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for producto in conceptos%}
+            
+                <tr>
+                    <td scope="col">{{producto.producto.producto.codigo}}</td>
+                    <td scope="col">{{producto.producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.cantidad}}</td>
+                    <td scope="col">${{producto.precio|floatformat:2}}</td>
+                    <td scope="col">${{producto.get_total_parcial|floatformat:2}}</td></td>
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-viatico' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            <table class="table table-light table-striped mx-1">
+            <thead>
+                <tr>
+                    <th scope="col">Total</th>
+                    <td scope="col" id="total">${{viatico.get_total|floatformat:2}}</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+    ;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+    })()
+
+    var myModal = document.getElementById('dialog')
+
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+    location.reload();
+    })
+
+    viatico = document.getElementById('id_viatico')
+    via_id = document.getElementById('viatico')
+    id_via = via_id.getAttribute('solicitud')
+
+
+    viatico.value= id_via
+
+
+    document.getElementById("id_producto").addEventListener("change", (event)=>{
+    var select = document.getElementById("id_producto");
+    var rendimiento = document.getElementById('rendimiento')
+    var lbl_cantidad = document.getElementById('lbl_cantidad')
+    
+    console.log(lbl_cantidad)
+    if (select.value == '795'){
+        rendimiento.setAttribute('class','row-3')
+        lbl_cantidad.innerHTML = '<strong>Kilometraje:*</strong>'
+    } else {
+        rendimiento.setAttribute('class','row-3 d-none')
+        lbl_cantidad.innerHTML = '<strong>Cantidad:*</strong>'
+    }
+});
+
+document.getElementById("btn_producto").addEventListener("click",(event)=>{
+    var rendimiento = document.getElementById('id_rendimiento')
+    var select = document.getElementById("id_producto");
+    console.log(rendimiento.value)
+
+   
+
+    if (select.value == '795'){
+        if (!rendimiento.value){
+            event.preventDefault() 
+        }
+    }
+
+});
+
+   
+   
+   
+</script>
+{% endblock %}
+</body>
+</html>

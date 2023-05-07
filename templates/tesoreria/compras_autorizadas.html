@@ -58,7 +58,7 @@
                 <form method=POST>
                     {% csrf_token %}
                     <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
+                        <!--<li class="nav-item mx-2">
                             <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
@@ -67,6 +67,13 @@
                             <button type="button" class="btn btn-outline-danger">
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
+                        </li>-->
+                        <li class="nav-item mx-2">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-autorizadas' %}">Compras</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viaticos</a>
+                              </div>
                         </li>
                     </ul>
                 </form>
@@ -124,26 +131,26 @@
             <tbody>
                 {% for compra in compras %}
                 <tr>
-                    <th scope="row">{{compra.folio}}</th>
+                    <th scope="row">{{compra.get_folio}}</th>
                     <td>{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
                     <td>{{compra.req.orden.proyecto.nombre}}</td>
                     <td>{{compra.req.orden.subproyecto.nombre}}</td>
                     <td>{{compra.autorizado_date2}} </td>
                     <td>{{compra.proveedor}}</td>
-                    <td>{{compra.costo_oc}}</td>
+                    <td>${{compra.costo_oc}}</td>
                     <td>{{compra.moneda}}</td>
-                    <td>{{compra.monto_pagado}}</td>
+                    <td>${{compra.monto_pagado}}</td>
                     <td>{{compra.cond_de_pago}}</td>
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">
+                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
+                            </li>
+                            <li class="nav-item mx-1">
                                 <button id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'compras-pagos' compra.id %}">Detalle</button>
                             </li>
                             <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-light" style="background-color:#990f0f" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload-facturas' compra.id %}"><i class="fa-solid fa-cloud-arrow-up"></i><i class="fa-solid fa-file-pdf"></i></a>
-                            </li>
-                            <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload-xml' compra.id %}"><i class="fa-solid fa-cloud-arrow-up"></i><i class="fa-solid fa-file-code"></i></i></a>
+                                <button id="myBtn2" type="button" class="btn btn-outline-light" style="background-color:#990f0f" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'matriz-facturas' compra.id %}"><i class="fa-solid fa-cloud-arrow-up"></i></button>
                             </li>
                         </ul>
                     </td>

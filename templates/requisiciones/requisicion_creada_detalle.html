@@ -24,7 +24,8 @@
                     <th scope="col">#</th>
                     <th scope="col">Código</th>
                     <th scope="col">Artículo</th>
-                    <th scope="col">Cantidad</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Cantidad Requisitada</th>
                 </tr>
             </thead>
             <tbody id="mytbl">
@@ -33,11 +34,13 @@
                     <td scope="col"><img class='row-image' src="{{producto.producto.articulos.producto.producto.imageURL}}"></td>
                     <td scope="col">{{producto.producto.articulos.producto.producto.codigo}}</td>
                     <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
                     <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
                 </tr>
                 {% endfor %}
             </tbody>
             </table>
+            <h6>Comentario: {{requis.comentario_super}}</h6>
             </div>
         </div>
 

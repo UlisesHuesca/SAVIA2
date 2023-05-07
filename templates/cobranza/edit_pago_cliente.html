@@ -1,0 +1,67 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Edición de Pagos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Actualizar Pago</h3>
+                <hr>
+                <form method="POST">
+                    {% csrf_token %}
+                    <label for="form.nombre" class="col-auto col-form-label"><strong>ID: {{pago.id}}</strong></label>
+                    <br>
+                    <label for="form.cliente" class="col-auto col-form-label"><strong>Proyecto: {{pago.proyecto.nombre}}</strong></label>
+                    <br>
+                    <label for="form.nombre" class="col-auto col-form-label my-1"><strong>Monto abono:</strong></label>
+                    <div class="col-12">
+                        {{ form.monto_abono|add_class:"form-control"}}
+                    </div>
+                    <label for="form.factura" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
+                    <div class="col-6">
+                        {{ form.comentario|add_class:"form-control"}}
+                    </div>
+                    <label for="form.folio_cotizacion" class="col-auto col-form-label my-1"><strong>Fecha de pago<strong></label>
+                    <div class="col-6">
+                        {% render_field form.fecha_pago type="date" class="form-control" %}
+                    </div>
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'cobranza-pagos' %}">Cancelar</a>
+                    <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                var m = "{{ message }}";
+                swal("Excelente !", m, "success")
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+  </script>
+{% endblock %}

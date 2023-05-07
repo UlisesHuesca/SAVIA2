@@ -1,22 +1,22 @@
 from django.shortcuts import render, redirect
-from dashboard.models import Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir
-from requisiciones.models import Requis, ArticulosRequisitados
-from compras.models import Compra, ArticuloComprado
-from solicitudes.models import Subproyecto
-from dashboard.models import Product, Tipo_Orden
-from entradas.models import EntradaArticulo
-from .forms import InventarioForm, OrderForm, Inv_UpdateForm, ArticulosOrdenadosForm
-from user.models import Profile
+from dashboard.models import Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden
+from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas
+from compras.models import Compra
+from tesoreria.models import Pago
+from solicitudes.models import Subproyecto, Operacion, Proyecto
+from entradas.models import EntradaArticulo, Entrada
+from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm
+from dashboard.forms import Inventario_BatchForm
+from user.models import Profile, Distrito, Almacen
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 import json
 from django.db.models import Sum
-from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter
+from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter
 from django.contrib import messages
 # Import Pagination Stuff
 from django.core.paginator import Paginator
 from datetime import date, datetime
-from djmoney.money import Money
 # Import Excel Stuff
 from django.db.models.functions import Concat
 from django.db.models import Value
@@ -26,22 +26,27 @@ from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
-from django.core.mail import send_mail
 from django.db.models import F
+import csv
+import ast
+from django.core.mail import EmailMessage
 # Create your views here.
 
 
 #Respuesta de Json
+
+#def product_edit(request):
+#    return render(request,'solicitud/product_edit.html')
 
 def updateItem(request):
     data= json.loads(request.body)
     productId = data['productId']
     action = data['action']
 
-    usuario = Profile.objects.get(id=request.user.id)
+    usuario = Profile.objects.get(staff__id=request.user.id)
     producto = Inventario.objects.get(id=productId)
     tipo = Tipo_Orden.objects.get(tipo ='normal')
-    order, created = Order.objects.get_or_create(staff=usuario, complete=False, tipo = tipo)
+    order, created = Order.objects.get_or_create(staff=usuario, complete=False, tipo = tipo, distrito = usuario.distrito)
 
     orderItem, created = ArticulosOrdenados.objects.get_or_create(orden = order, producto= producto)
 
@@ -63,7 +68,7 @@ def updateItemRes(request):
     usuario = Profile.objects.get(id=request.user.id)
     producto = Inventario.objects.get(id=productId)
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
-    order, created = Order.objects.get_or_create(staff=usuario, complete=False, tipo = tipo)
+    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
     orderItem, created = ArticulosOrdenados.objects.get_or_create(orden = order, producto= producto)
 
     if action == 'add':
@@ -79,10 +84,10 @@ def updateItemRes(request):
 #Vista de seleccion de productos, requiere login
 @login_required(login_url='user-login')
 def product_selection_resurtimiento(request):
-    usuario = Profile.objects.get(id=request.user.id)
+    usuario = Profile.objects.get(staff__id=request.user.id)
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
     order, created = Order.objects.get_or_create(staff=usuario, complete=False, tipo=tipo)
-    productos = Inventario.objects.filter(cantidad__lte =F('minimo'))
+    productos = Inventario.objects.filter(cantidad__lt =F('minimo'))
     cartItems = order.get_cart_quantity
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
@@ -99,50 +104,58 @@ def product_selection_resurtimiento(request):
 #Vista de seleccion de productos, requiere login
 @login_required(login_url='user-login')
 def product_selection(request):
-    usuario = Profile.objects.get(id=request.user.id)
+    usuario = Profile.objects.get(staff__id=request.user.id)
     tipo = Tipo_Orden.objects.get(tipo ='normal')
-    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo = tipo)
-    productos = Inventario.objects.all()
+    #order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo = tipo)
+    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
+    productos = Inventario.objects.filter(complete=True)
     cartItems = order.get_cart_quantity
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
 
+    #Set up pagination
+    p = Paginator(productos, 30)
+    page = request.GET.get('page')
+    productos_list = p.get_page(page)
+
 
     context= {
         'myfilter': myfilter,
+        'productos_list':productos_list,
         'productos':productos,
         'productosordenados':cartItems,
         }
     return render(request, 'solicitud/product_selection.html', context)
 
-
-
-#Vista del carro de compras
-#@login_required(login_url='user-login')
-#def cart(request):
-#    staff = Profile.objects.get(id = request.user.id)
-
-#    orden = Order.objects.filter(staff = staff, complete = False, autorizar=None, tipo__tipo="normal")
-    #productos = orden.articulosordenados_set.all()
-#    productos = ArticulosOrdenados.objects.filter(id__orden = orden.id)
-#    cartItems = orden.get_cart_quantity
-
-#    context= {
-#        'productos':productos,
-#        'orden':orden,
-#        'productosordenados':cartItems,
-#    }
-#    return render(request, 'solicitud/cart.html', context)
-
 #Vista para crear solicitud
 @login_required(login_url='user-login')
 def checkout(request):
-    usuario = Profile.objects.get(id=request.user.id)
+    usuario = Profile.objects.get(staff=request.user)
+
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
     orders = Order.objects.filter(staff__distrito = usuario.distrito)
-    consecutivo = orders.count() + 1
+    #consecutivo = orders.count() + 1
+    proyectos = Proyecto.objects.filter(activo=True)
+    subproyectos = Subproyecto.objects.all()
     tipo = Tipo_Orden.objects.get(tipo ='normal')
-    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo)
+
+    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
+
+    if usuario.tipo.supervisor:
+        supervisores = Profile.objects.filter(staff=request.user)
+        order.supervisor = usuario
+    else:
+        supervisores = Profile.objects.filter(tipo__supervisor = True)
+
+    if usuario.tipo.superintendente:
+        superintendentes = Profile.objects.filter(staff=request.user)
+        order.superintendente = usuario
+    else:
+        superintendentes = Profile.objects.filter(tipo__superintendente = True)
+
+
+    form = OrderForm(instance = order)
+
 
     if order.staff != usuario:
         productos = None
@@ -151,18 +164,70 @@ def checkout(request):
         productos = order.articulosordenados_set.all()
         cartItems = order.get_cart_quantity
 
-    form = OrderForm(instance=order, distrito = usuario.distrito)
-
 
     if request.method =='POST':
-        form = OrderForm(request.POST, instance=order, distrito = usuario.distrito)
-        order.complete = True
+        form = OrderForm(request.POST, instance=order)
         order.created_at = date.today()
         order.created_at_time = datetime.now().time()
 
+        if usuario.tipo.supervisor == True:
+            for producto in productos:
+                # We fetch inventory product corresponding to product (that's why we use product.id)
+                # We create a new product line in a new database to control the ArticlestoDeliver (ArticulosparaSurtir)
+                prod_inventario = Inventario.objects.get(id = producto.producto.id)
+                ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
+                #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
+                if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
+                    prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
+                    prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
+                    prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
+                    ordensurtir.cantidad = producto.cantidad
+                    ordensurtir.precio = prod_inventario.price
+                    ordensurtir.surtir = True
+                    ordensurtir.requisitar = False
+                    ordensurtir.save()
+                    prod_inventario.save()
+                elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0: #si la cantidad solicitada es mayor que la cantidad en inventario
+                    ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
+                    ordensurtir.precio = prod_inventario.price
+                    ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
+                    prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
+                    prod_inventario.cantidad = 0
+                    if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
+                        ordensurtir.surtir = True
+                    ordensurtir.requisitar = True
+                    order.requisitar = True
+                    if producto.producto.producto.servicio == True:
+                        requi, created = Requis.objects.get_or_create(complete = True, orden = order)
+                        requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad)
+                        requi.folio = str(usuario.distrito.abreviado)+str(order.id).zfill(4)
+                        order.requisitar=False
+                        ordensurtir.requisitar=False
+                        requi.save()
+                        requitem.save()
+                    prod_inventario.save()
+                    ordensurtir.save()
+                    order.save()
+            order.autorizar = True
+            order.approved_at = date.today()
+            order.approved_at_time = datetime.now().time()
+            email = EmailMessage(
+                f'Solicitud Autorizada {order.id}',
+                f'Estás recibiendo este correo porque ha sido aprobada la solicitud {order.id}\n Este mensaje ha sido automáticamente generado por SAVIA X',
+                'savia@vordtec.com',
+                [order.staff.staff.email],
+                )
+            #email.attach(f'OC_folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+            email.send()
+            order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)
+
         abrev= usuario.distrito.abreviado
-        order.folio = str(abrev) + str(consecutivo).zfill(4)
+        order.folio = str(abrev) + str(order.id).zfill(4)
+        for orden in orders:
+            if orden.folio == order.folio:
+                order.folio = str(abrev) + str(order.id).zfill(4)
         if form.is_valid():
+            order.complete = True
             order.save()
             form.save()
             messages.success(request, f'La solicitud {order.folio} ha sido creada')
@@ -175,6 +240,10 @@ def checkout(request):
         'productos':productos,
         'orden':order,
         'productosordenados':cartItems,
+        'supervisores':supervisores,
+        'superintendentes':superintendentes,
+        'proyectos':proyectos,
+        'subproyectos':subproyectos,
     }
     return render(request, 'solicitud/checkout.html', context)
 
@@ -198,14 +267,24 @@ def product_quantity_edit(request, pk):
 #Vista para crear solicitud
 @login_required(login_url='user-login')
 def checkout_resurtimiento(request):
-    usuario = Profile.objects.get(id=request.user.id)
+    usuario = Profile.objects.get(staff=request.user)
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
-    orders = Order.objects.filter(staff__distrito = usuario.distrito)
-    consecutivo = orders.count()+1
+    superintendentes = Profile.objects.filter(tipo__superintendente=True)
+    subproyectos = Subproyecto.objects.all()
+    orders = Order.objects.filter(staff__distrito = usuario.distrito, complete = False)
+    #consecutivo = orders.count()+1
+
 
 
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
-    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo)
+    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
+    almacen = Operacion.objects.get(nombre = "ALMACEN")
+
+
+    if usuario.tipo.almacen:
+        supervisores = Profile.objects.filter(staff=request.user)
+        order.supervisor = usuario
+        order.area = almacen
 
     if order.staff != usuario:
         productos = None
@@ -214,17 +293,35 @@ def checkout_resurtimiento(request):
         productos = order.articulosordenados_set.all()
         cartItems = order.get_cart_quantity
 
-    form = OrderForm(instance=order, distrito = usuario.distrito)
+    form = OrderForm(instance = order)
 
 
     if request.method =='POST':
-        form = OrderForm(request.POST, instance=order, distrito = usuario.distrito)
+        form = OrderForm(request.POST, instance=order)
         order.complete = True
         order.created_at = date.today()
         order.created_at_time = datetime.now().time()
-
         abrev= usuario.distrito.abreviado
-        order.folio = str(abrev) + str(consecutivo).zfill(4)
+        order.folio = str(abrev) + str(order.id).zfill(4)
+
+        requi, created = Requis.objects.get_or_create(complete = True, orden = order)
+        requi.folio = str(abrev) + str(requi.id).zfill(4)
+        requi.save()
+        for producto in productos:
+            ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
+            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
+            ordensurtir.requisitar = True
+            ordensurtir.cantidad_requisitar = producto.cantidad
+            ordensurtir.save()
+            requitem.save()
+        order.requisitar = True
+        order.autorizar = True
+        order.approved_at = date.today()
+        order.approved_at_time = datetime.now().time()
+        requi.save()
+        order.save()
+        abrev= usuario.distrito.abreviado
+        order.folio = str(abrev) + str(order.id).zfill(4)
         if form.is_valid():
             order.save()
             form.save()
@@ -237,6 +334,9 @@ def checkout_resurtimiento(request):
         'productos':productos,
         'orden':order,
         'productosordenadosres':cartItems,
+        'supervisores':supervisores,
+        'superintendentes':superintendentes,
+        'subproyectos':subproyectos,
     }
     return render(request, 'solicitud/checkout_resurtimiento.html', context)
 
@@ -273,28 +373,51 @@ def checkout_editar(request, pk):
 @login_required(login_url='user-login')
 def solicitud_pendiente(request):
 
-    #El filtro de usuario, obtengo el id de usuario, busco el perfil que hace match, lo pasó como argumento
-    # de filtro
-    usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
+    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
+    perfil = Profile.objects.get(staff__id=request.user.id)
 
-    #Este es un filtro por usuario general solo puede ver sus solicitudes
-    productos = ArticulosOrdenados.objects.filter(orden__complete=False, orden__staff=perfil).order_by('-orden__folio')
+
+    #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
+    if perfil.tipo.superintendente == True:
+        ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
+    elif perfil.tipo.supervisor == True:
+        ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
+    else:
+        ordenes = Order.objects.filter(complete=True, staff = perfil).order_by('-folio')
+
+    myfilter=SolicitudesFilter(request.GET, queryset=ordenes)
+    ordenes = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(ordenes, 10)
+    page = request.GET.get('page')
+    ordenes_list = p.get_page(page)
+
+    if request.method =='POST' and 'btnExcel' in request.POST:
+
+        return convert_excel_solicitud_matriz(ordenes)
 
     context= {
-         'productos':productos,
+        'ordenes_list':ordenes_list,
+        'myfilter':myfilter,
         }
+
     return render(request, 'solicitud/solicitudes_pendientes.html',context)
 
 @login_required(login_url='user-login')
 def solicitud_matriz(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
-    usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
+    perfil = Profile.objects.get(staff__id=request.user.id)
 
 
-    #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
+     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
+    if perfil.tipo.superintendente == True:
+        ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
+    elif perfil.tipo.supervisor == True:
+        ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
+    else:
+        ordenes = Order.objects.filter(complete=True, staff = perfil).order_by('-folio')
+
     myfilter=SolicitudesFilter(request.GET, queryset=ordenes)
     ordenes = myfilter.qs
 
@@ -318,10 +441,20 @@ def solicitud_matriz(request):
 @login_required(login_url='user-login')
 def solicitud_matriz_productos(request):
 
-    #Aquí aparecen todoas las ordenes, es decir sería el filtro para administrador
-    productos = ArticulosOrdenados.objects.filter(orden__complete=True).order_by('-orden__folio')
+    perfil = Profile.objects.get(staff__id=request.user.id)
+
+     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
+    if perfil.tipo.superintendente == True:
+        productos = ArticulosOrdenados.objects.filter(orden__complete=True, orden__staff__distrito=perfil.distrito).order_by('-orden__folio')
+    elif perfil.tipo.supervisor == True:
+        productos = ArticulosOrdenados.objects.filter(orden__complete=True, orden__staff__distrito=perfil.distrito, orden__supervisor=perfil).order_by('-orden__folio')
+    else:
+        productos = ArticulosOrdenados.objects.filter(orden__complete=True, orden__staff = perfil).order_by('-orden__folio')
+
     myfilter=SolicitudesProdFilter(request.GET, queryset=productos)
     productos = myfilter.qs
+    perfil = Profile.objects.get(staff__id=request.user.id)
+
 
     #Set up pagination
     p = Paginator(productos, 15)
@@ -342,31 +475,120 @@ def solicitud_matriz_productos(request):
 
 @login_required(login_url='user-login')
 def inventario(request):
-    existencia = Inventario.objects.filter(complete=True, producto__servicio = False).order_by('producto__codigo')
-    entradas = EntradaArticulo.objects.all().annotate(Sum('cantidad'))
+    perfil = Profile.objects.get(staff=request.user)
+    existencia = Inventario.objects.filter(complete=True, producto__servicio = False, producto__gasto = False).order_by('producto__codigo')
+    entries = EntradaArticulo.objects.all()
+    entradas = entries.annotate(Sum('cantidad'))
+    for item in existencia:
+        query = entries.filter(articulo_comprado__producto__producto__articulos__producto = item, agotado = False)
+        if query.exists():
+            cantidad = query.aggregate(Sum('cantidad_por_surtir'))
+            item.cantidad_entradas = cantidad['cantidad_por_surtir__sum']
+            item.save()
+
+    if perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == 'SuperAdm':
+        perfil_flag = True
+    else:
+        perfil_flag = False
+
+
 
     #apartado = ArticulosparaSurtir.objects.values('articulos__producto__producto__codigo').annotate(cantidad_total=Sum('cantidad'))
     #Este es el metodo que utilicé para multiplicar 2 columnas de un mismo modelo y devolver el total
     list_inv = existencia.values_list('cantidad', 'cantidad_apartada','price')
     valor_inv_raw = sum((t[0] + t[1])*t[2] for t in list_inv)
-    valor_inv = Money(valor_inv_raw,'MXN')
+    valor_inv = valor_inv_raw
+
+    myfilter = InventarioFilter(request.GET, queryset=existencia)
+    existencia = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(existencia, 50)
+    page = request.GET.get('page')
+    existencia_list = p.get_page(page)
+
+
+
 
     if request.method =='POST' and 'btnExcel' in request.POST:
         return convert_excel_inventario(existencia, valor_inv_raw )
 
     context = {
-        'existencia' : existencia,
+        'perfil_flag':perfil_flag,
+        'existencia': existencia,
+        'myfilter': myfilter,
+        'existencia_list':existencia_list,
         'entradas':entradas,
         'valor_inv': valor_inv,
         }
 
     return render(request,'dashboard/inventario.html', context)
 
+@login_required(login_url='user-login')
+def upload_batch_inventario(request):
+
+    form = Inventario_BatchForm(request.POST or None, request.FILES or None)
+
+
+    if form.is_valid():
+        form.save()
+        form = Inventario_BatchForm()
+        inventario_list = Inventario_Batch.objects.get(activated = False)
+
+        f = open(inventario_list.file_name.path, 'r')
+        reader = csv.reader(f)
+        next(reader)
+
+        for row in reader:
+            if Product.objects.filter(codigo=row[0]):
+                producto = Product.objects.get(codigo=row[0])
+                if Distrito.objects.filter(nombre = row[1]):
+                    distrito = Distrito.objects.get(nombre = row[1])
+                    if Almacen.objects.filter(nombre = row[2]):
+                        almacen = Almacen.objects.get(nombre = row[2])
+                        inventario = Inventario(producto=producto,distrito=distrito, almacen=almacen, ubicacion=row[3], estante=row[4], cantidad=row[5], price=row[6], minimo=row[7],comentario=row[8],complete=True)
+                        inventario.save()
+                        #marcas_str = row[2]
+                        #marcas_names = ast.literal_eval(marcas_str)
+                        #marcas_names = map(str.lower, marcas_names) # normalize them, all lowercase
+                        #marcas_names = list(set(marcas_names)) # remove duplicates
+
+                        #for marca in marcas_names:
+                        #    marca, _ = Marca.objects.get_or_create(nombre=marca)
+                        #    inventario.marca.add(marca)
+                        #    inventario.save()
+                    else:
+                        messages.error(request,'El almacén no existe en la base de datos')
+                else:
+                     messages.error(request,'El distrito no existe en la base de datos')
+            else:
+                messages.error(request,f'El producto código:{row[0]} ya existe dentro de la base de datos')
+
+        inventario_list.activated = True
+        inventario_list.save()
+    elif request.FILES:
+        messages.error(request,'El formato no es CSV')
+
+
+
+
+    context = {
+        'form': form,
+        }
+
+    return render(request,'dashboard/upload_batch_inventario.html', context)
+
+
+
+
 def inventario_add(request):
-    usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
-    productos = Inventario.objects.filter(complete = False, producto__completado = True)
+    #usuario = request.user.id
+    perfil = Profile.objects.get(staff__id=request.user.id)
+
+    #productos.exclude(id__in=existing)
     form = InventarioForm()
+    #form.fields['producto'].queryset = productos
+
 
     if request.method =='POST':
         form = InventarioForm(request.POST)
@@ -381,38 +603,53 @@ def inventario_add(request):
     #else:
         #form = InventarioForm()
 
-
-
     context = {
         'form': form,
-        'productos':productos,
+        #'productos':productos,
         }
 
     return render(request,'dashboard/inventario_add.html',context)
 
 @login_required(login_url='user-login')
 def inventario_update_modal(request, pk):
-    #usuario = request.user.id
-    #perfil = Profile.objects.get(id=usuario)
+    perfil = Profile.objects.get(staff=request.user)
     item = Inventario.objects.get(id=pk)
 
 
-    if request.method =='POST':
-        form = Inv_UpdateForm(request.POST, instance=item)
-        if form.is_valid():
-            item = form.save(commit=False)
-            item._change_reason = item.comentario +'. Se modifica inventario en view: inventario_update_modal'
-            item.save()
-            messages.success(request, f'El artículo {item.producto.codigo}:{item.producto.nombre} se ha actualizado exitosamente')
-            return HttpResponse(status=204)
+
+    if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
+        flag_perfil = True
     else:
-        form = Inv_UpdateForm(instance=item)
+        flag_perfil = False
+
+
+    if request.method =='POST':
+        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
+            form = Inv_UpdateForm(request.POST, instance=item)
+        else:
+            form = Inv_UpdateForm_almacenista(request.POST, instance= item)
+        if request.POST['comentario'] and 'btnUpdate' in request.POST:
+            if form.is_valid():
+                item = form.save(commit=False)
+                item._change_reason = item.comentario +'. Se modifica inventario en view: inventario_update_modal'
+                item.save()
+                messages.success(request, f'El artículo {item.producto.codigo}:{item.producto.nombre} se ha actualizado exitosamente')
+                return HttpResponse(status=204)
+        else:
+            messages.error(request, 'Debes agregar un comentario con respecto al cambio realizado')
+    else:
+        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
+            form = Inv_UpdateForm(instance=item)
+        else:
+            form = Inv_UpdateForm_almacenista(instance= item)
+
 
     context = {
+        'flag_perfil':flag_perfil,
         'form': form,
         'item':item,
         }
-    #return render(request,'dashboard/inventario_update.html', context)
+
     return render(request,'dashboard/inventario_update_modal.html',context)
 
 
@@ -440,11 +677,13 @@ def inventario_delete(request, pk):
 @login_required(login_url='user-login')
 def solicitud_autorizacion(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
-    usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
+    #usuario = request.user.id
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    #perfil = Profile.objects.get(id=usuario)
 
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     ordenes = Order.objects.filter(complete=True, autorizar=None, staff__distrito=perfil.distrito).order_by('-folio')
+    ordenes = ordenes.filter(supervisor=perfil)
     myfilter=SolicitudesFilter(request.GET, queryset=ordenes)
     ordenes = myfilter.qs
 
@@ -452,6 +691,7 @@ def solicitud_autorizacion(request):
     context= {
         'myfilter':myfilter,
         'ordenes':ordenes,
+        #'perfil':perfil,
         }
 
     return render(request, 'autorizacion/solicitudes_pendientes_autorizacion.html',context)
@@ -467,7 +707,8 @@ def detalle_autorizar(request, pk):
 @login_required(login_url='user-login')
 def autorizada_sol(request, pk):
     usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    #perfil = Profile.objects.get(id=usuario)
     order = Order.objects.get(id = pk)
     productos = ArticulosOrdenados.objects.filter(orden = pk)
     requis = Requis.objects.filter(orden__staff__distrito = perfil.distrito)
@@ -480,8 +721,8 @@ def autorizada_sol(request, pk):
             # We create a new product line in a new database to control the ArticlestoDeliver (ArticulosparaSurtir)
             prod_inventario = Inventario.objects.get(id = producto.producto.id)
             ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
-            #cond:1
-            if prod_inventario.cantidad >= producto.cantidad:
+            #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
+            if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
                 prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
                 prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
                 prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
@@ -491,43 +732,42 @@ def autorizada_sol(request, pk):
                 ordensurtir.requisitar = False
                 ordensurtir.save()
                 prod_inventario.save()
-            elif prod_inventario.cantidad <= 0:
+            elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal": #si la cantidad solicitada es mayor que la cantidad en inventario
+                ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
+                ordensurtir.precio = prod_inventario.price
+                ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
+                prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
+                prod_inventario.cantidad = 0
+                if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
+                    ordensurtir.surtir = True
+                ordensurtir.requisitar = True
+                order.requisitar = True
+                prod_inventario.save()
+                ordensurtir.save()
+            elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento":
+                ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
-                ordensurtir.surtir = False
-                ordensurtir.requisitar=True
-                order.requisitar=True
+                order.requisitar = True
                 if producto.producto.producto.servicio == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                     requitem, created = ArticulosRequisitados.objects.create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
-                    requi.folio = str(usuario.distrito.abreviado)+str(consecutivo).zfill(4)
+                    requi.folio = str(usuario.distrito.abreviado)+str(order.id).zfill(4)
                     order.requisitar=False
                     ordensurtir.requisitar=False
                     requi.save()
                     requitem.save()
                 ordensurtir.save()
-            #cond:3
-            elif prod_inventario.cantidad >0 and prod_inventario.cantidad < producto.cantidad:
-                ordensurtir.surtir = True
-                ordensurtir.requisitar = True
-                order.requisitar=True
-                ordensurtir.cantidad = prod_inventario.cantidad
-                ordensurtir.precio = prod_inventario.price
-                prod_inventario.cantidad_apartada = prod_inventario.cantidad
-                ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad
-                prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:3'
-                prod_inventario.cantidad = 0
-                prod_inventario.save()
-                ordensurtir.save()
+                order.save()
         order.autorizar = True
         order.approved_at = date.today()
         order.approved_at_time = datetime.now().time()
-        send_mail(
-            f'Solicitud Autorizada {order.folio}',
-            f'{order.staff.staff.first_name}, la solicitud {order.folio} ha sido autorizada. Este mensaje ha sido automáticamente generado por SAVIA X',
-            'saviax.vordcab@gmail.com',
-            [order.staff.staff.email],
-            )
-        order.sol_autorizada_por = Profile.objects.get(id=request.user.id)
+        #send_mail(
+        #    f'Solicitud Autorizada {order.folio}',
+        #    f'{order.staff.staff.first_name}, la solicitud {order.folio} ha sido autorizada. Este mensaje ha sido automáticamente generado por SAVIA X',
+        #    'saviax.vordcab@gmail.com',
+        #    [order.staff.staff.email],
+        #    )
+        order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)
         order.save()
 
         messages.success(request, f'{perfil.staff.first_name} has autorizado la solicitud {order.folio}')
@@ -571,30 +811,85 @@ def status_sol(request, pk):
         requi = None
 
 
-
     if requi != None:
         exist_req = True
-        oc = Compra.objects.filter(req=requi)
-        product_requis = ArticulosRequisitados.objects.filter(req=requi)
-        if oc != None:
-            exist_oc=True
-            context = {
-            'solicitud': solicitud,
-            'product_solicitudes': product_solicitudes,
-            'num_prod_sol': num_prod_sol,
-            'product_requis':product_requis,
-            'requi': requi,
-            'exist_oc': exist_oc,
-            'oc':oc,
-        }
+        if not requi.autorizar:
+            requi_cancelada = True
         else:
+            requi_cancelada = False
+        compras = Compra.objects.filter(req=requi)
+        product_requis = ArticulosRequisitados.objects.filter(req=requi)
+        num_prod_req = product_requis.count()
+        if compras != None:
+            pagos = Pago.objects.filter(oc__req = requi)
+            #productos_comprados = ArticuloComprado.objects.filter(oc = compras)
+            exist_oc=True
+            if pagos:
+                exist_pago=True
+                entradas = Entrada.objects.filter(oc__req = requi)
+                exist_entradas = False
+                if entradas:
+                    exist_entradas = True
+                    articulos_entradas = EntradaArticulo.objects.filter(entrada__oc__req = requi)
+                    exist_salidas = False
+                    salidas = ValeSalidas.objects.filter(solicitud = solicitud)
+                    if salidas:
+                        exist_salidas = True
+                    context = {
+                        'salidas':salidas,
+                        'exist_salidas': exist_salidas,
+                        'solicitud': solicitud,
+                        'exist_entradas': exist_entradas,
+                        'entradas': entradas,
+                        'articulos_entradas': articulos_entradas,
+                        'product_solicitudes': product_solicitudes,
+                        'num_prod_sol': num_prod_sol,
+                        'product_requis':product_requis,
+                        'requi': requi,
+                        'exist_oc': exist_oc,
+                        'exist_pago':exist_pago,
+                        'num_prod_req': num_prod_req,
+                        'compras':compras,
+                        'pagos':pagos,
+                        }
+                else:
+                    context = {
+                        'solicitud': solicitud,
+                        #'productos_comp': productos_comprados,
+                        'product_solicitudes': product_solicitudes,
+                        'num_prod_sol': num_prod_sol,
+                        'product_requis':product_requis,
+                        'requi': requi,
+                        'exist_oc': exist_oc,
+                        'exist_pago':exist_pago,
+                        'exist_entradas':exist_entradas,
+                        'num_prod_req': num_prod_req,
+                        'compras':compras,
+                        'pagos':pagos,
+                        }
+            else:
+                exist_pago=False
+                context = {
+                    'solicitud': solicitud,
+                    'exist_pago': exist_pago,
+                    'product_solicitudes': product_solicitudes,
+                    'num_prod_sol': num_prod_sol,
+                    'product_requis':product_requis,
+                    'requi': requi,
+                    'num_prod_req': num_prod_req,
+                    'exist_oc': exist_oc,
+                    'compras':compras,
+                }
+        else:
+            exist_oc = False
             context = {
             'solicitud': solicitud,
             'product_solicitudes': product_solicitudes,
             'num_prod_sol': num_prod_sol,
+            'num_prod_req': num_prod_req,
             'requi': requi,
             'exist_req': exist_req,
-            'oc':oc,
+            'exist_oc': exist_oc,
         }
     else:
         exist_req = False
@@ -801,7 +1096,7 @@ def convert_excel_solicitud_matriz(ordenes):
     ws.column_dimensions[get_column_letter(columna_max)].width = 20
 
     rows = ordenes.values_list('id',Concat('staff__staff__first_name',Value(' '),'staff__staff__last_name'),'proyecto__nombre','subproyecto__nombre',
-                                'operacion__nombre','created_at')
+                                'area__nombre','created_at')
 
     for row in rows:
         row_num += 1

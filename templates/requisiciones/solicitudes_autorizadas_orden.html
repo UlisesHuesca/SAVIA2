@@ -12,7 +12,7 @@
 <hr>
 <hr>
 <div class = "row mt-2 bg-white">
-    <h4>Pendiente Requisición</h4>
+    <h4>Pendiente por Requisitar</h4>
     <hr>
     <form method=POST>
     {% csrf_token %}
@@ -27,10 +27,12 @@
                 <i class="fa-solid fa-file-pdf fa-2xl"></i>
             </button>
         </li>
-        <li class="nav-item mx-2 my-1">
-            <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada' %}">
-                Solicitud por producto
-            </a>
+        <li class="nav-item mx-2">
+            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada' %}">Surtir</a>
+                <a type="button" class="btn btn-outline-info" href="{% url 'solicitudes-auotorizadas-pendientes' %}">Pendientes</a>
+                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'solicitud-autorizada-orden' %}">Requisitar</a>
+              </div>
         </li>
     </ul>
     </form>
@@ -73,7 +75,7 @@
                     <th scope="col">Solicitado por</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
-                    <th scope="col">Operación</th>
+                    <th scope="col">Área</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Acción</th>
                     <th scope="col">Documentos</th>
@@ -86,7 +88,7 @@
                     <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
-                    <td>{{orden.operacion}}</td>
+                    <td>{{orden.area}}</td>
                     <td>{{orden.created_at}} </td>
                     <td>
                         <ul class="nav nav-pills">
@@ -99,7 +101,7 @@
                                 {% else %}
                                 <div class='invisible'>
                                 {% endif %}
-                                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-detalle' orden.id%}">Requisitar</a>
+                                    <a type="button" class="btn btn-outline-success" href="{% url 'requisicion-detalle' orden.id%}">Requisitar</a>
                                 </div>
                             </li>
                         </ul>

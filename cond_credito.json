@@ -1,0 +1,1 @@
+[{"model": "compras.cond_credito", "pk": 1, "fields": {"nombre": "CONTADO"}}, {"model": "compras.cond_credito", "pk": 2, "fields": {"nombre": "CREDITO"}}]

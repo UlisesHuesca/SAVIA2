@@ -6,6 +6,7 @@ from django_filters import CharFilter, DateFilter
 from django.db.models import Q
 
 class ArticulosparaSurtirFilter(django_filters.FilterSet):
+    solicitud = CharFilter(field_name='articulos__orden__folio', lookup_expr='icontains')
     producto = CharFilter(field_name='articulos__producto__producto__nombre', lookup_expr='icontains')
     codigo = CharFilter(field_name='articulos__producto__producto__codigo', lookup_expr='icontains')
     #nombre = CharFilter(field_name='articulos__orden__staff__staff__first_name', lookup_expr='icontains')
@@ -18,7 +19,7 @@ class ArticulosparaSurtirFilter(django_filters.FilterSet):
 
     class Meta:
         model = ArticulosparaSurtir
-        fields = ['producto','codigo','nombre','proyecto','subproyecto','start_date','end_date',]
+        fields = ['solicitud','producto','codigo','nombre','proyecto','subproyecto','start_date','end_date',]
 
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(articulos__orden__staff__staff__first_name__icontains = value) | Q(articulos__orden__staff__staff__last_name__icontains=value))

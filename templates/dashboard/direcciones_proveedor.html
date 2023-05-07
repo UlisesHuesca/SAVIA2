@@ -1,0 +1,191 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Proveedores{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class = "row mt-2 bg-white">
+        <div class="col-12">
+            <div class="card card-body">
+                <h5>Direcciones Proveedor</h5>
+                <hr>
+                <!--{% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Razón Social:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.razon_social|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>RFC:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.rfc|add_class:'form-control'}}
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                -->
+                    <ul class="nav nav-pills">
+                        <li class="nav-item mx-2">
+                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores' %}">
+                                <i class="fa-solid fa-backward"></i>
+                            </a>
+                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href=#>
+                                <i class="fa-solid fa-plus"> Agregar Direccion</i>
+                            </a>
+                        </li>
+                    </ul>
+            </div>
+        </div>
+</div>
+
+    <div class="col-md-12 my-2">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Razón Social</th>
+                    <th scope="col">Direccion</th>
+                    <th scope="col">Contacto</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Banco</th>
+                    <th scope="col">Clabe</th>
+                    <th scope="col">Cuenta</th>
+                    <th scope="col">Financiamiento</th>
+                    <th scope="col">Dias de Crédito</th>
+                    <th scope="col">Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for direccion in direcciones %}
+                <tr>
+                    <th scope="row">{{direccion.nombre.razon_social}}</th>
+                    <td>{{direccion.domicilio}}</td>
+                    <td>{{direccion.contacto}}</td>
+                    <td>{{direccion.email}}</td>
+                    <td>{{direccion.banco}}</td>
+                    <td>{{direccion.clabe}}</td>
+                    <td>{{direccion.cuenta}}</td>
+                    {% if direccion.financiamiento %}
+                    <td>Crédito</td>
+                    {% else %}
+                    <td>Contado</td>
+                    {% endif %}
+                    <td>{{direccion.dias_credito}}</td>
+                    <td>{{direccion.estatus}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if proveedores_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+
+            {% for item in proveedores_list.paginator.page_range %}
+                {% if proveedores_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > proveedores_list.number|add:'-2' and item < proveedores_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if proveedores_list.paginator.num_pages > proveedores_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{ proveedores_list.paginator.num_pages}}">{{proveedores_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if proveedores_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+<!--Este es el modal-->
+        <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+            </div>
+        </div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $("#id_familia").change(function () {
+      const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
+      const familiaId = $(this).val();  // get the selected familia ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'familia_id': familiaId       // add the familia id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
+          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
+        }
+      });
+    });
+
+    ;(function(){
+        const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+        htmx.on('htmx:beforeSwap',(e)=>{
+            if (e.detail.target.id === "document" && !e.detail.xhr.response)
+                modal.hide()
+        })
+    })()
+
+    var myModal = document.getElementById('dialog')
+
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+       setTimeout(function(){
+            location.reload();
+        },3000);
+    })
+  </script>
+{% endblock %}
+
+<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
+<!--style="background-color: #515151; color:white;"-->
+<!--style="background-color: #711F1B; color:white;"-->

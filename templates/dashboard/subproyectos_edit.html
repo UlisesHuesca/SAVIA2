@@ -1,0 +1,78 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Edición de Proyectos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Agregar Subproyecto</h3>
+                <h6>Proyecto: {{proyecto.nombre}}</h6>
+                <h6>Descripción: {{proyecto.descripcion}}</h6>
+                <hr>
+                <form method="POST">
+                    {% csrf_token %}
+                    <label for="form.nombre" class="col-auto col-form-label my-1"><strong>Subproyecto:</strong></label>
+                    <div class="col-12">
+                        {{ form.nombre|add_class:"form-control"}}
+                    </div>
+                    <label for="form.descripcion" class="col-auto col-form-label my-1"><strong>Descripción:</strong></label>
+                    <div class="col-12">
+                        {{ form.descripcion|add_class:"form-control"}}
+                    </div>
+                     <label for="form.presupuesto" class="col-auto col-form-label my-1"><strong>Monto:</strong></label>
+                    <div class="col-6">
+                        {{ form.presupuesto|add_class:"form-control"}}
+                    </div>
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'subproyectos' proyecto.id %}">Cancelar</a>
+                    <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+  </script>
+{% endblock %}

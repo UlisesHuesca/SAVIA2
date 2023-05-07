@@ -1,0 +1,44 @@
+<html>
+<body>
+<a class="btn btn-outline-dark" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-arrow-left">Agregar productos</i></a>
+            <hr>
+            <h3>Resumen de solicitud</h3>
+            <hr>
+            {% for producto in productos %}
+            <div class='cart-row'>
+                <table class="table table-ligth table-striped mx-1">
+                <form method="POST">
+                {% csrf_token %}
+                <thead>
+                        <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col"></th>
+                        </tr>
+                </thead>
+                <tbody>
+                        <tr>
+                            <td><img class="row-image" src="{{producto.producto.producto.imageURL}}"></td>
+                            <td>{{producto.producto.producto.codigo}}</td>
+                            <td>{{producto.producto.producto.nombre}}</td>
+                            <td>{{producto.cantidad}}</td>
+                            <td>{{producto.producto.producto.unidad}}</td>
+                            <td>
+                                <a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'product-quantity-edit' producto.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger add-btn update-cart" value="Delete" data-product={{producto.producto.id}} data-action="remove" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                        </tr>
+                </tbody>
+                </form>
+                </table>
+            </div>
+            <hr>
+            {% endfor %}
+            <h5>Artículos: {{orden.get_cart_quantity}}</h5>
+</body>
+</html>

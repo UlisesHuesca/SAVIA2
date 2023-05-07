@@ -1,0 +1,780 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Gasto {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-5">
+        <div class="box-element" id="form-wrapper">
+            <div id="Solicitud-info">
+                <hr>
+					<h2>Solicitud de gasto:</h2>
+					<hr>
+					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+                        {% csrf_token %}
+                            <div class="row my-2">
+                                <label for="form.proyecto" class="col-auto col-form-label my-1"><strong>Proyecto*</strong></label>
+                                <div class="col-4">
+                                    <div class="input-group">
+                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
+                                    {{form.proyecto|add_class:"form-select d-none"}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12">
+                                <input type="text" list="proyectos" id="txt_proyectos" valor="{{proyectos.id}}" placeholder="Proyecto..." class="form-control">
+
+                                <datalist id="proyectos" name='proyectos'>
+                                {% for item in proyectos %}
+                                 <option valor="{{item.id}}" value="{{item.nombre}} {{item.descripcion}}"></option>
+                                 {% endfor %}
+                                </datalist>
+                            </div>
+                            <div class="row my-2">
+                                <label for="form.subproyecto" class="col-auto col-form-label my-1"><strong>Subproyecto*</strong></label>
+                                <div class="col-8">
+                                    <div class="input-group">
+                                    <div class="selector">
+                                        <select class="form-select form-select-sm my-1 d-none" style="height:35px" id="subproyecto">
+                                            <option id="default_sel">      </option>
+                                            {% for subproyecto in subproyectos %}
+                                            <option id="js" target="{{subproyecto.proyecto.id}}" sub="{{subproyecto.id}}">
+                                            {{subproyecto.nombre}}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="input-group">
+                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
+                                    {{form.subproyecto|add_class:"form-select d-none"}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2 d-none">
+                                <label for="form.subproyecto" class="col-auto col-form-label my-1"><strong>Tipo*</strong></label>
+                                <div class="col-4">
+                                    <div class="input-group">
+                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
+                                    {{form.tipo|add_class:"form-select"}}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="form-check form-switch col-auto mx-4" id="Otro_Colaborador">
+                                <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
+                                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelColaborador">Otro Colaborador</label>
+                            </div>
+
+                            <div class="row my-2 d-none">
+
+                                <div class="col-4">
+                                    <div class="input-group">
+                                    {{form.colaborador|add_class:"form-select"}}
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="col-sm-12 d-none" id="colaborador_parrafo">
+                                <label for="form.proyecto" class="col-auto col-form-label my-1"><strong>Colaborador*</strong></label>
+                                <input type="text" list="colaborador" id="txt_colaborador" placeholder="Colaboradores..." class="form-control">
+
+                                <datalist id="colaborador" name='colaborador'>
+                                {% for item in colaborador %}
+                                 <option valor="{{item.id}}" value="{{item.staff.first_name}} {{item.staff.last_name}}"></option>
+                                 {% endfor %}
+                                </datalist>
+                            </div>
+
+                            <div class="row my-2">
+                            <label class="col-auto col-form-label" superintendentes='{{superintendentes}}'><strong>Superintendente*</strong></label>
+                            <div class="col-5">
+                                <div class="input-group">
+                                <span class="input-group-text my-1" style="height:35px"><i class="fa-solid fa-user"></i></span>
+                                <div class="selector">
+                                    <select class="form-select form-select-sm my-1" style="height:35px" id="superintendentes">
+                                    <option id="default_sel">      </option>
+                                    {% for superintendente in superintendentes %}
+                                    <option id="js" target="{{superintendente.id}}">
+                                    {{superintendente.staff.first_name}} {{superintendente.staff.last_name}}
+                                    </option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                                </div>
+                            </div>
+                            </div>
+                            <div class="row my-2 d-none">
+                                <label for="form.superintendente" class="col-auto col-form-label my-1 d-none"><strong>Superintendente*</strong></label>
+                                <div class="col-3">
+                                <!--<div class="input-group mb-3">-->
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    {{form.superintendente|add_class:"form-control"}}
+                                </div>
+                            </div>
+
+                        {% if productos %}
+                        <input class="btn btn-outline-info btn-block my-2" name="btn_agregar" id="btn_agregar" type="submit" value="Agregar Solicitud">
+                        {% endif %}
+
+                    </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="box-element">
+            <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <div class="row">
+                <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
+                <div class="col-sm-6 my-2">
+                    <input type="text" list='articulos' id="txt_articulos" valor="{{articulos.id}}" placeholder="Artículos..." class="form-control d-none">
+
+                    <datalist id="articulos" name='articulos'>
+                        {% for item in articulos %}
+                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
+                        {% endfor %}
+                    </datalist>
+                    <input type="text" list='articulos_gasto' id="txt_articulos_gasto" valor="{{articulos_gasto.id}}" placeholder="Artículos..." class="form-control">
+
+                    <datalist id="articulos_gasto" name='articulos_gasto'>
+                        {% for item in articulos_gasto %}
+                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="form-check form-switch col-auto mx-4 d-none" id="Gasto" gasto ="{{gasto.id}}">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchGasto">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelAlmacén">Almacén</label>
+                </div>
+            </div>
+
+            <div class="row d-none">
+                <label for="form_product.producto" class="col-auto col-form-label"><strong>Producto:</strong></label>
+                <div class="col-sm-6">
+                    {{form_product.producto|add_class:"form-control"}}
+                </div>
+            </div>
+            <div class="row">
+                <label for="form_product.concepto" class="col-sm-2 col-form-label"><strong>Descripción:</strong></label>
+                <div class="col-sm-6">
+                    {{form_product.comentario|add_class:"form-control"}}
+                </div>
+                <label for="form_product.precio_unitario" class="col-sm-1 col-form-label"><strong>P.U.:</strong></label>
+                <div class="col-sm-2">
+                    {{form_product.precio_unitario|add_class:"form-control"}}
+                </div>
+            </div>
+            <div class="row my-2">
+                 <label for="form_product.precio_unitario" class="col-sm-1 col-form-label"><strong>Cantidad:</strong></label>
+                <div class="col-sm-2">
+                    {{form_product.cantidad|add_class:"form-control"}}
+                </div>
+                <label for="form_product.precio_unitario" class="col-sm-2 col-form-label"><strong>Cálculo previo:</strong></label>
+                <div id="calculo_previo" class="col-sm-2">
+
+                </div>
+            </div>
+
+            <div id="factura_pdf" class="row">
+                <div class="col-sm-6">
+                    {{form_product.factura_pdf|add_class:"form-control my-2"}}
+                </div>
+                <div class="col-sm-1 my-3" style="color:#980f0f">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>PDF
+                </div>
+
+            </div>
+            <div id="factura_xml" class="row">
+                <div class="col-sm-6">
+                    {{form_product.factura_xml|add_class:"form-control my-2"}}
+                </div>
+                 <div class="col-sm-1 my-3" style="color:#9a9b9d">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>XML
+                </div>
+            </div>
+
+            <div  class="row">
+            <div class="form-check form-switch col-auto mx-4" id="Otros_impuestos">
+                        <input class="form-check-input" type="checkbox" role="switch" id="Switch_Otros_impuestos">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelOtros_Impuestos">Otros Impuestos</label>
+            </div>
+                <div class="col-sm-3">
+                    {{form_product.otros_impuestos|add_class:"form-control d-none"}}
+                </div>
+            </div>
+
+            <div  class="row my-1">
+            <div class="form-check form-switch col-auto mx-4" id="Impuestos_retenidos">
+                        <input class="form-check-input" type="checkbox" role="switch" id="Switch_Impuestos_retenidos">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelOtros_Impuestos">Impuestos Retenidos</label>
+            </div>
+                <div class="col-sm-3">
+                    {{form_product.impuestos_retenidos|add_class:"form-control d-none"}}
+                </div>
+            </div>
+
+            <div class="form-check form-switch col-auto mx-4 d-none" id="Entrada_Salida">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelAlmacén">Entrada-Salida Express</label>
+                </div>
+            <div  class="row">
+                <div class="col-sm-1">
+                    <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit">
+                </div>
+            </div>
+
+        </form>
+            <hr>
+            <table class="table table-light table-striped table-hover mx-2">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">P.U.</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col">Total</th>
+                    <th scope="col">Facturas</th>
+                    <th scope="col" class="col-sm-2">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for producto in productos%}
+
+                <tr>
+                    <td scope="col">{{producto.producto.producto.codigo}}</td>
+                    <td scope="col">{{producto.producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.cantidad|floatformat:2}}</td>
+                    <td scope="col">${{producto.precio_unitario|floatformat:4}}</td>
+                    <td scope="col">${{producto.get_subtotal|floatformat:2}}</td></td>
+                    <td scope="col">${{producto.total_parcial|floatformat:2}}</td>
+                    <td>
+                        {% if producto.factura_pdf %}
+                        <a class="btn btn-outline-danger" href="{{producto.factura_pdf.url}}" download class="btn btn-outline-info">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </a>
+                        {% endif %}
+
+                        {% if producto.factura_xml %}
+                        <a class="btn btn-outline-light" style="background-color:#9a9b9d" href="{{producto.factura_xml.url}}" download class="btn btn-outline-light">
+                            <i class="fa-solid fa-file-code"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-gasto' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <!--<a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'editar-gasto' producto.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i></td>-->
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+            <table class="table table-light table-striped mx-1">
+            <thead>
+                <tr>
+                    <th scope="col">Subtotal</th>
+                    <td scope="col" id="subtotal">${{gasto.get_subtotal_solicitud}}</td>
+                </tr>
+                </thead>
+            <tbody>
+                <tr>
+                    <th scope="col">Impuestos</th>
+                    <td scope="col" id="iva">${{gasto.get_total_impuesto}}</td>
+                </tr>
+                <tr>
+                    <th scope="col">Total</th>
+                    <td scope="col" id="total">${{gasto.get_total_solicitud}}</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+
+    document.getElementById('id_precio_unitario').addEventListener('change',(event)=>{
+    cantidad = document.getElementById('id_cantidad').value;
+    precio = document.getElementById('id_precio_unitario').value;
+    otros_impuestos = document.getElementById('id_otros_impuestos').value
+    retenidos = document.getElementById('id_impuestos_retenidos').value
+    calculo_previo = document.getElementById('calculo_previo')
+    var other_select = document.getElementById('id_producto')
+    var value = other_select.options[other_select.selectedIndex].value
+    var browserChildren = document.getElementById('articulos_gasto').children;
+    var producto = document.getElementById('btn_producto')
+    if (precio <= 0 || cantidad <= 0){
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
+        } else {
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
+        }
+
+
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+        if (valor === value) {
+            console.log(browserChildren[i])
+            let iva = browserChildren[i].getAttribute('iva');
+            console.log(iva)
+            if (iva){
+                subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
+                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+            } else {
+                subtotal = precio * cantidad + otros_impuestos - retenidos
+                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+            }
+            }
+    }
+    })
+
+    document.getElementById('id_cantidad').addEventListener('change',(event)=>{
+        cantidad = document.getElementById('id_cantidad').value
+        precio = document.getElementById('id_precio_unitario').value
+        calculo_previo = document.getElementById('calculo_previo')
+        otros_impuestos = document.getElementById('id_otros_impuestos').value
+        retenidos = document.getElementById('id_impuestos_retenidos').value
+        var other_select = document.getElementById('id_producto')
+        var value = other_select.options[other_select.selectedIndex].value
+        var producto = document.getElementById('btn_producto')
+        var browserChildren = document.getElementById('articulos_gasto').children;
+        if (precio <= 0 || cantidad <= 0){
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
+        } else {
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
+        }
+
+
+
+        for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+            if (valor === value) {
+                console.log(browserChildren[i])
+                let iva = browserChildren[i].getAttribute('iva');
+                console.log(iva)
+                    if (iva){
+                        subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                    } else {
+                        subtotal = precio * cantidad + otros_impuestos - retenidos
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                   }
+        }}
+
+    })
+
+    document.getElementById('id_otros_impuestos').addEventListener('change',(event)=>{
+        cantidad = document.getElementById('id_cantidad').value
+        precio = document.getElementById('id_precio_unitario').value
+        otros_impuestos = document.getElementById('id_otros_impuestos').value
+        retenidos = document.getElementById('id_impuestos_retenidos').value
+        console.log(otros_impuestos)
+
+        calculo_previo = document.getElementById('calculo_previo')
+        var other_select = document.getElementById('id_producto')
+        var value = other_select.options[other_select.selectedIndex].value
+        var browserChildren = document.getElementById('articulos_gasto').children;
+
+
+
+        for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+            if (valor === value) {
+                console.log(browserChildren[i])
+                let iva = browserChildren[i].getAttribute('iva');
+                console.log(iva)
+                    if (iva){
+                        subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                    } else {
+                        subtotal = precio * cantidad + otros_impuestos - retenidos
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                   }
+        }}
+
+    })
+    document.getElementById('id_impuestos_retenidos').addEventListener('change',(event)=>{
+        cantidad = document.getElementById('id_cantidad').value
+        precio = document.getElementById('id_precio_unitario').value
+        otros_impuestos = document.getElementById('id_otros_impuestos').value
+        retenidos = document.getElementById('id_impuestos_retenidos').value
+
+        calculo_previo = document.getElementById('calculo_previo')
+        var other_select = document.getElementById('id_producto')
+        var value = other_select.options[other_select.selectedIndex].value
+        var browserChildren = document.getElementById('articulos_gasto').children;
+
+
+
+        for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+            if (valor === value) {
+                console.log(browserChildren[i])
+                let iva = browserChildren[i].getAttribute('iva');
+                console.log(iva)
+                    if (iva){
+                        subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                    } else {
+                        subtotal = precio * cantidad + otros_impuestos - retenidos
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                   }
+        }}
+
+    })
+
+    if (document.getElementById('btn_agregar')){
+    document.getElementById('btn_agregar').addEventListener('submit', (event)=>{
+
+    if ((check_colaborador.checked) &&  (!txt_colaborador.value)) {
+
+        Swal.fire({
+                "title":"Error",
+                "text":"Favor de agregar un colaborador",
+                "icon":"error",
+            })
+        event.preventDefault()
+    }
+
+    });
+    }
+
+
+    document.getElementById("txt_proyectos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proyectos");
+    console.log(select.value)
+    var browserChildren = document.getElementById('proyectos').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_proyecto');
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            var target = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+            //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+    //var select2 = document.getElementById("id_proyecto");
+    var text_subproyectos = document.getElementById("subproyecto")
+    var subproyectos = text_subproyectos.children;
+    //var current_option2 = select2.options[select.selectedIndex];
+
+    var sub = document.getElementById('id_subproyecto')
+    console.log(target)
+    text_subproyectos.setAttribute('class','form-select form-select-sm my-1')
+
+
+    text_subproyectos.value = ""
+    sub.value =""
+
+
+     for(let i = 0; i < subproyectos.length; i++){
+        proyecto_num  = subproyectos[i].getAttribute('target')
+        if (proyecto_num === target) {
+            subproyectos[i].setAttribute('class','')
+        } else {
+            subproyectos[i].setAttribute('class','d-none')
+     }
+     }
+});
+
+
+document.getElementById("superintendentes").addEventListener("change", function(event){
+    var select = document.getElementById("superintendentes");
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target')
+    var other_select = document.getElementById('id_superintendente')
+    other_select.value = target
+});
+
+var precio_mod = document.getElementById("id_precio_unitario")
+
+
+document.getElementById("txt_articulos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_articulos");
+    var browserChildren = document.getElementById('articulos').children;
+    var other_select = document.getElementById('id_producto');
+
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+document.getElementById("txt_articulos_gasto").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_articulos_gasto");
+    var browserChildren = document.getElementById('articulos_gasto').children;
+    var other_select = document.getElementById('id_producto');
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+       // console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+         //   console.log(browserChildren[i])
+          //  console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+        //    console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+document.getElementById("txt_colaborador").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_colaborador");
+    var browserChildren = document.getElementById('colaborador').children;
+    var other_select = document.getElementById('id_colaborador');
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+
+var check_colaborador = document.getElementById("SwitchColaborador");
+
+
+document.getElementById("SwitchColaborador").addEventListener("change", function(element){
+	let colaboradores = document.getElementById('colaborador_parrafo');
+
+	if (check_colaborador.checked){
+	    colaboradores.setAttribute('class','col-sm-12')
+
+	} else {
+	    colaboradores.setAttribute('class','col-sm-12 d-none')
+
+	}
+});
+
+
+var check_gasto = document.getElementById("SwitchGasto");
+
+
+document.getElementById("SwitchGasto").addEventListener("change", function(element){
+	let articulos = document.getElementById('txt_articulos');
+	let articulos_gasto = document.getElementById('txt_articulos_gasto');
+	let form_art = document.getElementById('id_producto')
+	let entrada_salida = document.getElementById('Entrada_Salida')
+
+
+	articulos.value = ""
+	articulos_gasto.value=""
+	form_art.value = ""
+
+	if (check_gasto.checked){
+	    articulos.setAttribute('class','form-control')
+	    articulos_gasto.setAttribute('class','form-control d-none')
+	    entrada_salida.setAttribute('class','form-check form-switch col-auto mx-4')
+	    //impuestos_retenidos.setAttribute('class','form-check form-switch col-auto mx-4')
+	} else {
+	    articulos.setAttribute('class','form-control d-none')
+	    articulos_gasto.setAttribute('class','form-control')
+	    entrada_salida.setAttribute('class','form-check form-switch col-auto mx-4 d-none')
+	    //impuestos_retenidos.setAttribute('class','form-check form-switch col-auto mx-4 d-none')
+	}
+});
+
+var check_otros_imp = document.getElementById("Switch_Otros_impuestos")
+
+check_otros_imp.addEventListener("change", function(element){
+    let otros_imp = document.getElementById('id_otros_impuestos')
+
+    if (check_otros_imp.checked){
+        otros_imp.setAttribute('class','form-control')
+    } else {
+        otros_imp.setAttribute('class','form-control d-none')
+    }
+
+
+});
+
+let check_impuestos_retenidos = document.getElementById('Switch_Impuestos_retenidos')
+
+check_impuestos_retenidos.addEventListener("change", function(element){
+    let imp_ret = document.getElementById('id_impuestos_retenidos')
+    console.log(imp_ret)
+
+    if (check_impuestos_retenidos.checked){
+        imp_ret.setAttribute('class','form-control')
+    } else {
+        imp_ret.setAttribute('class','form-control d-none')
+    }
+
+
+});
+
+document.getElementById("subproyecto").addEventListener("change", function(event){
+        var select = document.getElementById("subproyecto");
+        var current_option = select.options[select.selectedIndex];
+        var target = current_option.getAttribute('sub')
+        console.log(target)
+        var other_select = document.getElementById('id_subproyecto')
+        other_select.value = target
+    });
+
+/*document.getElementById("id_tipo").addEventListener("change", function(element){
+	let articulos = document.getElementById('id_tipo');
+	let value = articulos.value;
+	let factura_pdf = document.getElementById('factura_pdf')
+	let factura_xml = document.getElementById('factura_xml')
+
+	//console.log(value)
+	//articulos.value = ""
+	//form_art.value = ""
+
+
+	if (value == 2){
+	  factura_pdf.setAttribute('class','row')
+	  factura_xml.setAttribute('class','row')
+	} else {
+	  factura_pdf.setAttribute('class','row d-none')
+	  factura_xml.setAttribute('class','row d-none')
+	}
+
+});*/
+
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+
+</script>
+{% endblock %}
+</body>
+</html>

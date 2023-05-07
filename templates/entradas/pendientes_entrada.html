@@ -57,7 +57,7 @@
                 </form>
                 <form method=POST>
                     {% csrf_token %}
-                    <ul class="nav nav-pills">
+                    <!--<ul class="nav nav-pills">
                         <li class="nav-item mx-2">
                             <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
@@ -68,7 +68,7 @@
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
                         </li>
-                    </ul>
+                    </ul>-->
                 </form>
             </div>
         </div>
@@ -122,7 +122,7 @@
             <tbody>
                 {% for compra in compras %}
                 <tr>
-                    <td scope="col">{{compra.folio}}</th>
+                    <td scope="col">{{compra.get_folio}}</th>
                     <td scope="col">{{compra.req.folio}}</td>
                     <td scope="col">{{compra.req.orden.folio}}</td>
                     <td>{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>

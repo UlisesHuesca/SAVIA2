@@ -1,0 +1,139 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Matriz de Conceptos Viaticos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<div class = "row mt-2 bg-white" id="response-div">
+        <div class="col-12">
+            <div class="card card-body">
+                
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                    <li class="nav-item mx-1">
+                        <a href="{% url 'mis-gastos' %}" class="btn btn-outline-info">
+                            <i class="fa-solid fa-backward"></i>
+                        </a>
+                    </li>
+                    {% if usuario.tipo.tesoreria == True %}
+                        <li class="nav-item mx-1">
+                            <a href="{% url 'viaticos-autorizados-pago' %}" class="btn btn-outline-info">
+                                <i class="fa-solid fa-backward"> VIATICOS</i>
+                            </a>                 
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a href="{% url 'matriz-pagos' %}" class="btn btn-outline-info">
+                                <i class="fa-solid fa-backward"> MATRIZ PAGOS</i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        <!--<li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Viático</th>
+                    <th scope="col">Concepto</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Importe Gasto</th>
+                    <th scope="col">Upload</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for concepto in concepto_viatico %}
+                <tr>
+                    <th scope="row">{{concepto.id}}</th>
+                    <td>{{concepto.producto}}</td>
+                    <td>{{concepto.comentario}}</td>
+                    <td>${{concepto.get_total_parcial|floatformat:2}}</td>
+                    <td>   
+                        <ul class="nav nav pills" >   
+                            <li class="nav-item mx-1">
+                                <a type="button" class="btn btn-outline-secondary" href="{% url 'facturas-viaticos' concepto.id %}">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+</script>
+{% endblock %}
+</body>
+</html>

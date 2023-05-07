@@ -5,7 +5,7 @@ from dashboard.models import Inventario, Order, Product, ArticulosOrdenados
 class InventarioForm(forms.ModelForm):
     class Meta:
         model = Inventario
-        fields = ['producto','marca','cantidad', 'price']
+        fields = ['producto','cantidad', 'price','comentario']
 
     def __init__(self, *args, **kwargs):
 
@@ -30,25 +30,14 @@ class ArticulosOrdenadosForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['proyecto','subproyecto', 'operacion','activo']
-
-#Sobreescribiendo el método __init__ y configurando el queryset para que esté vacío
-    def __init__(self, *args, **kwargs):
-        distrito = kwargs.pop('distrito')
-        super().__init__(*args, **kwargs)
-        self.fields['subproyecto'].queryset = Subproyecto.objects.none()
-        self.fields['proyecto'].queryset = Proyecto.objects.filter(distrito=distrito)
-
-        if 'proyecto' in self.data:
-            try:
-                proyecto_id = int(self.data.get('proyecto'))
-                self.fields['subproyecto'].queryset = Subproyecto.objects.filter(proyecto_id=proyecto_id).order_by('nombre')
-            except (ValueError, TypeError):
-                pass  # invalid input from the client; ignore and fallback to empty subproyecto queryset
-        #elif self.instance.pk:
-        #    self.fields['subproyecto'].queryset = self.instance.proyecto.subproyecto_set.order_by('nombre')
+        fields = ['proyecto','subproyecto', 'area','superintendente','supervisor']
 
 class Inv_UpdateForm(forms.ModelForm):
     class Meta:
         model = Inventario
-        fields = ['marca','cantidad','cantidad_apartada', 'price','comentario','minimo']
+        fields = ['price','cantidad','minimo','ubicacion','estante','comentario']
+
+class Inv_UpdateForm_almacenista(forms.ModelForm):
+    class Meta:
+        model = Inventario
+        fields = ['ubicacion','estante','minimo','comentario']

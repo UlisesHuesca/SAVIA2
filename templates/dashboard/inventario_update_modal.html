@@ -8,6 +8,34 @@
 </head>
 <body>
 {% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
 <div class="modal-dialog-lg" role="document">
     <form  hx-post="{{request.path}}" class="modal-content">
     <div class="modal-content">
@@ -20,25 +48,28 @@
                 {% csrf_token %}
                     <label for="form.producto" class="col-auto col-form-label"><strong>Producto: {{item.producto}}</strong></label>
                     <br>
-                    <label for="form.marca" class="col-auto col-form-label my-1"><strong>Marca:</strong></label>
-                    <div class="col-4">
-                        {{ form.marca|add_class:"form-control"}}
-                    </div>
+                    {% if flag_perfil %}
                     <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad:</strong></label>
                     <div class="col-4">
                         {{ form.cantidad|add_class:"form-control"}}
                     </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Precio:</strong></label>
+                    <div class="col-4">
+                        {{ form.price|add_class:"form-control"}}
+                    </div>
+                    {% endif %}
                     <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Mínimo:</strong></label>
                     <div class="col-4">
                         {{ form.minimo|add_class:"form-control"}}
                     </div>
-                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad Apartada:</strong></label>
+                    <label for="form.ubicacion" class="col-auto col-form-label my-1"><strong>Ubicación:</strong></label>
                     <div class="col-4">
-                        {{ form.cantidad_apartada|add_class:"form-control"}}
+                        {{ form.ubicacion|add_class:"form-control"}}
                     </div>
-                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Precio:</strong></label>
+
+                    <label for="form.estante" class="col-auto col-form-label my-1"><strong>Estante:</strong></label>
                     <div class="col-4">
-                        {{ form.price|add_class:"form-control"}}
+                        {{ form.estante|add_class:"form-control"}}
                     </div>
                     <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
                      <div class="col-12">
@@ -47,7 +78,7 @@
             </div>
         </div>
         <div class="modal-footer">
-                <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>
+                <button class="btn btn-success col-2" name="btnUpdate" id="crear" type="submit" ><i class="fa-solid fa-floppy-disk"></i></button>
                 <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
         </div>
     </div>

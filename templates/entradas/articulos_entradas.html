@@ -5,12 +5,12 @@
 {% load widget_tweaks %}
 <html>
 <head>
-{% block title %}Autorización OC{% endblock %}
+{% block title %}Entrada de Artículos{% endblock %}
 </head>
 <body>
 {% block content %}
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
 <div>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         {% if messages %}
@@ -42,15 +42,15 @@
         <div class="box-element" id="form-wrapper">
             <div class="card-header mt-3 mb-4">
             <form method="POST">
-            <h5 class="modal-title" id="entrada" value="{{entrada.id}}">Entrada: {{entrada.id}}&ensp;&ensp; Compra: {{compra.folio}}</h5>
+            <h5 class="modal-title" id="entrada" value="{{entrada.id}}">Entrada: {{entrada.id}}&ensp;&ensp; Compra: {{compra.get_folio}}</h5>
         </div>
 
 
             <table class='table table-dark table striped'>
                 <thead>
                     <tr>
-                        <th scope="col">Codigo:</th>
-                        <th scope="col">{{compra.proveedor.nombre.nombre}}</th>
+                        <th scope="col">Proveedor:</th>
+                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -65,7 +65,7 @@
             {% csrf_token %}
             <div class="row">
                 <label class="col-auto col-form-label"><strong>Productos:</strong></label>
-                <div class="col-sm-4">
+                <div class="col-sm-6">
                     <div class="selector">
                         <select class="form-select form-select-sm" id="producto">
                             <option id="default_sel">      </option>
@@ -105,7 +105,8 @@
                             <th scope="col">#</th>
                             <th scope="col">Producto</th>
                             <th scope="col">Cantidad</th>
-                            <th scope="col" class="col-sm-2">Acción</th>
+                            <th scope="col">Unidad</th>
+                            <th scope="col" class="col-sm-2">Eliminar</th>
                         </tr>
                     </thead>
 
@@ -115,6 +116,7 @@
                         <td scope="col" id=>#</td>
                         <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
                         <td scope="col">{{producto.cantidad}}</td>
+                        <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
                         <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id}}" entrada="{{producto.entrada.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                     </tr>
                     {% endfor %}
@@ -122,7 +124,7 @@
                 </table>
 
 
-            <button id="Crear" name="entrada" type="submit" class="btn btn-success">Crear</button>
+            <button id="Crear" type="submit" class="btn btn-success">Crear</button>
             <a id="cerrar" type="button" class="btn btn-secondary cerrar"  href="{% url 'pendientes_entrada' %}">Cerrar</a>
     </form>
 </div>
@@ -167,6 +169,29 @@ document.getElementById("producto").addEventListener("change", function(element)
     //console.log(other_select);
 });
 
+
+
+
+var rows = document.getElementById("mytbl").rows.length
+var CrearBtn = document.getElementById('Crear')
+console.log('rows',rows)
+
+CrearBtn.addEventListener('click',function(){
+
+    if (rows < 1){
+        Swal.fire({
+                "title":"Error",
+                "text":"No tienes productos seleccionados",
+                "icon":"error",
+            })
+        CrearBtn.setAttribute('name','')
+        } else {
+            CrearBtn.setAttribute('name','entrada')
+
+        }
+
+})
+
 var updateBtn = document.getElementById('update-entrada')
     let count=0;
     let suma=0;
@@ -180,7 +205,7 @@ updateBtn.addEventListener('click',function(){
         var current_option = select.options[select.selectedIndex];
         var current_cantidad = current_option.getAttribute('cantidad')
         producto = current_option.getAttribute('target');
-        console.log('producto',producto)
+        console.log('current_option',current_option)
         producto_id = current_option.getAttribute('producto');
         var select = document.getElementById('producto');
         var cantidad_form = document.getElementById('id_cantidad');
@@ -210,16 +235,15 @@ updateBtn.addEventListener('click',function(){
                     "text":"La cantidad ingresada debe ser mayor que 0",
                     "icon":"error",
                 })
-            } else {
+        } else {
             count += 1;
-
+            current_option.setAttribute("class","d-none");
             select.value = default_sel;
 
 
             ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id);
 
-            var botonCrear = document.getElementById("Crear");
-            botonCrear.setAttribute("class","btn btn-success");
+
             }
     });
 
@@ -248,6 +272,7 @@ updateBtn.addEventListener('click',function(){
         location.reload()
     })
 }
+
 
 
 

@@ -1,3 +1,0 @@
-﻿codigo,nombre ,unidad,familia,subfamilia,especialista(True/False),iva(True/False),activo(True/False),servicio(True/False)
-M0006,Disco de corte de 7 1/2 x 1/16,Pieza,Consumibles,Ferretero,False,True,False,False
-M0007,Disco de desbaste de 4 1/2 x 1/4,Pieza,Consumibles,Ferretero,False,True,False,False

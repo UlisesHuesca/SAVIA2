@@ -1,16 +1,17 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
-{% block title %}Product Page{% endblock %}
+{% block title %}Productos{% endblock %}
 </head>
 <body>
 {% block content %}
 <hr>
 <hr>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
 <div class="row my-4">
     <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -40,7 +41,7 @@
 <div class = "row mt-2 bg-white">
         <div class="col-12">
             <div class="card card-body">
-                <h5>Filtro de Solicitudes Autorizadas</h5>
+                <h5>Filtro de Productos</h5>
                 <hr>
                 {% csrf_token %}
                 <form method="GET">
@@ -70,10 +71,10 @@
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
                             <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_products' %}">
-                                <i class="fa-solid fa-file-arrow-up"> CARGA MASIVA</i>
+                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
                             </a>
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-product' %}">
-                                <i class="fa-solid fa-plus"> AGREGAR PRODUCTO</i>
+                                <i class="fa-solid fa-plus"> Agregar Producto</i>
                             </a>
                         </li>
                     </ul>
@@ -91,11 +92,11 @@
                     <th scope="col">Subfamilia</th>
                     <th scope="col">Unidad</th>
                     <th scope="col">IVA</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Editar</th>
                 </tr>
             </thead>
             <tbody>
-                {% for item in items %}
+                {% for item in items_list %}
                 <tr>
                     <th scope="row">{{item.codigo}}</th>
                     <td>{{item.nombre}}</td>
@@ -113,7 +114,34 @@
             </tbody>
         </table>
     </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if items_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{items_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
 
+            {% for item in items_list.paginator.page_range %}
+                {% if items_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > items_list.number|add:'-2' and item < items_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if items_list.paginator.num_pages > items_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{items_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{ items_list.paginator.num_pages}}">{{items_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if items_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{items_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{items_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+        </ul>
+    </nav>
 <!--Este es el modal-->
         <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
             <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
@@ -153,7 +181,9 @@
     var myModal = document.getElementById('dialog')
 
     myModal.addEventListener('hidden.bs.modal', function (event) {
-        location.reload();
+        setTimeout(function(){
+            location.reload();
+        },3000);
     })
   </script>
 {% endblock %}

@@ -88,9 +88,11 @@
                 <tr>
                     <th scope="col">Folio</th>
                     <th scope="col">Solicitado por</th>
+                    <th scope="col">Autorización N1</th>
+                    <th scope="col">Autorización N2</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
-                    <th scope="col">Operación</th>
+                    <th scope="col">Área</th></th>
                     <th scope="col">Creado</th>
                     <th scope="col">Acción</th>
                 </tr>
@@ -100,9 +102,11 @@
                 <tr>
                     <th scope="row">{{orden.folio}}</th>
                     <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
+                    <td>{{orden.superintendente}}</td>
+                    <td>{{orden.supervisor}}</td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
-                    <td>{{orden.operacion}}</td>
+                    <td>{{orden.area}}</td>
                     <td>{{orden.created_at}}</td>
                     <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
                     <a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>

@@ -14,7 +14,7 @@
 <hr>
 <div class = "row mt-2 bg-white">
     <ul class="nav nav-pills" >
-        <li class="nav-item mx-2 pl-5">
+        <!--<li class="nav-item mx-2 pl-5">
             <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
                 <i class="fa-solid fa-file-excel fa-2xl"></i>
             </button>
@@ -23,11 +23,11 @@
             <button type="button" class="btn btn-outline-danger">
                 <i class="fa-solid fa-file-pdf fa-2xl"></i>
             </button>
-        </li>
+        </li>-->
     </ul>
 </div>
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
 <div class="row my-4">
     <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -64,7 +64,7 @@
                     <th scope="col">Solicitado por</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
-                    <th scope="col">Operación</th>
+                     <th scope="col">Área</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Proveedor</th>
                     <th scope="col">Costo</th>
@@ -75,19 +75,22 @@
             <tbody>
                 {% for compra in compras %}
                 <tr>
-                    <th scope="row">{{compra.folio}}</th>
+                    <th scope="row">{{compra.get_folio}}</th>
                     <td>{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
                     <td>{{compra.req.orden.proyecto.nombre}}</td>
                     <td>{{compra.req.orden.subproyecto.nombre}}</td>
-                    <td>{{compra.req.orden.operacion}}</td>
+                    <td>{{compra.req.orden.area}}</td>
                     <td>{{compra.created_at}} </td>
                     <td>{{compra.proveedor}}</td>
-                    <td>{{compra.costo_oc}}</td>
+                    <td>${{compra.costo_oc}}</td>
                     <td>{{compra.cond_de_pago.nombre}}</td>
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'autorizar-oc2' compra.id %}"><i class="fa-solid fa-check"></i></a>
+                            </li>
+                            <li class="nav-item mx-2">
+                                <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}">R<i class="fa-solid fa-backward"></i></a>
                             </li>
                             <li class="nav-item mx-2">
                                 <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>

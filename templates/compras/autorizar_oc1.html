@@ -7,6 +7,33 @@
 </head>
 <body>
 {% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
     <div class="modal-content">
         <div class="modal-header">
             <h5 class="modal-title" id="compra" value={{compra.id}}>Compra: {{compra.folio}}</h5>
@@ -18,7 +45,7 @@
                     <thead>
                         <tr>
                         <th scope="col">Concepto</th>
-                        <th scope="col">Monto</th>
+                        <th scope="col">Monto/Descripción</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -34,9 +61,27 @@
                             <th scope="col">Presupuesto Subproyecto:</th>
                             <th scope="col" id="subproyecto" value={{compra.req.orden.subproyecto}}>{{compra.req.orden.subproyecto.presupuesto}}</th>
                         </tr>
+                        <tr>
+                            <th scope="col">Solicitud:</th>
+                            <th scope="col">{{compra.req.orden.folio}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Solicitante:</th>
+                            <th scope="col">{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Proveedor</th>
+                            <th scope="col">{{compra.proveedor}}</th>
+                        </tr>
+                        {% if compra.deposito_comprador %}
+                        <tr>
+                            <th scope="col">Comentario:</th>
+                            <th scope="col"  style="color:#3e92cc" id="subproyecto">Esta OC se depositará a la cuenta del colaborador(a): {{compra.deposito_colaborador.staff.first_name}} {{compra.deposito_colaborador.staff.last_name}}</th>
+                        </tr>
+                        {% endif %}
                         <tr style="color:#3e92cc">
                             <th scope="col">Importe OC:</th>
-                            <th scope="col">{{costo_oc}}</th>
+                            <th scope="col">$ {{costo_oc}}</th>
                         </tr>
                         {% if compra.costo_fletes > 0 %}
                         <tr style="color:#3e92cc">
@@ -45,16 +90,17 @@
                         </tr>
                         <tr style="color:#3e92cc">
                             <th scope="col">Total OC:</th>
-                            <th scope="col">{{costo_total}}</th>
+                            <th scope="col">$ {{costo_total}}</th>
                         </tr>
                         {% endif %}
                         <tr>
                             <th scope="col">Porcentaje Gasto/Subproyecto:</th>
                             <th scope="col"> {{porcentaje}}</th>
                         </tr>
+
                         <tr>
                             <th scope="col">Presupuesto remanente:*</th>
-                            <th scope="col" id="resta">{{resta}}</th>
+                            <th scope="col" id="resta">$ {{resta}}</th>
                         </tr>
                     </tbody>
                 </table>
@@ -68,6 +114,7 @@
                             <th scope="col-2">Código</th>
                             <th scope="col-3">Artículos</th>
                             <th scope="col-3">Cantidad</th>
+                            <th scope="col-3">P.U.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -77,6 +124,7 @@
                             <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
                             <td>{{producto.producto.producto.articulos.producto.producto.nombre}}</td>
                             <td>{{producto.cantidad}}</td>
+                            <td>${{producto.precio_unitario}}</td>
                         </tr>
                    {% endfor %}
                    </tbody>

@@ -19,6 +19,7 @@ urlpatterns = [
     path('compras/autorizar_oc1/<int:pk>/', views.autorizar_oc1, name='autorizar-oc1'),
     path('compras/autorizar_oc2/<int:pk>/', views.autorizar_oc2, name='autorizar-oc2'),
     path('salida_material/oc_pdf/<int:pk>/', views.render_oc_pdf, name='oc-pdf'),
+    path('compras/productos_oc/<int:pk>/', views.productos_oc,name='productos-oc')
     ]
 
 if settings.DEBUG:

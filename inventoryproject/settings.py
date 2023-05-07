@@ -50,6 +50,10 @@ INSTALLED_APPS = [
     'tesoreria.apps.TesoreriaConfig',
     'entradas.apps.EntradasConfig',
     'user.apps.UserConfig',
+    'cobranza.apps.CobranzaConfig',
+    'gastos.apps.GastosConfig',
+    'viaticos.apps.ViaticosConfig',
+
 
 
 # Extensions - installed with pip3 / requirements.txt
@@ -58,6 +62,7 @@ INSTALLED_APPS = [
     'djmoney',
     'widget_tweaks',
     'simple_history',
+    'django.contrib.humanize'
 ]
 
 MIDDLEWARE = [
@@ -96,10 +101,20 @@ WSGI_APPLICATION = 'inventoryproject.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.2/ref/settings/#databases
 
+#DATABASES = {
+#    'default': {
+#        'ENGINE': 'django.db.backends.sqlite3',
+#        'NAME': BASE_DIR / 'db.sqlite3',
+#    }
+#}
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.mysql',
+        'NAME': 'UlisesHuesca$default',
+        'USER': 'UlisesHuesca',
+        'PASSWORD': 'peruzzi25',
+        'HOST': 'UlisesHuesca.mysql.pythonanywhere-services.com',
     }
 }
 
@@ -164,9 +179,17 @@ LOGIN_REDIRECT_URL ='dashboard-index'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = '587'
-EMAIL_HOST_USER = 'saviax.vordcab@gmail.com'
-EMAIL_HOST_PASSWORD = 'kjnaifllvqivexci'
+#EMAIL_HOST = 'smtp.gmail.com'
+#EMAIL_PORT = '587'
+#EMAIL_HOST_USER = 'saviax.vordcab@gmail.com'
+#EMAIL_HOST_PASSWORD = 'yzhzxcdkmmamxchq'
+#EMAIL_USE_TLS = True
+#EMAIL_USE_SSL = False
+
+EMAIL_HOST = 'mail.vordtec.com'
+EMAIL_PORT = '26'
+EMAIL_HOST_USER = 'savia@vordtec.com'
+EMAIL_HOST_PASSWORD = 'MjUaQ*46852'
 EMAIL_USE_TLS = True
-EMAIL_USE_SSL = False
+
+USE_THOUSAND_SEPARATOR = True

@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Solicitudes para Surtir{% endblock %}
@@ -15,11 +16,15 @@
     <div class = "row mt-2 bg-white">
         <div class="col-12">
             <div class="card card-body">
-                <h5>Filtro de Solicitudes Autorizadas para Surtir</h5>
+                <h5>Filtro de Solicitudes Autorizadas</h5>
                 <hr>
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row g-12">
+                    <label for="myfilter.form.folio" class="col-sm-auto col-form-label text-right my-2"><strong>Solicitud:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.solicitud|add_class:'form-control'}}
+                    </div>
                     <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Código:</strong></label>
                     <div class="col-auto my-2">
                         {{myfilter.form.codigo|add_class:'form-control'}}
@@ -31,10 +36,6 @@
                     <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right my-2"><strong>Nombre:</strong></label>
                     <div class="col-auto my-2">
                         {{myfilter.form.nombre|add_class:'form-control'}}
-                    </div>
-                     <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right my-2"><strong>Apellido:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.apellido|add_class:'form-control'}}
                     </div>
                     <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right my-2"><strong>Proyecto:</strong></label>
                     <div class="col-auto my-2">
@@ -73,11 +74,19 @@
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
                         </li>
-                        <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada-orden' %}">
-                                Requisitar
-                            </a>
-                        </li>
+                        {% if usuario.tipo.almacenista == True %}
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-2">
+                                <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                    <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'solicitud-autorizada' %}">Surtir</a>
+                                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitudes-auotorizadas-pendientes' %}">Pendientes</a>
+                                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada-orden' %}">Requisitar</a>
+                                  </div>
+                            </li>
+                        </ul>
+                        {% else %}
+                        <div class="d-none">
+                        {% endif %}
                     </ul>
                 </form>
             </div>
@@ -86,7 +95,7 @@
     <!-- Aquí terminan el encabezado de los filtros -->
 
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
 <div class="row my-4">
     <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -124,34 +133,63 @@
                     <th scope="col">Solicitado por</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
-                    <th scope="col">Artículo</th>
-                    <th scope="col">Aprobado</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">Precio</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Cantidad Solicitada</th>
+                    <th scope="col">Cantidad Apartada</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Creado</th>
                     <th scope="col">Acción</th>
+                    <th scope="col">Documentos</th>
                 </tr>
             </thead>
             <tbody>
-                {% for producto in productos %}
+                {% for producto in productos_list %}
                 <tr>
                     <th scope="row">{{producto.articulos.orden.folio}}</th>
                     <td>{{producto.articulos.orden.staff.staff.first_name}} {{producto.articulos.orden.staff.staff.last_name}}</td>
                     <td>{{producto.articulos.orden.proyecto.nombre}}</td>
                     <td>{{producto.articulos.orden.subproyecto.nombre}}</td>
-                    <td>{{producto.articulos.producto.producto.codigo}} {{producto.articulos.producto.producto.nombre}}</td>
-                    <td>{{producto.articulos.orden.approved_at}}</td>
+                    <td>{{producto.articulos.producto.producto}}</td>
                     <td>{{producto.articulos.cantidad}}</td>
-                    <td>{{producto.precio}}</td>
+                    <td>{{producto.articulos.producto.cantidad_apartada}}</td>
+                    {% if producto.salida == True %}
+                    <td>Salida realizada</td>
+                    {% else %}
+                    <td>Salida no realizada aún</td>
+                    {% endif %}
+                    <td>{{producto.articulos.orden.created_at}}</td>
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-2">
-                                {% if producto.surtir == True and producto.salida == False %}
-                                <div class='visible' >
+                                <a type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-orden' producto.articulos.orden.id %}">Detalle</a>
+                            </li>
+                            <li class="nav-item mx-2">
+                                {% if orden.requisitar == True and producto.requisitar == True %}
+                                <div class='visible'>
                                 {% else %}
                                 <div class='invisible'>
                                 {% endif %}
-                                    <a type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'salida-material' producto.id %}">Surtir</a>
+                                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-detalle' producto.articulos.orden.id %}">Requisitar</a>
                                 </div>
+                            </li>
+                            <li class="nav-item mx-2">
+                                {% if producto.surtir == True %}
+                                <div class='visible'>
+                                {% else %}
+                                <div class='invisible'>
+                                {% endif %}
+                                    <a type="button" class="btn btn-outline-success" href="{% url 'salida-material' producto.articulos.orden.id %}">Surtir</a>
+                                     <a type="button" class="btn btn-outline-success" href="{% url 'liberar-stock' producto.articulos.orden.id %}">Cambiar Proyecto</a>
+                                </div>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-2">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' producto.articulos.orden.id %}">
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </a>
                             </li>
                         </ul>
                     </td>
@@ -159,6 +197,23 @@
                 {% endfor %}
             </tbody>
         </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if productos_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+                {% for page in productos_list.paginator  %}
+                {% if productos_list.number == page.number %}
+                <li class="page-item active" aria-current="page"><a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if productos_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 </div>
 

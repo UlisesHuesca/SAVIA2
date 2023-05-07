@@ -9,7 +9,7 @@
 </head>
 <body>
 {% block content %}
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
 <div>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         {% if messages %}
@@ -39,16 +39,16 @@
 <div class="modal-dialog modal-lg"  id="document" role="document">
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Compra: {{compra.folio}} | Pago: {{pago.id}}</h5>
+            <h5 class="modal-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Compra: {{compra.get_folio}} | Pago: {{pago.id}}</h5>
             <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
         </div>
 
         <div class="modal-body">
-                <table class='table table-dark table striped'>
+                <table class='table table-dark table-striped'>
                     <thead>
                         <tr>
                         <th scope="col">Proveedor:</th>
-                        <th scope="col">{{compra.proveedor.nombre.nombre}}</th>
+                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -56,6 +56,24 @@
                             <th scope="col">RFC:</th>
                             <th scope="col">{{compra.proveedor.nombre.rfc}}</th>
                         </tr>
+                        {% if compra.deposito_comprador %}
+                         <tr>
+                            <th scope="col">Comentario:</th>
+                            <th scope="col">Esta depósito se realizará a la cuenta de {{compra.deposito_comprador.staff.first_name}} {{compra.deposito_comprador.staff.last_name}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Banco Colaborador:</th>
+                            <th scope="col">{{compra.deposito_comprador.banco.nombre}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Cuenta:</th>
+                            <th scope="col">{{compra.proveedor.cuenta}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Clabe:</th>
+                            <th scope="col">{{compra.proveedor.clabe}}</th>
+                        </tr>
+                        {% else %}
                         <tr>
                             <th scope="col">Banco:</th>
                             <th scope="col">{{compra.proveedor.banco}}</th>
@@ -68,24 +86,38 @@
                             <th scope="col">Clabe:</th>
                             <th scope="col">{{compra.proveedor.clabe}}</th>
                         </tr>
+                        {% if compra.referencia %}
+                        <tr>
+                            <th scope="col">Referencia</th>
+                            <th scope="col">{{compra.referencia}}</th>
+                        </tr>
+                        {% else %}
+                        <tr> </tr>
+                        {% endif %}
+
+                        {% endif %}
                     </tbody>
                 </table>
                 <hr>
-                <table class='table table-dark table striped'>
+                <table class='table table-dark table-striped'>
                     <thead>
                         <tr>
                         <th scope="col">Importe Compra</th>
-                        <th id="importe" value={{compra.costo_oc}} moneda={{compra.moneda.nombre}} scope="col">{{compra.costo_oc}}</th>
+                        <th id="importe" value={{compra.costo_oc}} moneda={{compra.moneda.nombre}} scope="col">${{compra.costo_oc|floatformat:2}}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
+                            <th scope="col">Impuestos</th>
+                            <th scope="col">${{compra.costo_iva}}</th>
+                        </tr>
+                        <tr>
                             <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">{{suma_pagos}}</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:2}}</th>
                         </tr>
                         <tr>
                             <th scope="col">Remanente:</th>
-                            <th>{{remanente}}</th>
+                            <th>${{remanente|floatformat:2}}</th>
                         </tr>
                     </tbody>
                 </table>
@@ -95,6 +127,8 @@
                         <tr>
                             <th scope="col-3">#</th>
                             <th scope="col-2">Pagado</th>
+                            <th scope="col-2">Moneda</th>
+                            <th scope="col-2">T.C.</th>
                             <th scope="col-3">Cuenta</th>
                             <th scope="col-3">Fecha</th>
                             <th scope="col-2">Pago</th>
@@ -105,6 +139,12 @@
                         <tr>
                             <th scope="row">{{p.id}}</th>
                             <td>{{p.monto}}</td>
+                            <td>{{p.cuenta.moneda}}</td>
+                            {% if p.tipo_de_cambio %}
+                            <td>{{p.tipo_de_cambio}}</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
                             <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
                             <td>{{p.pagado_date}}</td>
                             <td>
@@ -140,15 +180,20 @@
                         {{form.cuenta|add_class:'form-control'}}
                     </div>
                     <label for="form.monto_pagado" class="col-auto col-form-label my-1"><strong>Monto:</strong></label>
-                    <div class="col-4">
+                    <div class="col-2">
+                        <input type="text" class="form-control d-none" id="monto_dolares" placeholder="Dolares...">
                         {{form.monto|add_class:'form-control'}}
                     </div>
-                    {% if compra.moneda.nombre == "Dólares" %}
-                    <label for="form.monto_pagado" id="lbl_tipo" class="col-auto col-form-label my-1"><strong>Tipo de Cambio:</strong></label>
+                </div>
+                <div class="row my-2">
+                    <label for="form.monto_pagado" id="lbl_tipo" class="col-auto col-form-label my-1 d-none"><strong>Tipo de Cambio:</strong></label>
                     <div class="col-2">
                         {{form.tipo_de_cambio|add_class:'form-control'}}
                     </div>
-                    {% endif %}
+                    <label for="form_product.precio_unitario" class="col-sm-2 col-form-label d-none" id="lbl_calculo"><strong>Cálculo previo:</strong></label>
+                    <div id="calculo_previo" class="col-sm-2">
+
+                    </div>
                     <div class="col-8">
                     <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
                         {{form.comprobante_pago|add_class:'form-control'}}
@@ -157,7 +202,7 @@
             </div>
 
             <div class="modal-footer">
-                <h6>Registrar pago la OC: {{compra.folio}}</h6>
+                <h6>Registrar pago la OC: {{compra.get_folio}}</h6>
                 <button id="myBtn" type = "submit" class="btn btn-success">Registrar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
@@ -171,42 +216,110 @@
 <script>
 var compra = document.getElementById("importe");
 var compra_moneda = compra.getAttribute("moneda");
-var monto_moneda = document.getElementById("id_monto_1");
-var tipo_cambio = document.getElementById("id_tipo_de_cambio_1");
+var monto_moneda = document.getElementById("id_monto");
+var tipo_cambio = document.getElementById("id_tipo_de_cambio");
+var lbl_tipo = document.getElementById("lbl_tipo");
 if (tipo_cambio) {
     tipo_cambio.setAttribute("class","form-control d-none");
+    
 }
 
-monto_moneda.setAttribute("class","form-control d-none");
-console.log(compra_moneda);
 
-if (compra_moneda == "Dólares"){
-    monto_moneda.selectedIndex = 1;
+
+//if (compra_moneda == "DOLARES"){
+  //  monto_moneda.selectedIndex = 1;
+//}
+
+document.getElementById('monto_dolares').addEventListener('change',(event)=>{
+    var tipo = document.getElementById("id_tipo_de_cambio").value;
+    var monto = document.getElementById('monto_dolares').value;
+    var monto_real = document.getElementById('id_monto')
+    console.log(tipo)
+    calculo_previo = document.getElementById('calculo_previo')
+    var mybtn = document.getElementById('myBtn')
+    if (compra_moneda == "PESOS"){
+        if (monto <= 0 || tipo_cambio <= 0){
+            mybtn.setAttribute('class','btn btn-success d-none')
+    }
 }
+    if (compra_moneda == "DOLARES"){ 
+    if (monto <= 0 || tipo <= 0){
+            mybtn.setAttribute('class','btn btn-success d-none')
+        } else {
+            total_dolares = monto*tipo
+            calculo_previo.innerHTML = parseFloat(total_dolares).toFixed(4)
+            monto_real.value = parseFloat(total_dolares).toFixed(4)   
+        }
+    }
+    });
+
+
+    document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>{
+    var tipo = document.getElementById("id_tipo_de_cambio").value;
+    var monto = document.getElementById('monto_dolares').value;
+    var monto_real = document.getElementById('id_monto')
+    console.log(tipo)
+    calculo_previo = document.getElementById('calculo_previo')
+    //var other_select = document.getElementById('id_producto')
+    if (compra_moneda == "PESOS"){
+        if (monto <= 0 || tipo_cambio <= 0){
+            mybtn.setAttribute('class','btn btn-success d-none')
+    }
+}
+    if (compra_moneda == "DOLARES"){  
+    if (monto <= 0 || tipo_cambio <= 0){
+            mybtn.setAttribute('class','btn btn-success d-none')
+        } else {
+            total_dolares = monto*tipo
+            calculo_previo.innerHTML = parseFloat(total_dolares).toFixed(4)
+            monto_real.value = parseFloat(total_dolares).toFixed(4)
+            
+        }
+    }
+
+    })
+
 
 document.getElementById("cuentas").addEventListener("change", function(element){
     var select = document.getElementById("cuentas");
-    var tipo_cambio_txt = document.getElementById("tipo_de_cambio_0")
+    var tipo_cambio_txt = document.getElementById("tipo_de_cambio")
     var current_option = select.options[select.selectedIndex];
     var target = current_option.getAttribute('target');
     var moneda = current_option.getAttribute('moneda');
     var select_cuenta = document.getElementById('id_cuenta');
+    var monto = document.getElementById('id_monto')
+    var monto_dolares = document.getElementById('monto_dolares')
+    var calculo_previo = document.getElementById('calculo_previo')
 
 
     //Aquí hago que desaparezca o aparezca el campo de tipo de cambio según la moneda seleccionada
     var lbl_tipo_cambio = document.getElementById('lbl_tipo');
-    var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio_0');
-        if (moneda == "Dólares"){
-            lbl_tipo_cambio.removeAttribute("class");
-            txt_tipo_cambio.removeAttribute("class");
-            lbl_tipo_cambio.setAttribute("class","col-auto col-form-label my-1 d-none");
-            txt_tipo_cambio.setAttribute("class","form-control d-none");
-        } else if (compra_moneda == "Dólares"){
+    var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio');
+    var lbl_calculo = document.getElementById('lbl_calculo')    
+           
+        if (compra_moneda == "DOLARES"){
+            if (moneda == "PESOS"){
+            
+            monto.setAttribute('class','form-control d-none');
+            monto_dolares.setAttribute('class','form-control')
+            lbl_calculo.setAttribute('class','col-sm-2 col-form-label')
             lbl_tipo_cambio.removeAttribute("class");
             txt_tipo_cambio.removeAttribute("class");
             lbl_tipo_cambio.setAttribute("class","col-auto col-form-label my-1");
             txt_tipo_cambio.setAttribute("class","form-control");
+            } else if (moneda =="DOLARES") {
+            monto.value = ""
+            tipo_cambio.value=""
+            calculo_previo.innerHTML = ""
+            lbl_calculo.setAttribute('class','col-sm-2 col-form-label d-none')
+            lbl_tipo_cambio.removeAttribute("class");
+            txt_tipo_cambio.removeAttribute("class");
+            lbl_tipo_cambio.setAttribute("class","col-auto col-form-label my-1 d-none");
+            txt_tipo_cambio.setAttribute("class","form-control d-none");
+            monto_dolares.setAttribute('class','form-control d-none')
+            monto.setAttribute('class','form-control');
         }
+    }
     //Aqui le doy la instruccion para que cambie la seleccion de acuerdo a lo seleccionado en el primer desplegable de cuentas
     select_cuenta.selectedIndex = target;
 });

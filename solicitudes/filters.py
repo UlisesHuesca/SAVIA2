@@ -3,13 +3,27 @@ from dashboard.models import Inventario, Order, ArticulosOrdenados
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
 
+
 class InventoryFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='producto__nombre', lookup_expr='icontains')
     codigo = CharFilter(field_name='producto__codigo', lookup_expr='icontains')
 
+
     class Meta:
         model = Inventario
         fields = ['producto','codigo',]
+
+
+class InventarioFilter(django_filters.FilterSet):
+    codigo = CharFilter(field_name='producto__codigo', lookup_expr='icontains')
+    producto = CharFilter(field_name='producto__nombre', lookup_expr='icontains')
+    familia = CharFilter(field_name='producto__familia__nombre', lookup_expr='icontains')
+    ubicacion = CharFilter(field_name='ubicacion', lookup_expr='icontains')
+    estante = CharFilter(field_name='estante', lookup_expr='icontains')
+
+    class Meta:
+        model = Inventario
+        fields = ['producto','codigo','familia','ubicacion','estante',]
 
 class SolicitudesFilter(django_filters.FilterSet):
     #staff = CharFilter(field_name='staff__staff', lookup_expr='icontains')

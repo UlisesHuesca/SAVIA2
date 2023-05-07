@@ -40,9 +40,11 @@
                     <th scope="col">Tipo de cambio</th>
                     <th scope="col">Producto</th>
                     <th scope="col">Cantidad Actual</th>
-                    <th scope="col">Cantidad Anterior</th>
                     <th scope="col">Cantidad Apartada</th>
+                    <th scope="col">Cantidad Entradas</th>
+                    <th scope="col">Cantidad Anterior</th>
                     <th scope="col">Cantidad Apartada Anterior</th>
+                    <th scope="col">Cantidad Entradas Anterior</th>
                     <th scope="col">Precio</th>
                 </tr>
             </thead>
@@ -55,9 +57,11 @@
                     <td>{{registro.history_type}}</td>
                     <td>{{registro.producto}}</td>
                     <td>{{registro.cantidad}}</td>
-                    <td>{{registro.prev_record.cantidad}}</td>
                     <td>{{registro.cantidad_apartada}}</td>
+                    <td>{{registro.cantidad_entradas}}</td>
+                    <td>{{registro.prev_record.cantidad}}</td>
                     <td>{{registro.prev_record.cantidad_apartada}}</td>
+                    <td>{{registro.prev_record.cantidad_entradas}}</td>
                     <td>{{registro.price}}</td>
                 </tr>
                 {% endfor %}

@@ -1,0 +1,1 @@
+[{"model": "user.almacen", "pk": 1, "fields": {"nombre": "Motos", "distrito": 2}}, {"model": "user.almacen", "pk": 2, "fields": {"nombre": "Petroleras", "distrito": 2}}]

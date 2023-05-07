@@ -1,3 +1,0 @@
-﻿codigo,nombre ,unidad,familia,subfamilia,especialista(True/False),iva(True/False),activo(True/False),servicio(True/False)
-M0008,Cemento,Pieza,Consumibles,Ferretero,False,True,False,False
-M0009,Grava,Pieza,Consumibles,Ferretero,False,True,False,False
