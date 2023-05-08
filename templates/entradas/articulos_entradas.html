@@ -97,11 +97,11 @@
                 <div id="referencialbl" class="col-sm-1 d-none">
                     <label for="form.referencia" class="col"><strong>Referencia:</strong></label>
                 </div>
-                <div class="col-sm">    
+                <div class="col-sm">
                     {{form.referencia|add_class:"form-control d-none"}}
                 </div>
             </div>
-            <div class="row">    
+            <div class="row">
                 <div class="col-sm-1">
                     <a class="btn btn-success" id='update-entrada' type="submit" name="entrada_articulo">
                        Agregar
@@ -221,7 +221,7 @@ if (checkref.checked){
                 "icon":"error",
             })
         cantidad.value = 1
-    } 
+    }
 }
 })
 
@@ -246,7 +246,7 @@ updateBtn.addEventListener('click',function(){
         var value = select.options[select.selectedIndex].value;
         var default_op = document.getElementById('default_sel');
         cantidad_ingresada = cantidad_form.value;
-        
+
         var referencia = referencia_div.value
         console.log(referencia)
         action = "add"
@@ -288,12 +288,12 @@ updateBtn.addEventListener('click',function(){
 
 
 document.getElementById("SwitchReferencia").addEventListener("change", function(element){
-    var checkref = document.getElementById("SwitchReferencia");    
+    var checkref = document.getElementById("SwitchReferencia");
 	console.log('referencia check:'+checkref.checked);
 	var lbl_referencia = document.getElementById('referencialbl');
     var referencia = document.getElementById('id_referencia')
     var cantidad = document.getElementById('id_cantidad')
-    
+
 
 
 	if (checkref.checked){
