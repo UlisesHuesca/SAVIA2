@@ -43,7 +43,7 @@ class Solicitud_Viatico(models.Model):
     @property
     def monto_pagado(self):
         pagado = self.pago_set.all()
-        pagado.filter(hecho=True)
+        pagado = pagado.filter(hecho = True)
         total = sum([pago.monto for pago in pagado])
         return total
 

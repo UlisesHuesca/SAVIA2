@@ -29,7 +29,7 @@ class Pago(models.Model):
     gasto = models.ForeignKey(Solicitud_Gasto, on_delete = models.CASCADE, null=True, blank=True)
     viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True, blank=True)
     cuenta = models.ForeignKey (Cuenta, on_delete = models.CASCADE, null=True)
-    monto = models.DecimalField(max_digits=14,decimal_places=4, null=True)
+    monto = models.DecimalField(max_digits=14,decimal_places=4, null=True, default=0)
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
     comentario = models.CharField(max_length=100, null=True, blank=True)
     pagado_date = models.DateField(null=True, blank=True)
@@ -43,8 +43,8 @@ class Pago(models.Model):
         facturas = self.facturas_set.all()
         return facturas
 
-    def __str__(self):
-        return f'{self.id} - {self.oc} - {self.cuenta}'
+    #def __str__(self):
+     #   return f'{self.id} - {self.oc} - {self.cuenta}'
 
 class Facturas(models.Model):
     oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, related_name='Compra')

@@ -6,6 +6,7 @@ from django.core.mail import EmailMessage
 from user.models import Profile
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from dashboard.models import Inventario
+from django.http import HttpResponse
 from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form
@@ -374,7 +375,7 @@ def viaticos_pagos(request, pk):
     conceptos = Concepto_Viatico.objects.filter(viatico=viatico)
     pagos = Pago.objects.filter(viatico=viatico, hecho=True)
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
-    pago, created = Pago.objects.get_or_create(tesorero = usuario, distrito = usuario.distrito, hecho=False)
+    pago, created = Pago.objects.get_or_create(tesorero = usuario, distrito = usuario.distrito, hecho=False, viatico=viatico)
     form = Pago_Viatico_Form()
     remanente = viatico.get_total - viatico.monto_pagado
 
@@ -383,15 +384,20 @@ def viaticos_pagos(request, pk):
 
         if form.is_valid():
             pago = form.save(commit = False)
-            pago.viatico = viatico
+            #pago.viatico = viatico
             pago.pagado_date = date.today()
             pago.pagado_hora = datetime.now().time()
             pago.hecho = True
-            total_pagado = viatico.monto_pagado  + pago.monto
+            total_pagado = round(viatico.monto_pagado  + pago.monto, 2)
+            total_sol = round(viatico.get_total,2)
+            if total_sol == total_pagado:
+                flag = True
+            else:
+                flag = False
             if total_pagado > viatico.get_total:
                 messages.error(request,f'{usuario.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del viático')
             else:
-                if viatico.monto_pagado == viatico.get_total:
+                if flag:
                     viatico.pagada = True
                     viatico.save()
                 pago.save()
@@ -445,10 +451,10 @@ def facturas_viaticos(request, pk):
                 factura.hecho = True
                 factura.subido_por = usuario
                 factura.save()
-                messages.success(request,f'Haz registrado tu factura')
+                messages.success(request,'Haz registrado tu factura')
                 return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
             else:
-                messages.error(request,f'No está validando')
+                messages.error(request,'No está validando')
 
 
     context={
