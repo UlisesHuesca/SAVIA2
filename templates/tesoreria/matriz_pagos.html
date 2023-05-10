@@ -183,18 +183,18 @@
                             <li class="nav-item mx-1">
                                 {% if pago.oc %}
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}">
-                                <i class="fa-solid fa-file-pdf"></i></a>    
-                                {% endif %} 
+                                <i class="fa-solid fa-file-pdf"></i></a>
+                                {% endif %}
                                 {% if pago.gasto %}
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}">
-                                <i class="fa-solid fa-file-pdf"></i>      
+                                <i class="fa-solid fa-file-pdf"></i>
                                 </a>
                                 {% endif %}
                                 {% if pago.viatico %}
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}">
-                                    <i class="fa-solid fa-file-pdf"></i>      
+                                    <i class="fa-solid fa-file-pdf"></i>
                                 </a>
-                                {% endif %}    
+                                {% endif %}
                             </li>
                         </ul>
                     </td>
@@ -205,11 +205,12 @@
     </div>
 
 <!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document">
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
 
     </div>
 </div>
+
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -219,10 +220,10 @@ dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
 });
-//var modal = document.getElementById('dialog')
-//modal.on('hidden.bs.modal', function () {
-//    location.reload();
-//});
+var modal = document.getElementById('dialog')
+modal.on('hidden.bs.modal', function () {
+    location.reload();
+});
 
 </script>
 {% endblock %}

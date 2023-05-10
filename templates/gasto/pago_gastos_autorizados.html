@@ -114,6 +114,7 @@
                 <tr>
                     <th scope="col">Gasto</th>
                     <th scope="col">Solicitado por</th>
+                    <th scope="col">Solicitado para</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th scope="col">Autorizado</th>
@@ -128,6 +129,7 @@
                 <tr>
                     <th scope="row">{{gasto.id}}</th>
                     <td>{{gasto.staff.staff.first_name}} {{gasto.staff.staff.last_name}}</td>
+                    <td>{{gasto.colaborador.staff.first_name}} {{gasto.colaborador.staff.last_name}}</td>
                     <td>{{gasto.proyecto.nombre}}</td>
                     <td>{{gasto.subproyecto.nombre}}</td>
                     <td>{{gasto.approbado_fecha2}} </td>

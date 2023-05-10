@@ -203,7 +203,7 @@
 
             <div class="modal-footer">
                 <h6>Registrar pago la OC: {{compra.get_folio}}</h6>
-                <button id="myBtn" type = "submit" class="btn btn-success">Registrar</button>
+                <button id="myBtn" type="submit" class="btn btn-success">Registrar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </div>
         </form>
@@ -221,7 +221,7 @@ var tipo_cambio = document.getElementById("id_tipo_de_cambio");
 var lbl_tipo = document.getElementById("lbl_tipo");
 if (tipo_cambio) {
     tipo_cambio.setAttribute("class","form-control d-none");
-    
+
 }
 
 
@@ -237,24 +237,26 @@ document.getElementById('monto_dolares').addEventListener('change',(event)=>{
     console.log(tipo)
     calculo_previo = document.getElementById('calculo_previo')
     var mybtn = document.getElementById('myBtn')
+
     if (compra_moneda == "PESOS"){
         if (monto <= 0 || tipo_cambio <= 0){
             mybtn.setAttribute('class','btn btn-success d-none')
+        }
     }
-}
-    if (compra_moneda == "DOLARES"){ 
+    if (compra_moneda == "DOLARES"){
     if (monto <= 0 || tipo <= 0){
             mybtn.setAttribute('class','btn btn-success d-none')
         } else {
             total_dolares = monto*tipo
             calculo_previo.innerHTML = parseFloat(total_dolares).toFixed(4)
-            monto_real.value = parseFloat(total_dolares).toFixed(4)   
+            monto_real.value = parseFloat(total_dolares).toFixed(4)
         }
     }
     });
 
 
-    document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>{
+if (compra_moneda == "DOLARES"){
+document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>{
     var tipo = document.getElementById("id_tipo_de_cambio").value;
     var monto = document.getElementById('monto_dolares').value;
     var monto_real = document.getElementById('id_monto')
@@ -266,19 +268,19 @@ document.getElementById('monto_dolares').addEventListener('change',(event)=>{
             mybtn.setAttribute('class','btn btn-success d-none')
     }
 }
-    if (compra_moneda == "DOLARES"){  
+    if (compra_moneda == "DOLARES"){
     if (monto <= 0 || tipo_cambio <= 0){
             mybtn.setAttribute('class','btn btn-success d-none')
         } else {
             total_dolares = monto*tipo
             calculo_previo.innerHTML = parseFloat(total_dolares).toFixed(4)
             monto_real.value = parseFloat(total_dolares).toFixed(4)
-            
+
         }
     }
 
-    })
-
+})
+}
 
 document.getElementById("cuentas").addEventListener("change", function(element){
     var select = document.getElementById("cuentas");
@@ -295,11 +297,11 @@ document.getElementById("cuentas").addEventListener("change", function(element){
     //Aquí hago que desaparezca o aparezca el campo de tipo de cambio según la moneda seleccionada
     var lbl_tipo_cambio = document.getElementById('lbl_tipo');
     var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio');
-    var lbl_calculo = document.getElementById('lbl_calculo')    
-           
+    var lbl_calculo = document.getElementById('lbl_calculo')
+
         if (compra_moneda == "DOLARES"){
             if (moneda == "PESOS"){
-            
+
             monto.setAttribute('class','form-control d-none');
             monto_dolares.setAttribute('class','form-control')
             lbl_calculo.setAttribute('class','col-sm-2 col-form-label')

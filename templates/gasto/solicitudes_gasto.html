@@ -50,7 +50,7 @@
                 <!--<ul class="nav nav-pills">
                     <li class="nav-item mx-2">
                         <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
-                    </li> 
+                    </li>
                     <li class="nav-item mx-2">
                         <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
                     </li>
@@ -87,6 +87,7 @@
                 <tr>
                     <th scope="col">Folio</th>
                     <th scope="col">Solicitado por</th>
+                    <th scope="col">Solicitado para:</th>
                     <th scope="col">Autorización N1</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
@@ -101,6 +102,7 @@
                 <tr>
                     <th scope="row">{{orden.id}}</th>
                     <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
+                    <td>{{orden.colaborador.staff.first_name}} {{orden.colaborador.staff.last_name}}</td>
                     <td>{{orden.superintendente.staff.first_name}} {{orden.superintendente.staff.last_name}}</td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>

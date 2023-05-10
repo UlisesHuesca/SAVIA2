@@ -562,9 +562,9 @@ def autorizar_oc2(request, pk):
                 f'Compra Autorizada {compra.get_folio}',
                 f'Estimado(a) {compra.proveedor.contacto} | Proveedor {compra.proveedor.nombre}:\n\nEstás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.get_folio}.\n\n Atte. {compra.creada_por.staff.first_name} {compra.creada_por.staff.last_name} \nVORDTEC DE MÉXICO S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                 'savia@vordtec.com',
-                ['ulises_huesc@hotmail.com'],[compra.proveedor.email],
+                ['ulises_huesc@hotmail.com','lizeth.ojeda@vordtec.com','osiris.bautista@vordtec.com',compra.proveedor.email,'ulises_huesc@hotmail.com'],  #compra.proveedor.email,
                 )
-            email.attach(f'OC_folio_{compra.get_folio}.pdf',archivo_oc,'application/pdf')
+            email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
             email.send()
             for producto in productos:
                 if producto.producto.producto.articulos.producto.producto.especialista == True:
@@ -575,7 +575,7 @@ def autorizar_oc2(request, pk):
                         'savia@vordtec.com',
                         ['ulises_huesc@hotmail.com'],
                         )
-                    email.attach(f'OC_folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
+                    email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
                     email.send()
         messages.success(request, f'{usuario.staff.first_name} has autorizado la solicitud {compra.get_folio}')
 

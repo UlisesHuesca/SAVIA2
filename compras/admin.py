@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Compra, ArticuloComprado, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, Estatus_proveedor, Uso_cfdi, Cond_credito, Moneda, Estado
 
 class CompraAdmin(admin.ModelAdmin):
-    list_display = ('id','folio', 'req','proveedor','autorizado1','autorizado2')
+    list_display = ('id','folio', 'req','proveedor','oc_autorizada_por2','cond_de_pago','autorizado1','autorizado2')
     list_filter = ('proveedor',)
 
 class ArticuloComprado_Admin(admin.ModelAdmin):
