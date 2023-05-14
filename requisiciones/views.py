@@ -3,12 +3,12 @@ from solicitudes.models import Proyecto, Subproyecto
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Inventario_Batch, Product, Marca
 from dashboard.forms import  Inventario_BatchForm
 from user.models import Profile, User
-from .models import ArticulosRequisitados, Requis
+from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos
 from entradas.models import Entrada, EntradaArticulo
 from requisiciones.models import Salidas, ValeSalidas
 from django.contrib.auth.decorators import login_required
 from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter
-from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form
+from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
 from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -24,6 +24,7 @@ import json
 import csv
 from django.core.paginator import Paginator
 import ast # Para leer el csr many to many
+import decimal
 
 #PDF generator
 import io
@@ -88,12 +89,7 @@ def liberar_stock(request, pk):
 @login_required(login_url='user-login')
 def solicitud_autorizada(request):
     usuario = Profile.objects.get(staff__id=request.user.id)
-    #productos= Requis.objects.filter(complete=True, autorizar=None)
-    #Aquí aparecen todas las ordenes, es decir sería el filtro para administrador, el objeto Q no tiene propiedad conmutativa
-    #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(requisitar=True), articulos__orden__autorizar = True )
-
-    #if usuario.tipo.superintendente == True:
-        #productos= Requis.objects.filter(complete=True, autorizar=None, orden__superintendente=usuario)
+    
     if usuario.tipo.almacen == True:
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True)
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal")
@@ -161,10 +157,175 @@ def solicitudes_autorizadas_pendientes(request):
     return render(request, 'requisiciones/solicitudes_autorizadas_no_surtidas.html',context)
 
 
+def update_devolucion(request):
+    data= json.loads(request.body)
+    action = data["action"]
+    cantidad = decimal.Decimal(data["val_cantidad"])
+    devolucion = data["devolucion"]
+    producto_id = data["id"]
+    comentario = data["comentario"]
+    producto = ArticulosparaSurtir.objects.get(id = producto_id)
+    devolucion = Devolucion.objects.get(id = devolucion)
+    inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto)
+    #orden = Order.objects.get(id = devolucion.orden.id)
+
+   
+    if action == "add":
+        cantidad_total = producto.cantidad - cantidad
+        if cantidad_total < 0:
+            messages.error(request,f'La cantidad que se quiere egresar sobrepasa la cantidad disponible. {cantidad_total} mayor que {producto.cantidad}')
+        else:
+            devolucion_articulos, created = Devolucion_Articulos.objects.get_or_create(producto=producto, vale_devolucion = devolucion, complete=False)
+            producto.seleccionado = True
+            producto.cantidad = producto.cantidad - cantidad
+            inv_del_producto.cantidad = inv_del_producto.cantidad + cantidad
+            inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - cantidad
+            inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
+            devolucion_articulos.cantidad = cantidad
+            devolucion_articulos.comentario = comentario
+            devolucion_articulos.precio = producto.precio
+            devolucion_articulos.complete = True
+            #inv_del_producto.price = ((inv_del_producto.get_total_producto) + (devolucion_articulos.cantidad * devolucion_articulos.precio))/(devolucion_articulos.cantidad+inv_del_producto.cantidad+inv_del_producto.cantidad_apartada)
+
+            if producto.cantidad == 0:  
+                producto.surtir = False
+            messages.success(request,'Has agregado producto de manera exitosa')
+            producto.save()
+            inv_del_producto.save()
+            devolucion_articulos.save()
+    if action == "remove":
+        item = Devolucion_Articulos.objects.get(producto=producto, vale_devolucion = devolucion, complete = True)
+        inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
+        inv_del_producto.cantidad = inv_del_producto.cantidad - item.cantidad       
+        producto.seleccionado = False
+        producto.surtir= True
+        producto.cantidad = producto.cantidad + item.cantidad
+        inv_del_producto._change_reason = f'Esta es una cancelación de una devolucion {item.id}'
+        producto.save()
+        messages.success(request,'Has eliminado un producto de tu listado')
+        inv_del_producto.save()
+        item.delete()
+
+    return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
+
+
+@login_required(login_url='user-login')
+def salida_material(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    orden = Order.objects.get(id = pk)
+    productos= ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
+    vale_salida, created = ValeSalidas.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
+    salidas = Salidas.objects.filter(vale_salida = vale_salida)
+    cantidad_items = salidas.count()
+
+
+    formVale = ValeSalidasForm()
+    form = SalidasForm()
+    users = Profile.objects.all()
+
+    if request.method == 'POST':
+        formVale = ValeSalidasForm(request.POST, instance=vale_salida)
+        cantidad_salidas = 0
+        cantidad_productos = productos.count()
+        for producto in productos:
+            producto.seleccionado = False
+            if producto.cantidad == 0:
+                producto.salida=True
+                producto.surtir=False
+                cantidad_salidas = cantidad_salidas + 1
+            producto.save()
+        if cantidad_productos == cantidad_salidas:
+            orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
+            orden.save()
+        if formVale.is_valid():
+            formVale.save()
+            vale = formVale.save(commit=False)
+            vale.complete = True
+            messages.success(request,'La salida se ha generado de manera exitosa')
+            return redirect('reporte-salidas')
+        if not formVale.is_valid():
+            messages.error(request,'No capturaste el usuario')
+
+    context= {
+        'productos':productos,
+        'form':form,
+        'formVale':formVale,
+        'users': users,
+        #'disponible':disponible,
+        'vale_salida':vale_salida,
+        'cantidad_items':cantidad_items,
+        'salidas':salidas,
+        }
+
+    return render(request, 'requisiciones/salida_material.html',context)
+
+@login_required(login_url='user-login')
+def devolucion_material(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    orden = Order.objects.get(id = pk)
+    productos_sel = ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
+    devolucion, created = Devolucion.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
+    productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
+    cantidad_items = productos.count()
+    form = DevolucionArticulosForm()
+    form2 = DevolucionForm()
+
+    form.fields['producto'].queryset = productos_sel
+
+    if request.method == 'POST':
+        if "agregar_devolucion" in request.POST:
+            form2 = DevolucionForm(request.POST, instance=devolucion)
+            if form2.is_valid():
+                devolucion.complete= True
+                devolucion.hora = datetime.now().time()
+                devolucion.fecha = date.today()
+                messages.success(request,f'{usuario.staff.first_name},Has hecho la devolución de manera exitosa')
+                email = EmailMessage(
+                    f'Cancelación de solicitud: {orden.folio}',
+                    f'Estimado {orden.staff.staff.first_name} {orden.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordtec.com',
+                    ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
+                    )
+                email.send()
+                return redirect('solicitud-autorizada')
+
+    context= {
+        'orden':orden, 
+        'productos':productos,
+        'form':form,
+        'form2':form2,
+        'devolucion': devolucion,
+        'cantidad_items':cantidad_items,
+        'productos_sel': productos_sel,
+        }
+
+    return render(request, 'requisiciones/devolucion_material.html',context)
+
+
+def solicitud_autorizada_firma(request):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    #Aquí aparecen todas las ordenes, es decir sería el filtro para administrador
+    productos= Salidas.objects.filter(producto__articulos__orden__autorizar = True, salida_firmada=False)
+    myfilter = SalidasFilter(request.GET, queryset=productos)
+    productos = myfilter.qs
+
+    #Here is where XLSX is generated, using Openpyxl library | Aquí es donde se genera el XLSX
+    if request.method == "POST" and 'btnExcel' in request.POST:
+
+        return convert_solicitud_autorizada_orden_to_xls(productos)
+
+    context= {
+        'productos':productos,
+        'myfilter':myfilter,
+        'usuario':usuario,
+        }
+    return render(request, 'requisiciones/solicitudes_autorizadas_firma.html',context)
+
+
 def update_salida(request):
     data= json.loads(request.body)
     action = data["action"]
-    cantidad = int(data["val_cantidad"])
+    cantidad = decimal.Decimal(data["val_cantidad"])
     salida = data["salida"]
     producto_id = data["id"]
     id_salida =data["id_salida"]
@@ -178,6 +339,7 @@ def update_salida(request):
         suma_entradas = 0
 
     if action == "add":
+        
         cantidad_total = producto.cantidad - cantidad
         if cantidad_total < 0 and inv_del_producto.cantidad > 0:
             cantidad_total = inv_del_producto.cantidad - cantidad
@@ -187,7 +349,7 @@ def update_salida(request):
             salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
             producto.seleccionado = True
             if inv_del_producto.cantidad_apartada > inv_del_producto.cantidad_entradas and suma_entradas <= 0: #Definitoria or inv_del_producto.cantidad_apartada >0:
-                #Voy a crear un vale de salida con producto salida desde al apartado, lo voy a mandar a llamar aqui, si existe, entonces no hay ni resurtimiento ni salidas derivadas de entradas, solo salidas derivadas de inventario
+            #Voy a crear un vale de salida con producto salida desde al apartado, lo voy a mandar a llamar aqui, si existe, entonces no hay ni resurtimiento ni salidas derivadas de entradas, solo salidas derivadas de inventario
                 try:
                     EntradaArticulo.objects.get(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento')
                 except EntradaArticulo.DoesNotExist:
@@ -274,78 +436,6 @@ def update_salida(request):
         item.delete()
 
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
-
-
-@login_required(login_url='user-login')
-def salida_material(request, pk):
-    usuario = Profile.objects.get(staff__id=request.user.id)
-    orden = Order.objects.get(id = pk)
-    productos= ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
-    vale_salida, created = ValeSalidas.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
-    salidas = Salidas.objects.filter(vale_salida = vale_salida)
-    cantidad_items = salidas.count()
-
-
-    formVale = ValeSalidasForm()
-    form = SalidasForm()
-    users = Profile.objects.all()
-
-    if request.method == 'POST':
-        formVale = ValeSalidasForm(request.POST, instance=vale_salida)
-        cantidad_salidas = 0
-        cantidad_productos = productos.count()
-        for producto in productos:
-            producto.seleccionado = False
-            if producto.cantidad == 0:
-                producto.salida=True
-                producto.surtir=False
-                cantidad_salidas = cantidad_salidas + 1
-            producto.save()
-        if cantidad_productos == cantidad_salidas:
-            orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
-            orden.save()
-        if formVale.is_valid():
-            formVale.save()
-            vale = formVale.save(commit=False)
-            vale.complete = True
-            messages.success(request,'La salida se ha generado de manera exitosa')
-            return redirect('reporte-salidas')
-        if not formVale.is_valid():
-            messages.error(request,'No capturaste el usuario')
-
-    context= {
-        'productos':productos,
-        'form':form,
-        'formVale':formVale,
-        'users': users,
-        #'disponible':disponible,
-        'vale_salida':vale_salida,
-        'cantidad_items':cantidad_items,
-        'salidas':salidas,
-        }
-
-    return render(request, 'requisiciones/salida_material.html',context)
-
-
-def solicitud_autorizada_firma(request):
-    usuario = Profile.objects.get(staff__id=request.user.id)
-    #Aquí aparecen todas las ordenes, es decir sería el filtro para administrador
-    productos= Salidas.objects.filter(producto__articulos__orden__autorizar = True, salida_firmada=False)
-    myfilter = SalidasFilter(request.GET, queryset=productos)
-    productos = myfilter.qs
-
-    #Here is where XLSX is generated, using Openpyxl library | Aquí es donde se genera el XLSX
-    if request.method == "POST" and 'btnExcel' in request.POST:
-
-        return convert_solicitud_autorizada_orden_to_xls(productos)
-
-    context= {
-        'productos':productos,
-        'myfilter':myfilter,
-        'usuario':usuario,
-        }
-    return render(request, 'requisiciones/solicitudes_autorizadas_firma.html',context)
-
 
 
 @login_required(login_url='user-login')
@@ -446,7 +536,7 @@ def update_requisicion(request):
     action = data["action"]
     producto_id = data["id"]
     pk = data["requi"]
-    cantidad = int(data["cantidad"])
+    cantidad = decimal.Decimal(data["cantidad"])
 
     requi = Requis.objects.get(id=pk)
     #orden = Order.objects.get(id=requi.orden.id)

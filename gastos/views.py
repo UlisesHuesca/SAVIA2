@@ -368,9 +368,9 @@ def pago_gasto(request, pk):
                 #archivo_oc = attach_oc_pdf(request, gasto.id)
                 email = EmailMessage(
                     f'Gasto Autorizado {gasto.id}',
-                    f'Estimado(a) {gasto.staff.staff}:\n\nEstás recibiendo este correo porque ha sido pagada el gasto con folio: {gasto.id}.\n\n\nVordtec de México S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    f'Estimado(a) {gasto.staff.staff.first_name} {gasto.staff.staff.last_name}:\n\nEstás recibiendo este correo porque ha sido pagado el gasto con folio: {gasto.id}.\n\n\nVordtec de México S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                     'savia@vordtec.com',
-                    ['ulises_huesc@hotmail.com'],[gasto.staff.staff.email],
+                    ['ulises_huesc@hotmail.com',gasto.staff.staff.email],
                     )
                 #email.attach(f'OC_folio_{gasto.id}.pdf',archivo_oc,'application/pdf')
                 email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')

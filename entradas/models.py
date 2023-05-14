@@ -19,8 +19,8 @@ class Entrada(models.Model):
 
 class EntradaArticulo(models.Model):
     entrada = models.ForeignKey(Entrada, on_delete = models.CASCADE, null=True)
-    cantidad = models.PositiveIntegerField(null=True, blank=True)
-    cantidad_por_surtir = models.PositiveIntegerField(null=True, blank=True)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    cantidad_por_surtir = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     articulo_comprado = models.ForeignKey(ArticuloComprado, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     created_at = models.DateTimeField(auto_now_add=True)
@@ -33,7 +33,7 @@ class EntradaArticulo(models.Model):
 
 class Reporte_Calidad(models.Model):
     articulo = models.ForeignKey(EntradaArticulo, on_delete = models.CASCADE, null=True)
-    cantidad = models.PositiveIntegerField(null=True, blank=True)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     comentarios = models.TextField(max_length=200, null=True, blank=True)
     reporte_date = models.DateField(null=True, blank=True)
     reporte_hora = models.TimeField(null=True, blank=True)

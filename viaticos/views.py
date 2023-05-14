@@ -208,7 +208,7 @@ def cancelar_viaticos2(request, pk):
 
 
     if request.method =='POST' and 'btn_cancelar' in request.POST:
-        viatico.autorizar = False
+        viatico.autorizar2 = False
         viatico.approbado_fecha2 = date.today()
         viatico.approved_at_time2 = datetime.now().time()
         viatico.save()

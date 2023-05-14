@@ -181,7 +181,8 @@ class Order(models.Model):
 class ArticulosOrdenados(models.Model):
     producto = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
     orden = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)
-    cantidad = models.IntegerField(default=0, null=True, blank=True)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+
 
     created_at = models.DateTimeField(auto_now_add=True)
 
@@ -195,10 +196,10 @@ class ArticulosOrdenados(models.Model):
 
 class ArticulosparaSurtir(models.Model):
     articulos = models.ForeignKey(ArticulosOrdenados, on_delete = models.CASCADE, null=True)
-    cantidad = models.IntegerField(default=0, null=True, blank= True)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     precio = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     surtir = models.BooleanField(default=False)
-    cantidad_requisitar = models.IntegerField(default=0, null=True, blank=True)
+    cantidad_requisitar = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     comentario = models.CharField(max_length=60, null=True, blank=True)
     requisitar = models.BooleanField(null=True, default=False)
     salida = models.BooleanField(null=True, default=False)

@@ -31,8 +31,8 @@ class Requis(models.Model):
 class ArticulosRequisitados(models.Model):
     producto = models.ForeignKey(ArticulosparaSurtir, on_delete = models.CASCADE, null=True)
     req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True)
-    cantidad = models.IntegerField(default=0, null=True, blank=True)
-    cantidad_comprada = models.IntegerField(default=0, null=True, blank=True)
+    cantidad =  models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    cantidad_comprada =  models.DecimalField(max_digits=14, decimal_places=2, default=0)
     art_surtido = models.BooleanField(null=True, default=False)
     almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Almacen2')
     created_at = models.DateTimeField(auto_now_add=True)
@@ -55,7 +55,7 @@ class ValeSalidas(models.Model):
 class Salidas(models.Model):
     vale_salida = models.ForeignKey(ValeSalidas, on_delete = models.CASCADE, null=True)
     producto = models.ForeignKey(ArticulosparaSurtir, on_delete = models.CASCADE, null=True)
-    cantidad = models.IntegerField(default=0, null=True, blank=True)
+    cantidad =  models.DecimalField(max_digits=14, decimal_places=2, default=0)
     comentario = models.CharField(max_length=100, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
@@ -67,3 +67,23 @@ class Salidas(models.Model):
 
     def __str__(self):
         return f'{self.producto} - {self.cantidad} - {self.created_at}'
+
+
+class Devolucion(models.Model):
+    solicitud = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)
+    almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    created_at = models.DateField(auto_now_add=True)
+    fecha = models.DateField(null=True)
+    hora = models.TimeField(null=True)
+    complete = models.BooleanField(null=True, default=False)
+    comentario = models.TextField(max_length=200, null=True)
+
+class Devolucion_Articulos(models.Model):
+    vale_devolucion = models.ForeignKey(Devolucion, on_delete = models.CASCADE, null=True)
+    producto = models.ForeignKey(ArticulosparaSurtir, on_delete = models.CASCADE, null=True)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    precio = models.DecimalField(max_digits=14, decimal_places=2,default=0)
+    comentario = models.CharField(max_length=100, blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+    complete = models.BooleanField(null=True, default=False)

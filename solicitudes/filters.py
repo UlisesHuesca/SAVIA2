@@ -58,4 +58,13 @@ class SolicitudesProdFilter(django_filters.FilterSet):
     def the_filter(self, queryset, name, value):
         return queryset.filter(Q(orden__staff__staff__first_name__icontains = value) | Q(orden__staff__staff__last_name__icontains = value))
 
+class HistoricalInventarioFilter(django_filters.FilterSet):
+    history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
+    history_user = CharFilter(field_name='history_user', lookup_expr='icontains')
+    producto = CharFilter(field_name='producto__nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = Inventario.history.model
+        fields = ['history_id','history_user','producto']
+
 

@@ -142,8 +142,8 @@ class Compra(models.Model):
 class ArticuloComprado(models.Model):
     producto = models.ForeignKey(ArticulosRequisitados, on_delete = models.CASCADE, null=True)
     oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True)
-    cantidad = models.PositiveIntegerField(null=True, blank=True)
-    cantidad_pendiente = models.PositiveIntegerField(null=True, blank=True)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    cantidad_pendiente = models.DecimalField(max_digits=14, decimal_places=2, null=True)
     entrada_completa = models.BooleanField(default=False)
     seleccionado = models.BooleanField(default=False)
     precio_unitario = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
@@ -154,7 +154,7 @@ class ArticuloComprado(models.Model):
     def get_entradas(self):
         entradas = self.entradaarticulo_set.all()
         #entradas = entradas.filter(entrada__oc = self.oc)
-        cant_entradas = sum([entrada.cantidad for entrada in entradas]) 
+        cant_entradas = sum([entrada.cantidad for entrada in entradas])
         return cant_entradas
 
 

@@ -5,15 +5,17 @@ from compras.models import Compra
 from tesoreria.models import Pago
 from solicitudes.models import Subproyecto, Operacion, Proyecto
 from entradas.models import EntradaArticulo, Entrada
-from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm
+from gastos.models import Entrada_Gasto_Ajuste, Conceptos_Entradas
+from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm, Conceptos_EntradasForm, Entrada_Gasto_AjusteForm
 from dashboard.forms import Inventario_BatchForm
 from user.models import Profile, Distrito, Almacen
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 import json
 from django.db.models import Sum
-from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter
+from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter, HistoricalInventarioFilter
 from django.contrib import messages
+import decimal
 # Import Pagination Stuff
 from django.core.paginator import Paginator
 from datetime import date, datetime
@@ -525,6 +527,122 @@ def inventario(request):
     return render(request,'dashboard/inventario.html', context)
 
 @login_required(login_url='user-login')
+def ajuste_inventario(request):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    productos_sel = Inventario.objects.filter(complete=True, producto__servicio = False, producto__gasto = False)
+    ajuste, created = Entrada_Gasto_Ajuste.objects.get_or_create(almacenista = usuario, completo = False)
+    productos_ajuste = Conceptos_Entradas.objects.filter(entrada = ajuste)
+    cantidad_items = productos_ajuste.count()
+    form = Conceptos_EntradasForm()
+    form2 = Entrada_Gasto_AjusteForm()
+
+    form.fields['concepto_material'].queryset = productos_sel
+
+    if request.method == 'POST':
+        if "agregar_ajuste" in request.POST:
+            form2 = Entrada_Gasto_AjusteForm(request.POST, instance=ajuste)
+            if form2.is_valid():
+                ajuste.completo= True
+                ajuste.completado_hora = datetime.now().time()
+                ajuste.completado_fecha = date.today()
+                messages.success(request,f'{usuario.staff.first_name},Has hecho la devolución de manera exitosa')
+                #email = EmailMessage(
+                #    f'Ajuste de producto: {ajuste.id}',
+                #    f'Estimado {usuario.staff.first_name} {usuario.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                #    'savia@vordtec.com',
+                #    ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
+                #    )
+                #email.send()
+                ajuste.save()
+                return redirect('solicitud-inventario')
+
+    context= {
+        'productos_ajuste':productos_ajuste,
+        'form':form,
+        'form2':form2,
+        'ajuste': ajuste,
+        'cantidad_items':cantidad_items,
+        'productos_sel': productos_sel,
+        }
+
+    return render(request, 'dashboard/ajuste_inventario.html',context)
+
+def update_ajuste(request):
+    data= json.loads(request.body)
+    action = data["action"]
+    cantidad = decimal.Decimal(data["cantidad"])
+    ajuste = data["ajuste"]
+    producto_id = int(data["id"])
+    precio = decimal.Decimal(data["precio"])
+    
+    ajuste = Entrada_Gasto_Ajuste.objects.get(id = ajuste)
+    producto = Inventario.objects.get(id=producto_id)
+    
+    
+    if action == "add":
+        productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto, requisitar=True)
+        producto.price = ((precio * cantidad)+ (producto.cantidad * producto.price))/(producto.cantidad + cantidad)
+        producto.cantidad = producto.cantidad + cantidad 
+        articulo, created = Conceptos_Entradas.objects.get_or_create(concepto_material=producto, entrada = ajuste)
+        articulo.precio_unitario = precio
+        articulo.cantidad = cantidad
+        articulo.save()
+        for item in productos_por_surtir:
+            if producto.cantidad >= item.cantidad_requisitar:
+                item.cantidad = item.cantidad_requisitar
+                item.surtir = True
+                item.cantidad_requisitar = 0
+                item.requisitar = False
+            else:
+                item.cantidad = producto.cantidad
+                item.cantidad_requisitar = item.cantidad_requisitar - producto.cantidad 
+            producto.cantidad = producto.cantidad - item.cantidad
+            producto.cantidad_apartada = producto.cantidad_apartada + item.cantidad
+            producto.save()
+            item.save()
+        producto._change_reason = f'Esta es una ajuste desde un surtimiento de inventario {ajuste.id}'
+        messages.success(request,'Has agregado producto de manera exitosa')
+        producto.save()
+        ajuste.save()
+    if action == "remove":
+        articulo = Conceptos_Entradas.objects.get(concepto_material = producto, entrada = ajuste)
+        productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto, requisitar=False)
+        if (producto.cantidad_apartada + producto.cantidad - articulo.cantidad) == 0:
+            producto.price = 0
+        else:
+            producto.price = (((producto.cantidad_apartada + producto.cantidad) * producto.price)-(articulo.precio_unitario * articulo.cantidad))/(producto.cantidad + producto.cantidad_apartada - articulo.cantidad)
+        cantidad_devuelta = articulo.cantidad
+        for item in productos_por_surtir:
+            if cantidad_devuelta > 0:
+                if item.cantidad < cantidad_devuelta:
+                    item.cantidad_requisitar = item.cantidad_requisitar + item.cantidad
+                    item.cantidad = item.cantidad - item.cantidad_requisitar   
+                    cantidad_devuelta = cantidad_devuelta - item.cantidad_requisitar
+                    producto.cantidad_apartada = producto.cantidad_apartada - item.cantidad_requisitar
+                    producto.cantidad = producto.cantidad - cantidad_devuelta
+                elif item.cantidad >= cantidad_devuelta:
+                    item.cantidad_requisitar = item.cantidad_requisitar + cantidad_devuelta
+                    item.cantidad = item.cantidad - cantidad_devuelta
+                    producto.cantidad_apartada =  producto.cantidad_apartada - cantidad_devuelta
+                    cantidad_devuelta = 0
+                if item.cantidad_requisitar > 0:
+                    item.requisitar = True
+                else:
+                    item.requisitar = False
+                if item.cantidad > 0:
+                    item.surtir = True
+                else:
+                    item.surtir = False
+            producto.save()
+            item.save()
+        producto._change_reason = f'Esta es una ajuste desde un surtimiento de inventario {ajuste.id}'
+        producto.save()
+        messages.success(request,'Has eliminado un producto de tu listado')
+        articulo.delete()
+    return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
+
+
+@login_required(login_url='user-login')
 def upload_batch_inventario(request):
 
     form = Inventario_BatchForm(request.POST or None, request.FILES or None)
@@ -657,8 +775,17 @@ def inventario_update_modal(request, pk):
 def historico_inventario(request):
     registros = Inventario.history.all()
 
+    myfilter = HistoricalInventarioFilter(request.GET, queryset=registros)
+    registros = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+
     context = {
-        'registros':registros,
+        'registros_list':registros_list,
+        'myfilter':myfilter,
         }
 
     return render(request,'dashboard/historico_inventario.html',context)

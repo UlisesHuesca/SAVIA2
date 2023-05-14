@@ -115,7 +115,8 @@
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th scope="col">Área</th>
-                    <th scope="col">Creado</th>
+                    <th scope="col">Creada</th>
+                    <th scope="col">Req. Autorizada</th>
                     <th scope="col">Proveedor</th>
                     <th scope="col">Costo</th>
                     <th scope="col">Status Pago</th>
@@ -133,6 +134,7 @@
                     <td>{{compra.req.orden.subproyecto.nombre}}</td>
                     <td>{{compra.req.orden.area}}</td>
                     <td>{{compra.created_at}} </td>
+                    <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
                     <td>{{compra.proveedor}}</td>
                     <td>${{compra.costo_oc}}</td>
                     {% if compra.pagada %}

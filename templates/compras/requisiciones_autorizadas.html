@@ -78,7 +78,7 @@
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th scope="col">Área</th>
-                    <th scope="col">Creado</th>
+                    <th scope="col">Autorizado</th>
                     <th scope="col">Acción</th>
                 </tr>
             </thead>
@@ -91,7 +91,7 @@
                     <td>{{req.orden.proyecto.nombre}}</td>
                     <td>{{req.orden.subproyecto.nombre}}</td>
                     <td>{{req.orden.area}}</td>
-                    <td>{{req.orden.created_at}} </td>
+                    <td>{{req.approved_at}} {{req.approved_at_time}} </td>
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">

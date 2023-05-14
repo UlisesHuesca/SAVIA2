@@ -163,7 +163,7 @@
                             <li class="nav-item mx-2">
                                 <a type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-orden' producto.articulos.orden.id %}">Detalle</a>
                             </li>
-                            <li class="nav-item mx-2">
+                            <!--<li class="nav-item mx-2">
                                 {% if orden.requisitar == True and producto.requisitar == True %}
                                 <div class='visible'>
                                 {% else %}
@@ -171,7 +171,7 @@
                                 {% endif %}
                                     <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-detalle' producto.articulos.orden.id %}">Requisitar</a>
                                 </div>
-                            </li>
+                            </li>-->
                             <li class="nav-item mx-2">
                                 {% if producto.surtir == True %}
                                 <div class='visible'>
@@ -179,8 +179,10 @@
                                 <div class='invisible'>
                                 {% endif %}
                                     <a type="button" class="btn btn-outline-success" href="{% url 'salida-material' producto.articulos.orden.id %}">Surtir</a>
-                                     <a type="button" class="btn btn-outline-success" href="{% url 'liberar-stock' producto.articulos.orden.id %}">Cambiar Proyecto</a>
                                 </div>
+                            </li>
+                            <li class="nav-item mx-2">
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'devolucion-material' producto.articulos.orden.id %}">R<i class="fa-solid fa-backward"></i></a>
                             </li>
                         </ul>
                     </td>

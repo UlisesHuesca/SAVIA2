@@ -118,18 +118,18 @@ def update_oc(request):
     precio = data["val_precio"]
     oc = Compra.objects.get(id=pk)
     if action == "add":
-        cantidad_total = productos.cantidad_comprada + int(cantidad)
+        cantidad_total = productos.cantidad_comprada + decimal.Decimal(cantidad)
         if cantidad_total > productos.cantidad:
             messages.error(request,f'La cantidad que se quiere comprar sobrepasa la cantidad requisitada {cantidad_total} mayor que {productos.cantidad}')
         else:
             comp_item, created = ArticuloComprado.objects.get_or_create(oc=oc, producto=productos)
-            productos.cantidad_comprada = productos.cantidad_comprada + int(cantidad)
+            productos.cantidad_comprada = productos.cantidad_comprada + decimal.Decimal(cantidad)
             messages.success(request,f'Estos son los productos comprados ahora {productos.cantidad_comprada}')
             if productos.cantidad_comprada == productos.cantidad:
                 productos.art_surtido = True
             if comp_item.cantidad == None:
                 comp_item.cantidad = 0
-            comp_item.cantidad = comp_item.cantidad + int(cantidad)
+            comp_item.cantidad = comp_item.cantidad + decimal.Decimal(cantidad)
             comp_item.precio_unitario = precio
             productos.sel_comp = True
             comp_item.save()

@@ -1,0 +1,283 @@
+{% extends 'partials/base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Devolución{% endblock %}
+</head>
+<body>
+
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-4">
+        <div class="box-element" id="form-wrapper">
+            <div class="card-header mt-3 mb-4">
+            <!-- Aqui es el encabezado de los filtros -->
+                <h5>Ajuste de Inventario AJ{{ajuste.id}}</h5>
+            </div>
+            <div id="Solicitud-info">
+                    <form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        {% if cantidad_items > 0 %}
+                        <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Comentario General:</strong></label>
+                        <div class="col-sm-8">
+                        {{form2.comentario|add_class:"form-control"}}
+                        </div>
+                        <div class="col-3">
+                            <input class="btn btn-outline-info btn-block btn-lg my-4" name="agregar_ajuste" type="submit" value="Ajustar">
+                        </div>
+                        {% endif %}
+                    </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="box-element">
+            <h5 id="ajuste" vale="{{ajuste.id}}">Productos</h5>
+            <hr>
+
+            <div class='cart-row'>
+                <form method="POST">
+                <div class="row">
+                    <label class="col-auto col-form-label"><strong>Productos:</strong></label>
+                        <div class="col-sm-8">
+                            {{form.concepto_material|add_class:"form-control d-none"}}
+                            <input type="text" list="productos_sel" id="txt_producto" valor="{{productos_sel.id}}" placeholder="Productos..." class="form-control">
+
+                            <datalist id="productos_sel" name='productos_sel'>
+                                {% for item in productos_sel %}
+                                <option status="" valor="{{item.id}}" value="{{item}}"></option>
+                                {% endfor %}
+                            </datalist>
+                        </div>               
+                </div>
+                <div class="row my-2">
+                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Cantidad:</strong></label>
+                    <div class="col-sm-2">
+                        {{form.cantidad|add_class:"form-control"}}
+                    </div>
+                
+                
+                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Precio:</strong></label>
+                    <div class="col-sm-2">
+                        {{form.precio_unitario|add_class:"form-control"}}
+                    </div>
+                    <div class="col-sm-1">
+                        <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                            Agregar
+                        </a>
+                    </div>
+                </div>
+                <hr>
+
+                <table class="table table-ligth table-striped mx-1">
+                {% csrf_token %}
+                <thead>
+                        <tr>
+                        <th scope="col" salidas="{{salidas}}">#</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <!--<th scope="col">Precio</th>-->
+                        <th scope="col">P.U.</th>
+                        </tr>
+                </thead>
+                <tbody>
+                    {% for item in productos_ajuste %}
+                        <tr>
+                            <th scope="col"><img class="row-image" src="{{item.producto.articulos.producto.producto.imageURL}}"></th>
+                            <th scope="col">{{item.concepto_material.producto.codigo|unlocalize}}</th>
+                            <th scope="col">{{item.concepto_material.producto.nombre}}</th>
+                            <th scope="col">{{item.cantidad|floatformat:2}}</th>
+                            <!--<th scope="col">${{item.precio}}</th>-->
+                            <th scope="col">${{item.precio_unitario|floatformat:2}}</th>
+                            <th scope="col">
+                            <td>
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" ajuste ="{{item.entrada.id}}" cantidad="{{item.cantidad}}" precio="{{item.precio_unitario}}" producto_id="{{item.concepto_material.id}}" action="remove">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                </form>
+                </table>
+            </div>
+            <hr>
+            <h5>Artículos: {{cantidad_items}}</h5>
+
+        </div>
+    </div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+var updateBtn = document.getElementById('update-purchase')
+let count=0;
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let vale = document.getElementById('ajuste');
+        ajuste = vale.getAttribute('vale')
+        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
+        var select = document.getElementById('id_concepto_material');
+        var current_option = select.options[select.selectedIndex];
+        var id = current_option.value;
+        
+        var producto = current_option.getAttribute('producto');
+        //Esta es la cantidad establecida en la requisición
+        var cantidad = current_option.getAttribute('cantidad');
+        //var cantidad_sol = current_option.getAttribute('cantidad_sol');
+        
+        var quantity = document.getElementById('id_cantidad');
+        //Esta es la cantidad comprada de acuerdo a la requisición
+        var cantidad = quantity.value;
+        var precio = document.getElementById("id_precio_unitario").value
+
+        var action = "add";
+
+        if (!id) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de seleccionar algún valor de la lista",
+                    "icon":"error",
+                })
+        //Si "la cantidad comprada" es menor que cero
+        } else if (quantity.value <= 0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            console.log('cantidad:',cantidad)
+            console.log('ajuste:',ajuste)
+            console.log('id:',id)
+            console.log('action:',action)
+            console.log('precio:',precio)
+
+            ActualizarArticulos(ajuste,id,cantidad,action,precio);
+            //current_option.setAttribute("class","d-none");
+            //select.value = default_sel;
+
+            //document.getElementById("id_cantidad").value= null;
+            //document.getElementById("id_precio_unitario_0").value= null;
+        }
+
+})
+
+function deleteRow(element) {
+    let btn_delete = document.getElementById('delete');
+    let ajuste = element.getAttribute('ajuste')
+    let id = element.getAttribute('producto_id');
+    cantidad = element.getAttribute('cantidad');
+    var action = "remove"
+    var precio = 0
+    ActualizarArticulos(ajuste,id,cantidad,action,precio);
+}
+
+
+
+function ActualizarArticulos(ajuste,id,cantidad,action,precio){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/solicitudes/update_ajuste/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'ajuste':ajuste, 'id':id, 'cantidad':cantidad, 'action':action,'precio':precio})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+document.getElementById("txt_producto").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_producto");
+    var browserChildren = document.getElementById('productos_sel').children;
+    var other_select = document.getElementById('id_concepto_material');
+   
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value == select.value) {
+            //console.log(browserChildren[i])
+            //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            //console.log(id)
+            let status = browserChildren[i].getAttribute('status')
+            console.log(id)
+
+
+            other_select.value = id;
+            cont = 1
+            }
+        }
+
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+        status_txt.setAttribute("class","row my-2 d-none")
+    }
+});
+
+
+</script>
+{% endblock %}
+</body>
+</html>
+

@@ -173,7 +173,7 @@ def articulos_entrada(request, pk):
 
 def update_entrada(request):
     data = json.loads(request.body)
-    cantidad = int(data["cantidad_ingresada"])
+    cantidad = decimal.Decimal(data["cantidad_ingresada"])
     action = data["action"]
     producto_id = int(data["producto"])
     pk = int(data["entrada_id"])
@@ -329,7 +329,7 @@ def reporte_calidad(request, pk):
 
     if request.method =='POST':
         form = Reporte_CalidadForm(request.POST, instance = reporte_actual)
-        if int(request.POST['cantidad']) <=  restantes_liberacion:
+        if decimal.Decimal(request.POST['cantidad']) <=  restantes_liberacion:
             if not request.POST['autorizado'] == None:
                 if form.is_valid():
                     item = form.save()

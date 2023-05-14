@@ -113,3 +113,24 @@ class Articulo_Gasto(models.Model):
         impuesto = self.get_iva
         total = round(self.get_subtotal + impuesto + self.get_otros_impuestos)
         return total
+
+class Entrada_Gasto_Ajuste(models.Model):
+    gasto = models.ForeignKey(Solicitud_Gasto, on_delete = models.CASCADE, null=True, blank=True)
+    almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completado_fecha = models.DateField(null=True)
+    completado_hora = models.TimeField(null=True)
+    completo = models.BooleanField(default=False)
+    comentario = models.TextField(max_length=200, null=True)
+
+    def __str__(self):
+        return f'{self.id}'
+
+
+class Conceptos_Entradas(models.Model):
+    concepto_material = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
+    entrada = models.ForeignKey(Entrada_Gasto_Ajuste, on_delete= models.CASCADE, null=True)
+    cantidad = models.DecimalField(max_digits=10, decimal_places=6, null=True)
+    precio_unitario = models.DecimalField(max_digits=14, decimal_places=6, null=True)
+    agotado = models.BooleanField(default=False)
+

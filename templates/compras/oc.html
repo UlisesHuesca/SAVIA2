@@ -216,7 +216,7 @@
                     <td scope="col">{{product.producto.producto.articulos.producto.codigo}}</td>
                     <td scope="col">{{product.producto.producto.articulos.producto.producto}}</td>
                     <td scope="col">{{product.cantidad}}</td>
-                    <td scope="col">${{product.precio_unitario}}</td>
+                    <td scope="col">${{product.precio_unitario|floatformat:2}}</td>
                     {% if product.precio_unitario != None  and product.cantidad != None %}
                     <td scope="col">${% widthratio product.precio_unitario 1 product.cantidad %}</td>
                     {% endif %}
@@ -229,17 +229,17 @@
             <thead>
                 <tr>
                     <th scope="col">Subtotal</th>
-                    <td scope="col" id="subtotal">${{subtotal}}</td>
+                    <td scope="col" id="subtotal">${{subtotal|floatformat:2}}</td>
                 </tr>
                 </thead>
             <tbody>
                 <tr>
                     <th scope="col">IVA</th>
-                    <td scope="col" id="iva">${{iva}}</td>
+                    <td scope="col" id="iva">${{iva|floatformat:2}}</td>
                 </tr>
                 <tr>
                     <th scope="col">Total</th>
-                    <td scope="col" id="total">${{total}}</td>
+                    <td scope="col" id="total">${{total|floatformat:2}}</td>
                 </tr>
             </tbody>
             </table>
