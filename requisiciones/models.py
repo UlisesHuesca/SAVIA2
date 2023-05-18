@@ -83,7 +83,7 @@ class Devolucion_Articulos(models.Model):
     producto = models.ForeignKey(ArticulosparaSurtir, on_delete = models.CASCADE, null=True)
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     precio = models.DecimalField(max_digits=14, decimal_places=2,default=0)
-    comentario = models.CharField(max_length=100, blank=True, null=True)
+    comentario = models.CharField(max_length=100, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     complete = models.BooleanField(null=True, default=False)

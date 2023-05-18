@@ -21,12 +21,13 @@ class InventarioAdmin(SimpleHistoryAdmin):
 
 class ArticulosOrdenadosAdmin(admin.ModelAdmin):
     list_display = ('id','orden','producto','cantidad')
+    search_fields = ['producto__producto__nombre']
 
 class ArticulosparaSurtirAdmin(admin.ModelAdmin):
     list_display = ('id','articulos','cantidad', 'surtir','requisitar','cantidad_requisitar','salida','precio')
 
 class OrderAdmin(admin.ModelAdmin):
-    list_display = ('id','folio','staff','proyecto','subproyecto','approved_at','requisitado')
+    list_display = ('id','folio','staff','proyecto','subproyecto','tipo','approved_at','requisitado','requisitar')
 
 class SubfamiliaAdmin(admin.ModelAdmin):
     list_display = ('id','nombre','familia')

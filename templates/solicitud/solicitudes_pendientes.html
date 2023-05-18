@@ -118,17 +118,27 @@
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
                 {% if ordenes_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
                 {% endif %}
-                {% for page in ordenes_list.paginator  %}
-                {% if ordenes_list.number == page.number %}
-                <li class="page-item active" aria-current="page"><a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
-                {% else %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
-                {% endif %}
+
+                {% for item in ordenes_list.paginator.page_range %}
+                    {% if ordenes_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
                 {% endfor %}
+
+                {% if ordenes_list.paginator.num_pages > ordenes_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
                 {% if ordenes_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
                 {% endif %}
             </ul>
         </nav>

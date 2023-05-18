@@ -1,5 +1,5 @@
 import django_filters
-from dashboard.models import Inventario, Order, ArticulosOrdenados
+from dashboard.models import Inventario, Order, ArticulosOrdenados, Product
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
 
@@ -60,11 +60,25 @@ class SolicitudesProdFilter(django_filters.FilterSet):
 
 class HistoricalInventarioFilter(django_filters.FilterSet):
     history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
-    history_user = CharFilter(field_name='history_user', lookup_expr='icontains')
+    history_user = CharFilter(method='nombre', lookup_expr='icontains')
     producto = CharFilter(field_name='producto__nombre', lookup_expr='icontains')
 
     class Meta:
         model = Inventario.history.model
         fields = ['history_id','history_user','producto']
 
+    def nombre(self, queryset, name, value):
+        return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
+
+class HistoricalProductoFilter(django_filters.FilterSet):
+    history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
+    history_user = CharFilter(method='nombre', lookup_expr='icontains')
+    nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = Product.history.model
+        fields = ['history_id','history_user','nombre','codigo']
+
+    def nombre(self, queryset, name, value):
+        return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
 

@@ -13,7 +13,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 import json
 from django.db.models import Sum
-from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter, HistoricalInventarioFilter
+from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter, HistoricalInventarioFilter, HistoricalProductoFilter
 from django.contrib import messages
 import decimal
 # Import Pagination Stuff
@@ -67,7 +67,7 @@ def updateItemRes(request):
     productId = data['productId']
     action = data['action']
 
-    usuario = Profile.objects.get(id=request.user.id)
+    usuario = Profile.objects.get(staff__id=request.user.id)
     producto = Inventario.objects.get(id=productId)
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
@@ -545,7 +545,38 @@ def ajuste_inventario(request):
                 ajuste.completo= True
                 ajuste.completado_hora = datetime.now().time()
                 ajuste.completado_fecha = date.today()
-                messages.success(request,f'{usuario.staff.first_name},Has hecho la devolución de manera exitosa')
+                messages.success(request,f'{usuario.staff.first_name},Has hecho un ajuste de manera exitosa')
+                #ajuste.save()
+                for item_producto in productos_ajuste:
+                    producto = Inventario.objects.get(producto= item_producto.concepto_material.producto)
+                    productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto, requisitar = True)
+                    for item in productos_por_surtir:
+                        orden_producto = Order.objects.get(id = item.articulos.orden.id)
+                        #articulos_orden = ArticulosOrdenados.objects.filter(orden = orden_producto).count()
+                        producto.price = ((item.precio * item.cantidad)+ ((producto.cantidad_apartada + producto.cantidad) * producto.price))/(producto.cantidad + item.cantidad+producto.cantidad_apartada)
+                        producto.cantidad = producto.cantidad + item_producto.cantidad
+                        if producto.cantidad >= item.cantidad_requisitar:
+                            item.cantidad = item.cantidad_requisitar
+                            item.surtir = True
+                            item.cantidad_requisitar = 0
+                            item.requisitar = False
+                        else:
+                            item.cantidad = producto.cantidad
+                            item.cantidad_requisitar = item.cantidad_requisitar - producto.cantidad
+                        producto.cantidad = producto.cantidad - item.cantidad
+                        producto.cantidad_apartada = producto.cantidad_apartada + item.cantidad
+                        producto.save()
+                        item.save()
+                        articulos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__orden=orden_producto)
+                        #Se cuentan los articulos por surtir de esa orden, se cuentan los articulos que ya no requieren requisición
+                        numero_articulos = articulos_por_surtir.count()
+                        numero_articulos_requisitados = articulos_por_surtir.filter(requisitar = False).count()
+                        #si el numero total de articulos por surtir ya no requieren requisición
+                        if numero_articulos == numero_articulos_requisitados:
+                            orden_producto.requisitar = False   # entonces ya no se requiere que la Orden se requisite
+                            orden_producto.save()
+                    producto._change_reason = f'Esta es una ajuste desde un ajuste de inventario {ajuste.id}'
+                    producto.save()
                 #email = EmailMessage(
                 #    f'Ajuste de producto: {ajuste.id}',
                 #    f'Estimado {usuario.staff.first_name} {usuario.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
@@ -553,7 +584,7 @@ def ajuste_inventario(request):
                 #    ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
                 #    )
                 #email.send()
-                ajuste.save()
+
                 return redirect('solicitud-inventario')
 
     context= {
@@ -574,69 +605,17 @@ def update_ajuste(request):
     ajuste = data["ajuste"]
     producto_id = int(data["id"])
     precio = decimal.Decimal(data["precio"])
-    
-    ajuste = Entrada_Gasto_Ajuste.objects.get(id = ajuste)
     producto = Inventario.objects.get(id=producto_id)
-    
-    
+    ajuste = Entrada_Gasto_Ajuste.objects.get(id = ajuste)
     if action == "add":
-        productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto, requisitar=True)
-        producto.price = ((precio * cantidad)+ (producto.cantidad * producto.price))/(producto.cantidad + cantidad)
-        producto.cantidad = producto.cantidad + cantidad 
         articulo, created = Conceptos_Entradas.objects.get_or_create(concepto_material=producto, entrada = ajuste)
         articulo.precio_unitario = precio
         articulo.cantidad = cantidad
         articulo.save()
-        for item in productos_por_surtir:
-            if producto.cantidad >= item.cantidad_requisitar:
-                item.cantidad = item.cantidad_requisitar
-                item.surtir = True
-                item.cantidad_requisitar = 0
-                item.requisitar = False
-            else:
-                item.cantidad = producto.cantidad
-                item.cantidad_requisitar = item.cantidad_requisitar - producto.cantidad 
-            producto.cantidad = producto.cantidad - item.cantidad
-            producto.cantidad_apartada = producto.cantidad_apartada + item.cantidad
-            producto.save()
-            item.save()
-        producto._change_reason = f'Esta es una ajuste desde un surtimiento de inventario {ajuste.id}'
         messages.success(request,'Has agregado producto de manera exitosa')
-        producto.save()
         ajuste.save()
     if action == "remove":
         articulo = Conceptos_Entradas.objects.get(concepto_material = producto, entrada = ajuste)
-        productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto, requisitar=False)
-        if (producto.cantidad_apartada + producto.cantidad - articulo.cantidad) == 0:
-            producto.price = 0
-        else:
-            producto.price = (((producto.cantidad_apartada + producto.cantidad) * producto.price)-(articulo.precio_unitario * articulo.cantidad))/(producto.cantidad + producto.cantidad_apartada - articulo.cantidad)
-        cantidad_devuelta = articulo.cantidad
-        for item in productos_por_surtir:
-            if cantidad_devuelta > 0:
-                if item.cantidad < cantidad_devuelta:
-                    item.cantidad_requisitar = item.cantidad_requisitar + item.cantidad
-                    item.cantidad = item.cantidad - item.cantidad_requisitar   
-                    cantidad_devuelta = cantidad_devuelta - item.cantidad_requisitar
-                    producto.cantidad_apartada = producto.cantidad_apartada - item.cantidad_requisitar
-                    producto.cantidad = producto.cantidad - cantidad_devuelta
-                elif item.cantidad >= cantidad_devuelta:
-                    item.cantidad_requisitar = item.cantidad_requisitar + cantidad_devuelta
-                    item.cantidad = item.cantidad - cantidad_devuelta
-                    producto.cantidad_apartada =  producto.cantidad_apartada - cantidad_devuelta
-                    cantidad_devuelta = 0
-                if item.cantidad_requisitar > 0:
-                    item.requisitar = True
-                else:
-                    item.requisitar = False
-                if item.cantidad > 0:
-                    item.surtir = True
-                else:
-                    item.surtir = False
-            producto.save()
-            item.save()
-        producto._change_reason = f'Esta es una ajuste desde un surtimiento de inventario {ajuste.id}'
-        producto.save()
         messages.success(request,'Has eliminado un producto de tu listado')
         articulo.delete()
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
@@ -789,6 +768,26 @@ def historico_inventario(request):
         }
 
     return render(request,'dashboard/historico_inventario.html',context)
+
+
+@login_required(login_url='user-login')
+def historico_producto(request):
+    registros = Product.history.all()
+
+    myfilter = HistoricalProductoFilter(request.GET, queryset=registros)
+    registros = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+
+    context = {
+        'registros_list':registros_list,
+        'myfilter':myfilter,
+        }
+
+    return render(request,'dashboard/historico_producto.html',context)
 
 
 @login_required(login_url='user-login')

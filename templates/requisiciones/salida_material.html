@@ -2,6 +2,7 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %}Productos{% endblock %}
@@ -84,7 +85,7 @@
                             <option id="default_sel">      </option>
                             {% for producto in productos %}
                             {% if producto.seleccionado == False %}
-                            <option id="js" target="{{producto.id}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
                                 {{producto.articulos.producto}}
                             </option>
                             {% endif %}

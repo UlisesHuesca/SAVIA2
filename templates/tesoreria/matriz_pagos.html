@@ -20,34 +20,23 @@
                 <div class="row g-12">
                     <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Folio:</strong></label>
                     <div class="col-auto my-2">
-                        {{myfilter.form.id|add_class:'form-control'}}
+                        {{myfilter.form.oc|add_class:'form-control'}}
                     </div>
-                    <label for="myfilter.form.proveedor" class="col-sm-auto col-form-label text-right my-2"><strong>Proveedor:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.proveedor|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.monto_pagadp" class="col-sm-auto col-form-label text-right my-2"><strong>Requisición:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.monto_pagado|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.proyecto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
+                    <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Proyecto:</strong></label>
                     <div class="col-auto my-2">
                         {{myfilter.form.proyecto|add_class:'form-control'}}
                     </div>
-                </div>
-                <div class="row g-12">
-                    <label for="myfilter.form.subproyecto" class="col-sm-1 col-form-label text-right"><strong>Subproyecto:</strong></label>
-                    <div class="col-2">
-                        {{myfilter.form.subproyecto|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.start_date" class="col-sm-1 col-form-label text-right"><strong>Desde:</strong></label>
-                    <div class="col-2">
+                    <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Fecha Inicial:</strong></label>
+                    <div class="col-auto my-2">
                         {% render_field myfilter.form.start_date type="date" class="form-control" %}
                     </div>
-                    <label for="myfilter.form.end_date" class="col-sm-1 col-form-label text-right"><strong>Hasta:</strong></label>
-                    <div class="col-2">
-                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Fecha Final:</strong></label>
+                    <div class="col-auto my-2">
+                         {% render_field myfilter.form.end_date type="date" class="form-control" %}
                     </div>
+                </div>
+                <div class="row g-12">
+
                     <div class="col-2">
                         <button class="btn btn-outline-success btn-block" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
@@ -135,7 +124,11 @@
                     {% else %}
                     <td>{{pago.oc.proveedor}}</td>
                     {% endif %}
-                    <td>{{pago.oc.facturas_completas}}</td>
+                    {% if pago.oc.facturas_completas == True %}
+                    <td>Completas</td>
+                    {% else %}
+                    <td>Incompletas</td>
+                    {% endif %}
 
                     {% endif %}
                     {% if pago.gasto %}

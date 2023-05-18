@@ -81,10 +81,10 @@
                                 {% for compra in compras %}
                                     {% if compra.autorizado1 == True and compra.autorizado2 == True  %}
                                     <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                    Compra Autorizada:&nbsp<strong>{{compra.folio}}</strong><i class="fa-solid fa-circle-check"></i>
+                                    Compra Autorizada:&nbsp<strong>{{compra.get_folio}}</strong><i class="fa-solid fa-circle-check"></i>
                                     {% elif compra.autorizado1 == False or compra.autorizada2 == False %}
                                     <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                    Compra Cancelada:&nbsp<strong>{{compra.folio}}</strong><i class="fa-solid fa-circle-check"></i>
+                                    Compra Cancelada:&nbsp<strong>{{compra.get_folio}}</strong><i class="fa-solid fa-circle-check"></i>
                                     {% else %}
                                     <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                     Se ha elaborado la OC:&nbsp<strong>{{compra.folio}}</strong><i class="fa-solid fa-circle-check"></i>
@@ -95,7 +95,7 @@
                             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                                 <div class="accordion-body" style="color:black">
                                     {% for compra in compras %}
-                                    <p><strong>Folio de la OC: </strong>{{compra.folio}}</p>
+                                    <p><strong>Folio de la OC: </strong>{{compra.get_folio}}</p>
                                     {% if compra.autorizado2 == null %}
                                         {% if compra.autorizado1 == null %}
                                         <p class="card-text" style="color:#980F0F">Esta OC aún no ha sido autorizada</p>
@@ -124,10 +124,10 @@
                                     {% if pago.hecho == True %}
                                         {% if pago.oc.pagada == False %}
                                          <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                         Pago parcial: {{pago.oc.folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                         Pago parcial: {{pago.oc.get_folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                          {% else %}
                                         <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                        Pago completo: {{pago.oc.folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                        Pago completo: {{pago.oc.get_folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                         {% endif %}
                                     {% else %}
                                     <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
@@ -141,7 +141,7 @@
                                     {% for pago in pagos %}
 
                                     {% if pago.hecho == True %}
-                                        <p><strong>Folio OC: </strong>{{pago.oc.folio}}</p>
+                                        <p><strong>Folio OC: </strong>{{pago.oc.get_folio}}</p>
                                         <p class="card-text" style="color:black">Este pago fue realizado por: {{pago.tesorero}}</p>
                                         <p class="card-text" style="color:black">El día {{pago.pagado_date}} a las {{pago.pagado_hora}}</p>
                                     {% else %}
@@ -163,10 +163,10 @@
                                 {% for entrada in entradas %}
                                         {% if entrada.oc.entrada_completa == False %}
                                          <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                         Entrada parcial: {{entrada.oc.folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                         Entrada parcial: {{entrada.oc.id}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                          {% else %}
                                         <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                        Entrada completa: {{entrada.oc.folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                        Entrada completa: {{entrada.oc.id}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                         {% endif %}
                                     </button>
                                 {% endfor %}
@@ -175,7 +175,7 @@
                                     <div class="accordion-body" style="color:black">
                                     {% for entrada in entradas %}
                                         {% if entrada.completo == True %}
-                                        <p><strong>Folio OC: </strong>{{entrada.oc.folio}}</p>
+                                        <p><strong>Folio OC: </strong>{{entrada.oc.get_folio}}</p>
                                         <p class="card-text" style="color:black">Este entrada fue realizada por: {{entrada.almacenista}}</p>
                                         <p class="card-text" style="color:black">El día {{entrada.entrada_date}} a las {{entrada.entrada_hora}}</p>
                                         {% endif %}

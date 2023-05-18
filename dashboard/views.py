@@ -216,6 +216,7 @@ def staff(request):
 
 @login_required(login_url='user-login')
 def product(request):
+    usuario = Profile.objects.get(staff=request.user)
     items = Product.objects.filter(completado = True).order_by('codigo')
 
     myfilter=ProductFilter(request.GET, queryset=items)
@@ -227,6 +228,7 @@ def product(request):
     items_list = p.get_page(page)
 
     context = {
+        'usuario':usuario,
         'items': items,
         'myfilter':myfilter,
         'items_list':items_list,

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Solicitud_Viatico, Concepto_Viatico
+from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura
 
 # Register your models here.
 
@@ -15,4 +15,6 @@ class Concepto_ViaticoAdmin(admin.ModelAdmin):
 admin.site.register(Solicitud_Viatico, Solicitud_ViaticoAdmin)
 
 admin.site.register(Concepto_Viatico, Concepto_ViaticoAdmin)
+
+admin.site.register(Viaticos_Factura)
 

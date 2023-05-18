@@ -10,7 +10,7 @@ from .models import Pago, Cuenta, Facturas
 from gastos.models import Solicitud_Gasto
 from viaticos.models import Solicitud_Viatico
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form
-from .filters import PagoFilter
+from .filters import PagoFilter, Matriz_Pago_Filter
 from user.models import Profile
 from django.contrib import messages
 from django.db.models import Sum
@@ -128,14 +128,14 @@ def compras_pagos(request, pk):
                         if compra.referencia:
                             email = EmailMessage(
                                 f'Compra Autorizada {compra.get_folio}',
-                                f'Estimado(a) {compra.proveedor.contacto} | Proveedor {compra.proveedor.nombre}:\n\nEstás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.get_folio} y referencia: {compra.referencia}.\n\n Atte. {compra.creada_por.staff.first_name} {compra.creada_por.staff.last_name} \nGrupo Vordcab S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                                f'Estimado(a) {compra.proveedor.contacto} | Proveedor {compra.proveedor.nombre}:\n\nEstás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.get_folio} y referencia: {compra.referencia}.\n\n Atte. {compra.creada_por.staff.first_name} {compra.creada_por.staff.last_name} \nVordtec de México S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                                 'savia@vordtec.com',
                                 ['ulises_huesc@hotmail.com',compra.proveedor.email,'lizeth.ojeda@vordtec.com','osiris.bautista@vordtec.com'],
                                 )
                         else:
                             email = EmailMessage(
                                 f'Compra Autorizada {compra.get_folio}',
-                                f'Estimado(a) {compra.proveedor.contacto} | Proveedor {compra.proveedor.nombre}:\n\nEstás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.get_folio}.\n\n Atte. {compra.creada_por.staff.first_name} {compra.creada_por.staff.last_name} \nGrupo Vordcab S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                                f'Estimado(a) {compra.proveedor.contacto} | Proveedor {compra.proveedor.nombre}:\n\nEstás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.get_folio}.\n\n Atte. {compra.creada_por.staff.first_name} {compra.creada_por.staff.last_name} \nVordtec de México S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                                 'savia@vordtec.com',
                                 ['ulises_huesc@hotmail.com',compra.proveedor.email,'lizeth.ojeda@vordtec.com','osiris.bautista@vordtec.com'],
                                 )
@@ -189,7 +189,7 @@ def compras_pagos(request, pk):
 @login_required(login_url='user-login')
 def matriz_pagos(request):
     pagos = Pago.objects.filter(hecho=True)
-    myfilter = PagoFilter(request.GET, queryset=pagos)
+    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
 
     context= {

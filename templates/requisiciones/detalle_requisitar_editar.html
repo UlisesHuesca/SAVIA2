@@ -2,9 +2,10 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
-{% block title %} Requisción {% endblock %}
+{% block title %} Requisición {% endblock %}
 </head>
 <body>
 {% block content %}
@@ -54,7 +55,7 @@
                         <select class="form-select form-select-sm" id="producto">
                             <option id="default_sel">      </option>
                             {% for producto in productos %}
-                            <option id="js" target="{{producto.id}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar}}">
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar}}">
                                 {{producto.articulos.producto.producto.nombre}}
                             </option>
                             {% endfor %}

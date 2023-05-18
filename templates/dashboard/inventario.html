@@ -148,7 +148,7 @@
                             <th scope="col">Precio</th>
                             <th scope="col">Costo</th>
                             <th scope="col">Mínimo</th>
-                            <!--<th scope="col">Editar</th>-->
+                            <th scope="col">Editar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -174,11 +174,11 @@
                             <td>{{producto.price}}</td>
                             <td>{{producto.get_total_producto}}</td>
                             <td>{{producto.minimo}}</td>
-                            <!--{% if usuario.tipo.nombre == "Superintendente" %}
+                            {% if usuario.tipo.nombre == "Superintendente" %}
                             <td></td>
                             {% else %}
                             <td><a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-inventario-update-modal' producto.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
-                            {% endif %}-->
+                            {% endif %}
                         </tr>
                         {% endfor %}
                     </tbody>

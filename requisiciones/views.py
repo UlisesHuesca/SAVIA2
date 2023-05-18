@@ -89,7 +89,7 @@ def liberar_stock(request, pk):
 @login_required(login_url='user-login')
 def solicitud_autorizada(request):
     usuario = Profile.objects.get(staff__id=request.user.id)
-    
+
     if usuario.tipo.almacen == True:
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True)
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal")
@@ -169,7 +169,7 @@ def update_devolucion(request):
     inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto)
     #orden = Order.objects.get(id = devolucion.orden.id)
 
-   
+
     if action == "add":
         cantidad_total = producto.cantidad - cantidad
         if cantidad_total < 0:
@@ -187,7 +187,7 @@ def update_devolucion(request):
             devolucion_articulos.complete = True
             #inv_del_producto.price = ((inv_del_producto.get_total_producto) + (devolucion_articulos.cantidad * devolucion_articulos.precio))/(devolucion_articulos.cantidad+inv_del_producto.cantidad+inv_del_producto.cantidad_apartada)
 
-            if producto.cantidad == 0:  
+            if producto.cantidad == 0:
                 producto.surtir = False
             messages.success(request,'Has agregado producto de manera exitosa')
             producto.save()
@@ -196,7 +196,7 @@ def update_devolucion(request):
     if action == "remove":
         item = Devolucion_Articulos.objects.get(producto=producto, vale_devolucion = devolucion, complete = True)
         inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
-        inv_del_producto.cantidad = inv_del_producto.cantidad - item.cantidad       
+        inv_del_producto.cantidad = inv_del_producto.cantidad - item.cantidad
         producto.seleccionado = False
         producto.surtir= True
         producto.cantidad = producto.cantidad + item.cantidad
@@ -290,7 +290,7 @@ def devolucion_material(request, pk):
                 return redirect('solicitud-autorizada')
 
     context= {
-        'orden':orden, 
+        'orden':orden,
         'productos':productos,
         'form':form,
         'form2':form2,
@@ -339,7 +339,7 @@ def update_salida(request):
         suma_entradas = 0
 
     if action == "add":
-        
+
         cantidad_total = producto.cantidad - cantidad
         if cantidad_total < 0 and inv_del_producto.cantidad > 0:
             cantidad_total = inv_del_producto.cantidad - cantidad
@@ -592,7 +592,7 @@ def requisicion_detalle(request, pk):
             messages.success(request,f'Has realizado la requisición {requi.folio} con éxito')
             return redirect('solicitud-autorizada-orden')
         else:
-             messages.error(request,'No se puede crear la requisición debido a que no productos agregados')
+             messages.error(request,'No se puede crear la requisición debido a que no hay productos agregados')
 
 
     context = {

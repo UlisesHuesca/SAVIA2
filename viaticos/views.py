@@ -452,7 +452,7 @@ def facturas_viaticos(request, pk):
                 factura.subido_por = usuario
                 factura.save()
                 messages.success(request,'Haz registrado tu factura')
-                return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+                return redirect('facturas-viaticos', pk= concepto.id) #No content to render nothing and send a "signal" to javascript in order to close window
             else:
                 messages.error(request,'No está validando')
 
