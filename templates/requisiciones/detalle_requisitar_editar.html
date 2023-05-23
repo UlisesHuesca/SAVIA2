@@ -88,7 +88,7 @@
                     <td scope="col">{{product.producto.articulos.producto.producto.codigo}}</td>
                     <td scope="col">{{product.producto.articulos.producto.producto.nombre}}</td>
                     <td scope="col">{{product.cantidad}}</td>
-                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                 </tr>
                 {% endfor %}
             </tbody>
