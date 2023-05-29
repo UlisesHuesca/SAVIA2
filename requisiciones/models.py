@@ -24,6 +24,16 @@ class Requis(models.Model):
         return f'{self.get_folio} order {self.orden} req {self.id}'
 
     @property
+    def comprado_parcial(self):
+        articulos = self.articulosrequisitados_set.all()
+        for articulo in articulos:
+            if articulo.cantidad_comprada > 0:
+                resultado_parcial = False
+            else:
+                resultado_parcial = True
+        return resultado_parcial
+
+    @property
     def get_folio(self):
         return str(self.pk).zfill(6)
 
@@ -38,6 +48,8 @@ class ArticulosRequisitados(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     sel_comp = models.BooleanField(default=False)
+    cancelado = models.BooleanField(default=False)
+    comentario_cancelacion = models.CharField(max_length=200, null=True, blank= True)
 
     def __str__(self):
         return f'{self.req} - {self.producto}- {self.cantidad}'
@@ -45,8 +57,8 @@ class ArticulosRequisitados(models.Model):
 class ValeSalidas(models.Model):
     solicitud = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)
     almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Almacen')
-    proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True)
-    subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True)
+    proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True, blank=True)
+    subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True, blank=True)
     material_recibido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Vale')
     created_at = models.DateField(auto_now_add=True)
     complete = models.BooleanField(null=True, default=False)
@@ -64,6 +76,10 @@ class Salidas(models.Model):
     precio = models.DecimalField(max_digits=14, decimal_places=2,default=0)
     entrada = models.IntegerField(default=0, null=True, blank=True)
 
+    @property
+    def get_costo_salida(self):
+        costo = self.cantidad * self.precio
+        return costo
 
     def __str__(self):
         return f'{self.producto} - {self.cantidad} - {self.created_at}'
@@ -86,4 +102,6 @@ class Devolucion_Articulos(models.Model):
     comentario = models.CharField(max_length=100, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
-    complete = models.BooleanField(null=True, default=False)
+    complete = models.BooleanField(default=False)
+
+

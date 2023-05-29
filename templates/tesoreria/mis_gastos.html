@@ -125,18 +125,30 @@
                     <td>{{gasto.staff.staff.first_name}} {{gasto.staff.staff.last_name}}</td>
                     <td>{{gasto.proyecto.nombre}}</td>
                     <td>{{gasto.subproyecto.nombre}}</td>
-                    <td>{{gasto.superintendente.staff.first_name}} {{gasto.superintendente.staff.last_name}}</td>
+                    {% if gasto.autorizar == True %}
+                    <td>Autorizado|{{gasto.superintendente.staff.last_name}}</td>
+                    {% elif gasto.autorizar2 == False %}
+                    <td>No autorizado|{{gasto.superintendente.staff.last_name}}</td>
+                    {% else %}
+                    <td>Pendiente Autorización|{{gasto.superintendente.staff.last_name}}</td>
+                    {% endif %}
                     {% if gasto.colaborador %}
                     <td>{{gasto.colaborador.staff.first_name}} {{gasto.colaborador.staff.last_name}}</td>
                     {% else %}
                     <td>{{gasto.staff.staff.first_name}} {{gasto.staff.staff.last_name}}</td>
                     {% endif %}
                     <td>${{gasto.get_total_solicitud}}</td>
+                    {% if gasto.autorizar2 == True %}
                     <td>{{gasto.approbado_fecha2}}</td>
+                    {% elif gasto.autorizar2 == False %}
+                    <td>No autorizado</td>
+                    {% else %}
+                    <td>Pendiente Autorización</td>
+                    {% endif %}
                     <td>
                         {% if gasto.autorizar2 == True %}
                         <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}">
-                        <i class="fa-solid fa-file-pdf"></i>      
+                        <i class="fa-solid fa-file-pdf"></i>
                         </a>
                         {% endif %}
                     </td>

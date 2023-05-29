@@ -32,7 +32,7 @@
 
                     <datalist id="proveedor" name='proveedor'>
                         {% for item in proveedores %}
-                        <option status="{{item.estatus}}" valor="{{item.id}}" value="{{item.nombre.razon_social}}"></option>
+                        <option status="{{item.estatus}}" valor="{{item.id}}" value="{{item.nombre.razon_social}}|{{item.domicilio}}"></option>
                         {% endfor %}
                     </datalist>
                     </div>

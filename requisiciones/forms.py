@@ -31,6 +31,11 @@ class ArticulosRequisitadosForm(forms.ModelForm):
         model = ArticulosRequisitados
         fields = ['cantidad']
 
+class Articulo_Cancelado_Form(forms.ModelForm):
+    class Meta:
+        model = ArticulosRequisitados
+        fields = ['cancelado','comentario_cancelacion']
+
 class RequisForm(forms.ModelForm):
     class Meta:
         model = Requis

@@ -380,7 +380,7 @@ def solicitud_pendiente(request):
 
 
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    if perfil.tipo.superintendente == True:
+    if perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control":
         ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
     elif perfil.tipo.supervisor == True:
         ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
@@ -413,7 +413,7 @@ def solicitud_matriz(request):
 
 
      #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    if perfil.tipo.superintendente == True:
+    if perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control":
         ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
     elif perfil.tipo.supervisor == True:
         ordenes = Order.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
@@ -446,7 +446,7 @@ def solicitud_matriz_productos(request):
     perfil = Profile.objects.get(staff__id=request.user.id)
 
      #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    if perfil.tipo.superintendente == True:
+    if perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control":
         productos = ArticulosOrdenados.objects.filter(orden__complete=True, orden__staff__distrito=perfil.distrito).order_by('-orden__folio')
     elif perfil.tipo.supervisor == True:
         productos = ArticulosOrdenados.objects.filter(orden__complete=True, orden__staff__distrito=perfil.distrito, orden__supervisor=perfil).order_by('-orden__folio')

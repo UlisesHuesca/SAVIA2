@@ -19,7 +19,10 @@ urlpatterns = [
     path('compras/autorizar_oc1/<int:pk>/', views.autorizar_oc1, name='autorizar-oc1'),
     path('compras/autorizar_oc2/<int:pk>/', views.autorizar_oc2, name='autorizar-oc2'),
     path('salida_material/oc_pdf/<int:pk>/', views.render_oc_pdf, name='oc-pdf'),
-    path('compras/productos_oc/<int:pk>/', views.productos_oc,name='productos-oc')
+    path('compras/productos_oc/<int:pk>/', views.productos_oc, name='productos-oc'),
+    path('compras/eliminar_articulos/<int:pk>', views.eliminar_articulos, name='eliminar-articulos'),
+    path('compras/articulos_restantes/<int:pk>', views.articulos_restantes, name='articulos-restantes'),
+    path('compras/productos_pendientes/', views.productos_pendientes, name='productos-pendientes'),
     ]
 
 if settings.DEBUG:

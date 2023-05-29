@@ -1,4 +1,5 @@
 import django_filters
+from requisiciones.models import ArticulosRequisitados
 from .models import Compra
 from django_filters import CharFilter, DateFilter
 
@@ -16,3 +17,10 @@ class CompraFilter(django_filters.FilterSet):
     class Meta:
         model = Compra
         fields = ['proveedor','creada_por','req','proyecto','subproyecto','start_date','end_date', 'costo_oc', 'id',]
+
+class ArticulosRequisitadosFilter(django_filters.FilterSet):
+    producto = CharFilter(field_name='producto__articulos__producto__producto__nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = ArticulosRequisitados
+        fields = ['producto']

@@ -17,7 +17,7 @@
             <div class="card">
                 <div class="card-header bg-light text-dark">
                     <strong>
-                        SAVIA X
+                        SAVIA VORDTEC
                     </strong>
                 </div>
                 <div class="card-body">
@@ -40,7 +40,7 @@
                             <a class="text-decoration-none text-dark" href="{% url 'dashboard-staff' %}">
                                 <div class="card my-card shadow text-center p-3">
                                     <h4>Personal <i class="fa-solid fa-users"></i></h4>
-                                    <h3>4</h3>
+                                    <h3>{{conteo_usuario}}</h3>
                                 </div>
                             </a>
                         </div>
@@ -48,15 +48,15 @@
                             <a class="text-decoration-none text-dark" href="{% url 'dashboard-product' %}">
                                 <div class="card my-card shadow text-center p-3">
                                     <h4>Productos <i class="fa-solid fa-box"></i></h4>
-                                    <h3>4</h3>
+                                    <h3>{{conteo_productos}}</h3>
                                 </div>
                             </a>
                         </div>
                         <div class="col-md-4">
                             <a class="text-decoration-none text-dark" href="{% url 'dashboard-order' %}">
                                 <div class="card my-card shadow text-center p-3">
-                                    <h4>Ordenes <i class="fa-solid fa-truck-fast"></i></h4>
-                                    <h3>4</h3>
+                                    <h4>Solicitudes <i class="fa-solid fa-truck-fast"></i></h4>
+                                    <h3>{{solicitudes_generadas}}</h3>
                                 </div>
                             </a>
                         </div>

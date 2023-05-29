@@ -1,6 +1,7 @@
 from genericpath import exists
 from itertools import count
-from dashboard.models import ArticulosparaSurtir, Order
+from dashboard.models import ArticulosparaSurtir, Order, Inventario
+from user.models import Profile
 from gastos.models import Solicitud_Gasto
 from tesoreria.models import Pago
 from compras.models import Compra
@@ -32,6 +33,11 @@ def contadores_processor(request):
     conteo_gastos_pagar= 0 
     conteo_asignar_montos = 0
     conteo_viaticos=0
+    
+    conteo_usuario = Profile.objects.all().count()
+    conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
+    solicitudes_generadas = Order.objects.filter(complete = True).count()
+
 
 
 
@@ -74,7 +80,7 @@ def contadores_processor(request):
             conteo_pagos = oc_pendientes.count()
             conteo_asignar_montos = viaticos_por_asignar.count()
         if usuario.tipo.supervisor == True:
-            solicitudes_pendientes = Order.objects.filter(autorizar = None, complete = True)
+            solicitudes_pendientes = Order.objects.filter(autorizar = None, complete = True, supervisor=usuario)
             conteo_solicitudes = solicitudes_pendientes.count()
         if usuario.tipo.superintendente == True:
             requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__superintendente = usuario)
@@ -92,6 +98,9 @@ def contadores_processor(request):
 
 
     return {
+    'solicitudes_generadas':solicitudes_generadas,
+    'conteo_productos':conteo_productos,
+    'conteo_usuario':conteo_usuario,
     'conteo_viaticos_pagar':conteo_viaticos_pagar,
     'conteo_gastos_pagar':conteo_gastos_pagar,
     'conteo_asignar_montos':conteo_asignar_montos,

@@ -177,6 +177,7 @@ def update_entrada(request):
     action = data["action"]
     producto_id = int(data["producto"])
     pk = int(data["entrada_id"])
+    referencia = data["referencia"]
     producto_comprado = ArticuloComprado.objects.get(id = producto_id)
     entrada = Entrada.objects.get(id = pk, completo = False)
     entradas_producto = EntradaArticulo.objects.filter(articulo_comprado = producto_comprado, entrada__oc = producto_comprado.oc, entrada__completo = True).aggregate(Sum('cantidad'))
@@ -192,6 +193,7 @@ def update_entrada(request):
 
     #if not entrada_item.cantidad:
     entrada_item.cantidad = cantidad
+    entrada_item.referencia = referencia
 
 
     if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': #si es resurtimiento

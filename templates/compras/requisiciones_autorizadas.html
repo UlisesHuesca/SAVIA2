@@ -25,7 +25,7 @@
 
 
 
-<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
 <div class="row my-4">
     <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -53,19 +53,39 @@
     </div>
 </div>
 
-<div class="card text-center" style="width: 18rem;">
-    <div class="card-header">
-         <h5 class="card-title">Tipo de cambio</h5>
+<div class="row">
+    <div class="card text-center" style="width: 18rem;">
+        <div class="card-header">
+            <h5 class="card-title">Tipo de cambio</h5>
+        </div>
+        <div class="card-body">
+            <h6 class="card-subtitle mb-2 text-muted">{{tags}}</h6>
+            <p style="font-style:italic;"> Información extraída del DOF</p>
+        </div>
+        <div class="card-footer text-muted">
+            <a href="https://www.dof.gob.mx/#gsc.tab=0" class="card-link">DOF</a>
+        </div>
     </div>
-    <div class="card-body">
-        <h6 class="card-subtitle mb-2 text-muted">{{tags}}</h6>
-        <p style="font-style:italic;"> Información extraída del DOF</p>
-    </div>
-    <div class="card-footer text-muted">
-         <a href="https://www.dof.gob.mx/#gsc.tab=0" class="card-link">DOF</a>
+    <div class="card text-center" style="width: 20rem;">
+        <div class="card-header">
+            <h5 class="card-title">Compras</h5>
+        </div>
+        <div class="card-body">
+        <ul class="nav nav-pills">
+            <li class="nav-item mx-2">
+                <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                    <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos</a>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                  </div>
+            </li>
+        </ul>
+        </div>
+        <div class="card-footer text-muted">
+
+        </div>
     </div>
 </div>
-
 
 <div class = "row mt-2">
     <div class="col-md-12">
@@ -95,14 +115,21 @@
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-creada-detalle' req.id %}">Productos</a>
+                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-restantes' req.id %}">Productos</a>
                             </li>
                             <li class="nav-item mx-1">
                                 <a type="button" class="btn btn-outline-success" href="{% url 'oc' req.id %}">Crear OC</a>
                             </li>
+                            {% if req.comprado_parcial %}
                             <li class="nav-item mx-1">
                                 <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-cancelar' req.id %}">
                                     <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                            </li>
+                            {% endif %}
+                            <li class="nav-item mx-1">
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-articulos' req.id %}">
+                                    <i class="fa-solid fa-eraser"></i>
                                 </a>
                             </li>
                         </ul>

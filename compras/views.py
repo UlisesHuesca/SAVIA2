@@ -3,10 +3,11 @@ from dashboard.models import Inventario, Order, ArticulosOrdenados, Articulospar
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago
-from .filters import CompraFilter
+from .filters import CompraFilter, ArticulosRequisitadosFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_credito, Uso_cfdi, Moneda
 from tesoreria.models import Facturas
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm
+from requisiciones.forms import Articulo_Cancelado_Form
 from tesoreria.forms import Facturas_Form
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
@@ -14,7 +15,9 @@ import json
 from django.contrib import messages
 from datetime import date, datetime
 from num2words import num2words
+from django.core.paginator import Paginator
 import decimal
+from django.db.models import F
 #PDF generator
 import io
 from reportlab.pdfgen import canvas
@@ -30,6 +33,15 @@ from bs4 import BeautifulSoup
 from django.core.files.base import ContentFile
 import urllib.request, urllib.parse, urllib.error
 from django.core.mail import EmailMessage
+# Import Excel Stuff
+from django.db.models.functions import Concat
+from django.db.models import Value
+from django.contrib import messages
+from django.db.models import Sum
+from openpyxl import Workbook
+from openpyxl.styles import NamedStyle, Font, PatternFill
+from openpyxl.utils import get_column_letter
+import datetime as dt
 #from urllib.parse import (
 #    ParseResult,
 #    SplitResult,
@@ -60,6 +72,75 @@ def requisiciones_autorizadas(request):
         }
 
     return render(request, 'compras/requisiciones_autorizadas.html',context)
+
+@login_required(login_url='user-login')
+def productos_pendientes(request):
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    if perfil.tipo.compras == True:
+        requis = Requis.objects.filter(autorizar=True, colocada=False)
+    else:
+        requis = Requis.objects.filter(complete=None)
+
+    articulos = ArticulosRequisitados.objects.filter(req__autorizar = True, req__colocada=False, cancelado = False)
+    myfilter = ArticulosRequisitadosFilter(request.GET, queryset=articulos)
+    articulos = myfilter.qs
+
+    context= {
+        'requis':requis,
+        'articulos':articulos,
+        'myfilter':myfilter,
+        }
+
+    return render(request, 'compras/productos_pendientes.html',context)
+
+def eliminar_articulos(request, pk):
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
+    requis = Requis.objects.get(id = pk)
+
+    form = Articulo_Cancelado_Form()
+
+    if request.method == 'POST' and "btn_eliminar" in request.POST:
+        pk = request.POST.get('id')
+        producto = ArticulosRequisitados.objects.get(id=pk)
+        form = Articulo_Cancelado_Form(request.POST,instance=producto)
+        if form.is_valid():
+            articulo = form.save()
+            conteo_productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False).count()
+            if conteo_productos == 0:
+                requis.colocada = True
+                requis.save()
+            email = EmailMessage(
+                f'Producto Eliminado {producto.producto.articulos.producto.producto.nombre}',
+                f'Estimado(a) {producto.req.orden.staff.staff.first_name}:\n\nEstás recibiendo este correo porque el producto: {producto.producto.articulos.producto.producto.nombre} de la solicitud: {producto.req.orden.folio} ha sido eliminado, por la siguiente razón: {producto.comentario_cancelacion} \n\n Atte.{perfil.staff.first_name}{perfil.staff.last_name}  \nVORDTEC DE MÉXICO S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                'savia@vordtec.com',
+                ['ulises_huesc@hotmail.com',producto.req.orden.staff.staff.email,],
+                )
+            email.send()
+            messages.success(request,f' Has eliminado el {producto.producto.articulos.producto} correctamente')
+            return redirect('requisicion-autorizada')
+
+
+
+
+    context = {
+        'form':form,
+        'productos': productos,
+        'requis': requis,
+        }
+
+    return render(request,'compras/eliminar_articulos.html', context)
+
+def articulos_restantes(request, pk):
+    productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"))
+    requis = Requis.objects.get(id = pk)
+
+    context = {
+        'productos': productos,
+        'requis': requis,
+        }
+
+    return render(request,'compras/articulos_restantes.html', context)
 
 def dof():
 #Trying to fetch DOF
@@ -227,11 +308,16 @@ def matriz_oc(request):
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
 
-    #if request.method == 'POST' and 'btn_OC' in request.POST:
+     #Set up pagination
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
 
-        #return oc_pdf(request, pk)
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_matriz_compras(compras)
 
     context= {
+        'compras_list':compras_list,
         'compras':compras,
         'myfilter':myfilter,
         }
@@ -601,8 +687,6 @@ def render_oc_pdf(request, pk):
     compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
 
-
-
     #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
     rojo = Color(0.59375, 0.05859375, 0.05859375)
@@ -685,25 +769,17 @@ def render_oc_pdf(request, pk):
     c.drawString(inicio_central + 10,caja_proveedor-135,'Cuenta:')
     c.drawString(inicio_central + 10,caja_proveedor-155,'Clabe:')
 
-    #c.drawString(inicio_central + 10,640,'Lugar de entrega:')
-    #c.drawString(inicio_central + 10,600,'Anticipo:')
-
-
-    #c.setFont('Helvetica',12) ## FECHA DE LA SOLICITUD 505,735
-    #c.setFillColor(rojo) ## NUMERO DEL FOLIO
-    #c.drawString(495,735, str(compra.id))
-
     c.setFillColor(black)
     c.setFont('Helvetica',9)
     if compra.proveedor.nombre.razon_social == 'COLABORADOR':
-        c.drawString(100,caja_proveedor-15, compra.deposito_comprador.staff.first_name+' '+compra.deposito_comprador.staff.last_name)
+        c.drawString(100,caja_proveedor-20, compra.deposito_comprador.staff.first_name+' '+compra.deposito_comprador.staff.last_name)
     else:
-        c.drawString(100,caja_proveedor-15, compra.proveedor.nombre.razon_social)
-    c.drawString(100,caja_proveedor-35, compra.proveedor.nombre.rfc)
-    c.drawString(100,caja_proveedor-55, compra.uso_del_cfdi.descripcion)
-    c.drawString(100,caja_proveedor-75, compra.req.orden.staff.staff.first_name +' '+ compra.req.orden.staff.staff.last_name)
-    c.drawString(100,caja_proveedor-95, compra.created_at.strftime("%d/%m/%Y"))
-    c.drawString(100,caja_proveedor-115, compra.proveedor.estatus.nombre)
+        c.drawString(100,caja_proveedor-20, compra.proveedor.nombre.razon_social)
+    c.drawString(100,caja_proveedor-40, compra.proveedor.nombre.rfc)
+    c.drawString(100,caja_proveedor-60, compra.uso_del_cfdi.descripcion)
+    c.drawString(100,caja_proveedor-80, compra.req.orden.staff.staff.first_name +' '+ compra.req.orden.staff.staff.last_name)
+    c.drawString(100,caja_proveedor-100, compra.created_at.strftime("%d/%m/%Y"))
+    c.drawString(100,caja_proveedor-120, compra.proveedor.estatus.nombre)
     if compra.dias_de_entrega:
         c.drawString(110,caja_proveedor-140, str(compra.dias_de_entrega)+' '+'días hábiles')
 
@@ -734,8 +810,6 @@ def render_oc_pdf(request, pk):
     #c.drawString(inicio_central + 70,600, str(compra.monto_anticipo))
 
 
-
-
     data =[]
     high = 495
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''', '''P.Unitario''', '''Importe'''])
@@ -748,90 +822,76 @@ def render_oc_pdf(request, pk):
 
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(20,high-125,340,20, fill=True, stroke=False) #3ra linea azul
+    c.rect(20,200,340,20, fill=True, stroke=False) #2ra linea azul, donde esta el proyecto y el subproyecto, se coloca altura de 150
     c.setFillColor(black)
     c.setFont('Helvetica',7)
 
     c.setFillColor(white)
     c.setLineWidth(.1)
     c.setFont('Helvetica-Bold',10)
-    c.drawCentredString(50,high-120,'Proyecto')
-    c.drawCentredString(110,high-120,'Subproyecto')
-    c.drawCentredString(230,high-120,'Elaboró')
-    c.drawCentredString(325,high-120,'Moneda')
+    c.drawCentredString(50,205,'Proyecto')
+    c.drawCentredString(110,205,'Subproyecto')
+    c.drawCentredString(230,205,'Elaboró')
+    c.drawCentredString(325,205,'Moneda')
     c.setFont('Helvetica',8)
     c.setFillColor(black)
-    c.drawCentredString(50,high-140,compra.req.orden.proyecto.nombre)
-    c.drawCentredString(110,high-140,compra.req.orden.subproyecto.nombre)
-    c.drawCentredString(230,high-140,compra.creada_por.staff.first_name + ' ' +compra.creada_por.staff.last_name)
-    c.drawCentredString(325,high-140,compra.moneda.nombre)
+    c.drawCentredString(50,190,compra.req.orden.proyecto.nombre)
+    c.drawCentredString(110,190,compra.req.orden.subproyecto.nombre)
+    c.drawCentredString(230,190,compra.creada_por.staff.first_name + ' ' +compra.creada_por.staff.last_name)
+    c.drawCentredString(325,190,compra.moneda.nombre)
 
     c.setLineWidth(.3)
-    c.line(370,high-95,370,high-160) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
-    c.line(370,high-160,580,high-160)
+    c.line(370,220,370,160) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    c.line(370,160,580,160)
 
     c.setFillColor(black)
     c.setFont('Helvetica-Bold',9)
 
     montos_align = 480
-    c.drawRightString(montos_align,high-115,'Sub Total:')
-    c.drawRightString(montos_align,high-125,'IVA 16%:')
-    c.drawRightString(montos_align,high-135,'Importe Neto:')
-    c.drawRightString(montos_align,high-145,'Costo fletes:')
+    c.drawRightString(montos_align,210,'Sub Total:')
+    c.drawRightString(montos_align,200,'IVA 16%:')
+    c.drawRightString(montos_align,190,'Importe Neto:')
+    c.drawRightString(montos_align,180,'Costo fletes:')
     c.setFillColor(prussian_blue)
-    c.drawRightString(montos_align,high-155,'Total:')
+    c.drawRightString(montos_align,170,'Total:')
     c.setFillColor(black)
-    c.drawString(35,high-200,'Opciones y condiciones:')
+    c.drawString(20,130,'Opciones y condiciones:')
     c.setFont('Helvetica',8)
     letras = 320
-    c.drawString(letras-90,high-175,'Total con letra:')
-    c.line(135,high-240,215, high-240) #Linea de Autorizacion
-    c.line(350,high-240,430, high-240)
-    c.drawCentredString(175,high-250,'Autorización')
-    c.drawCentredString(390,high-250,'Autorización')
+    c.drawString(20,140,'Total con letra:')
+    c.line(135,90,215,90 ) #Linea de Autorizacion
+    c.line(350,90,430,90)
+    c.drawCentredString(175,70,'Autorización')
+    c.drawCentredString(390,70,'Autorización')
 
-    c.drawCentredString(175,high-270,'Superintendente Administrativo')
-    c.drawCentredString(390,high-270,'Gerencia Zona')
+    c.drawCentredString(175,80,'Superintendente Administrativo')
+    c.drawCentredString(390,80,'Gerencia Zona')
     if compra.autorizado1:
-        c.drawCentredString(175,high-230,compra.oc_autorizada_por.staff.first_name + ' ' +compra.oc_autorizada_por.staff.last_name)
+        c.drawCentredString(175,90,compra.oc_autorizada_por.staff.first_name + ' ' +compra.oc_autorizada_por.staff.last_name)
     if compra.autorizado2:
-        c.drawCentredString(390,high-230,compra.oc_autorizada_por2.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.last_name)
+        c.drawCentredString(390,90,compra.oc_autorizada_por2.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.last_name)
 
     c.setFont('Helvetica',10)
     subtotal = compra.costo_oc - compra.costo_iva
-    c.drawRightString(montos_align + 90,high-115,str(subtotal))
-    c.drawRightString(montos_align + 90,high-125,str(compra.costo_iva))
-    c.drawRightString(montos_align + 90,high-135,str(compra.costo_oc))
+    c.drawRightString(montos_align + 90,210,str(subtotal))
+    c.drawRightString(montos_align + 90,200,str(compra.costo_iva))
+    c.drawRightString(montos_align + 90,190,str(compra.costo_oc))
     if compra.costo_fletes is None:
         compra.costo_fletes = 0
-    c.drawRightString(montos_align + 90,high-145,str(compra.costo_fletes))
+    c.drawRightString(montos_align + 90,180,str(compra.costo_fletes))
     c.setFillColor(prussian_blue)
-    c.drawRightString(montos_align + 90,high-155,str(compra.costo_oc ))
+    c.drawRightString(montos_align + 90,170,str(compra.costo_oc ))
     c.setFont('Helvetica', 9)
-    c.drawString(letras,high-175, num2words(compra.costo_oc, lang='es_CO', to='currency'))
+    c.drawString(80,140, num2words(compra.costo_oc, lang='es_CO', to='currency'))
     c.setFillColor(black)
     if compra.opciones_condiciones is not None:
-        c.drawString(150,high-200,compra.opciones_condiciones)
+        c.drawString(130,130,compra.opciones_condiciones)
     else:
         c.drawString(150,high-200,"NA")
 
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
-    #Primer renglón
-    #c.drawCentredString(70,48,'Clasificación:')
-    #c.drawCentredString(140,48,'Nivel:')
-    #c.drawCentredString(240,48,'Preparado por:')
-    #c.drawCentredString(350,48,'Aprobado:')
-    #c.drawCentredString(450,48,'Fecha emisión:')
-    #c.drawCentredString(550,48,'Rev:')
-    #Segundo renglón
-    #c.drawCentredString(70,34,'Controlado')
-    #c.drawCentredString(140,34,'N5')
-    #c.drawCentredString(240,34,'SEOV-ALM-N4-01-01')
-    #c.drawCentredString(350,34,'SUB ADM')
-    #c.drawCentredString(450,34,'24/Oct/2018')
-    #c.drawCentredString(550,34,'001')
 
     width, height = letter
     table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
@@ -938,7 +998,6 @@ def attach_oc_pdf(request, pk):
 
     c.setFillColor(black)
     c.setFont('Helvetica',9)
-
     c.drawString(inicio_central + 10,caja_proveedor-35,'No. Requisición:')
     c.drawString(inicio_central + 10,caja_proveedor-55,'Método de pago:')
     c.drawString(inicio_central + 10,caja_proveedor-75,'Condiciones de pago:')
@@ -946,15 +1005,6 @@ def attach_oc_pdf(request, pk):
     c.drawString(inicio_central + 10,caja_proveedor-115,'Banco:')
     c.drawString(inicio_central + 10,caja_proveedor-135,'Cuenta:')
     c.drawString(inicio_central + 10,caja_proveedor-155,'Clabe:')
-
-    #c.drawString(inicio_central + 10,640,'Lugar de entrega:')
-    #c.drawString(inicio_central + 10,600,'Anticipo:')
-
-
-
-    #c.setFont('Helvetica',12) ## FECHA DE LA SOLICITUD 505,735
-    #c.setFillColor(rojo) ## NUMERO DEL FOLIO
-    #c.drawString(495,735, str(compra.id))
 
     c.setFillColor(black)
     c.setFont('Helvetica',9)
@@ -971,6 +1021,7 @@ def attach_oc_pdf(request, pk):
         c.drawString(110,caja_proveedor-140, str(compra.dias_de_entrega)+' '+'días hábiles')
 
 
+
     c.drawString(inicio_central + 90,caja_proveedor-35, str(compra.req.id))
     c.drawString(inicio_central + 90,caja_proveedor-95, 'tesoreria.planta@vordtec.com')
     if compra.proveedor.nombre.razon_social == 'COLABORADOR':
@@ -981,6 +1032,7 @@ def attach_oc_pdf(request, pk):
         c.drawString(inicio_central + 90,caja_proveedor-115, compra.proveedor.banco.nombre)
         c.drawString(inicio_central + 90,caja_proveedor-135, compra.proveedor.cuenta)
         c.drawString(inicio_central + 90,caja_proveedor-155, compra.proveedor.clabe)
+
 
 
 
@@ -995,8 +1047,6 @@ def attach_oc_pdf(request, pk):
     #c.drawString(inicio_central + 70,600, str(compra.monto_anticipo))
 
 
-
-
     data =[]
     high = 495
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''', '''P.Unitario''', '''Importe'''])
@@ -1009,91 +1059,76 @@ def attach_oc_pdf(request, pk):
 
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(20,high-125,340,20, fill=True, stroke=False) #3ra linea azul
+    c.rect(20,200,340,20, fill=True, stroke=False) #2ra linea azul, donde esta el proyecto y el subproyecto, se coloca altura de 150
     c.setFillColor(black)
     c.setFont('Helvetica',7)
 
     c.setFillColor(white)
     c.setLineWidth(.1)
     c.setFont('Helvetica-Bold',10)
-    c.drawCentredString(50,high-120,'Proyecto')
-    c.drawCentredString(110,high-120,'Subproyecto')
-    c.drawCentredString(230,high-120,'Elaboró')
-    c.drawCentredString(325,high-120,'Moneda')
+    c.drawCentredString(50,205,'Proyecto')
+    c.drawCentredString(110,205,'Subproyecto')
+    c.drawCentredString(230,205,'Elaboró')
+    c.drawCentredString(325,205,'Moneda')
     c.setFont('Helvetica',8)
     c.setFillColor(black)
-    c.drawCentredString(50,high-140,compra.req.orden.proyecto.nombre)
-    c.drawCentredString(110,high-140,compra.req.orden.subproyecto.nombre)
-    c.drawCentredString(230,high-140,compra.creada_por.staff.first_name + ' ' +compra.creada_por.staff.last_name)
-    c.drawCentredString(325,high-140,compra.moneda.nombre)
-
+    c.drawCentredString(50,190,compra.req.orden.proyecto.nombre)
+    c.drawCentredString(110,190,compra.req.orden.subproyecto.nombre)
+    c.drawCentredString(230,190,compra.creada_por.staff.first_name + ' ' +compra.creada_por.staff.last_name)
+    c.drawCentredString(325,190,compra.moneda.nombre)
 
     c.setLineWidth(.3)
-    c.line(370,high-95,370,high-160) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
-    c.line(370,high-160,580,high-160)
+    c.line(370,220,370,160) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    c.line(370,160,580,160)
 
     c.setFillColor(black)
     c.setFont('Helvetica-Bold',9)
 
     montos_align = 480
-    c.drawRightString(montos_align,high-115,'Sub Total:')
-    c.drawRightString(montos_align,high-125,'IVA 16%:')
-    c.drawRightString(montos_align,high-135,'Importe Neto:')
-    c.drawRightString(montos_align,high-145,'Costo fletes:')
+    c.drawRightString(montos_align,210,'Sub Total:')
+    c.drawRightString(montos_align,200,'IVA 16%:')
+    c.drawRightString(montos_align,190,'Importe Neto:')
+    c.drawRightString(montos_align,180,'Costo fletes:')
     c.setFillColor(prussian_blue)
-    c.drawRightString(montos_align,high-155,'Total:')
+    c.drawRightString(montos_align,170,'Total:')
     c.setFillColor(black)
-    c.drawString(35,high-200,'Opciones y condiciones:')
+    c.drawString(20,130,'Opciones y condiciones:')
     c.setFont('Helvetica',8)
-    letras = 350
-    c.drawString(letras-90,high-175,'Total con letra:')
-    c.line(135,high-240,215, high-240) #Linea de Autorizacion
-    c.line(350,high-240,430, high-240)
-    c.drawCentredString(175,high-250,'Autorización')
-    c.drawCentredString(390,high-250,'Autorización')
+    letras = 320
+    c.drawString(20,140,'Total con letra:')
+    c.line(135,90,215,90 ) #Linea de Autorizacion
+    c.line(350,90,430,90)
+    c.drawCentredString(175,70,'Autorización')
+    c.drawCentredString(390,70,'Autorización')
 
-    c.drawCentredString(175,high-270,'Superintendente Administrativo')
-    c.drawCentredString(390,high-270,'Gerencia Zona')
+    c.drawCentredString(175,80,'Superintendente Administrativo')
+    c.drawCentredString(390,80,'Gerencia Zona')
     if compra.autorizado1:
-        c.drawCentredString(175,high-230,compra.oc_autorizada_por.staff.first_name + ' ' +compra.oc_autorizada_por.staff.last_name)
+        c.drawCentredString(175,90,compra.oc_autorizada_por.staff.first_name + ' ' +compra.oc_autorizada_por.staff.last_name)
     if compra.autorizado2:
-        c.drawCentredString(390,high-230,compra.oc_autorizada_por2.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.last_name)
+        c.drawCentredString(390,90,compra.oc_autorizada_por2.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.last_name)
 
     c.setFont('Helvetica',10)
     subtotal = compra.costo_oc - compra.costo_iva
-    c.drawRightString(montos_align + 90,high-115,str(subtotal))
-    c.drawRightString(montos_align + 90,high-125,str(compra.costo_iva))
-    c.drawRightString(montos_align + 90,high-135,str(compra.costo_oc))
+    c.drawRightString(montos_align + 90,210,str(subtotal))
+    c.drawRightString(montos_align + 90,200,str(compra.costo_iva))
+    c.drawRightString(montos_align + 90,190,str(compra.costo_oc))
     if compra.costo_fletes is None:
         compra.costo_fletes = 0
-    c.drawRightString(montos_align + 90,high-145,str(compra.costo_fletes))
+    c.drawRightString(montos_align + 90,180,str(compra.costo_fletes))
     c.setFillColor(prussian_blue)
-    c.drawRightString(montos_align + 90,high-155,str(compra.costo_oc ))
+    c.drawRightString(montos_align + 90,170,str(compra.costo_oc ))
     c.setFont('Helvetica', 9)
-    c.drawString(letras,high-175, num2words(compra.costo_oc, lang='es_CO', to='currency'))
+    c.drawString(80,140, num2words(compra.costo_oc, lang='es_CO', to='currency'))
     c.setFillColor(black)
     if compra.opciones_condiciones is not None:
-        c.drawString(150,high-200,compra.opciones_condiciones)
+        c.drawString(130,130,compra.opciones_condiciones)
     else:
         c.drawString(150,high-200,"NA")
 
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
-    #Primer renglón
-    #c.drawCentredString(70,48,'Clasificación:')
-    #c.drawCentredString(140,48,'Nivel:')
-    #c.drawCentredString(240,48,'Preparado por:')
-    #c.drawCentredString(350,48,'Aprobado:')
-    #c.drawCentredString(450,48,'Fecha emisión:')
-    #c.drawCentredString(550,48,'Rev:')
-    #Segundo renglón
-    #c.drawCentredString(70,34,'Controlado')
-    #c.drawCentredString(140,34,'N5')
-    #c.drawCentredString(240,34,'SEOV-ALM-N4-01-01')
-    #c.drawCentredString(350,34,'SUB ADM')
-    #c.drawCentredString(450,34,'24/Oct/2018')
-    #c.drawCentredString(550,34,'001')
 
     width, height = letter
     table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
@@ -1115,3 +1150,67 @@ def attach_oc_pdf(request, pk):
     c.showPage()
     buf.seek(0)
     return buf.getvalue()
+
+def convert_excel_matriz_compras(compras):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Matriz_compras_' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Solicitudes')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+
+    columns = ['Compra','Requisición','Solicitud','Solicitante','Proyecto','Subproyecto','Área','Creado','Req. Autorizada','Proveedor','Costo','Status Pago','Status Autorización','Días de entrega']
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 5:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 25
+
+    columna_max = len(columns)+2
+
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 20
+
+    rows = compras.values_list('id','req__folio','req__orden__folio','req__orden__proyecto__nombre','req__orden__subproyecto__nombre',
+                               'req__orden__area__nombre', Concat('req__orden__staff__staff__first_name',Value(' '),'req__orden__staff__staff__last_name'),
+                               'created_at','req__approved_at','proveedor__nombre__razon_social','costo_oc','pagada','autorizado2','dias_de_entrega')
+
+    for row in rows:
+        row_num += 1
+        for col_num in range(len(row)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            if col_num == 8 or col_num == 7:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num == 10 or col_num == 11 or col_num == 12:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    wb.save(response)
+
+    return(response)

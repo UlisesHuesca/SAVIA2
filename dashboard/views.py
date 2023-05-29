@@ -1,7 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
 from django.contrib.auth.decorators import login_required
-from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad
+from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
@@ -19,10 +19,12 @@ from django.db.models import Sum
 @login_required(login_url='user-login')
 def index(request):
     usuario = Profile.objects.get(staff=request.user)
-    #usuario = Profile.objects.get(id=request.user.id)
-    #vale_salidas = ValeSalidas.objects.filter(material_recibido_por = usuario)
-    #salidas = Salidas.objects.filter(vale_salida = vale_salidas) | No jala me marca que la búsqueda por un valor exacto debe estar limtado a un resultado no debería ser porque hay 3
-    subproyectos = Subproyecto.objects.all()
+    inventario = Inventario.objects.all()
+
+
+    #salidas = Salidas.objects.all().annotate(sumatoria=Sum(F('precio')* F('cantidad'))).order_by("-sumatoria")[:100]
+
+    subproyectos = Subproyecto.objects.all().order_by('-gastado')
     #productos = Inventario.objects.filter(producto = salidas.producto.articulos.producto.producto)
     labels = []
     data = []
@@ -32,25 +34,33 @@ def index(request):
 
 
     #for salida in salidas:
-    #    if salida.producto.articulos.producto.producto.nombre not in labels:
-    #        labels.append(salida.producto.articulos.producto.producto.nombre)
-    #        data.append(salida.cantidad)
-    #    else:
-    #        index = labels.index(salida.producto.articulos.producto.producto.nombre)
-    #        data[index] = data[index]+salida.cantidad
+    inventario = sorted(inventario, key=lambda t: t.costo_salidas, reverse=True)[:30]
+    for item in inventario:
+        #if item.producto.nombre not in labels:
+        #if salida.producto.articulos.producto.producto.nombre not in labels:
+        if item.costo_salidas >0:
+            labels.append(item.producto.nombre)
+            data.append(float(item.costo_salidas))
+            #labels.append(salida.producto.articulos.producto.producto.nombre)
+            #data.append(float(salida.get_costo_salida))
+        #else:
+            #index = labels.index(salida.producto.articulos.producto.producto.nombre)
+            #data[index] = data[index] + float(salida.get_costo_salida)
 
     for subproyecto in subproyectos:
         subproy.append(subproyecto.nombre)
         gast.append(format(subproyecto.gastado, '.2f'))
         pres.append(format(subproyecto.presupuesto, '.2f'))
 
+
     context= {
-        #'usuario':usuario,
+        #'salidas':salidas,
         'labels':labels,
         'data':data,
         'subproyecto':subproy,
         'gastado':gast,
         }
+
     return render(request,'dashboard/index.html',context)
 
 @login_required(login_url='user-login')

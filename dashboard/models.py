@@ -122,6 +122,12 @@ class Inventario(models.Model):
         total_inv = (self.cantidad + self.cantidad_apartada) * self.price
         return total_inv
 
+    @property
+    def costo_salidas(self):
+        art_ordenados = self.articulosordenados_set.all()
+        total = sum([item.get_costo_salidas for item in art_ordenados])
+        return total
+
     def __str__(self):
         return f'{self.producto}'
 
@@ -175,7 +181,7 @@ class Order(models.Model):
 
     @property
     def get_folio(self):
-        return str(self.pk).zfill(6)
+        return 'PL'+str(self.pk).zfill(6)
 
 
 class ArticulosOrdenados(models.Model):
@@ -194,6 +200,12 @@ class ArticulosOrdenados(models.Model):
         total = self.producto.price * self.cantidad
         return total
 
+    @property
+    def get_costo_salidas(self):
+        surtidos = self.articulosparasurtir_set.all()
+        total = sum([surtido.get_costo_salidas for surtido in surtidos])
+        return total
+
 class ArticulosparaSurtir(models.Model):
     articulos = models.ForeignKey(ArticulosOrdenados, on_delete = models.CASCADE, null=True)
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
@@ -209,6 +221,11 @@ class ArticulosparaSurtir(models.Model):
     created_at_time = models.TimeField(auto_now_add=True)
     modified_at = models.DateField(auto_now=True)
 
+    @property
+    def get_costo_salidas(self):
+        salidas = self.salidas_set.all()
+        costo = sum([salida.get_costo_salida for salida in salidas])
+        return costo
 
     def __str__(self):
         return f'{self.articulos} - {self.cantidad} - {self.cantidad_requisitar}'

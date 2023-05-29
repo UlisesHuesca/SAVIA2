@@ -241,6 +241,7 @@ def salida_material(request, pk):
             formVale.save()
             vale = formVale.save(commit=False)
             vale.complete = True
+            vale.save()
             messages.success(request,'La salida se ha generado de manera exitosa')
             return redirect('reporte-salidas')
         if not formVale.is_valid():
