@@ -125,11 +125,31 @@ class Compra(models.Model):
     monto_pagado = models.DecimalField(max_digits=14,decimal_places=2, default=0)
     entrada_completa = models.BooleanField(default=False)
     solo_servicios = models.BooleanField(default=False)
+    regresar_oc = models.BooleanField(default=False)
+
 
     @property
     def get_pagos(self):
         pagos = self.pago_set.all()
         return pagos
+
+    @property
+    def get_subtotal(self):
+        productos = self.articulocomprado_set.all()
+        suma =  sum([producto.subtotal_parcial for producto in productos])
+        return suma
+
+    @property
+    def get_iva(self):
+        productos =  self.articulocomprado_set.all()
+        suma = sum([producto.iva_parcial for producto in productos])
+        return suma
+
+    @property
+    def get_total(self):
+        productos =  self.articulocomprado_set.all()
+        suma = sum([producto.total for producto in productos])
+        return suma
 
     @property
     def get_folio(self):

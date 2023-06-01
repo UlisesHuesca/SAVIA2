@@ -3,7 +3,7 @@ from dashboard.models import Inventario, Order, ArticulosOrdenados, Articulospar
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago
-from .filters import CompraFilter, ArticulosRequisitadosFilter
+from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_credito, Uso_cfdi, Moneda
 from tesoreria.models import Facturas
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm
@@ -187,6 +187,98 @@ def oc(request, pk):
 
     return render(request, 'compras/oc.html',context)
 
+def compras_devueltas(request):
+    #productos = ArticulosRequisitados.objects.filter(req = pk)
+    #req = Requis.objects.get(id = pk)
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    compras = Compra.objects.filter(regresar_oc = True)
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
+
+    #form_product = ArticuloCompradoForm()
+    #form = CompraForm(instance=oc)
+
+
+
+    context= {
+        'myfilter':myfilter,
+        'compras_list':compras,
+        }
+
+    return render(request, 'compras/compras_devueltas.html',context)
+
+def compra_edicion(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    oc = Compra.objects.get(id =pk)
+    colaborador_sel = Profile.objects.all()
+    productos_comp = ArticuloComprado.objects.filter(oc = oc)
+    productos = ArticulosRequisitados.objects.filter(req = oc.req, sel_comp = False)
+    req = Requis.objects.get(id = oc.req.id)
+    proveedores = Proveedor_direcciones.objects.filter(estatus__nombre='APROBADO')
+    form_product = ArticuloCompradoForm()
+    form = CompraForm(instance=oc)
+
+    tag = dof()
+    subtotal = 0
+    iva = 0
+    total = 0
+    dif_cant = 0
+    form.fields['deposito_comprador'].queryset = colaborador_sel
+    for item in productos_comp:
+        subtotal = decimal.Decimal(subtotal + item.cantidad * item.precio_unitario)
+        if item.producto.producto.articulos.producto.producto.iva == True:
+            iva = round(subtotal * decimal.Decimal(0.16),2)
+        total = decimal.Decimal(subtotal + decimal.Decimal(iva))
+
+    if request.method == 'POST' and  "crear" in request.POST:
+        form = CompraForm(request.POST, instance=oc)
+        costo_oc = 0
+        costo_iva = 0
+        articulos = ArticuloComprado.objects.filter(oc=oc)
+        requisitados = ArticulosRequisitados.objects.filter(req = pk)
+        cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
+        cuenta_art_totales = requisitados.count()
+        if cuenta_art_totales == cuenta_art_comprados:
+            req.colocada = True
+        for articulo in articulos:
+            costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
+            if articulo.producto.producto.articulos.producto.producto.iva == True:
+                costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+        for producto in requisitados:
+            dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
+            if producto.art_surtido == False:
+                producto.sel_comp = False
+                producto.save()
+        oc.complete = True
+        if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
+            oc.costo_iva = decimal.Decimal(costo_iva)
+            oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+        else:
+            oc.costo_iva = decimal.Decimal(costo_iva)
+            oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+        if form.is_valid():
+            abrev= usuario.distrito.abreviado
+            #oc.folio = str(abrev) + str(consecutivo).zfill(4)
+            oc.regresar_oc = False
+            form.save()
+            oc.save()
+            req.save()
+            messages.success(request,f'{usuario.staff.first_name}, Has modificado la OC {oc.get_folio} correctamente')
+            return redirect('compras-devueltas')
+
+
+
+    context= {
+        'proveedores':proveedores,
+        'productos':productos,
+        'form':form,
+        'oc':oc,
+        'productos_comp':productos_comp,
+        'form_product':form_product,
+        }
+
+    return render(request, 'compras/compra_edicion.html',context)
+
 
 
 def update_oc(request):
@@ -323,6 +415,30 @@ def matriz_oc(request):
         }
 
     return render(request, 'compras/matriz_compras.html',context)
+
+@login_required(login_url='user-login')
+def matriz_oc_productos(request):
+    compras = Compra.objects.filter(complete=True)
+    articulos = ArticuloComprado.objects.filter(oc__complete = True)
+    myfilter = ArticuloCompradoFilter(request.GET, queryset=articulos)
+    articulos = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(articulos, 50)
+    page = request.GET.get('page')
+    articulos_list = p.get_page(page)
+
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_solicitud_matriz_productos(articulos)
+
+    context= {
+        'articulos_list':articulos_list,
+        'articulos':articulos,
+        'compras':compras,
+        'myfilter':myfilter,
+        }
+
+    return render(request, 'compras/matriz_oc_productos.html',context)
 
 @login_required(login_url='user-login')
 def productos_oc(request, pk):
@@ -521,13 +637,14 @@ def back_oc(request, pk):
     if request.method == 'POST':
         if not compra.autorizado1:
             compra.autorizada1_por = perfil
-            compra.autorizada1 = False
+            compra.autorizada1 = None
             compra.complete = False
             compra.autorizada_date1 = date.today()
             compra.autorizada_hora2 = datetime.now().time()
         else:
             compra.autorizada2_por = perfil
-            compra.autorizado2 = False
+            compra.autorizado2 = None
+            compra.autorizado1 = None
             compra.complete = False
             compra.autorizado_date2 = date.today()
             compra.autorizado_hora2 = datetime.now().time()
@@ -683,6 +800,7 @@ def render_oc_pdf(request, pk):
     #Configuration of the PDF object
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
+    #doc = SimpleDocTemplate(buf, pagesize=letter)
     #Here ends conf.
     compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
@@ -714,11 +832,6 @@ def render_oc_pdf(request, pk):
     c.drawString(452,caja_iso-30,'000')
     c.drawString(510,caja_iso-20,'Fecha de Emisión')
     c.drawString(525,caja_iso-30,'1-Sep.-18')
-
-
-    #c.drawString(460,735,'Folio: ')
-    #c.drawString(270,735,'Fecha:')
-
 
     caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)
@@ -803,11 +916,6 @@ def render_oc_pdf(request, pk):
         c.drawString(inicio_central + 90,caja_proveedor-55, compra.cond_de_pago.nombre + '  ' + str(compra.dias_de_credito) + 'días')
     else:
         c.drawString(inicio_central + 90,caja_proveedor-55, compra.cond_de_pago.nombre )
-
-    #c.drawString(inicio_central + 90,640, 'Almacén '+ compra.req.orden.staff.distrito.nombre)
-    #if compra.anticipo == False:
-    #    compra.monto_anticipo = 0
-    #c.drawString(inicio_central + 70,600, str(compra.monto_anticipo))
 
 
     data =[]
@@ -894,8 +1002,8 @@ def render_oc_pdf(request, pk):
     c.setFillColor(white)
 
     width, height = letter
-    table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-    table.setStyle(TableStyle([ #estilos de la tabla
+    table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
+    table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
         ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
@@ -906,11 +1014,74 @@ def render_oc_pdf(request, pk):
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
         ('FONTSIZE',(0,1),(-1,-1), 6),
-        ]))
-    table.wrapOn(c, width, height)
-    table.drawOn(c, 20, high)
+        ])
+    table_style2 = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
+        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        #ENCABEZADO
+        ('TEXTCOLOR',(0,0),(-1,0), colors.black),
+        ('FONTSIZE',(0,0),(-1,0), 6),
+        #('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        #CUERPO
+        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    table.setStyle(table_style)
+
+    rows_per_page = 15
+    total_rows = len(data) - 1  # Excluye el encabezado
+    remaining_rows = total_rows - rows_per_page
+
+    if remaining_rows <= 0:
+        # Si no hay suficientes filas para una segunda página, dibujar la tabla completa en la primera página
+        table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        table.drawOn(c, 20, high)  # Posición en la primera página
+    else:
+        # Dibujar las primeras 15 filas en la primera página
+        first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
+        first_page_table = Table(first_page_data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+        first_page_table.setStyle(table_style)
+        first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        first_page_table.drawOn(c, 20, high)  # Posición en la primera página
+
+        # Agregar una nueva página y dibujar las filas restantes en la segunda página
+        c.showPage()
+        remaining_data = data[rows_per_page + 1:]
+        remaining_table = Table(remaining_data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+        remaining_table.setStyle(table_style2)
+        remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        remaining_table_height = len(remaining_data) * 18
+        remaining_table_y = c._pagesize[1] - 70 - remaining_table_height - 10  # Espacio para el encabezado
+        remaining_table.drawOn(c, 20, remaining_table_y)  # Posición en la segunda página
+
+        # Agregar el encabezado en la segunda página
+        c.setFont('Helvetica', 8)
+        c.drawString(420, caja_iso, 'Preparado por:')
+        c.drawString(420, caja_iso - 10, 'SUP. ADMON')
+        c.drawString(520, caja_iso, 'Aprobación')
+        c.drawString(520, caja_iso - 10, 'SUB ADM')
+        c.drawString(150, caja_iso - 20, 'Número de documento')
+        c.drawString(160, caja_iso - 30, 'F-ADQ-N4-01.02')
+        c.drawString(245, caja_iso - 20, 'Clasificación del documento')
+        c.drawString(275, caja_iso - 30, 'Controlado')
+        c.drawString(355, caja_iso - 20, 'Nivel del documento')
+        c.drawString(380, caja_iso - 30, 'N5')
+        c.drawString(440, caja_iso - 20, 'Revisión No.')
+        c.drawString(452, caja_iso - 30, '000')
+        c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
+        c.drawString(525, caja_iso - 30, '1-Sep.-18')
+
+        caja_proveedor = caja_iso - 65
+        c.setFont('Helvetica', 12)
+        c.setFillColor(prussian_blue)
+        c.rect(150, 750, 250, 20, fill=True, stroke=False)  # Barra azul superior Orden de Compra
+        c.setFillColor(colors.white)
+        c.setFont('Helvetica-Bold', 14)
+        c.drawCentredString(280, 755, 'Orden de compra')
+        c.drawInlineImage('static/images/logo vordtec_documento.png', 45, 730, 3 * cm, 1.5 * cm)  # Imagen vortec
+
     c.save()
-    c.showPage()
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename='oc_'+str(compra.id) +'.pdf')
 
@@ -1034,18 +1205,10 @@ def attach_oc_pdf(request, pk):
         c.drawString(inicio_central + 90,caja_proveedor-155, compra.proveedor.clabe)
 
 
-
-
     if compra.cond_de_pago.nombre == "CREDITO":
         c.drawString(inicio_central + 90,caja_proveedor-55, compra.cond_de_pago.nombre + '  ' + str(compra.dias_de_credito) + 'días')
     else:
         c.drawString(inicio_central + 90,caja_proveedor-55, compra.cond_de_pago.nombre )
-
-    #c.drawString(inicio_central + 90,640, 'Almacén '+ compra.req.orden.staff.distrito.nombre)
-    #if compra.anticipo == False:
-    #    compra.monto_anticipo = 0
-    #c.drawString(inicio_central + 70,600, str(compra.monto_anticipo))
-
 
     data =[]
     high = 495
@@ -1131,8 +1294,8 @@ def attach_oc_pdf(request, pk):
     c.setFillColor(white)
 
     width, height = letter
-    table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-    table.setStyle(TableStyle([ #estilos de la tabla
+    table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
+    table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
         ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
@@ -1143,9 +1306,72 @@ def attach_oc_pdf(request, pk):
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
         ('FONTSIZE',(0,1),(-1,-1), 6),
-        ]))
-    table.wrapOn(c, width, height)
-    table.drawOn(c, 20, high)
+        ])
+    table_style2 = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
+        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        #ENCABEZADO
+        ('TEXTCOLOR',(0,0),(-1,0), colors.black),
+        ('FONTSIZE',(0,0),(-1,0), 6),
+        #('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        #CUERPO
+        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    table.setStyle(table_style)
+
+    rows_per_page = 15
+    total_rows = len(data) - 1  # Excluye el encabezado
+    remaining_rows = total_rows - rows_per_page
+
+    if remaining_rows <= 0:
+        # Si no hay suficientes filas para una segunda página, dibujar la tabla completa en la primera página
+        table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        table.drawOn(c, 20, high)  # Posición en la primera página
+    else:
+        # Dibujar las primeras 15 filas en la primera página
+        first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
+        first_page_table = Table(first_page_data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+        first_page_table.setStyle(table_style)
+        first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        first_page_table.drawOn(c, 20, high)  # Posición en la primera página
+
+        # Agregar una nueva página y dibujar las filas restantes en la segunda página
+        c.showPage()
+        remaining_data = data[rows_per_page + 1:]
+        remaining_table = Table(remaining_data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+        remaining_table.setStyle(table_style2)
+        remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        remaining_table_height = len(remaining_data) * 18
+        remaining_table_y = c._pagesize[1] - 70 - remaining_table_height - 10  # Espacio para el encabezado
+        remaining_table.drawOn(c, 20, remaining_table_y)  # Posición en la segunda página
+
+        # Agregar el encabezado en la segunda página
+        c.setFont('Helvetica', 8)
+        c.drawString(420, caja_iso, 'Preparado por:')
+        c.drawString(420, caja_iso - 10, 'SUP. ADMON')
+        c.drawString(520, caja_iso, 'Aprobación')
+        c.drawString(520, caja_iso - 10, 'SUB ADM')
+        c.drawString(150, caja_iso - 20, 'Número de documento')
+        c.drawString(160, caja_iso - 30, 'F-ADQ-N4-01.02')
+        c.drawString(245, caja_iso - 20, 'Clasificación del documento')
+        c.drawString(275, caja_iso - 30, 'Controlado')
+        c.drawString(355, caja_iso - 20, 'Nivel del documento')
+        c.drawString(380, caja_iso - 30, 'N5')
+        c.drawString(440, caja_iso - 20, 'Revisión No.')
+        c.drawString(452, caja_iso - 30, '000')
+        c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
+        c.drawString(525, caja_iso - 30, '1-Sep.-18')
+
+        caja_proveedor = caja_iso - 65
+        c.setFont('Helvetica', 12)
+        c.setFillColor(prussian_blue)
+        c.rect(150, 750, 250, 20, fill=True, stroke=False)  # Barra azul superior Orden de Compra
+        c.setFillColor(colors.white)
+        c.setFont('Helvetica-Bold', 14)
+        c.drawCentredString(280, 755, 'Orden de compra')
+        c.drawInlineImage('static/images/logo vordtec_documento.png', 45, 730, 3 * cm, 1.5 * cm)  # Imagen vortec
     c.save()
     c.showPage()
     buf.seek(0)
@@ -1209,6 +1435,77 @@ def convert_excel_matriz_compras(compras):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num == 10 or col_num == 11 or col_num == 12:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    wb.save(response)
+
+    return(response)
+
+def convert_excel_solicitud_matriz_productos(productos):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Solicitudes_por_producto_' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Compras_Producto')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+
+    columns = ['OC','RQ','Sol','Solicitante','Proyecto','Subproyecto','Área','Cantidad','Código', 'Producto','P.U.','Cantidad','Subtotal','IVA','Total']
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 4 or col_num == 7:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 25
+
+
+
+    columna_max = len(columns)+2
+
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 20
+
+    rows = productos.values_list('oc','oc__req','oc__req__orden', Concat('oc__req__orden__staff__staff__first_name',Value(' '),'oc__req__orden__staff__staff__last_name'),
+                                'oc__req__orden__proyecto__nombre','oc__req__orden__subproyecto__nombre', 'oc__req__orden__area__nombre','cantidad','producto__producto__articulos__producto__producto__codigo',
+                                'producto__producto__articulos__producto__producto__nombre','precio_unitario','cantidad')
+
+    subtotales = [producto.subtotal_parcial for producto in productos]
+    ivas = [producto.iva_parcial for producto in productos]
+    totales = [producto.total for producto in productos]
+
+    for row, subtotal, iva, total in zip(rows,subtotales, ivas, totales):
+        row_num += 1
+        row_with_additional_columns = list(row) + [subtotal, iva, total]  # Agrega el subtotal a la fila existente
+        for col_num in range(len(row_with_additional_columns)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row_with_additional_columns[col_num]))).style = body_style
+            if col_num == 5:
+                (ws.cell(row = row_num, column = col_num+1, value=row_with_additional_columns[col_num])).style = body_style
+            if col_num == 10 or col_num == 12 or col_num == 13 or col_num == 14:
+                (ws.cell(row = row_num, column = col_num+1, value=row_with_additional_columns[col_num])).style = money_style
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)

@@ -5,9 +5,9 @@ from compras.models import Compra, ArticuloComprado
 from compras.filters import CompraFilter
 from compras.views import attach_oc_pdf
 from dashboard.models import Inventario, Order, ArticulosparaSurtir
-from requisiciones.models import Salidas
-from .models import Entrada, EntradaArticulo, Reporte_Calidad
-from .forms import EntradaArticuloForm, Reporte_CalidadForm
+from requisiciones.models import Salidas, ArticulosRequisitados, Requis
+from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, NC_Articulo
+from .forms import EntradaArticuloForm, Reporte_CalidadForm, NoConformidadForm, NC_ArticuloForm
 from user.models import Profile
 import json
 from django.db.models import Sum
@@ -369,3 +369,136 @@ def reporte_calidad(request, pk):
         }
 
     return render(request,'entradas/calidad_entrada.html',context)
+
+def productos(request, pk):
+    compra = Compra.objects.get(id=pk)
+    articulos_comprados = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False)
+
+    context = {
+        'compra': compra,
+        'articulos_comprados': articulos_comprados,
+    }
+
+    return render(request, 'entradas/productos.html', context)
+
+
+def no_conformidad(request, pk):
+    # Obtén la compra y el perfil asociado con la sesión actual
+    compra = Compra.objects.get(id=pk)
+    perfil = Profile.objects.get(staff__id = request.user.id)
+    articulos = ArticuloComprado.objects.filter(oc=pk, entrada_completa = False, seleccionado = False, producto__producto__articulos__producto__producto__servicio = False)
+
+    for articulo in articulos:
+        if articulo.cantidad_pendiente == None:
+            articulo.cantidad_pendiente = articulo.cantidad
+
+
+    # Crear o obtener la instancia de No_Conformidad
+    no_conformidad, created = No_Conformidad.objects.get_or_create(
+        oc=compra,
+        almacenista=perfil,
+        completo = False,
+    )
+
+    articulos_nc = NC_Articulo.objects.filter(nc = no_conformidad, )
+    form = NC_ArticuloForm()
+    form2 = NoConformidadForm()
+
+    # Si el método de la petición es POST, procesar el formulario
+    if request.method == "POST":
+        #and 'BtnCrear' in request.POST:
+        form2 = NoConformidadForm(request.POST, instance = no_conformidad)
+
+        if form2.is_valid():
+            no_conf = form2.save(commit=False)
+            for articulo in articulos_nc:
+                articulo_comprado = ArticuloComprado.objects.get(oc=compra, producto=articulo.articulo_comprado.producto)
+                articulo_requisitado = ArticulosRequisitados.objects.get(req=compra.req, producto=articulo.articulo_comprado.producto.producto)
+                requi = Requis.objects.get(id=compra.req.id)
+                articulo_comprado.cantidad = articulo_comprado.cantidad - articulo.cantidad
+                articulo_comprado.cantidad_pendiente = articulo_comprado.cantidad_pendiente - articulo.cantidad
+                articulo_requisitado.cantidad_comprada = articulo_requisitado.cantidad_comprada - articulo.cantidad
+                requi.colocada = False
+                articulo_comprado.seleccionado = False
+                articulo_requisitado.sel_comp = False
+                articulo_comprado.save()
+                articulo_requisitado.save()
+                requi.save()
+                email = EmailMessage(
+                    f'Compra| No conformidad {no_conf.id} OC {no_conf.oc.get_folio}',
+                    f'Estimado {no_conf.oc.proveedor.nombre.razon_social},\n Estás recibiendo este correo porque se ha recibido en almacén el producto código:{articulo.articulos.producto.producto.codigo} descripción:{articulo.articulos.producto.producto.nombre} el cual no fue entregado al almacén\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordcab.com',
+                    ['ulises_huesc@hotmail.com',no_conf.oc.proveedor.nombre.email,'lizeth.ojeda@vordtec.com','osiris.bautista@vordtec.com'],
+                    )
+                #email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
+                email.send()
+
+            no_conf.completo = True
+            no_conf.nc_date = date.today()
+            no_conf.nc_hora = datetime.now().time()
+            no_conf.save()
+
+            messages.success(request,'Has completado la No Conformidad de manera exitosa')
+            return redirect('pendientes_entrada')
+        else:
+            messages.error(request,'No está validando')
+    #else:
+        #messages.error(request,'Está siguiendo de largo')
+
+
+    context = {
+        'compra':compra,
+        'articulos':articulos,
+        'articulos_nc':articulos_nc,
+        'form': form,
+        'form2':form2,
+        'no_conformidad': no_conformidad,
+    }
+
+    return render(request, 'entradas/no_conformidad.html', context)
+
+def update_no_conformidad(request):
+    data = json.loads(request.body)
+    cantidad = decimal.Decimal(data["cantidad_ingresada"])
+    action = data["action"]
+    producto_id = int(data["producto"])
+    pk = int(data["nc_id"])
+    #referencia = data["referencia"]
+    producto_comprado = ArticuloComprado.objects.get(id = producto_id)
+    nc = No_Conformidad.objects.get(id = pk, completo = False)
+    nc_producto = NC_Articulo.objects.filter(articulo_comprado = producto_comprado, nc__oc = producto_comprado.oc, nc__completo = True).aggregate(Sum('cantidad'))
+    entradas_producto = EntradaArticulo.objects.filter(articulo_comprado = producto_comprado, entrada__oc = producto_comprado.oc, entrada__completo = True).aggregate(Sum('cantidad'))
+    suma_entradas = entradas_producto['cantidad__sum']
+    suma_nc_producto = nc_producto['cantidad__sum']
+    entradas_producto = EntradaArticulo.objects.filter(articulo_comprado = producto_comprado, entrada__oc = producto_comprado.oc, entrada__completo = True).aggregate(Sum('cantidad_por_surtir'))
+    pendientes_surtir = entradas_producto['cantidad_por_surtir__sum']
+    if pendientes_surtir == None:   #Esto sucede cuando no hay ningún producto en esos articulos
+        pendientes_surtir = 0
+    if suma_nc_producto == None:
+        suma_nc_producto = 0
+    if suma_entradas == None:
+        suma_entradas = 0
+
+
+    nc_item, created = NC_Articulo.objects.get_or_create(nc = nc, articulo_comprado = producto_comprado)
+    nc_item.cantidad = cantidad
+
+    if action == "add":
+        total_entradas_nc = pendientes_surtir + suma_nc_producto + nc_item.cantidad
+
+        if total_entradas_nc > producto_comprado.cantidad: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
+            messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {suma_entradas} > {cantidad}')
+        else:
+            #producto_comprado.cantidad_pendiente = producto_comprado.cantidad - total_entradas_nc
+            #Cree una variable booleana temporal para quitarlo del seleccionable
+            producto_comprado.seleccionado = True
+            messages.success(request,f'Has agregado el artículo con éxito {total_entradas_nc}')
+            producto_comprado.save()
+            nc_item.save()
+    elif action == "remove":
+        producto_comprado.seleccionado = False
+        messages.success(request,'Has eliminado el artículo con éxito')
+        #Se borra el elemento de las entradas
+        #Guardado de bases de datos
+        nc_item.delete()
+    return JsonResponse('Item was '+action, safe=False)

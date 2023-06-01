@@ -139,6 +139,14 @@
                             <li class="nav-item mx-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'articulos_entrada' compra.id %}">Entrada</a>
                             </li>
+                            <!-- Añadir el botón de productos aquí -->
+                            <li class="nav-item mx-1">
+                            <a id="productosBtn" type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'productos' compra.id %}">Productos</a>
+                            </li>
+                            <!-- Añadir el botón de NC aquí -->
+                            <li class="nav-item mx-1">
+                            <a id="ncBtn" type="button" class="btn btn-outline-warning" href="{% url 'no-conformidad' compra.id %}">NC</a>
+                            </li> 
                         </ul>
                     </td>
                 </tr>

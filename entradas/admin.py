@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Entrada, EntradaArticulo, Reporte_Calidad
+from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, NC_Articulo
 
 # Register your models here.
 class EntradaAdmin(admin.ModelAdmin):
@@ -15,3 +15,7 @@ admin.site.register(Entrada, EntradaAdmin)
 admin.site.register(EntradaArticulo, EntradaArticuloAdmin)
 
 admin.site.register(Reporte_Calidad)
+
+admin.site.register(No_Conformidad)
+
+admin.site.register(NC_Articulo)

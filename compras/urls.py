@@ -23,6 +23,9 @@ urlpatterns = [
     path('compras/eliminar_articulos/<int:pk>', views.eliminar_articulos, name='eliminar-articulos'),
     path('compras/articulos_restantes/<int:pk>', views.articulos_restantes, name='articulos-restantes'),
     path('compras/productos_pendientes/', views.productos_pendientes, name='productos-pendientes'),
+    path('compras/compras_devueltas', views.compras_devueltas,name='compras-devueltas'),
+    path('compras/compra_edicion/<int:pk>', views.compra_edicion, name='compra-edicion'),
+    path('compras/matriz_oc_productos/', views.matriz_oc_productos, name='matriz-oc-productos'),
     ]
 
 if settings.DEBUG:

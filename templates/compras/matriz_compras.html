@@ -60,7 +60,7 @@
                     {% csrf_token %}
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
-                            <button type="submit" name="btnReporte" class="btn btn-outline-success" value='Reporte Excel'>
+                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
@@ -72,9 +72,11 @@
                         <li class="nav-item mx-2">
                                 <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                     <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos</a>
+                                    <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
                                     <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>
-                                  </div>
+                                    <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                    <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                                </div>
                             </li>
                     </ul>
                 </form>
