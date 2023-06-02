@@ -13,55 +13,72 @@ from django.contrib import messages
 import csv
 from django.core.paginator import Paginator
 from django.db.models import Sum
+#import plotly.express as px
+#from plotly.subplots import make_subplots
+#import plotly.graph_objects as go
+#import pandas as pd
 #import decimal
 
 # Create your views here.
 @login_required(login_url='user-login')
 def index(request):
     usuario = Profile.objects.get(staff=request.user)
-    inventario = Inventario.objects.all()
+    inventarios = Inventario.objects.all()
+    proyectos = Proyecto.objects.all()
+
+    # Obtener los proyectos y calcular el total
+    proyectos_total = [(proyecto, proyecto.get_projects_gastado) for proyecto in proyectos]
+
+    # Obtener los inventarios y calcular el costo de salidas
+    inventarios_costo_salidas = [(inventario, inventario.costo_salidas) for inventario in inventarios]
+
+    # Ordenar los inventarios por el costo de salidas en orden descendente
+    inventarios_costo_salidas_sorted = sorted(inventarios_costo_salidas, key=lambda x: x[1], reverse=True)
+    # Ordenar los proyectos por el total en orden descendente
+    proyectos_total_sorted = sorted(proyectos_total, key=lambda x: x[1], reverse=True)
+
+    # Tomar solo los primeros 50 inventarios ordenados
+    inventarios_top_50 = inventarios_costo_salidas_sorted[:50]
 
 
-    #salidas = Salidas.objects.all().annotate(sumatoria=Sum(F('precio')* F('cantidad'))).order_by("-sumatoria")[:100]
-
-    subproyectos = Subproyecto.objects.all().order_by('-gastado')
-    #productos = Inventario.objects.filter(producto = salidas.producto.articulos.producto.producto)
-    labels = []
-    data = []
-    subproy = []
-    gast = []
-    pres = []
+    # Preparar los datos para el gráfico
+    x = [proyecto.nombre for proyecto, _ in proyectos_total_sorted]
+    y = [total for _, total in proyectos_total_sorted]
+    x2 = [inventario.producto.nombre[:15] + '...' if len(inventario.producto.nombre) > 10 else inventario.producto.nombre for inventario,_ in inventarios_top_50]
+    y2 = [costo_salidas for _, costo_salidas in inventarios_top_50]
 
 
-    #for salida in salidas:
-    inventario = sorted(inventario, key=lambda t: t.costo_salidas, reverse=True)[:30]
-    for item in inventario:
-        #if item.producto.nombre not in labels:
-        #if salida.producto.articulos.producto.producto.nombre not in labels:
-        if item.costo_salidas >0:
-            labels.append(item.producto.nombre)
-            data.append(float(item.costo_salidas))
-            #labels.append(salida.producto.articulos.producto.producto.nombre)
-            #data.append(float(salida.get_costo_salida))
-        #else:
-            #index = labels.index(salida.producto.articulos.producto.producto.nombre)
-            #data[index] = data[index] + float(salida.get_costo_salida)
 
-    for subproyecto in subproyectos:
-        subproy.append(subproyecto.nombre)
-        gast.append(format(subproyecto.gastado, '.2f'))
-        pres.append(format(subproyecto.presupuesto, '.2f'))
+   # Crear el gráfico de barras
+#fig = make_subplots()
+#    fig.add_trace(go.Bar(x=x, y=y, marker=dict(color='#3E92CC')),1,1)
+    # Crear el gráfico de barras
+#    fig2 = make_subplots()
+#    fig2.add_trace(go.Bar(x=x2, y=y2, marker=dict(color='#3E92CC')),1,1)
 
+ #   fig.update_layout(
 
-    context= {
-        #'salidas':salidas,
-        'labels':labels,
-        'data':data,
-        'subproyecto':subproy,
-        'gastado':gast,
-        }
+  #      plot_bgcolor='#9a9b9d',
+   #     paper_bgcolor='white',
+    #    font_color= '#3E92CC'
+    #)
 
-    return render(request,'dashboard/index.html',context)
+    #fig2.update_layout(
+     #   plot_bgcolor='#9a9b9d',
+      #  paper_bgcolor='white',
+       # font_color= '#3E92CC'
+    #)
+
+    # Convertir el gráfico en HTML para pasar a la plantilla
+    #graph_proyectos = fig.to_html(full_html=False)
+    #graph_inventarios = fig2.to_html(full_html=False)
+
+    #context = {
+     #   'graph_proyectos': graph_proyectos,
+     #   'graph_inventarios':graph_inventarios,
+    #}
+
+    return render(request,'dashboard/index.html')#context)
 
 @login_required(login_url='user-login')
 def proyectos(request):
@@ -130,8 +147,9 @@ def proyectos_edit(request, pk):
 
 @login_required(login_url='user-login')
 def proveedor_direcciones(request, pk):
+    proveedor = Proveedor.objects.get(id=pk)
 
-    direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk)
+    direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True)
 
     #if request.method =='POST':
         #form = Proyectos_Form(request.POST, instance=proyecto)
@@ -145,6 +163,7 @@ def proveedor_direcciones(request, pk):
 
     context = {
         #'form': form,
+        'proveedor':proveedor,
         'direcciones':direcciones,
         }
     return render(request,'dashboard/direcciones_proveedor.html', context)
@@ -250,6 +269,7 @@ def product(request):
 
 @login_required(login_url='user-login')
 def proveedores(request):
+    usuario = Profile.objects.get(staff=request.user)
     proveedores = Proveedor.objects.all()
 
     total_prov = proveedores.count()
@@ -263,6 +283,7 @@ def proveedores(request):
     proveedores_list = p.get_page(page)
 
     context = {
+        'usuario':usuario,
         'proveedores': proveedores,
         'myfilter':myfilter,
         'proveedores_list':proveedores_list,
@@ -293,6 +314,54 @@ def proveedores_update(request, pk):
         }
 
     return render(request,'dashboard/proveedores_update.html', context)
+
+@login_required(login_url='user-login')
+def add_proveedores(request):
+    usuario = Profile.objects.get(staff=request.user)
+    item, created = Proveedor.objects.get_or_create(creado_por=usuario)
+
+    if request.method =='POST':
+        form = ProveedoresForm(request.POST, request.FILES or None, instance = item)
+        if form.is_valid():
+            form.save()
+            messages.success(request,f'Has agregado correctamente el proveedor {item.razon_social}')
+            return redirect('dashboard-proveedores')
+    else:
+        form = ProveedoresForm(instance = item)
+
+
+    context = {
+        'form': form,
+        'item':item,
+        }
+    return render(request,'dashboard/add_proveedores.html', context)
+
+@login_required(login_url='user-login')
+def add_proveedor_direccion(request, pk):
+
+    usuario = Profile.objects.get(staff=request.user)
+    proveedor = Proveedor.objects.get(id=pk)
+    item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, creado_por = usuario)
+
+    if request.method =='POST':
+        form = ProveedoresDireccionesForm(request.POST, instance = item)
+        if form.is_valid():
+            direccion = form.save(commit=False)
+            direccion.completo = True
+            direccion.save()
+            messages.success(request,f'Has agregado correctamente la direccion del proveedor {item.nombre.razon_social}')
+            return redirect('dashboard-proveedores')
+    else:
+        form = ProveedoresDireccionesForm(instance = item)
+
+
+    context = {
+        'form': form,
+        'item':item,
+        }
+    return render(request,'dashboard/add_proveedor_direccion.html', context)
+
+
 
 @login_required(login_url='user-login')
 def upload_batch_proveedores(request):

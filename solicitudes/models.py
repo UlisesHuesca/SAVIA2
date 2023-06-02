@@ -34,6 +34,12 @@ class Proyecto(models.Model):
         unique_together = ('nombre', 'distrito',)
 
     @property
+    def get_projects_gastado(self):
+        subproyectos = self.subproyecto_set.all()
+        total = sum([subproyecto.gastado for subproyecto in subproyectos])
+        return total
+
+    @property
     def get_projects_total(self):
         subproyectos = self.subproyecto_set.all()
         total = sum([subproyecto.presupuesto for subproyecto in subproyectos])

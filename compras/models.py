@@ -20,6 +20,8 @@ class Proveedor(models.Model):
     razon_social = models.CharField(max_length=100, null=True, unique=True)
     nombre_comercial = models.CharField(max_length=100, null=True, blank=True)
     rfc = models.CharField(max_length=13, null=True, unique=True)
+    creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
 
     def __str__(self):
@@ -43,6 +45,7 @@ class Estado(models.Model):
 
 class Proveedor_direcciones(models.Model):
     nombre = models.ForeignKey(Proveedor, on_delete=models.CASCADE, null=True)
+    creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE, null=True)
     domicilio = models.CharField(max_length=200, null=True)
     estado = models.ForeignKey(Estado, on_delete=models.CASCADE, null=True)
@@ -55,6 +58,7 @@ class Proveedor_direcciones(models.Model):
     dias_credito = models.PositiveIntegerField(null=True)
     estatus = models.ForeignKey(Estatus_proveedor, on_delete=models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+    completo = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.nombre}'

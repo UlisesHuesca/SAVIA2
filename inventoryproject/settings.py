@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'crispy_forms',
     'djmoney',
+    #'plotly',
     'widget_tweaks',
     'simple_history',
     'django.contrib.humanize'

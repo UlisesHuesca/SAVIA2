@@ -66,13 +66,15 @@
                 </form>
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
+                            {% if usuario.tipo.nombre == "Admin" %}
                             <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_proveedores' %}">
                                 <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
                             </a>
                             <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_proveedores_direcciones' %}">
                                 <i class="fa-solid fa-file-arrow-up"> Carga Masiva Direcciones</i>
                             </a>
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href=#>
+                            {% endif %}
+                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add_proveedores' %}">
                                 <i class="fa-solid fa-plus"> Agregar Proveedor</i>
                             </a>
                         </li>

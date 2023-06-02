@@ -411,9 +411,12 @@ def no_conformidad(request, pk):
 
         if form2.is_valid():
             no_conf = form2.save(commit=False)
+
             for articulo in articulos_nc:
                 articulo_comprado = ArticuloComprado.objects.get(oc=compra, producto=articulo.articulo_comprado.producto)
                 articulo_requisitado = ArticulosRequisitados.objects.get(req=compra.req, producto=articulo.articulo_comprado.producto.producto)
+                if articulo_comprado.cantidad_pendiente == None:
+                    articulo_comprado.cantidad_pendiente = 0
                 requi = Requis.objects.get(id=compra.req.id)
                 articulo_comprado.cantidad = articulo_comprado.cantidad - articulo.cantidad
                 articulo_comprado.cantidad_pendiente = articulo_comprado.cantidad_pendiente - articulo.cantidad
@@ -426,9 +429,9 @@ def no_conformidad(request, pk):
                 requi.save()
                 email = EmailMessage(
                     f'Compra| No conformidad {no_conf.id} OC {no_conf.oc.get_folio}',
-                    f'Estimado {no_conf.oc.proveedor.nombre.razon_social},\n Estás recibiendo este correo porque se ha recibido en almacén el producto código:{articulo.articulos.producto.producto.codigo} descripción:{articulo.articulos.producto.producto.nombre} el cual no fue entregado al almacén\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    f'Estimado {no_conf.oc.proveedor.nombre.razon_social},\n Estás recibiendo este correo porque se ha recibido en almacén el producto código:{articulo.articulo_comprado.producto.producto.articulos.producto.producto.codigo} descripción:{articulo.articulo_comprado.producto.producto.articulos.producto.producto.nombre} el cual no fue entregado al almacén\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                     'savia@vordcab.com',
-                    ['ulises_huesc@hotmail.com',no_conf.oc.proveedor.nombre.email,'lizeth.ojeda@vordtec.com','osiris.bautista@vordtec.com'],
+                    ['ulises_huesc@hotmail.com',no_conf.oc.proveedor.email,no_conf.oc.creada_por.staff.staff.email,],
                     )
                 #email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
                 email.send()
