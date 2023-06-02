@@ -59,13 +59,19 @@
                         {% if compra.costo_fletes %}
                         <tr style="color:#3e92cc">
                             <th scope="col">Costo Fletes:</th>
-                            <th scope="col">{{compra.costo_fletes}}</th>
-                        </tr>
-                        <tr style="color:#3e92cc">
-                            <th scope="col">Total OC:</th>
-                            <th scope="col">{{costo_total}}</th>
+                            <th scope="col">${{compra.costo_fletes}}</th>
                         </tr>
                         {% endif %}
+                        {% if compra.impuestos_adicionales %}
+                        <tr style="color:#3e92cc">
+                            <th scope="col">Impuestos Adicionales:</th>
+                            <th scope="col">$ {{compra.impuestos_adicionales}}</th>
+                        </tr>
+                        {% endif %}
+                        <tr style="color:#3e92cc">
+                            <th scope="col">Total OC:</th>
+                            <th scope="col">$ {{compra.costo_plus_adicionales}}</th>
+                        </tr>
                         <tr>
                             <th scope="col">Porcentaje Gasto/Subproyecto:</th>
                             <th scope="col"> {{porcentaje}}</th>

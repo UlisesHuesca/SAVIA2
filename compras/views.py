@@ -986,11 +986,24 @@ def render_oc_pdf(request, pk):
     c.drawRightString(montos_align + 90,190,str(compra.costo_oc))
     if compra.costo_fletes is None:
         compra.costo_fletes = 0
+
     c.drawRightString(montos_align + 90,180,str(compra.costo_fletes))
     c.setFillColor(prussian_blue)
-    c.drawRightString(montos_align + 90,170,str(compra.costo_oc ))
+
+    if compra.impuesto:
+        c.setFillColor(black)
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align,170,'Impuestos Adicionales:')
+        c.setFont('Helvetica',10)
+        c.drawRightString(montos_align + 90,170,str(compra.impuestos_adicionales))
+
+    c.drawRightString(montos_align + 90,160,str(compra.costo_plus_adicionales))
     c.setFont('Helvetica', 9)
-    c.drawString(80,140, num2words(compra.costo_oc, lang='es_CO', to='currency'))
+    if compra.moneda.nombre == "PESOS":
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es_CO', to='currency'))
+    if compra.moneda.nombre == "DOLARES":
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='en', to='currency'))
+
     c.setFillColor(black)
     if compra.opciones_condiciones is not None:
         c.drawString(130,130,compra.opciones_condiciones)
@@ -1280,14 +1293,28 @@ def attach_oc_pdf(request, pk):
         compra.costo_fletes = 0
     c.drawRightString(montos_align + 90,180,str(compra.costo_fletes))
     c.setFillColor(prussian_blue)
-    c.drawRightString(montos_align + 90,170,str(compra.costo_oc ))
+
+
+    if compra.impuesto:
+        c.setFillColor(black)
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align,170,'Impuestos Adicionales:')
+        c.setFont('Helvetica',10)
+        c.drawRightString(montos_align + 90,170,str(compra.impuestos_adicionales))
+
+    c.drawRightString(montos_align + 90,160,str(compra.costo_plus_adicionales))
     c.setFont('Helvetica', 9)
-    c.drawString(80,140, num2words(compra.costo_oc, lang='es_CO', to='currency'))
+    if compra.moneda.nombre == "PESOS":
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es_CO', to='currency'))
+    if compra.moneda.nombre == "DOLARES":
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='en', to='currency'))
+
+
     c.setFillColor(black)
     if compra.opciones_condiciones is not None:
         c.drawString(130,130,compra.opciones_condiciones)
     else:
-        c.drawString(150,high-200,"NA")
+        c.drawString(150,130,"NA")
 
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)

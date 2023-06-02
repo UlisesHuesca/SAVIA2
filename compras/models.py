@@ -21,6 +21,7 @@ class Proveedor(models.Model):
     nombre_comercial = models.CharField(max_length=100, null=True, blank=True)
     rfc = models.CharField(max_length=13, null=True, unique=True)
     creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    completo = models.BooleanField(default=False)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
 
@@ -130,6 +131,15 @@ class Compra(models.Model):
     entrada_completa = models.BooleanField(default=False)
     solo_servicios = models.BooleanField(default=False)
     regresar_oc = models.BooleanField(default=False)
+
+    @property
+    def costo_plus_adicionales(self):
+        total = self.costo_oc
+        if self.costo_fletes:
+            total = total + self.costo_fletes
+        if self.impuestos_adicionales:
+            total = total + self.impuestos_adicionales
+        return total
 
 
     @property

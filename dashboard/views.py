@@ -270,7 +270,7 @@ def product(request):
 @login_required(login_url='user-login')
 def proveedores(request):
     usuario = Profile.objects.get(staff=request.user)
-    proveedores = Proveedor.objects.all()
+    proveedores = Proveedor.objects.filter(completo=True)
 
     total_prov = proveedores.count()
 
@@ -304,7 +304,7 @@ def proveedores_update(request, pk):
         if form.is_valid():
             form.save()
             messages.success(request,f'Has actualizado correctamente el proyecto {proveedores.razon_social}')
-            return redirect('configuracion-proyectos')
+            return redirect('dashboard-proveedores')
     else:
         form = ProveedoresForm(instance=proveedores)
 
@@ -318,16 +318,18 @@ def proveedores_update(request, pk):
 @login_required(login_url='user-login')
 def add_proveedores(request):
     usuario = Profile.objects.get(staff=request.user)
-    item, created = Proveedor.objects.get_or_create(creado_por=usuario)
+    item, created = Proveedor.objects.get_or_create(creado_por=usuario, completo = False)
 
     if request.method =='POST':
         form = ProveedoresForm(request.POST, request.FILES or None, instance = item)
         if form.is_valid():
-            form.save()
+            item = form.save(commit=False)
+            item.completo = True
+            item.save()
             messages.success(request,f'Has agregado correctamente el proveedor {item.razon_social}')
             return redirect('dashboard-proveedores')
     else:
-        form = ProveedoresForm(instance = item)
+        form = ProveedoresForm(instance=item)
 
 
     context = {

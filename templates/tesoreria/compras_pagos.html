@@ -103,7 +103,7 @@
                     <thead>
                         <tr>
                         <th scope="col">Importe Compra</th>
-                        <th id="importe" value={{compra.costo_oc}} moneda={{compra.moneda.nombre}} scope="col">${{compra.costo_oc|floatformat:2}}</th>
+                        <th id="importe" value={{compra.costo_plus_adicionales}} moneda={{compra.moneda.nombre}} scope="col">${{compra.costo_plus_adicionales|floatformat:2}}</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -111,6 +111,18 @@
                             <th scope="col">Impuestos</th>
                             <th scope="col">${{compra.costo_iva}}</th>
                         </tr>
+                        {% if compra.impuestos_adicionales %}
+                        <tr>
+                            <th scope="col">Impuestos Adicionales</th>
+                            <th scope="col">${{compra.impuestos_adicionales}}</th>
+                        </tr>
+                        {% endif %}
+                        {% if compra.costo_fletes > 0 %}
+                        <tr>
+                            <th scope="col">Flete</th>
+                            <th scope="col">${{compra.costo_fletes}}</th>
+                        </tr>
+                        {% endif %}
                         <tr>
                             <th scope="col">Pagado:</th>
                             <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:2}}</th>

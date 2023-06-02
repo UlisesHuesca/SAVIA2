@@ -32,7 +32,7 @@
 
                     <datalist id="proveedor" name='proveedor'>
                         {% for item in proveedores %}
-                        <option status="{{item.estatus}}" valor="{{item.id}}" value="{{item.nombre.razon_social}}|{{item.domicilio}}"></option>
+                        <option status="{{item.estatus}}" valor="{{item.id}}" value="{{item.nombre.razon_social}}"></option>
                         {% endfor %}
                     </datalist>
                     </div>
@@ -237,6 +237,14 @@
                     <th scope="col">IVA</th>
                     <td scope="col" id="iva">${{iva|floatformat:2}}</td>
                 </tr>
+                <tr id="impuestos_total" class="d-none">
+                    <th scope="col">Impuesto</th>
+                    <td scope="col" id="valor_impuesto"></td>
+                </tr>
+                <tr id="flete" class="d-none">
+                    <th scope="col">Flete</th>
+                    <td scope="col" id="valor_flete"></td>
+                </tr>
                 <tr>
                     <th scope="col">Total</th>
                     <td scope="col" id="total">${{total|floatformat:2}}</td>
@@ -370,11 +378,11 @@ document.getElementById("crear").addEventListener("click", function(element){
     let checkanticipo = document.getElementById('id_anticipo');
     let opciones = document.getElementById('id_opciones_condiciones');
     let dias_credito = document.getElementById('id_dias_de_credito');
-    let impuestos = document.getElementById('id_impuestos_adicionales_0');
-    let flete = document.getElementById('id_costo_fletes_0');
-    let anticipo = document.getElementById('id_monto_anticipo_0');
+    let impuestos = document.getElementById('id_impuestos_adicionales');
+    let flete = document.getElementById('id_costo_fletes');
+    let anticipo = document.getElementById('id_monto_anticipo');
     let moneda = document.getElementById('id_moneda');
-    let tipo_cambio = document.getElementById('id_tipo_de_cambio_0');
+    let tipo_cambio = document.getElementById('id_tipo_de_cambio');
 
 
     console.log('iva:'+iva)
@@ -618,6 +626,11 @@ document.getElementById("id_flete").addEventListener("change", function(element)
 	console.log('checkflete:'+checkflete.checked);
 	var lbl_flete = document.getElementById('fletes')
 	var txt_flete1 = document.getElementById('id_costo_fletes')
+    var valor_flete = document.getElementById('flete')
+    var total_element = document.getElementById('total')
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+    var v_flete = document.getElementById('valor_flete')
+    
 
 	if (checkflete.checked){
 	    lbl_flete.removeAttribute('class');
@@ -629,7 +642,43 @@ document.getElementById("id_flete").addEventListener("change", function(element)
 		txt_flete1.removeAttribute("class")
 		lbl_flete.setAttribute("class","col-auto col-form-label d-none");
 		txt_flete1.setAttribute("class","form-control d-none")
+        let flete = parseFloat(v_flete.innerHTML.slice(1));
+        total_val -= flete;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+        txt_flete1.value=0
+        valor_flete.setAttribute("class", "d-none")
 	}
+});
+
+document.getElementById("id_costo_fletes").addEventListener("change", function(element) {
+    let flete_row = document.getElementById('flete');
+    let flete_valor = document.getElementById('valor_flete');
+    let total_element = document.getElementById('total');
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+
+    // Verificar si el valor de flete ha cambiado
+    if (element.target.value) {
+        let flete = parseFloat(element.target.value);
+        
+        // Hacer visible la fila del flete
+        flete_row.setAttribute('class','');
+
+        // Asignar valor de flete
+        flete_valor.innerHTML = '$' + flete.toFixed(2);
+
+        // Suma el valor del flete al total y actualiza el elemento total
+        total_val += flete;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+    } else {
+        let flete = parseFloat(flete_valor.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+
+        // Si el valor del flete es 0, puedes volver a ocultar la fila y restar el valor de flete del total.
+        flete_row.setAttribute('class','d-none');
+
+        // Resta el valor del flete del total y actualiza el elemento total
+        total_val -= flete;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+    }
 });
 
 var checkdof = document.getElementById("SwitchDof");
@@ -673,11 +722,15 @@ document.getElementById("id_anticipo").addEventListener("change", function(eleme
 
 var checkimpuesto = document.getElementById("id_impuesto")
 
-//This is the part off code that when flete swicth button change
+//This is the part off code that when impuesto swicth button change
 document.getElementById("id_impuesto").addEventListener("change", function(element){
 	console.log('checkimpuesto:'+checkimpuesto.checked);
 	var lbl_impuestos = document.getElementById('impuestos')
 	var txt_impuestos = document.getElementById('id_impuestos_adicionales')
+    let total_element = document.getElementById('total');
+    let impuesto_row = document.getElementById('impuestos_total')
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+    var v_impuesto = document.getElementById('valor_impuesto')
 
 	if (checkimpuesto.checked){
 	    lbl_impuestos.removeAttribute('class');
@@ -689,7 +742,34 @@ document.getElementById("id_impuesto").addEventListener("change", function(eleme
 		txt_impuestos.removeAttribute("class")
 		lbl_impuestos.setAttribute("class","col-auto col-form-label d-none");
 		txt_impuestos.setAttribute("class","form-control d-none")
+        impuesto_row.setAttribute("class","d-none")
+        let impuesto = parseFloat(v_impuesto.innerHTML.slice(1));
+        total_val -= impuesto;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+        txt_impuestos.value = 0
+        v_impuesto.innerHTML = " "
 	}
+});
+
+// Evento al cambiar el impuesto adicional
+document.getElementById("id_impuestos_adicionales").addEventListener("change", function(element) {
+    let impuesto = document.getElementById("id_impuestos_adicionales").value;
+    let impuesto_row = document.getElementById('impuestos_total');
+    let impuesto_valor = document.getElementById('valor_impuesto');
+    let total_element = document.getElementById('total');
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+
+    
+
+    impuesto_row.setAttribute('class','');
+    impuesto_valor.innerHTML = '$' + impuesto;
+
+    // Suma el valor del impuesto al total y actualiza el elemento total
+    total_val += parseFloat(impuesto);
+    console.log(impuesto);
+    total_element.innerHTML = '$' + total_val.toFixed(2);
+    console.log(total_val)
+    impuesto_valor.innerHTML = '$' + parseFloat(impuesto).toFixed(2);
 });
 
 var pago = document.getElementById("id_cond_de_pago")

@@ -9,17 +9,8 @@ class ProductForm(forms.ModelForm):
         model = Product
         fields = ['familia','subfamilia','unidad','especialista','iva','activo','servicio','baja_item','image','gasto']
 
-class ProveedoresForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor
-        fields = ['razon_social','rfc','nombre_comercial',]
 
-class ProveedoresDireccionesForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor_direcciones
-        fields = ['nombre','distrito','domicilio','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
-
-#Sobreescribiendo el método __init__ y configurando el queryset para que esté vacío
+    #Sobreescribiendo el método __init__ y configurando el queryset para que esté vacío
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['subfamilia'].queryset = Subfamilia.objects.none()
@@ -33,6 +24,15 @@ class ProveedoresDireccionesForm(forms.ModelForm):
         elif self.instance.pk:
             self.fields['subfamilia'].queryset = self.instance.familia.subfamilia_set.order_by('nombre')
 
+class ProveedoresForm(forms.ModelForm):
+    class Meta:
+        model = Proveedor
+        fields = ['razon_social','rfc','nombre_comercial',]
+
+class ProveedoresDireccionesForm(forms.ModelForm):
+    class Meta:
+        model = Proveedor_direcciones
+        fields = ['nombre','distrito','domicilio','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
 class Products_BatchForm(forms.ModelForm):
     class Meta:
