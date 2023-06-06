@@ -9,6 +9,7 @@ https://docs.djangoproject.com/en/3.2/topics/settings/
 For the full list of settings and their values, see
 https://docs.djangoproject.com/en/3.2/ref/settings/
 """
+#import os
 from pathlib import Path
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -60,7 +61,7 @@ INSTALLED_APPS = [
     'django_extensions',
     'crispy_forms',
     'djmoney',
-    #'plotly',
+    'plotly',
     'widget_tweaks',
     'simple_history',
     'django.contrib.humanize'
@@ -113,10 +114,11 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.mysql',
         'NAME': 'UlisesHuesca$default',
-        'USER': 'UlisesHuesca',
-        'PASSWORD': 'peruzzi25',
-        'HOST': 'UlisesHuesca.mysql.pythonanywhere-services.com',
-    }
+	'USER': 'root',
+        'PASSWORD': '*$HbAq*/4528*',
+        'HOST': 'localhost',
+        'PORT': '3306',
+	}
 }
 
 
@@ -171,6 +173,7 @@ STATICFILES_DIRS = [
 
 STATIC_ROOT = (BASE_DIR/"assert/")
 
+#STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 #Esta etiqueta es para redigir cuando te logeas desde settings
 LOGIN_REDIRECT_URL ='dashboard-index'
 

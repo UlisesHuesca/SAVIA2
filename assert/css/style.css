@@ -1,0 +1,143 @@
+body {background-color: #9a9b9d;}
+
+.my-card:hover{
+    transform: scale(1.1);
+    transition: 0.2s ease-in-out;
+}
+
+
+
+.col-lg-4, .col-lg-6, .col-lg-8, .col-lg-12{
+	margin-top: 10px;
+}
+
+
+.btn-outline-info{
+    color: #3E92CC;
+    border-color: #3E92CC;
+}
+
+.btn-outline-info:hover{
+    background-color: #3E92CC;
+    border-color: #3E92CC;
+    color: white;
+}
+
+.btn-outline-secondary{
+    color: #9a9b9d;
+    border-color: #9a9b9d;
+
+}
+
+.btn-outline-secondary:hover{
+    background-color: #9a9b9d;
+    border-color: #9a9b9d;
+    color: white;
+}
+
+.btn-outline-danger{
+    color: #990f0f;
+    border-color: #990f0f;
+}
+
+.btn-outline-danger:hover{
+    background-color: #990f0f;
+    border-color: #990f0f;
+    color: white;
+}
+
+.thumbnail{
+	    width: 100%;
+	    height: 200px;
+	    -webkit-box-shadow: -1px -3px 5px -2px rgba(214,214,214,1);
+    -moz-box-shadow: -1px -3px 5px -2px rgba(214,214,214,1);
+    box-shadow: -1px -3px 5px -2px rgba(214,214,214,1);
+}
+
+.box-element{
+    box-shadow: hsl(0,0%,80%)0 0 16px;
+    background-color: #fff;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.box-element-2{
+    box-shadow: hsl(0,0%,80%)0 0 16px;
+    border-radius: 4px;
+    padding: 10px;
+}
+
+.product{
+	border-radius: 0 0 4px 4px;
+}
+
+.bg-light{
+    background-color: #F5F5F5!important;
+}
+
+.bg-dark{
+    background-color: #122D45!important;
+}
+
+
+#cart-icon{
+    width: 25px;
+    display: inline-block;
+    margin-left: 15px;
+}
+
+#cart-total{
+    display: block;
+    text-align: center;
+    color: #fff;
+    background-color: red;
+    width: 20px;
+    height: 25px;
+    border-radius: 50px;
+    font-size: 14px;
+}
+
+.cart-row{
+	display: flex;
+    align-items: flex-stretch;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+    border-bottom: 1px solid #ececec;
+}
+
+.row-image{
+    width: 100px;
+}
+
+.quantity{
+	display: inline-block;
+	font-weight: 700;
+	padding-right:10px;
+}
+
+.chg-quantity{
+	width: 12px;
+	cursor: pointer;
+	display: block;
+	margin-top: 5px;
+	transition:.1s;
+}
+
+.chg-quantity:hover{
+	opacity: .6;
+}
+
+
+.form-field{
+    width: 250px;
+    display: inline-block;
+    padding: 5px;
+}
+
+/* ---------------------------------
+# BOOTSTRAP MODAL POPUP DARK THEME
+------------------------------------*/
+.modal-header, .modal-body, .modal-footer {
+    background-color: rgba(0,0,0,0.8);
+    color: #fff;
+}

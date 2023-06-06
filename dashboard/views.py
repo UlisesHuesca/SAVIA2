@@ -13,10 +13,10 @@ from django.contrib import messages
 import csv
 from django.core.paginator import Paginator
 from django.db.models import Sum
-#import plotly.express as px
-#from plotly.subplots import make_subplots
-#import plotly.graph_objects as go
-#import pandas as pd
+import plotly.express as px
+from plotly.subplots import make_subplots
+import plotly.graph_objects as go
+import pandas as pd
 #import decimal
 
 # Create your views here.
@@ -50,35 +50,34 @@ def index(request):
 
 
    # Crear el gráfico de barras
-#fig = make_subplots()
-#    fig.add_trace(go.Bar(x=x, y=y, marker=dict(color='#3E92CC')),1,1)
+    fig = make_subplots()
+    fig.add_trace(go.Bar(x=x, y=y, marker=dict(color='#3E92CC')),1,1)
     # Crear el gráfico de barras
-#    fig2 = make_subplots()
-#    fig2.add_trace(go.Bar(x=x2, y=y2, marker=dict(color='#3E92CC')),1,1)
+    fig2 = make_subplots()
+    fig2.add_trace(go.Bar(x=x2, y=y2, marker=dict(color='#3E92CC')),1,1)
 
- #   fig.update_layout(
+    fig.update_layout(
+        plot_bgcolor='#9a9b9d',
+        paper_bgcolor='white',
+        font_color= '#3E92CC',
+        )
 
-  #      plot_bgcolor='#9a9b9d',
-   #     paper_bgcolor='white',
-    #    font_color= '#3E92CC'
-    #)
+    fig2.update_layout(
+        plot_bgcolor='#9a9b9d',
+        paper_bgcolor='white',
+        font_color= '#3E92CC',
+        )
 
-    #fig2.update_layout(
-     #   plot_bgcolor='#9a9b9d',
-      #  paper_bgcolor='white',
-       # font_color= '#3E92CC'
-    #)
+    #Convertir el gráfico en HTML para pasar a la plantilla
+    graph_proyectos = fig.to_html(full_html=False)
+    graph_inventarios = fig2.to_html(full_html=False)
 
-    # Convertir el gráfico en HTML para pasar a la plantilla
-    #graph_proyectos = fig.to_html(full_html=False)
-    #graph_inventarios = fig2.to_html(full_html=False)
-
-    #context = {
-     #   'graph_proyectos': graph_proyectos,
-     #   'graph_inventarios':graph_inventarios,
-    #}
-
-    return render(request,'dashboard/index.html')#context)
+    context = {
+        'graph_proyectos': graph_proyectos,
+        'graph_inventarios':graph_inventarios,
+        }
+    
+    return render(request,'dashboard/index.html',context)
 
 @login_required(login_url='user-login')
 def proyectos(request):

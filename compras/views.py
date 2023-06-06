@@ -521,8 +521,7 @@ def autorizacion_oc1(request):
     return render(request, 'compras/autorizacion_oc1.html',context)
 
 def cancelar_oc1(request, pk):
-    usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
+    usuario = Profile.objects.get(staff__id=request.user.id)
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc = pk)
 
@@ -565,8 +564,7 @@ def cancelar_oc1(request, pk):
     return render(request,'compras/cancelar_oc1.html', context)
 
 def cancelar_oc2(request, pk):
-    usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
+    usuario = Profile.objects.get(staff__id=request.user.id)
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc = pk)
 
@@ -610,8 +608,7 @@ def cancelar_oc2(request, pk):
     return render(request,'compras/cancelar_oc2.html', context)
 
 def back_oc(request, pk):
-    usuario = request.user.id
-    perfil = Profile.objects.get(id=usuario)
+    perfil = Profile.objects.get(staff__id=request.user.id)
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc = pk)
     #Traigo la requisición para poderla activar de nuevo
@@ -639,8 +636,9 @@ def back_oc(request, pk):
             compra.autorizada1_por = perfil
             compra.autorizada1 = None
             compra.complete = False
-            compra.autorizada_date1 = date.today()
-            compra.autorizada_hora2 = datetime.now().time()
+            compra.autorizado_date1 = date.today()
+            compra.autorizado_hora1 = datetime.now().time()
+            compra.regresar_oc = True
         else:
             compra.autorizada2_por = perfil
             compra.autorizado2 = None
@@ -648,8 +646,9 @@ def back_oc(request, pk):
             compra.complete = False
             compra.autorizado_date2 = date.today()
             compra.autorizado_hora2 = datetime.now().time()
+            compra.regresar_oc = True
         #Esta línea es la que activa a la requi
-        requi.colocada = False
+        #requi.colocada = False
         compra.save()
         requi.save()
         messages.error(request,f'Has regresado la compra con FOLIO: {compra.get_folio} y ahora podrás encontrar esos productos en la requisición {requi.folio}')
@@ -1002,7 +1001,7 @@ def render_oc_pdf(request, pk):
     if compra.moneda.nombre == "PESOS":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es_CO', to='currency'))
     if compra.moneda.nombre == "DOLARES":
-        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='en', to='currency'))
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
 
     c.setFillColor(black)
     if compra.opciones_condiciones is not None:
@@ -1307,8 +1306,7 @@ def attach_oc_pdf(request, pk):
     if compra.moneda.nombre == "PESOS":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es_CO', to='currency'))
     if compra.moneda.nombre == "DOLARES":
-        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='en', to='currency'))
-
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
 
     c.setFillColor(black)
     if compra.opciones_condiciones is not None:
