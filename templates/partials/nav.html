@@ -74,6 +74,7 @@
                             <div class="d-none">
                             {% endif %}
                             <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
+                            <a class="dropdown-item" href="{% url 'activos' %}">Activos</a>
                             </div>
                         <div class="dropdown-divider"></div>
                     </div>
@@ -109,6 +110,9 @@
                                 {% if conteo_entradas > 0 %}
                                 <span class="badge bg-danger">({{conteo_entradas}})</span>
                                  {% endif %}
+                            </a>
+                            <a class="dropdown-item" href="{% url 'matriz-gasto-entrada'%}">
+                                Entrada por gasto
                             </a>
                             <!--<a class="dropdown-item" href="{% url 'solicitud-autorizada-firma' %}">Salidas</a>-->
                             <a class="dropdown-item" href="{% url 'product_selection_resurtimiento' %}">Resurtimiento: Seleccionar Productos</a>
@@ -168,7 +172,7 @@
                         <
                         <div class="dropdown-divider"></div>
                     </div>-->
-                    {% if usuario.tipo.comprador == False %}
+                    {% if usuario.tipo.compras == False %}
                     <div class="d-none">
                     {% else %}
                     <div>

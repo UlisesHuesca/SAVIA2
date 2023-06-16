@@ -78,7 +78,7 @@
                             <option id="default_sel">      </option>
                             {% for producto in productos_sel %}
                             {% if producto.seleccionado == False %}
-                            <option id="js" target="{{producto.id}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
                                 {{producto.articulos.producto}}
                             </option>
                             {% endif %}
@@ -134,7 +134,7 @@
                             <th scope="col">{{item.comentario}}</th>
                             <th scope="col">
                             <td>
-                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.id}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id}}" action="remove">
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.vale_devolucion.id}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </td>

@@ -7,7 +7,7 @@ class Solicitud_Gasto_Admin(admin.ModelAdmin):
     search_fields = ('colaborador',)
 
 class Articulo_Gasto_Admin(admin.ModelAdmin):
-    list_display =('staff','producto','comentario', 'gasto', 'created_at')
+    list_display =('id','staff','producto','comentario', 'gasto', 'created_at', 'validacion')
 
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)
 

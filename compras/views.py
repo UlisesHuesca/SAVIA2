@@ -633,14 +633,14 @@ def back_oc(request, pk):
 
     if request.method == 'POST':
         if not compra.autorizado1:
-            compra.autorizada1_por = perfil
-            compra.autorizada1 = None
+            compra.oc_autorizada_por = perfil
+            compra.autorizado1 = None
             compra.complete = False
             compra.autorizado_date1 = date.today()
             compra.autorizado_hora1 = datetime.now().time()
             compra.regresar_oc = True
         else:
-            compra.autorizada2_por = perfil
+            compra.oc_autorizada_por2 = perfil
             compra.autorizado2 = None
             compra.autorizado1 = None
             compra.complete = False
@@ -999,7 +999,7 @@ def render_oc_pdf(request, pk):
     c.drawRightString(montos_align + 90,160,str(compra.costo_plus_adicionales))
     c.setFont('Helvetica', 9)
     if compra.moneda.nombre == "PESOS":
-        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es_CO', to='currency'))
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN'))
     if compra.moneda.nombre == "DOLARES":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
 
@@ -1304,7 +1304,7 @@ def attach_oc_pdf(request, pk):
     c.drawRightString(montos_align + 90,160,str(compra.costo_plus_adicionales))
     c.setFont('Helvetica', 9)
     if compra.moneda.nombre == "PESOS":
-        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es_CO', to='currency'))
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN'))
     if compra.moneda.nombre == "DOLARES":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
 

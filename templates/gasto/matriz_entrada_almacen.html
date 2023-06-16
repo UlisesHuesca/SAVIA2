@@ -1,0 +1,154 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Entradas Pendientes{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<div class = "row mt-2 bg-white" id="response-div">
+        <div class="col-12">
+            <div class="card card-body">
+                <h5>Pendientes de Entrada</h5>
+                
+                <form method=POST>
+                    {% csrf_token %}
+                    <!--<ul class="nav nav-pills">
+                        <li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>
+                    </ul>-->
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Gasto Producto</th>
+                    <th scope="col">Gasto</th>
+                    <th scope="col">Solitado por</th>
+                    <th scope="col">Concepto</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Subproyecto</th>
+                    <th scope="col">Monto</th>
+                    <th scope="col">XML</th>
+                    <th scope="col">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in articulos_gasto %}
+                <tr>
+                    <td scope="col">{{gasto.id}}</th>
+                    <td scope="col">{{gasto.gasto.id}}</td>
+                    <td scope="col">{{gasto.staff.staff.first_name}} {{gasto.staff.staff.last_name}}</td>
+                    <td scope="col">{{gasto.producto.producto.nombre}}</td>
+                    <td scope="col">{{gasto.comentario}}</td>
+                    <td>{{gasto.gasto.proyecto.nombre}}</td>
+                    <td>{{gasto.gasto.subproyecto.nombre}}</td>
+                    <td>${{gasto.total_parcial|floatformat:2}} </td>
+                    {% if gasto.factura_xml %}
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                <a href="{{gasto.factura_xml.url}}" download class="btn btn-outline-secondary">
+                                    <i class="fa-solid fa-file-code fa-2xl"></i>
+                                </a>                 
+                            </li>
+                        </ul>
+                    </td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'gasto-entrada' gasto.id%}">Entrada</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+</script>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,123 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Agregar Activos {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+
+
+<div class="modal-dialog modal-lg"  id="document" role="document">
+    <form  hx-post="{{request.path}}" class="modal-content">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Agregar Activos</h5>
+            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="color:white">
+            <div>
+                {% csrf_token %}
+                    <label for="form.producto" class="col-auto col-form-label my-1"><strong>Activo:</strong></label>
+                    <!--<div class="col-sm-6">
+                        <input type="text" list="activos" id="txt_activos" valor="{{productos_activos.id}}" placeholder="Activos..." class="form-control">
+    
+                        <datalist id="activos" name='activos'>
+                            {% for item in productos_activos %}
+                            <option valor="{{item.id}}" value="{{item.producto}}"></option>
+                            {% endfor %}
+                        </datalist>
+                    </div>-->
+                    <div class="col-8">
+                        {{form.activo|add_class:"form-control"}}
+                    </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Tipo Activo:</strong></label>
+                    <div class="col-4">
+                        {{form.tipo_activo|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Responsable:</strong></label>
+                    <div class="col-4">
+                        {{form.responsable|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Eco Unidad:</strong></label>
+                    <div class="col-12">
+                        {{form.eco_unidad|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Serie:</strong></label>
+                    <div class="col-12">
+                        {{form.serie|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Cuenta Contable:</strong></label>
+                    <div class="col-12">
+                        {{form.cuenta_contable|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Factura Interna:</strong></label>
+                    <div class="col-12">
+                        {{form.factura_interna|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Descripción:</strong></label>
+                    <div class="col-12">
+                        {{form.descripcion|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
+                    <div class="col-12">
+                        {{form.comentario|add_class:"form-control"}}
+                    </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+                <button class="btn btn-success col-2" id="crear" type="submit">Crear</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.getElementById('id_activo').addEventListener("change",function(elment){
+
+});
+
+</script>
+{% endblock %}
+
+</body>
+</html>

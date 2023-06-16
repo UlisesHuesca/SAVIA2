@@ -89,6 +89,9 @@
                     <th scope="col">Gasto</th>
                     <th scope="col">Artículo</th>
                     <th scope="col">Descripción</th>
+                    <th scope="col">Concepto [XML]</th>
+                    <th scope="col">Proveedor [XML]</th>
+                    <th scope="col">Monto [XML]</th>
                     <th scope="col">Importe Gasto</th>
                     <th scope="col">Facturas</th>
                     <th scope="col">Upload</th>
@@ -100,7 +103,16 @@
                     <th scope="row">{{gasto.id}}</th>
                     <td>{{gasto.producto}}</td>
                     <td>{{gasto.comentario}}</td>
-                    <td>${{gasto.total_parcial}}</td>
+                    {% if gasto.factura_xml %}
+                    <td>{{gasto.emisor.resultados}}</td>
+                    <td>{{gasto.emisor.nombre}}</td>
+                    <td>${{gasto.emisor.total}}</td>
+                    {% else %}
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    {% endif %}
+                    <td>${{gasto.total_parcial|floatformat:2}}</td>
                     <td>
                         <ul class="nav nav-pills">
                             {% if gasto.factura_pdf %}

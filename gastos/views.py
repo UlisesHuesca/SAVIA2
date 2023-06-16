@@ -2,11 +2,11 @@ from django.shortcuts import render, redirect
 from datetime import date, datetime
 from django.contrib import messages
 from django.core.mail import EmailMessage
-from dashboard.models import Inventario
+from dashboard.models import Inventario, Order, ArticulosparaSurtir 
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta
-from .models import Solicitud_Gasto, Articulo_Gasto
-from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Articulo_Gasto_Factura_Form
+from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas
+from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Articulo_Gasto_Factura_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm 
 from compras.views import attach_oc_pdf
 from .filters import Solicitud_Gasto_Filter
 from user.models import Profile
@@ -15,6 +15,7 @@ from django.http import JsonResponse, HttpResponse
 from django.core.paginator import Paginator
 from django.db.models import Sum
 import json
+import xml.etree.ElementTree as ET
 import decimal
 
 # Create your views here.
@@ -26,7 +27,7 @@ def crear_gasto(request):
     subproyectos = Subproyecto.objects.all()
     colaborador = Profile.objects.all()
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
-    gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False)
+    gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False, staff=usuario)
     articulo, created = Articulo_Gasto.objects.get_or_create(completo = False, staff=usuario)
 
     productos = Articulo_Gasto.objects.filter(gasto=gasto, completo = True)
@@ -164,6 +165,9 @@ def gastos_pendientes_autorizar(request):
     #    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
     #else:
     solicitudes = Solicitud_Gasto.objects.filter(complete=True, autorizar = None, superintendente = perfil).order_by('-folio')
+    ids_solicitudes_validadas = [solicitud.id for solicitud in solicitudes if solicitud.get_validado]
+
+    solicitudes = Solicitud_Gasto.objects.filter(id__in=ids_solicitudes_validadas)
 
     myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
     solicitudes = myfilter.qs
@@ -432,3 +436,112 @@ def facturas_gasto(request, pk):
     return render(request, 'gasto/facturas_gasto.html', context)
 
 
+def matriz_gasto_entrada(request):
+    #articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
+
+    #articulos_gasto = Articulo_Gasto.objects.all()
+    articulos_gasto = Articulo_Gasto.objects.filter(producto__producto__nombre = "MATERIALES", completo = True, validacion = False, gasto__autorizar = None)
+
+    context={
+        'articulos_gasto':articulos_gasto,
+        #'form':form,
+    }
+
+    return render(request, 'gasto/matriz_entrada_almacen.html', context)
+
+def gasto_entrada(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    #Tengo que revisar primero si ya existe una orden pendiente del usuario
+    articulo_gasto = Articulo_Gasto.objects.get(id=pk)
+    entrada, created = Entrada_Gasto_Ajuste.objects.get_or_create(completo= False, almacenista=usuario, gasto = articulo_gasto)
+    articulo, created = Conceptos_Entradas.objects.get_or_create(completo = False, entrada = entrada)
+
+    productos = Conceptos_Entradas.objects.filter(entrada=entrada, completo = True)
+
+    articulos = Inventario.objects.filter(producto__gasto = False)
+    form_product = Conceptos_EntradasForm()
+    form = Entrada_Gasto_AjusteForm()
+
+    if request.method =='POST':
+        if "btn_agregar" in request.POST:
+            form = Entrada_Gasto_AjusteForm(request.POST, instance = entrada)
+            #abrev= usuario.distrito.abreviado
+            if form.is_valid():
+                entrada = form.save(commit=False)
+                entrada.completo = True
+                entrada.completado_fecha = date.today()
+                entrada.completado_hora = datetime.now().time()
+                entrada.save()
+                articulo_gasto.validacion = True
+                articulo_gasto.save()
+                messages.success(request, f'La entrada del gasto {entrada.id} ha sido creada')
+                for item_producto in productos:
+                    producto_inventario = Inventario.objects.get(producto= item_producto.concepto_material.producto)
+                    productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto_inventario, requisitar = True)
+                    #Calculo el precio 
+                    producto_inventario.price = ((item_producto.precio_unitario * item_producto.cantidad)+ ((producto_inventario.cantidad_apartada + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + item_producto.cantidad + producto_inventario.cantidad_apartada)
+                    #La cantidad en inventario + la cantidad del producto en la entrada
+                    producto_inventario.cantidad = producto_inventario.cantidad + item_producto.cantidad
+                    for item in productos_por_surtir:
+                        orden_producto = Order.objects.get(id = item.articulos.orden.id)                
+                        #Si la cantidad en inventario es mayor que la cantidad requisitada
+                        if producto_inventario.cantidad >= item.cantidad_requisitar:
+                            cantidad = item.cantidad_requisitar
+                        else:
+                            cantidad = producto_inventario.cantidad
+                        item.requisitar = False
+                        item.cantidad = item.cantidad + cantidad
+                        item.cantidad_requisitar = item.cantidad_requisitar - cantidad
+                        if item.cantidad_requisitar == 0:
+                            item.surtir = True
+                        #Se reduce la cantidad de inventario y se aumenta la apartada
+                        producto_inventario.cantidad = producto_inventario.cantidad - cantidad
+                        producto_inventario.cantidad_apartada = producto_inventario.cantidad_apartada + cantidad
+                        producto_inventario.save()
+                        item.save()
+                        articulos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__orden=orden_producto)
+                        #Se cuentan los articulos por surtir de esa orden, se cuentan los articulos que ya no requieren requisición
+                        numero_articulos = articulos_por_surtir.count()
+                        numero_articulos_requisitados = articulos_por_surtir.filter(requisitar = False).count()
+                        #si el numero total de articulos por surtir es igual al numero de articulos requisitados > 
+                        if numero_articulos == numero_articulos_requisitados:
+                            orden_producto.requisitar = False   # > entonces ya no se requiere que la Orden se requisite
+                            orden_producto.save()
+                    producto_inventario._change_reason = f'Esta es una entrada desde un gasto {item_producto.id}'
+                    producto_inventario.save()
+                #email = EmailMessage(
+                #    f'Ajuste de producto: {ajuste.id}',
+                #    f'Estimado {usuario.staff.first_name} {usuario.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                #    'savia@vordtec.com',
+                #    ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
+                #    )
+                #email.send()
+                return redirect('matriz-gasto-entrada')
+        if "btn_producto" in request.POST:
+            form_product = Conceptos_EntradasForm(request.POST, instance=articulo)
+            if form_product.is_valid():
+                articulo = form_product.save(commit=False)
+                articulo.completo = True
+                articulo.save()
+                messages.success(request, 'Has guardado exitosamente un artículo')
+                return redirect('gasto-entrada',pk= pk)
+
+    context= {
+        'articulo_gasto':articulo_gasto,
+        'productos':productos,
+        'form':form,
+        'form_product': form_product,
+        'articulos':articulos,
+        'entrada':entrada,
+    }
+
+    return render(request, 'gasto/crear_entrada.html', context)
+
+def delete_articulo_entrada(request, pk):
+   
+    articulo = Conceptos_Entradas.objects.get(id=pk)
+    gasto = articulo.entrada.gasto.id
+    messages.success(request,f'El articulo {articulo.concepto_material} ha sido eliminado exitosamente')
+    articulo.delete()
+
+    return redirect('gasto-entrada',pk= gasto)

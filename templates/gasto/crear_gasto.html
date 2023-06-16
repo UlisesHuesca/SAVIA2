@@ -162,11 +162,16 @@
 
     <div class="col-lg-7">
         <div class="box-element">
-            <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-            <div class="row">
-                <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
-                <div class="col-sm-6 my-2">
+            <div class="form-check form-switch col-auto mx-4" id="usarXML">
+                <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
+                <label class="form-check-label" for="SwitchUsarXML">Usar XML</label>
+            </div>            
+            <div id="form_product">
+                <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
+                    <div class="col-sm-6 my-2">
                     <input type="text" list='articulos' id="txt_articulos" valor="{{articulos.id}}" placeholder="Artículos..." class="form-control d-none">
 
                     <datalist id="articulos" name='articulos'>
@@ -188,14 +193,14 @@
                 </div>
             </div>
 
-            <div class="row d-none">
-                <label for="form_product.producto" class="col-auto col-form-label"><strong>Producto:</strong></label>
+            <div class="row">
+                <label for="form_product.producto" class="col-auto col-form-label d-none"><strong>Producto:</strong></label>
                 <div class="col-sm-6">
-                    {{form_product.producto|add_class:"form-control"}}
+                    {{form_product.producto|add_class:"form-control producto1 d-none"}}
                 </div>
             </div>
             <div class="row">
-                <label for="form_product.concepto" class="col-sm-2 col-form-label"><strong>Descripción:</strong></label>
+                <label for="form_product.comentario" class="col-sm-2 col-form-label"><strong>Comentario:</strong></label>
                 <div class="col-sm-6">
                     {{form_product.comentario|add_class:"form-control"}}
                 </div>
@@ -205,7 +210,7 @@
                 </div>
             </div>
             <div class="row my-2">
-                 <label for="form_product.precio_unitario" class="col-sm-1 col-form-label"><strong>Cantidad:</strong></label>
+                 <label for="form_product.cantidad" class="col-sm-1 col-form-label"><strong>Cantidad:</strong></label>
                 <div class="col-sm-2">
                     {{form_product.cantidad|add_class:"form-control"}}
                 </div>
@@ -222,7 +227,6 @@
                 <div class="col-sm-1 my-3" style="color:#980f0f">
                     <i class="fa-solid fa-cloud-arrow-up"></i>PDF
                 </div>
-
             </div>
             <div id="factura_xml" class="row">
                 <div class="col-sm-6">
@@ -249,7 +253,7 @@
                         <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelOtros_Impuestos">Impuestos Retenidos</label>
             </div>
                 <div class="col-sm-3">
-                    {{form_product.impuestos_retenidos|add_class:"form-control d-none"}}
+                    {{form_product.impuestos_retenidos|add_class:"form-control d-none form1"}}
                 </div>
             </div>
 
@@ -262,14 +266,68 @@
                     <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit">
                 </div>
             </div>
-
         </form>
+        </div>
+        <div id="form_product2" class="d-none">
+            <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}   
+            <div class="row">
+                <div class="row">
+                    <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
+                    <div class="col-sm-6 my-2">
+                    <input type="text" list='articulos' id="txt_articulos" valor="{{articulos.id}}" placeholder="Artículos..." class="form-control d-none">
+
+                    <datalist id="articulos" name='articulos'>
+                        {% for item in articulos %}
+                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
+                        {% endfor %}
+                    </datalist>
+                    <input type="text" list='articulos_gasto' id="txt_articulos_gasto2" valor="{{articulos_gasto.id}}" placeholder="Artículos..." class="form-control">
+
+                    <datalist id="articulos_gasto2" name='articulos_gasto'>
+                        {% for item in articulos_gasto %}
+                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="row">
+                <label for="form_product2.producto" class="col-auto col-form-label d-none"><strong>Producto:</strong></label>
+                <div class="col-sm-6">
+                    {{form_product2.producto|add_class:"form-control producto2 d-none"}}
+                </div>
+                </div>
+                <div class="row">
+                    <label for="form_product2.producto" class="col-auto col-form-label"><strong>Comentario:</strong></label>
+                    <div class="col-sm-6">
+                        {{form_product2.comentario|add_class:"form-control producto2"}}
+                    </div>
+                </div>
+            </div>
+            <div id="factura_xml" class="row">
+                <div class="col-sm-6">
+                    {{form_product2.factura_xml|add_class:"form-control my-2 form2"}}
+                </div>
+                 <div class="col-sm-1 my-3" style="color:#9a9b9d">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>XML
+                </div>
+            </div>
+            <div  class="row">
+                <div class="col-sm-1">
+                    <input class="btn btn-outline-info btn-block my-2" name="btn_xml" id="btn_xml" type="submit">
+                </div>
+            </div>
+            </form>
+        </div>
+        </div>
+        
+
             <hr>
             <table class="table table-light table-striped table-hover mx-2">
             <thead>
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Producto</th>
+                    <th scope="col">Descripción</th>
                     <th scope="col">Cantidad</th>
                     <th scope="col">P.U.</th>
                     <th scope="col">Subtotal</th>
@@ -284,6 +342,7 @@
                 <tr>
                     <td scope="col">{{producto.producto.producto.codigo}}</td>
                     <td scope="col">{{producto.producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.comentario}}</td>
                     <td scope="col">{{producto.cantidad|floatformat:2}}</td>
                     <td scope="col">${{producto.precio_unitario|floatformat:4}}</td>
                     <td scope="col">${{producto.get_subtotal|floatformat:2}}</td></td>
@@ -322,7 +381,7 @@
                 </tr>
                 <tr>
                     <th scope="col">Total</th>
-                    <td scope="col" id="total">${{gasto.get_total_solicitud}}</td>
+                    <td scope="col" id="total">${{gasto.get_total_solicitud|floatformat:2}}</td>
                 </tr>
             </tbody>
             </table>
@@ -570,7 +629,7 @@ var precio_mod = document.getElementById("id_precio_unitario")
 document.getElementById("txt_articulos").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_articulos");
     var browserChildren = document.getElementById('articulos').children;
-    var other_select = document.getElementById('id_producto');
+    var other_select = document.getElementsByClassName('producto1')[0];
 
 
 
@@ -627,6 +686,38 @@ document.getElementById("txt_articulos_gasto").addEventListener("change", (event
         other_select.value = 0
     }
 });
+
+document.getElementById("txt_articulos_gasto2").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_articulos_gasto2");
+    var browserChildren = document.getElementById('articulos_gasto2').children;
+    var other_select = document.getElementsByClassName('producto2')[0];
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+       // console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+         //   console.log(browserChildren[i])
+          //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+        //    console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+
 
 document.getElementById("txt_colaborador").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_colaborador");
@@ -773,6 +864,37 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
 
+document.getElementById('SwitchUsarXML').addEventListener('change', function() {
+// Obtener los formularios
+var form_product = document.getElementById('form_product');
+var form_product2 = document.getElementById('form_product2');
+
+// Obtener los campos de los formularios
+var inputs_form_product = form_product.getElementsByTagName('input');
+var inputs_form_product2 = form_product2.getElementsByTagName('input');
+
+if(this.checked) {
+// Limpiar los campos del formulario form_product
+for (var i = 0; i < inputs_form_product.length; i++) {
+    if (inputs_form_product[i].type == "text") {
+        inputs_form_product[i].value = "";
+        }
+    }
+
+    form_product.classList.add('d-none');
+    form_product2.classList.remove('d-none');
+    } else {
+    // Limpiar los campos del formulario form_product2
+    for (var i = 0; i < inputs_form_product2.length; i++) {
+    if (inputs_form_product2[i].type == "text") {
+        inputs_form_product2[i].value = "";
+        }
+    }
+
+    form_product.classList.remove('d-none');
+    form_product2.classList.add('d-none');
+    }
+});
 
 </script>
 {% endblock %}

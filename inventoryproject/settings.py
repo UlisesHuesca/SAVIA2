@@ -54,6 +54,7 @@ INSTALLED_APPS = [
     'cobranza.apps.CobranzaConfig',
     'gastos.apps.GastosConfig',
     'viaticos.apps.ViaticosConfig',
+    'activos.apps.ActivosConfig',
 
 
 
@@ -70,6 +71,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'django.middleware.locale.LocaleMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -135,16 +137,20 @@ AUTH_PASSWORD_VALIDATORS = [
     {
         'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
     },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+    #{
+    #    'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    #},
+    {'NAME': 'user.validators.UppercaseValidator'},
+    {'NAME': 'user.validators.LowercaseValidator'},
+    {'NAME': 'user.validators.NumberValidator'},
+    {'NAME': 'user.validators.SpecialCharacterValidator'},
 ]
 
 
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'en-us'
+LANGUAGE_CODE = 'es'
 
 TIME_ZONE = 'America/Mexico_City'
 

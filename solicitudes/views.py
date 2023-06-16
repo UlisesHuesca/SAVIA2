@@ -548,24 +548,28 @@ def ajuste_inventario(request):
                 messages.success(request,f'{usuario.staff.first_name},Has hecho un ajuste de manera exitosa')
                 #ajuste.save()
                 for item_producto in productos_ajuste:
-                    producto = Inventario.objects.get(producto= item_producto.concepto_material.producto)
-                    productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto, requisitar = True)
+                    producto_inventario = Inventario.objects.get(producto= item_producto.concepto_material.producto)
+                    productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto_inventario, requisitar = True)
+                    #Calculo el precio 
+                    producto_inventario.price = ((item_producto.precio_unitario * item_producto.cantidad)+ ((producto_inventario.cantidad_apartada + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + item_producto.cantidad + producto_inventario.cantidad_apartada)
+                    #La cantidad en inventario + la cantidad del producto en la entrada
+                    producto_inventario.cantidad = producto_inventario.cantidad + item_producto.cantidad
                     for item in productos_por_surtir:
-                        orden_producto = Order.objects.get(id = item.articulos.orden.id)
-                        #articulos_orden = ArticulosOrdenados.objects.filter(orden = orden_producto).count()
-                        producto.price = ((item.precio * item.cantidad)+ ((producto.cantidad_apartada + producto.cantidad) * producto.price))/(producto.cantidad + item.cantidad+producto.cantidad_apartada)
-                        producto.cantidad = producto.cantidad + item_producto.cantidad
-                        if producto.cantidad >= item.cantidad_requisitar:
-                            item.cantidad = item.cantidad_requisitar
-                            item.surtir = True
-                            item.cantidad_requisitar = 0
-                            item.requisitar = False
+                        orden_producto = Order.objects.get(id = item.articulos.orden.id)                
+                        #Si la cantidad en inventario es mayor que la cantidad requisitada
+                        if producto_inventario.cantidad >= item.cantidad_requisitar:
+                            cantidad = item.cantidad_requisitar
                         else:
-                            item.cantidad = producto.cantidad
-                            item.cantidad_requisitar = item.cantidad_requisitar - producto.cantidad
-                        producto.cantidad = producto.cantidad - item.cantidad
-                        producto.cantidad_apartada = producto.cantidad_apartada + item.cantidad
-                        producto.save()
+                            cantidad = producto_inventario.cantidad
+                        item.requisitar = False
+                        item.cantidad = item.cantidad + cantidad
+                        item.cantidad_requisitar = item.cantidad_requisitar - cantidad
+                        if item.cantidad_requisitar == 0:
+                            item.surtir = True
+                        #Se reduce la cantidad de inventario y se aumenta la apartada
+                        producto_inventario.cantidad = producto_inventario.cantidad - cantidad
+                        producto_inventario.cantidad_apartada = producto_inventario.cantidad_apartada + cantidad
+                        producto_inventario.save()
                         item.save()
                         articulos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__orden=orden_producto)
                         #Se cuentan los articulos por surtir de esa orden, se cuentan los articulos que ya no requieren requisición
@@ -575,8 +579,8 @@ def ajuste_inventario(request):
                         if numero_articulos == numero_articulos_requisitados:
                             orden_producto.requisitar = False   # entonces ya no se requiere que la Orden se requisite
                             orden_producto.save()
-                    producto._change_reason = f'Esta es una ajuste desde un ajuste de inventario {ajuste.id}'
-                    producto.save()
+                    producto_inventario._change_reason = f'Esta es una ajuste desde un ajuste de inventario {ajuste.id}'
+                    producto_inventario.save()
                 #email = EmailMessage(
                 #    f'Ajuste de producto: {ajuste.id}',
                 #    f'Estimado {usuario.staff.first_name} {usuario.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
@@ -1041,9 +1045,9 @@ def load_subproyectos(request):
 
 def convert_excel_inventario(existencia, valor_inventario):
     response= HttpResponse(content_type = "application/ms-excel")
-    response['Content-Disposition'] = 'attachment; filename = Solicitudes_' + str(dt.date.today())+'.xlsx'
+    response['Content-Disposition'] = 'attachment; filename = Inventario_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.create_sheet(title='Solicitudes')
+    ws = wb.create_sheet(title='Inventario')
     #Comenzar en la fila 1
     row_num = 1
 
@@ -1071,7 +1075,7 @@ def convert_excel_inventario(existencia, valor_inventario):
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
 
-    columns = ['Código','Producto','Distrito','Cantidad','Cantidad Apartada','Precio']
+    columns = ['Código','Producto','Distrito','Unidad','Cantidad','Cantidad Apartada','Ubicación','Estante','Precio','Total']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1083,26 +1087,31 @@ def convert_excel_inventario(existencia, valor_inventario):
             ws.column_dimensions[get_column_letter(col_num + 1)].width = 15
 
 
-    columna_max = len(columns)+2
+    columna_max = len(columns)+3
 
-    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia X. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}')).style = messages_style
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
     (ws.cell(column = columna_max, row = 3, value='Inventario Costo Total:')).style = messages_style
     (ws.cell(column = columna_max +1, row=3, value = valor_inventario)).style = money_resumen_style
     ws.column_dimensions[get_column_letter(columna_max)].width = 20
     ws.column_dimensions[get_column_letter(columna_max + 1)].width = 20
 
-    rows = existencia.values_list('producto__codigo','producto__nombre','distrito__nombre','cantidad','cantidad_apartada','price')
+    rows = existencia.values_list('producto__codigo','producto__nombre','distrito__nombre','producto__unidad__nombre','cantidad','cantidad_apartada','ubicacion','estante','price')
 
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
-            if col_num > 2:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 5:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
-            if col_num <= 2:
-                (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            cell = ws.cell(row=row_num, column=col_num +1, value=row[col_num])
+            if col_num > 2 and col_num != 8:
+                cell.style = body_style #(ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
+            elif col_num == 8:
+                cell.style = money_style #(ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+            else:
+                cell.style = body_style#(ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+
+        total_value = row[4] * row[8] + row[5] * row[8]
+        total_cell = ws.cell(row=row_num, column=len(row)+1, value=total_value)
+        total_cell.style = money_style
 
     sheet = wb['Sheet']
     wb.remove(sheet)
