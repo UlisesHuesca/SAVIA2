@@ -440,7 +440,7 @@ def matriz_gasto_entrada(request):
     #articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
 
     #articulos_gasto = Articulo_Gasto.objects.all()
-    articulos_gasto = Articulo_Gasto.objects.filter(producto__producto__nombre = "MATERIALES", completo = True, validacion = False, gasto__autorizar = None)
+    articulos_gasto = Articulo_Gasto.objects.filter(producto__producto__nombre = "MATERIALES", completo = True, validacion = False, gasto__autorizar = None, gasto__tipo__tipo='REEMBOLSO')
 
     context={
         'articulos_gasto':articulos_gasto,

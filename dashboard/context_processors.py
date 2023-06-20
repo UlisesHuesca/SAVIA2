@@ -84,7 +84,9 @@ def contadores_processor(request):
             conteo_solicitudes = solicitudes_pendientes.count()
         if usuario.tipo.superintendente == True:
             requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__superintendente = usuario)
-            gastos_pendientes = Solicitud_Gasto.objects.filter(complete=True, autorizar=None, superintendente = usuario)
+            gastos = Solicitud_Gasto.objects.filter(complete=True, autorizar=None, superintendente = usuario)
+            ids_gastos_validados = [gasto.id for gasto in gastos if gasto.get_validado]
+            gastos_pendientes = Solicitud_Gasto.objects.filter(id__in=ids_gastos_validados)
             viaticos_pendientes = Solicitud_Viatico.objects.filter(complete =True, autorizar = None, superintendente = usuario)
             conteo_requis_pendientes = requisiciones_pendientes.count()
             conteo_gastos_pendientes = gastos_pendientes.count()

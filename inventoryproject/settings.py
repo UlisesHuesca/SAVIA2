@@ -182,11 +182,13 @@ STATIC_ROOT = (BASE_DIR/"assert/")
 #STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 #Esta etiqueta es para redigir cuando te logeas desde settings
 LOGIN_REDIRECT_URL ='dashboard-index'
+AUTHENTICATION_BACKENDS = ['user.backends.EmailBackend']
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
+DEFAULT_FROM_EMAIL ='savia@vordtec.com'
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 #EMAIL_HOST = 'smtp.gmail.com'

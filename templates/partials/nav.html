@@ -8,7 +8,7 @@
     {% if user.is_authenticated %}
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'dashboard-index' %}">
-            <img src="https://www.pythonanywhere.com/user/UlisesHuesca/files/home/UlisesHuesca/inventoryproject/templates/partials/SAVIA_Logo.png" alt="SAVIA" width="50" height="50">
+            <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA" width="50" height="50">
             </a>
             <ul class="nav nav-pills" >
                 <li class="nav-item">

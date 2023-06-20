@@ -13,7 +13,7 @@
                 <div class='border p-3 bg-white'>
                     <h3>Login Page</h3>
                     <hr>
-                   <h6>En este momento ya estás activo en el sistema como: {{user.username}}</h6>
+                    <h6>En este momento ya estás activo en el sistema como: {{user.first_name}} {{user.last_name}}</h6>
                 </div>
             </div>
         </div>
@@ -53,12 +53,12 @@
 
              
 
-              <!--
+              
               <div class="form-check d-flex justify-content-center mb-4">
                 <label class="form-check-label" for="form2Example33">
                     <a class='btn' style="color:rgb(84, 118, 150)" href="{% url 'password-reset' %}">Cambiar contraseña</a>
                 </label>
-              </div>-->
+              </div>
 
               <!-- Submit button -->
               <input class='btn btn-primary btn-block mb-4' type='submit' value='Log in'>
