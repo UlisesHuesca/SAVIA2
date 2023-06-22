@@ -106,8 +106,11 @@ def eliminar_articulos(request, pk):
         form = Articulo_Cancelado_Form(request.POST,instance=producto)
         if form.is_valid():
             articulo = form.save()
-            conteo_productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False).count()
-            if conteo_productos == 0:
+            productos = ArticulosRequisitados.objects.filter(req = producto.req)
+            productos_cancelados = productos.filter(cancelado = True).count()
+            productos_requisitados = productos.count() - productos_cancelados
+            productos_comprados = productos.filter(cantidad_comprada__gte = F("cantidad")).count()
+            if productos_requisitados == productos_comprados:
                 requis.colocada = True
                 requis.save()
             email = EmailMessage(
@@ -587,7 +590,7 @@ def cancelar_oc2(request, pk):
 
 
     if request.method == 'POST':
-        compra.autorizada2_por = perfil
+        compra.oc_autorizada_por2 = usuario
         compra.autorizado2 = False
         compra.autorizado_date2 = date.today()
         compra.autorizado_hora2 = datetime.now().time()

@@ -225,21 +225,22 @@ def salida_material(request, pk):
 
     if request.method == 'POST':
         formVale = ValeSalidasForm(request.POST, instance=vale_salida)
-        cantidad_salidas = 0
-        cantidad_productos = productos.count()
-        for producto in productos:
-            producto.seleccionado = False
-            if producto.cantidad == 0:
-                producto.salida=True
-                producto.surtir=False
-                cantidad_salidas = cantidad_salidas + 1
-            producto.save()
-        if cantidad_productos == cantidad_salidas:
-            orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
-            orden.save()
+        
         if formVale.is_valid():
-            formVale.save()
+            #formVale.save()
             vale = formVale.save(commit=False)
+            cantidad_salidas = 0
+            cantidad_productos = productos.count()
+            for producto in productos:
+                producto.seleccionado = False
+                if producto.cantidad == 0:
+                    producto.salida=True
+                    producto.surtir=False
+                    cantidad_salidas = cantidad_salidas + 1
+                producto.save()
+            if cantidad_productos == cantidad_salidas:
+                orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
+                orden.save()
             vale.complete = True
             vale.save()
             messages.success(request,'La salida se ha generado de manera exitosa')
@@ -375,7 +376,7 @@ def update_salida(request):
                 else:    #si no hay resurtimiento
                     salida.entrada = 0
                     salida.precio = inv_del_producto.price
-                    #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad
+                    inv_del_producto._change_reason = f'Esta es una salida de inventario'
                 inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
                 producto.save()
                 inv_del_producto.save()

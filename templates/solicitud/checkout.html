@@ -18,7 +18,7 @@
                 <hr>
 					<h2>Información de Solicitud:</h2>
 					<hr>
-					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+					<form id="myForm" method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
                         {% csrf_token %}
                             <div class="row my-2">
                                 <label for="form.proyecto" class="col-auto col-form-label my-1"><strong>Proyecto*</strong></label>
@@ -145,7 +145,7 @@
                                     {{form.supervisor|add_class:"form-control"}}
                                 </div>
                             </div>
-                        <input class="btn btn-outline-info btn-block my-2" name="agregar" type="submit" value="Agregar Solicitud">
+                            <input id="submit-button" class="btn btn-outline-info btn-block my-2" name="agregar" type="submit" value="Agregar Solicitud">
                     </form>
             </div>
             <hr>
@@ -181,6 +181,11 @@
     myModal.addEventListener('hidden.bs.modal', function (event) {
     location.reload();
     })
+
+    document.getElementById('myForm').addEventListener('submit', function() {
+    // Deshabilita el botón de envío cuando se envía el formulario
+    document.getElementById('submit-button').disabled = true;
+    });
 
     document.getElementById("txt_proyectos").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_proyectos");

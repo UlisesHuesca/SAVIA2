@@ -136,6 +136,7 @@ def checkout(request):
 
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
     orders = Order.objects.filter(staff__distrito = usuario.distrito)
+    last_order = orders.order_by('-last_folio_number').first()
     #consecutivo = orders.count() + 1
     proyectos = Proyecto.objects.filter(activo=True)
     subproyectos = Subproyecto.objects.all()
@@ -166,75 +167,87 @@ def checkout(request):
         productos = order.articulosordenados_set.all()
         cartItems = order.get_cart_quantity
 
-
     if request.method =='POST':
         form = OrderForm(request.POST, instance=order)
-        order.created_at = date.today()
-        order.created_at_time = datetime.now().time()
-
-        if usuario.tipo.supervisor == True:
-            for producto in productos:
-                # We fetch inventory product corresponding to product (that's why we use product.id)
-                # We create a new product line in a new database to control the ArticlestoDeliver (ArticulosparaSurtir)
-                prod_inventario = Inventario.objects.get(id = producto.producto.id)
-                ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
-                #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
-                if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
-                    prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
-                    prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
-                    prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
-                    ordensurtir.cantidad = producto.cantidad
-                    ordensurtir.precio = prod_inventario.price
-                    ordensurtir.surtir = True
-                    ordensurtir.requisitar = False
-                    ordensurtir.save()
-                    prod_inventario.save()
-                elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0: #si la cantidad solicitada es mayor que la cantidad en inventario
-                    ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
-                    ordensurtir.precio = prod_inventario.price
-                    ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
-                    prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
-                    prod_inventario.cantidad = 0
-                    if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
-                        ordensurtir.surtir = True
-                    ordensurtir.requisitar = True
-                    order.requisitar = True
-                    if producto.producto.producto.servicio == True:
-                        requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-                        requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad)
-                        requi.folio = str(usuario.distrito.abreviado)+str(order.id).zfill(4)
-                        order.requisitar=False
-                        ordensurtir.requisitar=False
-                        requi.save()
-                        requitem.save()
-                    prod_inventario.save()
-                    ordensurtir.save()
-                    order.save()
-            order.autorizar = True
-            order.approved_at = date.today()
-            order.approved_at_time = datetime.now().time()
-            email = EmailMessage(
-                f'Solicitud Autorizada {order.id}',
-                f'Estás recibiendo este correo porque ha sido aprobada la solicitud {order.id}\n Este mensaje ha sido automáticamente generado por SAVIA X',
-                'savia@vordtec.com',
-                [order.staff.staff.email],
-                )
-            #email.attach(f'OC_folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-            email.send()
-            order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)
-
-        abrev= usuario.distrito.abreviado
-        order.folio = str(abrev) + str(order.id).zfill(4)
-        for orden in orders:
-            if orden.folio == order.folio:
-                order.folio = str(abrev) + str(order.id).zfill(4)
         if form.is_valid():
+            order = form.save(commit=False)
+            order.created_at = date.today()
+            order.created_at_time = datetime.now().time()
+            abrev= usuario.distrito.abreviado
+            if last_order == None:
+                #No hay órdenes para este distrito todavía
+                folio_number = 1
+            else:
+                folio_number = last_order.last_folio_number + 1
+                order.last_folio_number = folio_number
+            order.folio = str(abrev) + str(folio_number).zfill(4)
+            if usuario.tipo.supervisor == True:
+                for producto in productos:
+                    # We fetch inventory product corresponding to product (that's why we use product.id)
+                    # We create a new product line in a new database to control the ArticlestoDeliver (ArticulosparaSurtir)
+                    prod_inventario = Inventario.objects.get(id = producto.producto.id)
+                    ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
+                    #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
+                    if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
+                        prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
+                        prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
+                        prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
+                        ordensurtir.cantidad = producto.cantidad
+                        ordensurtir.precio = prod_inventario.price
+                        ordensurtir.surtir = True
+                        ordensurtir.requisitar = False
+                        ordensurtir.save()
+                        prod_inventario.save()
+                    elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0: #si la cantidad solicitada es mayor que la cantidad en inventario
+                        ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
+                        ordensurtir.precio = prod_inventario.price
+                        ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
+                        prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
+                        prod_inventario.cantidad = 0
+                        if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
+                            ordensurtir.surtir = True
+                        ordensurtir.requisitar = True
+                        order.requisitar = True
+                        if producto.producto.producto.servicio == True:
+                            requi, created = Requis.objects.get_or_create(complete = True, orden = order)
+                            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad)
+                            requi.folio = str(usuario.distrito.abreviado)+str(order.id).zfill(4)
+                            order.requisitar=False
+                            ordensurtir.requisitar=False
+                            requi.save()
+                            requitem.save()
+                        prod_inventario.save()
+                        ordensurtir.save()
+                        order.save()
+                order.autorizar = True
+                order.approved_at = date.today()
+                order.approved_at_time = datetime.now().time()
+                email = EmailMessage(
+                    f'Solicitud Autorizada {order.folio}',
+                    f'Estás recibiendo este correo porque ha sido aprobada la solicitud {order.folio}\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordtec.com',
+                    [order.staff.staff.email],
+                    )
+                #email.attach(f'OC_folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+                email.send()
+                order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)    
+                messages.success(request, f'La solicitud {order.folio} ha sido creada')
+                cartItems = '0'
+            else:
+                abrev= usuario.distrito.abreviado
+                email = EmailMessage(
+                    f'Solicitud Autorizada {order.id}',
+                    f'Estás recibiendo este correo por se ha generado la orden {order.folio}\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordtec.com',
+                    [order.staff.staff.email],
+                    )
+                email.send()
+                messages.success(request, f'La solicitud {order.folio} ha sido creada')
             order.complete = True
             order.save()
-            form.save()
-            messages.success(request, f'La solicitud {order.folio} ha sido creada')
-            cartItems = '0'
             return redirect('solicitud-matriz')
+
+    
 
 
     context= {
@@ -530,7 +543,7 @@ def inventario(request):
 def ajuste_inventario(request):
     usuario = Profile.objects.get(staff__id=request.user.id)
     productos_sel = Inventario.objects.filter(complete=True, producto__servicio = False, producto__gasto = False)
-    ajuste, created = Entrada_Gasto_Ajuste.objects.get_or_create(almacenista = usuario, completo = False)
+    ajuste, created = Entrada_Gasto_Ajuste.objects.get_or_create(almacenista = usuario, completo = False, gasto = None)
     productos_ajuste = Conceptos_Entradas.objects.filter(entrada = ajuste)
     cantidad_items = productos_ajuste.count()
     form = Conceptos_EntradasForm()
@@ -693,13 +706,13 @@ def inventario_add(request):
 
     if request.method =='POST':
         form = InventarioForm(request.POST)
-        item = form.save(commit=False)
-        item.complete = True
-        item._change_reason = 'Se agrega producto el inventario en view: inventario_add'
-        item.distrito = perfil.distrito
         if form.is_valid():
-            form.save()
+            item = form.save(commit=False)
+            item.complete = True
+            item._change_reason = 'Se agrega producto el inventario en view: inventario_add'
+            item.distrito = perfil.distrito
             item.save()
+            messages.success(request, f'El artículo {item.producto.codigo}:{item.producto.nombre} se ha agregado exitosamente')
             return HttpResponse(status=204)
     #else:
         #form = InventarioForm()
@@ -881,7 +894,7 @@ def autorizada_sol(request, pk):
                 if producto.producto.producto.servicio == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                     requitem, created = ArticulosRequisitados.objects.create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
-                    requi.folio = str(usuario.distrito.abreviado)+str(order.id).zfill(4)
+                    requi.folio = str(usuario.distrito.abreviado)+str(requi.id).zfill(4)
                     order.requisitar=False
                     ordensurtir.requisitar=False
                     requi.save()
