@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from datetime import date, datetime
 from django.contrib import messages
 from django.core.mail import EmailMessage
-from dashboard.models import Inventario, Order, ArticulosparaSurtir 
+from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden 
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas
@@ -455,9 +455,8 @@ def gasto_entrada(request, pk):
     articulo_gasto = Articulo_Gasto.objects.get(id=pk)
     entrada, created = Entrada_Gasto_Ajuste.objects.get_or_create(completo= False, almacenista=usuario, gasto = articulo_gasto)
     articulo, created = Conceptos_Entradas.objects.get_or_create(completo = False, entrada = entrada)
-
+    last_order = Order.objects.filter(staff__distrito = usuario.distrito).order_by('-last_folio_number').first()
     productos = Conceptos_Entradas.objects.filter(entrada=entrada, completo = True)
-
     articulos = Inventario.objects.filter(producto__gasto = False)
     form_product = Conceptos_EntradasForm()
     form = Entrada_Gasto_AjusteForm()
@@ -465,7 +464,6 @@ def gasto_entrada(request, pk):
     if request.method =='POST':
         if "btn_agregar" in request.POST:
             form = Entrada_Gasto_AjusteForm(request.POST, instance = entrada)
-            #abrev= usuario.distrito.abreviado
             if form.is_valid():
                 entrada = form.save(commit=False)
                 entrada.completo = True
@@ -475,47 +473,56 @@ def gasto_entrada(request, pk):
                 articulo_gasto.validacion = True
                 articulo_gasto.save()
                 messages.success(request, f'La entrada del gasto {entrada.id} ha sido creada')
+               
+                abrev= usuario.distrito.abreviado
+                if last_order == None:
+                    #No hay órdenes para este distrito todavía
+                    folio_number = 1
+                else:
+                    folio_number = last_order.last_folio_number + 1
+                last_folio_number = folio_number
+                tipo = Tipo_Orden.objects.get(tipo ='normal')
+                folio = str(abrev) + str(folio_number).zfill(4)  
+                orden_producto, created = Order.objects.get_or_create(staff = articulo_gasto.staff, complete = None, distrito = articulo_gasto.staff.distrito)
+                orden_producto.folio =folio
+                orden_producto.tipo = tipo
+                orden_producto.last_folio_number = last_folio_number
+                orden_producto.created_at = date.today()
+                orden_producto.created_at_time = datetime.now().time()
+                orden_producto.autorizar = True
+                orden_producto.supervisor = articulo_gasto.staff
+                orden_producto.proyecto = articulo_gasto.gasto.proyecto
+                orden_producto.subproyecto = articulo_gasto.gasto.subproyecto
+                orden_producto.complete = True
+                
                 for item_producto in productos:
                     producto_inventario = Inventario.objects.get(producto= item_producto.concepto_material.producto)
-                    productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto_inventario, requisitar = True)
+                    #productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto_inventario, requisitar = True)
+                    articulo_ordenado = ArticulosOrdenados.objects.create(producto=producto_inventario, orden = orden_producto, cantidad=item_producto.cantidad)
+                    productos_por_surtir = ArticulosparaSurtir.objects.create(
+                        articulos = articulo_ordenado,
+                        cantidad=item_producto.cantidad,
+                        precio = item_producto.precio_unitario,
+                        surtir=True,
+                        comentario="esta solicitud es proveniente de un gasto",
+                        created_at=date.today(),
+                        created_at_time=datetime.now().time(),
+                    )
                     #Calculo el precio 
                     producto_inventario.price = ((item_producto.precio_unitario * item_producto.cantidad)+ ((producto_inventario.cantidad_apartada + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + item_producto.cantidad + producto_inventario.cantidad_apartada)
                     #La cantidad en inventario + la cantidad del producto en la entrada
-                    producto_inventario.cantidad = producto_inventario.cantidad + item_producto.cantidad
-                    for item in productos_por_surtir:
-                        orden_producto = Order.objects.get(id = item.articulos.orden.id)                
-                        #Si la cantidad en inventario es mayor que la cantidad requisitada
-                        if producto_inventario.cantidad >= item.cantidad_requisitar:
-                            cantidad = item.cantidad_requisitar
-                        else:
-                            cantidad = producto_inventario.cantidad
-                        item.requisitar = False
-                        item.cantidad = item.cantidad + cantidad
-                        item.cantidad_requisitar = item.cantidad_requisitar - cantidad
-                        if item.cantidad_requisitar == 0:
-                            item.surtir = True
-                        #Se reduce la cantidad de inventario y se aumenta la apartada
-                        producto_inventario.cantidad = producto_inventario.cantidad - cantidad
-                        producto_inventario.cantidad_apartada = producto_inventario.cantidad_apartada + cantidad
-                        producto_inventario.save()
-                        item.save()
-                        articulos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__orden=orden_producto)
-                        #Se cuentan los articulos por surtir de esa orden, se cuentan los articulos que ya no requieren requisición
-                        numero_articulos = articulos_por_surtir.count()
-                        numero_articulos_requisitados = articulos_por_surtir.filter(requisitar = False).count()
-                        #si el numero total de articulos por surtir es igual al numero de articulos requisitados > 
-                        if numero_articulos == numero_articulos_requisitados:
-                            orden_producto.requisitar = False   # > entonces ya no se requiere que la Orden se requisite
-                            orden_producto.save()
+                    producto_inventario.cantidad_apartada = producto_inventario.cantidad_apartada + item_producto.cantidad
+                    producto_inventario.save()
                     producto_inventario._change_reason = f'Esta es una entrada desde un gasto {item_producto.id}'
                     producto_inventario.save()
-                #email = EmailMessage(
-                #    f'Ajuste de producto: {ajuste.id}',
-                #    f'Estimado {usuario.staff.first_name} {usuario.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                #    'savia@vordtec.com',
-                #    ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
-                #    )
-                #email.send()
+                email = EmailMessage(
+                    f'Entrada de producto por gasto: {articulo_gasto.producto.producto.nombre} |Gasto: {articulo_gasto.gasto.id}',
+                    f'Estimado {articulo_gasto.staff.staff.first_name} {articulo_gasto.staff.staff.last_name},\n Estás recibiendo este correo porque tu producto: {articulo_gasto.producto.producto.nombre} ha sido validado por el almacenista {usuario.staff.first_name} {usuario.staff.last_name}, favor de pasar a firmar el vale de salida para terminar con este proceso.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordtec.com',
+                    ['ulises_huesc@hotmail.com',articulo_gasto.staff.staff.email],
+                    )
+                email.send()
+                orden_producto.save()
                 return redirect('matriz-gasto-entrada')
         if "btn_producto" in request.POST:
             form_product = Conceptos_EntradasForm(request.POST, instance=articulo)

@@ -103,7 +103,7 @@
             </div>
             <div class="row">
                 <div class="col-sm-1">
-                    <a class="btn btn-success" id='update-entrada' type="submit" name="entrada_articulo">
+                    <a class="btn btn-success d-none" id='update-entrada' type="submit" name="entrada_articulo">
                        Agregar
                     </a>
                 </div>
@@ -212,6 +212,18 @@ CrearBtn.addEventListener('click',function(){
 document.getElementById('id_cantidad').addEventListener('change', function(){
 var cantidad = document.getElementById('id_cantidad');
 var checkref = document.getElementById("SwitchReferencia");
+var select = document.getElementById('producto');
+var current_option = select.options[select.selectedIndex];
+let solicitado =  current_option.getAttribute('cantidad');
+var boton =document.getElementById('update-entrada');
+
+if (cantidad.value <= solicitado){
+    boton.setAttribute('class','btn btn-success')
+} else if (cantidad.value == 0){
+    boton.setAttribute('class','btn btn-success d-none')
+} else {
+    boton.setAttribute('class','btn btn-success d-none')
+}
 
 if (checkref.checked){
     if (cantidad.value > 1){

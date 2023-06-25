@@ -731,14 +731,14 @@ def inventario_update_modal(request, pk):
 
 
 
-    if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
+    if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == "Almacen":
         flag_perfil = True
     else:
         flag_perfil = False
 
 
     if request.method =='POST':
-        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
+        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == "Almacen":
             form = Inv_UpdateForm(request.POST, instance=item)
         else:
             form = Inv_UpdateForm_almacenista(request.POST, instance= item)
@@ -752,7 +752,7 @@ def inventario_update_modal(request, pk):
         else:
             messages.error(request, 'Debes agregar un comentario con respecto al cambio realizado')
     else:
-        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
+        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == "Almacen":
             form = Inv_UpdateForm(instance=item)
         else:
             form = Inv_UpdateForm_almacenista(instance= item)
@@ -893,7 +893,7 @@ def autorizada_sol(request, pk):
                 order.requisitar = True
                 if producto.producto.producto.servicio == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-                    requitem, created = ArticulosRequisitados.objects.create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
+                    requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
                     requi.folio = str(usuario.distrito.abreviado)+str(requi.id).zfill(4)
                     order.requisitar=False
                     ordensurtir.requisitar=False

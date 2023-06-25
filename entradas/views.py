@@ -275,7 +275,10 @@ def update_entrada(request):
 
 
     elif action == "remove":
-        monto_total = monto_inventario - (entrada_item.cantidad * producto_comprado.precio_unitario)
+        if producto_inv.producto.servicio == False:
+            monto_total = monto_inventario - (entrada_item.cantidad * producto_comprado.precio_unitario)
+        else:
+            monto_total = 0
         if monto_total == 0:
             producto_inv.price = 0
         else:

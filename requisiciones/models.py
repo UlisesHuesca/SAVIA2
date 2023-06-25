@@ -68,7 +68,7 @@ class Salidas(models.Model):
     vale_salida = models.ForeignKey(ValeSalidas, on_delete = models.CASCADE, null=True)
     producto = models.ForeignKey(ArticulosparaSurtir, on_delete = models.CASCADE, null=True)
     cantidad =  models.DecimalField(max_digits=14, decimal_places=2, default=0)
-    comentario = models.CharField(max_length=100, blank=True, null=True)
+    comentario = models.CharField(max_length=150, blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     salida_firmada = models.BooleanField(null=True, default=False)

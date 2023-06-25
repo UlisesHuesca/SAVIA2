@@ -135,7 +135,8 @@ def eliminar_articulos(request, pk):
     return render(request,'compras/eliminar_articulos.html', context)
 
 def articulos_restantes(request, pk):
-    productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"))
+    productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
+    #productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"))
     requis = Requis.objects.get(id = pk)
 
     context = {
@@ -321,7 +322,8 @@ def update_oc(request):
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
 
 def oc_modal(request, pk):
-    productos = ArticulosRequisitados.objects.filter(req = pk, sel_comp = False)
+    #productos = ArticulosRequisitados.objects.filter(req = pk, sel_comp = False)
+    productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     req = Requis.objects.get(id = pk)
     proveedores = Proveedor_direcciones.objects.filter(estatus__nombre='APROBADO')
     usuario = Profile.objects.get(staff__id=request.user.id)
@@ -653,7 +655,7 @@ def back_oc(request, pk):
         #Esta línea es la que activa a la requi
         #requi.colocada = False
         compra.save()
-        requi.save()
+        #requi.save()
         messages.error(request,f'Has regresado la compra con FOLIO: {compra.get_folio} y ahora podrás encontrar esos productos en la requisición {requi.folio}')
         return redirect('requisicion-autorizada')
 
