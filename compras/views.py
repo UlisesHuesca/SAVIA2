@@ -25,10 +25,11 @@ from reportlab.lib import colors
 from reportlab.lib.colors import Color, black, blue, red, white
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import letter
+from reportlab.rl_config import defaultPageSize
 from django.http import FileResponse
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
 from django.core.files.base import ContentFile
 import urllib.request, urllib.parse, urllib.error
@@ -1009,16 +1010,28 @@ def render_oc_pdf(request, pk):
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
 
     c.setFillColor(black)
-    if compra.opciones_condiciones is not None:
-        c.drawString(130,130,compra.opciones_condiciones)
-    else:
-        c.drawString(150,high-200,"NA")
+    width, height = letter
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
 
+    if compra.opciones_condiciones is not None:
+        options_conditions = compra.opciones_condiciones
+    else:
+        options_conditions = "NA"
+
+    options_conditions_paragraph = Paragraph(options_conditions, styleN)
+
+
+    # Crear un marco (frame) en la posición específica
+    frame = Frame(135, 0, width-145, height-648, id='normal')
+
+    # Agregar el párrafo al marco
+    frame.addFromList([options_conditions_paragraph], c)
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
 
-    width, height = letter
+    
     table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
@@ -1314,16 +1327,33 @@ def attach_oc_pdf(request, pk):
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
 
     c.setFillColor(black)
+    #if compra.opciones_condiciones is not None:
+    #   c.drawString(130,130,compra.opciones_condiciones)
+    #else:
+    #    c.drawString(150,130,"NA")
+    width, height = letter
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+
     if compra.opciones_condiciones is not None:
-        c.drawString(130,130,compra.opciones_condiciones)
+        options_conditions = compra.opciones_condiciones
     else:
-        c.drawString(150,130,"NA")
+        options_conditions = "NA"
+
+    options_conditions_paragraph = Paragraph(options_conditions, styleN)
+
+
+    # Crear un marco (frame) en la posición específica
+    frame = Frame(135, 0, width-145, height-648, id='normal')
+
+    # Agregar el párrafo al marco
+    frame.addFromList([options_conditions_paragraph], c)
 
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
 
-    width, height = letter
+    
     table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),

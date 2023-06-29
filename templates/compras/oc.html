@@ -2,6 +2,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %} OC {% endblock %}
@@ -247,7 +248,7 @@
                 </tr>
                 <tr>
                     <th scope="col">Total</th>
-                    <td scope="col" id="total">${{total|floatformat:2}}</td>
+                    <td scope="col" total={{total|unlocalize}} id="total">${{total|floatformat:2}}</td>
                 </tr>
             </tbody>
             </table>
@@ -756,20 +757,18 @@ document.getElementById("id_impuestos_adicionales").addEventListener("change", f
     let impuesto = document.getElementById("id_impuestos_adicionales").value;
     let impuesto_row = document.getElementById('impuestos_total');
     let impuesto_valor = document.getElementById('valor_impuesto');
-    let total_element = document.getElementById('total');
-    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
-
-    
+   
+    let total_element = document.getElementById('total')
+    let total_val = total_element.getAttribute('total'); // Quita el signo de dolar y convierte a float
+    //console.log(total_val)
 
     impuesto_row.setAttribute('class','');
     impuesto_valor.innerHTML = '$' + impuesto;
 
     // Suma el valor del impuesto al total y actualiza el elemento total
-    total_val += parseFloat(impuesto);
-    console.log(impuesto);
-    total_element.innerHTML = '$' + total_val.toFixed(2);
-    console.log(total_val)
-    impuesto_valor.innerHTML = '$' + parseFloat(impuesto).toFixed(2);
+    total_imp = parseFloat(total_val) + parseFloat(impuesto);
+    //console.log(total_imp);
+    total_element.innerHTML = '$' + parseFloat(total_imp).toFixed(2);
 });
 
 var pago = document.getElementById("id_cond_de_pago")

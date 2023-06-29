@@ -20,6 +20,10 @@
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row g-12">
+                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Solicitud:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.solicitud|add_class:'form-control'}}
+                    </div>
                     <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Código:</strong></label>
                     <div class="col-auto my-2">
                         {{myfilter.form.codigo|add_class:'form-control'}}
@@ -124,6 +128,7 @@
                     <th scope="col-sm">Folio Vale</th>
                     <th scope="col-sm">Fecha</th>
                     <th scope="col-sm">Solicitado por</th>
+                    <th scope="col-sm">Área</th>
                     <th scope="col-sm">Proyecto</th>
                     <th scope="col-sm">Subproyecto</th>
                     <th scope="col-sm">Proyecto Red.</th>
@@ -131,6 +136,7 @@
                     <th scope="col-sm">Artículo</th>
                     <th scope="col-sm">Material Recibido por</th>
                     <th scope="col-sm">Cantidad</th>
+                    <th scope="col-sm">Precio</th>
                     <th scope="col-sm">Vale</th>
                 </tr>
             </thead>
@@ -143,6 +149,7 @@
                     <th>{{salida.vale_salida.id}}</th>
                     <td>{{salida.created_at}}</td>
                     <td>{{salida.producto.articulos.orden.staff.staff.first_name}} {{salida.producto.articulos.orden.staff.staff.last_name}}</td>
+                    <td>{{salida.producto.articulos.orden.area.nombre}}</td>
                     <td>{{salida.producto.articulos.orden.proyecto.nombre}}</td>
                     <td>{{salida.producto.articulos.orden.subproyecto.nombre}}</td>
                     <td>{{salida.vale_salida.proyecto.nombre}}</td>
@@ -150,6 +157,7 @@
                     <td>{{salida.producto.articulos.producto.producto.codigo}} {{salida.producto.articulos.producto.producto.nombre}}</td>
                     <td>{{salida.vale_salida.material_recibido_por.staff.first_name}} {{salida.vale_salida.material_recibido_por.staff.last_name}}</td>
                     <td>{{salida.cantidad}}</td>
+                    <td>{{salida.precio}}</td>
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-2">

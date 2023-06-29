@@ -26,6 +26,7 @@ class ArticulosparaSurtirFilter(django_filters.FilterSet):
 
 
 class SalidasFilter(django_filters.FilterSet):
+    solicitud = CharFilter(field_name='producto__articulos__orden__folio', lookup_expr='icontains')
     producto = CharFilter(field_name='producto__articulos__producto__producto__nombre', lookup_expr='icontains')
     codigo = CharFilter(field_name='producto__articulos__producto__producto__codigo', lookup_expr='icontains')
     nombre = CharFilter(field_name='producto__articulos__orden__staff', lookup_expr='icontains')
@@ -36,7 +37,7 @@ class SalidasFilter(django_filters.FilterSet):
 
     class Meta:
         model = Salidas
-        fields = ['producto','codigo','nombre','proyecto','subproyecto','start_date','end_date',]
+        fields = ['solicitud','producto','codigo','nombre','proyecto','subproyecto','start_date','end_date',]
 
 class EntradasFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='articulo_comprado__producto__producto__articulos__producto__producto__nombre', lookup_expr='icontains')

@@ -341,81 +341,80 @@ def update_salida(request):
         suma_entradas = 0
 
     if action == "add":
-
+        #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
-        if cantidad_total < 0 and inv_del_producto.cantidad > 0:
-            cantidad_total = inv_del_producto.cantidad - cantidad
-        if cantidad_total < 0:
-            messages.error(request,f'La cantidad que se quiere egresar sobrepasa la cantidad disponible. {cantidad_total} mayor que {producto.cantidad}')
+        producto.seleccionado = True
+        entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden)
+
+        try:
+            EntradaArticulo.objects.get(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento')
+        except EntradaArticulo.DoesNotExist:
+            entrada_res = None
         else:
-            salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
-            producto.seleccionado = True
-            if inv_del_producto.cantidad_apartada > inv_del_producto.cantidad_entradas and suma_entradas <= 0: #Definitoria or inv_del_producto.cantidad_apartada >0:
-            #Voy a crear un vale de salida con producto salida desde al apartado, lo voy a mandar a llamar aqui, si existe, entonces no hay ni resurtimiento ni salidas derivadas de entradas, solo salidas derivadas de inventario
-                try:
-                    EntradaArticulo.objects.get(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento')
-                except EntradaArticulo.DoesNotExist:
-                    entrada_res = None
-                else:
-                    entrada_res = EntradaArticulo.objects.get(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento')
+            entrada_res = EntradaArticulo.objects.get(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento')
 
-                salida.cantidad = cantidad #Lo que se surte es la cantidad pedida
-                producto.cantidad = producto.cantidad - salida.cantidad   #se le resta a los articulos por surtir la cantidad que sale
-                if entrada_res:   #si hay resurtimiento
-                    #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad #    Este falló ya con el nuevo método salida.precio = entrada_res.articulo_comprado.precio_unitario
-                    entrada_res.cantidad_por_surtir = entrada_res.cantidad_por_surtir - salida.cantidad
-                    #producto.cantidad_apartada = producto.cantidad_apartada - salida.cantidad
-                    salida.entrada = entrada_res.id
-                    if producto.cantidad_requisitar == 0:
-                        producto.requisitar = False
-                    if entrada_res.cantidad_por_surtir == 0:
-                        entrada_res.agotado = True
-                    entrada_res.save()
-                    inv_del_producto._change_reason = f'Esta es una salida desde un resurtimiento de inventario {salida.id}'
-                    salida.precio = entrada_res.articulo_comprado.precio_unitario
-                else:    #si no hay resurtimiento
-                    salida.entrada = 0
-                    salida.precio = inv_del_producto.price
-                    inv_del_producto._change_reason = f'Esta es una salida de inventario'
-                inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
-                producto.save()
-                inv_del_producto.save()
-                salida.save()
-
-            else:
-                entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden)
-                for entrada in entradas:
-                    if producto.cantidad > 0:
-                        salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
-                        salida.precio = entrada.articulo_comprado.precio_unitario
-                        if entrada.cantidad_por_surtir >= cantidad:
-                            salida.cantidad = cantidad
-                            producto.cantidad = producto.cantidad - salida.cantidad
-                            salida.entrada = entrada.id
-                            entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
-                            salida.complete = True
-                            if entrada.cantidad_por_surtir == 0:
-                                entrada.agotado = True
-                            producto.save()
-                            entrada.save()
-                            salida.save()
-                        elif entrada.cantidad_por_surtir < cantidad:
-                            salida.cantidad = entrada.cantidad_por_surtir #No puedo surtir mas que la cantidad que tengo disponible en la entrada
-                            cantidad = cantidad - salida.cantidad #La nueva cantidad a surtir es la cantidad menos lo que ya salió
-                            producto.cantidad = producto.cantidad - salida.cantidad
-                            salida.entrada = entrada.id
-                            salida.complete = True
+        if entradas_dir.exists():
+            entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden)
+            for entrada in entradas:
+                if producto.cantidad > 0:
+                    salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
+                    salida.precio = entrada.articulo_comprado.precio_unitario
+                    if entrada.cantidad_por_surtir >= cantidad:
+                        salida.cantidad = cantidad
+                        producto.cantidad = producto.cantidad - salida.cantidad
+                        salida.entrada = entrada.id
+                        entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
+                        salida.complete = True
+                        if entrada.cantidad_por_surtir == 0:
                             entrada.agotado = True
-                            entrada.cantidad_por_surtir = 0
-                            #producto.salida = True si vuelvo la entrada de resurtimiento verdadera anulo la posibilidad de realizar más salidas
-                            producto.save()
-                            entrada.save()
-                            salida.save()
-                        inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
-                        if inv_del_producto.cantidad_apartada > 0:
-                            inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
-                        #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad si hago una salida que proviene de entradas voy a obtener un inv_del_producto negativo
-                        inv_del_producto.save()
+                        producto.save()
+                        entrada.save()
+                        salida.save()
+                    elif entrada.cantidad_por_surtir < cantidad:
+                        salida.cantidad = entrada.cantidad_por_surtir #No puedo surtir mas que la cantidad que tengo disponible en la entrada
+                        cantidad = cantidad - salida.cantidad #La nueva cantidad a surtir es la cantidad menos lo que ya salió
+                        producto.cantidad = producto.cantidad - salida.cantidad
+                        salida.entrada = entrada.id
+                        salida.complete = True
+                        entrada.agotado = True
+                        entrada.cantidad_por_surtir = 0
+                        #producto.salida =
+                        #True si vuelvo la entrada de resurtimiento verdadera anulo la posibilidad de realizar más salidas
+                        producto.save()
+                        entrada.save()
+                        salida.save()
+                    inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
+                    #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad si hago una salida que proviene de entradas voy a obtener un inv_del_producto negativo
+                    inv_del_producto.save()
+        elif entrada_res:   #si hay resurtimiento
+            salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
+            #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad #    Este falló ya con el nuevo método salida.precio = entrada_res.articulo_comprado.precio_unitario
+            entrada_res.cantidad_por_surtir = entrada_res.cantidad_por_surtir - salida.cantidad
+            #producto.cantidad_apartada = producto.cantidad_apartada - salida.cantidad
+            salida.entrada = entrada_res.id
+            if producto.cantidad_requisitar == 0:
+                producto.requisitar = False
+            if entrada_res.cantidad_por_surtir == 0:
+                entrada_res.agotado = True
+            entrada_res.save()
+            inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
+            inv_del_producto._change_reason = f'Esta es una salida desde un resurtimiento de inventario {salida.id}'
+            salida.precio = entrada_res.articulo_comprado.precio_unitario
+        else:    #si no hay resurtimiento
+            salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
+            salida.cantidad = cantidad
+            salida.entrada = 0
+            producto.cantidad = producto.cantidad - cantidad 
+            salida.precio = inv_del_producto.price
+            inv_del_producto._change_reason = f'Esta es una salida de inventario'
+            #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad
+        inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
+        producto.save()
+        inv_del_producto.save()
+        salida.save()
+
+       
+        
     if action == "remove":
         item = Salidas.objects.get(vale_salida = vale_salida, id = id_salida)
         if item.entrada != 0:
@@ -845,7 +844,11 @@ def reporte_salidas(request):
 
     if request.method == "POST" and 'btnExcel' in request.POST:
         return convert_salidas_to_xls(salidas)
-
+    
+     #Set up pagination
+    p = Paginator(salidas, 50)
+    page = request.GET.get('page')
+    salidas_list = p.get_page(page)
 
 
     context = {
@@ -1066,7 +1069,7 @@ def convert_salidas_to_xls(salidas):
     date_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(date_style)
 
-    columns = ['Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Código','Articulo','Material recibido por','Cantidad']
+    columns = ['Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Material recibido por','Cantidad','Precio']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1078,8 +1081,8 @@ def convert_salidas_to_xls(salidas):
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
 
     rows = salidas.values_list('producto__articulos__orden__id','created_at',Concat('producto__articulos__orden__staff__staff__first_name',Value(' '),'producto__articulos__orden__staff__staff__last_name'),
-                        'producto__articulos__orden__proyecto__nombre','producto__articulos__orden__subproyecto__nombre','producto__articulos__producto__producto__codigo','producto__articulos__producto__producto__nombre',
-                        Concat('vale_salida__material_recibido_por__staff__first_name',Value(' '),'vale_salida__material_recibido_por__staff__last_name'),'cantidad')
+                        'producto__articulos__orden__proyecto__nombre','producto__articulos__orden__subproyecto__nombre','producto__articulos__orden__area__nombre','producto__articulos__producto__producto__codigo','producto__articulos__producto__producto__nombre',
+                        Concat('vale_salida__material_recibido_por__staff__first_name',Value(' '),'vale_salida__material_recibido_por__staff__last_name'),'cantidad','precio')
 
     for row in rows:
         row_num += 1
@@ -1104,7 +1107,8 @@ def render_salida_pdf(request, pk):
     articulo = Salidas.objects.get(id=pk)
     vale = ValeSalidas.objects.get(id = articulo.vale_salida.id)
     productos = Salidas.objects.filter(vale_salida = vale)
-
+    styles = getSampleStyleSheet()
+    styles['BodyText'].fontSize = 6
 
     #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
@@ -1158,16 +1162,17 @@ def render_salida_pdf(request, pk):
     high = 670
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''','''P.Unitario''', '''Importe'''])
     for producto in productos:
-        data.append([producto.producto.articulos.producto.producto.codigo, producto.producto.articulos.producto.producto.nombre,producto.cantidad, producto.producto.articulos.producto.producto.unidad, producto.precio, producto.precio * producto.cantidad])
+        producto_nombre = Paragraph(producto.producto.articulos.producto.producto.nombre, styles["BodyText"])
+        data.append([producto.producto.articulos.producto.producto.codigo, producto_nombre, producto.cantidad, producto.producto.articulos.producto.producto.unidad, producto.precio, producto.precio * producto.cantidad])
         high = high - 18
-
+   
     c.setFillColor(black)
     c.setFont('Helvetica',8)
-
+    proyecto_y = 485 if high > 500 else high - 30
 
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(20,480,250,20, fill=True, stroke=False) #3ra linea azul
+    c.rect(20,proyecto_y - 5 ,250,20, fill=True, stroke=False) #3ra linea azul
     c.setFillColor(black)
     c.setFont('Helvetica',7)
 
@@ -1175,29 +1180,29 @@ def render_salida_pdf(request, pk):
     c.setFillColor(white)
     c.setLineWidth(.1)
     c.setFont('Helvetica-Bold',10)
-    c.drawCentredString(70,485,'Proyecto')
-    c.drawCentredString(165,485,'Subproyecto')
+    c.drawCentredString(70,proyecto_y,'Proyecto')
+    c.drawCentredString(165,proyecto_y,'Subproyecto')
 
     c.setFont('Helvetica',8)
     c.setFillColor(black)
-    c.drawCentredString(70,470, str(vale.solicitud.proyecto.nombre))
-    c.drawCentredString(165,470, str(vale.solicitud.subproyecto.nombre))
+    c.drawCentredString(70,proyecto_y - 15, str(vale.solicitud.proyecto.nombre))
+    c.drawCentredString(165,proyecto_y - 15, str(vale.solicitud.subproyecto.nombre))
 
 
     c.setFillColor(black)
     c.setFont('Helvetica',8)
     #c.line(135,high-200,215, high-200) #Linea de Autorizacion
-    c.drawCentredString(150,455,'Entregó')
-    c.drawCentredString(150,445, vale.almacenista.staff.first_name +' '+vale.almacenista.staff.last_name)
+    c.drawCentredString(150,proyecto_y - 30,'Entregó')
+    c.drawCentredString(150,proyecto_y - 40, vale.almacenista.staff.first_name +' '+vale.almacenista.staff.last_name)
 
-    c.line(370,465,430, 465)
-    c.drawCentredString(400,455,'Recibió')
-    c.drawCentredString(400,445, vale.material_recibido_por.staff.first_name +' '+vale.material_recibido_por.staff.last_name)
+    c.line(370,proyecto_y - 20,430, proyecto_y - 20)
+    c.drawCentredString(400,proyecto_y - 30,'Recibió')
+    c.drawCentredString(400,proyecto_y - 40, vale.material_recibido_por.staff.first_name +' '+vale.material_recibido_por.staff.last_name)
 
 
     #c.line(240, high-200, 310, high-200)
-    c.drawCentredString(280,455,'Autorizó')
-    c.drawCentredString(280,445, vale.solicitud.staff.staff.first_name + ' ' + vale.solicitud.staff.staff.last_name)
+    c.drawCentredString(280,proyecto_y - 30,'Autorizó')
+    c.drawCentredString(280,proyecto_y - 40, vale.solicitud.staff.staff.first_name + ' ' + vale.solicitud.staff.staff.last_name)
 
     c.setFont('Helvetica',10)
     c.setFillColor(prussian_blue)
@@ -1205,22 +1210,22 @@ def render_salida_pdf(request, pk):
     c.setFillColor(black)
 
     c.setFillColor(prussian_blue)
-    c.rect(20,420,565,20, fill=True, stroke=False)
+    c.rect(20,proyecto_y - 65,565,20, fill=True, stroke=False)
     c.setFillColor(white)
 
     width, height = letter
-    table = Table(data, colWidths=[2.8 * cm, 6 * cm, 2.8 * cm, 2.8 * cm, 2.8 * cm, 2.8 * cm])
+    table = Table(data, colWidths=[1.5 * cm, 10.5 * cm, 2.0 * cm, 2.0 * cm, 2.0 * cm, 2.0 * cm])
     table.setStyle(TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
         ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
         #ENCABEZADO
         ('TEXTCOLOR',(0,0),(-1,0), white),
-        ('FONTSIZE',(0,0),(-1,0), 12),
+        ('FONTSIZE',(0,0),(-1,0), 10),
         ('BACKGROUND',(0,0),(-1,0), prussian_blue),
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
-        ('FONTSIZE',(0,1),(-1,-1), 8),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
         ]))
     table.wrapOn(c, width, height)
     table.drawOn(c, 20, high)

@@ -152,7 +152,17 @@ class Articulo_Gasto(models.Model):
 
     @property
     def get_otros_impuestos(self):
-        impuestos = round(self.otros_impuestos - self.impuestos_retenidos, 2)
+        impuestos = 0
+        if self.otros_impuestos:
+            if self.impuestos_retenidos:
+                impuestos = round(self.otros_impuestos - self.impuestos_retenidos, 2)
+            else:
+                impuestos = round(self.otros_impuestos,2)
+        else:
+            if self.impuestos_retenidos:
+                impuestos = round(-self.impuestos_retenidos, 2)
+
+
         return impuestos
 
     @property

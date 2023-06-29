@@ -120,7 +120,7 @@ class Compra(models.Model):
     costo_fletes = models.DecimalField(max_digits=14, decimal_places=2, null=True, blank=True)
     logistica = models.BooleanField(default=False)
     tesoreria_matriz = models.BooleanField(default=False)
-    opciones_condiciones = models.CharField(max_length=250, null=True, blank=True)
+    opciones_condiciones = models.TextField(max_length=400, null=True, blank=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     comparativo = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
     facturas_completas = models.BooleanField(default=False)

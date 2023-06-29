@@ -227,7 +227,10 @@ def solicitudes_viaticos(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     perfil = Profile.objects.get(staff__id=request.user.id)
 
-    viaticos = Solicitud_Viatico.objects.filter(complete=True).order_by('-folio')
+    if perfil.tipo.nombre == "Admin" or perfil.tipo.nombre == "Control" or perfil.tipo.nombre == "Gerente" or perfil.tipo.nombre == "Superintendente":
+        viaticos = Solicitud_Viatico.objects.filter(complete=True).order_by('-folio')
+    else:
+        viaticos = Solicitud_Viatico.objects.filter(complete=True, staff = perfil).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
