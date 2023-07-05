@@ -50,12 +50,19 @@
                         <div class="accordion-item">
                             {% if solicitud.autorizar == True %}
                             <h2 class="accordion-header" id="headingSol">
-                                {% if exist_req == False %}
+                                {% if not requi and exist_salida == True %}
+                                <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                    Salida realizada<i class="fa-solid fa-circle-check"></i>
+
+                                {% elif not requi and solicitud.requisitar == True %}    
                                 <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                Requisición No Creada<i class="fa-solid fa-circle-xmark"></i>
+                                Requisición No Creada Aún<i class="fa-solid fa-circle-xmark"></i>
+                                {% elif not requi and listo_surtir %}    
+                                <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                Solicitud lista para surtir en almacén<i class="fa-solid fa-circle-check"></i>
                                 {% elif requi.autorizar == True %}
                                 <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                Requisición Autorizada&nbsp<strong>{{requi.folio}} {{requi.autorizar}}</strong><i class="fa-solid fa-circle-check"></i>
+                                Requisición Autorizada&nbsp<strong>{{requi.folio}}</strong><i class="fa-solid fa-circle-check"></i>
                                 {% else %}
                                 <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                 Requisición No Autorizada {{requi.folio}}<i class="fa-solid fa-circle-check"></i>
@@ -64,12 +71,21 @@
                             </h2>
                             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                                 <div class="accordion-body" style="color:black">
-                                    {% if requi.autorizar == null %}
-                                    <p class="card-text" style="color:#980F0F">Esta requisición aún no ha sido autorizada</p>
+                                    {% if exist_salida == True %}
+                                        <p class="card-text" style="color:black">Este material fue surtida en la salidas: </p>
+                                        {% for salida in salidas %}
+                                            <p class="card-text" style="color:black">ID: {{salida.id}} por {{salida.almacenista.staff.first_name}} {{salida.almacenista.staff.last_name}} recibido por {{salida.material_recibido_por.staff.first_name}} {{salida.material_recibido_por.staff.last_name}} </p>
+                                        {% endfor %}
+                                    {% elif requi and requi.autorizar == null %}
+                                        <p class="card-text" style="color:#980F0F">Esta requisición aún no ha sido autorizada</p>
+                                        <p class="card-text" style="color:black">Autorizador: {{requi.order.superintendete.staff.last_name}}</p>
                                     {% elif requi.autorizar == True %}
-                                    <p><strong>La requisición contiene {{num_prod_req}} items</strong></p>
-                                    <p class="card-text" style="color:black">Esta requisición fue autorizada por: {{requi.orden.superintendente.staff.first_name}} {{requi.orden.superintendente.staff.last_name}}</p>
-                                    <p class="card-text" style="color:black">Fecha: {{requi.approved_at}}</p>
+                                        <p><strong>La requisición contiene {{num_prod_req}} items</strong></p>
+                                        <p class="card-text" style="color:black">Esta requisición fue autorizada por: {{requi.orden.superintendente.staff.first_name}} {{requi.orden.superintendente.staff.last_name}}</p>
+                                        <p class="card-text" style="color:black">Fecha: {{requi.approved_at}}</p>
+                                        {% for item in prod_req %}
+                                            <p class="card-text" style="color:black">{{item.producto.articulos.producto.producto.nombre}} {{item.cantidad}}</p>
+                                        {% endfor %}
                                     {% endif %}
                                 </div>
                             </div>
@@ -87,7 +103,7 @@
                                     Compra Cancelada:&nbsp<strong>{{compra.get_folio}}</strong><i class="fa-solid fa-circle-check"></i>
                                     {% else %}
                                     <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                    Se ha elaborado la OC:&nbsp<strong>{{compra.folio}}</strong><i class="fa-solid fa-circle-check"></i>
+                                    Se ha elaborado la OC:&nbsp<strong>{{compra.get_folio}}</strong><i class="fa-solid fa-circle-check"></i>
                                     {% endif %}
                                     </button>
                                 {% endfor %}
@@ -104,7 +120,7 @@
                                         <p class="card-text" style="color:black">Fecha: {{compra.autorizado_date1}}</p>
                                         {% endif %}
                                     {% else %}
-                                    <p class="card-text" style="color:black">Esta OC ya fue autorizada por Gerencia: {{compra.oc_autorizada_por.staff.first_name}} {{compra.oc_autorizada_por.staff.last_name}}</p>
+                                    <p class="card-text" style="color:black">Esta OC ya fue autorizada por Gerencia: {{compra.oc_autorizada_por2.staff.first_name}} {{compra.oc_autorizada_por2.staff.last_name}}</p>
                                     <p class="card-text" style="color:black">Fecha: {{compra.autorizado_date2}}</p>
                                         {% if compra.cond_de_pago == credito %}
                                             <p class="card-text" style="color:black">Esta OC fue hecha a crédito, es decir, ya fue enviada al proveedor</p>
@@ -163,10 +179,10 @@
                                 {% for entrada in entradas %}
                                         {% if entrada.oc.entrada_completa == False %}
                                          <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                         Entrada parcial: {{entrada.oc.id}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                         Entrada parcial: {{entrada.id}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                          {% else %}
                                         <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                        Entrada completa: {{entrada.oc.id}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                        Entrada completa: {{entrada.id}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                         {% endif %}
                                     </button>
                                 {% endfor %}
@@ -200,36 +216,42 @@
                                 {% for salida in salidas %}
                                         {% if salida.oc.entrada_completa == False %}
                                          <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                         Pago parcial: {{pago.oc.folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                         Salida parcial: {{pago.oc.folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                          {% else %}
                                         <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                        Entrada completa: {{entrada.oc.folio}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
+                                        Salida completa: {{salida.id}}&nbsp<strong></strong><i class="fa-solid fa-circle-check"></i>
                                         {% endif %}
                                     </button>
                                 {% endfor %}
                                 </h2>
                                 <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                                     <div class="accordion-body" style="color:black">
-                                    {% for entrada in entradas %}
-                                        {% if entrada.completo == True %}
-                                        <p><strong>Folio OC: </strong>{{entrada.oc.folio}}</p>
-                                        <p class="card-text" style="color:black">Este entrada fue realizada por: {{entrada.almacenista}}</p>
+                                    {% for salida in salidas %}
+                                        {% if salida.completo == True %}
+                                        <p><strong>Salida ID: </strong>{{salida.id}}</p>
+                                        <p class="card-text" style="color:black">Este entrada fue realizada por: {{salida.almacenista}}</p>
                                         <p class="card-text" style="color:black">El día {{entrada.entrada_date}} a las {{entrada.entrada_hora}}</p>
                                         {% endif %}
                                     {% endfor %}
                                         <p class="card-text" style="color:black">Se recibieron los siguientes items:</p>
-                                    {% for articulo in articulos_entradas %}
+                                    {% for articulo in articulos_salidas %}
                                         <p><strong>{{articulo.articulo_comprado.producto.producto.articulos.producto.producto}} </strong>Cantidad: {{articulo.cantidad}} {{articulo.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</p>
                                     {% endfor %}
                                     </div>
                                 </div>
+                            
                             {% elif exist_salidas == False %}
+                            {%for item in product_solicitudes %}
+                            {% if item.producto.producto.servicio == False %}
                              <h2 class="accordion-header" id="headingSol">
                                     <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                    No hay salidas aún<i class="fa-solid fa-hourglass-empty"></i>
+                                    No hay salidas aún para el producto {{item.producto.producto.name}}<i class="fa-solid fa-hourglass-empty"></i>
                                     </button>
                             </h2>
                             {% endif %}
+                            {% endfor %}
+                            {% endif %}
+                            
                             </div>
                         </div>
                     </div>

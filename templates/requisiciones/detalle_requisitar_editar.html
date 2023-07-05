@@ -55,7 +55,7 @@
                         <select class="form-select form-select-sm" id="producto">
                             <option id="default_sel">      </option>
                             {% for producto in productos %}
-                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar}}">
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar|unlocalize}}">
                                 {{producto.articulos.producto.producto.nombre}}
                             </option>
                             {% endfor %}

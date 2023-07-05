@@ -1,0 +1,57 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="VZ" Folio="79074" Fecha="2023-06-23T11:09:54" Sello="JS8ohcY6uwSvN3UeZUqI+QNDY8OmzEsJHvAsjiZ+C6UmiuckyfN4ha3g7JwcVHYKyvXywQIXxChPgczOhA+Gx+GY/a6zA/MyAy8OU/bUD9l+7qQOEBsi0C4imV0srSzJAfd6jBUI0gaKAGec7CD56fXUgDN8xSxu63gMy/7Dym5H/eGFC4FeyLuJjOrQrcLhrTjE06+5A7NFOETU0Wb04wIg3MFJlgidnMjyIBnuwigl1Rw+KqSrf5qFOW0QwU9JonWXH69BrdaMbaQEb8Pbvch2T46qwP+xTFpaLFG0LpUEaehnRb9xOrgHMcOyrZLFnCCCwpvAVlKAjTHGGbpiDw==" FormaPago="03" NoCertificado="00001000000509353781" Certificado="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" CondicionesDePago="CONTADO" SubTotal="2115.54" Moneda="MXN" Total="2454.03" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" LugarExpedicion="91700">
+  <cfdi:Emisor Rfc="UTA820628TV3" Nombre="UNIFORMES DE TAMPICO" RegimenFiscal="601" />
+  <cfdi:Receptor Rfc="VME121113PI3" Nombre="VORDTEC DE MEXICO" DomicilioFiscalReceptor="91633" RegimenFiscalReceptor="601" UsoCFDI="G03" />
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="53101604" NoIdentificacion="BLCSML0A2203D" Cantidad="2.000000" ClaveUnidad="H87" Unidad="PIEZA" Descripcion="BLUSA CASUAL ML GAB LIGERA BR 100  ALG BLANCO PC MARIN 0M 2" ValorUnitario="268.100000" Importe="536.200000" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="536.200000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="85.792000" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="73141715" NoIdentificacion="LG001A" Cantidad="4.000000" ClaveUnidad="E48" Unidad="SERVICIO" Descripcion="1 LOGOTIPO BORDADO CHICO ST   ST 2       2" ValorUnitario="31.900000" Importe="127.600000" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="127.600000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="20.416000" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="53101604" NoIdentificacion="BLCSML0A2238D" Cantidad="2.000000" ClaveUnidad="H87" Unidad="PIEZA" Descripcion="BLUSA CASUAL ML GAB LIGERA BR 100  ALG  ARENA PC MARIN 0M 2" ValorUnitario="268.100000" Importe="536.200000" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="536.200000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="85.792000" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="73141715" NoIdentificacion="LG001A" Cantidad="4.000000" ClaveUnidad="E48" Unidad="SERVICIO" Descripcion="1 LOGOTIPO BORDADO CHICO ST   ST 2       2" ValorUnitario="31.900000" Importe="127.600000" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="127.600000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="20.416000" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="53101604" NoIdentificacion="BLCSML0A2979D" Cantidad="2.000000" ClaveUnidad="H87" Unidad="PIEZA" Descripcion="BLUSA CASUAL ML OXFORD1 100   ALG CELESTE PC MARIN 0M 2" ValorUnitario="330.170000" Importe="660.340000" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="660.340000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="105.654400" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="73141715" NoIdentificacion="LG001A" Cantidad="4.000000" ClaveUnidad="E48" Unidad="SERVICIO" Descripcion="1 LOGOTIPO BORDADO CHICO ST   ST 2       2" ValorUnitario="31.900000" Importe="127.600000" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="127.600000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="20.416000" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="338.49">
+    <cfdi:Traslados>
+      <cfdi:Traslado Base="2115.54" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="338.49" />
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" FechaTimbrado="2023-06-23T11:09:59" NoCertificadoSAT="00001000000504204971" RfcProvCertif="PPD101129EA3" SelloCFD="JS8ohcY6uwSvN3UeZUqI+QNDY8OmzEsJHvAsjiZ+C6UmiuckyfN4ha3g7JwcVHYKyvXywQIXxChPgczOhA+Gx+GY/a6zA/MyAy8OU/bUD9l+7qQOEBsi0C4imV0srSzJAfd6jBUI0gaKAGec7CD56fXUgDN8xSxu63gMy/7Dym5H/eGFC4FeyLuJjOrQrcLhrTjE06+5A7NFOETU0Wb04wIg3MFJlgidnMjyIBnuwigl1Rw+KqSrf5qFOW0QwU9JonWXH69BrdaMbaQEb8Pbvch2T46qwP+xTFpaLFG0LpUEaehnRb9xOrgHMcOyrZLFnCCCwpvAVlKAjTHGGbpiDw==" SelloSAT="KBwwF19GMRz4GbRo3wr2dpz+wiXOuLSNxaXkMCjpMiSQO1gNwqBK1HDvwXUleksr4noRKHfTdgeMjLwQaEdak0iFm2OP827ksR7wyUBZf44Mf8+5SueFNVb4mLyKratjUF6Of6S0ul3WpXIfxoUjfGZn8LhULD1eJuP9hpgZbESmKgiNWaKxpl+jAR78h13Hz8kNOy/YKXykSO9qbBk4UxAYA/fCAj3LTiHzJVI8yX+Sr3PXD4si+lB8h8yH0dvRSFsqWe5wtoIAvJSrkTkCgyAsgnI489MTb0aTklGJ7u5VQGkNTU9HYsxv/t7z6SCc44BxtwMBvtGsJLIOkh0Y+w==" UUID="6C7A4E29-8417-4506-8AE8-C6579993636C" Version="1.1" xsi:schemaLocation="http://www.sat.gob.mx/TimbreFiscalDigital http://www.sat.gob.mx/sitio_internet/cfd/TimbreFiscalDigital/TimbreFiscalDigitalv11.xsd" />
+  </cfdi:Complemento>
+</cfdi:Comprobante>

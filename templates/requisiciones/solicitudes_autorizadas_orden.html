@@ -1,6 +1,7 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
+{% load widget_tweaks %}
 <html>
 <head>
 {% block title %}Pendiente Requisición{% endblock %}
@@ -13,21 +14,57 @@
 <hr>
 <div class = "row mt-2 bg-white">
     <h4>Pendiente por Requisitar</h4>
-    <hr>
+    <!-- Aqui es el encabezado de los filtros -->
+    <div class = "row mt-2 bg-white">
+        <div class="col-12">
+            <div class="card card-body">
+                <h5>Filtro de Solicitudes Autorizadas</h5>
+                <hr>
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <label for="myfilter.form.folio" class="col-sm-auto col-form-label text-right my-2"><strong>Solicitud:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.folio|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Solicitado por:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.staff|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Proyecto:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.proyecto|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right my-2"><strong>Desde:</strong></label>
+                    <div class="col-auto my-2">
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                    </div>
+                    <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right my-2"><strong>Hasta:</strong></label>
+                    <div class="col-auto my-2">
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                </form>
+            </div>
+        </div>
+                <hr>
     <form method=POST>
     {% csrf_token %}
     <ul class="nav nav-pills" >
-        <li class="nav-item mx-2 my-1">
+        <li class="nav-item mx-2 my-2">
             <button type="submit" class="btn btn-outline-success" name="btnExcel" value='Reporte Excel'>
                 <i class="fa-solid fa-file-excel fa-2xl"></i>
             </button>
         </li>
-        <li class="nav-item mx-2 my-1">
+        <!--<li class="nav-item mx-2 my-1">
             <button type="button" class="btn btn-outline-danger">
                 <i class="fa-solid fa-file-pdf fa-2xl"></i>
             </button>
-        </li>
-        <li class="nav-item mx-2">
+        </li>-->
+        <li class="nav-item mx-2 my-2">
             <div class="btn-group btn-group" role="group" aria-label="Large button group">
                 <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada' %}">Surtir</a>
                 <a type="button" class="btn btn-outline-info" href="{% url 'solicitudes-autorizadas-pendientes' %}">Pendientes</a>
@@ -36,6 +73,7 @@
         </li>
     </ul>
     </form>
+    </div>
 </div>
 
 <!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->

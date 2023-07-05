@@ -89,6 +89,7 @@
                     <th scope="col">Financiamiento</th>
                     <th scope="col">Dias de Crédito</th>
                     <th scope="col">Status</th>
+                    <th scope="col">Edición</th>
                 </tr>
             </thead>
             <tbody>
@@ -108,6 +109,9 @@
                     {% endif %}
                     <td>{{direccion.dias_credito}}</td>
                     <td>{{direccion.estatus}}</td>
+                    <td>
+                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'edit_proveedor_direccion' direccion.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -6,7 +6,7 @@ from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Bat
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
-from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form
+from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, Edit_ProveedoresDireccionesForm
 from django.contrib.auth.models import User
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter
 from django.contrib import messages
@@ -362,6 +362,54 @@ def add_proveedor_direccion(request, pk):
         }
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
+@login_required(login_url='user-login')
+def add_proveedor_direccion(request, pk):
+
+    usuario = Profile.objects.get(staff=request.user)
+    proveedor = Proveedor.objects.get(id=pk)
+    item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, creado_por = usuario)
+
+    if request.method =='POST':
+        form = ProveedoresDireccionesForm(request.POST, instance = item)
+        if form.is_valid():
+            direccion = form.save(commit=False)
+            direccion.completo = True
+            direccion.save()
+            messages.success(request,f'Has agregado correctamente la direccion del proveedor {item.nombre.razon_social}')
+            return redirect('dashboard-proveedores')
+    else:
+        form = ProveedoresDireccionesForm(instance = item)
+
+
+    context = {
+        'form': form,
+        'item':item,
+        }
+    return render(request,'dashboard/add_proveedor_direccion.html', context)
+
+@login_required(login_url='user-login')
+def edit_proveedor_direccion(request, pk):
+
+    usuario = Profile.objects.get(staff=request.user)
+    direccion = Proveedor_direcciones.objects.get(id = pk)
+
+    if request.method =='POST':
+        form = Edit_ProveedoresDireccionesForm(request.POST, instance = direccion)
+        if form.is_valid():
+            direccion = form.save(commit=False)
+            direccion.completo = True
+            direccion.save()
+            messages.success(request,'Has actualizado correctamente la direccion del proveedor')
+            return redirect('dashboard-proveedores')
+    else:
+        form = ProveedoresDireccionesForm(instance = direccion)
+
+
+    context = {
+        'form': form,
+        'direccion':direccion,
+        }
+    return render(request,'dashboard/edit_direcciones_proveedores.html', context)
 
 
 @login_required(login_url='user-login')

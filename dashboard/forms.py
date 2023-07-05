@@ -34,6 +34,11 @@ class ProveedoresDireccionesForm(forms.ModelForm):
         model = Proveedor_direcciones
         fields = ['nombre','distrito','domicilio','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
+class Edit_ProveedoresDireccionesForm(forms.ModelForm):
+    class Meta:
+        model = Proveedor_direcciones
+        fields = ['domicilio','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
+
 class Products_BatchForm(forms.ModelForm):
     class Meta:
         model = Products_Batch

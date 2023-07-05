@@ -1,6 +1,7 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Página de Inventario{% endblock %}
@@ -187,33 +188,31 @@
         </div>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
-            {% if existencia_list.has_previous %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{existencia_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
-            {% endif %}
-            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
-
-            {% for item in existencia_list.paginator.page_range %}
-                {% if existencia_list.number == item %}
-                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                {% elif item > existencia_list.number|add:'-2' and item < existencia_list.number|add:'2' %}
-                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
+                {% if existencia_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url existencia_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
                 {% endif %}
-            {% endfor %}
-
-            {% if existencia_list.paginator.num_pages > existencia_list.number|add:'2' %}
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{existencia_list.number|add:'2'}}">&hellip;</a></li>
-            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-            <li><a class="page-link" style="color:#3E92CC" href="?page={{ existencia_list.paginator.num_pages}}">{{existencia_list.paginator.num_pages}}</a></li>
-            {% endif %}
-
-            {% if existencia_list.has_next %}
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{existencia_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{existencia_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
-            {% endif %}
+        
+                {% for item in existencia_list.paginator.page_range %}
+                    {% if existencia_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > existencia_list.number|add:'-2' and item < existencia_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+        
+                {% if existencia_list.paginator.num_pages > salidas_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{existencia_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url existencia_list.paginator.num_pages 'page' request.GET.urlencode %}">{{existencia_list.paginator.num_pages}}</a></li>
+                {% endif %}
+        
+                {% if existencia_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url existencia_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url existencia_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
             </ul>
         </nav>
-
 
 
 

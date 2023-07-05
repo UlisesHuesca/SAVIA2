@@ -21,6 +21,7 @@ urlpatterns = [
     path('proveedor/update/<int:pk>/', views.proveedores_update, name='dashboard-proveedores-update'),
     path('proveedor/direcciones/<int:pk>/', views.proveedor_direcciones, name='proveedor-direcciones'),
     path('proveedor/add_direccion/<int:pk>/', views.add_proveedor_direccion, name='add-proveedor-direccion'),
+    path('proveedor/edit_direccion/<int:pk>', views.edit_proveedor_direccion, name='edit_proveedor_direccion'),
     path('proveedores/upload_batch_proveedores', views.upload_batch_proveedores, name='upload_batch_proveedores'),
     path('proveedores/upload_batch_proveedores_direcciones', views.upload_batch_proveedores_direcciones, name='upload_batch_proveedores_direcciones'),
     path('order/', views.order, name='dashboard-order'),

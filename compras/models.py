@@ -52,6 +52,7 @@ class Proveedor_direcciones(models.Model):
     estado = models.ForeignKey(Estado, on_delete=models.CASCADE, null=True)
     contacto = models.CharField(max_length=50, null=True)
     email = models.EmailField(max_length=254, null=True)
+    email_opt = models.EmailField(max_length=100, null=True)
     banco = models.ForeignKey(Banco, on_delete=models.CASCADE, null=True)
     clabe = models.CharField(max_length=20, null=True)
     cuenta = models.CharField(max_length=20, null=True)
@@ -60,6 +61,7 @@ class Proveedor_direcciones(models.Model):
     estatus = models.ForeignKey(Estatus_proveedor, on_delete=models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     completo = models.BooleanField(default=False)
+    modified = models.DateField(auto_now=True)
 
     def __str__(self):
         return f'{self.nombre}'

@@ -172,7 +172,7 @@
                         <select class="form-select form-select-sm" id="producto">
                             <option id="default_sel">      </option>
                             {% for producto in productos %}
-                            <option id="js" target="{{producto.id}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_comprada="{{producto.cantidad_comprada}}" iva="{{producto.producto.articulos.producto.producto.iva}}">
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad|unlocalize}}" cantidad_comprada="{{producto.cantidad_comprada}}" iva="{{producto.producto.articulos.producto.producto.iva}}">
                                 {{producto.producto.articulos.producto}}
                             </option>
                             {% endfor %}
@@ -221,7 +221,7 @@
                     {% if product.precio_unitario != None  and product.cantidad != None %}
                     <td scope="col">${% widthratio product.precio_unitario 1 product.cantidad %}</td>
                     {% endif %}
-                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id}}" cantidad="{{product.cantidad}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad|unlocalize}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                 </tr>
                 {% endfor %}
             </tbody>

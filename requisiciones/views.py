@@ -9,6 +9,7 @@ from requisiciones.models import Salidas, ValeSalidas
 from django.contrib.auth.decorators import login_required
 from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter
 from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
+from solicitudes.filters import SolicitudesFilter
 from django.http import HttpResponse
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -476,6 +477,8 @@ def solicitud_autorizada_orden(request):
 
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(requisitar=True), articulos__orden__autorizar = True )
+    myfilter=SolicitudesFilter(request.GET, queryset=ordenes)
+    ordenes = myfilter.qs
 
 
     if request.method == "POST" and 'btnExcel' in request.POST:
@@ -484,6 +487,7 @@ def solicitud_autorizada_orden(request):
 
     context= {
         'ordenes':ordenes,
+        'myfilter':myfilter,
         }
 
     return render(request, 'requisiciones/solicitudes_autorizadas_orden.html',context)
@@ -853,6 +857,7 @@ def reporte_salidas(request):
 
     context = {
         'salidas':salidas,
+        'salidas_list':salidas_list,
         'myfilter':myfilter,
         }
 
@@ -1014,7 +1019,7 @@ def convert_entradas_to_xls(entradas):
     date_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(date_style)
 
-    columns = ['Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Código','Articulo','Cantidad']
+    columns = ['Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Código','Articulo','Cantidad','Precio']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1027,7 +1032,7 @@ def convert_entradas_to_xls(entradas):
 
     rows = entradas.values_list('entrada__oc__req__orden__id','created_at',Concat('entrada__oc__req__orden__staff__staff__first_name',Value(' '),'entrada__oc__req__orden__staff__staff__last_name'),
                         'entrada__oc__req__orden__proyecto__nombre','entrada__oc__req__orden__subproyecto__nombre','articulo_comprado__producto__producto__articulos__producto__producto__codigo',
-                        'articulo_comprado__producto__producto__articulos__producto__producto__nombre','cantidad')
+                        'articulo_comprado__producto__producto__articulos__producto__producto__nombre','cantidad','articulo_comprado__precio_unitario')
 
     for row in rows:
         row_num += 1
@@ -1077,8 +1082,8 @@ def convert_salidas_to_xls(salidas):
 
     columna_max = len(columns)+2
 
-    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia V2. UH}')).style = messages_style
-    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA VORDTEC. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Grupo Vordcab S.A. de C.V.}')).style = messages_style
 
     rows = salidas.values_list('producto__articulos__orden__id','created_at',Concat('producto__articulos__orden__staff__staff__first_name',Value(' '),'producto__articulos__orden__staff__staff__last_name'),
                         'producto__articulos__orden__proyecto__nombre','producto__articulos__orden__subproyecto__nombre','producto__articulos__orden__area__nombre','producto__articulos__producto__producto__codigo','producto__articulos__producto__producto__nombre',
