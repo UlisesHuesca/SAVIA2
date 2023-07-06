@@ -32,6 +32,7 @@ class Solicitud_Viatico(models.Model):
     approved_at_time = models.TimeField(null=True)
     approved_at2 = models.DateField(null=True)
     approved_at_time2 = models.TimeField(null=True)
+    facturas_completas = models.BooleanField(default=False)
 
     @property
     def get_total(self):

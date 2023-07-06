@@ -20,7 +20,7 @@
             <!-- Aqui es el encabezado de los filtros -->
                 <h5 id="oc" target={{oc.id}}>ORDEN DE COMPRA: {{oc.get_folio}}</h5>
             </div>
-            <form method="POST">
+            <form id="id_formulario" method="POST">
             <div>
                 {% csrf_token %}
                 <div class="row my-2">
@@ -42,7 +42,7 @@
                 <div id="comparativo" class="row my-2 d-none">
                     <label for="form.comparativo" class="col-auto col-form-label my-1"><strong>Comparativo:</strong></label>
                     <div class="col-6">
-                        {{ form.comparativo|add_class:"form-control" }}
+                        {{ form.comparativo_model|add_class:"form-control" }}
                     </div>
                 </div>
                 <div class="row my-2">
@@ -156,7 +156,15 @@
                 </div>
             </div>
             <div class="text-end">
-                <button type="submit" id="crear" name="crear" class="btn btn-success col-2">Crear</button>
+                <input type="hidden" name="crear" value="crear">
+                {% if productos_comp %}
+                <div>
+                {%else%}
+                <div class="d-none">
+                {% endif %}   
+                    <button type="submit" id="crear" name="crear" class="btn btn-success col-2 my-2">Crear</button>
+                </div>
+               
                 <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
             </div>
             </form>
@@ -285,22 +293,27 @@ document.getElementById("txt_proveedor").addEventListener("change", (event)=>{
     //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
     var other_select = document.getElementById('id_proveedor');
     var status_txt = document.getElementById('comparativo')
+    var comparativo = document.getElementById('id_comparativo_model')
     var colaborador = document.getElementById("colaborador")
     var lbl_colaborador = document.getElementById("lbl_colaborador")
+    console.log(comparativo.value)
     cont = 0
+    
 
     for(let i = 0; i < browserChildren.length; i++){
         //console.log(browserChildren[i].value)
 
         if (browserChildren[i].value === select.value) {
-            //console.log(browserChildren[i])
-            //console.log(select.value)
             let id = browserChildren[i].getAttribute('valor');
-            //console.log(id)
             let status = browserChildren[i].getAttribute('status')
             console.log(status)
             if (status=="NUEVO"){
                 status_txt.setAttribute("class","row my-2")
+                status_txt.setAttribute('status','true')
+            } else {
+                status_txt.setAttribute("class","row my-2 d-none")
+                status_txt.value = " "
+                status_txt.setAttribute('status','false')
             }
 
             other_select.value = id;
@@ -364,11 +377,7 @@ document.getElementById("txt_colaborador").addEventListener("change", (event)=>{
     }
 });
 
-
-document.getElementById("crear").addEventListener("click", function(element){
-    let array_id_oc=[];
-    let oc_tag = document.getElementById('oc');
-    let oc = oc_tag.getAttribute('target');
+function verificar() {
     let proveedor = document.getElementById('id_proveedor');
     let cond_pago = document.getElementById('id_cond_de_pago');
     let uso_cfdi = document.getElementById('id_uso_del_cfdi');
@@ -384,100 +393,139 @@ document.getElementById("crear").addEventListener("click", function(element){
     let anticipo = document.getElementById('id_monto_anticipo');
     let moneda = document.getElementById('id_moneda');
     let tipo_cambio = document.getElementById('id_tipo_de_cambio');
-
-
-    console.log('iva:'+iva)
-    val_proveedor = proveedor.value;
-    val_cond_pago = cond_pago.value;
-    val_uso_cfdi = uso_cfdi.value;
-    val_dias_entrega = dias_entrega.value;
-    val_dias_credito = dias_credito.value;
-    val_flete = flete.value;
-    val_impuesto = impuestos.value;
-    val_anticipo = anticipo.value;
-    val_opciones = opciones.value;
-    val_checkimpuesto = checkimpuesto.checked;
-    val_checktesoreria = checktesoreria.checked;
-    val_checkflete = checkflete.checked;
-    val_checkanticipo = checkanticipo.checked;
+    var status_txt = document.getElementById('comparativo');
+    let status_comparativo = status_txt.getAttribute('status');
+    let comparativo = document.getElementById('id_comparativo_model');
+    let rows = document.getElementById("mytbl").rows.length;
+    console.log(comparativo.value)
+    
     val_moneda = moneda.value;
     val_tipo_cambio = tipo_cambio.value;
-
-    //Cuenta el número de filas dentro de la tabla
-    var rows = document.getElementById("mytbl").rows.length;
-    console.log('rows',rows)
     if (!proveedor.value) {
+        
         Swal.fire({
                     "title":"Error",
                     "text":"Debes elegir una opción en proveedores",
                     "icon":"error",
                 })
+                return false
+    } else if ((status_comparativo == 'true') && (comparativo.value =='')){
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir una opción en comparativo",
+                "icon":"error",
+        })
+        return false
     } else if (!cond_pago.value){
+        
         let dias_credito = 0;
         Swal.fire({
                 "title":"Error",
                 "text":"Debes elegir una opción en condiciones de pago",
                 "icon":"error",
         })
+        return false
     } else if ((cond_pago.value == 2) && (!dias_credito.value)){
+       
         Swal.fire({
                 "title":"Error",
                 "text":"La cantidad de días debe ser mayor a 0",
                 "icon":"error",
             })
+            return false
     } else if (!val_moneda){
+       
          Swal.fire({
                 "title":"Error",
                 "text":"Debes elegir un tipo de moneda",
                 "icon":"error",
             })
+            return false
     } else if ((val_moneda == 2) && (val_tipo_cambio <= 0)) {
+        
         Swal.fire({
                 "title":"Error",
                 "text":"El tipo de cambio debe ser mayor a 0",
                 "icon":"error",
         })
+        return false
     } else if (!uso_cfdi.value){
+        
         Swal.fire({
                     "title":"Error",
                     "text":"Debes elegir una opción en uso del cfdi",
                     "icon":"error",
                 })
+                return false
     } else if ((checkimpuesto.checked) && (impuestos.value<=0) || (!impuestos)){
+        
         Swal.fire({
                     "title":"Error",
                     "text":"La cantidad en impuestos debe ser mayor que 0",
                     "icon":"error",
                 })
+                return false
     } else if ((checkflete.checked) && (flete.value<=0) || (!flete)){
+       
         Swal.fire({
                     "title":"Error",
                     "text":"La cantidad en flete debe ser mayor que 0",
                     "icon":"error",
                 })
+                return false
     } else if ((checkanticipo.checked) && (anticipo.value<=0) || (!anticipo)){
+        
         Swal.fire({
                 "title":"Error",
                 "text":"La cantidad en anticipo debe ser mayor que 0",
                 "icon":"error",
             })
+            return false
     } else if (rows<=0) {
+        
         Swal.fire({
                 "title":"Error",
                 "text":"No tienes productos en tu listado",
                 "icon":"error",
             })
+            return false
     } else if (rows>0) {
+        
         Swal.fire({
                 "title":"Success",
                 "text":"Puedes crear la OC, ahora",
                 "icon":"success",
             })
+            return true;
+        } 
+    
+   
 
-            }
+    //if (!formValid) {
+     //   // Muestra tu mensaje de error aquí
+     //   // Puedes personalizar este mensaje según la primera condición que no se cumpla
+    //}
+
+   
+
+    // Habilita el botón si todas las condiciones son falsas
+    
+}
+
+document.getElementById("crear").addEventListener("click", function(event){
+    event.preventDefault();
+    formulario = document.getElementById("id_formulario")// Evita el comportamiento de submit predeterminado
+    boton = document.getElementById("crear")
+
+    let formValid = verificar();
+    console.log(formValid)
+
+    // Si el resultado es true (todas las condiciones se cumplen), procede con el submit
+    if (formValid) {
+        formulario.submit();
+    }
 });
-
-
 
 
 
@@ -488,7 +536,7 @@ document.getElementById("SwitchReferencia").addEventListener("change", function(
 	console.log('referencia check:'+checkref.checked);
 	var referencia = document.getElementById('referencialbl');
 
-
+   
 	if (checkref.checked){
 	    referencia.setAttribute('class','col-sm')
 	} else{
@@ -632,6 +680,7 @@ document.getElementById("id_flete").addEventListener("change", function(element)
     let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
     var v_flete = document.getElementById('valor_flete')
     
+    
 
 	if (checkflete.checked){
 	    lbl_flete.removeAttribute('class');
@@ -656,6 +705,7 @@ document.getElementById("id_costo_fletes").addEventListener("change", function(e
     let flete_valor = document.getElementById('valor_flete');
     let total_element = document.getElementById('total');
     let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+    
 
     // Verificar si el valor de flete ha cambiado
     if (element.target.value) {
@@ -705,6 +755,7 @@ document.getElementById("id_anticipo").addEventListener("change", function(eleme
 	console.log('checkanticipo:'+checkanticipo.checked);
 	var lbl_anticipo = document.getElementById('anticipo')
 	var txt_anticipo = document.getElementById('id_monto_anticipo')
+    
 
 	if (checkanticipo.checked){
 	    lbl_anticipo.removeAttribute('class');
@@ -732,6 +783,7 @@ document.getElementById("id_impuesto").addEventListener("change", function(eleme
     let impuesto_row = document.getElementById('impuestos_total')
     let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
     var v_impuesto = document.getElementById('valor_impuesto')
+    
 
 	if (checkimpuesto.checked){
 	    lbl_impuestos.removeAttribute('class');
@@ -761,6 +813,7 @@ document.getElementById("id_impuestos_adicionales").addEventListener("change", f
     let total_element = document.getElementById('total')
     let total_val = total_element.getAttribute('total'); // Quita el signo de dolar y convierte a float
     //console.log(total_val)
+    
 
     impuesto_row.setAttribute('class','');
     impuesto_valor.innerHTML = '$' + impuesto;
@@ -778,6 +831,7 @@ document.getElementById("id_cond_de_pago").addEventListener("change", function(e
     var lbl_dias = document.getElementById('dias_credito')
     var dias = document.getElementById('id_dias_de_credito')
     //console.log('pago:'+pago.value);
+    
 
     if (pago.value == 2){
         lbl_dias.removeAttribute("class");
@@ -802,6 +856,7 @@ document.getElementById("id_moneda").addEventListener("change", function(element
     var flete_mod = document.getElementById("id_costo_fletes");
     var impuestos_mod = document.getElementById("id_impuestos_adicionales");
     var anticipo_mod = document.getElementById("id_monto_anticipo");
+    
 
     if (moneda.value == 2){
         lbl_tipo_cambio.removeAttribute('class');

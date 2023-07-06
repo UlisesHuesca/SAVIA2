@@ -89,6 +89,35 @@ class Moneda(models.Model):
 
     def __str__(self):
         return f'{self.nombre}'
+    
+class Comparativo(models.Model):
+    nombre = models.CharField(max_length=100, null=True)
+    creada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completo = models.BooleanField(default=False)
+    comentarios = models.TextField(max_length=100, null=True)
+
+    def __str__(self):
+        return f'{self.nombre}'
+
+class Item_Comparativo(models.Model):
+    producto = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
+    comparativo = models.ForeignKey(Comparativo, on_delete = models.CASCADE, null=True)
+    proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True)
+    modelo = models.CharField(max_length=100, null=True)
+    marca = models.CharField(max_length=100, null=True)
+    cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
+    precio = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
+    proveedor2 = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, related_name='proveedor2') 
+    modelo2 = models.CharField(max_length=100, null=True, blank=True)
+    marca2 = models.CharField(max_length=100, null=True, blank=True)
+    precio2 = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
+    proveedor3 = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, related_name='proveedor3') 
+    modelo3 = models.CharField(max_length=100, null=True, blank=True)
+    marca3 = models.CharField(max_length=100, null=True, blank=True)
+    precio3 = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    completo = models.BooleanField(default=False)
 
 class Compra(models.Model):
     req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True)
@@ -124,7 +153,8 @@ class Compra(models.Model):
     tesoreria_matriz = models.BooleanField(default=False)
     opciones_condiciones = models.TextField(max_length=400, null=True, blank=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
-    comparativo = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
+    #comparativo = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
+    comparativo_model = models.ForeignKey(Comparativo, on_delete = models.CASCADE, null=True, blank=True)
     facturas_completas = models.BooleanField(default=False)
     costo_oc = models.DecimalField(max_digits=14,decimal_places=2, null=True, blank=True)
     costo_iva = models.DecimalField(max_digits=14,decimal_places=2, null=True, blank=True)

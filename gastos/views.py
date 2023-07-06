@@ -7,6 +7,7 @@ from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Articulo_Gasto_Factura_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm 
+from tesoreria.forms import Facturas_Gastos_Form 
 from compras.views import attach_oc_pdf
 from .filters import Solicitud_Gasto_Filter
 from user.models import Profile
@@ -17,6 +18,7 @@ from django.db.models import Sum
 import json
 import xml.etree.ElementTree as ET
 import decimal
+from django.db.models import Q
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -404,8 +406,20 @@ def pago_gasto(request, pk):
 def matriz_facturas_gasto(request, pk):
     gasto = Solicitud_Gasto.objects.get(id = pk)
     articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
+    form =  Facturas_Gastos_Form(instance=gasto)
+
+    if request.method == 'POST':
+        form = Facturas_Gastos_Form(request.POST, instance=gasto)
+        if "btn_factura_completa" in request.POST:
+            if form.is_valid():
+                form.save()
+                messages.success(request,'Haz cambiado el status de facturas completas')
+                return redirect('matriz-pagos')
+            else:
+                messages.error(request,'No está validando')
 
     context={
+        'form':form,
         'articulos_gasto':articulos_gasto,
         'gasto':gasto,
         }
@@ -440,7 +454,7 @@ def matriz_gasto_entrada(request):
     #articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
 
     #articulos_gasto = Articulo_Gasto.objects.all()
-    articulos_gasto = Articulo_Gasto.objects.filter(producto__producto__nombre = "MATERIALES", completo = True, validacion = False, gasto__autorizar = None, gasto__tipo__tipo='REEMBOLSO')
+    articulos_gasto = Articulo_Gasto.objects.filter(Q(producto__producto__nombre = "MATERIALES")|Q(producto_producto__nombre = "HERRAMIENTA"), completo = True, validacion = False, gasto__autorizar = None, gasto__tipo__tipo='REEMBOLSO')
 
     context={
         'articulos_gasto':articulos_gasto,

@@ -185,6 +185,9 @@
                                 <span class="badge bg-danger">({{conteo_requis}})</span>
                                 {% endif %}
                             </a>
+                            <a class="dropdown-item" href="{% url 'comparativos' %}">
+                                Comparativos
+                            </a>
                         <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.tesoreria == False %}

@@ -4,9 +4,9 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter
-from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_credito, Uso_cfdi, Moneda
+from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_credito, Uso_cfdi, Moneda, Comparativo, Item_Comparativo
 from tesoreria.models import Facturas
-from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm
+from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm
 from requisiciones.forms import Articulo_Cancelado_Form
 from tesoreria.forms import Facturas_Form
 from django.contrib.auth.decorators import login_required
@@ -800,6 +800,76 @@ def autorizar_oc2(request, pk):
         }
 
     return render(request, 'compras/autorizar_oc2.html',context)
+
+def comparativos(request):
+    comparativos = Comparativo.objects.all()
+    
+    context= {
+        'comparativos':comparativos,
+    }
+    return render(request,'compras/comparativos.html', context)
+
+@login_required(login_url='user-login')
+def crear_comparativo(request):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    #Tengo que revisar primero si ya existe una orden pendiente del usuario
+    
+    comparativo, created = Comparativo.objects.get_or_create(completo= False, creada_por=usuario)
+    articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo=comparativo)
+
+    productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
+
+    proveedores = Proveedor_direcciones.objects.all()
+    articulos = Inventario.objects.filter(producto__gasto = False)
+    form_item = Item_ComparativoForm()
+    form = ComparativoForm()
+
+    if request.method =='POST':
+        if "btn_agregar" in request.POST:
+            form = ComparativoForm(request.POST, instance=comparativo)
+            #abrev= usuario.distrito.abreviado
+            if form.is_valid():
+                comparativo = form.save(commit=False)
+                comparativo.completo = True
+                comparativo.created_at = date.today()
+                #comparativo.created_at_time = datetime.now().time()
+                comparativo.creado_por =  usuario
+                comparativo.save()
+                #form.save()
+                messages.success(request, f'El comparativo {comparativo.id} ha sido creado')
+                return redirect('comparativos')
+        if "btn_producto" in request.POST:
+            form_item = Item_ComparativoForm(request.POST, instance=articulo)
+            if form_item.is_valid():
+                articulo = form_item.save(commit=False)
+                articulo.comparativo = comparativo
+                articulo.completo = True
+                articulo.save()
+                messages.success(request, 'Se ha agregado el artículo exitosamente')
+                return redirect('crear_comparativo')
+
+
+    context= {
+        'productos':productos,
+        'form':form,
+        'form_item':form_item,
+        'articulos':articulos,
+        'comparativo':comparativo,
+        'proveedores':proveedores,
+    }
+
+    return render(request, 'compras/crear_comparativo.html', context)
+
+def articulos_comparativo(request, pk):
+    articulos = Item_Comparativo.objects.filter(comparativo__id = pk , completo = True)
+
+    context= {
+        'articulos':articulos,
+    }
+    return render(request, 'compras/articulos_comparativo.html', context)
+
+
+
 
 def render_oc_pdf(request, pk):
     #Configuration of the PDF object

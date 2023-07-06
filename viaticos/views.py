@@ -10,6 +10,7 @@ from django.http import HttpResponse
 from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form
+from tesoreria.forms import Facturas_Viaticos_Form
 from .filters import Solicitud_Viatico_Filter
 from django.core.paginator import Paginator
 
@@ -473,8 +474,20 @@ def facturas_viaticos(request, pk):
 def matriz_facturas_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id = pk)
     concepto_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
+    form = Facturas_Viaticos_Form(instance=viatico)
+
+    if request.method == 'POST':
+        form = Facturas_Viaticos_Form(request.POST, instance=viatico)
+        if "btn_factura_completa" in request.POST:
+            if form.is_valid():
+                form.save()
+                messages.success(request,'Haz cambiado el status de facturas completas')
+                return redirect('matriz-pagos')
+            else:
+                messages.error(request,'No está validando')
 
     context={
+        'form':form,
         'concepto_viatico': concepto_viatico,
         'viatico': viatico,
         }

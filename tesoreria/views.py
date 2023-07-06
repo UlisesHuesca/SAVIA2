@@ -17,6 +17,8 @@ from django.db.models import Sum
 from datetime import date, datetime
 import decimal
 from django.core.mail import EmailMessage
+from django.core.paginator import Paginator
+
 
 
 
@@ -192,7 +194,13 @@ def matriz_pagos(request):
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
 
+    #Set up pagination
+    p = Paginator(pagos, 50)
+    page = request.GET.get('page')
+    pagos_list = p.get_page(page)
+
     context= {
+        'pagos_list':pagos_list,
         'pagos':pagos,
         'myfilter':myfilter,
         }

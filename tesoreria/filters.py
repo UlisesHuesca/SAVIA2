@@ -1,6 +1,6 @@
 import django_filters
 from .models import Compra, Pago
-from django_filters import CharFilter, DateFilter
+from django_filters import CharFilter, DateFilter, ChoiceFilter, BooleanFilter
 from django.db.models import Q
 
 class PagoFilter(django_filters.FilterSet):
@@ -21,9 +21,16 @@ class PagoFilter(django_filters.FilterSet):
 
 class Matriz_Pago_Filter(django_filters.FilterSet):
 
+    TIPO_CHOICES = [
+        ('compra', 'Compra'),
+        ('gasto', 'Gasto'),
+        ('viatico', 'Viatico'),
+    ]
+
     oc = CharFilter(method='my_filter', label='Search')
     proyecto = CharFilter(method ='my_proyecto', label="Search")
-
+    tipo = ChoiceFilter(choices=TIPO_CHOICES, method='filter_by_tipo', label='Tipo') # Changed filter
+    facturas_completas = BooleanFilter(method='filter_by_facturas_completas', label='Facturas Completas') # New filter
     #folio = CharFilter(field_name='folio', lookup_expr='icontains')
     #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
     start_date = DateFilter(field_name ='pagado_date', lookup_expr='gte')
@@ -38,3 +45,15 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
 
     def my_proyecto(self, queryset, name, value):
         return queryset.filter(Q(oc__req__orden__proyecto__nombre__icontains = value) | Q(gasto__proyecto__nombre__icontains = value) | Q(viatico__proyecto__nombre__icontains = value))
+    
+    def filter_by_tipo(self, queryset, name, value):  # new method
+        if value.lower() == 'compra':
+            return queryset.filter(oc__isnull=False)
+        elif value.lower() == 'viatico':
+            return queryset.filter(viatico__isnull=False)
+        elif value.lower() == 'gasto':
+            return queryset.filter(gasto__isnull=False)
+        return queryset
+    
+    def filter_by_facturas_completas(self, queryset, name, value):  # New method
+        return queryset.filter(Q(oc__facturas_completas=value) | Q(gasto__facturas_completas=value) | Q(viatico__facturas_completas=value))

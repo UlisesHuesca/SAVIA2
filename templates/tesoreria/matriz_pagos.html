@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Matriz Pagos{% endblock %}
@@ -25,6 +26,14 @@
                     <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Proyecto:</strong></label>
                     <div class="col-auto my-2">
                         {{myfilter.form.proyecto|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Tipo:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.tipo|add_class:'form-select'}}
+                    </div>
+                    <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Facturas Completas:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.facturas_completas|add_class:'form-select'}}
                     </div>
                     <label for="myfilter.form.id" class="col-sm-auto col-form-label text-right my-2"><strong>Fecha Inicial:</strong></label>
                     <div class="col-auto my-2">
@@ -110,7 +119,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for pago in pagos %}
+                {% for pago in pagos_list %}
                 <tr>
                     <th scope="row">{{pago.id}}</th>
                     {% if pago.oc %}
@@ -145,17 +154,21 @@
                     <td></td>
                     {% endif %}
                     {% if pago.viatico %}
-                    <td>V{{pago.viatico.id}}</td>
-                    <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
-                    <td>{{pago.viatico.proyecto.nombre}}</td>
-                    <td>{{pago.viatico.subproyecto.nombre}}</td>
-                    <td>{{pago.viatico.superintendente.staff.first_name}} {{pago.viatico.superintendente.staff.last_name}}</td>
-                    {% if pago.viatico.colaborador %}
-                    <td>{{pago.viatico.colaborador.staff.first_name}} {{pago.viatico.colaborador.staff.last_name}}</td>
-                    {% else %}
-                    <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
-                    {% endif %}
-                    <td></td>
+                        <td>V{{pago.viatico.id}}</td>
+                        <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
+                        <td>{{pago.viatico.proyecto.nombre}}</td>
+                        <td>{{pago.viatico.subproyecto.nombre}}</td>
+                        <td>{{pago.viatico.superintendente.staff.first_name}} {{pago.viatico.superintendente.staff.last_name}}</td>
+                        {% if pago.viatico.colaborador %}
+                        <td>{{pago.viatico.colaborador.staff.first_name}} {{pago.viatico.colaborador.staff.last_name}}</td>
+                        {% else %}
+                        <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
+                        {% endif %}
+                        {% if pago.viatico.facturas_completas == True %}
+                        <td>Completas</td>
+                        {% else %}
+                        <td>Incompletas</td>
+                        {% endif %}
                     {% endif %}
                     <td>{{pago.monto}}</td>
                     <td>{{pago.pagado_date}}</td>
@@ -195,6 +208,33 @@
                 {% endfor %}
             </tbody>
         </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if pagos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in pagos_list.paginator.page_range %}
+                    {% if pagos_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > pagos_list.number|add:'-2' and item < pagos_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagos_list.paginator.num_pages > pagos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{pagos_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{pagos_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if pagos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 
 <!--Este es el modal-->

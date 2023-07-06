@@ -50,7 +50,6 @@
                 </form>
             </div>
         </div>
-    </div>
     <!-- Aquí terminan el encabezado de los filtros -->
 
 <!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
@@ -143,6 +142,24 @@
             </tbody>
         </table>
     </div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row ms-3 my-2">
+            <div class="form-check form-switch col-sm">
+            <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas</strong></label>
+            {{form.facturas_completas|add_class:"form-check-input"}}
+            </div>
+            <hr>
+        <!--<h6>Nueva factura</h6>-->
+        <ul class="nav">
+            <!--<li class="nav-item">
+                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' gasto.id %}" >Registrar</a>
+            </li>-->
+            <li class="nav-item ms-4">
+                <button type="submit" name="btn_factura_completa" class="btn btn-secondary">Cerrar</button>
+            </li>
+        </ul>
+    </form>
 </div>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
@@ -150,7 +167,7 @@
 
     </div>
 </div>
-
+</div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>

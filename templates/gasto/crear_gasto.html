@@ -2,6 +2,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %} Gasto {% endblock %}
@@ -183,7 +184,7 @@
 
                     <datalist id="articulos_gasto" name='articulos_gasto'>
                         {% for item in articulos_gasto %}
-                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
+                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id|unlocalize}}" value="{{item}}"></option>
                         {% endfor %}
                     </datalist>
                 </div>
