@@ -59,7 +59,7 @@
                     {% endif %}
                         <h6 class="dropdown-header">Configuración</h6>
                         <div class="dropdown-divider"></div>
-                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin"  %}
+                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin"%}
                             <div>
                             {% else %}
                             <div class="d-none">
@@ -67,13 +67,25 @@
                             <a class="dropdown-item" href="{% url 'dashboard-staff' %}">Usuarios</a>
                             <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">Proveedores</a>
                             </div>
+                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Almacen" or usuario.tipo.nombre == "Superintendente"  %}
+                            <div>
+                            {% else %}
+                            <div class="d-none">
+                            {% endif %}
                             <a class="dropdown-item" href="{% url 'dashboard-product' %}">Productos/Servicios</a>
-                            {% if usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "Admin" %}
+                            </div>
+                            {% if usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Gerente" %}
                             <div>
                             {% else %}
                             <div class="d-none">
                             {% endif %}
                             <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
+                            </div>
+                            {% if usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "Admin"%}
+                            <div>
+                            {% else %}
+                            <div class="d-none">
+                            {% endif %}
                             <a class="dropdown-item" href="{% url 'activos' %}">Activos</a>
                             </div>
                         <div class="dropdown-divider"></div>
@@ -319,25 +331,25 @@
                     <div>
                     {% endif %}
                         <a class="dropdown-item" href="{% url 'solicitud-matriz' %}">Matriz Solicitudes</a>
-                        {% if usuario.tipo.almacen == False %}
-                            <div class="d-none">
-                        {% else %}
+                        {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" %}
                             <div>
+                        {% else %}
+                            <div class="d-none">
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'reporte-entradas' %}">Matriz Entradas</a>
                             <a class="dropdown-item" href="{% url 'reporte-salidas' %}">Matriz Salidas</a>
                             </div>
-                        {% if usuario.tipo.compras == False %}
-                            <div class="d-none">
-                        {% else %}
+                        {% if usuario.tipo.compras == True or usuario.tipo.nombre == "Gerente" %}
                             <div>
+                        {% else %}
+                            <div class="d-none"></div>
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'matriz-compras' %}">Matriz Compras</a>
                             </div>
-                        {% if usuario.tipo.tesoreria == False %}
-                            <div class="d-none">
+                        {% if usuario.tipo.tesoreria == True or usuario.tipo.nombre == "Gerente" %}
+                        <div>
                         {% else %}
-                            <div>
+                            <div class="d-none">
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'matriz-pagos' %}">Matriz Pagos</a>
                             </div>

@@ -40,7 +40,8 @@
                 {% endfor %}
             </tbody>
             </table>
-            <h6>Comentario: {{requis.comentario_super}}</h6>
+            <h6>Comentario Superintendente:   {%if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentario {%endif%}</h6>
+            <h6>Comentario Almacén: {%if requis.comentario_compras %} {{requis.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
             </div>
         </div>
 

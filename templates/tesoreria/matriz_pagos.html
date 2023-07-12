@@ -56,7 +56,7 @@
                     {% csrf_token %}
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
-                            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                            <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel'>
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
@@ -141,34 +141,38 @@
 
                     {% endif %}
                     {% if pago.gasto %}
-                    <td>G{{pago.gasto.id}}</td>
-                    <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
-                    <td>{{pago.gasto.proyecto.nombre}}</td>
-                    <td>{{pago.gasto.subproyecto.nombre}}</td>
-                    <td>{{pago.gasto.superintendente.staff.first_name}} {{pago.gasto.superintendente.staff.last_name}}</td>
-                    {% if pago.gasto.colaborador %}
-                    <td>{{pago.gasto.colaborador.staff.first_name}} {{pago.gasto.colaborador.staff.last_name}}</td>
-                    {% else %}
-                    <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
-                    {% endif %}
-                    <td></td>
-                    {% endif %}
-                    {% if pago.viatico %}
-                        <td>V{{pago.viatico.id}}</td>
-                        <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
-                        <td>{{pago.viatico.proyecto.nombre}}</td>
-                        <td>{{pago.viatico.subproyecto.nombre}}</td>
-                        <td>{{pago.viatico.superintendente.staff.first_name}} {{pago.viatico.superintendente.staff.last_name}}</td>
-                        {% if pago.viatico.colaborador %}
-                        <td>{{pago.viatico.colaborador.staff.first_name}} {{pago.viatico.colaborador.staff.last_name}}</td>
+                        <td>G{{pago.gasto.id}}</td>
+                        <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
+                        <td>{{pago.gasto.proyecto.nombre}}</td>
+                        <td>{{pago.gasto.subproyecto.nombre}}</td>
+                        <td>{{pago.gasto.superintendente.staff.first_name}} {{pago.gasto.superintendente.staff.last_name}}</td>
+                        {% if pago.gasto.colaborador %}
+                        <td>{{pago.gasto.colaborador.staff.first_name}} {{pago.gasto.colaborador.staff.last_name}}</td>
                         {% else %}
-                        <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
+                        <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
                         {% endif %}
-                        {% if pago.viatico.facturas_completas == True %}
+                        {% if pago.gasto.facturas_completas == True %}
                         <td>Completas</td>
                         {% else %}
                         <td>Incompletas</td>
                         {% endif %}
+                    {% endif %}
+                    {% if pago.viatico %}
+                    <td>V{{pago.viatico.id}}</td>
+                    <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
+                    <td>{{pago.viatico.proyecto.nombre}}</td>
+                    <td>{{pago.viatico.subproyecto.nombre}}</td>
+                    <td>{{pago.viatico.superintendente.staff.first_name}} {{pago.viatico.superintendente.staff.last_name}}</td>
+                    {% if pago.viatico.colaborador %}
+                    <td>{{pago.viatico.colaborador.staff.first_name}} {{pago.viatico.colaborador.staff.last_name}}</td>
+                    {% else %}
+                    <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
+                    {% endif %}
+                    {% if pago.viatico.facturas_completas == True %}
+                    <td>Completas</td>
+                    {% else %}
+                    <td>Incompletas</td>
+                    {% endif %}
                     {% endif %}
                     <td>{{pago.monto}}</td>
                     <td>{{pago.pagado_date}}</td>

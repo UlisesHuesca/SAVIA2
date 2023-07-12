@@ -52,11 +52,11 @@
                         <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
                     </li> -->
                     <li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                        <button type="submit" class="btn btn-outline-success" name="btnReporte"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
                     </li>
-                    <li class="nav-item mx-2">
+                    <!--<li class="nav-item mx-2">
                         <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                    </li>
+                    </li>-->
                     <li class="nav-item mx-2">
                         <a class="btn btn-outline-info" href="{% url 'proyectos-add' %}"><i class="fa-solid fa-plus"></i>Agregar Proyectos</a>
                     </li>
@@ -88,14 +88,12 @@
                     <th scope="col">ID</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Descripción</th>
-                    <th scope="col">Cliente</th>
-                    <th scope="col">Factura</th>
-                    <th scope="col">Folio Cotización</th>
-                    <th scope="col">OC Cliente</th>
                     <th scope="col">Status de entrega</th>
                     <th scope="col">Monto</th>
-                    <th scope="col">Abonos</th>
-                    <th scope="col">Saldo</th>
+                    <th scope="col">Gastado[salidas]</th>
+                    <th scope="col">[Suma_compras_total]</th>
+                    <th scope="col">[Suma_pagos_compras]</th>
+                    <th scope="col">[Suma_pagos_gastos]</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Editar</th>
                     <th scope="col">Subproyectos</th>
@@ -111,26 +109,6 @@
                     {% else %}
                     <td></td>
                     {% endif %}
-                    {% if proyecto.cliente %}
-                    <td>{{proyecto.cliente}}</td>
-                    {% else %}
-                    <td> </td>
-                    {% endif %}
-                    {% if proyecto.factura %}
-                    <td>{{proyecto.factura}}</td>
-                    {% else %}
-                    <td> </td>
-                    {% endif %}
-                    {% if proyecto.folio_cotizacion %}
-                    <td>{{proyecto.folio_cotizacion}}</td>
-                    {% else %}
-                    <td> </td>
-                    {% endif %}
-                    {% if proyecto.oc_cliente %}
-                    <td>{{proyecto.oc_cliente}}</td>
-                    {% else %}
-                    <td></td>
-                    {% endif %}
                     {% if proyecto.status_de_entrega %}
                     <td>{{proyecto.status_de_entrega}}</td>
                     {% else %}
@@ -141,8 +119,10 @@
                     {% else %}
                     <td>$0</td>
                     {% endif %}
-                    <td id='pago'>${{proyecto.get_pagos_cliente}}</td>
-                    <td>${{proyecto.get_saldo}}</td>
+                    <td>${{proyecto.get_solicitudes_salidas.suma_salidas|floatformat:2}}</td>
+                    <td>${{proyecto.get_solicitudes_salidas.suma_comprast|floatformat:2}}</td>
+                    <td>${{proyecto.get_solicitudes_salidas.suma_pagos|floatformat:2}}</td>
+                    <td>${{proyecto.get_pagos_gasto|floatformat:2}}</td>
                     <td>{{proyecto.created_at}}</td>
                     <td>
                     <a type="button" class="btn btn-outline-info" href="{% url 'proyectos-edit' proyecto.id %}"><i class="fa-solid fa-pen-to-square"></i></a>

@@ -166,6 +166,25 @@ class Order(models.Model):
 
     def __str__(self):
         return f'{self.id} -{self.folio} ordered by {self.staff}'
+    
+    @property
+    def get_total_vales(self):
+        salidas = self.valesalidas_set.all()
+        suma =  sum([item.get_costo_vale for item in salidas])
+        return suma
+    
+    @property
+    def get_requis_compras(self):
+        requisiciones = self.requis_set.all()
+        suma_comprat = sum([item.get_costo_requisicion['suma_total'] for item in requisiciones])
+       
+        suma_pagos = sum([item.get_costo_requisicion['suma_pagos'] for item in requisiciones])
+       
+        return {
+            'suma_comprat':suma_comprat,
+           
+            'suma_pagos': suma_pagos,
+        }
 
 
     @property

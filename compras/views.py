@@ -6,18 +6,18 @@ from tesoreria.models import Pago
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_credito, Uso_cfdi, Moneda, Comparativo, Item_Comparativo
 from tesoreria.models import Facturas
-from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm
+from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm
 from requisiciones.forms import Articulo_Cancelado_Form
 from tesoreria.forms import Facturas_Form
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 import json
 from django.contrib import messages
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from num2words import num2words
 from django.core.paginator import Paginator
 import decimal
-from django.db.models import F
+from django.db.models import F, Avg
 #PDF generator
 import io
 from reportlab.pdfgen import canvas
@@ -36,7 +36,7 @@ import urllib.request, urllib.parse, urllib.error
 from django.core.mail import EmailMessage
 # Import Excel Stuff
 from django.db.models.functions import Concat
-from django.db.models import Value
+from django.db.models import Value, F, ExpressionWrapper, fields
 from django.contrib import messages
 from django.db.models import Sum
 from openpyxl import Workbook
@@ -405,6 +405,18 @@ def matriz_oc(request):
     compras = Compra.objects.filter(complete=True)
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
+    # Calcular el total de órdenes de compra
+    total_de_oc = compras.count()
+     # Calcular el número de OC que cumplen el criterio (created_at - approved_at <= 3)
+    time_difference = ExpressionWrapper(F('created_at') - F('req__approved_at'), output_field=fields.DurationField())
+    compras_con_criterio = compras.annotate(time_difference=time_difference).filter(time_difference__lte=timedelta(days=3))
+    oc_cumplen = compras_con_criterio.count()
+
+     # Calcular el indicador de cumplimiento (oc_cumplen / total_de_oc)
+    if total_de_oc > 0:
+        cumplimiento = (oc_cumplen / total_de_oc)*100
+    else:
+        cumplimiento = 0
 
      #Set up pagination
     p = Paginator(compras, 50)
@@ -418,6 +430,7 @@ def matriz_oc(request):
         'compras_list':compras_list,
         'compras':compras,
         'myfilter':myfilter,
+        'cumplimiento': cumplimiento,
         }
 
     return render(request, 'compras/matriz_compras.html',context)
@@ -549,7 +562,7 @@ def cancelar_oc1(request, pk):
     porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
 
     if request.method == 'POST':
-        compra.autorizada1_por = perfil
+        compra.oc_autorizada_por = usuario
         compra.autorizado1 = False
         compra.autorizado_date1 = date.today()
         compra.autorizado_hora1 = datetime.now().time()
@@ -637,30 +650,36 @@ def back_oc(request, pk):
     resta = compra.req.orden.subproyecto.presupuesto - costo_total - compra.req.orden.subproyecto.gastado
     porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
 
+    form = Compra_ComentarioForm()
+
     if request.method == 'POST':
-        if not compra.autorizado1:
-            compra.oc_autorizada_por = perfil
-            compra.autorizado1 = None
-            compra.complete = False
-            compra.autorizado_date1 = date.today()
-            compra.autorizado_hora1 = datetime.now().time()
-            compra.regresar_oc = True
-        else:
-            compra.oc_autorizada_por2 = perfil
-            compra.autorizado2 = None
-            compra.autorizado1 = None
-            compra.complete = False
-            compra.autorizado_date2 = date.today()
-            compra.autorizado_hora2 = datetime.now().time()
-            compra.regresar_oc = True
-        #Esta línea es la que activa a la requi
-        #requi.colocada = False
-        compra.save()
-        #requi.save()
-        messages.error(request,f'Has regresado la compra con FOLIO: {compra.get_folio} y ahora podrás encontrar esos productos en la requisición {requi.folio}')
-        return redirect('requisicion-autorizada')
+        form = Compra_ComentarioForm(request.POST, instance=compra)
+        if form.is_valid():
+            compra = form.save(commit = False)
+            if not compra.autorizado1:
+                compra.oc_autorizada_por = perfil
+                compra.autorizado1 = None
+                compra.complete = False
+                compra.autorizado_date1 = date.today()
+                compra.autorizado_hora1 = datetime.now().time()
+                compra.regresar_oc = True
+            else:
+                compra.oc_autorizada_por2 = perfil
+                compra.autorizado2 = None
+                compra.autorizado1 = None
+                compra.complete = False
+                compra.autorizado_date2 = date.today()
+                compra.autorizado_hora2 = datetime.now().time()
+                compra.regresar_oc = True
+            #Esta línea es la que activa a la requi
+            #requi.colocada = False
+            compra.save()
+            #requi.save()
+            messages.success(request,f'Has regresado la compra con FOLIO: {compra.get_folio} y ahora podrás encontrar esos productos en el apartado devolución')
+            return redirect('compras-devueltas')
 
     context = {
+        'form':form,
         'compra':compra,
         'productos': productos,
         'costo_oc':costo_oc,
@@ -762,7 +781,7 @@ def autorizar_oc2(request, pk):
         compra.autorizado2 = True
         compra.oc_autorizada_por2 = usuario
         compra.autorizado_date2 = date.today()
-        compra.autorizado_time2 = datetime.now().time()
+        compra.autorizado_hora2 = datetime.now().time()
         compra.save()
         if compra.cond_de_pago.nombre == "CREDITO":
             archivo_oc = attach_oc_pdf(request, compra.id)
@@ -1538,8 +1557,13 @@ def convert_excel_matriz_compras(compras):
     money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
+    percent_style = NamedStyle(name='percent_style', number_format='0.00%')
+    percent_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(percent_style)
 
-    columns = ['Compra','Requisición','Solicitud','Solicitante','Proyecto','Subproyecto','Área','Creado','Req. Autorizada','Proveedor','Costo','Status Pago','Status Autorización','Días de entrega']
+    columns = ['Compra','Requisición','Solicitud','Solicitante','Proyecto','Subproyecto','Área','Creado','Req. Autorizada','Proveedor',
+               'Costo','Monto_Pagado','Status Pago','Status Autorización','Días de entrega','Moneda',
+               'Tipo de cambio','Diferencia de Fechas',"Total en pesos"]
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1549,13 +1573,61 @@ def convert_excel_matriz_compras(compras):
 
     columna_max = len(columns)+2
 
-    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}')).style = messages_style
-    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
-    ws.column_dimensions[get_column_letter(columna_max)].width = 20
+    # Agregar los mensajes
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 30
+    ws.column_dimensions[get_column_letter(columna_max + 1)].width = 30
 
-    rows = compras.values_list('id','req__folio','req__orden__folio','req__orden__proyecto__nombre','req__orden__subproyecto__nombre',
-                               'req__orden__area__nombre', Concat('req__orden__staff__staff__first_name',Value(' '),'req__orden__staff__staff__last_name'),
-                               'created_at','req__approved_at','proveedor__nombre__razon_social','costo_oc','pagada','autorizado2','dias_de_entrega')
+    # Agregar los encabezados de las nuevas columnas debajo de los mensajes
+    ws.cell(row=3, column = columna_max, value="Total de OC's").style = head_style
+    ws.cell(row=4, column = columna_max, value="OC dentro de tiempo").style = head_style
+    ws.cell(row=5, column = columna_max, value="% de cumplimiento").style = head_style
+    ws.cell(row=6, column = columna_max, value="Monto total de OC's").style = head_style
+
+
+    # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
+    ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=COUNTIF({get_column_letter(len(columns)-1)}:{get_column_letter(len(columns)-1)}, \"<=3\")").style = body_style
+    ws.cell(row=5, column=columna_max + 1, value=f"={get_column_letter(columna_max+1)}4/{get_column_letter(columna_max+1)}3").style = percent_style
+    ws.cell(row=6, column=columna_max + 1, value=f"=SUM({get_column_letter(len(columns))}:{get_column_letter(len(columns))})").style = money_resumen_style
+
+    rows = []
+    for compra in compras:
+        # Obtén todos los pagos relacionados con esta compra
+        pagos = Pago.objects.filter(oc=compra)
+
+        # Calcula el tipo de cambio promedio de estos pagos
+        tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+
+        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
+        tipo_de_cambio = tipo_de_cambio_promedio_pagos or compra.tipo_de_cambio
+        row = [
+        compra.id,
+        compra.req.folio,
+        compra.req.orden.folio,
+        compra.req.orden.proyecto.nombre,
+        compra.req.orden.subproyecto.nombre,
+        compra.req.orden.area.nombre,
+        f"{compra.req.orden.staff.staff.first_name} {compra.req.orden.staff.staff.last_name}",
+        compra.created_at,
+        compra.req.approved_at,
+        compra.proveedor.nombre.razon_social,
+        compra.costo_oc,
+        compra.monto_pagado,
+        compra.pagada,
+        compra.autorizado2,
+        compra.dias_de_entrega,
+        compra.moneda.nombre,
+        tipo_de_cambio,
+    ]
+        if row[15] == "DOLARES":
+            if row[16] is None or row[16] < 15:
+                row[16] = 17  # o compra.pago_oc.tipo_de_cambio si así es como obtienes el valor correcto de tipo_de_cambio
+        elif row[16] is None:  # por si acaso, aún manejar el caso donde 'tipo_de_cambio' es None
+            row[16] = ""
+
+        rows.append(row)
 
     for row in rows:
         row_num += 1
@@ -1563,8 +1635,15 @@ def convert_excel_matriz_compras(compras):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 8 or col_num == 7:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 10 or col_num == 11 or col_num == 12:
+            if col_num == 10 or col_num == 11 or col_num == 12 or col_num == 16:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+        # Agregamos la fórmula DATEDIF. Asumiendo que las columnas 'Creado' y 'Req. Autorizada'
+        # están en las posiciones 8 y 9 respectivamente (empezando desde 0), las posiciones en Excel serán 9 y 10 (empezando desde 1).
+        ws.cell(row=row_num, column=len(columns)-1, value=f"=NETWORKDAYS(I{row_num}, H{row_num})").style = body_style
+        # Agregar la fórmula de "Total en pesos"
+        ws.cell(row=row_num, column = len(columns), value=f"=IF(ISBLANK(Q{row_num}), K{row_num}, K{row_num}*Q{row_num})").style = money_style
+    
+    
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)

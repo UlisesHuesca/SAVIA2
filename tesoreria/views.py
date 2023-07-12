@@ -18,7 +18,12 @@ from datetime import date, datetime
 import decimal
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
-
+#Excel stuff
+from openpyxl import Workbook
+from openpyxl.styles import NamedStyle, Font, PatternFill
+from openpyxl.utils import get_column_letter
+import datetime as dt
+from django.db.models.functions import Concat
 
 
 
@@ -199,6 +204,9 @@ def matriz_pagos(request):
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
 
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_matriz_pagos(pagos)
+
     context= {
         'pagos_list':pagos_list,
         'pagos':pagos,
@@ -356,3 +364,134 @@ def mis_viaticos(request):
         }
 
     return render(request, 'tesoreria/mis_viaticos.html',context)
+
+def convert_excel_matriz_pagos(pagos):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Matriz_pagos_' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Pagos')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    # Función para manejar los IDs de las compras, gastos o viáticos
+    def get_transaction_id(pago):
+        if pago.oc:
+            return 'OC'+str(pago.oc.id)
+        elif pago.gasto:
+            return 'G'+str(pago.gasto.id)
+        elif pago.viatico:
+            return 'V'+str(pago.viatico.id)
+        else:
+            return None
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+    percent_style = NamedStyle(name='percent_style', number_format='0.00%')
+    percent_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(percent_style)
+
+    columns = ['Id','Compra/Gasto','Solicitado','Proyecto','Subproyecto','Proveedor/Colaborador','Factuas_Completas',
+               'Importe','Fecha', 'Moneda','Tipo de cambio', 'Total en Pesos']
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 5:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 25
+
+    columna_max = len(columns)+2
+
+    # Agregar los mensajes
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 30
+
+    # Agregar los encabezados de las nuevas columnas debajo de los mensajes
+    ws.cell(row=3, column = columna_max, value="Total de Pagos").style = head_style
+    ws.cell(row=4, column = columna_max, value="Sumatoria de Pagos").style = head_style
+   
+
+    # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
+    ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(L:L)").style = money_resumen_style
+  
+
+   # Aquí debes extraer el conjunto completo de pagos en lugar de solo ciertos valores
+    
+    for pago in pagos:
+        row_num = row_num + 1
+        # Define los valores de las columnas basándote en el tipo de pago
+        if pago.oc:
+            proveedor = pago.oc.proveedor
+            facturas_completas = pago.oc.facturas_completas
+            cuenta_moneda = pago.cuenta.moneda.nombre if pago.cuenta else None
+            if cuenta_moneda == 'PESOS':
+                tipo_de_cambio = ''
+            elif cuenta_moneda == 'DOLARES':
+                 tipo_de_cambio = pago.tipo_de_cambio or pago.oc.tipo_de_cambio or 17
+            else:
+                tipo_de_cambio = ''  # default si no se cumplen las condiciones anteriores
+        elif pago.gasto:
+            proveedor = pago.gasto.staff.staff.first_name
+            facturas_completas = pago.gasto.facturas_completas
+            tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para gastos
+        elif pago.viatico:
+            proveedor = pago.viatico.staff.staff.first_name
+            facturas_completas = pago.viatico.facturas_completas
+            tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para viáticos
+        else:
+            proveedor = None
+            facturas_completas = None
+            tipo_de_cambio = ''
+
+
+        row = [
+            pago.id,
+            get_transaction_id(pago),
+            pago.oc.req.orden.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.last_name if pago.oc else '',
+            pago.oc.req.orden.proyecto.nombre if pago.oc else '',
+            pago.oc.req.orden.subproyecto.nombre if pago.oc else '',
+            proveedor,
+            facturas_completas,
+            pago.monto,
+            pago.pagado_date.strftime('%d/%m/%Y') if pago.pagado_date else '',
+            pago.oc.moneda.nombre,
+            tipo_de_cambio,
+            f'=IF(K{row_num}="",H{row_num},H{row_num}*K{row_num})'  # Calcula total en pesos usando la fórmula de Excel
+        ]
+
+    
+        for col_num in range(len(row)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            if col_num == 8:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num == 7 or col_num == 10 or col_num == 11:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+       
+    
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    wb.save(response)
+
+    return(response)

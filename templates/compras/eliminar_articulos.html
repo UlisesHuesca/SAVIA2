@@ -75,7 +75,7 @@
                     <td scope="col">{{form.comentario_cancelacion|add_class:"form-control"}}</td>
                     <td scope="col"><div class="form-check form-switch col-sm">{{form.cancelado|add_class:"form-check-input"}}</div></td>
                     <td>
-                        <input type="hidden" value="{{producto.id}}" name="id">
+                        <input type="hidden" value="{{producto.id|unlocalize}}" name="id">
                         <button type="submit" name="btn_eliminar" class="btn btn-outline-danger">
                             <i class="fa-solid fa-eraser"></i>
                         </button>

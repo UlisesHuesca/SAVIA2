@@ -129,6 +129,7 @@
                     <th scope="col">Req. Autorizada</th>
                     <th scope="col">Proveedor</th>
                     <th scope="col">Costo</th>
+                    <th scope="col">Comentarios</th>
                     <th scope="col">Status Pago</th>
                     <th scope="col">Status Autorización</th>
                     <th scope="col">Días de Entrega</th>
@@ -149,6 +150,7 @@
                     <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
                     <td>{{compra.proveedor}}</td>
                     <td>${{compra.costo_oc}}</td>
+                    <td style="color:#478800">{{compra.comentarios}}</td>
                     {% if compra.pagada %}
                     <td>Pagada</td>
                     {% else %}

@@ -3,6 +3,7 @@ from dashboard.models import Order, Inventario, ArticulosparaSurtir
 from user.models import Profile
 from solicitudes.models import Proyecto, Subproyecto
 from simple_history.models import HistoricalRecords
+from django.db.models import Avg
 #from djmoney.models.fields import MoneyField
 # Create your models here.
 class Requis(models.Model):
@@ -32,6 +33,31 @@ class Requis(models.Model):
             else:
                 resultado_parcial = True
         return resultado_parcial
+    
+    @property
+    def get_costo_requisicion(self):
+        compras = self.compra_set.filter(complete=True)
+    
+        suma_total = 0
+        suma_pagos = sum([compra.get_monto_pagos['total_pagos'] for compra in compras])
+
+        for compra in compras:
+            
+            if compra.moneda.nombre == 'DOLARES':# Si el tipo de cambio de la compra es None
+                tipo_de_cambio = compra.tipo_de_cambio
+                if not tipo_de_cambio or tipo_de_cambio < 15:
+                # Buscar en los pagos
+                    pagos = compra.pago_set.all()
+                    if pagos.exists():  # Comprobar si hay pagos asociados a la compra
+                        tipo_de_cambio = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg'] or 17
+                suma_total += compra.costo_oc * tipo_de_cambio
+            else:
+                suma_total += compra.costo_oc
+
+        return {
+            'suma_total': suma_total,
+            'suma_pagos': suma_pagos,
+        }
 
     @property
     def get_folio(self):
@@ -63,6 +89,14 @@ class ValeSalidas(models.Model):
     created_at = models.DateField(auto_now_add=True)
     complete = models.BooleanField(null=True, default=False)
     firmado = models.BooleanField(null=True, default=False)
+
+    @property
+    def get_costo_vale(self):
+        salidas = self.salidas_set.all()
+        #salidas = salidas.filter(complete=True) 
+        suma =  sum([item.get_costo_salida for item in salidas])
+        return suma
+
 
 class Salidas(models.Model):
     vale_salida = models.ForeignKey(ValeSalidas, on_delete = models.CASCADE, null=True)

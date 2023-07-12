@@ -842,7 +842,7 @@ def reporte_entradas(request):
     return render(request,'requisiciones/reporte_entradas.html', context)
 
 def reporte_salidas(request):
-    salidas = Salidas.objects.all()
+    salidas = Salidas.objects.all().order_by('-vale_salida')
     myfilter = SalidasFilter(request.GET, queryset=salidas)
     salidas = myfilter.qs
 

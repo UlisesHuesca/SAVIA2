@@ -33,6 +33,11 @@ class OrderForm(forms.ModelForm):
         model = Order
         fields = ['proyecto','subproyecto', 'area','superintendente','supervisor']
 
+class Order_Resurtimiento_Form(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ['proyecto','subproyecto','superintendente']
+
 class Inv_UpdateForm(forms.ModelForm):
     class Meta:
         model = Inventario

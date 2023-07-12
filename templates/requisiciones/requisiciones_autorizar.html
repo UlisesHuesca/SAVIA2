@@ -33,11 +33,11 @@
                         </tr>
                         <tr>
                             <th scope="col">Presupuesto Subproyecto:</th>
-                            <th scope="col" id="subproyecto" value={{requis.orden.subproyecto}}>{{requis.orden.subproyecto.presupuesto}}</th>
+                            <th scope="col" id="subproyecto" value={{requis.orden.subproyecto}}>${{requis.orden.subproyecto.presupuesto|floatformat:2}}</th>
                         </tr>
                         <tr style="color:#3e92cc">
                             <th scope="col">Importe aprox.:</th>
-                            <th scope="col">{{costo_aprox}}</th>
+                            <th scope="col">${{costo_aprox|floatformat:2}}</th>
                         </tr>
                         <tr>
                             <th scope="col">Porcentaje Gasto/Subproyecto:</th>
@@ -45,7 +45,11 @@
                         </tr>
                         <tr>
                             <th scope="col">Presupuesto remanente:*</th>
-                            <th scope="col" id="resta">{{resta}}</th>
+                            <th scope="col" id="resta">${{resta|floatformat:2}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Comentario Almacén:</th>
+                            <th scope="col">{% if requis.comentario_compras %} {{requis.comentario_compras}} {%else%} No hay comentarios {% endif %}</th>
                         </tr>
                     </tbody>
             </table>
@@ -67,6 +71,7 @@
                 </div>
                 {% endfor %}
             </div>
+            
         </div>
 
         <div class="modal-footer">

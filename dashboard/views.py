@@ -18,6 +18,10 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
 #import decimal
+from openpyxl import Workbook
+from openpyxl.styles import NamedStyle, Font, PatternFill
+from openpyxl.utils import get_column_letter
+import datetime as dt
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -90,6 +94,10 @@ def proyectos(request):
     p = Paginator(proyectos, 50)
     page = request.GET.get('page')
     proyectos_list = p.get_page(page)
+
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_matriz_proyectos(proyectos)
+
 
     context = {
         'proyectos':proyectos,
@@ -628,3 +636,72 @@ def staff_detail(request, pk):
         'worker': worker,
         }
     return render(request,'dashboard/staff_detail.html', context)
+
+def convert_excel_matriz_proyectos(proyectos):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Matriz_proyectos_' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Proyectos')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+    percent_style = NamedStyle(name='percent_style', number_format='0.00%')
+    percent_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(percent_style)
+
+    columns = ['ID','Proyectos','Descripción','Cliente','Status de Entrega','Monto','Gastado Salidas','Suma de Compras',
+              'Pagado Compras','Pagado Gastos','Creado']
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 2:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 40
+
+    columna_max = len(columns)+2
+
+    # Agregar los mensajes
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 30
+   
+    rows = [(p.id, p.nombre, p.descripcion, p.cliente.nombre if p.cliente else '', p.status_de_entrega, p.get_projects_total, p.get_solicitudes_salidas['suma_salidas'],
+             p.get_solicitudes_salidas['suma_comprast'], p.get_solicitudes_salidas['suma_pagos'], p.get_pagos_gasto, p.created_at) for p in proyectos]
+
+    for row in rows:
+        row_num += 1
+        for col_num in range(len(row)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            if col_num == 10:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num in [5,6,7,8,9]:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+    
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    wb.save(response)
+
+    return(response)

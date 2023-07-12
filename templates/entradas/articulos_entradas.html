@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load l10n %}
 <html>
 <head>
 {% block title %}Entrada de Artículos{% endblock %}
@@ -69,7 +70,7 @@
                         <select class="form-select form-select-sm" id="producto">
                             <option id="default_sel">      </option>
                             {% for articulo in articulos %}
-                            <option id="js" target="{{articulo.id}}" producto="{{articulo.producto.producto.articulos.id}}" cantidad="{{articulo.cantidad_pendiente}}">
+                            <option id="js" target="{{articulo.id|unlocalize}}" producto="{{articulo.producto.producto.articulos.id|unlocalize}}" cantidad="{{articulo.cantidad_pendiente|unlocalize}}">
                             {{articulo.producto.producto.articulos.producto}}
                             </option>
                             {% endfor %}

@@ -163,15 +163,34 @@ class Compra(models.Model):
     entrada_completa = models.BooleanField(default=False)
     solo_servicios = models.BooleanField(default=False)
     regresar_oc = models.BooleanField(default=False)
+    comentarios = models.TextField(max_length=400, null=True)
 
     @property
     def costo_plus_adicionales(self):
-        total = self.costo_oc
-        if self.costo_fletes:
-            total = total + self.costo_fletes
-        if self.impuestos_adicionales:
-            total = total + self.impuestos_adicionales
+        total = 0
+        if self.complete:
+            total = self.costo_oc
         return total
+
+
+    @property
+    def get_monto_pagos(self):
+        pagos = self.pago_set.all()
+
+        total_pagos = 0
+
+        for pago in pagos:
+            tipo_de_cambio = pago.tipo_de_cambio or self.tipo_de_cambio
+            cuenta_moneda = pago.cuenta.moneda.nombre if pago.cuenta else None
+
+            if self.moneda.nombre == 'DOLARES' and cuenta_moneda == 'DOLARES' and tipo_de_cambio:
+                total_pagos += pago.monto * tipo_de_cambio
+            else:
+                total_pagos += pago.monto
+
+        return {
+            'total_pagos':total_pagos,
+        }
 
 
     @property

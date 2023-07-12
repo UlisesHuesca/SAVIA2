@@ -33,6 +33,26 @@ class Proyecto(models.Model):
     class Meta:
         unique_together = ('nombre', 'distrito',)
 
+    @property 
+    def get_solicitudes_salidas(self):
+        solicitudes = self.order_set.all() 
+        suma_salidas =  sum([item.get_total_vales for item in solicitudes])
+        suma_comprast = sum([item.get_requis_compras['suma_comprat'] for item in solicitudes])
+        suma_pagos = sum([item.get_requis_compras['suma_pagos'] for item in solicitudes])
+       
+        
+        return {
+            'suma_comprast':suma_comprast,
+            'suma_salidas':suma_salidas,
+            'suma_pagos':suma_pagos,
+        }
+    
+    @property
+    def get_pagos_gasto(self):
+        gastos = self.solicitud_gasto_set.all()
+        suma = sum([item.monto_pagado for item in gastos])
+        return suma
+
     @property
     def get_projects_gastado(self):
         subproyectos = self.subproyecto_set.all()

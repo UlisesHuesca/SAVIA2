@@ -1,15 +1,16 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
+{% load widget_tweaks %}
 <html>
 <head>
-{% block title %}Cancelación OC{% endblock %}
+{% block title %}Devolver OC{% endblock %}
 </head>
 <body>
 {% block content %}
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title" id="compra" value={{compra.id}}>Compra: {{compra.folio}}</h5>
+            <h5 class="modal-title" id="compra" value={{compra.id}}>Compra: {{compra.get_folio}}</h5>
             <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
         </div>
 
@@ -86,7 +87,18 @@
         <div class="modal-footer">
             <form action="{% url 'back-oc' compra.id %}" method=POST>
                 {% csrf_token %}
-                <h6 style="color:yellow;">Una vez que presiones el botón de regreso la OC: {{compra.folio}} quedará cancelada <br> y se activará nuevamente la requisición</h6>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-message"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.comentarios|add_class:"form-control"|append_attr:"placeholder=Comentario*"}}
+                                <label for="id_nombre">Comentario*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <h6 style="color:yellow;">Una vez que presiones el botón de regreso la OC: {{compra.id}} quedará devuelta y se activará nuevamente</h6>
                 <button class="btn btn-danger" type="submit"><i class="fa-solid fa-backward"></i></button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </form>

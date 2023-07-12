@@ -60,7 +60,7 @@
                     {% csrf_token %}
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
-                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
+                            <button type="submit" name="btnReporte" class="btn btn-outline-success" value='Reporte Excel'>
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
@@ -79,6 +79,15 @@
                                 </div>
                             </li>
                     </ul>
+                    <hr>
+                    <div class="col-sm-2 col-md-3 col-lg-2 mt-3">
+                        <div class="card text-white" style="background-color:#3E92CC">
+                            <div class="card-body">
+                                <h5 class="card-title">Indicador de Cumplimiento</h5>
+                                <p class="card-text display-4">{{ cumplimiento|floatformat:2 }}%</p>
+                            </div>
+                        </div>
+                    </div>
                 </form>
             </div>
         </div>

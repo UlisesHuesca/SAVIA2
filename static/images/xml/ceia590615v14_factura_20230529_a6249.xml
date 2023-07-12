@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Serie="A" Folio="6249" Fecha="2023-05-29T11:16:28" FormaPago="99" Sello="WWWuDRCrPyQbsfJRia7RpDv307+jy4t+GaM1cHuTE/bZF+p/Se1uNfWdiuD+r6kcpptds3URTKE8ORS/Q+u5e2D50HMgbiPgVJPeuZKTylXWV4mG5fku3mrBewNZNKKVhT91uVguPSt5zHCtR8QDq2jn4we2PM+JEKL5qOWGmbm2bfKOpSchQ5HQzx2S2hlInQpQV66rXys4khJrxWFjakD1A2LRBzMJ2dq1En2H+THBdt0wihy5huUamQiIH0t0ihdnNSuma1WTPUQiH6u/cmvPS6LGVjm04nvVksp+P4EEuM1m2joGHTZfcCTPBNG7n/U/yx9SSu1vH8iZY1TR+A==" NoCertificado="00001000000509240435" Certificado="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" SubTotal="2609.48" Moneda="MXN" TipoCambio="1" Total="3027.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PPD" LugarExpedicion="91799">
+    <cfdi:Emisor Rfc="CEIA590615V14" Nombre="ANTONIO CERVANTES ISLAS" RegimenFiscal="612"/>
+    <cfdi:Receptor Rfc="VME121113PI3" Nombre="VORDTEC DE MEXICO" UsoCFDI="G01" DomicilioFiscalReceptor="91633" RegimenFiscalReceptor="601"/>
+    <cfdi:Conceptos>
+        <cfdi:Concepto ObjetoImp="02" ClaveProdServ="12141900" Cantidad="9.50000" ClaveUnidad="MTQ" Unidad="METRO CUBICO" Descripcion="OXIGENO INDUSTRIAL 9.5 M3 CGA-540" ValorUnitario="57.89470" Importe="549.99965">
+            <cfdi:Impuestos>
+                <cfdi:Traslados>
+                    <cfdi:Traslado Base="549.999650" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="87.999944"/>
+                </cfdi:Traslados>
+            </cfdi:Impuestos>
+            <cfdi:Parte ClaveProdServ="12141900" Cantidad="9.50" Descripcion="OXIGENO INDUSTRIAL 9.5 M3 CGA-540" NoIdentificacion="OXIIND95M"/>
+        </cfdi:Concepto>
+        <cfdi:Concepto ObjetoImp="02" ClaveProdServ="15111506" Cantidad="10.0000" ClaveUnidad="KGM" Unidad="KILOGRAMO" Descripcion="ACETILENO INDUSTRIAL CILINDRO AM 5KG INF" ValorUnitario="205.9485" Importe="2059.4850">
+            <cfdi:Impuestos>
+                <cfdi:Traslados>
+                    <cfdi:Traslado Base="2059.485000" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="329.517600"/>
+                </cfdi:Traslados>
+            </cfdi:Impuestos>
+            <cfdi:Parte ClaveProdServ="15111506" Cantidad="10.00" Descripcion="ACETILENO INDUSTRIAL CILINDRO AM 5KG INF" NoIdentificacion="ACEIND5AM"/>
+        </cfdi:Concepto>
+    </cfdi:Conceptos>
+    <cfdi:Impuestos TotalImpuestosTrasladados="417.52">
+        <cfdi:Traslados>
+            <cfdi:Traslado Impuesto="002" Base="2609.48" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="417.52"/>
+        </cfdi:Traslados>
+    </cfdi:Impuestos>
+    <cfdi:Complemento>
+        <tfd:TimbreFiscalDigital xsi:schemaLocation="http://www.sat.gob.mx/TimbreFiscalDigital http://www.sat.gob.mx/sitio_internet/cfd/TimbreFiscalDigital/TimbreFiscalDigitalv11.xsd" Version="1.1" UUID="a6f2fffc-d87c-4e38-ae4b-a2a6315e3847" FechaTimbrado="2023-05-29T11:21:39" RfcProvCertif="DIG130917F9A" SelloCFD="WWWuDRCrPyQbsfJRia7RpDv307+jy4t+GaM1cHuTE/bZF+p/Se1uNfWdiuD+r6kcpptds3URTKE8ORS/Q+u5e2D50HMgbiPgVJPeuZKTylXWV4mG5fku3mrBewNZNKKVhT91uVguPSt5zHCtR8QDq2jn4we2PM+JEKL5qOWGmbm2bfKOpSchQ5HQzx2S2hlInQpQV66rXys4khJrxWFjakD1A2LRBzMJ2dq1En2H+THBdt0wihy5huUamQiIH0t0ihdnNSuma1WTPUQiH6u/cmvPS6LGVjm04nvVksp+P4EEuM1m2joGHTZfcCTPBNG7n/U/yx9SSu1vH8iZY1TR+A==" NoCertificadoSAT="00001000000513570558" SelloSAT="f3MptHXMCjKlw2oEqql2RHeB5FT4IvEdTfkefH8IrF3ASujO/DBF/IvpAhdMzBNuJSUwnwYiwl0juz4g0p5lYSx0p7p7Ea3rNxIvKpahDQ9WZhYMms+QGSZg2258ukiSh5cQ5YjJy5F2+hG0JNSIoG1o/XzgKbygTaKLQOn/+EcUV8ePU5ZpIHSR08bBL0NRtL49VlxUzARToQ4GWH3GfBMPI2FJUhfmGheHSEnh1Cz1qMiDIw6GQ9AFKcf6Xo5yMzMAsflcqhoAXXVqf9dUVixFT+LIZQ8VRKasBX231bqCRGtJ5/o5l+EAUlppe0Iik1wpr9WQYvOLzRD7IB9beQ==" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"/>
+    </cfdi:Complemento>
+</cfdi:Comprobante>

@@ -31,3 +31,7 @@ class Item_ComparativoForm(forms.ModelForm):
         fields = ['producto','proveedor','modelo','marca','cantidad', 'precio', 'proveedor2', 'modelo2', 'marca2', 
                   'precio2','proveedor3','modelo3','marca3','precio3']
 
+class Compra_ComentarioForm(forms.ModelForm):
+    class Meta:
+        model = Compra
+        fields = ['comentarios']

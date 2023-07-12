@@ -116,13 +116,11 @@ def solicitudes_gasto(request):
     perfil = Profile.objects.get(staff__id=request.user.id)
 
 
-    #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    #if perfil.tipo.superintendente == True:
-    #    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
-    #elif perfil.tipo.supervisor == True:
-    #    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
-    #else:
-    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
+   
+    if perfil.tipo.nombre == "Admin":
+        solicitudes = Solicitud_Gasto.objects.all().order_by('-folio')
+    else:
+        solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
 
     myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
     solicitudes = myfilter.qs
@@ -454,7 +452,7 @@ def matriz_gasto_entrada(request):
     #articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
 
     #articulos_gasto = Articulo_Gasto.objects.all()
-    articulos_gasto = Articulo_Gasto.objects.filter(Q(producto__producto__nombre = "MATERIALES")|Q(producto_producto__nombre = "HERRAMIENTA"), completo = True, validacion = False, gasto__autorizar = None, gasto__tipo__tipo='REEMBOLSO')
+    articulos_gasto = Articulo_Gasto.objects.filter(Q(producto__producto__nombre = "MATERIALES")|Q(producto__producto__nombre = "HERRAMIENTA"), completo = True, validacion = False, gasto__autorizar = None, gasto__tipo__tipo='REEMBOLSO')
 
     context={
         'articulos_gasto':articulos_gasto,

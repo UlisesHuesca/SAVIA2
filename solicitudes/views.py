@@ -6,7 +6,7 @@ from tesoreria.models import Pago
 from solicitudes.models import Subproyecto, Operacion, Proyecto
 from entradas.models import EntradaArticulo, Entrada
 from gastos.models import Entrada_Gasto_Ajuste, Conceptos_Entradas
-from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm, Conceptos_EntradasForm, Entrada_Gasto_AjusteForm
+from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm, Conceptos_EntradasForm, Entrada_Gasto_AjusteForm, Order_Resurtimiento_Form
 from dashboard.forms import Inventario_BatchForm
 from user.models import Profile, Distrito, Almacen
 from django.contrib.auth.decorators import login_required
@@ -211,7 +211,7 @@ def checkout(request):
                         if producto.producto.producto.servicio == True:
                             requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                             requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad)
-                            requi.folio = str(usuario.distrito.abreviado)+str(order.id).zfill(4)
+                            requi.folio = str(usuario.distrito.abreviado)+str(requi.id).zfill(4)
                             order.requisitar=False
                             ordensurtir.requisitar=False
                             requi.save()
@@ -279,27 +279,25 @@ def product_quantity_edit(request, pk):
 
     return render(request, 'solicitud/product_quantity_edit.html', context)
 
-#Vista para crear solicitud
+#Vista para crear solicitud de resurtimiento
 @login_required(login_url='user-login')
 def checkout_resurtimiento(request):
     usuario = Profile.objects.get(staff=request.user)
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
     superintendentes = Profile.objects.filter(tipo__superintendente=True)
+    proyectos = Proyecto.objects.filter(activo=True)
     subproyectos = Subproyecto.objects.all()
-    orders = Order.objects.filter(staff__distrito = usuario.distrito, complete = False)
+    orders = Order.objects.filter(staff__distrito = usuario.distrito)
+    #orders = Order.objects.filter(staff__distrito = usuario.distrito)
+    last_order = orders.order_by('-last_folio_number').first()
     #consecutivo = orders.count()+1
 
 
 
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
+   
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
     almacen = Operacion.objects.get(nombre = "ALMACEN")
-
-
-    if usuario.tipo.almacen:
-        supervisores = Profile.objects.filter(staff=request.user)
-        order.supervisor = usuario
-        order.area = almacen
 
     if order.staff != usuario:
         productos = None
@@ -312,44 +310,54 @@ def checkout_resurtimiento(request):
 
 
     if request.method =='POST':
-        form = OrderForm(request.POST, instance=order)
-        order.complete = True
-        order.created_at = date.today()
-        order.created_at_time = datetime.now().time()
-        abrev= usuario.distrito.abreviado
-        order.folio = str(abrev) + str(order.id).zfill(4)
-
-        requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-        requi.folio = str(abrev) + str(requi.id).zfill(4)
-        requi.save()
-        for producto in productos:
-            ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
-            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
-            ordensurtir.requisitar = True
-            ordensurtir.cantidad_requisitar = producto.cantidad
-            ordensurtir.save()
-            requitem.save()
-        order.requisitar = True
-        order.autorizar = True
-        order.approved_at = date.today()
-        order.approved_at_time = datetime.now().time()
-        requi.save()
-        order.save()
-        abrev= usuario.distrito.abreviado
-        order.folio = str(abrev) + str(order.id).zfill(4)
+        form = Order_Resurtimiento_Form(request.POST, instance=order)
         if form.is_valid():
+            order = form.save(commit=False)
+            order.supervisor = usuario
+            order.created_at = date.today()
+            order.created_at_time = datetime.now().time()
+            order.complete = True
+            order.area = almacen
+            abrev= usuario.distrito.abreviado
+            last_order = orders.order_by('-last_folio_number').first()
+            if last_order == None:
+                #No hay órdenes para este distrito todavía
+                folio_number = 1
+            else:
+                folio_number = last_order.last_folio_number + 1
+                order.last_folio_number = folio_number
+            order.folio = str(abrev) + str(folio_number).zfill(4)
+
+            requi, created = Requis.objects.get_or_create(complete = True, orden = order)
+            requi.folio = str(abrev) + str(requi.id).zfill(4)
+            requi.save()
+            for producto in productos:
+                ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
+                requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
+                ordensurtir.requisitar = True
+                ordensurtir.cantidad_requisitar = producto.cantidad
+                ordensurtir.save()
+                requitem.save()
+            order.requisitado = True
+            order.autorizar = True
+            order.approved_at = date.today()
+            order.approved_at_time = datetime.now().time()
+            requi.save()
             order.save()
-            form.save()
-            messages.success(request, f'La solicitud {order.folio} ha sido creada')
+        #abrev= usuario.distrito.abreviado
+        #order.folio = str(abrev) + str(order.id).zfill(4)
+            messages.success(request, f'La solicitud {order.folio} junto con la requisición {requi.folio} ha sido creada')
             cartItems = '0'
             return redirect('solicitud-matriz')
+    else:
+        form = OrderForm(request.POST)
 
     context= {
+        'proyectos':proyectos,
         'form':form,
         'productos':productos,
         'orden':order,
         'productosordenadosres':cartItems,
-        'supervisores':supervisores,
         'superintendentes':superintendentes,
         'subproyectos':subproyectos,
     }

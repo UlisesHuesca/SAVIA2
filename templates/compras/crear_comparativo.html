@@ -1,0 +1,611 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Comparativo {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-4">
+        <div class="box-element" id="form-wrapper">
+            <div id="Solicitud-info">
+                <hr>
+					<h2>Comparativo:</h2>
+					<hr>
+					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+                        {% csrf_token %}
+                            
+                            <div class="row my-2">
+                                <div class="col-10">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre*"}}
+                                            <label for="id_nombre">Nombre*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-10">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.comentarios|add_class:"form-control"|append_attr:"placeholder=Comentarios*"}}
+                                            <label for="id_nombre">Comentarios*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        {% if productos %}
+                        <input class="btn btn-outline-info btn-block my-2" name="btn_agregar" id="btn_agregar" type="submit" value="Agregar Solicitud">
+                        {% endif %}
+
+                    </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="box-element">    
+            <div id="form_product">
+                <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row my-2">
+                    <div class="col-sm-8">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-cubes-stacked"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1"> 
+                            <input type="text" list="articulos" id="txt_articulos" placeholder="Artículos..." class="form-control">
+                       
+                            <label for="txt_articulos">Productos*</label>
+                            </div>
+                            <datalist id="productos" name='productos'>
+                            {% for item in productos %}
+                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                            {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                    <div class="col-3 d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.producto|add_class:"form-control"|append_attr:"placeholder=Productos*"}}
+                                <label for="id_lugar_partida">Productos*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad*"}}
+                                <label for="id_lugar_partida">Cantidad*</label>
+                            </div>
+                        </div>
+                    </div>
+
+
+
+
+                </div>
+                <div class="row my-2">
+                    <div class="col-sm-11">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1"> 
+                            <input type="text" list="proveedores" id="txt_proveedores" placeholder="Proveedores..." class="form-control">
+                        
+                            <label for="txt_articulos">Proveedor*</label>
+                            </div>
+                            <datalist id="proveedores" name='proveedores'>
+                            {% for item in proveedores %}
+                                <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                            {% endfor %}
+                         </datalist>
+                        </div>
+                        
+                    </div>
+                </div>
+                
+                <div class="row my-2 d-none">
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
+                                <label for="id_nombre">Proveedor*</label>   
+                            </div>  
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.modelo|add_class:"form-control"|append_attr:"placeholder=Modelo*"}}
+                                <label for="id_lugar_partida">Modelo*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca|add_class:"form-control"|append_attr:"placeholder=Marca*"}}
+                                <label for="id_lugar_partida">Marca*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.precio|add_class:"form-control"|append_attr:"placeholder=Precio*"}}
+                                <label for="id_lugar_partida">Precio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-sm-11">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1"> 
+                            <input type="text" list="proveedores2" id="txt_proveedores2" placeholder="Proveedores..." class="form-control">
+                        
+                            <label for="txt_proveedores2">Proveedor2*</label>
+                            </div>
+                            <datalist id="proveedores2" name='proveedores2'>
+                            {% for item in proveedores %}
+                                <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                            {% endfor %}
+                         </datalist>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="row my-2 d-none">
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form_item.proveedor2|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
+                        <label for="id_nombre">Proveedor*</label>   
+                    </div>  
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.modelo2|add_class:"form-control"|append_attr:"placeholder=Modelo*"}}
+                                <label for="id_lugar_partida">Modelo*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca2|add_class:"form-control"|append_attr:"placeholder=Marca*"}}
+                                <label for="id_lugar_partida">Marca*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.precio2|add_class:"form-control"|append_attr:"placeholder=Precio*"}}
+                                <label for="id_lugar_partida">Precio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-sm-11">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1"> 
+                            <input type="text" list="proveedores3" id="txt_proveedores3" placeholder="Proveedores..." class="form-control">
+                        
+                            <label for="txt_proveedores3">Proveedor3*</label>
+                            </div>
+                            <datalist id="proveedores3" name='proveedores3'>
+                            {% for item in proveedores %}
+                                <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                            {% endfor %}
+                         </datalist>
+                        </div>
+                        
+                    </div>
+                </div>
+                <div class="row my-2 d-none">
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form_item.proveedor3|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
+                        <label for="id_nombre">Proveedor*</label>   
+                    </div>  
+                </div>
+                <div class="row">
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.modelo3|add_class:"form-control"|append_attr:"placeholder=Modelo*"}}
+                                <label for="id_lugar_partida">Modelo*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca3|add_class:"form-control"|append_attr:"placeholder=Marca*"}}
+                                <label for="id_lugar_partida">Marca*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.precio3|add_class:"form-control"|append_attr:"placeholder=Precio*"}}
+                                <label for="id_lugar_partida">Precio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+
+           
+
+            
+
+            
+
+            
+            <div  class="row">
+                <div class="col-sm-1">
+                    <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit">
+                </div>
+            </div>
+        </form>
+        </div>
+        <div id="form_product2" class="d-none">
+            <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}   
+            <div class="row">
+                <div class="row">
+                    <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
+                    <div class="col-sm-6 my-2">
+                    <input type="text" list='articulos' id="txt_articulos" valor="{{articulos.id}}" placeholder="Artículos..." class="form-control d-none">
+
+                    <datalist id="articulos" name='articulos'>
+                        {% for item in articulos %}
+                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
+                        {% endfor %}
+                    </datalist>
+                    <input type="text" list='articulos_gasto' id="txt_articulos_gasto2" valor="{{articulos_gasto.id}}" placeholder="Artículos..." class="form-control">
+
+                    <datalist id="articulos_gasto2" name='articulos_gasto'>
+                        {% for item in articulos_gasto %}
+                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
+                        {% endfor %}
+                    </datalist>
+                </div>
+                <div class="row">
+                <label for="form_product2.producto" class="col-auto col-form-label d-none"><strong>Producto:</strong></label>
+                <div class="col-sm-6">
+                    {{form_product2.producto|add_class:"form-control producto2 d-none"}}
+                </div>
+                </div>
+                <div class="row">
+                    <label for="form_product2.producto" class="col-auto col-form-label"><strong>Comentario:</strong></label>
+                    <div class="col-sm-6">
+                        {{form_product2.comentario|add_class:"form-control producto2"}}
+                    </div>
+                </div>
+            </div>
+            <div id="factura_xml" class="row">
+                <div class="col-sm-6">
+                    {{form_product2.factura_xml|add_class:"form-control my-2 form2"}}
+                </div>
+                 <div class="col-sm-1 my-3" style="color:#9a9b9d">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>XML
+                </div>
+            </div>
+            <div  class="row">
+                <div class="col-sm-1">
+                    <input class="btn btn-outline-info btn-block my-2" name="btn_xml" id="btn_xml" type="submit">
+                </div>
+            </div>
+            </form>
+        </div>
+        </div>
+        
+
+            <hr>
+            <table class="table table-light table-striped table-hover mx-2">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Cantidad</th>
+                    <th style="color:#478800" scope="col">Proveedor1</th>
+                    <th style="color:#478800" scope="col">P.U.</th>
+                    <th scope="col">Proveedor2</th>
+                    <th scope="col">P.U.</th>
+                    <th scope="col">Proveedor3</th>
+                    <th scope="col">P.U.</th>
+                    <th scope="col">Eliminar</th>
+                    
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for producto in productos%}
+
+                <tr>
+                    <td scope="col">{{producto.producto.producto.codigo}}</td>
+                    <td scope="col">{{producto.producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.cantidad|floatformat:2}}</td>
+                    <td style="color:#478800" scope="col">{{producto.proveedor.nombre}}</td>
+                    <td style="color:#478800" scope="col">${{producto.precio|floatformat:2}}</td>
+                    <td scope="col">{{producto.proveedor2.nombre}}</td>
+                    <td scope="col">${{producto.precio2|floatformat:2}}</td>
+                    <td scope="col">{{producto.proveedor3.nombre}}</td>
+                    <td scope="col">${{producto.precio3|floatformat:2}}</td>
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-gasto' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <!--<a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'editar-gasto' producto.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i></td>-->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+
+    document.getElementById('id_precio').addEventListener('change',(event)=>{
+    cantidad = document.getElementById('id_cantidad').value;
+    precio = document.getElementById('id_precio_unitario').value;
+    otros_impuestos = document.getElementById('id_otros_impuestos').value
+    retenidos = document.getElementById('id_impuestos_retenidos').value
+    calculo_previo = document.getElementById('calculo_previo')
+    var other_select = document.getElementById('id_producto')
+    var value = other_select.options[other_select.selectedIndex].value
+    var browserChildren = document.getElementById('articulos_gasto').children;
+    var producto = document.getElementById('btn_producto')
+    if (precio <= 0 || cantidad <= 0){
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
+        } else {
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
+        }
+
+
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+        if (valor === value) {
+            console.log(browserChildren[i])
+            let iva = browserChildren[i].getAttribute('iva');
+            console.log(iva)
+            if (iva){
+                subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
+                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+            } else {
+                subtotal = precio * cantidad + otros_impuestos - retenidos
+                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+            }
+            }
+    }
+    })
+
+    document.getElementById('id_cantidad').addEventListener('change',(event)=>{
+        cantidad = document.getElementById('id_cantidad').value
+        precio = document.getElementById('id_precio_unitario').value
+        calculo_previo = document.getElementById('calculo_previo')
+        otros_impuestos = document.getElementById('id_otros_impuestos').value
+        retenidos = document.getElementById('id_impuestos_retenidos').value
+        var other_select = document.getElementById('id_producto')
+        var value = other_select.options[other_select.selectedIndex].value
+        var producto = document.getElementById('btn_producto')
+        var browserChildren = document.getElementById('articulos_gasto').children;
+        if (precio <= 0 || cantidad <= 0){
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
+        } else {
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
+        }
+
+
+
+        for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+            if (valor === value) {
+                console.log(browserChildren[i])
+                let iva = browserChildren[i].getAttribute('iva');
+                console.log(iva)
+                    if (iva){
+                        subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                    } else {
+                        subtotal = precio * cantidad + otros_impuestos - retenidos
+                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                   }
+        }}
+
+    })
+
+
+document.getElementById("txt_articulos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_articulos");
+    var browserChildren = document.getElementById('articulos').children;
+    var other_select = document.getElementById('id_producto');
+
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+document.getElementById("txt_proveedores").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proveedores");
+    var browserChildren = document.getElementById('proveedores').children;
+    var other_select = document.getElementById('id_proveedor');
+
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+document.getElementById("txt_proveedores2").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proveedores2");
+    var browserChildren = document.getElementById('proveedores2').children;
+    var other_select = document.getElementById('id_proveedor2');
+
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+document.getElementById("txt_proveedores3").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proveedores3");
+    var browserChildren = document.getElementById('proveedores3').children;
+    var other_select = document.getElementById('id_proveedor3');
+
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+</script>
+{% endblock %}
+</body>
+</html>
