@@ -5,6 +5,7 @@ from user.models import Profile, Distrito, Banco
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 import decimal
+from phone_field import PhoneField
 # Create your models here.
 
 
@@ -49,10 +50,11 @@ class Proveedor_direcciones(models.Model):
     creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE, null=True)
     domicilio = models.CharField(max_length=200, null=True)
+    telefono = PhoneField(null=True, help_text='Número de contacto')
     estado = models.ForeignKey(Estado, on_delete=models.CASCADE, null=True)
     contacto = models.CharField(max_length=50, null=True)
     email = models.EmailField(max_length=254, null=True)
-    email_opt = models.EmailField(max_length=100, null=True)
+    email_opt = models.EmailField(max_length=100, null=True, blank=True)
     banco = models.ForeignKey(Banco, on_delete=models.CASCADE, null=True)
     clabe = models.CharField(max_length=20, null=True)
     cuenta = models.CharField(max_length=20, null=True)
@@ -62,6 +64,9 @@ class Proveedor_direcciones(models.Model):
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     completo = models.BooleanField(default=False)
     modified = models.DateField(auto_now=True)
+    actualizado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Des_proveedores' )
+    modificado_fecha = models.DateField(null=True)
+    enviado_fecha = models.DateField(null=True)
 
     def __str__(self):
         return f'{self.nombre}'
@@ -92,6 +97,12 @@ class Moneda(models.Model):
     
 class Comparativo(models.Model):
     nombre = models.CharField(max_length=100, null=True)
+    proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True)
+    proveedor2 = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, related_name='proveedor2') 
+    proveedor3 = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, related_name='proveedor3')
+    cotizacion = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])]) 
+    cotizacion2 = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
+    cotizacion3 = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
     creada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     completo = models.BooleanField(default=False)
@@ -103,19 +114,19 @@ class Comparativo(models.Model):
 class Item_Comparativo(models.Model):
     producto = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
     comparativo = models.ForeignKey(Comparativo, on_delete = models.CASCADE, null=True)
-    proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True)
     modelo = models.CharField(max_length=100, null=True)
     marca = models.CharField(max_length=100, null=True)
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     precio = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
-    proveedor2 = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, related_name='proveedor2') 
+    dias_de_entrega = models.PositiveIntegerField(null=True, blank=True)
     modelo2 = models.CharField(max_length=100, null=True, blank=True)
     marca2 = models.CharField(max_length=100, null=True, blank=True)
     precio2 = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
-    proveedor3 = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, related_name='proveedor3') 
+    dias_de_entrega2 = models.PositiveIntegerField(null=True, blank=True)
     modelo3 = models.CharField(max_length=100, null=True, blank=True)
     marca3 = models.CharField(max_length=100, null=True, blank=True)
     precio3 = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
+    dias_de_entrega3 = models.PositiveIntegerField(null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     completo = models.BooleanField(default=False)
 
@@ -164,6 +175,7 @@ class Compra(models.Model):
     solo_servicios = models.BooleanField(default=False)
     regresar_oc = models.BooleanField(default=False)
     comentarios = models.TextField(max_length=400, null=True)
+    saldo_a_favor = models.DecimalField(max_digits=14,decimal_places=2, default=0)
 
     @property
     def costo_plus_adicionales(self):

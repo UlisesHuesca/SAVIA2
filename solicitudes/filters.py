@@ -7,11 +7,13 @@ from django.db.models import Q
 class InventoryFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='producto__nombre', lookup_expr='icontains')
     codigo = CharFilter(field_name='producto__codigo', lookup_expr='icontains')
+    familia = CharFilter(field_name='producto__familia__nombre', lookup_expr='icontains')
+    subfamilia = CharFilter(field_name='producto__familia__nombre', lookup_expr='icontains')
 
 
     class Meta:
         model = Inventario
-        fields = ['producto','codigo',]
+        fields = ['producto','codigo','familia','subfamilia']
 
 
 class InventarioFilter(django_filters.FilterSet):
@@ -62,23 +64,24 @@ class HistoricalInventarioFilter(django_filters.FilterSet):
     history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
     history_user = CharFilter(method='nombre', lookup_expr='icontains')
     producto = CharFilter(field_name='producto__nombre', lookup_expr='icontains')
+    start_date = DateFilter(field_name='history_date', lookup_expr='gte')
+    end_date = DateFilter(field_name='history_date', lookup_expr='lte')
 
     class Meta:
         model = Inventario.history.model
-        fields = ['history_id','history_user','producto']
+        fields = ['history_id','history_user','producto','start_date','end_date']
 
     def nombre(self, queryset, name, value):
         return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
 
 class HistoricalProductoFilter(django_filters.FilterSet):
     history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
-    history_user = CharFilter(method='nombre', lookup_expr='icontains')
+    history_user = CharFilter(method='nombre_usuario', lookup_expr='icontains')
     nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
 
     class Meta:
         model = Product.history.model
-        fields = ['history_id','history_user','nombre','codigo']
+        fields = ['history_id','history_user','nombre']
 
-    def nombre(self, queryset, name, value):
+    def nombre_usuario(self, queryset, name, value):
         return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
-

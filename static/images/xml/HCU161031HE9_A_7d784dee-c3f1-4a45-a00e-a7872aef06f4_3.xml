@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<cfdi:Comprobante xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:catCFDI="http://www.sat.gob.mx/sitio_internet/cfd/catalogos" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" Version="4.0" Fecha="2023-07-10T10:38:45" TipoDeComprobante="I" Sello="oW+D+pw1/SLL8502dB5mDF708G7PWguqenQ57BBnPQFNg+y5LlWd55XA0e11kGJPpEhTKnod5Aq77sHH0ay+AUHMvDvxLIxzXXSDd8j1gcRcLAscPQ6zNNmNIkFGgPWGczO2AGhYdSs9cVOg+lw9adc3tPY4IuYswyTYjSA79aiv+Zn3MyApaFGpzjquxnJV6KvAok4WPHufuXtZNBj0wtemJtjTaFXBnN96rPklUg0ra2tnhzsFxpA4ndTj9+rEZu2DNJtcpjKNZsr1I+N6STRcUohzSidHM7qrX5b/K9cV6GSbbGqsVZQWY3JcmB2YgFws86byYv0WUFAsduWPjw==" Certificado="MIIGAjCCA+qgAwIBAgIUMDAwMDEwMDAwMDA1MDYxOTgwMzkwDQYJKoZIhvcNAQELBQAwggGEMSAwHgYDVQQDDBdBVVRPUklEQUQgQ0VSVElGSUNBRE9SQTEuMCwGA1UECgwlU0VSVklDSU8gREUgQURNSU5JU1RSQUNJT04gVFJJQlVUQVJJQTEaMBgGA1UECwwRU0FULUlFUyBBdXRob3JpdHkxKjAoBgkqhkiG9w0BCQEWG2NvbnRhY3RvLnRlY25pY29Ac2F0LmdvYi5teDEmMCQGA1UECQwdQVYuIEhJREFMR08gNzcsIENPTC4gR1VFUlJFUk8xDjAMBgNVBBEMBTA2MzAwMQswCQYDVQQGEwJNWDEZMBcGA1UECAwQQ0lVREFEIERFIE1FWElDTzETMBEGA1UEBwwKQ1VBVUhURU1PQzEVMBMGA1UELRMMU0FUOTcwNzAxTk4zMVwwWgYJKoZIhvcNAQkCE01yZXNwb25zYWJsZTogQURNSU5JU1RSQUNJT04gQ0VOVFJBTCBERSBTRVJWSUNJT1MgVFJJQlVUQVJJT1MgQUwgQ09OVFJJQlVZRU5URTAeFw0yMTAxMTgxNDI0MTlaFw0yNTAxMTgxNDI0MTlaMIHQMSYwJAYDVQQDEx1IRVJSQU1JRU5UQVMgQ1VNQlJFUyBTQSBERSBDVjEmMCQGA1UEKRMdSEVSUkFNSUVOVEFTIENVTUJSRVMgU0EgREUgQ1YxJjAkBgNVBAoTHUhFUlJBTUlFTlRBUyBDVU1CUkVTIFNBIERFIENWMSUwIwYDVQQtExxIQ1UxNjEwMzFIRTkgLyBHQVNHNzgxMTE0STYwMR4wHAYDVQQFExUgLyBHQVNHNzgxMTE0SE5MUkxOMDExDzANBgNVBAsTBlVOSURBRDCCASIwDQYJKoZIhvcNAQEBBQADggEPADCCAQoCggEBAOYVYLykQSXe667mAFeWMEzrWSfZELYyoDRmuOzIOaoaC3fKz0/prosXrR3G6HGS5CaDk0Gmp6l/K9aVSTDTbtIO9H6l/XLSKowOye1X1pmbKD46HhzoiqM7ZoWJMb085T+IIRqAP4eCX5ZALnPeBfTjzAdqzFeZyIlG77Wz7dM0t77LV+5+SNSegJo8zvNvaf4K7zZ9DbrsvCCDfdsei0zX1LiF/jtiw4tS165EZ40ACtlsmsfnvqjPKkSjm2uyz1PnncpDQXR2Yh+ku+aGd7bIbqAiVxguQ4hQq+9g8MbRbmrDdvcYGsuVq38O9oL6mII3l82SEAWxoEc9OqCWOjECAwEAAaMdMBswDAYDVR0TAQH/BAIwADALBgNVHQ8EBAMCBsAwDQYJKoZIhvcNAQELBQADggIBAIy7C2XG5DOD9DwGZ4wb4CxzGgWD7i0/IWZADekSIepuCLK8z5yUmN2Z2VX5Z/p0b6qJrf1xEvihjhKDcEvFVLAFwtbZxS44G/jcN/DH4Dk2f+3HZVBbVspxSanNM7NH1A1oPEM2iadK6CKM1XdwBMre9nkEhSp+DwraUwxCtyYUUUxIolJoD1IzSfWvqBYb2taT7CtrwG9dZGyZW/VagZP4P86U5kWDVvATX2k6yZhuPBxV88AROg/pxcj5rrM2PEh+GQOthdVfWQtipK6uygLFNmiWkWWnTPF9NzAt4O3gB9hAIi2nBmtHnTtpOoy/MpwiOe+nzI9eSbHOuMyR3YJ9vkAq++zCvfSm4NBCXwQXhKwFXTPsu/I2NhFh2PX7VLOi4VV633LVEWH4TOkqhwWISzXTlMWYpWuaaoVLFajax7Bz/LPOxNu5Rn2cwi/YUFWWaPYrYuvCkhXdlnUMldMy4hOwcvNgcaoMZHNt5A3qO3P34Xyd7+Y1WhudtAtfuHnJNNbY/P3nA8jZCvU0bmPLhZN4gUIQ54dOsPVL9LJkyFtr5vhBSMHptxL8lnnDtYz/dC2EEYDxSK4xXMhIXTo4fIYtbkCs5G0pi4a0mB9d7pxgXMJXIFhwGWg5jm2tERqMKAS5+sU6PFPrK7ExORhGNn3rheihQBMUDIG9P+VQ" NoCertificado="00001000000506198039" SubTotal="2772.41" Total="3216.00" Moneda="MXN" LugarExpedicion="64100" Exportacion="01" FormaPago="28" CondicionesDePago="CONTADO" MetodoPago="PUE" Serie="A" Folio="2639">
+	<cfdi:Emisor Rfc="HCU161031HE9" Nombre="HERRAMIENTAS CUMBRES" RegimenFiscal="601"/>
+	<cfdi:Receptor Rfc="VME121113PI3" UsoCFDI="G03" Nombre="VORDTEC DE MEXICO" DomicilioFiscalReceptor="91633" RegimenFiscalReceptor="601"/>
+	<cfdi:Conceptos>
+		<cfdi:Concepto ClaveProdServ="20102105" Cantidad="2" ClaveUnidad="H87" Descripcion="CORTADOR ANULAR CON INSERTOS DE CARBURO DE TUNGSTENO CON SUJECION WELDON DE 3/4 DE 1-3/4  X 1" ValorUnitario="1386.2068" Importe="2772.4136" ObjetoImp="02" NoIdentificacion="CAT110304" Unidad="PIEZA">
+			<cfdi:Impuestos>
+				<cfdi:Traslados>
+					<cfdi:Traslado Base="2772.4136" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="443.586176"/>
+				</cfdi:Traslados>
+			</cfdi:Impuestos>
+		</cfdi:Concepto>
+	</cfdi:Conceptos>
+	<cfdi:Impuestos TotalImpuestosTrasladados="443.59">
+		<cfdi:Traslados>
+			<cfdi:Traslado Base="2772.41" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="443.59"/>
+		</cfdi:Traslados>
+	</cfdi:Impuestos>
+	<cfdi:Complemento>
+        <tfd:TimbreFiscalDigital xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" xsi:schemaLocation="http://www.sat.gob.mx/TimbreFiscalDigital http://www.sat.gob.mx/sitio_internet/cfd/TimbreFiscalDigital/TimbreFiscalDigitalv11.xsd" Version="1.1" UUID="7d784dee-c3f1-4a45-a00e-a7872aef06f4" RfcProvCertif="SNF171020F3A" FechaTimbrado="2023-07-10T10:38:46" SelloCFD="oW+D+pw1/SLL8502dB5mDF708G7PWguqenQ57BBnPQFNg+y5LlWd55XA0e11kGJPpEhTKnod5Aq77sHH0ay+AUHMvDvxLIxzXXSDd8j1gcRcLAscPQ6zNNmNIkFGgPWGczO2AGhYdSs9cVOg+lw9adc3tPY4IuYswyTYjSA79aiv+Zn3MyApaFGpzjquxnJV6KvAok4WPHufuXtZNBj0wtemJtjTaFXBnN96rPklUg0ra2tnhzsFxpA4ndTj9+rEZu2DNJtcpjKNZsr1I+N6STRcUohzSidHM7qrX5b/K9cV6GSbbGqsVZQWY3JcmB2YgFws86byYv0WUFAsduWPjw==" NoCertificadoSAT="00001000000518812364" SelloSAT="F84f+5xXTw4tC0hiPOV4mfpmeNhDsGas8CcaX3/FA9G0oZEUmpEmyMAgi9hmnaetx/iMlQN71m33t3X9gK2aYuZDn+GFxhK67eHjrTuvJw2mxZaBT6QysL9ISKPO5x+JFoL8AQ8gklSih+PiO5XA1v22XrG7REj5wUcrgXqDf94m9ngcJ5G/okwH0n+kD1nJg27j7kFluaJhQBz5Jpuiyz9cnACqnDQwZ84po4dJUTrst30Q5B3E6hr/MOOROziUHA6ivRtTCa8famWgyzm6J69Wu+VPNznMrlNXCwK4/oyJnTatZorNanfMRr1jr4PNTF4CzCPDR5o+ZW7c66KBcA=="/>
+    </cfdi:Complemento><cfdi:Addenda>
+		<dvz:diverza version="1.1" xmlns:tdCFDI="http://www.sat.gob.mx/sitio_internet/cfd/tipoDatos/tdCFDI" xmlns:dvz="http://www.diverza.com/ns/addenda/diverza/1" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.diverza.com/ns/addenda/diverza/1 http://www.diverza.com/schema/xsd/Addenda_Diverza_v1.1.xsd">
+			<dvz:generales totalConLetra="TRES MIL DOSCIENTOS DIECISEIS PESOS MEXICANOS 00/100 M.N." observaciones="POR MERCADO LIBRE" numeroOrden="2000004601572127" fechaTipoCambio="2023-06-27" tipoDocumento="Factura"/>
+			<dvz:clavesDescripcion c_FormaPago="Tarjeta de débito" c_Moneda="Peso Mexicano" c_MetodoPago="Pago en una sola exhibición" c_RegimenFiscal="General de Ley Personas Morales" c_UsoCFDI="Gastos en general" c_TipoDeComprobante="I"/>
+			<dvz:emisor>
+				<dvz:datosContactoE telefono="81.2187.2553" emailContacto="ventas@herramientascumbres.com" web="www.herramientascumbres.com"/>
+				<dvz:domicilioFiscalE calle="Buena Vista" numero="Int  Ext 597" colonia="Puerta de Hierro Cumbres" municipio="Monterrey" estado="Nuevo León" pais="México" codigoPostal="64349"/>
+			</dvz:emisor>
+			<dvz:receptor comprador="Lizeth Silvia Ojeda Farias">
+				<dvz:datosContactoR emailContacto="lizeth.ojeda@vordtec.com"/>
+				<dvz:domicilioFiscalR calle="XALAPA, VERACRUZ" numero="KM 298" colonia="OTRA NO ESPECIFICADA EN EL CATALOGO" municipio="EMILIANO ZAPATA" estado="VERACRUZ DE IGNACIO DE LA LLAVE" pais="MÉXICO" codigoPostal="91633"/>
+			</dvz:receptor>
+		</dvz:diverza>
+	</cfdi:Addenda>
+</cfdi:Comprobante>

@@ -1,18 +1,23 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
+from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.contrib.auth.models import User
+from django.forms import inlineformset_factory
+from django.db.models import Sum, Q
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
-from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, Edit_ProveedoresDireccionesForm
-from django.contrib.auth.models import User
+from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, Edit_ProveedoresDireccionesForm, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm
+
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter
-from django.contrib import messages
+
 import csv
 from django.core.paginator import Paginator
-from django.db.models import Sum
+from datetime import date, datetime
+
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
@@ -158,16 +163,6 @@ def proveedor_direcciones(request, pk):
 
     direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True)
 
-    #if request.method =='POST':
-        #form = Proyectos_Form(request.POST, instance=proyecto)
-     #   if form.is_valid():
-      #      form.save()
-            #messages.success(request,f'Has actualizado correctamente el proyecto {proyecto.nombre}')
-       #     return redirect('configuracion-proyectos')
-    #else:
-        #form = Proyectos_Form(instance=proyecto)
-
-
     context = {
         #'form': form,
         'proveedor':proveedor,
@@ -177,14 +172,17 @@ def proveedor_direcciones(request, pk):
 
 @login_required(login_url='user-login')
 def proyectos_add(request):
-
+    usuario = Profile.objects.get(staff=request.user)
 
     form = Proyectos_Add_Form()
 
     if request.method =='POST':
-        form = Proyectos_Add_Form(request.POST)
+        proyecto = Proyecto.objects.get_or_create(distrito = usuario.distrito)
+        form = Proyectos_Add_Form(request.POST, instance = proyecto)
         if form.is_valid():
-            form.save()
+            proyecto = form.save(commit=False)
+            proyecto.activo = True
+            proyecto.save()
             messages.success(request,'Has agregado correctamente el proyecto')
             return redirect('configuracion-proyectos')
     else:
@@ -300,6 +298,32 @@ def proveedores(request):
 
     return render(request,'dashboard/proveedores.html', context)
 
+@login_required(login_url='user-login')
+def matriz_revision_proveedor(request):
+    usuario = Profile.objects.get(staff=request.user)
+    proveedores = Proveedor_direcciones.objects.filter(estatus__nombre = "REVISION")
+
+    total_prov = proveedores.count()
+
+    myfilter=ProveedorFilter(request.GET, queryset=proveedores)
+    proveedores = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(proveedores, 50)
+    page = request.GET.get('page')
+    proveedores_list = p.get_page(page)
+
+    context = {
+        'usuario':usuario,
+        'proveedores': proveedores,
+        'myfilter':myfilter,
+        'proveedores_list':proveedores_list,
+        'total_prov':total_prov,
+        }
+
+
+    return render(request,'dashboard/matriz_revision_proveedor.html', context)
+
 
 @login_required(login_url='user-login')
 def proveedores_update(request, pk):
@@ -322,8 +346,10 @@ def proveedores_update(request, pk):
 
     return render(request,'dashboard/proveedores_update.html', context)
 
+
+
 @login_required(login_url='user-login')
-def add_proveedores(request):
+def add_proveedores_old(request):
     usuario = Profile.objects.get(staff=request.user)
     item, created = Proveedor.objects.get_or_create(creado_por=usuario, completo = False)
 
@@ -371,29 +397,124 @@ def add_proveedor_direccion(request, pk):
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
 @login_required(login_url='user-login')
-def add_proveedor_direccion(request, pk):
-
+def add_proveedores2(request, pk=None):
     usuario = Profile.objects.get(staff=request.user)
-    proveedor = Proveedor.objects.get(id=pk)
-    item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, creado_por = usuario)
+    proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
+    proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distrito)).values_list('id', flat=True)
+    
+    proveedores = Proveedor.objects.filter(proveedor_direcciones__id__in=proveedores_dir_ids)
+    print('proveedores:',proveedores.count())
 
-    if request.method =='POST':
-        form = ProveedoresDireccionesForm(request.POST, instance = item)
-        if form.is_valid():
-            direccion = form.save(commit=False)
+    if usuario.tipo.proveedores == True:
+        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=Add_ProveedoresDireccionesForm, extra=1)
+    else:
+        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=ProveedoresDireccionesForm, extra=1)
+    
+
+    if request.method == 'POST':
+        form = ProveedoresForm(request.POST, instance = proveedor)
+        formset = ProveedorDireccionesFormSet(request.POST, instance=proveedor)
+        if form.is_valid() and formset.is_valid():
+            proveedor = form.save(commit=False)
+            proveedor.completo = True
+            proveedor.save()
+            direcciones = formset.save(commit=False)
+            direccion = direcciones[0]
+            direccion.distrito = usuario.distrito
+            if usuario.tipo.proveedores == False:
+                estatus = Estatus_proveedor.objects.get(nombre ="REVISION")
+                direccion.estatus = estatus
+            direccion.creado_por = usuario
+            direccion.enviado_fecha = date.today()
             direccion.completo = True
             direccion.save()
-            messages.success(request,f'Has agregado correctamente la direccion del proveedor {item.nombre.razon_social}')
+            messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
             return redirect('dashboard-proveedores')
+        else:
+            print(form.errors) 
+            print(formset.errors) 
+            messages.success(request, 'No está validando')
     else:
-        form = ProveedoresDireccionesForm(instance = item)
-
+        form = ProveedoresForm(instance=proveedor)
+        formset = ProveedorDireccionesFormSet(instance=proveedor)
 
     context = {
         'form': form,
-        'item':item,
-        }
-    return render(request,'dashboard/add_proveedor_direccion.html', context)
+        'formset': formset,
+    }
+    return render(request, 'dashboard/add_proveedores_&_direccion.html', context)
+
+@login_required(login_url='user-login')
+def add_proveedores(request, pk=None):
+    usuario = Profile.objects.get(staff=request.user)
+    #proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
+    proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distrito)).values_list('id', flat=True)
+    
+    proveedores = Proveedor.objects.filter(proveedor_direcciones__id__in=proveedores_dir_ids)
+    print('proveedores:',proveedores.count())
+
+    
+    form = ProveedoresExistDireccionesForm()
+    form.fields['nombre'].queryset = proveedores
+
+    if request.method == 'POST':
+        form = ProveedoresExistDireccionesForm(request.POST)
+        if form.is_valid():
+            proveedor = form.save(commit=False)
+            proveedor.completo = True
+            proveedor.save()
+            #direcciones = formset.save(commit=False)
+            #direccion = direcciones[0]
+            #direccion.distrito = usuario.distrito
+            #estatus = Estatus_proveedor.objects.get(nombre ="REVISION")
+            #direccion.creado_por = usuario
+            #direccion.estatus = estatus
+            #direccion.completo = True
+            #direccion.save()
+            messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
+            return redirect('dashboard-proveedores')
+    
+    context = {
+        'proveedores':proveedores,
+        'form': form,
+    }
+    return render(request, 'dashboard/proveedor_exist_&_direccion.html', context)
+
+@login_required(login_url='user-login')
+def edit_proveedores(request, pk):
+    usuario = Profile.objects.get(staff=request.user)
+    proveedor_direccion = Proveedor_direcciones.objects.get(id=pk)
+    proveedor = Proveedor.objects.get(id = proveedor_direccion.nombre.id)
+    #romper
+
+    ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form =Edit_ProveedoresDireccionesForm, extra=0)
+    form = ProveedoresForm(instance=proveedor)
+    formset = ProveedorDireccionesFormSet(instance=proveedor)
+
+    if request.method == 'POST':
+        form = ProveedoresForm(request.POST or None, instance =proveedor)
+        formset = ProveedorDireccionesFormSet(request.POST or None, instance=proveedor)
+        if form.is_valid and formset.is_valid():
+            
+            form.save()
+            direcciones = formset.save(commit=False)
+            for item in direcciones:
+                item.actualizado_por = usuario
+                item.modificado_fecha = date.today()
+                item.save()
+            messages.success(request, 'Has agregado correctamente el proveedor y sus direcciones')
+            return redirect('dashboard-proveedores')
+        else:
+            print(form.errors) 
+            print(formset.errors) 
+            messages.success(request, 'No está validando')
+
+    context = {
+        'form': form,
+        'proveedor':proveedor,
+        'formset': formset,
+    }
+    return render(request, 'dashboard/edit_proveedores_&_direccion.html', context)
 
 @login_required(login_url='user-login')
 def edit_proveedor_direccion(request, pk):
@@ -526,12 +647,17 @@ def upload_batch_products(request):
                     unidad = Unidad.objects.get(nombre = row[2])
                     if Familia.objects.filter(nombre = row[3]):
                         familia = Familia.objects.get(nombre = row[3])
+                        especialista = True if row[5].lower == 'si' else False
+                        iva = True if row[6].lower == 'si' else False
+                        activo = True if row[7].lower() == 'si' else False
+                        servicio = True if row[8].lower() == 'si' else False
                         if Subfamilia.objects.filter(nombre = row[4], familia = familia):
                             subfamilia = Subfamilia.objects.get(nombre = row[4], familia = familia)
-                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia, subfamilia=subfamilia,especialista=row[5],iva=row[6],activo=row[7],servicio=row[8],baja_item=False,completado=True)
+                            
+                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia, subfamilia=subfamilia,especialista=especialista,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
                             producto.save()
                         else:
-                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia,especialista=row[5],iva=row[6],activo=row[7],servicio=row[8],baja_item=False,completado=True)
+                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia,especialista=especialista,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
                             producto.save()
                     else:
                         messages.error(request,f'La familia no existe dentro de la base de datos, producto:{row[0]}')

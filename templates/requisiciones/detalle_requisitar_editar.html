@@ -14,71 +14,83 @@
 <hr>
 <hr>
 <div class="row">
-    <div class="col-lg-6">
-        <div class="box-element" id="form-wrapper">
-            <div class="card-header mt-3 mb-4">
+    <div class="card col-lg-6 col-md-12">
+            <div class="card-header mt-3">
             <!-- Aqui es el encabezado de los filtros -->
                 <h5 id="requi" orden={{orden.id}} target={{requi.id}}>Requisición: {{requi.id}}</h5>
             </div>
             <form method="POST">
-            {% csrf_token %}
-            <div class="form-check form-switch col-auto mx-4" id="c_super" valor = "{{tag}}">
-                <input class="form-check-input" type="checkbox" role="switch" id="Comment_Super">
-                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Superintendente</label>
+            <div class="card-body">
+                {% csrf_token %}
+                <div class="form-check form-switch col-auto mx-4" id="c_super" valor = "{{tag}}">
+                    <input class="form-check-input" type="checkbox" role="switch" id="Comment_Super">
+                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Superintendente</label>
+                </div>
+
+                {{form.comentario_super | add_class:"form-control my-2 d-none" }}
+
+                <div class="form-check form-switch col-auto mx-4" id="Dof" valor = "{{tag}}">
+                    <input class="form-check-input" type="checkbox" role="switch" id="Comment_Compras">
+                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Comprador</label>
+                </div>
+                {{form.comentario_compras | add_class:"form-control my-2 d-none" }}
             </div>
-
-            {{form.comentario_super | add_class:"form-control my-2 d-none" }}
-
-             <div class="form-check form-switch col-auto mx-4" id="Dof" valor = "{{tag}}">
-                <input class="form-check-input" type="checkbox" role="switch" id="Comment_Compras">
-                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">Comentario para Comprador</label>
-            </div>
-             {{form.comentario_compras | add_class:"form-control my-2 d-none" }}
-
-
-
-
             <div class="text-end">
-                <button type="submit" id="crear" name="crear" class="btn btn-success col-2">Crear</button>
+                <button type="submit" id="crear" name="crear" class="btn btn-outline-success col-2">Crear</button>
                 <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
             </div>
             </form>
             <hr>
-        </div>
+        
     </div>
     <div class="col-lg-6">
         <div class="box-element">
             <div class="row">
-                <label class="col-auto col-form-label"><strong>Productos:</strong></label>
-                <div class="col-sm-4">
-                    <div class="selector">
-                        <select class="form-select form-select-sm" id="producto">
-                            <option id="default_sel">      </option>
-                            {% for producto in productos %}
-                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar|unlocalize}}">
-                                {{producto.articulos.producto.producto.nombre}}
-                            </option>
-                            {% endfor %}
-                        </select>
+                <div class="col-12">
+                    <div id="input_subproyecto" class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            <label  style="font-size:10px; color:gray;" for="superintendente">Productos*</label>
+                            <select style="font-size:16px" class="form-select form-select-sm" placeholder="Productos" id="producto">
+                                <option style="color:gray;" value="" selected disabled>Productos</option>
+                                {% for producto in productos %}
+                                <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar|unlocalize}}" comentario="{{producto.articulos.comentario}}">
+                                    {{producto.articulos.producto.producto.nombre}}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
                     </div>
                 </div>
-                <div class="col-sm-2">
-                    <label class="col-auto col-form-label"><strong>Solicitado:</strong></label>
+            </div>
+            <div class="row">
+                <div id="etiqueta_solicitado" class="col-4">
+                    <div class="alert alert-secondary" role="alert">
+                    <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                    </div>
                 </div>
-                <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
+               
+                <div id="etiqueta_solicitado" class="col-8">
+                    <div class="alert alert-secondary" role="alert">
+                    <h6>Comentario:</h6><h6 style="color: #121212;" id="comentario"></h6>   
+                    </div>
+                </div>
+                    
                 <div class="col-sm-1">
-                    <a class="btn btn-success update-purchase" id="update-requi" name="requi">
-                        <i class="fa-solid fa-circle-plus"></i>
+                    <a class="btn btn-outline-success update-purchase" id="update-requi" name="requi">
+                    <i class="fa-solid fa-circle-plus"></i>
                     </a>
                 </div>
             </div>
             <hr>
+            <div class ="table-responsive-sm">
             <table class="table table-light table-striped table-hover mx-2">
             <thead>
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Producto</th>
                     <th scope="col">Cantidad</th>
+                    <th>Comentario</th>
                     <th scope="col" class="col-sm-2">Acción</th>
                 </tr>
             </thead>
@@ -88,11 +100,13 @@
                     <td scope="col">{{product.producto.articulos.producto.producto.codigo}}</td>
                     <td scope="col">{{product.producto.articulos.producto.producto.nombre}}</td>
                     <td scope="col">{{product.cantidad}}</td>
-                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    <td>{{product.producto.articulos.comentario}}</td>
+                    <td scope="col"><button type="button" class="btn" style="background-color: #980F0F; color:ghostwhite" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                 </tr>
                 {% endfor %}
             </tbody>
             </table>
+            </div>
         </div>
     </div>
 </div>
@@ -146,13 +160,16 @@ document.getElementById("crear").addEventListener("click", function(element){
 
 
 document.getElementById("producto").addEventListener("change", function(element){
-    var select = document.getElementById('producto');
+    var select = this;
     var current_option = select.options[select.selectedIndex];
     let cantidad = current_option.getAttribute('cantidad');
+    let comment = current_option.getAttribute('comentario');
 
-    console.log(cantidad);
+    console.log(comment);
     var solicitado = document.getElementById('solicitado');
+    var comentario = document.getElementById('comentario');
     solicitado.innerHTML = cantidad;
+    comentario.innerHTML = comment;
 });
 
 

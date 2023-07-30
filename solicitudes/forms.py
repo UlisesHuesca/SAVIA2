@@ -28,6 +28,12 @@ class ArticulosOrdenadosForm(forms.ModelForm):
         model = ArticulosOrdenados
         fields = ['cantidad']
 
+class ArticulosOrdenadosComentForm(forms.ModelForm):
+
+    class Meta:
+        model = ArticulosOrdenados
+        fields = ['comentario']
+
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order

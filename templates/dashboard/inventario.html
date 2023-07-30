@@ -47,7 +47,11 @@
                 <div class="card-body">
                     <h5 class="card-title">Valor de Inventario:</h5>
                     <hr>
-                    <h5 class="card-subtitle mb-2 text-muted">${{valor_inv|floatformat:2}}</h5>
+                    <h4 class="card-subtitle mb-2 text-muted">${{valor_inv|floatformat:2}}</h4>
+                    <h1>&nbsp;</h1>
+                    <h5 class="card-title">Productos:</h5>
+                    <hr>
+                    <h4 class="card-subtitle mb-2 text-muted">{{cuenta_productos}}</h4> 
                 </div>
             </div>
             {% endif %}
@@ -64,7 +68,9 @@
                                 <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
                             </a>
                             <hr>
+                            {% if usuario.tipo.nombre == "Admin" %}
                             <a class="btn btn-outline-info btn-block mx-auto" type="button" href="{% url 'ajuste-inventario' %}"><i class="fa-solid fa-circle-plus">AJUSTE</i></a>
+                            {% endif %}
                         </li>
                     </ul>
                 </div>
@@ -101,30 +107,55 @@
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row g-12">
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Código:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.codigo|add_class:'form-control'}}
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                            <label style="color: #121212;" for="id_codigo">Código</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Producto:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.producto|add_class:'form-control'}}
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                            <label style="color: #121212;" for="id_producto">Producto</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Familia:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.familia|add_class:'form-control'}}
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
+                            <label style="color: #121212;" for="id_familia">Familia</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.ubicacion|add_class:"form-control"|append_attr:"placeholder= Ubicación"}}
+                            <label style="color: #121212;" for="id_familia">Ubicación</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="row">
-                    <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Ubicación:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.ubicacion|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Estante:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.estante|add_class:'form-control'}}
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.estante|add_class:"form-control"|append_attr:"placeholder= Estante"}}
+                            <label style="color: #121212;" for="id_familia">Estante</label>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
                 <hr>
@@ -170,7 +201,7 @@
                             <td>{{producto.estante}}</td>
                             {% endif %}
                             <td>{{producto.cantidad}}</td>
-                            <td>{{producto.cantidad_apartada}}</td>
+                            <td>{{producto.apartada}}</td>
                             <td>{{producto.cantidad_entradas}}</td>
                             <td>{{producto.price}}</td>
                             <td>{{producto.get_total_producto}}</td>

@@ -133,7 +133,7 @@
                         </tr>
                     </tbody>
                 </table>
-
+                <div class ="table-responsive-sm">
                 <table class='table table-dark table-striped'>
                     <thead>
                         <tr>
@@ -168,33 +168,46 @@
                    {% endfor %}
                    </tbody>
                 </table>
+                </div>
         </div>
 
         <form hx-post="{% url 'compras-pagos' compra.id %}" hx-encoding='multipart/form-data' class="modal-content">
             <div>
                 {% csrf_token %}
                 <div class="row my-2">
-                    <label class="col-auto col-form-label"><strong>Cuentas:</strong></label>
-                    <div class="col-sm-4">
-                        <div class="selector">
-                            <select class="form-select form-select-sm my-1" id="cuentas">
-                            <option id="default_sel">      </option>
-                            {% for cuenta in cuentas%}
-                            <option id="js" target={{cuenta.id}} moneda={{cuenta.moneda.nombre}}>
-                                {{cuenta.cuenta}} - {{cuenta.moneda}}
-                            </option>
-                            {% endfor %}
-                            </select>
+                    
+                        <div class="col-12">
+                            <div id="input_subproyecto" class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-brands fa-cc-visa"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <label  style="font-size:10px; color:gray;" for="superintendente">Cuentas*</label>
+                                    <select style="font-size:16px" class="form-select form-select-sm" placeholder="Cuentas" id="cuentas">
+                                         <option style="color:gray;" value="" selected disabled>Cuentas</option>
+                                            {% for cuenta in cuentas%}
+                                            <option id="js" target={{cuenta.id}} moneda={{cuenta.moneda.nombre}}>
+                                                {{cuenta.cuenta}} - {{cuenta.moneda}}
+                                            </option>
+                                            {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
                         </div>
-                    </div>
                     <label for="form.cuenta" class="col-auto col-form-label d-none"><strong>Cuenta:</strong></label>
                     <div class="col-sm-3 d-none">
                         {{form.cuenta|add_class:'form-control'}}
                     </div>
-                    <label for="form.monto_pagado" class="col-auto col-form-label my-1"><strong>Monto:</strong></label>
-                    <div class="col-2">
-                        <input type="text" class="form-control d-none" id="monto_dolares" placeholder="Dolares...">
-                        {{form.monto|add_class:'form-control'}}
+
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <input type="text" class="form-control d-none" id="monto_dolares" placeholder="Dolares...">      
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
+                                    <label style="color: #121212;" for="id_area">Monto*</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="row my-2">
@@ -206,10 +219,12 @@
                     <div id="calculo_previo" class="col-sm-2">
 
                     </div>
-                    <div class="col-8">
-                    <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
-                        {{form.comprobante_pago|add_class:'form-control'}}
+                    <div class="row my-2">
+                        <div class="col-12">
+                            {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
+                        </div>
                     </div>
+                    
                 </div>
             </div>
 

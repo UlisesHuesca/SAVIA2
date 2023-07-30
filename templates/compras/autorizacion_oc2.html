@@ -55,44 +55,45 @@
     </div>
 </div>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table bg-white">
+<div class = "card bg-white my-2">
+    <div class ="table-responsive-sm">
+        <table class="table table-striped table-hover bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Folio</th>
-                    <th scope="col">Solicitado por</th>
-                    <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Área</th>
-                    <th scope="col">Creado</th>
-                    <th scope="col">Proveedor</th>
-                    <th scope="col">Costo</th>
-                    <th scope="col">Condición</th>
-                    <th scope="col">Acción</th>
+                <tr role="row">
+                    <th >Folio</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    <th class="d-none d-lg-table-cell">Proyecto</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Área</th>
+                    <th class="d-none d-lg-table-cell">Creado</th>
+                    <th class="numeric">Proveedor</th>
+                    <th class="numeric">Costo</th>
+                    <th class="numeric">Moneda</th>
+                    <th class="d-none d-lg-table-cell">Condición</th>
+                    <th class="numeric">Acción</th>
                 </tr>
             </thead>
             <tbody>
                 {% for compra in compras %}
                 <tr>
                     <th scope="row">{{compra.get_folio}}</th>
-                    <td>{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
-                    <td>{{compra.req.orden.proyecto.nombre}}</td>
-                    <td>{{compra.req.orden.subproyecto.nombre}}</td>
-                    <td>{{compra.req.orden.area}}</td>
-                    <td>{{compra.created_at}} </td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.proyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.area}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.created_at}} </td>
                     <td>{{compra.proveedor}}</td>
                     <td>${{compra.costo_plus_adicionales}}</td>
-                    <td>{{compra.cond_de_pago.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.cond_de_pago.nombre}}</td>
                     <td>
                         <ul class="nav nav-pills">
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-2">
                                 <a id="myBtn" type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'autorizar-oc2' compra.id %}"><i class="fa-solid fa-check"></i></a>
                             </li>
-                            <li class="nav-item mx-2">
+                            <li class="nav-item m-2">
                                 <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}">R<i class="fa-solid fa-backward"></i></a>
                             </li>
-                            <li class="nav-item mx-2">
+                            <li class="nav-item m-2">
                                 <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                             </li>
                         </ul>
@@ -102,7 +103,7 @@
             </tbody>
         </table>
     </div>
-
+</div>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
@@ -111,7 +112,7 @@
 </div>
 
 
-</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>

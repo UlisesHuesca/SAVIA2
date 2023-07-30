@@ -5,7 +5,7 @@ from user.models import Profile
 from gastos.models import Solicitud_Gasto
 from tesoreria.models import Pago
 from compras.models import Compra
-from requisiciones.models import Requis, ValeSalidas
+from requisiciones.models import Requis, ValeSalidas, Devolucion
 from compras.models import Compra
 from viaticos.models import Solicitud_Viatico
 from user.models import Profile, Tipo_perfil
@@ -33,6 +33,7 @@ def contadores_processor(request):
     conteo_gastos_pagar= 0 
     conteo_asignar_montos = 0
     conteo_viaticos=0
+    conteo_devoluciones = 0
     
     conteo_usuario = Profile.objects.all().count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
@@ -67,9 +68,11 @@ def contadores_processor(request):
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None)
             gastos_gerencia = Solicitud_Gasto.objects.filter(complete=True, autorizar=True, autorizar2=None)
             viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True)
+            devoluciones = Devolucion.objects.filter(complete = True, autorizada = None)
             conteo_oc = oc.count()
             conteo_viaticos_gerencia = viaticos_gerencia.count()
             conteo_gastos_gerencia = gastos_gerencia.count()
+            conteo_devoluciones = devoluciones.count()
         if usuario.tipo.tesoreria == True:
             oc_pendientes = Compra.objects.filter(pagada=False, autorizado2=True)
             viaticos_por_asignar = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, montos_asignados=False)
@@ -100,6 +103,7 @@ def contadores_processor(request):
 
 
     return {
+    'conteo_devoluciones': conteo_devoluciones,
     'solicitudes_generadas':solicitudes_generadas,
     'conteo_productos':conteo_productos,
     'conteo_usuario':conteo_usuario,

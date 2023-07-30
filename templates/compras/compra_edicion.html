@@ -2,6 +2,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %} OC {% endblock %}
@@ -32,7 +33,7 @@
 
                     <datalist id="proveedor" name='proveedor'>
                         {% for item in proveedores %}
-                        <option status="{{item.estatus}}" valor="{{item.id}}" value="{{item.nombre.razon_social}}"></option>
+                        <option status="{{item.estatus}}" valor="{{item.id|unlocalize}}" value="{{item.nombre.razon_social}}"></option>
                         {% endfor %}
                     </datalist>
                     </div>
@@ -58,7 +59,7 @@
 
                             <datalist id="colaborador_sel" name='colaborador_sel'>
                                 {% for item in colaborador_sel %}
-                                <option status="" valor="{{item.id}}" value="{{item.staff.first_name}} {{item.staff.last_name}}"></option>
+                                <option status="" valor="{{item.id|unlocalize}}" value="{{item.staff.first_name}} {{item.staff.last_name}}"></option>
                                 {% endfor %}
                             </datalist>
                             </div>
@@ -171,7 +172,7 @@
                         <select class="form-select form-select-sm" id="producto">
                             <option id="default_sel">      </option>
                             {% for producto in productos %}
-                            <option id="js" target="{{producto.id}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_comprada="{{producto.cantidad_comprada}}" iva="{{producto.producto.articulos.producto.producto.iva}}">
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad|unlocalize}}" cantidad_comprada="{{producto.cantidad_comprada|unlocalize}}" iva="{{producto.producto.articulos.producto.producto.iva}}">
                                 {{producto.producto.articulos.producto}}
                             </option>
                             {% endfor %}
@@ -218,7 +219,7 @@
                     <td scope="col">{{product.cantidad}}</td>
                     <td scope="col">${{product.precio_unitario|floatformat:2}}</td>
                     <td scope="col">${{product.subtotal_parcial|floatformat:2}}</td>
-                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id}}" cantidad="{{product.cantidad}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad|unlocalize}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                 </tr>
                 {% endfor %}
             </tbody>

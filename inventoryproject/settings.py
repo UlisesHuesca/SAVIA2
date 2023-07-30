@@ -65,7 +65,8 @@ INSTALLED_APPS = [
     'plotly',
     'widget_tweaks',
     'simple_history',
-    'django.contrib.humanize'
+    'django.contrib.humanize',
+    'phone_field',
 ]
 
 MIDDLEWARE = [

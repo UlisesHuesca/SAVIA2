@@ -6,7 +6,7 @@ from tesoreria.models import Pago
 from solicitudes.models import Subproyecto, Operacion, Proyecto
 from entradas.models import EntradaArticulo, Entrada
 from gastos.models import Entrada_Gasto_Ajuste, Conceptos_Entradas
-from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm, Conceptos_EntradasForm, Entrada_Gasto_AjusteForm, Order_Resurtimiento_Form
+from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm, Conceptos_EntradasForm, Entrada_Gasto_AjusteForm, Order_Resurtimiento_Form, ArticulosOrdenadosComentForm
 from dashboard.forms import Inventario_BatchForm
 from user.models import Profile, Distrito, Almacen
 from django.contrib.auth.decorators import login_required
@@ -188,7 +188,7 @@ def checkout(request):
                     prod_inventario = Inventario.objects.get(id = producto.producto.id)
                     ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
                     #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
-                    if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
+                    if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":  #si la cantidad solicitada es mayor que la cantidad en inventario
                         prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
                         prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
                         prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
@@ -198,7 +198,7 @@ def checkout(request):
                         ordensurtir.requisitar = False
                         ordensurtir.save()
                         prod_inventario.save()
-                    elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0: #si la cantidad solicitada es mayor que la cantidad en inventario
+                    elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False: #si la cantidad solicitada es mayor que la cantidad en inventario
                         ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
                         ordensurtir.precio = prod_inventario.price
                         ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
@@ -208,15 +208,20 @@ def checkout(request):
                             ordensurtir.surtir = True
                         ordensurtir.requisitar = True
                         order.requisitar = True
+                        prod_inventario.save()
+                        ordensurtir.save()
+                    elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True:
+                        ordensurtir.requisitar = True
+                        ordensurtir.cantidad_requisitar = producto.cantidad
+                        order.requisitar = True
                         if producto.producto.producto.servicio == True:
                             requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-                            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad)
+                            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
                             requi.folio = str(usuario.distrito.abreviado)+str(requi.id).zfill(4)
                             order.requisitar=False
                             ordensurtir.requisitar=False
                             requi.save()
                             requitem.save()
-                        prod_inventario.save()
                         ordensurtir.save()
                         order.save()
                 order.autorizar = True
@@ -278,6 +283,23 @@ def product_quantity_edit(request, pk):
         }
 
     return render(request, 'solicitud/product_quantity_edit.html', context)
+
+def product_comment_add(request, pk):
+    item = ArticulosOrdenados.objects.get(id= pk)
+    form= ArticulosOrdenadosComentForm(instance = item)
+
+    if request.method == 'POST':
+        form = ArticulosOrdenadosComentForm(request.POST, instance=item)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204)
+
+    context = {
+        'form': form,
+        'item':item,
+        }
+
+    return render(request, 'solicitud/product_comment_add.html', context)
 
 #Vista para crear solicitud de resurtimiento
 @login_required(login_url='user-login')
@@ -514,13 +536,11 @@ def inventario(request):
     else:
         perfil_flag = False
 
+    valor_inv = 0
+    for inventario in existencia.all():
+        valor_inv += (inventario.cantidad + inventario.apartada) * inventario.price
 
-
-    #apartado = ArticulosparaSurtir.objects.values('articulos__producto__producto__codigo').annotate(cantidad_total=Sum('cantidad'))
-    #Este es el metodo que utilicé para multiplicar 2 columnas de un mismo modelo y devolver el total
-    list_inv = existencia.values_list('cantidad', 'cantidad_apartada','price')
-    valor_inv_raw = sum((t[0] + t[1])*t[2] for t in list_inv)
-    valor_inv = valor_inv_raw
+   
 
     myfilter = InventarioFilter(request.GET, queryset=existencia)
     existencia = myfilter.qs
@@ -530,13 +550,13 @@ def inventario(request):
     page = request.GET.get('page')
     existencia_list = p.get_page(page)
 
-
-
+    cuenta_productos = existencia.count()
 
     if request.method =='POST' and 'btnExcel' in request.POST:
-        return convert_excel_inventario(existencia, valor_inv_raw )
+        return convert_excel_inventario(existencia, valor_inv )
 
     context = {
+        'cuenta_productos':cuenta_productos,
         'perfil_flag':perfil_flag,
         'existencia': existencia,
         'myfilter': myfilter,
@@ -739,14 +759,14 @@ def inventario_update_modal(request, pk):
 
 
 
-    if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == "Almacen":
+    if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
         flag_perfil = True
     else:
         flag_perfil = False
 
 
     if request.method =='POST':
-        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == "Almacen":
+        if perfil.tipo.nombre == 'SuperAdm' or perfil.tipo.nombre == 'Admin':
             form = Inv_UpdateForm(request.POST, instance=item)
         else:
             form = Inv_UpdateForm_almacenista(request.POST, instance= item)
@@ -883,7 +903,7 @@ def autorizada_sol(request, pk):
                 ordensurtir.requisitar = False
                 ordensurtir.save()
                 prod_inventario.save()
-            elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal": #si la cantidad solicitada es mayor que la cantidad en inventario
+            elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False: #si la cantidad solicitada es mayor que la cantidad en inventario 
                 ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
                 ordensurtir.precio = prod_inventario.price
                 ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
@@ -895,14 +915,14 @@ def autorizada_sol(request, pk):
                 order.requisitar = True
                 prod_inventario.save()
                 ordensurtir.save()
-            elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento":
+            elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True:
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
                 order.requisitar = True
                 if producto.producto.producto.servicio == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                     requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
-                    requi.folio = str(usuario.distrito.abreviado)+str(requi.id).zfill(4)
+                    requi.folio = str(perfil.distrito.abreviado)+str(requi.id).zfill(4)
                     order.requisitar=False
                     ordensurtir.requisitar=False
                     requi.save()
@@ -1088,10 +1108,24 @@ def convert_excel_inventario(existencia, valor_inventario):
     ws.column_dimensions[get_column_letter(columna_max)].width = 20
     ws.column_dimensions[get_column_letter(columna_max + 1)].width = 20
 
-    rows = existencia.values_list('producto__codigo','producto__nombre','distrito__nombre','producto__unidad__nombre','cantidad','cantidad_apartada','ubicacion','estante','price')
+    #rows = existencia.values_list('producto__codigo','producto__nombre','distrito__nombre','producto__unidad__nombre','cantidad','cantidad_apartada','ubicacion','estante','price')
+    rows = existencia.all()
 
-    for row in rows:
+    for inventario in rows:
         row_num += 1
+        # Aquí estás creando una lista manualmente con los valores que necesitas
+        row = [
+            inventario.producto.codigo,
+            inventario.producto.nombre,
+            inventario.distrito.nombre,
+            inventario.producto.unidad.nombre,
+            inventario.cantidad,
+            inventario.apartada,  # Aquí utilizas la propiedad apartada
+            inventario.ubicacion,
+            inventario.estante,
+            inventario.price
+        ]
+
         for col_num in range(len(row)):
             cell = ws.cell(row=row_num, column=col_num +1, value=row[col_num])
             if col_num > 2 and col_num != 8:
@@ -1101,7 +1135,7 @@ def convert_excel_inventario(existencia, valor_inventario):
             else:
                 cell.style = body_style#(ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
 
-        total_value = row[4] * row[8] + row[5] * row[8]
+        total_value = inventario.cantidad * inventario.price + inventario.apartada * inventario.price
         total_cell = ws.cell(row=row_num, column=len(row)+1, value=total_value)
         total_cell.style = money_style
 

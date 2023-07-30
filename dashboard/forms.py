@@ -32,13 +32,24 @@ class ProveedoresForm(forms.ModelForm):
 class ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['nombre','distrito','domicilio','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
+        fields = ['nombre','estado','distrito','telefono','domicilio','contacto','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
+
+class ProveedoresExistDireccionesForm(forms.ModelForm):
+   
+    class Meta:
+        model = Proveedor_direcciones
+        fields = ['nombre','domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito']
 
 class Edit_ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['domicilio','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
+        fields = ['nombre','domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
+class Add_ProveedoresDireccionesForm(forms.ModelForm):
+    class Meta:
+        model = Proveedor_direcciones
+        fields = ['domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
+        
 class Products_BatchForm(forms.ModelForm):
     class Meta:
         model = Products_Batch
@@ -86,7 +97,7 @@ class Proyectos_Form(forms.ModelForm):
 class Proyectos_Add_Form(forms.ModelForm):
     class Meta:
         model = Proyecto
-        fields = ['descripcion','nombre','cliente','activo','factura','fecha_factura','folio_cotizacion','oc_cliente','status_de_entrega',]
+        fields = ['descripcion','nombre','cliente','factura','fecha_factura','folio_cotizacion','oc_cliente','status_de_entrega',]
 
 class Subproyectos_Add_Form(forms.ModelForm):
     class Meta:

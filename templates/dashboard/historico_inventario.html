@@ -48,6 +48,12 @@
             <div class="col-auto my-2">
                 {{myfilter.form.producto|add_class:'form-control'}}
             </div>
+            <div class="col-auto my-2">
+                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+            </div>
+            <div class="col-auto my-2">
+                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+            </div>
             <div class="col-2">
                 <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>

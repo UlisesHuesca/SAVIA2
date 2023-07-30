@@ -1,6 +1,6 @@
 import django_filters
 from dashboard.models import ArticulosparaSurtir
-from requisiciones.models import Salidas
+from requisiciones.models import Salidas, Devolucion
 from entradas.models import EntradaArticulo
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
@@ -54,3 +54,18 @@ class EntradasFilter(django_filters.FilterSet):
     class Meta:
         model = EntradaArticulo
         fields = ['producto','codigo','nombre','proyecto','subproyecto','start_date','end_date',]
+
+class DevolucionFilter(django_filters.FilterSet):
+    solicitud = CharFilter(field_name='solicitud__nombre', lookup_expr='icontains')
+    almacenista = CharFilter(method ='my_custom_filter', label="Search")
+    start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
+    end_date = DateFilter(field_name='created_at',lookup_expr='lte')
+    #fecha = DateFilter(field_name='created_at',lookup_expr='lte')
+    #hora = models.TimeField(null=True)
+
+    class Meta:
+        model = Devolucion
+        fields = ['solicitud','almacenista','start_date','end_date',]
+
+    def my_custom_filter(self, queryset, name, value):
+        return queryset.filter(Q(solictud__staff__staff__first_name__icontains = value) | Q(solicitud__staff__staff__last_name__icontains=value))

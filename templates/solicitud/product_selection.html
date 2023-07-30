@@ -11,27 +11,56 @@
     {% block content %}
     <hr>
     <hr>
+    <h6>&nbsp;</h6>
+    <h6>&nbsp;</h6>
     <div class="row">
         <!-- Aqui es el encabezado de los filtros -->
-        <div class = "row mt-2 bg-white">
+        <div class = "card bg-white">
             <div class="col-12">
                 <div class="card card-body">
                     <h5>Filtro de productos</h5>
                     <hr>
                     {% csrf_token %}
                     <form class="row g-3" method="GET">
-                        <label for="myfilter.form.codigo" class="col-sm-1 col-form-label text-right"><strong>Código:</strong></label>
-                        <div class="col-2">
-                            {{myfilter.form.codigo|add_class:'form-control'}}
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                                    <label style="color: #121212;" for="id_codigo">Código*</label>
+                                </div>
+                            </div>
                         </div>
-                        <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Producto:</strong></label>
-                        <div class="col-5">
-                            {{myfilter.form.producto|add_class:'form-control'}}
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                                    <label style="color: #121212;" for="id_codigo">Producto*</label>
+                                </div>
+                            </div>
                         </div>
-                        <div class="col-2">
-                             <input class="btn btn-outline-success btn-block" type="submit" value="Buscar">
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
+                                    <label style="color: #121212;" for="id_codigo">Familia*</label>
+                                </div>
+                            </div>
                         </div>
-
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
+                                    <label style="color: #121212;" for="id_codigo">Subfamilia*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-2 mt-3">
+                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        </div>
                     </form>
                 </div>
             </div>
@@ -40,7 +69,7 @@
 
         <div class="row">
             {% for producto in productos_list %}
-            <div class='col-lg-2 my-2'>
+            <div class='col-md-3 my-2'>
                 <img class="thumbnail" src="{{producto.producto.imageURL}}">
                 <div class='box-element product'>
                     <h6><strong>{{producto.producto}}</strong></h6>

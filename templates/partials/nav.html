@@ -11,7 +11,7 @@
             <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA" width="50" height="50">
             </a>
             <ul class="nav nav-pills" >
-                <li class="nav-item">
+                <li class="nav-item d-none d-md-table-cell">
                     <a class="nav-link text-white" aria-current="page" href="{% url 'dashboard-index' %}">Dashboard</a>
                 </li>
                 <li class="nav-item">
@@ -65,7 +65,6 @@
                             <div class="d-none">
                             {% endif %}
                             <a class="dropdown-item" href="{% url 'dashboard-staff' %}">Usuarios</a>
-                            <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">Proveedores</a>
                             </div>
                             {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Almacen" or usuario.tipo.nombre == "Superintendente"  %}
                             <div>
@@ -200,7 +199,21 @@
                             <a class="dropdown-item" href="{% url 'comparativos' %}">
                                 Comparativos
                             </a>
+                            <a class="dropdown-item" href="{% url 'add_proveedores2' %}">
+                                Solicitud alta de proveedor
+                            </a>
                         <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.proveedores == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Proveedores</h6>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">Proveedores</a>
+                        <a class="dropdown-item" href="{% url 'matriz-revision-proveedor' %}">Matriz Revision Proveedores</a>
+                    <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.tesoreria == False %}
                     <div class="d-none">
@@ -303,10 +316,13 @@
                                 <a class="dropdown-item" href="{% url 'viaticos-pendientes-autorizar2' %}">Autorización Viáticos
                                   {% if conteo_viaticos_gerencia > 0 %}
                                 <span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span>
-
                                 {% endif %}
                                 </a>
-
+                                <a class="dropdown-item" href="{% url 'matriz-autorizar-devolucion' %}">Autorización Devolución Almacén
+                                  {% if conteo_devoluciones > 0 %}
+                                  <span class="badge bg-danger">({{conteo_devoluciones}})</span>
+                                  {% endif %}
+                                </a>
                             </div>
                             {% if usuario.tipo.superintendente == False %}
                                 <div class="d-none">

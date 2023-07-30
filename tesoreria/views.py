@@ -9,8 +9,9 @@ from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas
 from gastos.models import Solicitud_Gasto
 from viaticos.models import Solicitud_Viatico
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form
 from .filters import PagoFilter, Matriz_Pago_Filter
+from gastos.filters import Solicitud_Gasto_Filter
 from user.models import Profile
 from django.contrib import messages
 from django.db.models import Sum
@@ -102,10 +103,6 @@ def compras_pagos(request, pk):
             cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta)
             #La utilizo para sacar la información de todos los pagos relacionados con esa cuenta y sumarlos
 
-            #cuenta_pagos = Pago.objects.filter(cuenta = pago.cuenta).aggregate(Sum('monto'))
-            #if cuenta_pagos['monto__sum'] == None:
-            #    cuenta_pagos['monto__sum']=0
-
             # Actualizo el saldo de la cuenta
             monto_actual = pago.monto #request.POST['monto_0']
             if compra.moneda.nombre == "PESOS":
@@ -191,6 +188,27 @@ def compras_pagos(request, pk):
     }
 
     return render(request, 'tesoreria/compras_pagos.html',context)
+
+@login_required(login_url='user-login')
+def saldo_a_favor(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    compra = Compra.objects.get(id=pk)
+    form = Saldo_Form(instance = compra)
+
+    if request.method == 'POST':
+        form = Saldo_Form(request.POST, instance = compra)
+        if form.is_valid():
+            form.save()
+            if compra.costo_plus_adicionales == compra.saldo_a_favor:
+                compra.pagada = True
+            compra.save()
+            messages.success(request,f'El saldo se ha registrado correctamente, {usuario.staff.first_name}')
+            return HttpResponse(status=204) 
+
+    context= {
+        'compra':compra,
+        'form':form,
+    }
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -342,7 +360,7 @@ def factura_eliminar(request, pk):
 def mis_gastos(request):
     usuario = Profile.objects.get(staff__id=request.user.id)
     gastos = Solicitud_Gasto.objects.filter(complete=True, staff = usuario)
-    myfilter = PagoFilter(request.GET, queryset=gastos)
+    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
     gastos = myfilter.qs
 
     context= {
@@ -476,7 +494,7 @@ def convert_excel_matriz_pagos(pagos):
             facturas_completas,
             pago.monto,
             pago.pagado_date.strftime('%d/%m/%Y') if pago.pagado_date else '',
-            pago.oc.moneda.nombre,
+            pago.oc.moneda.nombre if pago.oc else '',  # Modificación aquí
             tipo_de_cambio,
             f'=IF(K{row_num}="",H{row_num},H{row_num}*K{row_num})'  # Calcula total en pesos usando la fórmula de Excel
         ]

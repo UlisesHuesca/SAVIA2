@@ -127,6 +127,7 @@ class Devolucion(models.Model):
     hora = models.TimeField(null=True)
     complete = models.BooleanField(null=True, default=False)
     comentario = models.TextField(max_length=200, null=True)
+    autorizada = models.BooleanField(null=True, default=None)
 
 class Devolucion_Articulos(models.Model):
     vale_devolucion = models.ForeignKey(Devolucion, on_delete = models.CASCADE, null=True)

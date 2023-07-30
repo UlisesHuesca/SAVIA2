@@ -118,6 +118,12 @@ class Inventario(models.Model):
         unique_together = ('producto', 'almacen',)
 
     @property
+    def apartada(self):
+        apartados = self.articulosordenados_set.all()
+        cantidad = sum([item.articulos_disponibles for item in apartados])
+        return cantidad
+
+    @property
     def get_total_producto(self):
         total_inv = (self.cantidad + self.cantidad_apartada) * self.price
         return total_inv
@@ -208,12 +214,18 @@ class ArticulosOrdenados(models.Model):
     producto = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
     orden = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
-
-
     created_at = models.DateTimeField(auto_now_add=True)
+    comentario = models.TextField(max_length=100, null=True, blank=True)
+
 
     def __str__(self):
         return f'{self.orden} - {self.producto}'
+
+    @property
+    def articulos_disponibles(self):
+        disponibles = self.articulosparasurtir_set.all()
+        cantidad_disponible = sum([item.cantidad for item in disponibles])
+        return cantidad_disponible 
 
     @property
     def get_total(self):

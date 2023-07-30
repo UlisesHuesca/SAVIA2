@@ -23,13 +23,13 @@ class ArticulosRequisitadosForm(forms.ModelForm):
 class ComparativoForm(forms.ModelForm):
     class Meta:
         model = Comparativo
-        fields = ['nombre','comentarios']
+        fields = ['nombre','comentarios','proveedor', 'proveedor2','proveedor3','cotizacion','cotizacion2', 'cotizacion3']
 
 class Item_ComparativoForm(forms.ModelForm):
     class Meta:
         model = Item_Comparativo
-        fields = ['producto','proveedor','modelo','marca','cantidad', 'precio', 'proveedor2', 'modelo2', 'marca2', 
-                  'precio2','proveedor3','modelo3','marca3','precio3']
+        fields = ['producto','modelo','marca','cantidad', 'precio','dias_de_entrega', 'modelo2', 'marca2','dias_de_entrega2', 
+                  'precio2','modelo3','marca3','precio3','dias_de_entrega3',]
 
 class Compra_ComentarioForm(forms.ModelForm):
     class Meta:

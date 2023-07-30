@@ -7,7 +7,7 @@ from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articu
 from entradas.models import Entrada, EntradaArticulo
 from requisiciones.models import Salidas, ValeSalidas
 from django.contrib.auth.decorators import login_required
-from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter
+from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter
 from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
 from solicitudes.filters import SolicitudesFilter
 from django.http import HttpResponse
@@ -179,9 +179,9 @@ def update_devolucion(request):
             devolucion_articulos, created = Devolucion_Articulos.objects.get_or_create(producto=producto, vale_devolucion = devolucion, complete=False)
             producto.seleccionado = True
             producto.cantidad = producto.cantidad - cantidad
-            inv_del_producto.cantidad = inv_del_producto.cantidad + cantidad
-            inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - cantidad
-            inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
+            #inv_del_producto.cantidad = inv_del_producto.cantidad + cantidad
+            #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - cantidad
+            #inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
             devolucion_articulos.cantidad = cantidad
             devolucion_articulos.comentario = comentario
             devolucion_articulos.precio = producto.precio
@@ -192,23 +192,107 @@ def update_devolucion(request):
                 producto.surtir = False
             messages.success(request,'Has agregado producto de manera exitosa')
             producto.save()
-            inv_del_producto.save()
+            #inv_del_producto.save()
             devolucion_articulos.save()
     if action == "remove":
         item = Devolucion_Articulos.objects.get(producto=producto, vale_devolucion = devolucion, complete = True)
-        inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
-        inv_del_producto.cantidad = inv_del_producto.cantidad - item.cantidad
-        producto.seleccionado = False
-        producto.surtir= True
-        producto.cantidad = producto.cantidad + item.cantidad
-        inv_del_producto._change_reason = f'Esta es una cancelación de una devolucion {item.id}'
-        producto.save()
+        #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
+        #inv_del_producto.cantidad = inv_del_producto.cantidad - item.cantidad
+        #producto.seleccionado = False
+        #producto.surtir= True
+        #producto.cantidad = producto.cantidad + item.cantidad
+        #inv_del_producto._change_reason = f'Esta es una cancelación de una devolucion {item.id}'
+        #producto.save()
         messages.success(request,'Has eliminado un producto de tu listado')
-        inv_del_producto.save()
+        #inv_del_producto.save()
         item.delete()
 
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
 
+@login_required(login_url='user-login')
+def autorizar_devolucion(request, pk):
+    devolucion= Devolucion.objects.get(id=pk)
+    productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
+    
+    if request.method == 'POST' and 'btnAutorizar' in request.POST:
+        for producto in productos:
+            producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
+            inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
+            #producto_surtir.seleccionado = False
+            #producto_surtir.cantidad = producto_surtir.cantidad + producto.cantidad
+            inv_del_producto.cantidad = inv_del_producto.cantidad + producto.cantidad
+            inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - producto.cantidad
+            inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
+            #producto_surtir.save()
+            inv_del_producto.save()
+        devolucion.autorizada = True
+        devolucion.save()
+        return redirect('matriz-autorizar-devolucion')
+
+    context= {
+        'productos':productos,
+        'devolucion':devolucion,
+        }
+
+    return render(request, 'requisiciones/autorizar_devolucion.html',context)
+
+@login_required(login_url='user-login')
+def cancelar_devolucion(request, pk):
+    devolucion= Devolucion.objects.get(id=pk)
+    productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
+    
+    if request.method == 'POST' and 'btnCancelar' in request.POST:
+        for producto in productos:
+            producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
+            #inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
+            #producto_surtir.seleccionado = False
+            producto_surtir.cantidad = producto_surtir.cantidad + producto.cantidad
+            producto_surtir.surtir = True
+            #inv_del_producto.cantidad = inv_del_producto.cantidad + producto.cantidad
+            #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - producto.cantidad
+            #inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
+            producto_surtir.save()
+            #inv_del_producto.save()
+        devolucion.autorizada = False
+        devolucion.save()
+        return redirect('matriz-autorizar-devolucion')
+
+    context= {
+        'productos':productos,
+        'devolucion':devolucion,
+        }
+
+    return render(request, 'requisiciones/cancelar_devolucion.html',context)
+
+
+@login_required(login_url='user-login')
+def matriz_autorizar_devolucion(request):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    devoluciones= Devolucion.objects.filter(complete=True, autorizada=None)
+    #print(devoluciones)
+
+    
+    myfilter = DevolucionFilter(request.GET, queryset = devoluciones)
+    devoluciones = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(devoluciones, 20)
+    page = request.GET.get('page')
+    devoluciones_list = p.get_page(page)
+
+    #Here is where call a function to generate XLSX, using Openpyxl library
+
+    #if request.method == 'POST' and 'btnExcel' in request.POST:
+    #    return convert_solicitud_autorizada_to_xls(productos)
+
+
+    context= {
+        'devoluciones_list':devoluciones_list,
+        'devoluciones':devoluciones,
+        'myfilter':myfilter,
+        'usuario':usuario,
+        }
+    return render(request, 'requisiciones/matriz_devoluciones_autorizar.html',context)
 
 @login_required(login_url='user-login')
 def salida_material(request, pk):
@@ -663,7 +747,7 @@ def requisicion_cancelar(request, pk):
             requis.save()
             email = EmailMessage(
                 f'Requisición Rechazada {requis.folio}',
-                f'Estimado {requis.orden.staff.staff.first_name} {requis.orden.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.first_name} {requis.autorizada_por.staff.last_name} por el siguiente motivo: \n " {requis.comentario_comprador} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA X',
+                f'Estimado {requis.orden.staff.staff.first_name} {requis.orden.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.first_name} {requis.autorizada_por.staff.last_name} por el siguiente motivo: \n " {requis.comentario_compras} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA X',
                 'savia@vordtec.com',
                 ['ulises_huesc@hotmail.com'],[requis.orden.staff.staff.email],
                 )

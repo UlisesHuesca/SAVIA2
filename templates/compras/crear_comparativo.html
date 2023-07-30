@@ -45,33 +45,125 @@
                 <hr>
 					<h2>Comparativo:</h2>
 					<hr>
-					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+					<form method="POST" id='OrderForm'>
                         {% csrf_token %}
                             
                             <div class="row my-2">
-                                <div class="col-10">
+                                <div class="col-12">
                                     <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-folder-plus"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre*"}}
-                                            <label for="id_nombre">Nombre*</label>
+                                            {{form.nombre|add_class:"form-control"|append_attr:"placeholder=Comparativo*"}}
+                                            <label for="id_nombre">Comparativo*</label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
                             <div class="row my-2">
-                                <div class="col-10">
+                                <div class="col-12">
                                     <div class="input-group mb-3">
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-comment"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{form.comentarios|add_class:"form-control"|append_attr:"placeholder=Comentarios*"}}
-                                            <label for="id_nombre">Comentarios*</label>
+                                            <label for="id_comentarios">Comentarios*</label>
                                         </div>
                                     </div>
                                 </div>
                             </div>
+                            <div class="row my-2">
+                                <div class="col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1"> 
+                                        <input type="text" list="proveedores" id="txt_proveedores" placeholder="Proveedores..." class="form-control">
+                                    
+                                        <label for="txt_proveedores">Proveedor*</label>
+                                        </div>
+                                        <datalist id="proveedores" name='proveedores'>
+                                        {% for item in proveedores %}
+                                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                                        {% endfor %}
+                                     </datalist>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            
+                            <div class="row my-2 d-none">
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
+                                        <label for="id_proveedor">Proveedor*</label>   
+                                </div>  
+                            </div>
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                        {{form.cotizacion|add_class:"form-control"}}
+                                        <label class="input-group-text" style="color:ghostwhite; background-color:#980F0F;" for="id_cotizacion"><i class="fa-solid fa-file-pdf"></i></i></label> 
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1"> 
+                                        <input type="text" list="proveedores2" id="txt_proveedores2" placeholder="Proveedores..." class="form-control">
+                                    
+                                        <label for="txt_proveedores2">Proveedor2*</label>
+                                        </div>
+                                        <datalist id="proveedores2" name='proveedores2'>
+                                        {% for item in proveedores %}
+                                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                                        {% endfor %}
+                                     </datalist>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div class="row my-2 d-none">
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.proveedor2|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
+                                    <label for="id_proveedor2">Proveedor*</label>   
+                                </div>  
+                            </div>
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                        {{form.cotizacion2|add_class:"form-control"}}
+                                        <label class="input-group-text" style="color:ghostwhite; background-color:#980F0F;" for="id_cotizacion2"><i class="fa-solid fa-file-pdf"></i></label> 
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1"> 
+                                        <input type="text" list="proveedores3" id="txt_proveedores3" placeholder="Proveedores..." class="form-control">
+                                    
+                                        <label for="txt_proveedores3">Proveedor3*</label>
+                                        </div>
+                                        <datalist id="proveedores3" name='proveedores3'>
+                                        {% for item in proveedores %}
+                                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                                        {% endfor %}
+                                     </datalist>
+                                    </div>
+                                    
+                                </div>
+                            </div>
+                            <div class="row my-2 d-none">
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.proveedor3|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
+                                    <label for="id_proveedor3">Proveedor*</label>   
+                                </div>  
+                            </div>
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                        {{form.cotizacion3|add_class:"form-control"}} 
+                                    <label class="input-group-text" style="color:ghostwhite; background-color:#980F0F;" for="id_cotizacion3"><i class="fa-solid fa-file-pdf"></i></label>
+                                </div>
+                            </div>
+
                         {% if productos %}
-                        <input class="btn btn-outline-info btn-block my-2" name="btn_agregar" id="btn_agregar" type="submit" value="Agregar Solicitud">
+                        <input class="btn btn-outline-info btn-block my-2" name="btn_agregar" id="btn_agregar" type="submit" value="Crear Solicitud">
                         {% endif %}
 
                     </form>
@@ -83,19 +175,19 @@
     <div class="col-lg-8">
         <div class="box-element">    
             <div id="form_product">
-                <form method="post" enctype="multipart/form-data">
+                <form method="POST" enctype="multipart/form-data">
                 {% csrf_token %}
                 <div class="row my-2">
-                    <div class="col-sm-8">
+                    <div class="col-sm-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-cubes-stacked"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1"> 
-                            <input type="text" list="articulos" id="txt_articulos" placeholder="Artículos..." class="form-control">
+                            <input type="text" list="productos" id="txt_productos" placeholder="Productos..." class="form-control">
                        
-                            <label for="txt_articulos">Productos*</label>
+                            <label for="txt_productos">Productos*</label>
                             </div>
-                            <datalist id="productos" name='productos'>
-                            {% for item in productos %}
+                            <datalist id="productos" name="productos">
+                            {% for item in articulos %}
                             <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
                             {% endfor %}
                             </datalist>
@@ -106,289 +198,204 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_item.producto|add_class:"form-control"|append_attr:"placeholder=Productos*"}}
-                                <label for="id_lugar_partida">Productos*</label>
+                                <label for="id_producto">Productos*</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-3 col-md-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_item.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad*"}}
-                                <label for="id_lugar_partida">Cantidad*</label>
+                                <label for="id_cantidad">Cantidad*</label>
                             </div>
                         </div>
                     </div>
-
-
-
-
                 </div>
-                <div class="row my-2">
-                    <div class="col-sm-11">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1"> 
-                            <input type="text" list="proveedores" id="txt_proveedores" placeholder="Proveedores..." class="form-control">
-                        
-                            <label for="txt_articulos">Proveedor*</label>
-                            </div>
-                            <datalist id="proveedores" name='proveedores'>
-                            {% for item in proveedores %}
-                                <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
-                            {% endfor %}
-                         </datalist>
-                        </div>
-                        
-                    </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="" id="tiempoCheck">
+                    <label class="form-check-label" for="tiempoCheck">
+                        Tiempo de Entrega
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="" id="marcaCheck">
+                    <label class="form-check-label" for="marcaCheck">
+                        Marca
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="" id="modeloCheck">
+                    <label class="form-check-label" for="modeloCheck">
+                        Modelo
+                    </label>
                 </div>
                 
-                <div class="row my-2 d-none">
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
-                                <label for="id_nombre">Proveedor*</label>   
-                            </div>  
-                </div>
                 <div class="row">
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.modelo|add_class:"form-control"|append_attr:"placeholder=Modelo*"}}
-                                <label for="id_lugar_partida">Modelo*</label>
+                                {{form_item.dias_de_entrega|add_class:"form-control"|append_attr:"placeholder=Días de entrega"}}
+                                <label for="id_dias_de_entrega">Días de entrega</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 modelo-field d-none">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.marca|add_class:"form-control"|append_attr:"placeholder=Marca*"}}
-                                <label for="id_lugar_partida">Marca*</label>
+                                {{form_item.modelo|add_class:"form-control"|append_attr:"placeholder=Modelo"}}
+                                <label for="id_modelo">Modelo</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 marca-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca|add_class:"form-control"|append_attr:"placeholder=Marca"}}
+                                <label for="id_marca">Marca</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_item.precio|add_class:"form-control"|append_attr:"placeholder=Precio*"}}
-                                <label for="id_lugar_partida">Precio*</label>
+                                <label for="id_precio">Precio*</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row my-2">
-                    <div class="col-sm-11">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1"> 
-                            <input type="text" list="proveedores2" id="txt_proveedores2" placeholder="Proveedores..." class="form-control">
-                        
-                            <label for="txt_proveedores2">Proveedor2*</label>
-                            </div>
-                            <datalist id="proveedores2" name='proveedores2'>
-                            {% for item in proveedores %}
-                                <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
-                            {% endfor %}
-                         </datalist>
-                        </div>
-                        
-                    </div>
-                </div>
-                <div class="row my-2 d-none">
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {{form_item.proveedor2|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
-                        <label for="id_nombre">Proveedor*</label>   
-                    </div>  
-                </div>
+                
+                
+                
                 <div class="row">
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.modelo2|add_class:"form-control"|append_attr:"placeholder=Modelo*"}}
-                                <label for="id_lugar_partida">Modelo*</label>
+                                {{form_item.dias_de_entrega2|add_class:"form-control"|append_attr:"placeholder=Días de entrega"}}
+                                <label for="id_dias_de_entrega2">Días de entrega</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 modelo-field d-none">
+                        <div class="input-group mb-3 ">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.modelo2|add_class:"form-control"|append_attr:"placeholder=Modelo"}}
+                                <label for="id_modelo2">Modelo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4 marca-field d-none">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.marca2|add_class:"form-control"|append_attr:"placeholder=Marca*"}}
-                                <label for="id_lugar_partida">Marca*</label>
+                                {{form_item.marca2|add_class:"form-control"|append_attr:"placeholder=Marca"}}
+                                <label for="id_marca2">Marca</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_item.precio2|add_class:"form-control"|append_attr:"placeholder=Precio*"}}
-                                <label for="id_lugar_partida">Precio*</label>
+                                <label for="id_precio2">Precio*</label>
                             </div>
                         </div>
                     </div>
                 </div>
-                <div class="row my-2">
-                    <div class="col-sm-11">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1"> 
-                            <input type="text" list="proveedores3" id="txt_proveedores3" placeholder="Proveedores..." class="form-control">
-                        
-                            <label for="txt_proveedores3">Proveedor3*</label>
-                            </div>
-                            <datalist id="proveedores3" name='proveedores3'>
-                            {% for item in proveedores %}
-                                <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
-                            {% endfor %}
-                         </datalist>
-                        </div>
-                        
-                    </div>
-                </div>
-                <div class="row my-2 d-none">
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {{form_item.proveedor3|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
-                        <label for="id_nombre">Proveedor*</label>   
-                    </div>  
-                </div>
+                
+                
                 <div class="row">
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.modelo3|add_class:"form-control"|append_attr:"placeholder=Modelo*"}}
-                                <label for="id_lugar_partida">Modelo*</label>
+                                {{form_item.dias_de_entrega3|add_class:"form-control"|append_attr:"placeholder=Días de entrega"}}
+                                <label for="id_dias_de_entrega3">Días de entrega</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 modelo-field d-none">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form_item.marca3|add_class:"form-control"|append_attr:"placeholder=Marca*"}}
-                                <label for="id_lugar_partida">Marca*</label>
+                                {{form_item.modelo3|add_class:"form-control"|append_attr:"placeholder=Modelo"}}
+                                <label for="id_modelo3">Modelo</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-5 col-md-4 marca-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca3|add_class:"form-control"|append_attr:"placeholder=Marca"}}
+                                <label for="id_marca3">Marca</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form_item.precio3|add_class:"form-control"|append_attr:"placeholder=Precio*"}}
-                                <label for="id_lugar_partida">Precio*</label>
+                                <label for="id_precio3">Precio*</label>
                             </div>
                         </div>
                     </div>
                 </div>
-
-
-           
-
-            
-
-            
-
-            
-            <div  class="row">
+                
+                <div  class="row">
                 <div class="col-sm-1">
-                    <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit">
+                    <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
                 </div>
+                </form>
             </div>
-        </form>
-        </div>
-        <div id="form_product2" class="d-none">
-            <form method="post" enctype="multipart/form-data">
-            {% csrf_token %}   
-            <div class="row">
-                <div class="row">
-                    <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
-                    <div class="col-sm-6 my-2">
-                    <input type="text" list='articulos' id="txt_articulos" valor="{{articulos.id}}" placeholder="Artículos..." class="form-control d-none">
-
-                    <datalist id="articulos" name='articulos'>
-                        {% for item in articulos %}
-                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
-                        {% endfor %}
-                    </datalist>
-                    <input type="text" list='articulos_gasto' id="txt_articulos_gasto2" valor="{{articulos_gasto.id}}" placeholder="Artículos..." class="form-control">
-
-                    <datalist id="articulos_gasto2" name='articulos_gasto'>
-                        {% for item in articulos_gasto %}
-                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
-                        {% endfor %}
-                    </datalist>
-                </div>
-                <div class="row">
-                <label for="form_product2.producto" class="col-auto col-form-label d-none"><strong>Producto:</strong></label>
-                <div class="col-sm-6">
-                    {{form_product2.producto|add_class:"form-control producto2 d-none"}}
-                </div>
-                </div>
-                <div class="row">
-                    <label for="form_product2.producto" class="col-auto col-form-label"><strong>Comentario:</strong></label>
-                    <div class="col-sm-6">
-                        {{form_product2.comentario|add_class:"form-control producto2"}}
-                    </div>
-                </div>
-            </div>
-            <div id="factura_xml" class="row">
-                <div class="col-sm-6">
-                    {{form_product2.factura_xml|add_class:"form-control my-2 form2"}}
-                </div>
-                 <div class="col-sm-1 my-3" style="color:#9a9b9d">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>XML
-                </div>
-            </div>
-            <div  class="row">
-                <div class="col-sm-1">
-                    <input class="btn btn-outline-info btn-block my-2" name="btn_xml" id="btn_xml" type="submit">
-                </div>
-            </div>
-            </form>
-        </div>
+        
         </div>
         
 
             <hr>
+            <div class ="table-responsive-sm">
             <table class="table table-light table-striped table-hover mx-2">
             <thead>
                 <tr>
                     <th scope="col">#</th>
                     <th scope="col">Producto</th>
                     <th scope="col">Cantidad</th>
-                    <th style="color:#478800" scope="col">Proveedor1</th>
+                    <th scope="col">Unidad</th>
                     <th style="color:#478800" scope="col">P.U.</th>
-                    <th scope="col">Proveedor2</th>
                     <th scope="col">P.U.</th>
-                    <th scope="col">Proveedor3</th>
                     <th scope="col">P.U.</th>
                     <th scope="col">Eliminar</th>
-                    
                 </tr>
             </thead>
             <tbody id="mytbl">
                 {% for producto in productos%}
-
                 <tr>
                     <td scope="col">{{producto.producto.producto.codigo}}</td>
                     <td scope="col">{{producto.producto.producto.nombre}}</td>
                     <td scope="col">{{producto.cantidad|floatformat:2}}</td>
-                    <td style="color:#478800" scope="col">{{producto.proveedor.nombre}}</td>
+                    <td scope="col">{{producto.producto.producto.unidad.nombre}}</td>
                     <td style="color:#478800" scope="col">${{producto.precio|floatformat:2}}</td>
-                    <td scope="col">{{producto.proveedor2.nombre}}</td>
                     <td scope="col">${{producto.precio2|floatformat:2}}</td>
-                    <td scope="col">{{producto.proveedor3.nombre}}</td>
                     <td scope="col">${{producto.precio3|floatformat:2}}</td>
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-gasto' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
-                    <!--<a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'editar-gasto' producto.id %}">
-                                    <i class="fa-solid fa-pen-to-square"></i></td>-->
+                    <td scope="col">
+                        <a class="btn btn-danger" value="Delete" name="btn_delete" href="{% url 'articulo-comparativo-delete' producto.id %}"   id="delete">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
+            </table>
+        </div>
         </div>
     </div>
 </div>
@@ -405,6 +412,43 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+tiempoCheck.addEventListener('change', function() {
+var tiempoCheck = this;
+var tiempoFields = document.getElementsByClassName("tiempo-field");
+    for (var i = 0; i < tiempoFields.length; i++) {
+        if(tiempoCheck.checked) {
+            tiempoFields[i].classList.remove("d-none");
+        } else {
+            tiempoFields[i].classList.add("d-none");
+        }
+    }
+});
+
+marcaCheck.addEventListener('change', function() {
+var marcaCheck = document.getElementById("marcaCheck");
+var marcaFields = document.getElementsByClassName("marca-field");
+    for (var i = 0; i < marcaFields.length; i++) {
+        if(marcaCheck.checked) {
+            marcaFields[i].classList.remove("d-none");
+        } else {
+            marcaFields[i].classList.add("d-none");
+        }
+    }
+});
+
+modeloCheck.addEventListener('change', function() {
+var modeloCheck = document.getElementById("modeloCheck");
+var modeloFields = document.getElementsByClassName("modelo-field");
+    for (var i = 0; i < modeloFields.length; i++) {
+        if(modeloCheck.checked) {
+            modeloFields[i].classList.remove("d-none");
+        } else {
+            modeloFields[i].classList.add("d-none");
+        }
+    }
+});
+
 
 
     document.getElementById('id_precio').addEventListener('change',(event)=>{
@@ -482,9 +526,9 @@
     })
 
 
-document.getElementById("txt_articulos").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_articulos");
-    var browserChildren = document.getElementById('articulos').children;
+document.getElementById("txt_productos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_productos");
+    var browserChildren = document.getElementById('productos').children;
     var other_select = document.getElementById('id_producto');
 
 

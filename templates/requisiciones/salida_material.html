@@ -45,7 +45,7 @@
                 <h5 target="">Vale de Salida</h5>
             </div>
             <div id="Solicitud-info">
-                    <form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+                    <form id="myForm" method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
                         {% csrf_token %}
                         <div class="row my-5">
                             <label for="form.moneda" class="col-auto col-form-label my-1"><strong>Material entregado a:</strong></label>
@@ -62,7 +62,7 @@
                             </div>
 
                                 <div class="col-3">
-                                <input class="btn btn-outline-info btn-block my-4" name="agregar" type="submit" value="Guardar vale">
+                                <input  id="submit-button" class="btn btn-outline-info btn-block my-4" name="agregar" type="submit" value="Guardar vale">
                                 </div>
                         </div>
                     </form>
@@ -72,7 +72,7 @@
     </div>
     <div class="col-lg-6">
         <div class="box-element">
-            <h3 id="vale" vale="{{vale_salida.id}}">Resumen de Salida</h3>
+            <h3 id="vale" vale="{{vale_salida.id|unlocalize}}">Resumen de Salida</h3>
             <hr>
 
             <div class='cart-row'>
@@ -85,7 +85,7 @@
                             <option id="default_sel">      </option>
                             {% for producto in productos %}
                             {% if producto.seleccionado == False %}
-                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad|unlocalize}}" cantidad_sol ="{{producto.articulos.cantidad|unlocalize}}" stock="{{producto.articulos.producto.cantidad|unlocalize}}">
                                 {{producto.articulos.producto}}
                             </option>
                             {% endif %}
@@ -135,7 +135,7 @@
                                 <a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="">
                                     <i class="fa-solid fa-pen-to-square"></i>
                                 </a>
-                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.id|unlocalize}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.id|unlocalize}}" cantidad="{{item.cantidad|unlocalize}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </td>
@@ -165,6 +165,10 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+document.getElementById('myForm').addEventListener('submit', function() {
+    // Deshabilita el botón de envío cuando se envía el formulario
+    document.getElementById('submit-button').disabled = true;
+    });
 
 document.getElementById("producto").addEventListener("change", function(element){
     var select = document.getElementById('producto');

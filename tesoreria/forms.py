@@ -29,3 +29,8 @@ class Facturas_Viaticos_Form(forms.ModelForm):
     class Meta:
         model = Solicitud_Viatico
         fields = ['facturas_completas']
+
+class Saldo_Form(forms.ModelForm):
+    class Meta:
+        model = Compra
+        fields = ['saldo_a_favor']

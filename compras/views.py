@@ -326,7 +326,7 @@ def oc_modal(request, pk):
     #productos = ArticulosRequisitados.objects.filter(req = pk, sel_comp = False)
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     req = Requis.objects.get(id = pk)
-    proveedores = Proveedor_direcciones.objects.filter(estatus__nombre='APROBADO')
+    proveedores = Proveedor_direcciones.objects.all()
     usuario = Profile.objects.get(staff__id=request.user.id)
     colaborador_sel = Profile.objects.all()
     compras = Compra.objects.all()
@@ -821,7 +821,7 @@ def autorizar_oc2(request, pk):
     return render(request, 'compras/autorizar_oc2.html',context)
 
 def comparativos(request):
-    comparativos = Comparativo.objects.all()
+    comparativos = Comparativo.objects.filter(completo = True)
     
     context= {
         'comparativos':comparativos,
@@ -834,8 +834,7 @@ def crear_comparativo(request):
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
     
     comparativo, created = Comparativo.objects.get_or_create(completo= False, creada_por=usuario)
-    articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo=comparativo)
-
+    
     productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
 
     proveedores = Proveedor_direcciones.objects.all()
@@ -858,16 +857,15 @@ def crear_comparativo(request):
                 messages.success(request, f'El comparativo {comparativo.id} ha sido creado')
                 return redirect('comparativos')
         if "btn_producto" in request.POST:
-            form_item = Item_ComparativoForm(request.POST, instance=articulo)
+            articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo = comparativo)
+            form_item = Item_ComparativoForm(request.POST, request.FILES, instance=articulo)
             if form_item.is_valid():
                 articulo = form_item.save(commit=False)
-                articulo.comparativo = comparativo
                 articulo.completo = True
                 articulo.save()
                 messages.success(request, 'Se ha agregado el artículo exitosamente')
                 return redirect('crear_comparativo')
-
-
+        
     context= {
         'productos':productos,
         'form':form,
@@ -887,7 +885,15 @@ def articulos_comparativo(request, pk):
     }
     return render(request, 'compras/articulos_comparativo.html', context)
 
+def articulo_comparativo_delete(request, pk):
+   
+    articulo = Item_Comparativo.objects.get(id=pk)
+    comparativo = articulo.comparativo.id
+   
+    messages.success(request,f'El articulo ha sido eliminado exitosamente')
+    articulo.delete()
 
+    return redirect('crear_comparativo')
 
 
 def render_oc_pdf(request, pk):
@@ -1562,7 +1568,7 @@ def convert_excel_matriz_compras(compras):
     wb.add_named_style(percent_style)
 
     columns = ['Compra','Requisición','Solicitud','Solicitante','Proyecto','Subproyecto','Área','Creado','Req. Autorizada','Proveedor',
-               'Costo','Monto_Pagado','Status Pago','Status Autorización','Días de entrega','Moneda',
+               'Crédito/Contado','Costo','Monto_Pagado','Status Pago','Status Autorización','Días de entrega','Moneda',
                'Tipo de cambio','Diferencia de Fechas',"Total en pesos"]
 
     for col_num in range(len(columns)):
@@ -1602,6 +1608,9 @@ def convert_excel_matriz_compras(compras):
 
         # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or compra.tipo_de_cambio
+        autorizado_text = 'Autorizado' if compra.autorizado2 else 'No Autorizado' if compra.autorizado2 == False or compra.autorizado1 == False else 'Pendiente Autorización'
+        pagado_text = 'Pagada' if compra.pagada else 'No Pagada'
+        
         row = [
         compra.id,
         compra.req.folio,
@@ -1613,19 +1622,20 @@ def convert_excel_matriz_compras(compras):
         compra.created_at,
         compra.req.approved_at,
         compra.proveedor.nombre.razon_social,
+        compra.cond_de_pago.nombre,
         compra.costo_oc,
         compra.monto_pagado,
-        compra.pagada,
-        compra.autorizado2,
+        pagado_text,
+        autorizado_text,
         compra.dias_de_entrega,
         compra.moneda.nombre,
         tipo_de_cambio,
     ]
-        if row[15] == "DOLARES":
-            if row[16] is None or row[16] < 15:
-                row[16] = 17  # o compra.pago_oc.tipo_de_cambio si así es como obtienes el valor correcto de tipo_de_cambio
-        elif row[16] is None:  # por si acaso, aún manejar el caso donde 'tipo_de_cambio' es None
-            row[16] = ""
+        if row[16] == "DOLARES":
+            if row[17] is None or row[17] < 15:
+                row[17] = 17  # o compra.pago_oc.tipo_de_cambio si así es como obtienes el valor correcto de tipo_de_cambio
+        elif row[17] is None:  # por si acaso, aún manejar el caso donde 'tipo_de_cambio' es None
+            row[17] = ""
 
         rows.append(row)
 
@@ -1641,7 +1651,7 @@ def convert_excel_matriz_compras(compras):
         # están en las posiciones 8 y 9 respectivamente (empezando desde 0), las posiciones en Excel serán 9 y 10 (empezando desde 1).
         ws.cell(row=row_num, column=len(columns)-1, value=f"=NETWORKDAYS(I{row_num}, H{row_num})").style = body_style
         # Agregar la fórmula de "Total en pesos"
-        ws.cell(row=row_num, column = len(columns), value=f"=IF(ISBLANK(Q{row_num}), K{row_num}, K{row_num}*Q{row_num})").style = money_style
+        ws.cell(row=row_num, column = len(columns), value=f"=IF(ISBLANK(R{row_num}), L{row_num}, L{row_num}*R{row_num})").style = money_style
     
     
     sheet = wb['Sheet']

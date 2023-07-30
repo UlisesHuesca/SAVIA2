@@ -8,6 +8,7 @@ urlpatterns = [
     path('crear/', views.checkout, name='solicitud-checkout'),
     path('crear_resurtimiento/', views.checkout_resurtimiento, name='solicitud-checkout-resurtimiento'),
     path('inventario/product_quantity_edit/<int:pk>/', views.product_quantity_edit, name='product-quantity-edit'),
+    path('inventario/product_comment_add/<int:pk>/', views.product_comment_add, name='product-comment-add'),
     path('inventario/upload_batch_inventario', views.upload_batch_inventario, name='upload_batch_inventario'),
     path('editar/<int:pk>', views.checkout_editar, name='solicitud-checkout-editar'),
     path('inventario/ajuste_inventario',views.ajuste_inventario, name='ajuste-inventario'),
