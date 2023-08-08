@@ -29,10 +29,16 @@ class ProveedoresForm(forms.ModelForm):
         model = Proveedor
         fields = ['razon_social','rfc','nombre_comercial',]
 
+class DireccionComparativoForm(forms.ModelForm):
+   
+    class Meta:
+        model = Proveedor_direcciones
+        fields = ['email']
+
 class ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['nombre','estado','distrito','telefono','domicilio','contacto','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
+        fields = ['estado','telefono','domicilio','contacto','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
 class ProveedoresExistDireccionesForm(forms.ModelForm):
    
@@ -40,10 +46,6 @@ class ProveedoresExistDireccionesForm(forms.ModelForm):
         model = Proveedor_direcciones
         fields = ['nombre','domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito']
 
-class Edit_ProveedoresDireccionesForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor_direcciones
-        fields = ['nombre','domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
 class Add_ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:

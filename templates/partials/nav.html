@@ -85,7 +85,9 @@
                             {% else %}
                             <div class="d-none">
                             {% endif %}
+                            {% if usuario.tipo.nombre == "Admin" %}
                             <a class="dropdown-item" href="{% url 'activos' %}">Activos</a>
+                            {% endif %}
                             </div>
                         <div class="dropdown-divider"></div>
                     </div>
@@ -202,6 +204,9 @@
                             <a class="dropdown-item" href="{% url 'add_proveedores2' %}">
                                 Solicitud alta de proveedor
                             </a>
+                            <a class="dropdown-item" href="{% url 'add_proveedores_comparativo' %}">
+                                Agregar Proveedor Comparativo
+                            </a>
                         <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.proveedores == False %}
@@ -266,6 +271,9 @@
                                 {% endif %}
                                 </a>
                                 </div>
+                                {% if usuario.tipo.nombre == 'Admin' %}
+                                <a class="dropdown-item" href="{% url 'matriz-salida-activos' %}">Revisión Activos</a>
+                                {% endif %}
                             {% if usuario.tipo.superintendente == False %}
                                 <div class="d-none">
                             {% else %}
@@ -386,6 +394,7 @@
                             <a class="dropdown-item" href="{% url 'historico-inventario' %}">Histórico Inventario</a>
                             <a class="dropdown-item" href="{% url 'historico-producto' %}">Histórico Producto</a>
                             <a class="dropdown-item" href="">Histórico Entradas</a>
+                            <a class="dropdown-item" href="{% url 'historico-articulos-compras' %}">Histórico Articulos Compras</a>
                             <a class="dropdown-item" href="{% url 'historico-salidas' %}">Histórico Salidas</a>
                             <a class="dropdown-item" href="{% url 'historico-articulos-para-surtir' %}">Históricos Artículos para Surtir</a>
                             </div>

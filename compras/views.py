@@ -3,7 +3,7 @@ from dashboard.models import Inventario, Order, ArticulosOrdenados, Articulospar
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago
-from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter
+from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_credito, Uso_cfdi, Moneda, Comparativo, Item_Comparativo
 from tesoreria.models import Facturas
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm
@@ -17,7 +17,8 @@ from datetime import date, datetime, timedelta
 from num2words import num2words
 from django.core.paginator import Paginator
 import decimal
-from django.db.models import F, Avg
+from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q
+from django.db.models.functions import Concat
 #PDF generator
 import io
 from reportlab.pdfgen import canvas
@@ -35,10 +36,7 @@ from django.core.files.base import ContentFile
 import urllib.request, urllib.parse, urllib.error
 from django.core.mail import EmailMessage
 # Import Excel Stuff
-from django.db.models.functions import Concat
-from django.db.models import Value, F, ExpressionWrapper, fields
 from django.contrib import messages
-from django.db.models import Sum
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -326,7 +324,8 @@ def oc_modal(request, pk):
     #productos = ArticulosRequisitados.objects.filter(req = pk, sel_comp = False)
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     req = Requis.objects.get(id = pk)
-    proveedores = Proveedor_direcciones.objects.all()
+    proveedores = Proveedor_direcciones.objects.filter(
+        Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO'))
     usuario = Profile.objects.get(staff__id=request.user.id)
     colaborador_sel = Profile.objects.all()
     compras = Compra.objects.all()
@@ -349,31 +348,32 @@ def oc_modal(request, pk):
 
     if request.method == 'POST' and  "crear" in request.POST:
         form = CompraForm(request.POST, instance=oc)
-        costo_oc = 0
-        costo_iva = 0
-        articulos = ArticuloComprado.objects.filter(oc=oc)
-        requisitados = ArticulosRequisitados.objects.filter(req = pk)
-        cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
-        cuenta_art_totales = requisitados.count()
-        if cuenta_art_totales == cuenta_art_comprados:
-            req.colocada = True
-        for articulo in articulos:
-            costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
-            if articulo.producto.producto.articulos.producto.producto.iva == True:
-                costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
-        for producto in requisitados:
-            dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
-            if producto.art_surtido == False:
-                producto.sel_comp = False
-                producto.save()
-        oc.complete = True
-        if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
-            oc.costo_iva = decimal.Decimal(costo_iva)
-            oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
-        else:
-            oc.costo_iva = decimal.Decimal(costo_iva)
-            oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+        
         if form.is_valid():
+            costo_oc = 0
+            costo_iva = 0
+            articulos = ArticuloComprado.objects.filter(oc=oc)
+            requisitados = ArticulosRequisitados.objects.filter(req = pk)
+            cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
+            cuenta_art_totales = requisitados.count()
+            if cuenta_art_totales == cuenta_art_comprados:
+                req.colocada = True
+            for articulo in articulos:
+                costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
+                if articulo.producto.producto.articulos.producto.producto.iva == True:
+                    costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+            for producto in requisitados:
+                dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
+                if producto.art_surtido == False:
+                    producto.sel_comp = False
+                    producto.save()
+            oc.complete = True
+            if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
+                oc.costo_iva = decimal.Decimal(costo_iva)
+                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+            else:
+                oc.costo_iva = decimal.Decimal(costo_iva)
+                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
             abrev= usuario.distrito.abreviado
             #oc.folio = str(abrev) + str(consecutivo).zfill(4)
             form.save()
@@ -894,6 +894,25 @@ def articulo_comparativo_delete(request, pk):
     articulo.delete()
 
     return redirect('crear_comparativo')
+
+@login_required(login_url='user-login')
+def historico_articulos_compras(request):
+    registros = ArticuloComprado.history.all()
+
+    myfilter = HistoricalArticuloCompradoFilter(request.GET, queryset=registros)
+    registros = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+
+    context = {
+        'registros_list':registros_list,
+        'myfilter':myfilter,
+        }
+
+    return render(request,'compras/historico_articulos_comprados.html',context)
 
 
 def render_oc_pdf(request, pk):
@@ -1692,13 +1711,15 @@ def convert_excel_solicitud_matriz_productos(productos):
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
 
-    columns = ['OC','RQ','Sol','Solicitante','Proyecto','Subproyecto','Área','Cantidad','Código', 'Producto','P.U.','Cantidad','Subtotal','IVA','Total']
+    columns = ['OC','RQ','Sol','Solicitante','Proyecto','Subproyecto','Fecha','Proveedor','Área','Cantidad','Código', 'Producto','P.U.','Cantidad','Subtotal','IVA','Total']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
         ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
         if col_num == 4 or col_num == 7:
             ws.column_dimensions[get_column_letter(col_num + 1)].width = 25
+        if col_num == 9:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 30
 
 
 
@@ -1708,8 +1729,8 @@ def convert_excel_solicitud_matriz_productos(productos):
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
     ws.column_dimensions[get_column_letter(columna_max)].width = 20
 
-    rows = productos.values_list('oc','oc__req','oc__req__orden', Concat('oc__req__orden__staff__staff__first_name',Value(' '),'oc__req__orden__staff__staff__last_name'),
-                                'oc__req__orden__proyecto__nombre','oc__req__orden__subproyecto__nombre', 'oc__req__orden__area__nombre','cantidad','producto__producto__articulos__producto__producto__codigo',
+    rows = productos.values_list('oc','oc__req__folio','oc__req__orden__folio', Concat('oc__req__orden__staff__staff__first_name',Value(' '),'oc__req__orden__staff__staff__last_name'),
+                                'oc__req__orden__proyecto__nombre','oc__req__orden__subproyecto__nombre','oc__created_at','oc__proveedor__nombre__razon_social', 'oc__req__orden__area__nombre','cantidad','producto__producto__articulos__producto__producto__codigo',
                                 'producto__producto__articulos__producto__producto__nombre','precio_unitario','cantidad')
 
     subtotales = [producto.subtotal_parcial for producto in productos]
@@ -1730,3 +1751,4 @@ def convert_excel_solicitud_matriz_productos(productos):
     wb.save(response)
 
     return(response)
+

@@ -12,6 +12,7 @@ from django.core.validators import FileExtensionValidator
 
 
 
+
 class Familia(models.Model):
     nombre = models.CharField(max_length=20, null=True, unique=True)
 
@@ -113,6 +114,7 @@ class Inventario(models.Model):
     updated_at = models.DateTimeField(auto_now=True)
     complete = models.BooleanField(default=False)
     comentario = models.CharField(max_length=100, null=True, blank=True)
+    activo_disponible = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('producto', 'almacen',)
@@ -122,6 +124,7 @@ class Inventario(models.Model):
         apartados = self.articulosordenados_set.all()
         cantidad = sum([item.articulos_disponibles for item in apartados])
         return cantidad
+
 
     @property
     def get_total_producto(self):
@@ -220,10 +223,10 @@ class ArticulosOrdenados(models.Model):
 
     def __str__(self):
         return f'{self.orden} - {self.producto}'
-
+    
     @property
     def articulos_disponibles(self):
-        disponibles = self.articulosparasurtir_set.all()
+        disponibles = self.articulosparasurtir_set.filter(surtir=True)
         cantidad_disponible = sum([item.cantidad for item in disponibles])
         return cantidad_disponible 
 

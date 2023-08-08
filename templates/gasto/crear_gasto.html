@@ -38,84 +38,108 @@
 </div>
 <hr>
 <hr>
-<hr>
+<h6>&nbsp;</h6>
 <div class="row">
     <div class="col-lg-5">
-        <div class="box-element" id="form-wrapper">
+        <div class="card" id="form-wrapper">
             <div id="Solicitud-info">
-                <hr>
+               
+                <div class="card-header">
 					<h2>Solicitud de gasto:</h2>
-					<hr>
-					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+                </div>
+					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
                         {% csrf_token %}
-                            <div class="row my-2">
+                        <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>    
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            <input type="text" list="proyectos" id="txt_proyectos" placeholder="Proyecto..." class="form-control grupo-entrada">
+                                            <label for="txt_proyectos">Proyecto*</label>
+                                        </div>         
+                                        <datalist id="proyectos" name='proyectos'>
+                                        {% for item in proyectos %}
+                                        <option valor="{{item.id}}" value="{{item.nombre}} {{item.descripcion}}"></option>
+                                        {% endfor %}
+                                        </datalist>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2 d-none">
                                 <label for="form.proyecto" class="col-auto col-form-label my-1"><strong>Proyecto*</strong></label>
                                 <div class="col-4">
                                     <div class="input-group">
-                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
-                                    {{form.proyecto|add_class:"form-select d-none"}}
+                                    {{form.proyecto|add_class:"form-select"}}
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-sm-12">
-                                <input type="text" list="proyectos" id="txt_proyectos" valor="{{proyectos.id}}" placeholder="Proyecto..." class="form-control">
-
-                                <datalist id="proyectos" name='proyectos'>
-                                {% for item in proyectos %}
-                                 <option valor="{{item.id}}" value="{{item.nombre}} {{item.descripcion}}"></option>
-                                 {% endfor %}
-                                </datalist>
-                            </div>
-                            <div class="row my-2">
-                                <label for="form.subproyecto" class="col-auto col-form-label my-1"><strong>Subproyecto*</strong></label>
-                                <div class="col-8">
-                                    <div class="input-group">
-                                    <div class="selector">
-                                        <select class="form-select form-select-sm my-1 d-none" style="height:35px" id="subproyecto">
-                                            <option id="default_sel">      </option>
-                                            {% for subproyecto in subproyectos %}
-                                            <option id="js" target="{{subproyecto.proyecto.id}}" sub="{{subproyecto.id}}">
-                                            {{subproyecto.nombre}}
-                                            </option>
-                                            {% endfor %}
-                                        </select>
-                                    </div>
+                            <div class="row">
+                    
+                                <div class="col-12">
+                                    <div id="input_subproyecto" class="input-group mb-3 d-none">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">
+                                            <label  style="font-size:10px; color:gray;" for="subproyecto">Subproyecto*</label>
+                                            <select style="font-size:16px" class="form-select form-select-sm grupo-entrada" placeholder="Subproyecto" id="subproyecto">
+                                                <option style="color:gray;" value="" selected disabled>Subproyecto</option>
+                                                {% for subproyecto in subproyectos %}
+                                                <option id="js" target="{{subproyecto.proyecto.id}}" sub="{{subproyecto.id}}">
+                                                {{subproyecto.nombre}}
+                                                </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
                                     </div>
                                 </div>
-                                <div class="col-4">
-                                    <div class="input-group">
-                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
-                                    {{form.subproyecto|add_class:"form-select d-none"}}
-                                    </div>
+                            <div class="col-4 d-none">
+                                <div class="input-group">
+                                {{form.subproyecto|add_class:"form-select "}}
                                 </div>
                             </div>
-                            <div class="row my-2">
-                                <label for="form.subproyecto" class="col-auto col-form-label my-1"><strong>Tipo*</strong></label>
-                                <div class="col-4">
-                                    <div class="input-group">
-                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
-                                    {{form.tipo|add_class:"form-select"}}
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.tipo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Tipo"}}
+                                        <label style="color: #121212;" for="id_area">Tipo*</label>
                                     </div>
                                 </div>
                             </div>
-
+                        </div>
                             <div class="form-check form-switch col-auto mx-4" id="Otro_Colaborador">
                                 <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
                                 <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelColaborador">Otro Colaborador</label>
                             </div>
 
                             <div class="row my-2 d-none">
-
                                 <div class="col-4">
                                     <div class="input-group">
                                     {{form.colaborador|add_class:"form-select"}}
                                     </div>
                                 </div>
                             </div>
+                            <div class="row my-2">
+                                <div class="col-sm-12 d-none" id="colaborador_parrafo">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>    
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            <input type="text" list="colaborador" id="txt_colaborador" placeholder="Colaboradores..." class="form-control grupo-entrada">
+                                            <label for="txt_colaborador">Colaborador*</label>
+                                        </div>         
+                                        <datalist id="colaborador" name='colaborador'>
+                                            {% for item in colaborador %}
+                                             <option valor="{{item.id}}" value="{{item.staff.first_name}} {{item.staff.last_name}}"></option>
+                                             {% endfor %}
+                                            </datalist>
+                                    </div>
+                                </div>
+                            </div>
 
                             <div class="col-sm-12 d-none" id="colaborador_parrafo">
                                 <label for="form.proyecto" class="col-auto col-form-label my-1"><strong>Colaborador*</strong></label>
-                                <input type="text" list="colaborador" id="txt_colaborador" placeholder="Colaboradores..." class="form-control">
+                                <input type="text" list="colaborador" id="#" placeholder="Colaboradores..." class="form-control">
 
                                 <datalist id="colaborador" name='colaborador'>
                                 {% for item in colaborador %}
@@ -123,30 +147,26 @@
                                  {% endfor %}
                                 </datalist>
                             </div>
-
                             <div class="row my-2">
-                            <label class="col-auto col-form-label" superintendentes='{{superintendentes}}'><strong>Superintendente*</strong></label>
-                            <div class="col-5">
-                                <div class="input-group">
-                                <span class="input-group-text my-1" style="height:35px"><i class="fa-solid fa-user"></i></span>
-                                <div class="selector">
-                                    <select class="form-select form-select-sm my-1" style="height:35px" id="superintendentes">
-                                    <option id="default_sel">      </option>
-                                    {% for superintendente in superintendentes %}
-                                    <option id="js" target="{{superintendente.id}}">
-                                    {{superintendente.staff.first_name}} {{superintendente.staff.last_name}}
-                                    </option>
-                                    {% endfor %}
-                                    </select>
+                                <div class="col-12">
+                                    <div id="input_subproyecto" class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">
+                                            <label  style="font-size:10px; color:gray;" for="superintendente">Superintendente*</label>
+                                            <select style="font-size:16px" class="form-select form-select-sm grupo-entrada" placeholder="Superintendente" id="superintendentes">
+                                                {% for superintendente in superintendentes %}
+                                                    <option id="js" target="{{superintendente.id}}">
+                                                    {{superintendente.staff.first_name}} {{superintendente.staff.last_name}}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+                                        </div>
+                                    </div>
                                 </div>
-                                </div>
-                            </div>
                             </div>
                             <div class="row my-2 d-none">
-                                <label for="form.superintendente" class="col-auto col-form-label my-1 d-none"><strong>Superintendente*</strong></label>
+                                <label for="form.superintendente" class="col-auto col-form-label my-1"><strong>Superintendente*</strong></label>
                                 <div class="col-3">
-                                <!--<div class="input-group mb-3">-->
-                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
                                     {{form.superintendente|add_class:"form-control"}}
                                 </div>
                             </div>
@@ -162,37 +182,37 @@
     </div>
 
     <div class="col-lg-7">
-        <div class="box-element">
-            <div class="form-check form-switch col-auto mx-4" id="usarXML">
+        <div class="card">
+            <div class="card-header">
+                <h2>Líneas de Gasto</h2>
+            </div>
+            <div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
                 <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
                 <label class="form-check-label" for="SwitchUsarXML">Usar XML</label>
             </div>            
             <div id="form_product">
                 <form method="post" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="row">
-                    <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
-                    <div class="col-sm-6 my-2">
-                    <input type="text" list='articulos' id="txt_articulos" valor="{{articulos.id}}" placeholder="Artículos..." class="form-control d-none">
-
-                    <datalist id="articulos" name='articulos'>
-                        {% for item in articulos %}
-                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id}}" value="{{item}}"></option>
-                        {% endfor %}
-                    </datalist>
-                    <input type="text" list='articulos_gasto' id="txt_articulos_gasto" valor="{{articulos_gasto.id}}" placeholder="Artículos..." class="form-control">
-
-                    <datalist id="articulos_gasto" name='articulos_gasto'>
-                        {% for item in articulos_gasto %}
-                        <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id|unlocalize}}" value="{{item}}"></option>
-                        {% endfor %}
-                    </datalist>
+                <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>    
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    <input type="text" list='articulos_gasto' id="txt_articulos_gasto" valor="{{articulos_gasto.id}}" placeholder="Productos..." class="form-control">
+                                    <label for="txt_articulos_gasto">Productos*</label>
+                                </div>         
+                                <datalist id="articulos_gasto" name='articulos_gasto'>
+                                    {% for item in articulos_gasto %}
+                                    <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id|unlocalize}}" value="{{item}}"></option>
+                                    {% endfor %}
+                                </datalist>
+                            </div>
+                        </div>   
                 </div>
                 <div class="form-check form-switch col-auto mx-4 d-none" id="Gasto" gasto ="{{gasto.id}}">
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchGasto">
                         <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelAlmacén">Almacén</label>
                 </div>
-            </div>
 
             <div class="row">
                 <label for="form_product.producto" class="col-auto col-form-label d-none"><strong>Producto:</strong></label>
@@ -200,61 +220,110 @@
                     {{form_product.producto|add_class:"form-control producto1 d-none"}}
                 </div>
             </div>
-            <div class="row">
-                <label for="form_product.comentario" class="col-sm-2 col-form-label"><strong>Comentario:</strong></label>
-                <div class="col-sm-6">
-                    {{form_product.comentario|add_class:"form-control"}}
-                </div>
-                <label for="form_product.precio_unitario" class="col-sm-1 col-form-label"><strong>P.U.:</strong></label>
-                <div class="col-sm-2">
-                    {{form_product.precio_unitario|add_class:"form-control"}}
-                </div>
-            </div>
             <div class="row my-2">
-                 <label for="form_product.cantidad" class="col-sm-1 col-form-label"><strong>Cantidad:</strong></label>
-                <div class="col-sm-2">
-                    {{form_product.cantidad|add_class:"form-control"}}
-                </div>
-                <label for="form_product.precio_unitario" class="col-sm-2 col-form-label"><strong>Cálculo previo:</strong></label>
-                <div id="calculo_previo" class="col-sm-2">
-
-                </div>
-            </div>
-
-            <div id="factura_pdf" class="row">
-                <div class="col-sm-6">
-                    {{form_product.factura_pdf|add_class:"form-control my-2"}}
-                </div>
-                <div class="col-sm-1 my-3" style="color:#980f0f">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>PDF
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.comentario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Comentario"}}
+                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                        </div>
+                    </div>
                 </div>
             </div>
-            <div id="factura_xml" class="row">
-                <div class="col-sm-6">
-                    {{form_product.factura_xml|add_class:"form-control my-2"}}
+            <div class="row">
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
+                            <label style="color: #121212;" for="id_precio_unitario">Precio Unitario*</label>
+                        </div>
+                    </div>
                 </div>
-                 <div class="col-sm-1 my-3" style="color:#9a9b9d">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>XML
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.cantidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_cantidad">Cantidad*</label>
+                        </div>
+                    </div>
+                </div>
+                <div id='etiqueta_responsable' class="col-lg-4 col-sm-12">
+                    <div class="alert alert-primary" role="alert">
+                        <h6 style="color: #121212;">&nbsp;Cálculo Previo:&nbsp;<div id="calculo_previo"> </div></h6>   
+                    </div>
                 </div>
             </div>
+            <div id="factura_pdf" class="row d-none d-lg-block mt-2">
+                    <div class="input-group col-lg-12"> 
+                        <div class="input-group-text" style="background-color:white">
+                            {{form_product.factura_pdf|add_class:"form-control"}}
+                        </div>
+                        <span class="input-group-text">
+                            <div class="my-3" style="color:#980f0f">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>PDF
+                            </div>
+                        </span>
+                    </div>
+                
+            </div>
+            <div class ="row d-lg-none col-12 mt-2">
+                <div class="input-group"> 
+                    <span class="input-group-text" style="color:#980f0f" id="basic-addon1"><i class="fa-solid fa-cloud-arrow-up"></i>PDF</span>
+                    {{form_product.factura_pdf|add_class:"form-control"}}
+                </div>
+            </div>  
+            <div id="factura_xml" class="row d-none d-lg-block mt-2">
+                <div class="input-group"> 
+                    <div class="input-group-text" style="background-color:white">
+                        {{form_product.factura_xml|add_class:"form-control"}}
+                    </div>
+                    <span class="input-group-text">
+                        <div class="my-3" style="color:#9a9b9d">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>XML
+                        </div>
+                    </span>
+                </div>
+            </div>
+            <div class ="row d-lg-none col-12 mt-2">
+                <div class="input-group" style="color:#9a9b9d"> 
+                <span class="input-group-text" id="basic-addon1"> <i class="fa-solid fa-cloud-arrow-up"></i>XML</span>
+                {{form_product.factura_xml|add_class:"form-control"}}
+                </div>
+            </div>  
 
             <div  class="row">
-            <div class="form-check form-switch col-auto mx-4" id="Otros_impuestos">
+                <div class="form-check form-switch col-auto mx-4 mt-3" id="Otros_impuestos">
                         <input class="form-check-input" type="checkbox" role="switch" id="Switch_Otros_impuestos">
                         <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelOtros_Impuestos">Otros Impuestos</label>
-            </div>
-                <div class="col-sm-3">
-                    {{form_product.otros_impuestos|add_class:"form-control d-none"}}
+                </div>
+                <div class="col-4">
+                    <div id="otros_impuestos" class="input-group mb-3 mt-3 d-none">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-plus"></i>&nbsp;$</span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.otros_impuestos|add_class:"form-control"|append_attr:"placeholder= Otros Impuestos"}}
+                            <label style="color: #121212;" for="id_cantidad">Otros Impuestos*</label>
+                        </div>
+                    </div>
                 </div>
             </div>
+                
 
             <div  class="row my-1">
-            <div class="form-check form-switch col-auto mx-4" id="Impuestos_retenidos">
+                <div class="form-check form-switch col-auto mx-4" id="Impuestos_retenidos">
                         <input class="form-check-input" type="checkbox" role="switch" id="Switch_Impuestos_retenidos">
                         <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelOtros_Impuestos">Impuestos Retenidos</label>
-            </div>
-                <div class="col-sm-3">
-                    {{form_product.impuestos_retenidos|add_class:"form-control d-none form1"}}
+                </div>
+                <div class="col-4">
+                    <div id="impuestos_retenidos" class="input-group mb-3 d-none">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-minus"></i>&nbsp;$</span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form_product.impuestos_retenidos|add_class:"form-control form1"|append_attr:"placeholder= Impuestos Retenidos"}}
+                        <label style="color: #121212;" for="id_cantidad">Impuestos Retenidos*</label>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -264,7 +333,7 @@
                 </div>
             <div  class="row">
                 <div class="col-sm-1">
-                    <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit">
+                    <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_producto" id="btn_producto" type="submit">
                 </div>
             </div>
         </form>
@@ -272,7 +341,7 @@
         <div id="form_product2" class="d-none">
             <form method="post" enctype="multipart/form-data">
             {% csrf_token %}   
-            <div class="row">
+            <div class="col">
                 <div class="row">
                     <label class="col-auto col-form-label my-2"><strong>Productos:</strong></label>
                     <div class="col-sm-6 my-2">
@@ -303,26 +372,26 @@
                         {{form_product2.comentario|add_class:"form-control producto2"}}
                     </div>
                 </div>
-            </div>
-            <div id="factura_xml" class="row">
+                </div>
+                <div id="factura_xml" class="row">
                 <div class="col-sm-6">
                     {{form_product2.factura_xml|add_class:"form-control my-2 form2"}}
                 </div>
                  <div class="col-sm-1 my-3" style="color:#9a9b9d">
                     <i class="fa-solid fa-cloud-arrow-up"></i>XML
                 </div>
-            </div>
-            <div  class="row">
+                </div>
+                <div class="row">
                 <div class="col-sm-1">
                     <input class="btn btn-outline-info btn-block my-2" name="btn_xml" id="btn_xml" type="submit">
+                </div>
                 </div>
             </div>
             </form>
         </div>
-        </div>
         
-
-            <hr>
+        
+        <div class ="table-responsive-sm">
             <table class="table table-light table-striped table-hover mx-2">
             <thead>
                 <tr>
@@ -368,6 +437,7 @@
                 {% endfor %}
             </tbody>
             </table>
+        </div>
             <table class="table table-light table-striped mx-1">
             <thead>
                 <tr>
@@ -402,6 +472,7 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+    
 
 
     document.getElementById('id_precio_unitario').addEventListener('change',(event)=>{
@@ -432,10 +503,10 @@
             console.log(iva)
             if (iva){
                 subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
-                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                calculo_previo.innerHTML ="$" + parseFloat(subtotal).toFixed(4);
             } else {
                 subtotal = precio * cantidad + otros_impuestos - retenidos
-                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                calculo_previo.innerHTML = "$" + parseFloat(subtotal).toFixed(4);
             }
             }
     }
@@ -469,10 +540,10 @@
                 console.log(iva)
                     if (iva){
                         subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
-                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                        calculo_previo.innerHTML ="$" + parseFloat(subtotal).toFixed(4)
                     } else {
                         subtotal = precio * cantidad + otros_impuestos - retenidos
-                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                        calculo_previo.innerHTML ="$" + parseFloat(subtotal).toFixed(4)
                    }
         }}
 
@@ -502,10 +573,10 @@
                 console.log(iva)
                     if (iva){
                         subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
-                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                        calculo_previo.innerHTML ="$" + parseFloat(subtotal).toFixed(4)
                     } else {
                         subtotal = precio * cantidad + otros_impuestos - retenidos
-                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                        calculo_previo.innerHTML = "$" +parseFloat(subtotal).toFixed(4)
                    }
         }}
 
@@ -592,13 +663,14 @@
         other_select.value = 0
     }
     //var select2 = document.getElementById("id_proyecto");
+    var input_subproyecto = document.getElementById("input_subproyecto")
     var text_subproyectos = document.getElementById("subproyecto")
     var subproyectos = text_subproyectos.children;
     //var current_option2 = select2.options[select.selectedIndex];
-
+    
     var sub = document.getElementById('id_subproyecto')
     console.log(target)
-    text_subproyectos.setAttribute('class','form-select form-select-sm my-1')
+    input_subproyecto.setAttribute('class','input-group mb-3')
 
 
     text_subproyectos.value = ""
@@ -615,13 +687,25 @@
      }
 });
 
-
-document.getElementById("superintendentes").addEventListener("change", function(event){
+/*document.getElementById("superintendentes").addEventListener("change", function(event){
     var select = document.getElementById("superintendentes");
     var current_option = select.options[select.selectedIndex];
     var target = current_option.getAttribute('target')
     var other_select = document.getElementById('id_superintendente')
     other_select.value = target
+});*/
+function syncSelectValues() {
+    var select = document.getElementById("superintendentes");
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target');
+    var other_select = document.getElementById('id_superintendente');
+    other_select.value = target;
+}
+
+document.getElementById("superintendentes").addEventListener("change", syncSelectValues);
+
+document.addEventListener("DOMContentLoaded", function() {
+    syncSelectValues();
 });
 
 var precio_mod = document.getElementById("id_precio_unitario")
@@ -631,8 +715,6 @@ document.getElementById("txt_articulos").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_articulos");
     var browserChildren = document.getElementById('articulos').children;
     var other_select = document.getElementsByClassName('producto1')[0];
-
-
 
     cont = 0
 
@@ -795,12 +877,15 @@ document.getElementById("SwitchGasto").addEventListener("change", function(eleme
 var check_otros_imp = document.getElementById("Switch_Otros_impuestos")
 
 check_otros_imp.addEventListener("change", function(element){
-    let otros_imp = document.getElementById('id_otros_impuestos')
+    //let otros_imp = document.getElementById('id_otros_impuestos')
+    let otros_impuestos = document.getElementById('otros_impuestos')
 
     if (check_otros_imp.checked){
-        otros_imp.setAttribute('class','form-control')
+        otros_impuestos.classList.remove('d-none')
+        //otros_imp.setAttribute('class','form-control')
     } else {
-        otros_imp.setAttribute('class','form-control d-none')
+        otros_impuestos.classList.add('d-none')
+        //otros_imp.setAttribute('class','form-control d-none')
     }
 
 
@@ -809,13 +894,16 @@ check_otros_imp.addEventListener("change", function(element){
 let check_impuestos_retenidos = document.getElementById('Switch_Impuestos_retenidos')
 
 check_impuestos_retenidos.addEventListener("change", function(element){
-    let imp_ret = document.getElementById('id_impuestos_retenidos')
-    console.log(imp_ret)
+    //let imp_ret = document.getElementById('id_impuestos_retenidos')
+    let impuestos_retenidos = document.getElementById('impuestos_retenidos');
+    //console.log(imp_ret)
 
     if (check_impuestos_retenidos.checked){
-        imp_ret.setAttribute('class','form-control')
+        //imp_ret.setAttribute('class','form-control')
+        impuestos_retenidos.classList.remove('d-none')
     } else {
-        imp_ret.setAttribute('class','form-control d-none')
+        //imp_ret.setAttribute('class','form-control d-none')
+        impuestos_retenidos.classList.add('d-none')
     }
 
 

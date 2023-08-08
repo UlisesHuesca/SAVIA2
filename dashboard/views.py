@@ -10,7 +10,7 @@ from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Bat
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
-from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, Edit_ProveedoresDireccionesForm, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm
+from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm
 
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter
 
@@ -96,7 +96,7 @@ def proyectos(request):
     proyectos = myfilter.qs
 
     #Set up pagination
-    p = Paginator(proyectos, 50)
+    p = Paginator(proyectos, 10)
     page = request.GET.get('page')
     proyectos_list = p.get_page(page)
 
@@ -164,7 +164,6 @@ def proveedor_direcciones(request, pk):
     direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True)
 
     context = {
-        #'form': form,
         'proveedor':proveedor,
         'direcciones':direcciones,
         }
@@ -177,11 +176,12 @@ def proyectos_add(request):
     form = Proyectos_Add_Form()
 
     if request.method =='POST':
-        proyecto = Proyecto.objects.get_or_create(distrito = usuario.distrito)
+        proyecto, created = Proyecto.objects.get_or_create(distrito = usuario.distrito, complete = False)
         form = Proyectos_Add_Form(request.POST, instance = proyecto)
         if form.is_valid():
             proyecto = form.save(commit=False)
             proyecto.activo = True
+            proyecto.complete = True
             proyecto.save()
             messages.success(request,'Has agregado correctamente el proyecto')
             return redirect('configuracion-proyectos')
@@ -275,12 +275,18 @@ def product(request):
 @login_required(login_url='user-login')
 def proveedores(request):
     usuario = Profile.objects.get(staff=request.user)
-    proveedores = Proveedor.objects.filter(completo=True)
+    # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
+    proveedores_dir = Proveedor_direcciones.objects.filter(Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO'))
+    proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
+    proveedores = Proveedor.objects.filter(id__in=proveedores_ids, completo=True)
 
     total_prov = proveedores.count()
 
     myfilter=ProveedorFilter(request.GET, queryset=proveedores)
     proveedores = myfilter.qs
+
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_proveedores(proveedores_dir)
 
     #Set up pagination
     p = Paginator(proveedores, 50)
@@ -376,23 +382,29 @@ def add_proveedor_direccion(request, pk):
 
     usuario = Profile.objects.get(staff=request.user)
     proveedor = Proveedor.objects.get(id=pk)
-    item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, creado_por = usuario)
+    form = ProveedoresDireccionesForm()
 
     if request.method =='POST':
+        item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, creado_por = usuario, completo = False)
         form = ProveedoresDireccionesForm(request.POST, instance = item)
         if form.is_valid():
-            direccion = form.save(commit=False)
-            direccion.completo = True
-            direccion.save()
+            item = form.save(commit=False)
+            item.disitrito = usuario.distrito
+            item.completo = True
+            item.save()
             messages.success(request,f'Has agregado correctamente la direccion del proveedor {item.nombre.razon_social}')
             return redirect('dashboard-proveedores')
+        else:
+            errors = form.errors.as_text()
+            messages.error(request,f'No esta validando. Errores:{errors}')
     else:
-        form = ProveedoresDireccionesForm(instance = item)
+        form = ProveedoresDireccionesForm()
 
 
     context = {
         'form': form,
-        'item':item,
+        #'item':item,
+        'proveedor':proveedor,
         }
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
@@ -443,6 +455,54 @@ def add_proveedores2(request, pk=None):
         'formset': formset,
     }
     return render(request, 'dashboard/add_proveedores_&_direccion.html', context)
+
+@login_required(login_url='user-login')
+def add_proveedores_comparativo(request, pk=None):
+    usuario = Profile.objects.get(staff=request.user)
+    proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
+    #proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distrito)).values_list('id', flat=True)
+    
+    #proveedores = Proveedor.objects.filter(proveedor_direcciones__id__in=proveedores_dir_ids)
+    print('usuario_tipo:',usuario.tipo.proveedores)
+
+    #if usuario.tipo.proveedores == True:
+    #    ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=Add_ProveedoresDireccionesForm, extra=1)
+    #else:
+    ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=DireccionComparativoForm, extra=1)
+    
+
+    if request.method == 'POST':
+        form = ProveedoresForm(request.POST, instance = proveedor)
+        formset = ProveedorDireccionesFormSet(request.POST, instance=proveedor)
+        if form.is_valid() and formset.is_valid():
+            proveedor = form.save(commit=False)
+            proveedor.completo = True
+            proveedor.save()
+            direcciones = formset.save(commit=False)
+            direccion = direcciones[0]
+            direccion.distrito = usuario.distrito
+            if usuario.tipo.proveedores == False:
+                estatus = Estatus_proveedor.objects.get(nombre ="COTIZACION")
+                direccion.estatus = estatus
+            direccion.creado_por = usuario
+            direccion.enviado_fecha = date.today()
+            direccion.completo = True
+            direccion.save()
+            messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
+            return redirect('comparativos')
+        else:
+            print(form.errors) 
+            print(formset.errors) 
+            messages.success(request, 'No está validando')
+    else:
+        form = ProveedoresForm(instance=proveedor)
+        formset = ProveedorDireccionesFormSet(instance=proveedor)
+
+    context = {
+        'form': form,
+        'formset': formset,
+    }
+    return render(request, 'dashboard/add_proveedor_direccion_cotizacion.html', context)
 
 @login_required(login_url='user-login')
 def add_proveedores(request, pk=None):
@@ -514,18 +574,23 @@ def edit_proveedores(request, pk):
         'proveedor':proveedor,
         'formset': formset,
     }
-    return render(request, 'dashboard/edit_proveedores_&_direccion.html', context)
+    
+    return render(request,'dashboard/add_proveedor_direccion.html', context)
+
 
 @login_required(login_url='user-login')
 def edit_proveedor_direccion(request, pk):
 
     usuario = Profile.objects.get(staff=request.user)
     direccion = Proveedor_direcciones.objects.get(id = pk)
+    proveedor = Proveedor.objects.get(id = direccion.nombre.id)
 
     if request.method =='POST':
-        form = Edit_ProveedoresDireccionesForm(request.POST, instance = direccion)
+        form = ProveedoresDireccionesForm(request.POST, instance = direccion)
         if form.is_valid():
             direccion = form.save(commit=False)
+            direccion.actualizado_por = usuario
+            direccion.modificado_fecha = date.today()
             direccion.completo = True
             direccion.save()
             messages.success(request,'Has actualizado correctamente la direccion del proveedor')
@@ -535,6 +600,7 @@ def edit_proveedor_direccion(request, pk):
 
 
     context = {
+        'proveedor':proveedor,
         'form': form,
         'direccion':direccion,
         }
@@ -637,7 +703,7 @@ def upload_batch_products(request):
         form = Products_BatchForm()
         product_list = Products_Batch.objects.get(activated = False)
 
-        f = open(product_list.file_name.path, 'r')
+        f = open(product_list.file_name.path, 'r', encoding='utf-8')
         reader = csv.reader(f)
         next(reader)
 
@@ -647,10 +713,10 @@ def upload_batch_products(request):
                     unidad = Unidad.objects.get(nombre = row[2])
                     if Familia.objects.filter(nombre = row[3]):
                         familia = Familia.objects.get(nombre = row[3])
-                        especialista = True if row[5].lower == 'si' else False
-                        iva = True if row[6].lower == 'si' else False
-                        activo = True if row[7].lower() == 'si' else False
-                        servicio = True if row[8].lower() == 'si' else False
+                        especialista = True if row[5] == 'SI' else False
+                        iva = True if row[6] == 'SI' else False
+                        activo = True if row[7] == 'SI' else False
+                        servicio = True if row[8] == 'SI' else False
                         if Subfamilia.objects.filter(nombre = row[4], familia = familia):
                             subfamilia = Subfamilia.objects.get(nombre = row[4], familia = familia)
                             
@@ -826,6 +892,86 @@ def convert_excel_matriz_proyectos(proyectos):
             if col_num in [5,6,7,8,9]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
     
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    wb.save(response)
+
+    return(response)
+
+def convert_excel_proveedores(proveedores):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Proveedores_' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Proveedores')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    number_style = NamedStyle(name='number_style', number_format='#,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(number_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+
+    columns = ['Razón Social','RFC','Nombre Comercial','Domicilio','Teléfono','Estado','Contacto','Email','Email Opción',
+               'Banco','Clabe','Cuenta','Financiamiento','Días Crédito','Estatus']
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 4 or col_num == 7:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 25
+        if col_num == 0:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 50
+
+    proveedores_ids = proveedores.values_list('nombre', flat=True).distinct()
+    proveedores_unicos = Proveedor.objects.filter(id__in=proveedores_ids, completo=True).count()
+
+    columna_max = len(columns)+2
+
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 20
+    ws.cell(row=3, column= columna_max, value="Número de proveedores:")
+    ws.cell(row=3, column = columna_max + 1, value=proveedores_unicos).style = number_style
+
+    rows = proveedores.values_list('nombre__razon_social','nombre__rfc','nombre__nombre_comercial','domicilio','telefono','estado__nombre',
+                                   'contacto','email','email_opt','banco__nombre','clabe','cuenta','financiamiento','dias_credito',
+                                   'estatus__nombre'
+                              )
+
+    
+
+    #for row, subtotal, iva, total in zip(rows,subtotales, ivas, totales):
+    for row in rows:
+        row_num += 1
+        #row_with_additional_columns = list(row) + [subtotal, iva, total]  # Agrega el subtotal a la fila existente
+        for col_num in range(len(row)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            if col_num == 5:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
+            if col_num == 13:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)

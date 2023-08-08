@@ -53,8 +53,8 @@
     </div>
 </div>
 
-<div class="row">
-    <div class="card text-center" style="width: 18rem;">
+<div class="row mt-2 ">
+    <div class="card text-center" style="width: 25rem;">
         <div class="card-header">
             <h5 class="card-title">Tipo de cambio</h5>
         </div>
@@ -89,16 +89,16 @@
 </div>
 
 <div class = "row mt-2">
-    <div class="col-md-12">
+    <div class ="table-responsive-sm">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">RQ</th>
                     <th scope="col">Solicitud</th>
-                    <th scope="col">Solicitado por</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
                     <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Área</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Área</th>
                     <th scope="col">Autorizado</th>
                     <th scope="col">Acción</th>
                 </tr>
@@ -108,27 +108,27 @@
                 <tr>
                     <th scope="row">{{req.folio}}</th>
                     <th scope="row">{{req.orden.folio}}</th>
-                    <th scope="row">{{req.orden.staff.staff.first_name}} {{req.orden.staff.staff.last_name}}</th>
+                    <th class="d-none d-lg-table-cell">{{req.orden.staff.staff.first_name}} {{req.orden.staff.staff.last_name}}</th>
                     <td>{{req.orden.proyecto.nombre}}</td>
-                    <td>{{req.orden.subproyecto.nombre}}</td>
-                    <td>{{req.orden.area}}</td>
+                    <td class="d-none d-lg-table-cell">{{req.orden.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{req.orden.area}}</td>
                     <td>{{req.approved_at}} {{req.approved_at_time}} </td>
                     <td>
                         <ul class="nav nav-pills">
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-restantes' req.id %}">Productos</a>
                             </li>
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-success" href="{% url 'oc' req.id %}">Crear OC</a>
                             </li>
                             {% if req.comprado_parcial %}
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-cancelar' req.id %}">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </a>
                             </li>
                             {% endif %}
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-articulos' req.id %}">
                                     <i class="fa-solid fa-eraser"></i>
                                 </a>

@@ -7,8 +7,8 @@ class EntradaAdmin(admin.ModelAdmin):
     list_filter = ('oc',)
 
 class EntradaArticuloAdmin(admin.ModelAdmin):
-    list_display = ('id','entrada','cantidad','articulo_comprado','liberado')
-    list_filter = ('entrada',)
+    list_display = ('id','entrada','cantidad','articulo_comprado','liberado','cantidad_por_surtir')
+    search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre']
 
 admin.site.register(Entrada, EntradaAdmin)
 

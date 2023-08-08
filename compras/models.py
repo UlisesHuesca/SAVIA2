@@ -114,8 +114,8 @@ class Comparativo(models.Model):
 class Item_Comparativo(models.Model):
     producto = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
     comparativo = models.ForeignKey(Comparativo, on_delete = models.CASCADE, null=True)
-    modelo = models.CharField(max_length=100, null=True)
-    marca = models.CharField(max_length=100, null=True)
+    modelo = models.CharField(max_length=100, null=True, blank=True)
+    marca = models.CharField(max_length=100, null=True, blank=True)
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     precio = models.DecimalField(max_digits=14, decimal_places=4, null=True, blank=True)
     dias_de_entrega = models.PositiveIntegerField(null=True, blank=True)

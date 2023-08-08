@@ -1,0 +1,339 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %} Asignar Activo {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class="container">
+    <div class="card"  id="document" role="document">
+        <form method="POST" class="post-form" id="form_id">
+        {% csrf_token %}
+    
+        <div class="card-header">
+            <h4 class="card-title">Asignar Activo: Salida:{{salida.vale_salida.id}} &nbsp;&nbsp;Solicitud:{{salida.vale_salida.solicitud.folio}} </h4>
+        </div>
+        <div class="card-body" style="color:white">
+            <div>
+                
+                
+                <input type="hidden" id="hidden_activo" name="hidden_activo">
+                <div class="row">
+                    <div class="col-lg-12 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Producto:</h6><h4 style="color: #121212;">{{salida.producto.articulos.producto.producto}}</h4>   
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Asignado a:</h6><h6 style="color: #121212;">{{salida.vale_salida.material_recibido_por.staff.first_name}} {{salida.vale_salida.material_recibido_por.staff.last_name}}</h6>   
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Almacenista:</h6><h6 style="color: #121212;">{{salida.vale_salida.almacenista.staff.first_name}} {{salida.vale_salida.almacenista.staff.last_name}}</h6>   
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Comentario:</h6><h6 style="color: #121212;">{{salida.comentario}}</h6>   
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>    
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            <input name="activo" type="text"  list="activo" id="txt_activo" placeholder="Activo..." class="form-control">
+                            <label  style="color: #121212;" for="txt_activo">Activo*</label>
+                            </div>
+                    
+                            <datalist id="activo" name='activo'>
+                            {% for item in activos %}
+                            <option valor="{{item.activo.id|unlocalize}}" valor_activo="{{item.id}}" value="{{item.eco_unidad}} {{item.activo.producto.nombre}}"></option>
+                            {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div id="etiqueta_activo" class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Activo:</h6><h6 style="color: #121212;" id="contenido_activo"></h6>   
+                        </div>
+                    </div>
+                    <div id="etiqueta_eco" class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Eco:</h6><h6 style="color: #121212;" id="contenido_eco"></h6>   
+                        </div>
+                    </div>
+                    <div id="etiqueta_tipo_activo" class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Tipo de Activo:</h6><h6 style="color: #121212;" id="contenido_tipo_activo"></h6>   
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div id="etiqueta_descripcion" class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Descripción:</h6><h6 style="color: #121212;" id="contenido_descripcion"></h6>   
+                        </div>
+                    </div>
+                    <div id="etiqueta_marca" class="col-4">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Marca:</h6><h6 style="color: #121212;" id="contenido_marca"></h6>   
+                        </div>
+                    </div>
+                    <div id="etiqueta_modelo" class="col-4">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Modelo:</h6><h6 style="color: #121212;" id="contenido_modelo"></h6>   
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div id="etiqueta_comentario" class="col-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Observaciones:</h6><h6 style="color: #121212;" id="contenido_comentario"></h6>   
+                        </div>
+                    </div>
+                </div>
+                
+        </div>    
+       
+        <div class="card-body" style="color:white">
+                <div class="row">
+                    <div class="col-12 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.activo|add_class:"form-control"|append_attr:"placeholder=Activo"}}
+                            <label style="color: #121212;" for="id_lugar_partida">Activo*</label>
+                            </div>
+                        </div>
+                    </div>    
+                </div>         
+                <div class="col-lg-12 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.comentario|add_class:"form-control"}}
+                        <label style="color: #121212;" for="id_lugar_partida">Observaciones*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+       
+        <div class="card-footer">
+                <button class="btn btn-success" name="Crear_Btn" id="crear" type="submit">Crear</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+   
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+{% if activos_completos_json %}
+
+document.getElementById("etiqueta_comentario").addEventListener("dblclick", function(){
+    var comentario = document.getElementById("etiqueta_comentario")
+    var input_comentario = document.getElementById("input_comentario")
+    input_comentario.setAttribute("class","col-sm-6")
+    comentario.setAttribute("class","col-6 d-none")
+});
+// Convertir JSON a matriz JavaScript
+var activos_completos = JSON.parse('{{ activos_completos_json|escapejs }}');
+
+// Escuchar cambios en el select de activos
+document.getElementById("txt_activo").addEventListener("change", function(event){
+    var activo = this;
+    var browserChildren = document.getElementById('activo').children;
+    var id_activo = browserChildren[i].getAttribute('valor_activo');
+    var selectedActivoId = id_activo;
+    var other_select = document.getElementById('id_activo');
+   
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value == activo.value) {
+            //console.log(browserChildren[i].value)
+            //console.log(activo.value)
+            let id = browserChildren[i].getAttribute('valor_activo');
+            //console.log(id)
+            let status = browserChildren[i].getAttribute('status')
+            //console.log(id)
+
+
+            other_select.value = id;
+            cont = 1
+            }
+        }
+    
+    
+    // Si el valor seleccionado es vacío, limpiar los campos y salir
+    if (activo.value == "") {
+        document.getElementById("contenido_activo").textContent = "";
+        document.getElementById("contenido_descripcion").textContent = "";
+        document.getElementById("contenido_marca").textContent = "";
+        document.getElementById("contenido_modelo").textContent = "";
+        document.getElementById("contenido_tipo_activo").textContent = "";
+        document.getElementById("contenido_comentario").textContent = "";
+        document.getElementById("contenido_eco").textContent = "";
+        return;
+    }
+    
+    // Buscar el activo seleccionado en la matriz
+    var selectedActivo = activos_completos.find(function(activo){
+        return activo.id == selectedActivoId;
+    });
+    console.log()
+    // Actualizar campos con los datos del activo seleccionado
+    if (selectedActivo) {
+        var fields = selectedActivo.fields;
+        document.getElementById("contenido_activo").textContent= fields.activo;
+        document.getElementById("contenido_descripcion").textContent= fields.descripcion;
+        document.getElementById("contenido_marca").textContent = fields.marca;
+        document.getElementById("contenido_modelo").textContent = fields.modelo;
+        document.getElementById("contenido_tipo_activo").textContent = fields.tipo_activo;
+        document.getElementById("contenido_comentario").textContent = fields.comentario;
+        document.getElementById("contenido_eco").textContent = fields.eco_unidad;
+    }
+});
+
+{% else %}
+document.getElementById('id_tipo_activo').addEventListener('change', (event) => {
+tipo_activo = document.getElementById('id_tipo_activo');
+serie = document.getElementById('serie');
+
+console.log(tipo_activo.value)
+if (tipo_activo.value == 1){
+    serie.classList.add('d-none')
+}else {
+    serie.classList.remove('d-none')
+}
+    
+});
+
+/*document.getElementById("txt_personal").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_personal");
+    var browserChildren = document.getElementById('personal').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_responsable');
+    //var status_txt = document.getElementById('comparativo')
+
+    //cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value == select.value) {
+            //console.log(browserChildren[i])
+            //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            //console.log(id)
+            let status = browserChildren[i].getAttribute('status')
+            console.log(id)
+
+
+            other_select.value = id;
+            cont = 1
+            }
+        }
+
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+        status_txt.setAttribute("class","row my-2 d-none")
+    }
+});*/
+
+document.getElementById("txt_marca").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_marca");
+    var browserChildren = document.getElementById('marca').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_marca');
+    //var status_txt = document.getElementById('comparativo')
+
+    //cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value == select.value) {
+            //console.log(browserChildren[i])
+            //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            //console.log(id)
+            let status = browserChildren[i].getAttribute('status')
+            console.log(id)
+
+
+            other_select.value = id;
+            cont = 1
+            }
+        }
+
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+        status_txt.setAttribute("class","row my-2 d-none")
+    }
+});
+{% endif %}
+</script>
+{% endblock %}
+
+</body>
+</html>

@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Autorización Devolución Almacén{% endblock %}
@@ -55,8 +56,12 @@
     </div>
 </div>
 
-<div class = "row mt-2">
-    <div class="col-sm-6 col-md-12">
+<div class = "row">
+    <div class = "card">
+        <div class ="card-header">
+            <h3>Autorización de devoluciones</h3>
+        </div>
+        <div class ="table-responsive-sm">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -64,8 +69,8 @@
                     <th scope="col">Almacenista</th>
                     <th scope="col">Solicitante</th>
                     <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Área</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Área</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Acción</th>
                 </tr>
@@ -77,15 +82,15 @@
                     <td  >{{item.almacenista.staff.first_name}} {{item.almacenista.staff.last_name}}</td>
                     <td  >{{item.solicitud.staff.staff.first_name}} {{item.solicitud.staff.staff.last_name}}</td>
                     <td >{{item.solicitud.proyecto.nombre}}</td>
-                    <td >{{item.solicitud.subproyecto.nombre}}</td>
-                    <td >{{item.solicitud.area}}</td>
+                    <td class="d-none d-lg-table-cell" >{{item.solicitud.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{item.solicitud.area}}</td>
                     <td >{{item.created_at}} </td>
                     <td >
                         <ul class="nav nav-pills">
-                            <li class="nav-item mx-2">
+                            <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-devolucion' item.id %}"><i class="fa-solid fa-xmark"></i></a>
                             </li>
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'autorizar-devolucion' item.id %}"><i class="fa-solid fa-check"></i></a>
                             </li>
                         </ul>
@@ -94,8 +99,36 @@
                 {% endfor %}
             </tbody>
         </table>
+        </div>
     </div>
     </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if devoluciones_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url devoluciones_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+
+            {% for item in devoluciones_list.paginator.page_range %}
+                {% if devoluciones_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > devoluciones_list.number|add:'-2' and item < devoluciones_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if devoluciones_list.paginator.num_pages > devoluciones_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{devoluciones_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="{% my_url devoluciones_list.paginator.num_pages 'page' request.GET.urlencode %}">{{devoluciones_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if devoluciones_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url devoluciones_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url devoluciones_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+        </ul>
+    </nav>
 
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">

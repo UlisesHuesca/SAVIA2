@@ -16,6 +16,7 @@ urlpatterns = [
     path('sol_autorizadas/firma', views.solicitud_autorizada_firma, name='solicitud-autorizada-firma'),
     path('salida_material/firma/<int:pk>/', views.salida_material_usuario, name='salida-material-usuario'),
     path('sol_autorizadas_orden/', views.solicitud_autorizada_orden, name='solicitud-autorizada-orden'),
+    path('matriz_salida_activos/', views.matriz_salida_activos, name='matriz-salida-activos'),
     path('autorizacion/', views.requisicion_autorizacion, name='requisicion-autorizacion'),
     path('sol_autorizadas_orden/detalle/<int:pk>/', views.detalle_orden, name='detalle-orden'),
     path('sol_autorizadas_orden/requisicion_detalle/<int:pk>/', views.requisicion_detalle, name='requisicion-detalle'),

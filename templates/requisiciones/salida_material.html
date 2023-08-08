@@ -37,33 +37,44 @@
 </div>
 <hr>
 <hr>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6>&nbsp;</h6>
 <div class="row">
     <div class="col-lg-6">
-        <div class="box-element" id="form-wrapper">
-            <div class="card-header mt-3 mb-4">
+        <div class="card" id="form-wrapper">
+            <div class="card-header">
             <!-- Aqui es el encabezado de los filtros -->
-                <h5 target="">Vale de Salida</h5>
+                <h3 target="">Vale de Salida</h3>
             </div>
-            <div id="Solicitud-info">
+            <div class="card-body" id="Solicitud-info">
                     <form id="myForm" method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
                         {% csrf_token %}
                         <div class="row my-5">
-                            <label for="form.moneda" class="col-auto col-form-label my-1"><strong>Material entregado a:</strong></label>
+                            <label for="form.moneda" class="col-auto col-form-label my-1"><strong><h4>Material entregado a:</h4></strong></label>
+                           
                             <div class="col-5">
                                 {{ formVale.material_recibido_por|add_class:"form-select my-1 d-none" }}
                             </div>
                             <div class="col-12">
-                                <input type="text" list="user" id="txt_usuario" valor="{{user.id}}" placeholder="Usuarios..." class="form-control">
-                                <datalist id="user" name='user'>
-                                    {% for user in users %}
-                                        <option valor="{{user.id}}" value="{{user.staff.first_name}} {{user.staff.last_name}}"></option>
-                                    {% endfor %}
-                                </datalist>
-                            </div>
-
-                                <div class="col-3">
-                                <input  id="submit-button" class="btn btn-outline-info btn-block my-4" name="agregar" type="submit" value="Guardar vale">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>    
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        <input type="text" list="user" id="txt_usuario" valor="{{user.id}}" placeholder="Usuarios..." class="form-control">
+                                        <label for="txt_usuario">Usuarios*</label>
+                                    </div>         
+                                    <datalist id="user" name='user'>
+                                        {% for user in users %}
+                                            <option valor="{{user.id}}" value="{{user.staff.first_name}} {{user.staff.last_name}}"></option>
+                                        {% endfor %}
+                                    </datalist>
                                 </div>
+                            </div>
+                                {% if salidas %}
+                                <div class="col-3">
+                                <input id="submit-button" class="btn btn-outline-info btn-block my-4" name="agregar" type="submit" value="Guardar vale">
+                                </div>
+                                {% endif %}
                         </div>
                     </form>
             </div>
@@ -71,60 +82,70 @@
         </div>
     </div>
     <div class="col-lg-6">
-        <div class="box-element">
+        <div class="card">
+            <div class="card-header">
             <h3 id="vale" vale="{{vale_salida.id|unlocalize}}">Resumen de Salida</h3>
-            <hr>
-
-            <div class='cart-row'>
+            </div>
+            <div class='card-body'>
                 <form method="POST">
                 <div class="row">
-                    <label class="col-auto col-form-label"><strong>Productos:</strong></label>
-                    <div class="col-sm-5">
-                        <div class="selector">
-                            <select class="form-select form-select-sm" id="producto">
-                            <option id="default_sel">      </option>
-                            {% for producto in productos %}
-                            {% if producto.seleccionado == False %}
-                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad|unlocalize}}" cantidad_sol ="{{producto.articulos.cantidad|unlocalize}}" stock="{{producto.articulos.producto.cantidad|unlocalize}}">
-                                {{producto.articulos.producto}}
-                            </option>
-                            {% endif %}
-                            {% endfor %}
-                            </select>
+                    <div class="col-lg-8 col-sm-12">
+                        <div id="input_subproyecto" class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                <label  style="font-size:10px; color:gray;" for="producto">Productos*</label>
+                                <select style="font-size:16px" class="form-select form-select-sm grupo-entrada" id="producto">
+                                    <option style="color:gray;" value="" selected disabled>Productos</option>
+                                    {% for producto in productos %}
+                                    {% if producto.seleccionado == False %}
+                                    <option id="js" target="{{producto.id|unlocalize}}" activo="{{producto.articulos.producto.producto.activo}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
+                                        {{producto.articulos.producto}}
+                                    </option>
+                                    {% endif %}
+                                    {% endfor %}
+                                </select>
+                            </div>
                         </div>
                     </div>
-                    <div class="col-sm-2">
-                    <label class="col-auto col-form-label"><strong>Solicitado:</strong></label>
+                    <div id="etiqueta_solicitado" class="col-lg-4 col-sm-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Disponible:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                        </div>
                     </div>
-                    <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
-                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Cantidad:</strong></label>
-                    <div class="col-sm-2">
-                        {{form.cantidad|add_class:"form-control"}}
+                </div>
+                <div class="row">    
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm-1">
-                        <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                       
+                    <div class="col-sm-1 mt-3">
+                        <a class="btn btn-success update-salida d-none" id="update-salida" name="salida">
                             <i class="fa-solid fa-circle-plus"></i>
                         </a>
                     </div>
                 </div>
                 <hr>
-
-                <table class="table table-ligth table-striped mx-1">
-                {% csrf_token %}
-                <thead>
+                <div class ="table-responsive-sm">
+                    <table class="table table-ligth table-striped mx-1">
+                    {% csrf_token %}
+                    <thead>
                         <tr>
-                        <th scope="col" salidas="{{salidas}}">#</th>
-                        <th scope="col">Código</th>
+                        <th  salidas="{{salidas}}">Código</th>
                         <th scope="col">Producto</th>
                         <th scope="col">Cantidad</th>
                         <th scope="col">Precio</th>
                         <th scope="col">Entrada</th>
                         </tr>
-                </thead>
-                <tbody>
-                    {% for item in salidas %}
+                    </thead>
+                    <tbody>
+                        {% for item in salidas %}
                         <tr>
-                            <th scope="col"><img class="row-image" src="{{item.producto.articulos.producto.producto.imageURL}}"></th>
                             <th scope="col">{{item.producto.articulos.producto.producto.codigo}}</th>
                             <th scope="col">{{item.producto.articulos.producto.producto.nombre}}</th>
                             <th scope="col">{{item.cantidad}}</th>
@@ -132,18 +153,19 @@
                             <th scope="col">{{item.entrada}}</th>
                             <th scope="col">
                             <td>
-                                <a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="">
+                                <!--<a class="btn btn-outline-info m-1" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="">
                                     <i class="fa-solid fa-pen-to-square"></i>
-                                </a>
-                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.id|unlocalize}}" cantidad="{{item.cantidad|unlocalize}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
+                                </a>-->
+                                <button type="button" class="btn btn-danger m-1" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.id|unlocalize}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </td>
                         </tr>
-                    {% endfor %}
-                </tbody>
+                        {% endfor %}
+                    </tbody>
                 </form>
                 </table>
+            </div>
             </div>
             <hr>
             <h5>Artículos: {{cantidad_items}}</h5>
@@ -165,10 +187,12 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+
 document.getElementById('myForm').addEventListener('submit', function() {
     // Deshabilita el botón de envío cuando se envía el formulario
     document.getElementById('submit-button').disabled = true;
     });
+
 
 document.getElementById("producto").addEventListener("change", function(element){
     var select = document.getElementById('producto');
@@ -216,7 +240,7 @@ document.getElementById("txt_usuario").addEventListener("change", (event)=>{
     }
 });
 
-var updateBtn = document.getElementById('update-purchase')
+var updateBtn = document.getElementById('update-salida')
 let count=0;
 let suma = 0;
 let suma_iva = 0;
@@ -324,6 +348,66 @@ function ActualizarArticulos(oc,id,val_cantidad,action){
         location.reload()
     })
 }
+document.addEventListener('DOMContentLoaded', function(){
+    var inputUsuario = document.getElementById('txt_usuario');
+    var submitButton = document.getElementById('submit-button');
+
+    // Deshabilitar el botón al cargar la página
+    submitButton.disabled = true;
+
+    inputUsuario.addEventListener('input', function(){
+        // Obtener el valor seleccionado del datalist
+        var value = inputUsuario.value;
+        var options = document.querySelectorAll('#user option');
+        var optionSelected = Array.from(options).find(option => option.value === value);
+
+        // Habilitar o deshabilitar el botón según si se ha seleccionado una opción válida
+        if (optionSelected) {
+            submitButton.disabled = false;
+        } else {
+            submitButton.disabled = true;
+        }
+    });
+});
+
+document.getElementById('id_cantidad').addEventListener('change', function(){
+var cantidad = this;
+var select = document.getElementById('producto');
+var current_option = select.options[select.selectedIndex];
+let cantidad_sol = current_option.getAttribute('cantidad_sol');
+//let cantidad =  current_option.getAttribute('cantidad');
+let activo = current_option.getAttribute('activo')
+var boton =document.getElementById('update-salida');
+
+if (cantidad.value <= 0){
+    boton.classList.add('d-none')
+    Swal.fire({
+                "title":"Error",
+                "text":"La cantidad capturada no puede ser menor o igual que 0",
+                "icon":"error",
+            })
+} else if (cantidad.value > cantidad_sol){
+    boton.classList.add('d-none')
+    Swal.fire({
+                "title":"Error",
+                "text":"La cantidad capturada no puede ser mayor que la cantidad disponible",
+                "icon":"error",
+            })
+} else {
+    boton.classList.remove('d-none')
+}
+
+if (activo == 'True'){
+    if (cantidad.value != 1){
+        Swal.fire({
+                "title":"Error",
+                "text":"Cuando tienes seleccionada la referencia la cantidad solo puede ser igual a 1, derivado de la solicitud de activos",
+                "icon":"error",
+            })
+        cantidad.value = 1
+    }
+}
+})
 
 </script>
 {% endblock %}

@@ -62,16 +62,25 @@
             <hr>
             {% csrf_token %}
             <form method="GET">
-            <div class="row g-12">
-                <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Producto:</strong></label>
-                <div class="col-auto my-2">
-                    {{myfilter.form.producto|add_class:'form-control'}}
-                </div>
-                <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Folio OC:</strong></label>
-                <div class="col-auto my-2">
-                    {{myfilter.form.oc|add_class:'form-control'}}
-                </div>
-
+                <div class="row g-12">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                                <label style="color: #121212;" for="id_producto">Producto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.oc|add_class:"form-control"|append_attr:"placeholder= Folio OC"}}
+                                <label style="color: #121212;" for="id_producto">Folio OC</label>
+                            </div>
+                        </div>
+                    </div>
                 <div class="col-2">
                     <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>

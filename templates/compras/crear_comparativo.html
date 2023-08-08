@@ -2,6 +2,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %} Comparativo {% endblock %}
@@ -188,7 +189,7 @@
                             </div>
                             <datalist id="productos" name="productos">
                             {% for item in articulos %}
-                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
+                            <option valor="{{item.id|unlocalize}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
                             {% endfor %}
                             </datalist>
                         </div>
@@ -451,7 +452,7 @@ var modeloFields = document.getElementsByClassName("modelo-field");
 
 
 
-    document.getElementById('id_precio').addEventListener('change',(event)=>{
+    /*document.getElementById('id_precio').addEventListener('change',(event)=>{
     cantidad = document.getElementById('id_cantidad').value;
     precio = document.getElementById('id_precio_unitario').value;
     otros_impuestos = document.getElementById('id_otros_impuestos').value
@@ -524,7 +525,7 @@ var modeloFields = document.getElementsByClassName("modelo-field");
         }}
 
     })
-
+*/
 
 document.getElementById("txt_productos").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_productos");

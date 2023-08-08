@@ -18,23 +18,55 @@
         <div class="modal-body" style="color:white">
             <div>
                 {% csrf_token %}
-                    <label for="form.producto" class="col-auto col-form-label my-1"><strong>Productos:</strong></label>
-                    <div class="col-8">
-                        {{form.producto|add_class:"form-control"}}
-                    </div>
-                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad:</strong></label>
-                    <div class="col-4">
-                        {{ form.cantidad|add_class:"form-control"}}
-                    </div>
-                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Precio:</strong></label>
-                    <div class="col-4">
-                        {{ form.price|add_class:"form-control"}}
-                    </div>
-                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
+                
+                <div class="row my-2"> 
+                <div class="input-group mb-3">
+                         
+                                <span class="input-group-text" id="basic-addon1"> 
+                                    <i class="fa-solid fa-box"></i>
+                                </span>
+                                
+                                {{form.producto|add_class:"form-control flex-grow-1"}}
+                            </div>   
+
+                
+                </div>
+                        
+                   
+                
+                <div class="row my-2">
                     <div class="col-12">
-                        {{ form.comentario|add_class:"form-control"}}
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                <label style="color: #121212;" for="id_producto">Cantidad</label>
+                            </div>
+                        </div>
                     </div>
-            </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.price|add_class:"form-control"|append_attr:"placeholder= Precio"}}
+                                <label style="color: #121212;" for="id_price">Precio</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                <label style="color: #121212;" for="id_price">Comentario</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
         </div>
         <div class="modal-footer">
                 <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>

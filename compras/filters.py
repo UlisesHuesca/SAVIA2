@@ -2,6 +2,7 @@ import django_filters
 from requisiciones.models import ArticulosRequisitados
 from .models import Compra, ArticuloComprado
 from django_filters import CharFilter, DateFilter
+from django.db.models import Q
 
 class CompraFilter(django_filters.FilterSet):
     proveedor = CharFilter(field_name='proveedor__nombre__razon_social', lookup_expr='icontains')
@@ -32,3 +33,19 @@ class ArticulosRequisitadosFilter(django_filters.FilterSet):
     class Meta:
         model = ArticulosRequisitados
         fields = ['producto']
+
+class HistoricalArticuloCompradoFilter(django_filters.FilterSet):
+    history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
+    history_user = CharFilter(method='nombre', lookup_expr='icontains')
+    history_type = CharFilter(field_name='history_type', lookup_expr='icontains')
+    producto = CharFilter(field_name='producto__producto__articulos__producto__producto__nombre', lookup_expr='icontains')
+    oc = CharFilter(field_name ='oc__id',lookup_expr='icontains')
+    start_date = DateFilter(field_name='history_date', lookup_expr='gte')
+    end_date = DateFilter(field_name='history_date', lookup_expr='lte')
+
+    class Meta:
+        model = ArticuloComprado.history.model
+        fields = ['history_id','history_user','producto','oc','start_date','end_date']
+    
+    def nombre(self, queryset, name, value):
+        return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))

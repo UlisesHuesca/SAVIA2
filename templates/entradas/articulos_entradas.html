@@ -64,7 +64,23 @@
 
             {% csrf_token %}
             <div class="row">
-                <label class="col-auto col-form-label"><strong>Productos:</strong></label>
+                <div class="col-lg-8 col-sm-12">
+                    <div id="input_producto" class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            <label  style="font-size:10px; color:gray;" for="subproyecto">Productos*</label>
+                            <select style="font-size:16px" class="form-select form-select-sm" placeholder="Subproyecto" id="producto">
+                                    <option style="color:gray;" value="" selected disabled>Producto</option>
+                                    {% for articulo in articulos %}
+                                    <option id="js" target="{{articulo.id|unlocalize}}" producto="{{articulo.producto.producto.articulos.id|unlocalize}}" cantidad="{{articulo.cantidad_pendiente|unlocalize}}">
+                                        {{articulo.producto.producto.articulos.producto}}
+                                    </option>
+                                    {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <!--<label class="col-auto col-form-label"><strong>Productos:</strong></label>
                 <div class="col-sm-6">
                     <div class="selector">
                         <select class="form-select form-select-sm" id="producto">
@@ -76,26 +92,37 @@
                             {% endfor %}
                         </select>
                     </div>
-                </div>
-                <div class="col-sm-2">
-                    <label class="col-auto col-form-label"><strong>Solicitado:</strong></label>
-                </div>
-                <div class="col-sm-2">
-                    <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
+                </div>-->
+                <div id="etiqueta_solicitado" class="col-4">
+                    <div class="alert alert-secondary" role="alert">
+                    <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                    </div>
                 </div>
             </div>
             <div class="row">
-                <div class="col-sm-2">
-                <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Cantidad:</strong></label>
+                <div class="col-lg-4">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                        </div>
+                    </div>
                 </div>
-                <div class="col-sm-4">
-                    {{form.cantidad|add_class:"form-control"}}
-                </div>
-                <div class="form-check form-switch col-auto mx-4" id="referencia">
+                <div class="form-check form-switch col-auto mx-4 mt-3" id="referencia">
                     <input class="form-check-input" type="checkbox" role="switch" id="SwitchReferencia">
                     <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelReferencia"><strong>Folio</strong></label>
                 </div>
-                <div id="referencialbl" class="col-sm-1 d-none">
+                <div  id="referencialbl" class="col-lg-4 d-none">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.referencia|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                            <label style="color: #121212;" for="id_impuestos_adicionales">Folio</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="#" class="col-sm-1 d-none">
                     <label for="form.referencia" class="col"><strong>Folio:</strong></label>
                 </div>
                 <div class="col-sm">
@@ -111,10 +138,11 @@
             </div>
 
         <hr>
-        <table class="table table-dark table-striped table-hover">
+        <div class ="table-responsive-sm">
+            <table class="table table-dark table-striped table-hover">
                     <thead>
                         <tr>
-                            <th scope="col">#</th>
+                            
                             <th scope="col">Producto</th>
                             <th scope="col">Cantidad</th>
                             <th scope="col">Unidad</th>
@@ -126,7 +154,7 @@
                     <tbody id="mytbl">
                     {% for producto in articulos_entrada %}
                     <tr>
-                        <td scope="col" id=>{{producto.articulo_comprado.get_entradas}}</td>
+                        
                         <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
                         <td scope="col">{{producto.cantidad}}</td>
                         <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
@@ -135,12 +163,12 @@
                         {% else %}
                         <td></td>
                         {% endif %}
-                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id}}" entrada="{{producto.entrada.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id|unlocalize}}" entrada="{{producto.entrada.id|unlocalize}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                     </tr>
                     {% endfor %}
                     </tbody>
                 </table>
-
+        </div>
             <button id="Crear" type="submit" class="btn btn-success">Crear</button>
             <a id="cerrar" type="button" class="btn btn-secondary cerrar"  href="{% url 'pendientes_entrada' %}">Cerrar</a>
     </form>
@@ -287,7 +315,7 @@ updateBtn.addEventListener('click',function(){
         } else {
             count += 1;
             current_option.setAttribute("class","d-none");
-            select.value = default_sel;
+            //select.value = default_sel;
 
             console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'entrada_id':entrada_id, 'referencia': new String(referencia)}));
             ActualizarArticulos(producto, cantidad_ingresada, action, entrada_id, referencia);
@@ -310,12 +338,12 @@ document.getElementById("SwitchReferencia").addEventListener("change", function(
 
 
 	if (checkref.checked){
-	    lbl_referencia.setAttribute('class','col-sm-1')
-        referencia.setAttribute('class','form-control')
+	    lbl_referencia.classList.remove('d-none');
+        //referencia.classList.remove('d-none');
         cantidad.value = 1
 	} else {
-	    lbl_referencia.setAttribute('class','col-sm-1 d-none')
-        referencia.setAttribute('class','form-control d-none')
+	    lbl_referencia.classList.add('d-none')
+        //referencia.setAttribute('class','form-control d-none')
         cantidad.value = 0
         referencia.value = ""
 	}

@@ -26,6 +26,7 @@
                     <th scope="col">Artículo</th>
                     <th scope="col">Unidad</th>
                     <th scope="col">Cantidad Restante</th>
+                    <th>Comentario Usuario</th>
                 </tr>
             </thead>
             <tbody id="mytbl">
@@ -36,10 +37,12 @@
                     <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
                     <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
                     <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
+                    <td>{% if producto.producto.articulos.comentario %}{{producto.producto.articulos.comentario}} {% endif %}</td>
                 </tr>
                 {% endfor %}
             </tbody>
             </table>
+          
             <h6>Comentario Superintendente:   {%if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentario {%endif%}</h6>
             <h6>Comentario Almacén: {%if requis.comentario_compras %} {{requis.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
             </div>

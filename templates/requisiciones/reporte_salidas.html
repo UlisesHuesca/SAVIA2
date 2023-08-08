@@ -198,7 +198,7 @@
                     <td>{{salida.producto.articulos.producto.producto.codigo}} {{salida.producto.articulos.producto.producto.nombre}}</td>
                     <td class="d-none d-md-table-cell">{{salida.vale_salida.material_recibido_por.staff.first_name}} {{salida.vale_salida.material_recibido_por.staff.last_name}}</td>
                     <td>{{salida.cantidad}}</td>
-                    <td>{{salida.precio}}</td>
+                    <td>{% if salida.precio > 0 %} {{salida.precio}} {% elif salida.producto.precio > 0 %} {{salida.producto.precio}} {% else %} {{salida.producto.articulos.producto.price}} {% endif %}</td>
                     <!--<td>{{salida.vale_salida.get_costo_vale}}</td>-->
                     <td class="d-none d-lg-table-cell">
                         <a type="submit" href="{% url 'vale-salida-pdf' salida.id %}" class="btn btn-outline-info btn-lg">

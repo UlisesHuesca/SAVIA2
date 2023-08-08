@@ -1,5 +1,5 @@
 from django.db import models
-from dashboard.models import Inventario
+from dashboard.models import Inventario, Marca
 from user.models import Profile
 
 # Create your models here.
@@ -21,6 +21,8 @@ class Activo(models.Model):
     cuenta_contable = models.CharField(max_length=20, null=True)
     factura_interna = models.CharField(max_length=20, null=True)
     descripcion = models.CharField(max_length=100, null=True)
+    marca = models.ForeignKey(Marca, on_delete = models.CASCADE, null=True)
+    modelo = models.CharField(max_length=30, null=True, blank=True)
     #codigo = models.CharField(max_length=20, null=True)
     comentario = models.CharField(max_length=100, null=True)
     completo = models.BooleanField(default=False)

@@ -29,6 +29,7 @@ class Proyecto(models.Model):
     status_de_entrega = models.ForeignKey(St_Entrega, on_delete=models.CASCADE, null=True)
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
+    complete = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('nombre', 'distrito',)

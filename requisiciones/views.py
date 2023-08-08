@@ -3,7 +3,7 @@ from solicitudes.models import Proyecto, Subproyecto
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Inventario_Batch, Product, Marca
 from dashboard.forms import  Inventario_BatchForm
 from user.models import Profile, User
-from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos
+from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos, Tipo_Devolucion
 from entradas.models import Entrada, EntradaArticulo
 from requisiciones.models import Salidas, ValeSalidas
 from django.contrib.auth.decorators import login_required
@@ -17,7 +17,7 @@ from openpyxl.utils import get_column_letter
 import datetime as dt
 from datetime import date, datetime
 from django.db.models.functions import Concat
-from django.db.models import Value, Sum
+from django.db.models import Value, Sum, Case, When, F, Value
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.mail import EmailMessage
@@ -165,46 +165,50 @@ def update_devolucion(request):
     devolucion = data["devolucion"]
     producto_id = data["id"]
     comentario = data["comentario"]
-    producto = ArticulosparaSurtir.objects.get(id = producto_id)
     devolucion = Devolucion.objects.get(id = devolucion)
-    inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto)
-    #orden = Order.objects.get(id = devolucion.orden.id)
+    
+    
+    if devolucion.tipo.nombre == "SALIDA":
+        producto = Salidas.objects.get(vale_salida=devolucion.salida.vale_salida, producto__id = producto_id)
+        inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto)
+    else:
+        producto = ArticulosparaSurtir.objects.get(id = producto_id)
+        inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto)
+        
 
 
     if action == "add":
         cantidad_total = producto.cantidad - cantidad
         if cantidad_total < 0:
-            messages.error(request,f'La cantidad que se quiere egresar sobrepasa la cantidad disponible. {cantidad_total} mayor que {producto.cantidad}')
+            messages.error(request,f'La cantidad que se quiere ingresar sobrepasa la cantidad disponible. {cantidad_total} mayor que {producto.cantidad}')
         else:
-            devolucion_articulos, created = Devolucion_Articulos.objects.get_or_create(producto=producto, vale_devolucion = devolucion, complete=False)
+            if devolucion.tipo.nombre == "SALIDA":
+                devolucion_articulos, created = Devolucion_Articulos.objects.get_or_create(producto= producto.producto, vale_devolucion = devolucion, complete=False)
+            else:
+                devolucion_articulos, created = Devolucion_Articulos.objects.get_or_create(producto=producto, vale_devolucion = devolucion, complete=False)
+            
             producto.seleccionado = True
+            #Se le resta a la cantidad de artículos para surtir
             producto.cantidad = producto.cantidad - cantidad
-            #inv_del_producto.cantidad = inv_del_producto.cantidad + cantidad
-            #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - cantidad
-            #inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
+            #La cantidad de la devolución es igual a la cantidad que se marcó en la devolución (daaa)
             devolucion_articulos.cantidad = cantidad
             devolucion_articulos.comentario = comentario
             devolucion_articulos.precio = producto.precio
             devolucion_articulos.complete = True
-            #inv_del_producto.price = ((inv_del_producto.get_total_producto) + (devolucion_articulos.cantidad * devolucion_articulos.precio))/(devolucion_articulos.cantidad+inv_del_producto.cantidad+inv_del_producto.cantidad_apartada)
-
-            if producto.cantidad == 0:
+            if producto.cantidad == 0: #Si la cantidad de artículos para surtir es igual a 0, si la cantidad a devolver es 0 entonces ya no se puede surtir
                 producto.surtir = False
-            messages.success(request,'Has agregado producto de manera exitosa')
+            messages.success(request,'Has agregado producto para devolución de manera exitosa')
             producto.save()
-            #inv_del_producto.save()
             devolucion_articulos.save()
     if action == "remove":
-        item = Devolucion_Articulos.objects.get(producto=producto, vale_devolucion = devolucion, complete = True)
-        #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
-        #inv_del_producto.cantidad = inv_del_producto.cantidad - item.cantidad
-        #producto.seleccionado = False
-        #producto.surtir= True
-        #producto.cantidad = producto.cantidad + item.cantidad
-        #inv_del_producto._change_reason = f'Esta es una cancelación de una devolucion {item.id}'
-        #producto.save()
+        if devolucion.tipo.nombre == "SALIDA":
+            item = Devolucion_Articulos.objects.get(producto=producto.producto, vale_devolucion = devolucion, complete = True)
+        else:
+            item = Devolucion_Articulos.objects.get(producto=producto, vale_devolucion = devolucion, complete = True)
+        producto.cantidad = producto.cantidad + item.cantidad
+        producto.seleccionado = False
         messages.success(request,'Has eliminado un producto de tu listado')
-        #inv_del_producto.save()
+        producto.save()
         item.delete()
 
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
@@ -216,15 +220,34 @@ def autorizar_devolucion(request, pk):
     
     if request.method == 'POST' and 'btnAutorizar' in request.POST:
         for producto in productos:
-            producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
-            inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
-            #producto_surtir.seleccionado = False
-            #producto_surtir.cantidad = producto_surtir.cantidad + producto.cantidad
+            if devolucion.tipo.nombre == "SALIDA":
+                producto_surtir = Salidas.objects.get(id=devolucion.salida.id)
+                inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto) 
+                inv_del_producto._change_reason = f'Esta es una devolucion desde un salida {devolucion.id}'
+            else:
+                producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
+                inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
+                inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
+                try:
+                    entrada = EntradaArticulo.objects.get(articulo_comprado__producto__producto=producto_surtir, entrada__oc__req__orden=producto_surtir.articulos.orden, agotado = False)
+                    
+                    # Verificar si la cantidad en la entrada es suficiente
+                    if entrada.cantidad_por_surtir >= producto.cantidad:
+                        print(entrada)
+                        # Reducir la cantidad de la entrada según la cantidad de la devolución
+                        entrada.cantidad_por_surtir -= producto.cantidad 
+                        entrada.save()
+                    else:
+                        # Manejar el caso en que no hay suficiente cantidad en la entrada (opcional)
+                        entrada.cantidad_por_surtir = 0
+                        entrada.agotado = True
+                except EntradaArticulo.DoesNotExist:
+                    # Manejar el caso en que no hay una entrada asociada (opcional)
+                    messages.error(request, 'No se encontró una entrada asociada para el producto.')
+                    
             inv_del_producto.cantidad = inv_del_producto.cantidad + producto.cantidad
-            inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - producto.cantidad
-            inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
-            #producto_surtir.save()
             inv_del_producto.save()
+            messages.success(request,'Has autorizado exitosamente una devolución')
         devolucion.autorizada = True
         devolucion.save()
         return redirect('matriz-autorizar-devolucion')
@@ -240,17 +263,15 @@ def autorizar_devolucion(request, pk):
 def cancelar_devolucion(request, pk):
     devolucion= Devolucion.objects.get(id=pk)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
-    
+
     if request.method == 'POST' and 'btnCancelar' in request.POST:
         for producto in productos:
-            producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
-            #inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
-            #producto_surtir.seleccionado = False
+            if devolucion.tipo.nombre == "SALIDA":
+                producto_surtir = Salidas.objects.get(salida=devolucion.salida)
+            else:
+                producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
             producto_surtir.cantidad = producto_surtir.cantidad + producto.cantidad
             producto_surtir.surtir = True
-            #inv_del_producto.cantidad = inv_del_producto.cantidad + producto.cantidad
-            #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - producto.cantidad
-            #inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
             producto_surtir.save()
             #inv_del_producto.save()
         devolucion.autorizada = False
@@ -351,7 +372,8 @@ def devolucion_material(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
     orden = Order.objects.get(id = pk)
     productos_sel = ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
-    devolucion, created = Devolucion.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
+    tipo = Tipo_Devolucion.objects.get(nombre ="APARTADO" )
+    devolucion, created = Devolucion.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden, tipo=tipo)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
     cantidad_items = productos.count()
     form = DevolucionArticulosForm()
@@ -363,10 +385,69 @@ def devolucion_material(request, pk):
         if "agregar_devolucion" in request.POST:
             form2 = DevolucionForm(request.POST, instance=devolucion)
             if form2.is_valid():
+                devolucion = form2.save(commit=False)
                 devolucion.complete= True
                 devolucion.hora = datetime.now().time()
                 devolucion.fecha = date.today()
-                messages.success(request,f'{usuario.staff.first_name},Has hecho la devolución de manera exitosa')
+                devolucion.tipo.nombre = "SIN SALIDA" 
+                devolucion.save()
+                for producto in productos_sel:
+                    producto.seleccionado = False
+                    producto.save()
+                messages.success(request,f'{usuario.staff.first_name}, Has hecho la devolución de manera exitosa')
+                email = EmailMessage(
+                    f'Cancelación de solicitud: {orden.folio}',
+                    f'Estimado {orden.staff.staff.first_name} {orden.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordtec.com',
+                    ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
+                    )
+                email.send()
+                return redirect('solicitud-autorizada')
+
+    context= {
+        'orden':orden,
+        'productos':productos,
+        'form':form,
+        'form2':form2,
+        'devolucion': devolucion,
+        'cantidad_items':cantidad_items,
+        'productos_sel': productos_sel,
+        }
+
+    return render(request, 'requisiciones/devolucion_material.html',context)
+
+@login_required(login_url='user-login')
+def devolucion_material_salida(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    salidas = Salidas.objects.all()
+    salida = salidas.get(id=pk)
+    vale_salida = ValeSalidas.objects.get(id=salida.vale_salida.id)
+    orden = Order.objects.get(id = vale_salida.solicitud.id)
+    #Esta es la parte que varía de devolución de material, aquí los productos deben ser salida = True
+    #productos_sel = ArticulosparaSurtir.objects.filter(articulos__orden = orden, salida=True)
+    productos_sel = salidas.filter(id=pk)
+    tipo = Tipo_Devolucion.objects.get(nombre ="SALIDA" )
+    devolucion, created = Devolucion.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden,tipo =tipo, salida =salida)
+    productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
+    cantidad_items = productos.count()
+    form = DevolucionArticulosForm()
+    form2 = DevolucionForm()
+
+    form.fields['producto'].queryset = productos_sel
+
+    if request.method == 'POST':
+        if "agregar_devolucion" in request.POST:
+            form2 = DevolucionForm(request.POST, instance=devolucion)
+            if form2.is_valid():
+                devolucion = form2.save(commit=False)
+                devolucion.complete= True
+                devolucion.hora = datetime.now().time()
+                devolucion.fecha = date.today()
+                devolucion.save()
+                for producto in productos_sel:
+                    producto.seleccionado = False
+                    producto.save()
+                messages.success(request,f'{usuario.staff.first_name}, Has hecho la devolución de manera exitosa')
                 email = EmailMessage(
                     f'Cancelación de solicitud: {orden.folio}',
                     f'Estimado {orden.staff.staff.first_name} {orden.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
@@ -412,7 +493,7 @@ def solicitud_autorizada_firma(request):
 def update_salida(request):
     data= json.loads(request.body)
     action = data["action"]
-    cantidad = decimal.Decimal(data["val_cantidad"])
+    cantidad = decimal.Decimal (data["val_cantidad"])
     salida = data["salida"]
     producto_id = data["id"]
     id_salida =data["id_salida"]
@@ -429,7 +510,7 @@ def update_salida(request):
         #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
         producto.seleccionado = True
-        entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden)
+        entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal')
 
         try:
             EntradaArticulo.objects.get(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento')
@@ -477,21 +558,25 @@ def update_salida(request):
             entrada_res.cantidad_por_surtir = entrada_res.cantidad_por_surtir - salida.cantidad
             #producto.cantidad_apartada = producto.cantidad_apartada - salida.cantidad
             salida.entrada = entrada_res.id
+            salida.cantidad = cantidad
             if producto.cantidad_requisitar == 0:
                 producto.requisitar = False
             if entrada_res.cantidad_por_surtir == 0:
                 entrada_res.agotado = True
             entrada_res.save()
             inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
-            inv_del_producto._change_reason = f'Esta es una salida desde un resurtimiento de inventario {salida.id}'
+            inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario {salida.id}'
             salida.precio = entrada_res.articulo_comprado.precio_unitario
         else:    #si no hay resurtimiento
             salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
             salida.cantidad = cantidad
             salida.entrada = 0
+            salida.complete = True
             producto.cantidad = producto.cantidad - cantidad 
+            if producto.cantidad_requisitar <= 0:
+                producto.requisitar = False
             salida.precio = inv_del_producto.price
-            inv_del_producto._change_reason = f'Esta es una salida de inventario'
+            inv_del_producto._change_reason = f'Esta es la salida de inventario de un artículo'
             #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad
         inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
         producto.save()
@@ -516,7 +601,7 @@ def update_salida(request):
         producto.seleccionado = False
         producto.salida= False
         producto.cantidad = producto.cantidad + item.cantidad
-        inv_del_producto._change_reason = f'Esta es una cancelación de una salida {item.id}'
+        inv_del_producto._change_reason = f'Esta es una cancelación de un artìculo en una salida {item.id}'
         producto.save()
         inv_del_producto.save()
         item.delete()
@@ -544,6 +629,19 @@ def salida_material_usuario(request, pk):
     }
 
     return render(request, 'requisiciones/salida_material_usuario.html',context)
+
+@login_required(login_url='user-login')
+def matriz_salida_activos(request):
+    productos = Salidas.objects.filter(validacion_activos = False, producto__articulos__producto__producto__activo = True)
+    #producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
+    #activo = Activo.objects.filter(activo = productos.producto.producto)
+
+
+    context= {
+        'productos':productos,
+    }
+
+    return render(request, 'requisiciones/matriz_salida_activos.html',context)
 
 @login_required(login_url='user-login')
 def solicitud_autorizada_orden(request):
@@ -929,9 +1027,10 @@ def reporte_salidas(request):
     salidas = Salidas.objects.all().order_by('-vale_salida')
     myfilter = SalidasFilter(request.GET, queryset=salidas)
     salidas = myfilter.qs
+    salidas_filtradas = salidas.filter(producto__articulos__producto__producto__servicio = False)
 
     if request.method == "POST" and 'btnExcel' in request.POST:
-        return convert_salidas_to_xls(salidas)
+        return convert_salidas_to_xls(salidas_filtradas)
     
      #Set up pagination
     p = Paginator(salidas, 50)
@@ -993,8 +1092,11 @@ def convert_solicitud_autorizada_to_xls(productos):
     date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
     date_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(date_style)
+    number_style = NamedStyle(name='number_style', number_format='#,##0.00')
+    number_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(number_style)
 
-    columns = ['Folio','Solicitante','Proyecto','Subproyecto','Código','Artículo','Creado']
+    columns = ['Folio','Solicitante','Proyecto','Subproyecto','Código','Artículo','Creado','Cantidad']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1005,17 +1107,26 @@ def convert_solicitud_autorizada_to_xls(productos):
     (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia V2. UH}')).style = messages_style
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
 
-    rows = productos.values_list('articulos__orden_id',Concat('articulos__orden__staff__staff__first_name',Value(' '),'articulos__orden__staff__staff__last_name'),
-                            'articulos__orden__proyecto__nombre','articulos__orden__subproyecto__nombre',
-                            'articulos__producto__producto__codigo','articulos__producto__producto__nombre','articulos__orden__approved_at')
+    rows = productos.values_list(
+        'articulos__orden__folio',
+        Concat('articulos__orden__staff__staff__first_name',Value(' '),'articulos__orden__staff__staff__last_name'),
+        'articulos__orden__proyecto__nombre',
+        'articulos__orden__subproyecto__nombre',
+        'articulos__producto__producto__codigo',
+        'articulos__producto__producto__nombre',
+        'articulos__orden__approved_at',
+        'cantidad')
 
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
-            if col_num/6 >0 and col_num % 6 == 0:
+            if col_num == 6:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num == 7 or col_num == 4:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
             else:
                 (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+    
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)
@@ -1081,7 +1192,7 @@ def convert_entradas_to_xls(entradas):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Entradas_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.create_sheet(title='Solicitudes')
+    ws = wb.create_sheet(title='Entradas')
     #Comenzar en la fila 1
     row_num = 1
 
@@ -1136,7 +1247,7 @@ def convert_salidas_to_xls(salidas):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Salidas_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.create_sheet(title='Solicitudes')
+    ws = wb.create_sheet(title='Salidas')
     #Comenzar en la fila 1
     row_num = 1
 
@@ -1157,8 +1268,17 @@ def convert_salidas_to_xls(salidas):
     date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
     date_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+    number_style = NamedStyle(name='number_style', number_format='#,##0.00')
+    number_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(number_style)
 
-    columns = ['Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Material recibido por','Cantidad','Precio']
+    columns = ['Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Material recibido por','Cantidad','Precio','Total']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1168,17 +1288,39 @@ def convert_salidas_to_xls(salidas):
 
     (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA VORDTEC. UH}')).style = messages_style
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Grupo Vordcab S.A. de C.V.}')).style = messages_style
+    
 
-    rows = salidas.values_list('producto__articulos__orden__id','created_at',Concat('producto__articulos__orden__staff__staff__first_name',Value(' '),'producto__articulos__orden__staff__staff__last_name'),
-                        'producto__articulos__orden__proyecto__nombre','producto__articulos__orden__subproyecto__nombre','producto__articulos__orden__area__nombre','producto__articulos__producto__producto__codigo','producto__articulos__producto__producto__nombre',
-                        Concat('vale_salida__material_recibido_por__staff__first_name',Value(' '),'vale_salida__material_recibido_por__staff__last_name'),'cantidad','precio')
+    rows = salidas.values_list(
+        'producto__articulos__orden__folio',
+        'created_at',
+        Concat('producto__articulos__orden__staff__staff__first_name',Value(' '),'producto__articulos__orden__staff__staff__last_name'),
+        'producto__articulos__orden__proyecto__nombre',
+        'producto__articulos__orden__subproyecto__nombre',
+        'producto__articulos__orden__area__nombre',
+        'producto__articulos__producto__producto__codigo',
+        'producto__articulos__producto__producto__nombre',
+        Concat('vale_salida__material_recibido_por__staff__first_name',Value(' '),'vale_salida__material_recibido_por__staff__last_name'),
+        'cantidad',
+        Case(
+            When(precio__gt = 0, then='precio'),
+            When(producto__precio__gt = 0, then='producto__precio'),
+            default='producto__articulos__producto__price',
+        )
+    )
 
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 8:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
+            if col_num == 1:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num == 9:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
+            if col_num == 10:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+        ws.cell(row=row_num, column=len(row) + 1, value=f'=J{row_num} * K{row_num}').style = money_style
+    
+    (ws.cell(column = columna_max , row = 3, value=f'=SUM(L2:L{row_num})')).style = money_resumen_style
 
     sheet = wb['Sheet']
     wb.remove(sheet)

@@ -171,7 +171,7 @@
                 </div>
         </div>
 
-        <form hx-post="{% url 'compras-pagos' compra.id %}" hx-encoding='multipart/form-data' class="modal-content">
+        <form hx-post="{% url 'compras-pagos' compra.id %}" hx-encoding='multipart/form-data' hx-ext="disable-on-submit" class="modal-content">
             <div>
                 {% csrf_token %}
                 <div class="row my-2">
@@ -251,11 +251,20 @@ if (tipo_cambio) {
 
 }
 
+htmx.defineExtension('disable-on-submit', {
+  onEvent: function(name, evt) {
+    if (name === 'htmx:configRequest') {
+      var target = evt.detail.elt;
+      if (target.tagName === 'FORM') {
+        var button = target.querySelector('input[type="submit"]');
+        if (button) {
+          button.disabled = true;
+        }
+      }
+    }
+  },
+});
 
-
-//if (compra_moneda == "DOLARES"){
-  //  monto_moneda.selectedIndex = 1;
-//}
 
 document.getElementById('monto_dolares').addEventListener('change',(event)=>{
     var tipo = document.getElementById("id_tipo_de_cambio").value;

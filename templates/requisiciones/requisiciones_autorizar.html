@@ -46,34 +46,37 @@
                         <tr>
                             <th scope="col">Presupuesto remanente:*</th>
                             <th scope="col" id="resta">${{resta|floatformat:2}}</th>
-                        </tr>
+                        </tr>   
                         <tr>
                             <th scope="col">Comentario Almacén:</th>
                             <th scope="col">{% if requis.comentario_compras %} {{requis.comentario_compras}} {%else%} No hay comentarios {% endif %}</th>
                         </tr>
                     </tbody>
             </table>
-            <div class='box-element-2'>
-                <div class='cart-row'>
-                    <div style="flex:1"></div>
-                    <div style="flex:1">Código</div>
-                    <div style="flex:2">Artículo</div>
-                    <div style="flex:1">Cantidad</div>
-                </div>
-                {% for producto in productos %}
-                <div class='cart-row'>
-                    <div style="flex:1"><img class='row-image' src="{{producto.producto.articulos.producto.producto.imageURL}}"></div>
-                    <div style="flex:1">{{producto.producto.articulos.producto.producto.codigo}}</div>
-                    <div style="flex:2">{{producto.producto.articulos.producto.producto.nombre}}</div>
-                    <div style="flex:1">
-                        <p class='quantity'>{{producto.cantidad}}</p>
-                    </div>
-                </div>
-                {% endfor %}
-            </div>
-            
-        </div>
+            <div class='box-element-2 table-responsive-sm'>
+                <table class='table table-dark table striped'>
+                    <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Artículo</th>
+                        <th>Cantidad</th>
+                        <th>Comentario</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{producto.producto.articulos.producto.producto.codigo}}</td>
+                        <td>{{producto.producto.articulos.producto.producto.nombre}}</td>
+                        <td><p class='quantity'>{{producto.cantidad}}</p></td>
+                        <td>{% if producto.producto.articulos.comentario %}{{producto.producto.articulos.comentario}} {% endif %}</td>
 
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
         <div class="modal-footer">
             <form action="{% url 'requisicion-autorizar' requis.id%}" method=POST>
                 {% csrf_token %}

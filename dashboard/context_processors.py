@@ -62,7 +62,7 @@ def contadores_processor(request):
             requis= Requis.objects.filter(complete=True, autorizar=True, colocada=False)
             conteo_requis = requis.count()
         if usuario.tipo.oc_superintendencia == True:
-            oc = Compra.objects.filter(complete=True, autorizado1=None)
+            oc = Compra.objects.filter(complete = True, autorizado1 = True, autorizado2= None)
             conteo_oc1 = oc.count()
         if usuario.tipo.oc_gerencia == True:
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None)

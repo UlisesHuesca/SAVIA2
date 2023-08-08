@@ -7,7 +7,7 @@ class CompraAdmin(admin.ModelAdmin):
 
 class ArticuloComprado_Admin(admin.ModelAdmin):
     list_display = ('oc','producto','cantidad')
-    search_fields = ('oc',)
+    search_fields = ['producto__producto__articulos__producto__producto__nombre']
 
 class ProveedorAdmin(admin.ModelAdmin):
     search_fields = ('razon_social',)

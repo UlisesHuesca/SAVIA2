@@ -41,8 +41,8 @@
 <hr>
 <div class="row">
     <div class="col-lg-4">
-        <div class="box-element" id="form-wrapper">
-            <div class="card-header mt-3 mb-4">
+        <div class="card" id="form-wrapper">
+            <div class="card-header">
             <!-- Aqui es el encabezado de los filtros -->
                 <h5>Devolución D{{devolucion.id}}| Solicitud: {{orden.folio}}</h5>
             </div>
@@ -64,56 +64,75 @@
         </div>
     </div>
     <div class="col-lg-7">
-        <div class="box-element">
+        <div class="card">
+            <div class = "card-header">
             <h5 id="devolucion" vale="{{devolucion.id}}">Productos</h5>
-            <hr>
+            </div>
 
-            <div class='cart-row'>
+            <div class='card-body'>
                 <form method="POST">
                 <div class="row">
-                    <label class="col-auto col-form-label"><strong>Productos:</strong></label>
-                    <div class="col-sm-7">
-                        <div class="selector">
-                            <select class="form-select form-select-sm" id="producto">
-                            <option id="default_sel">      </option>
-                            {% for producto in productos_sel %}
-                            {% if producto.seleccionado == False %}
-                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
-                                {{producto.articulos.producto}}
-                            </option>
-                            {% endif %}
-                            {% endfor %}
-                            </select>
+                        <div class="col-lg-8 col-sm-12">
+                            <div id="input_producto" class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <label  style="font-size:10px; color:gray;" for="subproyecto">Productos*</label>
+                                    <select style="font-size:16px" class="form-select form-select-sm"  id="producto">
+                                            <option style="color:gray;" value="" selected disabled>Producto</option>
+                                            {% for producto in productos_sel %}
+                                                {% if producto.seleccionado == False %}
+                                                    {% if devolucion.tipo.nombre == "SALIDA" %}
+                                                    <option id="js" target="{{producto.producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.producto.articulos.cantidad}}" stock="{{producto.producto.articulos.producto.cantidad}}">
+                                                        {{producto.producto.articulos.producto}}
+                                                    </option>
+                                                    {% else %}
+                                                    <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
+                                                        {{producto.articulos.producto}}
+                                                    </option>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="etiqueta_solicitado" class="col-4 mt-2">
+                            <div class="alert alert-secondary" role="alert">
+                            <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                            </div>
                         </div>
                         {{form.producto|add_class:"form-control d-none"}}
-                    </div>
-                    <div class="col-sm-2">
-                    <label class="col-auto col-form-label"><strong>Solicitado:</strong></label>
-                    </div>
-                    <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
                 </div>
                 <div class="row">
-                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Cantidad:</strong></label>
-                    <div class="col-sm-2">
-                        {{form.cantidad|add_class:"form-control"}}
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                            </div>
+                        </div>
                     </div>
-                
-                
-                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Comentario:</strong></label>
-                    <div class="col-sm-5">
-                        {{form.comentario|add_class:"form-control"}}
-                    </div>
-                    <div class="col-sm-1">
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Comentario</label>
+                            </div>
+                        </div>
+                    </div>    
+                    <div class="col-sm-1 mt-3">
                         <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
                             Agregar
                         </a>
                     </div>
                 </div>
                 <hr>
-
-                <table class="table table-ligth table-striped mx-1">
-                {% csrf_token %}
-                <thead>
+                <div class ="table-responsive-sm">
+                    <table class="table table-ligth table-striped mx-1">
+                    {% csrf_token %}
+                    <thead>
                         <tr>
                         <th scope="col" salidas="{{salidas}}">#</th>
                         <th scope="col">Código</th>
@@ -122,9 +141,9 @@
                         <!--<th scope="col">Precio</th>-->
                         <th scope="col">Comentario</th>
                         </tr>
-                </thead>
-                <tbody>
-                    {% for item in productos %}
+                    </thead>
+                    <tbody>
+                        {% for item in productos %}
                         <tr>
                             <th scope="col"><img class="row-image" src="{{item.producto.articulos.producto.producto.imageURL}}"></th>
                             <th scope="col">{{item.producto.articulos.producto.producto.codigo|unlocalize}}</th>
@@ -139,13 +158,15 @@
                                 </button>
                             </td>
                         </tr>
-                    {% endfor %}
-                </tbody>
-                </form>
-                </table>
+                        {% endfor %}
+                    </tbody>
+                    </form>
+                    </table>
+                </div>
             </div>
-            <hr>
-            <h5>Artículos: {{cantidad_items}}</h5>
+            <div class="card-footer">
+            <h5 class>Artículos: {{cantidad_items}}</h5>
+            </div>
 
         </div>
     </div>

@@ -3,7 +3,9 @@ from dashboard.models import Order, Inventario, ArticulosparaSurtir
 from user.models import Profile
 from solicitudes.models import Proyecto, Subproyecto
 from simple_history.models import HistoricalRecords
-from django.db.models import Avg
+from django.db.models import Avg,  F, ExpressionWrapper, DecimalField
+from activos.models import Activo
+
 #from djmoney.models.fields import MoneyField
 # Create your models here.
 class Requis(models.Model):
@@ -92,7 +94,9 @@ class ValeSalidas(models.Model):
 
     @property
     def get_costo_vale(self):
-        salidas = self.salidas_set.all()
+        salidas = self.salidas_set.annotate(
+            costo_salida = ExpressionWrapper(F('cantidad')* F('precio'),output_field=DecimalField())
+            )
         #salidas = salidas.filter(complete=True) 
         suma =  sum([item.get_costo_salida for item in salidas])
         return suma
@@ -109,6 +113,9 @@ class Salidas(models.Model):
     complete = models.BooleanField(null=True, default=False)
     precio = models.DecimalField(max_digits=14, decimal_places=2,default=0)
     entrada = models.IntegerField(default=0, null=True, blank=True)
+    validacion_activos = models.BooleanField(null=True, default=False)
+    seleccionado = models.BooleanField(null=True, default=False)
+    activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True, blank=True)
 
     @property
     def get_costo_salida(self):
@@ -118,6 +125,8 @@ class Salidas(models.Model):
     def __str__(self):
         return f'{self.producto} - {self.cantidad} - {self.created_at}'
 
+class Tipo_Devolucion(models.Model):
+    nombre = models.CharField(max_length=20, null=True)
 
 class Devolucion(models.Model):
     solicitud = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)
@@ -128,6 +137,9 @@ class Devolucion(models.Model):
     complete = models.BooleanField(null=True, default=False)
     comentario = models.TextField(max_length=200, null=True)
     autorizada = models.BooleanField(null=True, default=None)
+    tipo = models.ForeignKey(Tipo_Devolucion, on_delete = models.CASCADE, null=True)
+    salida = models.ForeignKey(Salidas, on_delete = models.CASCADE, null=True, blank=True)
+
 
 class Devolucion_Articulos(models.Model):
     vale_devolucion = models.ForeignKey(Devolucion, on_delete = models.CASCADE, null=True)

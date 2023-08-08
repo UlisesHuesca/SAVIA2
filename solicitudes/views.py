@@ -154,7 +154,7 @@ def checkout(request):
         superintendentes = Profile.objects.filter(staff=request.user)
         order.superintendente = usuario
     else:
-        superintendentes = Profile.objects.filter(tipo__superintendente = True)
+        superintendentes = Profile.objects.filter(tipo__superintendente = True, staff__is_active = True).exclude(tipo__nombre="Admin")
 
 
     form = OrderForm(instance = order)
@@ -210,15 +210,17 @@ def checkout(request):
                         order.requisitar = True
                         prod_inventario.save()
                         ordensurtir.save()
-                    elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True:
+                    elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or producto.producto.producto.servicio == True:
                         ordensurtir.requisitar = True
                         ordensurtir.cantidad_requisitar = producto.cantidad
                         order.requisitar = True
+                        print(producto.producto.producto.servicio)
                         if producto.producto.producto.servicio == True:
                             requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-                            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
+                            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad, almacenista = usuario)
                             requi.folio = str(usuario.distrito.abreviado)+str(requi.id).zfill(4)
                             order.requisitar=False
+                            order.requisitado = True
                             ordensurtir.requisitar=False
                             requi.save()
                             requitem.save()
@@ -609,7 +611,7 @@ def ajuste_inventario(request):
                             item.surtir = True
                         #Se reduce la cantidad de inventario y se aumenta la apartada
                         producto_inventario.cantidad = producto_inventario.cantidad - cantidad
-                        producto_inventario.cantidad_apartada = producto_inventario.cantidad_apartada + cantidad
+                        #producto_inventario.cantidad_apartada = producto_inventario.cantidad_apartada + cantidad
                         producto_inventario.save()
                         item.save()
                         articulos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__orden=orden_producto)
@@ -622,6 +624,7 @@ def ajuste_inventario(request):
                             orden_producto.save()
                     producto_inventario._change_reason = f'Esta es una ajuste desde un ajuste de inventario {ajuste.id}'
                     producto_inventario.save()
+                ajuste.save()
                 #email = EmailMessage(
                 #    f'Ajuste de producto: {ajuste.id}',
                 #    f'Estimado {usuario.staff.first_name} {usuario.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
@@ -1256,7 +1259,7 @@ def convert_excel_solicitud_matriz(ordenes):
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
     ws.column_dimensions[get_column_letter(columna_max)].width = 20
 
-    rows = ordenes.values_list('id',Concat('staff__staff__first_name',Value(' '),'staff__staff__last_name'),'proyecto__nombre','subproyecto__nombre',
+    rows = ordenes.values_list('folio',Concat('staff__staff__first_name',Value(' '),'staff__staff__last_name'),'proyecto__nombre','subproyecto__nombre',
                                 'area__nombre','created_at')
 
     for row in rows:

@@ -1,0 +1,298 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Agregar Activos {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="container">
+<div class="card"  id="document" role="document">
+    <form method="POST" class="post-form">
+    
+        <div class="card-header">
+            <h4 class="card-title">Editar Activos</h4>
+        </div>
+        <div class="card-body" style="color:white">
+            <div>
+                {% csrf_token %}
+                    <div class="col-12">
+                            <div class="alert alert-secondary" role="alert">
+                            <h4 style="color: #121212;">&nbsp;Activo:&nbsp;{{activo.activo}}</h4>   
+                            </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.descripcion|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
+                                <label style="color: #121212;" for="id_lugar_partida">Descripción*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.tipo_activo|add_class:"form-control"|append_attr:"placeholder= Tipo de Activo"}}
+                            <label style="color: #121212;" for="id_lugar_partida">Tipo de Activo*</label>
+                        </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.eco_unidad|add_class:"form-control"|append_attr:"placeholder= Eco"}}
+                            <label style="color: #121212;" for="id_lugar_partida">Eco*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                        <div id='etiqueta_responsable' class="col-6">
+                            <div class="alert alert-primary" role="alert">
+                            <h6 style="color: #121212;">&nbsp;Personal:&nbsp;{{activo.responsable.staff.first_name}} {{activo.responsable.staff.last_name}}</h6>   
+                            </div>
+                        </div>
+                        <div id="input_personal" class="col-sm-6 d-none">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>    
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                <input type="text" list="personal" id="txt_personal" valor="{{personal.id}}" placeholder="Personal..." class="form-control">
+                                <label  style="color: #121212;" for="txt_personal">Personal*</label>
+                            </div>
+                            <datalist id="personal" name='personal'>
+                            {% for item in personal %}
+                             <option valor="{{item.id}}" value="{{item.staff.first_name}} {{item.staff.last_name}} "></option>
+                             {% endfor %}
+                            </datalist>
+                            </div>
+                        </div>
+                        <div id="etiqueta_marca" class="col-6">
+                            <div class="alert alert-primary" role="alert">
+                            <h6 style="color: #121212;">&nbsp;Marca:&nbsp;{{activo.marca}}</h6>   
+                            </div>
+                        </div>
+                    <div id="input_marca" class="col-sm-6 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>    
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            <input type="text" list="marca" id="txt_marca" valor="{{personal.id}}" placeholder="Marca..." class="form-control">
+                            <label  style="color: #121212;" for="txt_marca">Marca*</label>
+                            </div>
+                            <datalist id="marca" name='marca'>
+                            {% for item in marcas %}
+                            <option valor="{{item.id}}" value="{{item.nombre}}"></option>
+                            {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                    
+                    
+                        <label for="form.price_2" class="col-auto col-form-label my-1 d-none"><strong>Responsable:</strong></label>
+                        <div class="col-4">
+                            {{form.responsable|add_class:"form-control d-none"}}
+                        </div>
+                        
+                    <div class="col-12 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.marca|add_class:"form-control"|append_attr:"placeholder= Marca"}}
+                            <label style="color: #121212;" for="id_lugar_partida">Marca*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                    <div id="serie" class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.serie|add_class:"form-control"|append_attr:"placeholder= Serie"}}
+                            <label style="color: #121212;" for="id_lugar_partida">Serie</label>
+                            </div>
+                        </div>
+                    </div>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.modelo|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
+                                <label style="color: #121212;" for="id_lugar_partida">Modelo</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.comentario|add_class:"form-control"}}
+                            <label style="color: #121212;" for="id_lugar_partida">Observaciones*</label>
+                            </div>
+                        </div>
+                    </div>
+            </div>
+        </div>
+        <div class="card-footer">
+                <button class="btn btn-success" id="crear" type="submit">Crear</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+   
+    </form>
+</div>
+</div>
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+document.getElementById("txt_personal").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_personal");
+    var browserChildren = document.getElementById('personal').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_responsable');
+    //var status_txt = document.getElementById('comparativo')
+
+    //cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value == select.value) {
+            //console.log(browserChildren[i])
+            //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            //console.log(id)
+            let status = browserChildren[i].getAttribute('status')
+            console.log(id)
+
+
+            other_select.value = id;
+            cont = 1
+            }
+        }
+
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+        status_txt.setAttribute("class","row my-2 d-none")
+    }
+});
+document.getElementById('id_tipo_activo').addEventListener('change', (event) => {
+tipo_activo = document.getElementById('id_tipo_activo');
+serie = document.getElementById('serie');
+
+console.log(tipo_activo.value)
+if (tipo_activo.value == 1){
+    serie.setAttribute('class','form-control d-none')
+}else {
+    serie.setAttribute('class','form-control')
+}
+    
+});
+document.getElementById("txt_marca").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_marca");
+    var browserChildren = document.getElementById('marca').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_marca');
+    //var status_txt = document.getElementById('comparativo')
+
+    //cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value == select.value) {
+            //console.log(browserChildren[i])
+            //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            //console.log(id)
+            let status = browserChildren[i].getAttribute('status')
+            console.log(id)
+
+
+            other_select.value = id;
+            cont = 1
+            }
+        }
+
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+        status_txt.setAttribute("class","row my-2 d-none")
+    }
+});
+document.getElementById("etiqueta_responsable").addEventListener("dblclick", function(){
+    var responsable = document.getElementById("etiqueta_responsable")
+    var input_personal = document.getElementById("input_personal")
+    input_personal.setAttribute("class","col-sm-6")
+    responsable.setAttribute("class","col-6 d-none")
+});
+document.getElementById("etiqueta_marca").addEventListener("dblclick", function(){
+    var marca = document.getElementById("etiqueta_marca")
+    var input_marca = document.getElementById("input_marca")
+    input_marca.setAttribute("class","col-sm-6")
+    marca.setAttribute("class","col-6 d-none")
+});
+window.onload = function() {
+    var tipo_activo = document.getElementById('id_tipo_activo');
+    var serie = document.getElementById('serie');
+
+
+    if (tipo_activo.value == 1){
+        serie.setAttribute('class','form-control d-none')
+}else {
+    serie.setAttribute('class','form-control')
+}
+};
+
+</script>
+{% endblock %}
+
+</body>
+</html>

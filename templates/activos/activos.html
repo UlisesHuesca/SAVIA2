@@ -23,7 +23,7 @@
                     {% csrf_token %}
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info btn-block mx-auto" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'add-activo' %}">
+                            <a class="btn btn-outline-info btn-block mx-auto" type="button" href="{% url 'add-activo' %}">
                                 <i class="fa-solid fa-circle-plus">
                                 Agregar
                                 </i>
@@ -85,8 +85,8 @@
                     <th scope="col">Responsable</th>
                     <th scope="col">Tipo Activo</th>
                     <th scope="col">Serie</th>
-                    <th scope="col">Cuenta Contable</th>
-                    <th scope="col">Factura Interna</th>
+                    <th scope="col">Marca</th>
+                    <th scope="col">Modelo</th>
                     <th scope="col">Descripción</th>
                     <th scope="col">Comentario</th>
                     <th scope="col">QR</th>
@@ -99,9 +99,9 @@
                     <th scope="row">{{item.eco_unidad}}</th>
                     <td>{{item.responsable.staff.first_name}} {{item.responsable.staff.last_name}}</td>
                     <td>{{item.tipo_activo}}</td>
-                    <td>{{item.serie}}</td>
-                    <td>{{item.cuenta_contable}} </td>
-                    <td>{{item.factura_interna}}</td>
+                    <td>{% if item.serie %} {{item.serie}} {% endif %}</td>
+                    <td>{{item.marca}}</td>
+                    <td>{% if item.modelo %} {{item.modelo}} {% endif %}</td>
                     <td>{{item.descripcion}}</td>
                     <td>{{item.comentario}}</td>
                     <td>
@@ -110,7 +110,7 @@
                         </a>
                     </td>
                     <td>
-                        <a type="button" class="btn btn-outline-info" href="#">
+                        <a type="button" class="btn btn-outline-info" href="{% url 'edit-activo' item.id %}">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
                     </td>
@@ -127,6 +127,7 @@
 
     </div>
 </div>
+
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>

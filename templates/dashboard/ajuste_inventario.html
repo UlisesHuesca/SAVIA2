@@ -41,12 +41,12 @@
 <hr>
 <div class="row">
     <div class="col-lg-4">
-        <div class="box-element" id="form-wrapper">
-            <div class="card-header mt-3 mb-4">
+        <div class="card" id="form-wrapper">
+            <div class="card-header mb-4">
             <!-- Aqui es el encabezado de los filtros -->
                 <h5>Ajuste de Inventario AJ{{ajuste.id}}</h5>
             </div>
-            <div id="Solicitud-info">
+            <div class="card-body" id="Solicitud-info">
                     <form method="POST" id='OrderForm'>
                         {% csrf_token %}
                         {% if cantidad_items > 0 %}
@@ -54,6 +54,7 @@
                         <div class="col-sm-8">
                         {{form2.comentario|add_class:"form-control"}}
                         </div>
+                        
                         <div class="col-3">
                             <input class="btn btn-outline-info btn-block btn-lg my-4" name="agregar_ajuste" type="submit" value="Ajustar">
                         </div>
@@ -64,43 +65,55 @@
         </div>
     </div>
     <div class="col-lg-7">
-        <div class="box-element">
+        <div class="card">
+            <div class="card-header">
             <h5 id="ajuste" vale="{{ajuste.id}}">Productos</h5>
-            <hr>
+            </div>
 
-            <div class='cart-row'>
+            <div class='card-body'>
                 <form method="POST">
                 <div class="row">
-                    <label class="col-auto col-form-label"><strong>Productos:</strong></label>
-                        <div class="col-sm-8">
-                            {{form.concepto_material|add_class:"form-control d-none"}}
-                            <input type="text" list="productos_sel" id="txt_producto" valor="{{productos_sel.id}}" placeholder="Productos..." class="form-control">
-
+                    <div class="col-12">
+                        {{form.concepto_material|add_class:"form-control d-none"}}
+                        <div  class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>    
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                <input type="text" list="productos_sel" id="txt_producto" valor="{{productos_sel.id}}" placeholder="Productos..." class="form-control">
+                                <label for="txt_producto">Productos*</label>
+                            </div>         
                             <datalist id="productos_sel" name='productos_sel'>
                                 {% for item in productos_sel %}
-                                <option status="" valor="{{item.id}}" value="{{item}}"></option>
+                                <option status="" valor="{{item.id|unlocalize}}" value="{{item}}"></option>
                                 {% endfor %}
                             </datalist>
-                        </div>               
+                        </div>
+                    </div>     
                 </div>
                 <div class="row my-2">
-                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Cantidad:</strong></label>
-                    <div class="col-sm-2">
-                        {{form.cantidad|add_class:"form-control"}}
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                            </div>
+                        </div>
                     </div>
-                
-                
-                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Precio:</strong></label>
-                    <div class="col-sm-2">
-                        {{form.precio_unitario|add_class:"form-control"}}
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.precio_unitario|add_class:"form-control"|append_attr:"placeholder= P.U."}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">P.U.</label>
+                            </div>
+                        </div>
                     </div>
-                    <div class="col-sm-1">
+                    <div class="col-sm-1 mt-3">
                         <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
                             Agregar
                         </a>
                     </div>
                 </div>
-                <hr>
 
                 <table class="table table-ligth table-striped mx-1">
                 {% csrf_token %}
@@ -135,9 +148,9 @@
                 </form>
                 </table>
             </div>
-            <hr>
+            <div class="card-footer">
             <h5>Artículos: {{cantidad_items}}</h5>
-
+            </div>
         </div>
     </div>
     <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">

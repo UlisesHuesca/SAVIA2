@@ -30,6 +30,7 @@ urlpatterns = [
     path('compras/crear_comparativo', views.crear_comparativo, name='crear_comparativo'),
     path('compras/articulos_comparativo/<int:pk>', views.articulos_comparativo, name='articulos-comparativo'),
     path('compras/articulo_comparativo_delete/<int:pk>', views.articulo_comparativo_delete, name='articulo-comparativo-delete'),
+    path('compras/historico_articulos_compras', views.historico_articulos_compras, name='historico-articulos-compras'),
     ]
 
 if settings.DEBUG:

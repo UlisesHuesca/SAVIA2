@@ -23,22 +23,26 @@ from django.db.models import Q
 # Create your views here.
 @login_required(login_url='user-login')
 def crear_gasto(request):
-    usuario = Profile.objects.get(staff__id=request.user.id)
-    superintendentes = Profile.objects.filter(tipo__superintendente=True)
+    colaborador = Profile.objects.all()
+    articulos_gasto = Articulo_Gasto.objects.all()
+    inventario = Inventario.objects.all()
+    usuario = colaborador.get(staff__id=request.user.id)
+    superintendentes = colaborador.filter(tipo__superintendente=True)
     proyectos = Proyecto.objects.filter(activo=True)
     subproyectos = Subproyecto.objects.all()
-    colaborador = Profile.objects.all()
+    #colaborador = Profile.objects.all()
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
     gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False, staff=usuario)
-    articulo, created = Articulo_Gasto.objects.get_or_create(completo = False, staff=usuario)
+    
+    articulo, created = articulos_gasto.get_or_create(completo = False, staff=usuario)
 
-    productos = Articulo_Gasto.objects.filter(gasto=gasto, completo = True)
+    productos = articulos_gasto.filter(gasto=gasto, completo = True)
+    
 
-    articulos_gasto = Inventario.objects.filter(producto__gasto = True)
-    articulos = Inventario.objects.filter(producto__gasto = False)
+    articulos_gasto = inventario.filter(producto__gasto = True)
+    articulos = inventario.filter(producto__gasto = False)
     form_product = Articulo_GastoForm()
     form = Solicitud_GastoForm()
-
     if request.method =='POST':
         if "btn_agregar" in request.POST:
             form = Solicitud_GastoForm(request.POST, instance=gasto)
@@ -117,7 +121,7 @@ def solicitudes_gasto(request):
 
 
    
-    if perfil.tipo.nombre == "Admin":
+    if perfil.tipo.nombre == "Admin" or perfil.tipo.nombre == "Gerente":
         solicitudes = Solicitud_Gasto.objects.all().order_by('-folio')
     else:
         solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')

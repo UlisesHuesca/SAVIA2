@@ -137,7 +137,7 @@
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                             {{f.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
-                            <label for="id_lugar_partida">Clabe*</label>
+                            <label for="id_clabe">Clabe*</label>
                             </div>
                         </div>
                     </div>
@@ -173,7 +173,7 @@
                     </div>
                     {% endfor %}
                     <hr>
-                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-product' %}">Cancelar</a>
+                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
                     <input id="BtnActualizar" class="btn btn-outline-info d-none" type='submit' value="Actualizar">
                 </form>
             </div>

@@ -11,7 +11,7 @@
 <hr>
 <hr>
 <hr>
-<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
 <h6>&nbsp;</h6>
 <div class="row">
     <div class="card col-lg-4 col-md-12">
@@ -254,35 +254,6 @@
      }
 });
 
-
-   // document.getElementById("id_proyecto").addEventListener("change", function(event){
-   // var select = document.getElementById("id_proyecto");
-   // var text_subproyectos = document.getElementById("subproyecto")
-   // var subproyectos = text_subproyectos.children;
-   // var current_option = select.options[select.selectedIndex];
-   // var target = current_option.value
-   // var sub = document.getElementById('id_subproyecto')
-   // console.log(target)
-
-   // text_subproyectos.setAttribute('class','form-select form-select-sm my-1')
-
-
-   // text_subproyectos.value = ""
-   // sub.value =""
-
-
-    // for(let i = 0; i < subproyectos.length; i++){
-    //    proyecto_num  = subproyectos[i].getAttribute('target')
-
-
-      //  if (proyecto_num === target) {
-       //     subproyectos[i].setAttribute('class','')
-        //} else {
-         //   subproyectos[i].setAttribute('class','d-none')
-     //}
-     //}
-
-    //});
   
     document.getElementById("subproyecto").addEventListener("change", function(event){
         var select = this;
@@ -308,6 +279,26 @@
     var other_select = document.getElementById('id_superintendente')
     other_select.value = target
     });
+
+document.addEventListener('DOMContentLoaded', function(){
+    var formInputs = Array.from(document.getElementsByClassName('grupo-entrada'));
+    var submitButton = document.querySelector('#submit-button');
+
+    formInputs.forEach(function(input){
+        input.addEventListener('input', function(){
+            var allFilled = formInputs.every(function(input){
+                if (input.tagName === 'INPUT') {
+                    return input.value !== '';
+                }
+                if (input.tagName === 'SELECT') {
+                    return input.value && input.value !== "Subproyecto" && input.value !== "Superintendente";
+                }
+                return false;
+            });
+            submitButton.disabled = !allFilled;
+        });
+    });
+});
 
 </script>
 {% endblock %}

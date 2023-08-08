@@ -19,6 +19,7 @@ urlpatterns = [
     path('proveedores/', views.proveedores, name='dashboard-proveedores'),
     path('proveedores/add/', views.add_proveedores, name='add_proveedores'),
     path('proveedores/add_nuevo/', views.add_proveedores2, name='add_proveedores2'),
+    path('proveedores/add_proveedor_comparativo/', views.add_proveedores_comparativo, name='add_proveedores_comparativo'),
     path('proveedor/matriz_revision_proveedor', views.matriz_revision_proveedor, name='matriz-revision-proveedor'),
     path('proveedor/update/<int:pk>/', views.proveedores_update, name='dashboard-proveedores-update'),
     path('proveedor/direcciones/<int:pk>/', views.proveedor_direcciones, name='proveedor-direcciones'),

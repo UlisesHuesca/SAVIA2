@@ -12,46 +12,86 @@
 <hr>
 <hr>
 <hr>
-<div class = "row mt-2 bg-white">
-        <div class="col-12">
-            <div class="card card-body">
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class = "card mt-2 bg-white">
+        
+            <div class="card card-header">
                 <h5>Filtro de Compras</h5>
-                <hr>
+            </div>
+            <div class="card card-body">
+               
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row g-12">
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Folio:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.id|add_class:'form-control'}}
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.id|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                                <label style="color: #121212;" for="id_id">Folio</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Proveedor:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.proveedor|add_class:'form-control'}}
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                                <label style="color: #121212;" for="id_id">Proveedor</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right my-2"><strong>Requisición:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.req|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.proyecto|add_class:'form-control'}}
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
+                                <label style="color: #121212;" for="id_id">Requisición</label>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div class="row g-12">
-                    <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Subproyecto:</strong></label>
-                    <div class="col-2">
-                        {{myfilter.form.subproyecto|add_class:'form-control'}}
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                                <label style="color: #121212;" for="id_id">Proyecto</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Desde:</strong></label>
-                    <div class="col-2">
-                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
+                                <label style="color: #121212;" for="id_id">Subproyecto</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Hasta:</strong></label>
-                    <div class="col-2">
-                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
+                        </div>
                     </div>
                     <div class="col-2">
-                        <button class="btn btn-outline-success btn-block" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
                 <hr>
@@ -59,7 +99,7 @@
                 <form method=POST>
                     {% csrf_token %}
                     <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
+                        <li class="nav-item m-1">
                             <button type="submit" name="btnReporte" class="btn btn-outline-success" value='Reporte Excel'>
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
@@ -122,58 +162,62 @@
     </div>
 </div>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
+<div class = "card">
+    <div class ="table-responsive-sm">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">Compra</th>
-                    <th scope="col">Req</th>
-                    <th scope="col">Sol</th>
-                    <th scope="col">Solicitado por</th>
+                    <th class="d-none d-lg-table-cell">Req</th>
+                    <th class="d-none d-lg-table-cell">Sol</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
                     <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Área</th>
-                    <th scope="col">Creada</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Área</th>
+                    <th class="d-none d-lg-table-cell">Creada</th>
                     <th scope="col">Req. Autorizada</th>
                     <th scope="col">Proveedor</th>
                     <th scope="col">Costo</th>
-                    <th scope="col">Status Pago</th>
-                    <th scope="col">Status Autorización</th>
-                    <th scope="col">Días de Entrega</th>
+                    <th scope="col">Moneda</th>
+                    <th class="d-none d-lg-table-cell">T.C.</th>
+                    <th class="d-none d-lg-table-cell">Status Pago</th>
+                    <th class="d-none d-lg-table-cell">Status Autorización</th>
+                    <th class="d-none d-lg-table-cell">Días de Entrega</th>
                     <th scope="col">Acción</th>
                 </tr>
             </thead>
             <tbody>
                 {% for compra in compras_list %}
                 <tr>
-                    <th scope="row">{{compra.get_folio}}</th>
-                    <th scope="row">{{compra.req.folio}}</th>
-                    <th scope="row">{{compra.req.orden.folio}}</th>
-                    <td>{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
+                    <th >{{compra.get_folio}}</th>
+                    <th class="d-none d-lg-table-cell">{{compra.req.folio}}</th>
+                    <th class="d-none d-lg-table-cell">{{compra.req.orden.folio}}</th>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
                     <td>{{compra.req.orden.proyecto.nombre}}</td>
-                    <td>{{compra.req.orden.subproyecto.nombre}}</td>
-                    <td>{{compra.req.orden.area}}</td>
-                    <td>{{compra.created_at}} </td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.area}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.created_at}} </td>
                     <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
                     <td>{{compra.proveedor}}</td>
                     <td>${{compra.costo_oc}}</td>
+                    <td>{{compra.moneda.nombre}}</td>
+                    <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
                     {% if compra.pagada %}
-                    <td>Pagada</td>
+                    <td class="d-none d-lg-table-cell">Pagada</td>
                     {% else %}
-                    <td>No Pagada</td>
+                    <td class="d-none d-lg-table-cell">No Pagada</td>
                     {% endif %}
-                    <td>{{compra.autorizado2}}</td>
-                    <td>{{compra.dias_de_entrega}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.autorizado2}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
                     <td>
                         <ul class="nav nav-pills">
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
                             </li>
-                            <li class="nav-item mx-1">
+                            <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}"><i class="fa-solid fa-file-pdf"></i></a>
                             </li>
-                            <li class="nav-item mx-2">
+                            <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                             </li>
                         </ul>
