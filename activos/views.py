@@ -43,7 +43,7 @@ def add_activo(request):
         
         existencia_inv = producto.cantidad + producto.apartada + salidas
         print( activo, activo_cont, existencia_inv, salidas)
-        if activo_cont == existencia_inv and activo_cont > 0: #Si el numero de activos es igual a la existencia en inventario
+        if activo_cont == existencia_inv and activo_cont > 0 or existencia_inv == 0: #Si el numero de activos es igual a la existencia en inventario #Si el numero de activos es igual a la existencia en inventario
             producto.activo_disponible = False   
         producto.save()         
             

@@ -88,7 +88,7 @@ def updateItemRes(request):
 def product_selection_resurtimiento(request):
     usuario = Profile.objects.get(staff__id=request.user.id)
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
-    order, created = Order.objects.get_or_create(staff=usuario, complete=False, tipo=tipo)
+    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
     productos = Inventario.objects.filter(cantidad__lt =F('minimo'))
     cartItems = order.get_cart_quantity
     myfilter=InventoryFilter(request.GET, queryset=productos)
@@ -132,32 +132,36 @@ def product_selection(request):
 #Vista para crear solicitud
 @login_required(login_url='user-login')
 def checkout(request):
-    usuario = Profile.objects.get(staff=request.user)
-
+    usuarios = Profile.objects.all()
+    ordenes = Order.objects.all()
+    usuario = usuarios.get(staff=request.user)
+    
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
-    orders = Order.objects.filter(staff__distrito = usuario.distrito)
+    orders = ordenes.filter(staff__distrito = usuario.distrito)
     last_order = orders.order_by('-last_folio_number').first()
     #consecutivo = orders.count() + 1
     proyectos = Proyecto.objects.filter(activo=True)
     subproyectos = Subproyecto.objects.all()
     tipo = Tipo_Orden.objects.get(tipo ='normal')
 
-    order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
+    order, created = ordenes.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
 
     if usuario.tipo.supervisor:
-        supervisores = Profile.objects.filter(staff=request.user)
+        supervisores = usuarios.filter(staff=request.user)
         order.supervisor = usuario
     else:
-        supervisores = Profile.objects.filter(tipo__supervisor = True)
+        supervisores = usuarios.filter(tipo__supervisor = True)
 
     if usuario.tipo.superintendente:
-        superintendentes = Profile.objects.filter(staff=request.user)
+        superintendentes = usuarios.filter(staff=request.user)
         order.superintendente = usuario
     else:
-        superintendentes = Profile.objects.filter(tipo__superintendente = True, staff__is_active = True).exclude(tipo__nombre="Admin")
+        superintendentes = usuarios.filter(tipo__superintendente = True, staff__is_active = True).exclude(tipo__nombre="Admin")
 
 
     form = OrderForm(instance = order)
+    form.fields['area'].queryset = Operacion.objects.exclude(nombre='GASTO')
+
 
 
     if order.staff != usuario:
@@ -308,18 +312,16 @@ def product_comment_add(request, pk):
 def checkout_resurtimiento(request):
     usuario = Profile.objects.get(staff=request.user)
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
-    superintendentes = Profile.objects.filter(tipo__superintendente=True)
+    superintendentes = Profile.objects.filter(tipo__superintendente = True, staff__is_active = True).exclude(tipo__nombre="Admin")
     proyectos = Proyecto.objects.filter(activo=True)
     subproyectos = Subproyecto.objects.all()
     orders = Order.objects.filter(staff__distrito = usuario.distrito)
-    #orders = Order.objects.filter(staff__distrito = usuario.distrito)
     last_order = orders.order_by('-last_folio_number').first()
     #consecutivo = orders.count()+1
 
 
 
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
-   
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distrito)
     almacen = Operacion.objects.get(nombre = "ALMACEN")
 
@@ -524,14 +526,26 @@ def solicitud_matriz_productos(request):
 def inventario(request):
     perfil = Profile.objects.get(staff=request.user)
     existencia = Inventario.objects.filter(complete=True, producto__servicio = False, producto__gasto = False).order_by('producto__codigo')
-    entries = EntradaArticulo.objects.all()
-    entradas = entries.annotate(Sum('cantidad'))
+    #entries = EntradaArticulo.objects.all()
+    #entradas = entries.annotate(Sum('cantidad'))
+    #for item in existencia:
+    #    query = entries.filter(articulo_comprado__producto__producto__articulos__producto = item, agotado = False)
+    #    if query.exists():
+    #        cantidad = query.aggregate(Sum('cantidad_por_surtir'))
+    #        item.cantidad_entradas = cantidad['cantidad_por_surtir__sum']
+    #        item.save()
+    # Definimos la subconsulta para calcular las sumas
+  
+    sumas = EntradaArticulo.objects.filter(
+        agotado=False
+    ).values('articulo_comprado__producto__producto__articulos__producto') \
+     .annotate(total=Sum('cantidad_por_surtir'))
+
+    sumas_dict = {item['articulo_comprado__producto__producto__articulos__producto']: item['total'] for item in sumas}
+
     for item in existencia:
-        query = entries.filter(articulo_comprado__producto__producto__articulos__producto = item, agotado = False)
-        if query.exists():
-            cantidad = query.aggregate(Sum('cantidad_por_surtir'))
-            item.cantidad_entradas = cantidad['cantidad_por_surtir__sum']
-            item.save()
+        item.cantidad_entradas = sumas_dict.get(item.id, 0)
+        item.save()
 
     if perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == 'SuperAdm':
         perfil_flag = True
@@ -563,7 +577,7 @@ def inventario(request):
         'existencia': existencia,
         'myfilter': myfilter,
         'existencia_list':existencia_list,
-        'entradas':entradas,
+        #'entradas':entradas,
         'valor_inv': valor_inv,
         }
 
@@ -898,7 +912,7 @@ def autorizada_sol(request, pk):
             #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
             if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
                 prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
-                prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
+                prod_inventario.cantidad_apartada = prod_inventario.apartada
                 prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
                 ordensurtir.cantidad = producto.cantidad
                 ordensurtir.precio = prod_inventario.price
@@ -910,7 +924,7 @@ def autorizada_sol(request, pk):
                 ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
                 ordensurtir.precio = prod_inventario.price
                 ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
-                prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
+                prod_inventario.cantidad_apartada = prod_inventario.apartada
                 prod_inventario.cantidad = 0
                 if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
                     ordensurtir.surtir = True

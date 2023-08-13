@@ -12,36 +12,64 @@
 <hr>
 <hr>
 <hr>
-<div class="row my-4">
-        <div class="col-md-12">
-        <div class="card card-body">
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class="col">
+    <div class="card">
+        <div class="card-header">
             <h5>Filtro de solicitudes</h5>
-            <hr>
+        </div>
+        <div class="card-body">
             <form method="GET" class="row g-7">
                 {% csrf_token %}
-                <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right"><strong>Solicitado por:</strong></label>
-                <div class="col-auto">
-                    {{myfilter.form.staff|add_class:'form-control'}}
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                            <label style="color: #121212;" for="id_staff">Solicitado por</label>
+                        </div>
+                    </div>
                 </div>
-                <label for="myfilter.form.proyecto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
-                <div class="col-auto">
-                    {{myfilter.form.proyecto|add_class:'form-control'}}
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                            <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+                        </div>
+                    </div>
                 </div>
-                <label for="myfilter.form.folio" class="col-sm-auto col-form-label text-right"><strong>Folio:</strong></label>
-                <div class="col-auto">
-                    {{myfilter.form.folio|add_class:'form-control'}}
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                            <label style="color: #121212;" for="id_proyecto">Folio</label>
+                        </div>
+                    </div>
                 </div>
-                <label for="myfilter.form.start_date" class="col-sm-auto col-form-label text-right"><strong>Desde:</strong></label>
-                <div class="col-auto">
-                     {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                        </div>
+                    </div>
                 </div>
-                 <label for="myfilter.form.end_date" class="col-sm-auto col-form-label text-right"><strong>Hasta:</strong></label>
-                <div class="col-auto">
-                     {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                        </div>
+                    </div>
                 </div>
                 <div class="col-auto">
-                <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
+                    <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
             </form>
             <hr>
             <div class = "row mt-2 bg-white">
@@ -81,18 +109,18 @@
         {% endfor %}
     </div>
 </div>
-<div class = "row mt-2">
-    <div class="col-md-10">
+<div class = "col mt-2">
+    <div class ="table-responsive-sm">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">Folio</th>
-                    <th scope="col">Solicitado por</th>
-                    <th scope="col">Autorización N1</th>
-                    <th scope="col">Autorización N2</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    <th class="d-none d-lg-table-cell">Autorización N1</th>
+                    <th class="d-none d-lg-table-cell">Autorización N2</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
-                    <th scope="col">Área</th></th>
+                    <th class="d-none d-lg-table-cell">Área</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Acción</th>
                 </tr>
@@ -101,16 +129,16 @@
                 {% for orden in ordenes_list %}
                 <tr>
                     <th scope="row">{{orden.folio}}</th>
-                    <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
-                    <td>{{orden.superintendente}}</td>
-                    <td>{{orden.supervisor}}</td>
+                    <td class="d-none d-lg-table-cell">{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">{{orden.superintendente.staff.first_name}} {{orden.superintendente.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">{{orden.supervisor.staff.first_name}} {{orden.supervisor.staff.last_name}}</td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
-                    <td>{{orden.area}}</td>
+                    <td class="d-none d-lg-table-cell">{{orden.area}}</td>
                     <td>{{orden.created_at}}</td>
                     <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
-                    <a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>
-                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                    <a class="btn btn-outline-warning m-1" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-shoe-prints"></i></a>
+                    <a type="button" class="btn btn-outline-info m-1" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

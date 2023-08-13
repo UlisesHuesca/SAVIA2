@@ -37,8 +37,8 @@ class ArticulosOrdenadosComentForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['proyecto','subproyecto', 'area','superintendente','supervisor']
-
+        fields = ['proyecto','subproyecto', 'area','superintendente','supervisor','comentario','soporte']
+        
 class Order_Resurtimiento_Form(forms.ModelForm):
     class Meta:
         model = Order

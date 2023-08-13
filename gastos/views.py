@@ -504,11 +504,15 @@ def gasto_entrada(request, pk):
                 orden_producto.tipo = tipo
                 orden_producto.last_folio_number = last_folio_number
                 orden_producto.created_at = date.today()
+                orden_producto.approved_at = date.today()
                 orden_producto.created_at_time = datetime.now().time()
+                orden_producto.approved_at_time = datetime.now().time()
                 orden_producto.autorizar = True
                 orden_producto.supervisor = articulo_gasto.staff
+                orden_producto.superintendente = articulo_gasto.gasto.superintendente
                 orden_producto.proyecto = articulo_gasto.gasto.proyecto
                 orden_producto.subproyecto = articulo_gasto.gasto.subproyecto
+                orden_producto.area.nombre = "GASTO" 
                 orden_producto.complete = True
                 
                 for item_producto in productos:

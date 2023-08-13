@@ -217,7 +217,8 @@ def compra_edicion(request, pk):
     productos_comp = ArticuloComprado.objects.filter(oc = oc)
     productos = ArticulosRequisitados.objects.filter(req = oc.req, sel_comp = False)
     req = Requis.objects.get(id = oc.req.id)
-    proveedores = Proveedor_direcciones.objects.filter(estatus__nombre='APROBADO')
+    proveedores = Proveedor_direcciones.objects.filter(
+        Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO'))
     form_product = ArticuloCompradoForm()
     form = CompraForm(instance=oc)
 
@@ -238,11 +239,13 @@ def compra_edicion(request, pk):
         costo_oc = 0
         costo_iva = 0
         articulos = ArticuloComprado.objects.filter(oc=oc)
-        requisitados = ArticulosRequisitados.objects.filter(req = pk)
+        requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
         cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
         cuenta_art_totales = requisitados.count()
-        if cuenta_art_totales == cuenta_art_comprados:
+        if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0:
             req.colocada = True
+        else:
+            req.colocada = False
         for articulo in articulos:
             costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
             if articulo.producto.producto.articulos.producto.producto.iva == True:
@@ -353,11 +356,13 @@ def oc_modal(request, pk):
             costo_oc = 0
             costo_iva = 0
             articulos = ArticuloComprado.objects.filter(oc=oc)
-            requisitados = ArticulosRequisitados.objects.filter(req = pk)
+            requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
             cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
             cuenta_art_totales = requisitados.count()
-            if cuenta_art_totales == cuenta_art_comprados:
+            if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0: #Compara los artículos comprados vs artículos requisitados
                 req.colocada = True
+            else:
+                req.colocada = False
             for articulo in articulos:
                 costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
                 if articulo.producto.producto.articulos.producto.producto.iva == True:

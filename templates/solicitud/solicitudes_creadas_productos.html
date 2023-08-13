@@ -12,6 +12,7 @@
 
 <hr>
 <hr>
+<h6>&nbsp;</h6>
 <div class="row my-4">
         <div class="card card-body">
             <h5>Filtro de productos</h5>
@@ -58,9 +59,9 @@
                         <li class="nav-item mx-2">
                             <button type="submit" name="btnExcel" class="btn btn-outline-success"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
                         </li>
-                        <li class="nav-item mx-2">
+                        <!--<li class="nav-item mx-2">
                             <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                        </li>
+                        </li>-->
                     </ul>
                     </form>
                 </div>
@@ -96,8 +97,8 @@
                     <td>{{producto.cantidad}}</td>
                     <td>{{producto.producto}}</td>
                     <td>{{producto.orden.created_at}}</td>
-                    <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
-                    <a class="btn btn-light" href="">Detalle</a></td>
+                    <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>
+                    <a class="btn btn-light" href="">Detalle</a></td>-->
                 </tr>
                 {% endfor %}
             </tbody>

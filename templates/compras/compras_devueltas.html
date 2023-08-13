@@ -12,48 +12,87 @@
 <hr>
 <hr>
 <hr>
-<div class = "row mt-2 bg-white">
-        <div class="col-12">
-            <div class="card card-body">
-                <h5>Filtro de Compras</h5>
-                <hr>
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Folio:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.id|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Proveedor:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.proveedor|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right my-2"><strong>Requisición:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.req|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.proyecto|add_class:'form-control'}}
+<h6>&nbsp;</h6>
+<div class = "card mt-2 bg-white">
+        
+    <div class="card-header">
+        <h5>Filtro de Compras</h5>
+    </div>
+    <div class="card card-body">
+        {% csrf_token %}
+        <form method="GET">
+        <div class="row">
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.id|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                        <label style="color: #121212;" for="id_id">Folio</label>
                     </div>
                 </div>
-                <div class="row g-12">
-                    <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Subproyecto:</strong></label>
-                    <div class="col-2">
-                        {{myfilter.form.subproyecto|add_class:'form-control'}}
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                        <label style="color: #121212;" for="id_id">Proveedor</label>
                     </div>
-                    <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Desde:</strong></label>
-                    <div class="col-2">
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
+                        <label style="color: #121212;" for="id_id">Requisición</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-12">
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                        <label style="color: #121212;" for="id_id">Proyecto</label>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
+                        <label style="color: #121212;" for="id_id">Subproyecto</label>
+                    </div>
+                </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
                         {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                    </div>
-                    <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Hasta:</strong></label>
-                    <div class="col-2">
-                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                    </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <label style="color: #121212;" for="id_subproyecto">Desde:</label>
                     </div>
                 </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+        </div>
+        
                 <hr>
                 </form>
                 <form method=POST>
@@ -69,15 +108,24 @@
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
                         </li>-->
-                        <li class="nav-item mx-2">
-                                <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
-                                    <a type="button" class="btn btn-outline-info"  href="{% url 'matriz-compras' %}">Matriz</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                                    <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
-                                  </div>
-                            </li>
+                        <li class="nav-item m-1 d-lg-none">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                <a type="button" class="btn btn-outline-info active"  style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                              </div>
+                        </li>
+                        <li class="nav-item m-1 d-none d-lg-block">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                <a type="button" class="btn btn-outline-info active"  style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                              </div>
+                        </li>
                     </ul>
                 </form>
             </div>

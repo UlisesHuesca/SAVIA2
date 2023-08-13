@@ -14,7 +14,7 @@
 <hr>
 <h6>&nbsp;</h6>
 <h6 class="d-lg-none">&nbsp;</h6>
-<div class = "card mt-2 bg-white">
+    <div class = "card mt-2 bg-white">
         
             <div class="card card-header">
                 <h5>Filtro de Compras</h5>
@@ -109,15 +109,24 @@
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
                         </li>-->
-                        <li class="nav-item mx-2">
-                                <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
-                                    <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                                    <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
-                                </div>
-                            </li>
+                        <li class="nav-item m-1 d-lg-none">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>
+                                <a type="button" class="btn btn-outline-info"  href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                              </div>
+                        </li>
+                        <li class="nav-item m-1 d-none d-lg-block">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>
+                                <a type="button" class="btn btn-outline-info"  href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                              </div>
+                        </li>
                     </ul>
                     <hr>
                     <div class="col-sm-2 col-md-3 col-lg-2 mt-3">

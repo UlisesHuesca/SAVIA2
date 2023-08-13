@@ -14,12 +14,13 @@
 <h6 class="d-lg-none">&nbsp;</h6>
 <h6>&nbsp;</h6>
 <div class="row">
-    <div class="card col-lg-4 col-md-12">
-        
-            <div id="Solicitud-info">
-                <hr>
+    <div class="col-lg-4 col-md-12">
+            
+            <div class="card" id="Solicitud-info">
+                <div class="card-header">
 					<h2>Información de Solicitud:</h2>
-					<hr>
+                </div>
+                <div class="card-body">
 					<form id="myForm" method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
                         {% csrf_token %}
                             <div class="row my-2">
@@ -44,7 +45,6 @@
                                 </div>
                             </div>
                             <div class="row">
-                    
                                     <div class="col-12">
                                         <div id="input_subproyecto" class="input-group mb-3 d-none">
                                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
@@ -84,14 +84,14 @@
 
                             <div class="row my-2">
                                 <div class="col-12">
-                                    <div id="input_subproyecto" class="input-group mb-3">
+                                    <div id="input_superintendente" class="input-group mb-3">
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">
                                             <label  style="font-size:10px; color:gray;" for="superintendente">Superintendente*</label>
                                             <select style="font-size:16px" class="form-select form-select-sm" placeholder="Superintendente" id="superintendentes">
                                                 {% if usuario.tipo.superintendente %}
                                                     {% for superintendente in superintendentes %}
-                                                    <option id="js" target="{{supervisor.id}}">
+                                                    <option id="js" target="{{superintendente.id}}">
                                                         {{superintendente.staff.first_name}} {{superintendente.staff.last_name}}
                                                     </option>
                                                     {% endfor %}
@@ -155,11 +155,38 @@
                                     {{form.supervisor|add_class:"form-control"}}
                                 </div>
                             </div>
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch col-auto mx-4" id="Soporte">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="SwitchSoporte">
+                                    <label class="form-check-label" for="SwitchSoporte">Subir Soporte/Factura/Cotización</label>
+                                </div>     
+                                <div id="subir_pdf" class="row d-none mt-2">
+                                    <div class="input-group col-lg-12"> 
+                                        <div class="input-group-text" style="background-color:white">
+                                            {{form.soporte|add_class:"form-control"}}
+                                        </div>
+                                        <span id="span-pdf" class="input-group-text">
+                                            <div class="my-3" style="color:#980f0f">
+                                                <i class="fa-solid fa-cloud-arrow-up"></i>PDF
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+
                             <input id="submit-button" class="btn btn-outline-info btn-block my-2" name="agregar" type="submit" value="Agregar Solicitud">
                     </form>
+                </div>
             </div>
-            <hr>
-        
     </div>
     <div class="col-lg-8 col-sm-12">
         <div class="card">
@@ -298,6 +325,17 @@ document.addEventListener('DOMContentLoaded', function(){
             submitButton.disabled = !allFilled;
         });
     });
+});
+document.getElementById('SwitchSoporte').addEventListener("change", function(element){
+    let check_soporte = this;
+    let subir_soporte = document.getElementById('subir_pdf')
+
+    if (check_soporte.checked){
+        subir_soporte.classList.remove('d-none')
+    } else {
+        subir_soporte.classList.add('d-none')
+    }
+
 });
 
 </script>

@@ -18,14 +18,20 @@ from django.core.paginator import Paginator
 # Create your views here.
 @login_required(login_url='user-login')
 def solicitud_viatico(request):
-    usuario = Profile.objects.get(staff__id=request.user.id)
-    superintendentes = Profile.objects.filter(tipo__superintendente=True)
+    colaborador = Profile.objects.all()
+    usuario = colaborador.get(staff__id=request.user.id)
     proyectos = Proyecto.objects.filter(activo=True)
     subproyectos = Subproyecto.objects.all()
     viatico, created = Solicitud_Viatico.objects.get_or_create(complete= False)
-    colaborador = Profile.objects.all()
 
-    form = Solicitud_ViaticoForm()
+    
+    if usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
+        superintendentes = colaborador.filter(staff=request.user)
+        viatico.superintendente = usuario
+    else:
+        superintendentes = colaborador.filter(tipo__superintendente = True, staff__is_active = True).exclude(tipo__nombre="Admin")
+
+    form = Solicitud_ViaticoForm(instance = viatico)
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:

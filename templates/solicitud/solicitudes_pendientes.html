@@ -14,10 +14,12 @@
 <hr>
 <h6>&nbsp;</h6>
 <div class="row my-4">
-        <div class="col-md-12">
-        <div class="card card-body">
+        <div class="card">
+           <div class="card-header">
             <h5>Filtro de solicitudes</h5>
-            <hr>
+            </div>
+        <div class="card-body">
+            
             <form method="GET" class="row g-7">
                 {% csrf_token %}
                 <div class="col-lg-4 col-sm-12">
@@ -67,7 +69,7 @@
                     </div>
                 </div>
                 <div class="col-auto">
-                <button class="btn btn-outline-success btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
             </form>
             <hr>
@@ -135,7 +137,7 @@
                     <td class="d-none d-lg-table-cell">{{orden.area}}</td>
                     <td>{{orden.created_at}}</td>
                     <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
-                    <a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>
+                    <a class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-shoe-prints"></i></a>
                     <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                     </td>
                 </tr>

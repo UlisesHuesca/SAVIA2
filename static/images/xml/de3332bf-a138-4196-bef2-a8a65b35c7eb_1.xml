@@ -1,0 +1,54 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<cfdi:Comprobante Version="4.0" Serie="ANM" Folio="10588" Fecha="2023-08-09T16:28:35" Sello="ei5GEAd4rz8D5kjwVPJ61TzFrbsQkGPwPC1EQpM5jgXKQnovP3TKrziskcNm42hkMPVExbt5wcbmr9Li9Tlhnt+2OCP7o/3P91trwS6BRxvi7gK5x7Hc6eZRqIDc96CQ/oYJ4Ue3e4EDmwZZ8ZALkMPyK/eDzg/KZ5KVtp/Qc3vOgFxDawIORdrZsuENaNsbdOdK+oHhz1t0Hr7y5XiNamY/BZblfLbkDmc9ZR04emuy/ywjbMhPMMHm2itKG9toBoo/dzKskvTju0W6ZSS5HHVgYwaWrJiBa2KTGZ2giIp5BZ8uvKAu1bxzx5HsDugTmZnxAEfPZ8EL2/vy0qdMXw==" FormaPago="28" NoCertificado="00001000000511760516" Certificado="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" SubTotal="367.24" Moneda="MXN" Total="426.00" TipoDeComprobante="I" Exportacion="01" MetodoPago="PUE" LugarExpedicion="91190" xmlns:cfdi="http://www.sat.gob.mx/cfd/4" xsi:schemaLocation="http://www.sat.gob.mx/cfd/4 http://www.sat.gob.mx/sitio_internet/cfd/4/cfdv40.xsd" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <cfdi:Emisor Rfc="TAB100719PY8" Nombre="TRADICION ABA" RegimenFiscal="601" />
+  <cfdi:Receptor Rfc="VME121113PI3" Nombre="VORDTEC DE MEXICO" DomicilioFiscalReceptor="91633" RegimenFiscalReceptor="601" UsoCFDI="G03" />
+  <cfdi:Conceptos>
+    <cfdi:Concepto ClaveProdServ="90101501" NoIdentificacion="207" Cantidad="1.000" ClaveUnidad="E48" Descripcion="Agua" ValorUnitario="38.793103" Importe="38.79" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="38.79" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="6.21" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="90101501" NoIdentificacion="206" Cantidad="1.000" ClaveUnidad="E48" Descripcion="J Naranja" ValorUnitario="39.655172" Importe="39.66" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="39.66" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="6.34" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="90101501" NoIdentificacion="106" Cantidad="1.000" ClaveUnidad="E48" Descripcion="Sopa Azteca Comb" ValorUnitario="51.724138" Importe="51.72" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="51.72" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="8.28" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="90101501" NoIdentificacion="109" Cantidad="1.000" ClaveUnidad="E48" Descripcion="Tacos Pollo" ValorUnitario="73.275862" Importe="73.28" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="73.28" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="11.72" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+    <cfdi:Concepto ClaveProdServ="90101501" NoIdentificacion="122" Cantidad="1.000" ClaveUnidad="E48" Descripcion="Tacos de Arrache" ValorUnitario="163.793103" Importe="163.79" ObjetoImp="02">
+      <cfdi:Impuestos>
+        <cfdi:Traslados>
+          <cfdi:Traslado Base="163.79" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="26.21" />
+        </cfdi:Traslados>
+      </cfdi:Impuestos>
+    </cfdi:Concepto>
+  </cfdi:Conceptos>
+  <cfdi:Impuestos TotalImpuestosTrasladados="58.76">
+    <cfdi:Traslados>
+      <cfdi:Traslado Base="367.24" Impuesto="002" TipoFactor="Tasa" TasaOCuota="0.160000" Importe="58.76" />
+    </cfdi:Traslados>
+  </cfdi:Impuestos>
+  <cfdi:Complemento>
+    <tfd:TimbreFiscalDigital xsi:schemaLocation="http://www.sat.gob.mx/TimbreFiscalDigital http://www.sat.gob.mx/sitio_internet/cfd/TimbreFiscalDigital/TimbreFiscalDigitalv11.xsd" Version="1.1" UUID="de3332bf-a138-4196-bef2-a8a65b35c7eb" FechaTimbrado="2023-08-10T08:14:57" RfcProvCertif="LSO1306189R5" SelloCFD="ei5GEAd4rz8D5kjwVPJ61TzFrbsQkGPwPC1EQpM5jgXKQnovP3TKrziskcNm42hkMPVExbt5wcbmr9Li9Tlhnt+2OCP7o/3P91trwS6BRxvi7gK5x7Hc6eZRqIDc96CQ/oYJ4Ue3e4EDmwZZ8ZALkMPyK/eDzg/KZ5KVtp/Qc3vOgFxDawIORdrZsuENaNsbdOdK+oHhz1t0Hr7y5XiNamY/BZblfLbkDmc9ZR04emuy/ywjbMhPMMHm2itKG9toBoo/dzKskvTju0W6ZSS5HHVgYwaWrJiBa2KTGZ2giIp5BZ8uvKAu1bxzx5HsDugTmZnxAEfPZ8EL2/vy0qdMXw==" NoCertificadoSAT="00001000000509846663" SelloSAT="Ho7uStkRo6d3ba9DQ66vBMgflhneOdre4mCLH0EOIRKmdm/i7wRdr74/Hk/Q5ral4Gy/jBdfeSELHgpcvaWct5eNtWm5AsuKga+00mdZgt6gxxZLEN9ENm3z7TFXwd5skgePJ/WMc/90XDygfGpaefOMKyE+CiruCI2avOnUiEWAU6/6q473jO+j2ZoZo27yNXapeDIXqwba8q+Lz+l/uzT06+aPXZJqteBo3ymcR/hQYOMzgURNJzYCEn2genByXt36xYsIkQWu7o6mX6Ku1ESCy1RmKSfzae0l7WQPBd2cZwrITWzYCvsds3zeMJFMpcTUG1NveIbMlKuVgoUkIQ==" xmlns:tfd="http://www.sat.gob.mx/TimbreFiscalDigital" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" />
+  </cfdi:Complemento>
+  <cfdi:Addenda>
+    <AddendaCodeMxLeyenda LeyendaPiePagina="No. Referencia: 35073550162833. Fecha de Consumo:09/08/2023 16:28:35." />
+    <AddendaCodeMxReceptorDireccion Direccion="CARRETERA XALAPA-VERACRUZ KM 298" />
+  </cfdi:Addenda>
+</cfdi:Comprobante>

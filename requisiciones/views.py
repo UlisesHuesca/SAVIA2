@@ -17,7 +17,7 @@ from openpyxl.utils import get_column_letter
 import datetime as dt
 from datetime import date, datetime
 from django.db.models.functions import Concat
-from django.db.models import Value, Sum, Case, When, F, Value
+from django.db.models import Value, Sum, Case, When, F, Value, Q
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.mail import EmailMessage
@@ -28,17 +28,22 @@ import ast # Para leer el csr many to many
 import decimal
 
 #PDF generator
+#PDF generator
 import io
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
 from reportlab.lib.colors import Color, black, blue, red, white
 from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import letter, portrait
+from reportlab.rl_config import defaultPageSize
 from django.http import FileResponse
-from reportlab.lib.pagesizes import letter, landscape, portrait
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle
-from django.db.models import Q
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
+from bs4 import BeautifulSoup
+from django.core.files.base import ContentFile
+import urllib.request, urllib.parse, urllib.error
+
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -241,6 +246,7 @@ def autorizar_devolucion(request, pk):
                         # Manejar el caso en que no hay suficiente cantidad en la entrada (opcional)
                         entrada.cantidad_por_surtir = 0
                         entrada.agotado = True
+                        entrada.save()
                 except EntradaArticulo.DoesNotExist:
                     # Manejar el caso en que no hay una entrada asociada (opcional)
                     messages.error(request, 'No se encontró una entrada asociada para el producto.')
@@ -873,70 +879,88 @@ def render_pdf_view(request, pk):
     #salidas = Salidas.objects.filter(producto__articulos__orden__id=pk)
 
 
-    #Azul Vordcab
+   #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
-    #prussian_blue = Color(0.2421875,0.5703125,0.796875)
     rojo = Color(0.59375, 0.05859375, 0.05859375)
-    c.setFillColor(prussian_blue)
-    # REC (DIST DEL MARGEN VERTICAL, DIST DEL MARGEN HORIZONTAL, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(20,695,565,25, fill=True, stroke=False)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    #Elaborar caja
+    #c.line(caja_iso,500,caja_iso,720)
+
 
 
     #Encabezado
-    c.setFillColor(black)
-    c.setLineWidth(.3)
-    c.setFont('Helvetica-Bold',14)
-    c.drawString(180,760,'Solicitud')
+    c.drawString(420,caja_iso,'Preparado por:')
+    c.drawString(420,caja_iso-10,'SUP. ADMON')
+    c.drawString(520,caja_iso,'Aprobación')
+    c.drawString(520,caja_iso-10,'SUB ADM')
+    c.drawString(150,caja_iso-20,'Número de documento')
+    c.drawString(160,caja_iso-30,'F-ADQ-N4-01.02')
+    c.drawString(245,caja_iso-20,'Clasificación del documento')
+    c.drawString(275,caja_iso-30,'Controlado')
+    c.drawString(355,caja_iso-20,'Nivel del documento')
+    c.drawString(380,caja_iso-30, 'N5')
+    c.drawString(440,caja_iso-20,'Revisión No.')
+    c.drawString(452,caja_iso-30,'000')
+    c.drawString(510,caja_iso-20,'Fecha de Emisión')
+    c.drawString(525,caja_iso-30,'1-Sep.-18')
+
+    caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)
-    c.drawString(300,760,'Preparado por:')
-
-
-    c.setFillColor(rojo)
-    #c.drawString(90,730,orden.get_folio)
-    c.setFillColor(black)
-    c.setFont('Helvetica',22)
-    #c.drawString(30,750,'Vordtec de México')
-
-    c.setFont('Helvetica-Bold',12)
-    c.drawString(480,740,orden.created_at.strftime("%d/%m/%Y"))
-
-
-
-    c.drawInlineImage('static/images/logo vordtec_documento.png',30,740, 3.0 * cm, 1.5 * cm)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
+    c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
+    c.rect(20,575,565,2, fill=True, stroke=False) #Linea posterior horizontal
     c.setFillColor(white)
-    c.setFont('Helvetica',14)
-    c.drawCentredString(320,700,'Comprobante de Solicitud')
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(280,755,'Solicitud')
+    c.setLineWidth(.3) #Grosor
+    c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
+    c.drawInlineImage('static/images/logo vordtec_documento.png',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    #c.drawString(120,caja_proveedor,'Infor')
+    c.drawString(300,caja_proveedor, 'Detalles')
+    inicio_central = 300
+    #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
     c.setFillColor(black)
-    c.setFont('Helvetica',12)
-    c.drawString(290,680,'Estatus:')
-    c.drawString(290,660, 'Proyecto:')
-    c.drawString(290,640, 'Área:')
-    c.drawString(290,620, 'Almacén:')
+    c.setFont('Helvetica',9)
+    c.drawString(30,caja_proveedor-20,'Solicitó:')
+    c.drawString(30,caja_proveedor-40,'Distrito:')
+    c.drawString(30,caja_proveedor-60,'Proyecto')
+    c.drawString(30,caja_proveedor-80,'Subproyecto:')
+    c.drawString(30,caja_proveedor-100,'Fecha:')
+    
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(500,caja_proveedor-20,'FOLIO:')
+    c.setFillColor(rojo)
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(540,caja_proveedor-20, orden.folio)
 
-
-    c.drawString(370,660, orden.proyecto.nombre)
-    c.drawString(370,640, orden.area.nombre)
-    c.drawString(370,620, orden.staff.distrito.nombre)
-    #c.drawString(370,600, orden.sector.nombre)
-
-
-
-    c.setLineWidth(.3)
-    c.line(20,570,585,570)
-
-
-
-
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+    c.drawString(100,caja_proveedor-20, orden.staff.staff.first_name+' '+ orden.staff.staff.last_name)
+    c.drawString(100,caja_proveedor-40, orden.staff.distrito.nombre)
+    c.drawString(100,caja_proveedor-60, orden.proyecto.nombre)
+    c.drawString(100,caja_proveedor-80, orden.subproyecto.nombre)
+    c.drawString(100,caja_proveedor-100, orden.approved_at.strftime("%d/%m/%Y"))
 
     #Create blank list
     data =[]
 
-    data.append(['''Código''', '''Nombre''', '''Cantidad'''])
+    data.append(['''Código''', '''Nombre''', '''Cantidad''','''Comentario'''])
 
 
     high = 540
     for producto in productos:
-        data.append([producto.producto.producto.codigo, producto.producto.producto.nombre,producto.cantidad])
+        data.append([producto.producto.producto.codigo, producto.producto.producto.nombre,producto.cantidad, producto.comentario])
         high = high - 18
 
 
@@ -980,36 +1004,60 @@ def render_pdf_view(request, pk):
     c.drawCentredString(450,34,'24/Oct/2018')
     c.drawCentredString(550,34,'001')
 
-
+    c.setFillColor(black)
     width, height = letter
-    table = Table(data, colWidths=[4 * cm, 9.0 * cm, 4.0 * cm])
-    table.setStyle(TableStyle([ #estilos de la tabla
-        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.black),
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+
+    if orden.comentario is not None:
+        comentario = orden.comentario
+    else:
+        comentario = "No hay comentarios"
+
+    options_conditions_paragraph = Paragraph(comentario, styleN)
+    # Crear un marco (frame) en la posición específica
+    frame = Frame(50, 0, width, high-50, id='normal')
+
+    # Agregar el párrafo al marco
+    frame.addFromList([options_conditions_paragraph], c)
+    c.setFillColor(prussian_blue)
+    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.setFillColor(white)
+
+    table = Table(data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
+    table_style = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
         ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
         #ENCABEZADO
         ('TEXTCOLOR',(0,0),(-1,0), white),
-        ('FONTSIZE',(0,0),(-1,0), 13),
+        ('FONTSIZE',(0,0),(-1,0), 8),
         ('BACKGROUND',(0,0),(-1,0), prussian_blue),
         #CUERPO
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
-        ('FONTSIZE',(0,1),(-1,-1), 12),
-        ]))
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    table.setStyle(table_style)
 
     #pdf size
     table.wrapOn(c, width, height)
-    table.drawOn(c, 55, high)
+    table.drawOn(c, 20, high)
 
     c.showPage()
     c.save()
     buf.seek(0)
 
-    return FileResponse(buf, as_attachment=True, filename='reporte_' + str(orden.get_folio) +'.pdf')
+    return FileResponse(buf, as_attachment=True, filename='reporte_' + str(orden.folio) +'.pdf')
 
 def reporte_entradas(request):
     entradas = EntradaArticulo.objects.filter(entrada__completo = True, articulo_comprado__producto__producto__articulos__producto__producto__servicio = False)
     myfilter = EntradasFilter(request.GET, queryset=entradas)
     entradas = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(entradas, 50)
+    page = request.GET.get('page')
+    entradas_list = p.get_page(page)
 
     if request.method == "POST" and 'btnExcel' in request.POST:
 
@@ -1017,6 +1065,7 @@ def reporte_entradas(request):
 
 
     context = {
+        'entradas_list':entradas_list,
         'entradas':entradas,
         'myfilter':myfilter,
         }

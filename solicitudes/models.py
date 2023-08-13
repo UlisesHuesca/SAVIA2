@@ -9,6 +9,10 @@ class Cliente(models.Model):
 
     def __str__(self):
         return f'{self.nombre}'
+    
+class Cuenta_Contable(models.Model):
+    codigo = models.CharField(max_length=20, null=True)
+    descripcion = models.CharField(max_length=50, null=True)
 
 class St_Entrega(models.Model):
     status = models.CharField(max_length=10,null=True)
@@ -30,6 +34,7 @@ class Proyecto(models.Model):
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
     complete = models.BooleanField(default=False)
+    cuenta_contable = models.ForeignKey(Cuenta_Contable, on_delete=models.CASCADE, null=True)
 
     class Meta:
         unique_together = ('nombre', 'distrito',)

@@ -355,7 +355,7 @@
                     <div>
                     {% endif %}
                         <a class="dropdown-item" href="{% url 'solicitud-matriz' %}">Matriz Solicitudes</a>
-                        {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" %}
+                        {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.nombre == "Comprador" or usuario.tipo.nombre == "Tesoreria" %}
                             <div>
                         {% else %}
                             <div class="d-none">

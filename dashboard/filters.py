@@ -16,6 +16,7 @@ class ProductFilter(django_filters.FilterSet):
 class ProyectoFilter(django_filters.FilterSet):
     id = CharFilter(field_name='id', lookup_expr='icontains')
     nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
+    descripcion = CharFilter(field_name='descripcion', lookup_expr='icontains')
     cliente = CharFilter(field_name='cliente', lookup_expr='icontains')
     folio_cotizacion = CharFilter(field_name='folio__cotizacion', lookup_expr='icontains')
     factura = CharFilter(field_name='factura', lookup_expr='icontains')
@@ -24,7 +25,7 @@ class ProyectoFilter(django_filters.FilterSet):
 
     class Meta:
         model = Proyecto
-        fields = ['id','nombre','cliente','folio_cotizacion', 'status_entrega','fecha']
+        fields = ['id','nombre','descripcion','cliente','folio_cotizacion', 'status_entrega','fecha']
 
 class SubproyectoFilter(django_filters.FilterSet):
     id = CharFilter(field_name='id', lookup_expr='icontains')

@@ -120,10 +120,28 @@ class Inventario(models.Model):
         unique_together = ('producto', 'almacen',)
 
     @property
+    def salidas(self):
+        salidas = self.articulosordenados_set.all()
+        cantidad = sum([item.articulos_salidas for item in salidas])
+        return cantidad
+
+    @property
     def apartada(self):
         apartados = self.articulosordenados_set.all()
-        cantidad = sum([item.articulos_disponibles for item in apartados])
-        return cantidad
+
+        # Para cada apartado, suma los valores disponibles_true y disponibles_false
+        disponibles = sum([item.articulos_disponibles for item in apartados])
+           
+        return disponibles
+    
+    @property
+    def apartada_entradas(self):
+        articulos = self.articulosordenados_set.all()
+
+        #Para cada apartado, suma los valores disponibles_true y disponibles_false
+        disponibles = sum([item.articulos_totales for item in articulos])
+           
+        return disponibles
 
 
     @property
@@ -168,6 +186,8 @@ class Order(models.Model):
     created_at_time = models.TimeField(null=True)
     approved_at = models.DateField(null=True)
     approved_at_time = models.TimeField(null=True)
+    comentario =  models.TextField(max_length=200, null=True, blank=True)
+    soporte = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
 
 
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
@@ -225,11 +245,25 @@ class ArticulosOrdenados(models.Model):
         return f'{self.orden} - {self.producto}'
     
     @property
+    def articulos_salidas(self):
+        disponibles = self.articulosparasurtir_set.all()
+        cantidad_salida = sum([item.cantidad_salidas for item in disponibles])
+        return cantidad_salida
+    
+     @property
     def articulos_disponibles(self):
         disponibles = self.articulosparasurtir_set.filter(surtir=True)
         cantidad_disponible = sum([item.cantidad for item in disponibles])
-        return cantidad_disponible 
 
+        return cantidad_disponible
+    
+    @property
+    def articulos_totales(self):
+        articulos = self.articulosparasurtir_set.all()
+        cantidad = sum([item.cantidad for item in articulos])
+
+        return cantidad
+    
     @property
     def get_total(self):
         total = self.producto.price * self.cantidad
@@ -255,6 +289,12 @@ class ArticulosparaSurtir(models.Model):
     created_at = models.DateField(auto_now_add=True)
     created_at_time = models.TimeField(auto_now_add=True)
     modified_at = models.DateField(auto_now=True)
+
+    @property
+    def cantidad_salidas(self):
+        salidas = self.salidas_set.all()
+        cantidad = sum([salida.cantidad for salida in salidas])
+        return cantidad
 
     @property
     def get_costo_salidas(self):

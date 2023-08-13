@@ -10,20 +10,7 @@
 <body>
 {% block content %}
 <hr>
-<div class = "row mt-2 bg-white">
-    <ul class="nav nav-pills" >
-        <li class="nav-item mx-2 pl-5">
-            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                <i class="fa-solid fa-file-excel fa-2xl"></i>
-            </button>
-        </li>
-        <li class="nav-item mx-2">
-            <button type="button" class="btn btn-outline-danger">
-                <i class="fa-solid fa-file-pdf fa-2xl"></i>
-            </button>
-        </li>
-    </ul>
-</div>
+
 
 
 
@@ -54,15 +41,17 @@
         {% endif %}
     </div>
 </div>
-
-<div class = "row mt-2 bg-white" id="response-div">
-    <div class="col-12">
-        <div class="card card-body">
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class = "col bg-white" id="response-div">
+    <div class="card">
+        <div class="card-header">
             <h5>Filtro de Productos Pendientes</h5>
-            <hr>
+        </div>
+        <div class="card-body">
             {% csrf_token %}
             <form method="GET">
-                <div class="row g-12">
+                <div class="row">
                     <div class="col-lg-4 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
@@ -82,7 +71,7 @@
                         </div>
                     </div>
                 <div class="col-2">
-                    <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    <button class="btn btn-outline-success btn-block mt-3 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
             </div>
             <hr>
@@ -90,12 +79,21 @@
             <form method=POST>
                 {% csrf_token %}
                 <ul class="nav nav-pills">
-                    <li class="nav-item mx-2">
-                        <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
+                    <li class="nav-item m-2">
+                        <button type="submit" name="btnExcel" class="btn btn-outline-success btn" value='Reporte Excel'>
                             <i class="fa-solid fa-file-excel fa-2xl"></i>
                         </button>
                     </li>
-                    <li class="nav-item mx-2">
+                    <li class="nav-item m-1 d-lg-none">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
+                            <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                            <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                            <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                            <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                          </div>
+                    </li>
+                    <li class="nav-item m-2 d-none d-lg-block">
                         <div class="btn-group btn-group" role="group" aria-label="Large button group">
                             <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
                             <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
@@ -111,18 +109,18 @@
 </div>
     
 
-<div class = "row mt-2">
-    <div class="col-md-12">
+<div class = "card mt-2">
+    <div class ="table-responsive-sm">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">OC</th>
-                    <th scope="col">RQ</th>
-                    <th scope="col">Solicitud</th>
-                    <th scope="col">Solicitado por</th>
+                    <th class="d-none d-lg-table-cell">RQ</th>
+                    <th class="d-none d-lg-table-cell">Solicitud</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
                     <th scope="col">Proyecto</th>
-                    <th scope="col">Subproyecto</th>
-                    <th scope="col">Área</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Área</th>
                     <th scope="col">Producto</th>
                     <th scope="col">P.U.</th>
                     <th scope="col">Cantidad</th>
@@ -133,12 +131,12 @@
                 {% for item in articulos_list %}
                 <tr>
                     <th scope="row">{{item.oc.get_folio}}</th>
-                    <th scope="row">{{item.oc.req.folio}}</th>
-                    <th scope="row">{{item.oc.req.orden.folio}}</th>
-                    <th scope="row">{{item.oc.req.orden.staff.staff.first_name}} {{item.oc.req.orden.staff.staff.last_name}}</th>
+                    <th class="d-none d-lg-table-cell">{{item.oc.req.folio}}</th>
+                    <th class="d-none d-lg-table-cell">{{item.oc.req.orden.folio}}</th>
+                    <th class="d-none d-lg-table-cell">{{item.oc.req.orden.staff.staff.first_name}} {{item.oc.req.orden.staff.staff.last_name}}</th>
                     <td>{{item.oc.req.orden.proyecto.nombre}}</td>
-                    <td>{{item.oc.req.orden.subproyecto.nombre}}</td>
-                    <td>{{item.oc.req.orden.area}}</td>
+                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.area}}</td>
                     <td>{{item.producto.producto.articulos.producto.producto.nombre}} </td>
                     <td>${{item.precio_unitario|floatformat:2}}</td>
                     <td>{{item.cantidad}}</td>
@@ -147,6 +145,8 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
                 {% if articulos_list.has_previous %}
@@ -174,7 +174,7 @@
                 {% endif %}
             </ul>
         </nav>
-    </div>
+   
 
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
@@ -184,7 +184,7 @@
 </div>
 
 
-</div>
+
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>

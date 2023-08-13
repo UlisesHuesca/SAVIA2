@@ -70,11 +70,11 @@
                                     </datalist>
                                 </div>
                             </div>
-                                {% if salidas %}
+                                
                                 <div class="col-3">
                                 <input id="submit-button" class="btn btn-outline-info btn-block my-4" name="agregar" type="submit" value="Guardar vale">
                                 </div>
-                                {% endif %}
+                                
                         </div>
                     </form>
             </div>
@@ -143,7 +143,7 @@
                         <th scope="col">Entrada</th>
                         </tr>
                     </thead>
-                    <tbody>
+                    <tbody id="mytbl">
                         {% for item in salidas %}
                         <tr>
                             <th scope="col">{{item.producto.articulos.producto.producto.codigo}}</th>
@@ -188,10 +188,33 @@
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
 
+var rows = document.getElementById("mytbl").rows.length
+//submit_btn = document.getElementById('submit-button')
+console.log('rows',rows)
+
+document.getElementById("update-salida").addEventListener('click',function(){
+
+if (rows < 1){
+    Swal.fire({
+            "title":"Error",
+            "text":"No tienes productos seleccionados",
+            "icon":"error",
+        })
+        this.setAttribute('name','')
+    } else {
+        this.setAttribute('name','entrada')
+
+    }
+
+})
+
+
+
 document.getElementById('myForm').addEventListener('submit', function() {
     // Deshabilita el botón de envío cuando se envía el formulario
-    document.getElementById('submit-button').disabled = true;
+    document.getElementById('update-salida').disabled = true;
     });
+
 
 
 document.getElementById("producto").addEventListener("change", function(element){
@@ -348,6 +371,8 @@ function ActualizarArticulos(oc,id,val_cantidad,action){
         location.reload()
     })
 }
+
+{% if salidas %}
 document.addEventListener('DOMContentLoaded', function(){
     var inputUsuario = document.getElementById('txt_usuario');
     var submitButton = document.getElementById('submit-button');
@@ -369,6 +394,7 @@ document.addEventListener('DOMContentLoaded', function(){
         }
     });
 });
+{% endif %}
 
 document.getElementById('id_cantidad').addEventListener('change', function(){
 var cantidad = this;
@@ -386,7 +412,7 @@ if (cantidad.value <= 0){
                 "text":"La cantidad capturada no puede ser menor o igual que 0",
                 "icon":"error",
             })
-} else if (cantidad.value > cantidad_sol){
+} else if (cantidad.value > cantidad_sol.value){
     boton.classList.add('d-none')
     Swal.fire({
                 "title":"Error",

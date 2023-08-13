@@ -16,6 +16,7 @@ from django.http import JsonResponse, HttpResponse
 from datetime import date, datetime
 import decimal
 from django.core.mail import EmailMessage
+from django.core.paginator import Paginator
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -39,14 +40,18 @@ def pendientes_entrada(request):
         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
 
 
-
-
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
 
     context = {
         'compras':compras,
         'myfilter':myfilter,
+        'compras_list':compras_list,
         }
 
     return render(request, 'entradas/pendientes_entrada.html', context)
@@ -223,9 +228,9 @@ def update_entrada(request):
         producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto_comprado.producto.producto.articulos)
 
     if producto_inv.producto.servicio == False:
-        monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.apartada * producto_inv.price
+        monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.apartada_entradas * producto_inv.price
 
-        cantidad_inventario = producto_inv.cantidad + producto_inv.apartada
+        cantidad_inventario = producto_inv.cantidad + producto_inv.apartada_entradas
 
         monto_total = monto_inventario + entrada_item.cantidad * producto_comprado.precio_unitario
 
@@ -254,31 +259,22 @@ def update_entrada(request):
             #Esta parte determina el comportamiento de todos las solicitudes que se tienen que activar cuando la entrada es de resurtimiento
             if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
                 if producto_surtir:
-                    producto_inv.cantidad_entradas = producto_inv.cantidad_entradas + entrada_item.cantidad
+                    producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad
                     producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad
                     producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad
                     producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad 
                     if producto_surtir.cantidad_requisitar == 0:
                         producto_surtir.requisitar = False
-                    #if producto_surtir.cantidad_requisitar > entrada_item.cantidad:                                 #Si el producto pendiente de requisitar es mayor que las entradas
-                    #    producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad  #Al producto pendiente por requisitar se le resta lo que entra
-                    #    producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad - producto_surtir.cantidad_requisitar #--------- No hay necesidad de apartar cuando la entrada es de resurtimiento
-                    #elif producto_surtir.cantidad_requisitar <= entrada_item.cantidad:                 #Si el producto pendiente de requisitar es menor o igual que las entradas
-                    #    producto_surtir.cantidad = producto_surtir.cantidad_requisitar                 #la cantidad disponible para surtir es igual a la cantidad por requisitar, es decir, se cubre toda la necesidad
-                    #    producto_surtir.cantidad_requisitar = 0                                        #Al cubrirse toda la necesidad la cantidad por requisitar pasa a 0
-                    #    producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad - producto_surtir.cantidad_requisitar #El producto disponible en el inventario es la suma de lo que ya estaba ahí más lo que entró menos lo que ho se había surtido y que ahora queda apartado
-                    #    solicitud = Order.objects.get(id = producto_surtir.articulos.orden.id)
-                    #    solicitud.requisitar = False
-                    #    solicitud.save()
+                    
                     producto_surtir.precio = producto_comprado.precio_unitario
                     producto_surtir.save()
                     producto_inv.save()
                 producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para resurtimiento'
             else:
-                producto_inv.cantidad_entradas = producto_inv.cantidad_entradas + entrada_item.cantidad
-                producto_inv.cantidad_apartada = producto_inv.cantidad_apartada + entrada_item.cantidad
-                producto_surtir.cantidad = total_entradas_pendientes                        #Al producto disponible para surtir se le suma lo que entra
-                producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - total_entradas_pendientes  #Al producto pendiente por requisitar se le resta lo que entra
+                producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad
+                producto_inv.cantidad_apartada = producto_inv.apartada_entradas
+                producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad                       #Al producto disponible para surtir se le suma lo que entra
+                producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
                 producto_inv.save()
                 producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para solicitud normal'
                 entrada.pagado_date = date.today()
