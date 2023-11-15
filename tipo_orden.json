@@ -1,1 +1,0 @@
-[{"model": "dashboard.tipo_orden", "pk": 1, "fields": {"tipo": "normal"}}, {"model": "dashboard.tipo_orden", "pk": 2, "fields": {"tipo": "resurtimiento"}}]

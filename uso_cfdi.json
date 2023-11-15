@@ -1,1 +1,0 @@
-[{"model": "compras.uso_cfdi", "pk": 1, "fields": {"codigo": "G01", "descripcion": "Adquisición de mercancías"}}, {"model": "compras.uso_cfdi", "pk": 2, "fields": {"codigo": "G02", "descripcion": "Devoluciones, descuentos"}}, {"model": "compras.uso_cfdi", "pk": 3, "fields": {"codigo": "G03", "descripcion": "Gastos en general"}}]

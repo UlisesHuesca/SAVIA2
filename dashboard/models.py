@@ -250,7 +250,7 @@ class ArticulosOrdenados(models.Model):
         cantidad_salida = sum([item.cantidad_salidas for item in disponibles])
         return cantidad_salida
     
-     @property
+    @property
     def articulos_disponibles(self):
         disponibles = self.articulosparasurtir_set.filter(surtir=True)
         cantidad_disponible = sum([item.cantidad for item in disponibles])

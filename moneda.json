@@ -1,1 +1,0 @@
-[{"model": "compras.moneda", "pk": 1, "fields": {"nombre": "PESOS"}}, {"model": "compras.moneda", "pk": 2, "fields": {"nombre": "DOLARES"}}]
