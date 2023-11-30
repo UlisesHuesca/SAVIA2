@@ -1,0 +1,145 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+    
+{% block title %}Autorización Superintendencia{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<hr>
+<div class = "row mt-2 bg-white">
+    <!--<ul class="nav nav-pills" >
+        <li class="nav-item mx-2 pl-5">
+            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                <i class="fa-solid fa-file-excel fa-2xl"></i>
+            </button>
+        </li>
+        <li class="nav-item mx-2">
+            <button type="button" class="btn btn-outline-danger">
+                <i class="fa-solid fa-file-pdf fa-2xl"></i>
+            </button>
+        </li>
+    </ul>-->
+</div>
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "card bg-white my-2">
+    <div class="card-header">
+        <h3>Autorización Superintendencia</h3>
+    </div>
+    <div class ="table-responsive-sm">
+        <table class="table table-striped table-hover bg-white">
+            <thead role="rowgroup" class="text-black" style="background-color: #F5F5F5;">
+                <tr role="row">
+                    <th >Folio</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    <th class="d-none d-lg-table-cell">Proyecto</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Área</th>
+                    <th class="d-none d-lg-table-cell">Creado</th>
+                    <th class="numeric">Proveedor</th>
+                    <th class="numeric">Costo</th>
+                    <th class="numeric">Moneda</th>
+                    <th class="d-none d-lg-table-cell">Condición</th>
+                    <th class="numeric">Acción</th>
+                </tr>
+            </thead>
+            <tbody role="rowgroup">
+                {% for compra in compras %}
+                <tr role="row">
+                    <td class="numeric">{{compra.get_folio}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.proyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.area}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.created_at}} </td>
+                    <td class="numeric">{{compra.proveedor}}</td>
+                    <td class="numeric">${{compra.costo_plus_adicionales}}</td>
+                    <td class="numeric">{{compra.moneda}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.cond_de_pago}}</td>
+                    <td class="numeric">
+                        <ul class="nav nav-pills">
+                            <li class="nav-item m-2">
+                                <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-oc1' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
+                            </li>
+                            <li class="nav-item m-2">
+                                <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}"><i class="fa-solid fa-backward"></i></a>
+                            </li>
+                            <li class="nav-item m-2 ">
+                                <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'autorizar-oc1' compra.id %}"><i class="fa-solid fa-check"></i></a>
+                            </li>
+                            {% if compra.proveedor.estatus.nombre == 'NUEVO' %}
+                                {% if compra.comparativo_model %}
+                                <li class="nav-item m-2">
+                                    <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'mostrar-comparativo' compra.comparativo_model.id %}">
+                                        <i class="fa-solid fa-eye"></i>
+                                    </a>
+                                </li>
+                                {% endif %}
+                            {% endif %}
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-xl modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+})
+
+</script>
+{% endblock %}
+</body>
+</html>

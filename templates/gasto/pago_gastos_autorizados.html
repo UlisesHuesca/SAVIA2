@@ -1,0 +1,220 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Matriz de gastos autorizados{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class = "row mt-2 bg-white" id="response-div">
+        <div class="col-12">
+            <div class="card-header">
+                <h5>Filtro de Gastos Autorizados</h5>
+            </div>
+            <div class="card-body">
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.id|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                                <label style="color: #121212;" for="id_proyecto">Folio</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                                <label style="color: #121212;" for="id_staff">Solicitado por</label>
+                            </div>
+                        </div>
+                    </div>
+                <div class="col-lg-2 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_start_date">Desde:</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-2 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_end_date">Hasta:</label>
+                        </div>
+                    </div>
+                </div>
+                    <div class="col-1">
+                        <button class="btn btn-outline-success btn-block m-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                    </row>
+                </div>
+                <hr>
+                </form>
+                <form method=POST>
+                    {% csrf_token %}
+                   <ul class="nav nav-pills">
+                     <!--<li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                        <li class="nav-item mx-2">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-autorizadas' %}">Compras</a>
+                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viáticos</a>
+                              </div>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Gasto</th>
+                    <th scope="col">Solicitado por</th>
+                    <th scope="col">Solicitado para</th>
+                    <th scope="col">Autorizado</th>
+                    <th scope="col">Importe Gasto</th>
+                    <th scope="col">Pagado</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Comprobación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in gastos_list %}
+                <tr>
+                    <th scope="row">{{gasto.folio}}-{{gasto.id}}</th>
+                    <td>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
+                    <td>{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
+                    <td>{{gasto.approbado_fecha2}} </td>
+                    <td>${{gasto.get_total_solicitud|floatformat:2}}</td>
+                    <td>${{gasto.monto_pagado|floatformat:2}}</td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                <button id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'pago-gasto' gasto.id %}">Pago</button>
+                            </li>
+                        </ul>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" href="{% url 'matriz-facturas-gasto' gasto.id %}">Comprobación</a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if gastos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in gastos_list.paginator.page_range %}
+                    {% if gastos_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > gastos_list.number|add:'-2' and item < gastos_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if gastos_list.paginator.num_pages > gastos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{gastos_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{gastos_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if gastos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+</script>
+{% endblock %}
+</body>
+</html>

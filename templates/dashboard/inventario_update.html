@@ -1,0 +1,50 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %}Página de Actualización de Inventario{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Actualizar Inventario</h3>
+                <hr>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{form | crispy}}
+                    <div>
+                    <h4>¿Confirmas la actualización del producto?</h4>
+                    </div>
+                    <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                    <a class="btn btn" href="{% url 'solicitud-inventario' %}">Cancelar</a>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $("#id_familia").change(function() {
+      var url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
+      var familiaId = $(this).val();  // get the selected familia ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'familia_id': familiaId       // add the familia id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
+          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
+        }
+      });
+
+    });
+  </script>
+{% endblock %}

@@ -1,0 +1,1202 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %} OC {% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card" id="form-wrapper">
+            <div class="card-header mb-4">
+            <!-- Aqui es el encabezado de los filtros -->
+                <h5 id="oc" target={{oc.id|unlocalize}}>ORDEN DE COMPRA: {{folio}}</h5>
+            </div>
+            <div class="card-body">
+            <form id="id_formulario" method="POST">
+                {% csrf_token %}
+                {% if error_messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{error_messages}}
+                </div>
+                {% endif %}
+                <div class="row my-3">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.proveedor}}    
+                            </div>
+                        </div>  
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div id="etiqueta_domicilio" class="col-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Domicilio:</h6><h6 style="color: #121212;" id="lbl_domicilio"></h6>   
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div id="etiqueta_status" class="col-lg-6 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Status:</h6><h6 style="color: #121212;" id="lbl_status"></h6>   
+                        </div>
+                    </div>
+                    
+                    <div id="etiqueta_distrito" class="col-lg-6 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Distrito:</h6><h6 style="color: #121212;" id="lbl_distrito"></h6>   
+                        </div>
+                    </div>
+                </div>
+                <div id="comparativo" class="row my-2 d-none">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.comparativo_model}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cond_de_pago|add_class:"form-select"|append_attr:"placeholder= Condiciones de pago"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Condiciones de pago*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="dias_credito" class="col-lg-6 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.dias_de_credito|add_class:"form-select"|append_attr:"placeholder= Días de crédito"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Días de crédito</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.moneda|add_class:"form-select"|append_attr:"placeholder= Moneda"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Moneda*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tipo_de_cambio" class="col-lg-6 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.tipo_de_cambio|add_class:"form-control"|append_attr:"placeholder= Tipo de Cambio"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Tipo de Cambio*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="form-check form-switch col-auto mx-4 d-none" id="Dof" valor = "{{tag}}">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchDof">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">DOF</label>
+                    </div>
+                </div>
+                    
+                
+                <div class="row my-2">
+                    <div class="col-lg-8 col-md-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text d-sm-none d-lg-block" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.uso_del_cfdi|add_class:"form-control"|append_attr:"placeholder= Uso CFDI"}}
+                                <label style="color: #121212;" for="id_uso_del_cfdi">Uso CFDI*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.dias_de_entrega|add_class:"form-control"|append_attr:"placeholder= Días de Entrega"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Días de Entrega</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-auto" id="referencia">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchReferencia">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelReferencia"><strong>Referencia de Pagos</strong></label>
+                    </div>
+                    <div id="referencialbl"  class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.referencia|add_class:"form-control"|append_attr:"placeholder= Referencia de Pagos"}}
+                                <label style="color: #121212;" for="id_referencia">Referencia de Pagos</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-auto" id="Impuesto" valor = "{{tag}}">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchImpuesto">
+                        <label class="form-check-label" for="SwitchImpuesto" id="LabelImpuesto"><strong>Impuestos</strong></label>
+                    </div>
+                    <div id="impuestos" class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.impuestos|add_class:"form-control"|append_attr:"placeholder=Impuestos"}}
+                                <label style="color: #121212;" for="id_impuestos">Impuestos</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-auto" id="retencion">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchRetencion">
+                        <label class="form-check-label" for="SwitchRetencion" id="LblRetencion"><strong>Retención</strong></label>
+                    </div>
+                    <div id="div_retencion" class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.retencion|add_class:"form-control"|append_attr:"placeholder=Retención"}}
+                                <label style="color: #121212;" for="id_retencion">Retención</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-auto" id="divflete" valor = "{{tag}}">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchFlete">
+                        <label class="form-check-label" for="SwitchFlete" id="LabelFlete"><strong>Flete</strong></label>
+                    </div>
+                    <div id="fletes" class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.costo_fletes|add_class:"form-control"|append_attr:"placeholder= Costo de flete"}}
+                                <label style="color: #121212;" for="id_costo_fletes">Costo de flete</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-auto" id="divanticipo" valor = "{{tag}}">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchAnticipo">
+                        <label class="form-check-label" for="SwitchAnticipo" id="LabelAnticipo"><strong>Anticipo</strong></label>
+                    </div>
+                    <div id="anticipo" class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.monto_anticipo|add_class:"form-control"|append_attr:"placeholder= Monto de anticipo"}}
+                                <label style="color: #121212;" for="id_monto_anticipo">Monto de anticipo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                    <label for="form.logistica" class="form-check-label"><strong>Logística</strong></label>
+                        {{form.logistica|add_class:"form-check-input"}}
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                    <label for="form.tesoreria_local" class="form-check-label"><strong>Tesorería Matriz</strong></label>
+                        {{form.tesoreria_matriz|add_class:"form-check-input"}}
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-message"></i></span>
+                            <span class="input-group-text d-lg-block d-none" id="basic-addon1">Opciones y Condiciones</span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.opciones_condiciones|add_class:"form-control"|append_attr:"type=text"}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid text-end">
+                <input type="hidden" name="crear" value="crear">
+                <!--El sentido de este if y porque repito el label es simplemente por el Javascript, 
+                si el botón no existe hay un error dentro de JS, el cual podría manejar pero eso será una implementación
+                más elegante para otro día -->
+                {% if productos_comp %}
+                <button type="submit" id="crear" name="crear" class="btn btn-success col-sm-2 my-2">
+                {% else %}
+                <button type="submit" id="crear" name="crear" class="btn btn-success col-sm-2 my-2 d-none">
+                {% endif %}   
+                Crear</button>
+                <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
+            </div>
+            </form>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="box-element">
+            <div class="row">
+                <div class="col-lg-8 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1"> 
+                                {{form_product.producto}}
+                            </div>
+                    </div>
+                </div>
+                <div id="etiqueta_solicitado" class="col-lg-4 col-sm-12">
+                    <div class="alert alert-secondary" role="alert">
+                    <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                    </div>
+                </div>
+            </div>
+            <div class="row">   
+                <div class="col-lg-4">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_cantidad">Cantidad</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.precio_unitario|add_class:"form-control"|append_attr:"placeholder= P.U."}}
+                            <label style="color: #121212;" for="id_precio_unitario">P.U.</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-1 mt-3">
+                    <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </a>
+                </div>
+            </div>
+            <hr>
+            <div class ="table-responsive-sm">
+                <table class="table table-light table-striped table-hover mx-2">
+                <thead>
+                    <tr>
+                        <th class="d-none d-lg-table-cell">#</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">P.U.</th>
+                        <th scope="col">Subtotal</th>
+                        <th scope="col" class="col-sm-2">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="mytbl">
+                    {% for product in productos_comp%}
+                    <tr id="row_{{product.id|unlocalize}}">
+                        <td class="d-none d-lg-table-cell">{{product.producto.producto.articulos.producto.producto.codigo}}</td>
+                        <td>{{product.producto.producto.articulos.producto.producto.nombre}}</td>
+                        <td>{{product.cantidad}}</td>
+                        <td>${{product.precio_unitario|floatformat:2}}</td>
+                        {% if product.precio_unitario != None  and product.cantidad != None %}
+                        <td scope="col">${% widthratio product.precio_unitario 1 product.cantidad %}</td>
+                        {% endif %}
+                        <td><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow({{product.producto.id|unlocalize}})" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad|unlocalize}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+            <table class="table table-light table-striped mx-1">
+            <thead>
+                <tr>
+                    <th scope="col">Subtotal</th>
+                    <td scope="col"  valor="{{subtotal|unlocalize}}" id="subtotal">${{subtotal|floatformat:2}}</td>
+                </tr>
+                </thead>
+            <tbody>
+                <tr>
+                    <th>IVA</th>
+                    <td valor="{{iva|unlocalize}}"  id="iva">${{iva|floatformat:2}}</td>
+                </tr>
+                <tr id="impuestos_total" class="d-none">
+                    <th>Impuesto</th>
+                    <td id="valor_impuesto"></td>
+                </tr>
+                <tr id="retencion_total" class="d-none">
+                    <th>Retención</th>
+                    <td id="valor_retencion"></td>
+                </tr>
+                <tr id="flete" class="d-none">
+                    <th>Flete</th>
+                    <td id="valor_flete"></td>
+                </tr>
+                <tr>
+                    <th scope="col">Total</th>
+                    <td scope="col" total={{total|unlocalize}} id="total">${{total|floatformat:2}}</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var format = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+
+var crear = document.getElementById("crear")
+var precio_mod = document.getElementById("id_precio_unitario");
+
+
+function verificar() {
+    var proveedor = document.getElementById('id_proveedor');
+    var cond_pago = document.getElementById('id_cond_de_pago');
+    var uso_cfdi = document.getElementById('id_uso_del_cfdi');
+    var dias_entrega = document.getElementById('id_dias_de_entrega');
+    var checkimpuesto = document.getElementById('SwitchImpuesto');
+    var checkretencion = document.getElementById('SwitchRetencion');
+    var checkflete = document.getElementById('SwitchFlete');
+    var checktesoreria = document.getElementById('id_tesoreria_matriz');
+    var checkanticipo = document.getElementById('SwitchAnticipo');
+    var opciones = document.getElementById('id_opciones_condiciones');
+    var dias_credito = document.getElementById('id_dias_de_credito');
+    var impuestos = document.getElementById('id_impuestos');
+    var flete = document.getElementById('id_costo_fletes');
+    var anticipo = document.getElementById('id_monto_anticipo');
+    var retencion = document.getElementById('id_retencion');
+    var moneda = document.getElementById('id_moneda');
+    var tipo_cambio = document.getElementById('id_tipo_de_cambio');
+    var status_txt = document.getElementById('comparativo');
+    var status_comparativo = status_txt.getAttribute('status');
+    var comparativo = document.getElementById('id_comparativo_model');
+    var rows = document.getElementById("mytbl").rows.length;
+    console.log(comparativo.value)
+    
+    val_moneda = moneda.value;
+    val_tipo_cambio = tipo_cambio.value;
+    if (!proveedor.value) {
+        
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Debes elegir una opción en proveedores",
+                    "icon":"error",
+                })
+                return false
+    } else if ((status_comparativo == 'true') && (comparativo.value =='')){
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir una opción en comparativo",
+                "icon":"error",
+        })
+        return false
+    } else if (!cond_pago.value){
+        
+        let dias_credito = 0;
+        Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir una opción en condiciones de pago",
+                "icon":"error",
+        })
+        return false
+    } else if ((cond_pago.value == 2) && (!dias_credito.value)){
+       
+        Swal.fire({
+                "title":"Error",
+                "text":"La cantidad de días debe ser mayor a 0",
+                "icon":"error",
+            })
+            return false
+    } else if (!val_moneda){
+       
+         Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir un tipo de moneda",
+                "icon":"error",
+            })
+            return false
+    } else if ((val_moneda == 2) && (val_tipo_cambio <= 0)) {
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"El tipo de cambio debe ser mayor a 0",
+                "icon":"error",
+        })
+        return false
+    } else if (!uso_cfdi.value){
+        
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Debes elegir una opción en uso del cfdi",
+                    "icon":"error",
+                })
+                return false
+    } else if ((checkimpuesto.checked) && (impuestos.value<=0) || (!impuestos)){
+        
+        Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad en impuestos debe ser mayor que 0",
+                    "icon":"error",
+                })
+                return false
+    } else if ((checkretencion.checked) && (retencion.value<=0) || (!retencion)){
+        
+        Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad en impuestos debe ser mayor que 0",
+                    "icon":"error",
+                })
+                return false
+    } else if ((checkflete.checked) && (flete.value<=0) || (!flete)){
+       
+        Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad en flete debe ser mayor que 0",
+                    "icon":"error",
+                })
+                return false
+    } else if ((checkanticipo.checked) && (anticipo.value<=0) || (!anticipo)){
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"La cantidad en anticipo debe ser mayor que 0",
+                "icon":"error",
+            })
+            return false
+    } else if (rows<=0) {
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"No tienes productos en tu listado",
+                "icon":"error",
+            })
+            return false
+    } else if (rows>0) {
+        
+        Swal.fire({
+                "title":"Success",
+                "text":"Validando formulario.. Espera un momento",
+                "icon":"success",
+            })
+            return true;
+        } 
+}
+
+document.getElementById("crear").addEventListener("click", function(event){
+    event.preventDefault();
+    formulario = document.getElementById("id_formulario")// Evita el comportamiento de submit predeterminado
+    boton = document.getElementById("crear")
+
+    let formValid = verificar();
+    console.log(formValid)
+
+    // Si el resultado es true (todas las condiciones se cumplen), procede con el submit
+    if (formValid) {
+        formulario.submit();
+    }
+});
+
+
+
+var checkref = document.getElementById("SwitchReferencia");
+
+
+document.getElementById("SwitchReferencia").addEventListener("change", f_checkreferencia)
+
+function f_checkreferencia(element){
+	console.log('referencia check:'+checkref.checked);
+	var referencia = document.getElementById('referencialbl');
+
+   
+	if (checkref.checked){
+	    referencia.classList.remove('d-none')
+	} else{
+	    referencia.classList.add('d-none')
+	}
+};
+
+var updateBtn = document.getElementById('update-purchase')
+let count=0;
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let oc_tag = document.getElementById('oc');
+        let oc = oc_tag.getAttribute('target');
+        //Guardar la etiqueta de solicitado que es donde tengo guardado el atributo de id
+        var lbl_solicitado = document.getElementById('solicitado');
+        var id = lbl_solicitado.getAttribute('data-id');
+        var cantidad_pendiente = lbl_solicitado.getAttribute('data-pendiente');
+        //Esta es la cantidad realmente pedida en la OC
+        var quantity = document.getElementById('id_cantidad');
+        var precio = document.getElementById('id_precio_unitario');
+        var val_cantidad = quantity.value;
+        console.log('val_cantidad',val_cantidad, 'cantidad_pendiente', cantidad_pendiente)
+        var val_precio = precio.value;
+        //console.log('val_precio',val_precio)
+        var action = "add";
+
+        if (!id) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de seleccionar algún valor de la lista",
+                    "icon":"error",
+                })
+        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
+        } else if (Number(cantidad_pendiente) < Number(val_cantidad))  {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad requerida",
+                    "icon":"error",
+                })
+        //Si "la cantidad comprada" es menor que cero
+        } else if (quantity.value <=0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else if (val_precio <=0) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"El precio ingresado debe ser mayor que 0",
+                    "icon":"error",
+            })
+        } else {
+            ActualizarArticulos(oc,id,val_cantidad,val_precio,action);
+            document.getElementById("id_cantidad").value= null;
+            document.getElementById("id_precio_unitario").value= null;
+            updateBtn.classList.add('disabled')
+
+        }
+})
+
+//ActualizarArticulos(array_id_prod)
+
+function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
+    console.log('User is logged in, sending data...' )
+    
+    var url = '/compras/update_oc/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'oc':oc, 'id':id, 'val_cantidad':val_cantidad, 'val_precio':val_precio, 'action':action})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+//This is the function that remove any product from render product table and remove the specific element from the array
+function deleteRow(elemento) {
+    var btn_delete = document.getElementById('delete');
+    let oc_tag = document.getElementById('oc');
+    let oc = oc_tag.getAttribute('target');
+    var id = elemento;
+    let val_cantidad = btn_delete.getAttribute('cantidad');
+    let iva_resp = btn_delete.getAttribute('iva');
+    let precio = btn_delete.getAttribute('precio');
+    let val_precio = precio;
+    btn_delete.classList.add('disabled')
+    //console.log(id)
+    //console.log(precio)
+    var action = "remove";
+
+    ActualizarArticulos(oc, id, val_cantidad, val_precio, action);
+
+    var select = document.getElementById('producto');
+
+    var rows = document.getElementById("mytbl").rows.length;
+}
+
+var checkFlete = document.getElementById("SwitchFlete")
+
+//This is the part off code that when flete swicth button change
+checkFlete.addEventListener("change", f_checkflete)
+
+
+function f_checkflete(element){
+	console.log('checkflete:'+checkFlete.checked);
+	var lbl_flete = document.getElementById('fletes')
+	var txt_flete1 = document.getElementById('id_costo_fletes')
+    var valor_flete = document.getElementById('flete')
+    var total_element = document.getElementById('total')
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+    var v_flete = document.getElementById('valor_flete')
+    
+	if (checkFlete.checked){
+        lbl_flete.classList.remove('d-none')
+		txt_flete1.classList.remove('d-none')
+        valor_flete.classList.remove('d-none')
+	} else {
+	    lbl_flete.classList.add('d-none')
+		txt_flete1.classList.add('d-none')
+        valor_flete.classList.add('d-none')
+        flete = parseFloat(v_flete.innerHTML.slice(1).replace(/,/g, ''))
+        console.log(flete)
+        total_val -= flete;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+        txt_flete1.value = 0
+        v_flete.innerHTML = ""
+        v_flete.setAttribute('valor', 0)
+	}
+};
+
+
+document.getElementById("id_costo_fletes").addEventListener("change", flete_v);
+
+function flete_v() {
+    var costo_fletes= document.getElementById("id_costo_fletes")
+    let flete_row = document.getElementById('flete');
+    let flete_valor = document.getElementById('valor_flete');
+    
+    let flete = parseFloat(flete_valor.innerHTML.slice(1).replace(/,/g, '')); // Quita el signo de dolar y convierte a float
+    console.log(flete)
+    
+    flete_row.classList.remove('d-none');
+    flete_valor.innerHTML = '$' + costo_fletes.value
+    flete_valor.setAttribute('valor',costo_fletes.value)
+};
+
+var checkdof = document.getElementById("SwitchDof");
+
+
+document.getElementById("SwitchDof").addEventListener("change", function(element){
+	console.log('Dof:'+checkdof.checked);
+	var tipo_cambio = document.getElementById('id_tipo_de_cambio');
+	let check = document.getElementById('Dof');
+	let checkdof_val = check.getAttribute('valor');
+	//
+
+	if (checkdof.checked){
+	    tipo_cambio.value = Number(checkdof_val);
+	} else{
+	    tipo_cambio.value = 0
+	}
+});
+
+var checkanticipo = document.getElementById("SwitchAnticipo");
+checkanticipo.addEventListener("change", f_checkanticipo);
+
+
+function f_checkanticipo(element){
+	console.log('checkanticipo:'+checkanticipo.checked);
+	var lbl_anticipo = document.getElementById('anticipo')
+	var txt_anticipo = document.getElementById('id_monto_anticipo')
+    
+
+	if (checkanticipo.checked){
+	    lbl_anticipo.classList.remove('d-none');
+		txt_anticipo.classList.remove('d-none');
+	} else {
+		lbl_anticipo.classList.add("d-none");
+		txt_anticipo.classList.add("d-none")
+	}
+};
+
+var checkimpuesto = document.getElementById("SwitchImpuesto")
+//This is the part off code that when impuesto swicth button change
+checkimpuesto.addEventListener("change", f_checkimpuesto);
+
+
+function f_checkimpuesto(element){
+
+	console.log('checkimpuesto:'+document.getElementById("SwitchImpuesto").checked);
+	var lbl_impuestos = document.getElementById('impuestos')
+	var txt_impuestos = document.getElementById('id_impuestos')
+    let impuesto_row = document.getElementById('impuestos_total')
+    var v_impuesto = document.getElementById('valor_impuesto')
+    
+
+	if (checkimpuesto.checked){
+		lbl_impuestos.classList.remove('d-none'); 
+		txt_impuestos.classList.remove('d-none'); 
+	} else {
+		lbl_impuestos.classList.add('d-none');
+		txt_impuestos.classList.add('d-none');
+        impuesto_row.classList.add('d-none')
+        let impuesto = parseFloat(v_impuesto.innerHTML.slice(1));
+        txt_impuestos.value = 0
+        v_impuesto.setAttribute('valor', 0)
+        v_impuesto.innerHTML = " "
+	}
+};
+
+// Evento al cambiar el impuesto adicional
+document.getElementById("id_impuestos").addEventListener("change", impuestos_v)
+
+
+function impuestos_v(element) {
+    let impuesto = document.getElementById("id_impuestos").value;
+    let impuesto_row = document.getElementById('impuestos_total');
+    let impuesto_valor = document.getElementById('valor_impuesto');
+    //console.log(total_val)
+    impuesto_row.setAttribute('class','');
+    impuesto_valor.innerHTML = '$' + impuesto;
+    impuesto_valor.setAttribute('valor',impuesto)
+};
+
+var pago = document.getElementById("id_cond_de_pago")
+
+//This is the part off code that when condiciones de pago swicth button change
+document.getElementById("id_cond_de_pago").addEventListener("change", function(element){
+    var lbl_dias = document.getElementById('dias_credito')
+    var dias = document.getElementById('id_dias_de_credito')
+
+    if (pago.value == 2){
+        lbl_dias.classList.remove('d-none');
+        dias.classList.remove('d-none');
+    } else {
+        dias.classList.add('d-none');
+        lbl_dias.classList.add('d-none');
+    }
+});
+
+var checkretencion = document.getElementById("SwitchRetencion")
+//This is the part off code that when impuesto swicth button change
+checkretencion.addEventListener("change", f_retencion);
+
+
+function f_retencion(element){
+
+	console.log('checkretencion:'+document.getElementById("SwitchRetencion").checked);
+	var lbl_retencion = document.getElementById('div_retencion')
+	var txt_retencion = document.getElementById('id_retencion')
+    let retencion_row = document.getElementById('retencion_total')
+    var v_retencion = document.getElementById('valor_retencion')
+    
+
+	if (checkretencion.checked){
+		lbl_retencion.classList.remove('d-none'); 
+		txt_retencion.classList.remove('d-none'); 
+	} else {
+		lbl_retencion.classList.add('d-none');
+		txt_retencion.classList.add('d-none');
+        retencion_row.classList.add('d-none')
+        let retencion = parseFloat(v_retencion.innerHTML.slice(1));
+        txt_retencion.value = 0
+        v_retencion.setAttribute('valor', 0)
+        v_retencion.innerHTML = " "
+	}
+};
+
+
+// Evento al cambiar el impuesto adicional
+document.getElementById("id_retencion").addEventListener("change",retencion_v)
+
+function retencion_v(element) {
+    let retencion = document.getElementById("id_retencion").value;
+    let retencion_row = document.getElementById('retencion_total');
+    let retencion_valor = document.getElementById('valor_retencion');
+    retencion_row.classList.remove('d-none');
+    retencion_valor.innerHTML = '$' + retencion;
+    retencion_valor.setAttribute('valor', retencion);
+};
+
+
+var moneda = document.getElementById("id_moneda");
+
+document.getElementById("id_moneda").addEventListener("change", function(element){
+    var lbl_tipo_cambio = document.getElementById('tipo_de_cambio')
+    var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio')
+    var div_dof = document.getElementById('Dof')
+    var precio_mod = document.getElementById("id_precio_unitario");
+    var flete_mod = document.getElementById("id_costo_fletes");
+    var impuestos_mod = document.getElementById("id_impuestos");
+    var anticipo_mod = document.getElementById("id_monto_anticipo");
+    
+
+    if (moneda.value == 2){
+        lbl_tipo_cambio.classList.remove('d-none');
+        div_dof.classList.remove('d-none');
+        precio_mod.selectedIndex = 1;
+        flete_mod.selectedIndex = 1;
+        impuestos_mod.selectedIndex = 1;
+        anticipo_mod.selectedIndex = 1;
+    } else {
+        lbl_tipo_cambio.classList.add('d-none');
+        div_dof.classList.add('d-none');
+        precio_mod.selectedIndex = 0;
+        flete_mod.selectedIndex = 0;
+        impuestos_mod.selectedIndex = 0;
+        anticipo_mod.selectedIndex = 0;
+    }
+});
+
+function calcular_total(){
+    var total_element = document.getElementById('total');
+    var subtotal_element = document.getElementById('subtotal');
+    var iva_element = document.getElementById('iva');
+    var impuesto_element = document.getElementById('valor_impuesto');
+    var flete_element = document.getElementById('valor_flete');
+    var retencion_element = document.getElementById('valor_retencion');
+    valor_subtotal = subtotal_element.getAttribute('valor');
+    valor_iva = iva_element.getAttribute('valor');
+    valor_impuesto = impuesto_element.getAttribute('valor');
+    valor_flete = flete_element.getAttribute('valor');
+    valor_retencion = retencion_element.getAttribute('valor');
+    if (Number(valor_impuesto)) {
+        var impuesto = Number(valor_impuesto);
+    } else {
+        var impuesto = 0;
+    };
+    if (Number(valor_flete)){
+        var flete = Number(valor_flete);
+    } else {
+        var flete = 0;
+    }
+    if (Number(valor_retencion)){
+        var retencion = Number(valor_retencion);
+    } else {
+        var retencion = 0
+    }
+    //console.log('retencion:',retencion);
+    //console.log('flete', flete);
+    //console.log('impuestos',impuesto);
+    total = Number(valor_subtotal) + Number(valor_iva) + impuesto + flete - retencion;
+    //console.log('total',total);
+    total_element.innerHTML = '$' + total.toFixed(2);
+};
+
+document.getElementById("id_formulario").addEventListener('change', function() {
+    var oc = document.getElementById("oc").getAttribute("target");
+    var datosGuardados = JSON.parse(localStorage.getItem("id_formulario_" + oc)) || {};
+    var formCompra = new FormData(this);
+    
+    formCompra.forEach(function(value, key) {
+        if (key !== 'csrfmiddlewaretoken') {  // Omitir csrfmiddlewaretoken
+            datosGuardados[key] = value;
+        }
+    });
+
+    datosGuardados["oc"] = oc;
+    datosGuardados["ocInner"] = document.getElementById("oc").innerHTML;
+    datosGuardados["SwitchDof"] = document.getElementById("SwitchDof").checked;
+    datosGuardados["SwitchReferencia"] = document.getElementById("SwitchReferencia").checked;
+    datosGuardados["SwitchImpuesto"] = document.getElementById("SwitchImpuesto").checked;
+    datosGuardados["SwitchFlete"] = document.getElementById("SwitchFlete").value;
+    localStorage.setItem("id_formulario_" + oc, JSON.stringify(datosGuardados));
+    console.log("Formulario guardado para OC:",oc, datosGuardados)
+    calcular_total();
+});
+
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM completamente cargado');
+    // Restablecer datos del formulario desde localStorage si existen
+    var encabezado = document.getElementById("oc")
+    var oc = encabezado.getAttribute("target");
+    console.log(oc)
+    var datosCompra = localStorage.getItem("id_formulario_"+oc);
+    console.log(datosCompra)
+    if (datosCompra) {
+        var obj = JSON.parse(datosCompra);
+        for (var key in obj) {
+            //Aquí se define lo que hace cuando la key es oc
+            if (key === "oc"){
+               console.log(key);
+            } else if (key === "ocInner"){
+              console.log(key)
+            } else{
+                var inputElement = document.querySelector("[name='" + key + "']") || document.getElementById(key);
+                if (inputElement && key !== 'proveedor')   {
+                    
+                    if ('value' in inputElement){
+                        if (inputElement.getAttribute('type') == "checkbox" && (obj[key] == true || obj[key] == "on")){
+                            inputElement.checked = true
+                        }
+                        else{
+                            inputElement.value = obj[key];
+                        }
+                    } else {
+                        inputElement.innerHTML = obj[key];
+                    }
+                }
+            }
+        }
+    }
+    f_checkimpuesto()
+    f_checkanticipo()
+    f_checkflete()
+    f_checkreferencia()
+    f_retencion()
+    impuestos_v()
+    flete_v()
+    retencion_v()
+    calcular_total()
+    precio_ref()
+});
+
+$(document).ready(function(){
+    $('#id_proveedor').select2({
+        placeholder:'Seleccione Proveedor',
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        allowClear: true,
+        width: '100%',
+        
+        ajax: {
+            url: "{% url 'carga-proveedor' %}",
+            datatype: 'json',
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {
+                            id: item.id,
+                            text: item.nombre__razon_social, 
+                            distrito: item.distrito__nombre,
+                            status: item.estatus__nombre,
+                            domicilio: item.domicilio
+                        };
+                    })
+
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    var encabezado = document.getElementById("oc")
+    var oc = encabezado.getAttribute("target");
+    var datosCompra = JSON.parse(localStorage.getItem("id_formulario_"+oc));
+    var proveedorSelect = $('#id_proveedor')
+    if (datosCompra){
+        if (datosCompra.proveedor_text){
+
+            var option = new Option(datosCompra.proveedor_text, datosCompra.proveedor, true, true);
+            proveedorSelect.append(option).trigger('change');
+
+            // Disparar manualmente el evento 'select2:select'
+            proveedorSelect.trigger({
+                type: 'select2:select',
+                params: {
+                    data: datosCompra
+                }
+            });
+        }
+        $('#id_proveedor').on('select2:unselect', function(e){
+       
+         datosCompra.lbl_distrito = '';
+         datosCompra.lbl_domicilio ='';
+         datosCompra.lbl_status ='';
+         datosCompra.proveedor='';
+         datosCompra.proveedor_text =''; 
+         $('#lbl_distrito').text('');
+         $('#lbl_domicilio').text('');
+         $('#lbl_status').text(''); 
+         localStorage.setItem("id_formulario_" + oc, JSON.stringify(datosCompra));    
+    })
+    }
+    $('#id_proveedor').on('select2:select', function(e) {
+        var data = e.params.data; // Aquí obtienes el objeto de datos seleccionado
+        var distrito = data.distrito; // Aquí obtienes el valor de distrito
+        var domicilio = data.domicilio;
+        var status = data.status;
+        var proveedor = data.id;
+        var lbl_nombre = data.text;
+        var encabezado = document.getElementById("oc")
+        var oc = encabezado.getAttribute("target"); 
+        //var comparativo = document.getElementById("comparativo") 
+        //localStorage.setItem("id_formulario_" + oc, JSON.stringify(object));
+        $('#lbl_distrito').text(distrito);
+        $('#lbl_domicilio').text(domicilio);
+        $('#lbl_status').text(status);   
+        
+        var datosCompra = JSON.parse(localStorage.getItem("id_formulario_" + oc)) || {};
+        
+        datosCompra.proveedor = proveedor;
+        datosCompra.proveedor_text = lbl_nombre;
+        datosCompra.lbl_domicilio = domicilio;
+        datosCompra.lbl_status = status;
+        datosCompra.lbl_distrito = distrito;
+        precio_ref()
+        //if (status == "NUEVO"){
+        //    comparativo.classList.remove('d-none');
+        //} else {
+        //    comparativo.classList.add('d-none');
+        //}
+        
+        localStorage.setItem("id_formulario_"+ oc, JSON.stringify(datosCompra));
+        console.log("Formulario guardado para OC:",oc, datosCompra)
+        
+    });
+}); 
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+var datosProductos = {{ productos_para_select2|safe }};
+
+$(document).ready(function() {
+    $('#id_producto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona un producto',
+        data: datosProductos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_producto').on('select2:select', function(e) {
+
+        var data = e.params.data;
+        var cantidad = data.cantidad;
+        var cantidad_comprada = data.cantidad_comprada;
+        var id = data.id;
+
+        console.log(cantidad)
+        if (!cantidad_comprada) {
+            cantidad_comprada = 0
+        }
+        var cantidad_pendiente = Number(cantidad) - Number(cantidad_comprada);
+
+
+        // Envío los variables como atributos y texto de los labels
+        $('#solicitado').text(cantidad_pendiente);
+        $('#solicitado').attr('data-id',id)
+        $('#solicitado').attr('data-pendiente',cantidad_pendiente)
+       
+    });
+});
+
+var datosComparativos = {{comparativos_para_select2 | safe}}
+
+$(document).ready(function() {
+    $('#id_comparativo_model').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona un comparativo',
+        data: datosComparativos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    //$('#id_comparativo_model').on('select2:select', function(e) {
+
+        //var data = e.params.data;
+        //var cantidad = data.cantidad;
+        //var cantidad_comprada = data.cantidad_comprada;
+        //var id = data.id;
+
+        //if (!cantidad_comprada) {
+         //   cantidad_comprada = 0
+        //}
+        //var cantidad_pendiente = Number(cantidad) - Number(cantidad_comprada);
+
+    //});
+});
+
+document.getElementById("id_formulario").addEventListener("submit", function(event){
+    event.preventDefault(); //Detiene el envío del formulario
+
+    //código para borrar datos del localStorage
+    var btn_crear = document.getElementById("crear");
+    btn_crear.classList.add('disabled')
+    var oc = document.getElementById("oc").getAttribute("target");
+    localStorage.removeItem("id_formulario_" + oc);
+    console.log("Datos borrados para OC:", oc);
+
+
+    // Continuar con el envío del formulario
+    event.target.submit(); 
+});
+
+var datosProductos_comp = {{ productos_comp_to_function|safe }};
+
+function precio_ref() {
+    console.log("Función precio_ref llamada");
+    var lbl_status = document.getElementById('lbl_status');
+    var status = lbl_status.innerHTML
+    var comparativo = document.getElementById('comparativo')
+
+    if (status == "NUEVO"){
+        for (data in datosProductos_comp){
+            
+            var precio_unitario = Number(datosProductos_comp[data].precio_unitario) || 0;
+            var precio_ref = Number(datosProductos_comp[data].precio_ref) || 0;
+            var porcentaje = Number(datosProductos_comp[data].porcentaje) || 1;
+            precio_ref_max = precio_ref * porcentaje;
+            console.log(precio_ref_max)
+            if ((precio_ref_max >0) && (precio_ref_max >= precio_unitario)){
+                //Se cumplen todas las condiciones por tanto no es necesario el cuadro de comparativo
+                comparativo.classList.add('d-none')
+            } else {
+                //No se cumple las condiones en al menos uno de los casos
+                comparativo.classList.remove('d-none')             
+                break;
+            }
+        }
+    } else {
+        comparativo.classList.add('d-none');
+    }
+
+}
+
+
+
+</script>
+{% endblock %}
+</body>
+</html>

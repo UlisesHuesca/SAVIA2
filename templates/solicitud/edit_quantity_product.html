@@ -1,0 +1,68 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Inventario {% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog-lg" role="document">
+    <form  hx-post="{{request.path}}" class="modal-content">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Actualizar Producto Solicitado</h5>
+            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="color:white">
+            <div>
+                {% csrf_token %}
+                    <label for="form.producto" class="col-auto col-form-label"><strong>Producto: {{item.producto}}</strong></label>
+                    <br>
+                    <label for="form.marca" class="col-auto col-form-label my-1"><strong>Marca:</strong></label>
+                    <div class="col-4">
+                        {{ form.marca|add_class:"form-control"}}
+                    </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad:</strong></label>
+                    <div class="col-4">
+                        {{ form.cantidad|add_class:"form-control"}}
+                    </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad Apartada:</strong></label>
+                    <div class="col-4">
+                        {{ form.cantidad_apartada|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Precio:</strong></label>
+                    <div class="col-4">
+                        {{ form.price|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
+                     <div class="col-12">
+                        {{ form.comentario|add_class:"form-control"}}
+                    </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+                <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+</script>
+{% endblock %}
+</body>
+</html>

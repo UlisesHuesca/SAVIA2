@@ -1,0 +1,139 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Solicitudes| Vista: Productos{% endblock %}
+</head>
+<body>
+{% block content %}
+
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row my-4">
+        <div class="card card-body">
+            <h5>Filtro de productos</h5>
+            <hr>
+            <form method="GET" class="row g-7">
+                {% csrf_token %}
+                <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right"><strong>Solicitado por:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.staff|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.proyecto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.proyecto|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.folio" class="col-sm-auto col-form-label text-right"><strong>Folio:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.folio|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.producto" class="col-sm-auto col-form-label text-right"><strong>Producto:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.producto|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.start_date" class="col-sm-auto col-form-label text-right"><strong>Desde:</strong></label>
+                <div class="col-auto">
+                     {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                </div>
+                 <label for="myfilter.form.end_date" class="col-sm-auto col-form-label text-right"><strong>Hasta:</strong></label>
+                <div class="col-auto">
+                     {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                </div>
+                <div class="col-auto">
+                <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+            </form>
+            <hr>
+            <div class='col md-12'>
+                <div class = "row mt-2 bg-white">
+                    <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item ml-2 mx-2">
+                            <a class="btn btn-outline-info" href="{% url 'solicitud-matriz' %}"><i class="fa-solid fa-angle-left"></i> Volver a Matriz Solicitud</a>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="submit" name="btnExcel" class="btn btn-outline-success"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                        </li>
+                        <!--<li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                        </li>-->
+                    </ul>
+                    </form>
+                </div>
+            </div>
+
+        </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Folio</th>
+                    <th scope="col">Solicitado por</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Subproyecto</th>
+                    <th scope="col">Operación</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Aprobada</th>
+                    <th scope="col">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                <tr>
+                    <th scope="row">{{producto.orden.folio}}</th>
+                    <td>{{producto.orden.staff.staff.first_name}} {{producto.orden.staff.staff.last_name}}</td>
+                    <td>{{producto.orden.proyecto.nombre}}</td>
+                    <td>{{producto.orden.subproyecto.nombre}}</td>
+                    <td>{{producto.orden.operacion}}</td>
+                    <td>{{producto.cantidad}}</td>
+                    <td>{{producto.producto}}</td>
+                    <td>{{producto.orden.created_at}}</td>
+                    <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>
+                    <a class="btn btn-light" href="">Detalle</a></td>-->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if productos.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in productos.paginator.page_range %}
+                    {% if productos.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > productos.number|add:'-2' and item < productos.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if productos.paginator.num_pages > productos.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{productos.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url productos.paginator.num_pages 'page' request.GET.urlencode %}">{{productos.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if productos.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+</div>
+
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,306 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Matriz Pagos{% endblock %}
+</head>
+<body>
+
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class = "col" id="response-div">
+        <div class="card">
+            <div class="card-header">
+            <h5>Filtro de Pagos</h5>
+            </div>
+            <div class="card-body">
+                
+               
+               
+               
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row">
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.oc|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                                <label style="color: #121212;" for="id_id">Folio</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                                <label style="color: #121212;" for="id_id">Proyecto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
+                                <label style="color: #121212;" for="id_id">Tipo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.facturas_completas|add_class:"form-control"|append_attr:"placeholder= Facturas Completas"}}
+                                <label style="color: #121212;" for="id_id">Facturas Completas</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-2">
+                        <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item mx-2">
+                            <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "card col">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th class="d-none d-lg-table-cell">Id</th>
+                    <th scope="col">Compra/Gasto</th>
+                    <th class="d-none d-lg-table-cell">Solicitado</th>
+                    <th scope="col">Proyecto</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th scope="col">Autorizado</th>
+                    <th scope="col">Proveedor/Colaborador</th>
+                    <th scope="col">Facturas Completas</th>
+                    <th scope="col">Importe</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos_list %}
+                <tr>
+                    <th class="d-none d-lg-table-cell">{{pago.id}}</th>
+                    {% if pago.oc %}
+                    <td>{{pago.oc.get_folio}}</td>
+                    <td class="d-none d-lg-table-cell">{{pago.oc.req.orden.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.last_name}}</td>
+                    <td>{{pago.oc.req.orden.proyecto.nombre}}</td>
+                    <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
+                    <td>{{pago.oc.req.orden.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.last_name}}</td>
+                    {% if pago.oc.deposito_colaborador %}
+                    <td>COLABORADOR: {{pago.oc.deposito_colaborador.staff.first_name}} {{pago.oc.deposito_colaborador.staff.last_name}}</td>
+                    {% else %}
+                    <td>{{pago.oc.proveedor}}</td>
+                    {% endif %}
+                    {% if pago.oc.facturas_completas == True %}
+                    <td>Completas</td>
+                    {% else %}
+                    <td>Incompletas</td>
+                    {% endif %}
+
+                    {% endif %}
+                    {% if pago.gasto %}
+                        <td>G{{pago.gasto.id}}</td>
+                        <td class="d-none d-lg-table-cell">{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
+                        <td>{{pago.gasto.proyecto.nombre}}</td>
+                        <td  class="d-none d-lg-table-cell">{{pago.gasto.subproyecto.nombre}}</td>
+                        <td>{{pago.gasto.superintendente.staff.first_name}} {{pago.gasto.superintendente.staff.last_name}}</td>
+                        {% if pago.gasto.colaborador %}
+                        <td>{{pago.gasto.colaborador.staff.first_name}} {{pago.gasto.colaborador.staff.last_name}}</td>
+                        {% else %}
+                        <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
+                        {% endif %}
+                        {% if pago.gasto.facturas_completas == True %}
+                        <td>Completas</td>
+                        {% else %}
+                        <td>Incompletas</td>
+                        {% endif %}
+                    {% endif %}
+                    {% if pago.viatico %}
+                    <td>V{{pago.viatico.id}}</td>
+                    <td class="d-none d-lg-table-cell">{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
+                    <td>{{pago.viatico.proyecto.nombre}}</td>
+                    <td  class="d-none d-lg-table-cell">{{pago.viatico.subproyecto.nombre}}</td>
+                    <td>{{pago.viatico.superintendente.staff.first_name}} {{pago.viatico.superintendente.staff.last_name}}</td>
+                    {% if pago.viatico.colaborador %}
+                    <td>{{pago.viatico.colaborador.staff.first_name}} {{pago.viatico.colaborador.staff.last_name}}</td>
+                    {% else %}
+                    <td>{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}}</td>
+                    {% endif %}
+                    {% if pago.viatico.facturas_completas == True %}
+                    <td>Completas</td>
+                    {% else %}
+                    <td>Incompletas</td>
+                    {% endif %}
+                    {% endif %}
+                    <td>{{pago.monto}}</td>
+                    <td>{{pago.pagado_date}}</td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            {% if pago.oc %}
+                            <li class="nav-item mx-1">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' pago.oc.id%}">
+                                <i class="fa-solid fa-file-pdf"></i></a>
+                            </li>
+                            {% else %}
+                            <li> </li>
+                            {% endif %}
+
+                            <li class="nav-item mx-1">
+                                <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download><i class="fa-solid fa-file-invoice-dollar"></i></a>
+                            </li>
+                            <li class="nav-item mx-1">
+                                {% if pago.oc %}
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}">
+                                <i class="fa-solid fa-file-pdf"></i></a>
+                                {% endif %}
+                                {% if pago.gasto %}
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}">
+                                <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
+                                {% if pago.viatico %}
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}">
+                                    <i class="fa-solid fa-file-pdf"></i>
+                                </a>
+                                {% endif %}
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if pagos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in pagos_list.paginator.page_range %}
+                    {% if pagos_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > pagos_list.number|add:'-2' and item < pagos_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if pagos_list.paginator.num_pages > pagos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{pagos_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{pagos_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if pagos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url pagos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+var modal = document.getElementById('dialog')
+modal.on('hidden.bs.modal', function () {
+    location.reload();
+});
+
+</script>
+{% endblock %}
+</body>
+</html>

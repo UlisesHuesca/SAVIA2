@@ -1,0 +1,68 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{& load humanize %}
+<html>
+<head>
+{% block title %}Autorización Gastos{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Autorizar Solicitud: {{gasto.id}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <div class='box-element-2'>
+                <div class='cart-row'>
+                    <div style="flex:1"></div>
+                    <div style="flex:2">Código</div>
+                    <div style="flex:4">Artículo</div>
+                    <div style="flex:2">Cantidad</div>
+                    <div style="flex:2">Total</div>
+                    <div style="flex:2">Facturas</div>
+                    <div style="flex:6">Comentario</div>
+                    <!--<div style="flex:2">Entrada-Salida</div>-->
+                </div>
+                {% for producto in productos %}
+                <div class='cart-row'>
+                    <div style="flex:1"><img class='row-image' src="{{producto.producto.producto.imageURL}}"></div>
+                    <div style="flex:2">{{producto.producto.producto.codigo}}</div>
+                    <div style="flex:4">{{producto.producto.producto.nombre}}</div>
+                    <div style="flex:2"><p class='quantity'>{{producto.cantidad|floatformat:2}}</p></div>
+                    <div style="flex:2">${{producto.total_parcial}}</div>
+                    {% if producto.factura_pdf %}
+                            <div style="flex:2">
+                                <a href="{{producto.factura_pdf.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </div>
+                    {% else %}
+                            <div style="flex:2"> 
+                            </div>
+                    {% endif %}
+                    <div style="flex:6">{{producto.comentario}}</div>
+                    {% if producto.entrada_salida_express == True %}
+                    <div style="flex:2; color:#f2d13d;">Este producto fue marcado para realizar una entrada-salida express</div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <form action="{% url 'autorizar-gasto' gasto.id %}" method=POST>
+                {% csrf_token %}
+                <button id="approve-btn" name="btn_autorizar" class="btn btn-success" type="submit">Autorizar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+</body>
+</html>

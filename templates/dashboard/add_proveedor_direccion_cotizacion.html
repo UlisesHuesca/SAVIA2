@@ -1,0 +1,159 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Agregar Proveedor Cotización{% endblock %}
+
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-8 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Agregar Proveedor [Cotización]</h3>
+                <hr>
+                <form method="POST" class="post-form" id='ProductForm'>
+                    {% csrf_token %}
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón Social"}}
+                            <label for="id_razon_social">Razón Social*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card-clip"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC"}}
+                            <label for="id_lugar_partida">RFC*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.nombre_comercial|add_class:"form-control"|append_attr:"placeholder=Nombre Comercial"}}
+                            <label for="id_lugar_partida">Nombre Comercial</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.familia|add_class:"form-control"|append_attr:"placeholder=Familia"}}
+                            <label for="id_lugar_partida">Familia</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {{ formset.management_form}}
+                    <hr>
+                    {% for f in formset %}
+                    {{f.id}}
+                    <div class="row">
+
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-at"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{f.email|add_class:"form-control required"|append_attr:"placeholder=Email"}}
+                                <label for="id_email">Email*</label>
+                                </div>
+                            </div>
+                        </div>
+
+                    </div>
+                                
+                    {% endfor %}
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
+                    <input id="BtnActualizar" class="btn btn-outline-info d-none" type='submit' value="Actualizar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var inputs = document.querySelectorAll("input");
+        inputs.forEach(function(input) {
+            if (input.name.endsWith('-DELETE')) {
+                input.style.display = 'none'; // Oculta el checkbox
+                var label = document.querySelector("label[for='"+input.id+"']"); // Busca el label asociado
+                if (label) { // Si existe un label asociado...
+                    label.style.display = 'none'; // Oculta el label
+                }
+            }
+        });
+    });
+
+// Selecciona todos los campos requeridos
+let requiredFields = document.querySelectorAll('.required');
+// Selecciona el botón de envío
+let submitButton = document.getElementById('BtnActualizar');
+
+
+// Escucha los eventos de entrada en los campos requeridos
+requiredFields.forEach(function(field) {
+    
+    field.addEventListener('input', function() {
+        // Verifica si todos los campos requeridos están llenos
+        let isFormValid = Array.from(requiredFields).every(function(field) {
+            return field.value;
+        });
+
+        // Muestra el botón de envío solo si todos los campos requeridos están llenos
+        if (isFormValid) {
+            submitButton.setAttribute('class',"btn btn-outline-info");
+            
+        } else {
+            console.log(requiredFields)
+            submitButton.setAttribute('class',"btn btn-outline-info d-none");
+        }
+    });
+});
+  </script>
+{% endblock %}

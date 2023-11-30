@@ -1,0 +1,222 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Productos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class = "col">
+        <div class="card">
+            <div class="card-header">
+                <h5>Filtro de Productos</h5>
+            </div>
+            <div class="card-body">
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <div class="col-md-12 col-lg-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                            <label style="color: #121212;" for="id_codigo">Código</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-12 col-lg-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                            <label style="color: #121212;" for="id_producto">Producto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
+                            <label style="color: #121212;" for="id_familia">Familia</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-3">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
+                            <label style="color: #121212;" for="id_familia">Subfamilia</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                    <ul class="nav nav-pills">
+                        <li class="nav-item mx-2">
+                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_products' %}">
+                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
+                            </a>
+                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-product' %}">
+                                <i class="fa-solid fa-plus"> Agregar Producto</i>
+                            </a>
+                        </li>
+                    </ul>
+            </div>
+        </div>
+</div>
+
+<div class="card col-lg-8">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Código</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Familia</th>
+                    <th scope="col">Subfamilia</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">IVA</th>
+                    <th scope="col">Servicio</th>
+                    <th scope="col">Editar</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in items_list %}
+                <tr>
+                    <th scope="row">{{item.codigo}}</th>
+                    <td>{{item.nombre}}</td>
+                    <td>{{item.familia}}</td>
+                    <td>{{item.subfamilia}}</td>
+                    <td>{{item.unidad}}</td>
+                    <td>{{item.iva}}</td>
+                    <td>{{item.servicio}}</td>
+                    {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" %}
+                    <td>
+                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-product-update' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                    </td>
+                    {% else %}
+                    <td></td>
+                    {% endif %}
+                    <!--
+                    <a class="btn btn-outline-danger" href="{% url 'dashboard-product-delete' item.id %}">Eliminar</a></td> -->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if items_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
+
+            {% for item in items_list.paginator.page_range %}
+                {% if items_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > items_list.number|add:'-2' and item < items_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if items_list.paginator.num_pages > items_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{items_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}">{{items_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if items_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url items_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+<!--Este es el modal-->
+        <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+            </div>
+        </div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $("#id_familia").change(function () {
+      const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
+      const familiaId = $(this).val();  // get the selected familia ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'familia_id': familiaId       // add the familia id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
+          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
+        }
+      });
+    });
+
+    ;(function(){
+        const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+        htmx.on('htmx:beforeSwap',(e)=>{
+            if (e.detail.target.id === "document" && !e.detail.xhr.response)
+                modal.hide()
+        })
+    })()
+
+    var myModal = document.getElementById('dialog')
+
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+        setTimeout(function(){
+            location.reload();
+        },3000);
+    })
+  </script>
+{% endblock %}
+
+<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
+<!--style="background-color: #515151; color:white;"-->
+<!--style="background-color: #711F1B; color:white;"-->

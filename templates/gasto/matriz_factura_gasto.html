@@ -1,0 +1,256 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Matriz de gastos autorizados{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class = "card mt-2 bg-white" id="response-div">
+        <div class="col-12">
+            <div class="card-body">
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item mx-1">
+                            <a href="{% url 'mis-gastos' %}" class="btn btn-outline-info"}">
+                                <i class="fa-solid fa-backward"></i>
+                            </a>
+                        </li>
+                        {% if usuario.tipo.tesoreria == True %}
+                        <li class="nav-item mx-1">
+                            <a href="{% url 'pago-gastos-autorizados' %}" class="btn btn-outline-info">
+                                <i class="fa-solid fa-backward"> GASTOS</i>
+                            </a>                 
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a href="{% url 'matriz-pagos' %}" class="btn btn-outline-info">
+                                <i class="fa-solid fa-backward"> MATRIZ PAGOS</i>
+                            </a>
+                        </li>
+                        {% endif %}
+                        
+                        <!--<li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                    </ul>
+                </form>
+            </div>
+        </div>
+</div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "card mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Gasto ID</th>
+                    <th>ID articulo</th>
+                    <th scope="col">Artículo</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Importe Gasto</th>
+                    
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in articulos_gasto %}
+                <tr>
+                    <th>{{gasto.gasto.folio}} - {{gasto.gasto.id}}</th>
+                    <th scope="row">{{gasto.id}}</th>
+                    <td>{{gasto.producto}}</td>
+                    <td>{{gasto.descripcion}}</td>
+                    <td class="total-linea" total={{gasto.get_subtotal}}>${{gasto.get_subtotal|floatformat:2}}</td>
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <td></td>
+                    <th>Total</th>
+                    <td scope="col" id="total"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+       
+            <div id="factura_pdf" class="row mt-2">
+                <div class="input-group col-lg-12"> 
+                    <div class="input-group-text" style="background-color:white">
+                        {{factura_form.archivo_pdf|add_class:"form-control"}}
+                    </div>
+                    <span class="input-group-text">
+                        <div class="my-3" style="color:#980f0f">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>PDF
+                        </div>
+                    </span>
+                </div>
+            </div>
+            <div id="factura_xml" class="row d-none d-lg-block mt-2">
+                <div class="input-group"> 
+                    <div class="input-group-text" style="background-color:white">
+                        {{factura_form.archivo_xml|add_class:"form-control"}}
+                    </div>
+                    <span class="input-group-text">
+                        <div class="my-3" style="color:#9a9b9d">
+                            <i class="fa-solid fa-cloud-arrow-up"></i>XML
+                        </div>
+                    </span>
+                </div>
+            </div>
+            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Factura</button>
+        </form>
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Concepto [XML]</th>
+                    <th scope="col">Proveedor [XML]</th>
+                    <th scope="col">Monto [XML]</th>
+                    <th>Facturas</th>
+                <tr>
+            </thead>
+            <tbody>
+                {% for factura in facturas  %}
+                <tr>
+                    <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
+                    <td>{% if factura.archivo_xml %} {{factura.emisor.nombre}} {% endif %}</td>
+                    {% if factura.archivo_xml %}<td class="total-xml" total={{factura.emisor.total}}> ${{factura.emisor.total}} </td>{%else%}<td></td>{% endif %}
+                    <td>
+                    <ul class="nav nav-pills">
+                        {% if factura.archivo_pdf %}
+                        <li class="nav-item mx-1">
+                            <a href="{{factura.archivo_pdf.url}}" download class="btn btn-outline-danger">
+                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </a>                 
+                        </li>
+                        {% endif %}
+                        {% if factura.archivo_xml %}
+                        <li class="nav-item mx-1">
+                            <a href="{{factura.archivo_xml.url}}" download class="btn btn-outline-secondary">
+                                <i class="fa-solid fa-file-code fa-2xl"></i>
+                            </a>                 
+                        </li>
+                        {% endif %}
+                    </ul>
+                    </td> 
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td></td>
+                    <th>Total</th>
+                    <td scope="col" id="total2"></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <form method="post">
+        {% csrf_token %}
+        <div class="row ms-3 my-2">
+            <div class="form-check form-switch col-sm">
+            <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas</strong></label>
+            {{form.facturas_completas|add_class:"form-check-input"}}
+            </div>
+            <hr>
+        <!--<h6>Nueva factura</h6>-->
+        <ul class="nav">
+            <!--<li class="nav-item">
+                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' gasto.id %}" >Registrar</a>
+            </li>-->
+            <li class="nav-item ms-4">
+                <button type="submit" name="btn_factura_completa" class="btn btn-secondary">Cerrar</button>
+            </li>
+        </ul>
+        </div>
+    </form>
+</div>
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+var elementos = document.getElementsByClassName('total-linea');
+var xml = document.getElementsByClassName('total-xml');
+
+
+function total(elementos,id){
+    console.log(elementos)
+    var lbltotal = document.getElementById(id)
+    var total = 0;
+    for (var i = 0 ; i < elementos.length; i++){
+        total += Number(elementos[i].getAttribute('total'))
+    };
+    //console.log(total)
+    lbltotal.innerText = `$${total}`
+
+};
+
+total(elementos, 'total');
+total(xml, 'total2');
+
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+</script>
+{% endblock %}
+</body>
+</html>

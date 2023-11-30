@@ -1,0 +1,43 @@
+{% extends 'partials/base.html' %}
+<html>
+<head>
+{% block title %}Staff{% endblock %}
+</head>
+
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+{% include 'partials/topside.html' %}
+<div class="container">
+<div class="row my-4">
+    <div class="col-md-4"></div>
+
+    <div class="col-md-8">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Ver Detalle</th>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Email</th>
+                    <th scope="col">Teléfono</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for worker in workers %}
+                <tr>
+                    <th scope="row"><a class="btn btn-outline-success" href="{% url 'dashboard-staff-detail' worker.id %}"><i class="fa-solid fa-id-card"></i></a></th>
+                    <td>{{worker.username}}</td>
+                    <td>{{worker.email}}</td>
+                    <td>{{worker.profile.phone}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+{% endblock %}
+</body>
+</html>

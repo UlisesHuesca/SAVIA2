@@ -1,0 +1,78 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Edición de Proyectos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Editar Proyectos</h3>
+                <hr>
+                <form method="POST">
+                    {% csrf_token %}
+                    <label for="form.nombre" class="col-auto col-form-label"><strong>ID: {{proyecto.id}}</strong></label>
+                    <br>
+                    <label for="form.cliente" class="col-auto col-form-label"><strong>Proyecto: {{proyecto.nombre}}</strong></label>
+                    <br>
+                    <label for="form.nombre" class="col-auto col-form-label my-1"><strong>Proyecto:</strong></label>
+                    <div class="col-12">
+                        {{ form.nombre|add_class:"form-control"}}
+                    </div>
+                    <label for="form.descripcion" class="col-auto col-form-label my-1"><strong>Descripción:</strong></label>
+                    <div class="col-12">
+                        {{ form.descripcion|add_class:"form-control"}}
+                    </div>
+                    <label for="form.descripcion" class="col-auto col-form-label my-1"><strong>Activo:</strong></label>
+                    <div class="col-12">
+                        {{ form.activo|add_class:"form-check-input"}}
+                    </div>
+                    <label for="form.factura" class="col-auto col-form-label my-1"><strong>Factura:</strong></label>
+                    <div class="col-6">
+                        {{ form.factura|add_class:"form-control"}}
+                    </div>
+                    <label for="form.folio_cotizacion" class="col-auto col-form-label my-1"><strong>Cotización:</strong></label>
+                    <div class="col-6">
+                        {{ form.folio_cotizacion|add_class:"form-control"}}
+                    </div>
+                    <label for="form.folio_cotizacion" class="col-auto col-form-label my-1"><strong>Cliente:</strong></label>
+                    <div class="col-6">
+                        {{ form.cliente|add_class:"form-control"}}
+                    </div>
+                    <label for="form.folio_cotizacion" class="col-auto col-form-label my-1"><strong>OC Cliente:</strong></label>
+                    <div class="col-6">
+                        {{ form.oc_cliente|add_class:"form-control"}}
+                    </div>
+                     <label for="form.folio_cotizacion" class="col-auto col-form-label my-1"><strong>Status de Entrega:</strong></label>
+                    <div class="col-6">
+                        {{ form.status_de_entrega|add_class:"form-control"}}
+                    </div>
+                     <label for="form.folio_cotizacion" class="col-auto col-form-label my-1"><strong>Monto:</strong></label>
+                    <div class="col-6">
+                        {{ form.monto_total|add_class:"form-control"}}
+                    </div>
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'configuracion-proyectos' %}">Cancelar</a>
+                    <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+  </script>
+{% endblock %}

@@ -1,0 +1,28 @@
+{% block content %}
+<h6>&nbsp;</h6>
+<div class="container">
+    <div class="col-md-5 mt-3">
+    <div class="card">
+        <div class="card-header bg-light text-dark">
+            <h5>
+                <strong>Bienvenido a SAVIA</strong>
+            </h5>
+        </div>
+
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-5">
+                    <a class="text-decoration-none text-dark" href="{% url 'solicitud-autorizada-firma' %}">
+                        <div class="card my-card shadow text-center p-3">
+                            <h4>Salidas <i class="fa-solid fa-truck-fast"></i></h4>
+                            <h3>{{conteo}}</h3>
+                        </div>
+                    </a>
+                </div>
+            </div>
+        </div>
+
+    </div>
+    </div>
+</div>
+{% endblock %}

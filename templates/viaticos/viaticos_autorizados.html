@@ -1,0 +1,178 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Viáticos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<div class="row my-4">
+        <div class="col-md-12">
+        <div class="card card-body">
+            <h5>Filtro de Viáticos</h5>
+            <hr>
+            <form method="GET" class="row g-7">
+                {% csrf_token %}
+                <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right"><strong>Solicitado por:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.staff|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.proyecto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.proyecto|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.folio" class="col-sm-auto col-form-label text-right"><strong>Folio:</strong></label>
+                <div class="col-auto">
+                    {{myfilter.form.folio|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.start_date" class="col-sm-auto col-form-label text-right"><strong>Desde:</strong></label>
+                <div class="col-auto">
+                     {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                </div>
+                 <label for="myfilter.form.end_date" class="col-sm-auto col-form-label text-right"><strong>Hasta:</strong></label>
+                <div class="col-auto">
+                     {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                </div>
+                <div class="col-auto">
+                <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            </form>
+            <hr>
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <!--<li class="nav-item mx-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
+                    </li> -->
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                    </li>
+                </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class = "row mt-2">
+    <div class="col-md-10">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Folio</th>
+                    <th scope="col">Solicitado por:</th>
+                    <th scope="col">Solicitado para:</th>
+                    <th scope="col">Autorización N1</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Subproyecto</th>
+                    <th scope="col">Creado</th>
+                    <th scope="col">Detalles</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes_list %}
+                <tr>
+                    <th scope="row">{{orden.id}}</th>
+                    <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
+                    <td>{{orden.colaborador.staff.first_name}} {{orden.colaborador.staff.first_name}}</td>
+                    <td>{{orden.superintendente.staff.first_name}} {{orden.superintendente.staff.last_name}}</td>
+                    <td>{{orden.proyecto.nombre}}</td>
+                    <td>{{orden.subproyecto.nombre}}</td>
+                    <td>{{orden.created_at}}</td>
+                    <td>
+                        <a id="myBtn" type="button" class="btn btn-outline-info btn-lg" href="{% url 'asignar-montos' orden.id %}">
+                            <i class="fa-solid fa-person-walking-luggage"></i>
+                        </a>
+                    </td>
+                </tr>
+                {% endfor %}
+                </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if ordenes_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+                {% for page in ordenes_list.paginator  %}
+                {% if ordenes_list.number == page.number %}
+                <li class="page-item active" aria-current="page"><a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if ordenes_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+
+</script>
+{% endblock %}
+</body>
+</html>

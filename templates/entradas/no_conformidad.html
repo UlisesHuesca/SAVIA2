@@ -1,0 +1,304 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}NC|Rechazo de Artículos{% endblock %}
+</head>
+<body>
+{% block content %}
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+
+<div class="row">
+    <div class="col-lg-8">
+        <div class="box-element" id="form-wrapper">
+            <div class="card-header mt-3 mb-4">
+            <form method="POST">
+            <h5 class="modal-title" id="no_conformidad" value="{{no_conformidad.id}}">NC: {{no_conformidad.id}}&ensp;&ensp; Compra: {{compra.get_folio}}</h5>
+        </div>
+
+
+            <table class='table table-dark table-striped'>
+                <thead>
+                    <tr>
+                        <th scope="col">Proveedor:</th>
+                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="col">RFC:</th>
+                        <th scope="col">{{compra.proveedor.nombre.rfc}}</th>
+                    </tr>
+                </tbody>
+            </table>
+            <hr>
+
+            {% csrf_token %}
+            <div class="row">
+                <label class="col-auto col-form-label"><strong>Productos:</strong></label>
+                <div class="col-sm-6">
+                    <div class="selector">
+                        <select class="form-select form-select-sm" id="producto">
+                            <option id="default_sel">      </option>
+                            {% for articulo in articulos %}
+                            <option id="js" target="{{articulo.id}}" producto="{{articulo.producto.producto.articulos.id}}" cantidad="{{articulo.cantidad_pendiente}}">
+                            {{articulo.producto.producto.articulos.producto}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <label class="col-auto col-form-label"><strong>Comprado:</strong></label>
+                </div>
+                <div class="col-sm-2">
+                    <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-2">
+                <label class="col-auto col-form-label"><strong>Cantidad:</strong></label>
+                </div>
+                <div class="col-sm-4">
+                    {{form.cantidad|add_class:"form-control"}}
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-sm-1">
+                    <a class="btn btn-success" id='update-no-conformidad' type="submit" name="update_articulo">
+                       Agregar
+                    </a>
+                </div>
+            </div>
+        </form>
+        <hr>
+        <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Unidad</th>
+                            <th scope="col" class="col-sm-2">Eliminar</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="mytbl">
+                    {% for producto in articulos_nc %}
+                    <tr>
+                        <td scope="col" ></td>
+                        <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
+                        <td scope="col">{{producto.cantidad}}</td>
+                        <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
+                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id}}" nc_id="{{producto.nc.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+            <div class="row">
+            <form method="POST">
+                {% csrf_token %}
+            <div class="col-sm-2">
+                <label class="col-auto col-form-label"><strong>Comentario:</strong></label>
+                </div>
+                <div class="col-sm-4">
+                    {{form2.comentario|add_class:"form-control"}}
+                </div>
+            </div>  
+            <input  type="submit" name="BtnCrear" id="BtnCrear" class="btn btn-success">
+            <a id="cerrar" type="button" class="btn btn-secondary cerrar"  href="{% url 'pendientes_entrada' %}">Cerrar</a>
+            </form>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+var cerrarBtn = document.getElementsByClassName('cerrar')
+
+for(var i=0; i< cerrarBtn.length; i++){
+    cerrarBtn[i].addEventListener('click',function(){
+    var rows = document.getElementById("mytbl").rows.length;
+    if (rows == 1) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de eliminar el producto para poder salir",
+                    "icon":"error",
+                })
+        }if (rows > 1) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de eliminar los productos para poder salir",
+                    "icon":"error",
+                })
+    }
+})
+};
+
+
+document.getElementById("producto").addEventListener("change", function(element){
+    var select = document.getElementById('producto');
+    var current_option = select.options[select.selectedIndex];
+    let target = current_option.getAttribute('target')
+    //var other_select = document.getElementById('id_articulo_comprado')
+    //other_select.value = target
+    let cantidad =  current_option.getAttribute('cantidad')
+    var solicitado = document.getElementById('solicitado');
+    solicitado.innerHTML = cantidad;
+    //console.log(target);
+    //console.log(other_select);
+});
+
+
+
+var rows = document.getElementById("mytbl").rows.length
+var CrearBtn = document.getElementById('BtnCrear')
+console.log('rows',rows)
+
+CrearBtn.addEventListener('click',function(){
+
+    if (rows < 1){
+        Swal.fire({
+                "title":"Error",
+                "text":"No tienes productos seleccionados",
+                "icon":"error",
+            })
+        CrearBtn.setAttribute('name','')
+        } else {
+            CrearBtn.setAttribute('name','entrada')
+
+        }
+
+})
+
+
+document.getElementById('id_cantidad').addEventListener('change', function(){
+var cantidad = document.getElementById('id_cantidad');
+
+})
+
+var updateBtn = document.getElementById('update-no-conformidad')
+    let count=0;
+    let suma=0;
+    let array_id_prod=[];
+
+
+updateBtn.addEventListener('click',function(){
+        let no_conformidad = document.getElementById('no_conformidad')
+        nc_id = no_conformidad.getAttribute('value')
+        var select = document.getElementById('producto');
+        var current_option = select.options[select.selectedIndex];
+        var current_cantidad = current_option.getAttribute('cantidad')
+        producto = current_option.getAttribute('target');
+        console.log('current_option',current_option)
+        producto_id = current_option.getAttribute('producto');
+        var select = document.getElementById('producto');
+        var cantidad_form = document.getElementById('id_cantidad');
+        var value = select.options[select.selectedIndex].value;
+        var default_op = document.getElementById('default_sel');
+        cantidad_ingresada = cantidad_form.value;
+        action = "add"
+
+
+
+        if (!value) {
+            Swal.fire({
+                "title":"Error",
+                "text":"Favor de seleccionar algún valor de la lista",
+                "icon":"error",
+            })
+        } else if (Number(cantidad_ingresada)>Number(current_cantidad)){
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad solicitada",
+                    "icon":"error",
+                })
+        } else if (Number(cantidad_ingresada<=0)) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            count += 1;
+            current_option.setAttribute("class","d-none");
+            select.value = default_sel;
+
+            console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id':nc_id }));
+            ActualizarArticulos(producto, cantidad_ingresada, action, nc_id);
+
+
+            }
+    });
+
+
+    function ActualizarArticulos(producto, cantidad_ingresada, action, nc_id){
+        console.log('User is logged in, sending data...' )
+
+    var url = '/entradas/no_conformidad/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id': nc_id})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+function deleteRow(element) {
+    let btn_delete = document.getElementById('delete');
+    producto = btn_delete.getAttribute('producto');
+    cantidad_ingresada = btn_delete.getAttribute('cantidad');
+    //cantidad_ingresada = cantidad.value
+    nc_id= btn_delete.getAttribute('nc_id');
+    referencia = ""
+    action = "remove" ;
+    console.log(producto, cantidad_ingresada, action, nc_id);
+    console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id':nc_id }))
+
+    ActualizarArticulos(producto, cantidad_ingresada, action, nc_id);
+}
+
+</script>
+{% endblock %}
+</body>
+</html>

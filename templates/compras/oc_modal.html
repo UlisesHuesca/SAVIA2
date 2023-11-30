@@ -1,0 +1,716 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} OC {% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog-lg" role="document">
+    <form  hx-post="{% url 'oc' req.id %}" class="modal-content">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title" id="oc" target={{oc.id}}>ORDEN DE COMPRA: {{oc.id}}</h5>
+            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="color:white">
+            <div>
+                {% csrf_token %}
+                <div class="row my-2">
+                    <label for="form.proveedor" class="col-auto col-form-label"><strong>Proveedor:</strong></label>
+                    <div class="col-sm-5">
+                        {{form.proveedor | add_class:"form-control"}}
+                    </div>
+                    <label for="form.cond_de_pago" class="col-auto col-form-label my-1"><strong>Condiciones de pago:</strong></label>
+                    <div class="col-2">
+                        {{ form.cond_de_pago|add_class:"form-control my-1" }}
+                    </div>
+                <div class="row my-2"
+                    </div>
+                    <label for="form.moneda" class="col-auto col-form-label my-1"><strong>Moneda:</strong></label>
+                    <div class="col-2">
+                        {{ form.moneda|add_class:"form-control my-1" }}
+                    </div>
+                    <label for="form.uso_del_cfdi" class="col-auto col-form-label my-1"><strong>Uso del CFDI:</strong></label>
+                    <div class="col-3">
+                        {{ form.uso_del_cfdi|add_class:"form-control my-1"}}
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <label for="form.tipo_de_cambio" id="tipo_de_cambio" class="col-auto col-form-label d-none"><strong>Tipo de cambio:</strong></label>
+                    <div class="col-2">
+                        {{ form.tipo_de_cambio|add_class:"form-control d-none"}}
+                    </div>
+                    <div class="form-check form-switch col-auto mx-4 d-none" id="Dof" valor = "{{tag}}">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchDof">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">DOF</label>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <label for="form.dias_de_credito" id="dias_credito" class="col-auto col-form-label d-none"><strong>Días de credito:</strong></label>
+                    <div class="col-1">
+                        {{form.dias_de_credito|add_class:"form-control d-none"}}
+                    </div>
+                    <label for="form.dias_de_entrega" class="col-auto col-form-label"><strong>Días de entrega:</strong></label>
+                    <div class="col-2">
+                        {{form.dias_de_entrega|add_class:"form-control"}}
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm-3">
+                    <label for="form.impuesto" class="form-check-label"><strong>Impuesto</strong></label>
+                        {{form.impuesto|add_class:"form-check-input"}}
+                    </div>
+                    <label for="form.impuestos_adicionales" id="impuestos" class="col-auto col-form-label d-none"><strong>Impuestos Adicionales:</strong></label>
+                    <div class="col-sm-2">
+                        {{form.impuestos_adicionales|add_class:"form-control d-none"}}
+                    </div>
+                    <div class="form-check form-switch col-sm-3">
+                    <label for="form.flete" class="form-check-label"><strong>Flete</strong></label>
+                        {{form.flete|add_class:"form-check-input"}}
+                    </div>
+                    <label for="form.costo_fletes" id="fletes" class="col-auto col-form-label d-none"><strong>Costo de flete:</strong></label>
+                    <div class="col-sm">
+                        {{form.costo_fletes|add_class:"form-control d-none"}}
+                    </div>
+                    <div class="form-check form-switch col-sm">
+                    <label for="form.tesoreria_local" class="form-check-label"><strong>Tesorería Matriz</strong></label>
+                        {{form.tesoreria_matriz|add_class:"form-check-input"}}
+                    </div>
+                    <div class="form-check form-switch col-sm">
+                    <label for="form.anticipo" id="anticipos" class="form-check-label"><strong>Anticipo</strong></label>
+                        {{form.anticipo|add_class:"form-check-input"}}
+                    </div>
+                    <label for="form.monto_anticipo" id="anticipo" class="col-auto col-form-label d-none"><strong>Monto de anticipo:</strong></label>
+                    <div class="col-sm">
+                        {{form.monto_anticipo|add_class:"form-control d-none"}}
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <label for="form.opciones_condiciones" class="col-auto col-form-label"><strong>Opciones y Condiciones:</strong></label>
+                    <div class="col-sm">
+                        {{form.opciones_condiciones|add_class:"form-control"}}
+                    </div>
+                </div>
+            </div>
+
+            <hr>
+            <div class="row" style="color:white;">
+                <label class="col-auto col-form-label"><strong>Productos:</strong></label>
+                <div class="col-sm-4">
+                    <div class="selector">
+                        <select class="form-select form-select-sm" id="producto">
+                        <option id="default_sel">      </option>
+                        {% for producto in productos %}
+                        <option id="js" target={{producto.id}} producto={{producto.producto.articulos.producto}} cantidad={{producto.cantidad}} cantidad_comprada={{producto.cantidad_comprada}} iva={{producto.producto.articulos.producto.producto.iva}}>
+                            {{producto.producto.articulos.producto}}
+                        </option>
+                        {% endfor %}
+                        </select>
+                    </div>
+                </div>
+                <div class="col-sm-2">
+                    <label class="col-auto col-form-label"><strong>Pendiente:</strong></label>
+                </div>
+                <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
+            </div>
+
+            <div class="row" style="color:white;">
+            <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Cantidad: </strong></label>
+            <div class="col-sm-2">
+                    {{form_product.cantidad|add_class:"form-control"}}
+            </div>
+            <label for="form_product.precio_unitario" class="col-sm-1 col-form-label"><strong>P.U.:</strong></label>
+            <div class="col-sm-2">
+                {{form_product.precio_unitario|add_class:"form-control"}}
+            </div>
+            <div class="col-sm-1">
+                <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                    <i class="fa-solid fa-circle-plus"></i>
+                </a>
+            </div>
+        </div>
+            <hr>
+            <table class="table table-light table-striped table-hover mx-2">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Precio</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col" class="col-sm-2">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+            {% for product in productos_comp%}
+                <tr>
+                    <td scope="col">{{product.producto.producto.articulos.producto.codigo}}</td>
+                    <td scope="col">{{product.producto.producto.articulos.producto.producto}}</td>
+                    <td scope="col">{{product.cantidad}}</td>
+                    <td scope="col">{{product.precio_unitario}}</td>
+                    {% if product.precio_unitario.amount != None  and product.cantidad != None %}
+                    <td scope="col"></td>
+                    {% endif %}
+                    <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id}}" cantidad="{{product.cantidad}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                </tr>
+            {% endfor %}
+            </tbody>
+            </table>
+            <table class="table table-dark table-striped mx-1">
+                <thead>
+                    <tr>
+                        <th scope="col">Subtotal</th>
+                        <td scope="col" id="subtotal"></td>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <th scope="col">IVA</th>
+                        <td scope="col" id="iva"></td>
+                    </tr>
+                    <tr>
+                        <th scope="col">Total</th>
+                        <td scope="col" id="total"></td>
+                    </tr>
+                </tbody>
+            </table>
+    </div>
+    <div class="modal-footer">
+                <button class="btn btn-success col-2 d-none" name="crear" id="crear" type="submit">Crear</button>
+                <a type="button" class="btn btn-secondary cerrar" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var format = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+
+var crear = document.getElementById("crear")
+var precio_mod = document.getElementById("id_precio_unitario_1")
+precio_mod.setAttribute("class","form-control d-none")
+
+
+document.getElementById("crear").addEventListener("click", function(element){
+    let array_id_oc=[];
+    let oc_tag = document.getElementById('oc');
+    let oc = oc_tag.getAttribute('target');
+    let proveedor = document.getElementById('id_proveedor');
+    let cond_pago = document.getElementById('id_cond_de_pago');
+    let uso_cfdi = document.getElementById('id_uso_del_cfdi');
+    let dias_entrega = document.getElementById('id_dias_de_entrega');
+    let checkimpuesto = document.getElementById('id_impuesto');
+    let checkflete = document.getElementById('id_flete');
+    let checktesoreria = document.getElementById('id_tesoreria_matriz');
+    let checkanticipo = document.getElementById('id_anticipo');
+    let opciones = document.getElementById('id_opciones_condiciones');
+    let dias_credito = document.getElementById('id_dias_de_credito');
+    let impuestos = document.getElementById('id_impuestos_adicionales_0');
+    let flete = document.getElementById('id_costo_fletes_0');
+    let anticipo = document.getElementById('id_monto_anticipo_0');
+    let moneda = document.getElementById('id_moneda');
+    let tipo_cambio = document.getElementById('id_tipo_de_cambio_0');
+
+
+    console.log('iva:'+iva)
+    val_proveedor = proveedor.value;
+    val_cond_pago = cond_pago.value;
+    val_uso_cfdi = uso_cfdi.value;
+    val_dias_entrega = dias_entrega.value;
+    val_dias_credito = dias_credito.value;
+    val_flete = flete.value;
+    val_impuesto = impuestos.value;
+    val_anticipo = anticipo.value;
+    val_opciones = opciones.value;
+    val_checkimpuesto = checkimpuesto.checked;
+    val_checktesoreria = checktesoreria.checked;
+    val_checkflete = checkflete.checked;
+    val_checkanticipo = checkanticipo.checked;
+    val_moneda = moneda.value;
+    val_tipo_cambio = tipo_cambio.value;
+
+    //Cuenta el número de filas dentro de la tabla
+    var rows = document.getElementById("mytbl").rows.length;
+    console.log('rows',rows)
+    if (!proveedor.value) {
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Debes elegir una opción en proveedores",
+                    "icon":"error",
+                })
+    } else if (!cond_pago.value){
+        let dias_credito = 0;
+        Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir una opción en condiciones de pago",
+                "icon":"error",
+        })
+    } else if ((cond_pago.value == 2) && (!dias_credito.value)){
+        Swal.fire({
+                "title":"Error",
+                "text":"La cantidad de días debe ser mayor a 0",
+                "icon":"error",
+            })
+    } else if (!val_moneda){
+         Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir un tipo de moneda",
+                "icon":"error",
+            })
+    } else if ((val_moneda == 2) && (val_tipo_cambio <= 0)) {
+        Swal.fire({
+                "title":"Error",
+                "text":"El tipo de cambio debe ser mayor a 0",
+                "icon":"error",
+        })
+    } else if (!uso_cfdi.value){
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Debes elegir una opción en uso del cfdi",
+                    "icon":"error",
+                })
+    } else if ((checkimpuesto.checked) && (impuestos.value<=0) || (!impuestos)){
+        Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad en impuestos debe ser mayor que 0",
+                    "icon":"error",
+                })
+    } else if ((checkflete.checked) && (flete.value<=0) || (!flete)){
+        Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad en flete debe ser mayor que 0",
+                    "icon":"error",
+                })
+    } else if ((checkanticipo.checked) && (anticipo.value<=0) || (!anticipo)){
+        Swal.fire({
+                "title":"Error",
+                "text":"La cantidad en anticipo debe ser mayor que 0",
+                "icon":"error",
+            })
+    } else if (rows<=0) {
+        Swal.fire({
+                "title":"Error",
+                "text":"No tienes productos en tu listado",
+                "icon":"error",
+            })
+    } else if (rows>0) {
+        Swal.fire({
+                "title":"Success",
+                "text":"Puedes crear la OC, ahora",
+                "icon":"success",
+            })
+            }
+});
+
+
+document.getElementById("producto").addEventListener("change", function(element){
+    var select = document.getElementById('producto');
+    var current_option = select.options[select.selectedIndex];
+    let cantidad = current_option.getAttribute('cantidad');
+    let cantidad_comprada = current_option.getAttribute('cantidad_comprada');
+    var cantidad_pendiente = cantidad - cantidad_comprada;
+    console.log(cantidad);
+    var solicitado = document.getElementById('solicitado');
+    solicitado.innerHTML = cantidad_pendiente;
+});
+
+var cerrarBtn = document.getElementsByClassName('cerrar')
+
+for(var i=0; i< cerrarBtn.length; i++){
+    cerrarBtn[i].addEventListener('click',function(){
+    var rows = document.getElementById("mytbl").rows.length;
+    if (rows == 1) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de eliminar el producto para poder salir",
+                    "icon":"error",
+                })
+        }if (rows > 1) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de eliminar los productos para poder salir",
+                    "icon":"error",
+                })
+    }
+})
+};
+
+var updateBtn = document.getElementById('update-purchase')
+let count=0;
+let array_id_prod=[];
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let oc_tag = document.getElementById('oc');
+        let oc = oc_tag.getAttribute('target');
+        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
+        var select = document.getElementById('producto');
+        var current_option = select.options[select.selectedIndex];
+        var id = current_option.getAttribute('target');
+        var producto = current_option.getAttribute('producto');
+        //Esta es la cantidad establecida en la requisición
+        var cantidad = current_option.getAttribute('cantidad');
+        //Esta es la cantidad comprada de acuerdo a la requisición
+        var cantidad_comprada = current_option.getAttribute('cantidad_comprada')
+        var cantidad_pendiente = cantidad - cantidad_comprada
+        var iva = current_option.getAttribute('iva');
+        console.log('pendiente: '+cantidad_pendiente);
+        //Esta es la cantidad realmente pedida en la OC
+        var quantity = document.getElementById('id_cantidad');
+
+        var precio = document.getElementById('id_precio_unitario_0');
+        var value = select.options[select.selectedIndex].value;
+        var default_op = document.getElementById('default_sel');
+        var val_cantidad = quantity.value;
+        var val_precio = precio.value;
+
+
+        var action = "add";
+
+
+
+        //console.log('cantidad colocada: '+ quantity.value);
+        //console.log('producto: '+ producto);
+        //console.log('cantidad requerida: '+ cantidad);
+        //console.log(precio.value);
+
+        //console.log('valor de la opcion: '+ value);
+        //console.log('valor del default: ' + default_op.value);
+
+
+
+
+        if (!value) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de seleccionar algún valor de la lista",
+                    "icon":"error",
+                })
+        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
+        } else if (cantidad_pendiente < quantity.value)  {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad requerida",
+                    "icon":"error",
+                })
+        //Si "la cantidad comprada" es menor que cero
+        } else if (quantity.value <=0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else if (val_precio <=0) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"El precio ingresado debe ser mayor que 0",
+                    "icon":"error",
+            })
+        } else {
+            //This array is where products are add and the idea is such that this is the one that is going to build Articulos_Comprados objects
+
+
+
+
+            count += 1;
+            current_option.setAttribute("class","d-none");
+
+
+            select.value = default_sel;
+            document.getElementById("id_cantidad").value= null;
+            document.getElementById("id_precio_unitario_0").value= null;
+            ActualizarArticulos(oc,id,val_cantidad,val_precio,action);
+
+            //console.log(JSON.stringify({'matriz':array_id_prod}))
+
+
+
+            //console.log('subtotal:'+ suma);
+            //console.log('total:'+ total);
+
+            var boton = document.getElementById("cerrar");
+            var boton1 = document.getElementById("cerrar1");
+            boton.removeAttribute('data-bs-dismiss');
+            boton1.removeAttribute('data-bs-dismiss');
+            var botonCrear = document.getElementById("crear");
+            botonCrear.setAttribute("class","btn btn-success col-2");
+            subtotal_oc = 0;
+            suma_iva = 0;
+            total_oc = 0;
+
+            cantidad = val_cantidad;
+            precio = val_precio;
+            iva_cond = iva;
+
+                subtotal_oc = subtotal_oc + (cantidad * precio);
+                //console.log('subtotal'+subtotal_oc)
+                if (iva_cond == 'True') {
+                suma_iva = suma_iva + (cantidad* precio * 0.16)
+                } else {
+                    suma_iva = suma_iva + (cantidad * precio)
+                }
+                total_oc = suma_iva + subtotal_oc
+            }
+            console.log('suma_iva')
+        var subt = document.getElementById('subtotal');
+        subt.innerHTML = format.format(subtotal_oc);
+        subt.setAttribute('valor',subtotal_oc);
+        var imp = document.getElementById('iva');
+        imp.innerHTML = format.format(suma_iva);
+        imp.setAttribute('valor',suma_iva);
+        var tot = document.getElementById('total');
+        tot.innerHTML = format.format(total_oc);
+        tot.setAttribute('valor',total_oc);
+})
+
+
+
+//ActualizarArticulos(array_id_prod)
+
+    function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
+        console.log('User is logged in, sending data...' )
+
+    var url = '/compras/update_oc/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'oc':oc, 'id':id, 'val_cantidad':val_cantidad, 'val_precio':val_precio, 'action':action})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+
+
+
+//This is the function that remove any product from render product table and remove the specific element from the array
+function deleteRow(element) {
+    let btn_delete = document.getElementById('delete');
+    let oc_tag = document.getElementById('oc');
+    let oc = oc_tag.getAttribute('target');
+    let id = btn_delete.getAttribute('producto');
+    let val_cantidad = btn_delete.getAttribute('cantidad');
+
+    let iva_resp = btn_delete.getAttribute('iva');
+    let precio = btn_delete.getAttribute('precio');
+    let val_precio = precio;
+    console.log(val_precio)
+    console.log(precio)
+    var action = "remove";
+
+    ActualizarArticulos(oc, id, val_cantidad, val_precio, action);
+    // Obteniendo el subtotal, total e impuesto directo de la etiqueta
+    var sub = document.getElementById('subtotal');
+    sub_value = sub.getAttribute('valor');
+    var imp = document.getElementById('iva');
+    imp_value = imp.getAttribute('valor');
+    var tot = document.getElementById('total');
+    tot_value= tot.getAttribute('valor');
+    resta_sub = precio * val_cantidad;
+    //console.log('resta:'+resta_sub);
+    subtotal = sub_value - resta_sub;
+    //console.log('sub: '+subtotal);
+    //console.log('sub_value: '+sub_value);
+    //console.log('iva:'+iva_resp);
+    if (iva_resp == 'True'){
+            iva = imp_value - (resta_sub * 0.16);
+        }
+    //console.log("imp: "+imp_value);
+    total = subtotal + iva
+    sub.innerHTML = format.format(subtotal);
+    sub.setAttribute('valor', subtotal);
+    imp.innerHTML = format.format(iva);
+    imp.setAttribute('valor', iva);
+    tot.innerHTML = format.format(total);
+    tot.setAttribute('valor', total)
+    val_precio = 0;
+    val_cantidad = 0;
+    iva = 0;
+
+
+    //option.removeAttribute('class');
+
+    var rows = document.getElementById("mytbl").rows.length;
+    if (rows == 0) {
+        var boton = document.getElementById("cerrar");
+        var boton1 = document.getElementById("cerrar1");
+        var botonCrear = document.getElementById("crear");
+        boton.setAttribute('data-bs-dismiss','modal');
+        boton1.setAttribute('data-bs-dismiss','modal');
+        botonCrear.setAttribute("class","btn btn-success col-2 d-none");
+    }
+}
+
+
+var checkflete = document.getElementById("id_flete")
+
+//This is the part off code that when flete swicth button change
+document.getElementById("id_flete").addEventListener("change", function(element){
+	console.log('checkflete:'+checkflete.checked);
+	var lbl_flete = document.getElementById('fletes')
+	var txt_flete1 = document.getElementById('id_costo_fletes_0')
+
+	if (checkflete.checked){
+	    lbl_flete.removeAttribute('class');
+		txt_flete1.removeAttribute('class');
+		lbl_flete.setAttribute("class","col-auto col-form-label");
+		txt_flete1.setAttribute("class","form-control")
+	} else {
+	    lbl_flete.removeAttribute("class")
+		txt_flete1.removeAttribute("class")
+		lbl_flete.setAttribute("class","col-auto col-form-label d-none");
+		txt_flete1.setAttribute("class","form-control d-none")
+	}
+});
+
+var checkdof = document.getElementById("SwitchDof");
+
+
+document.getElementById("SwitchDof").addEventListener("change", function(element){
+	console.log('Dof:'+checkdof.checked);
+	var tipo_cambio = document.getElementById('id_tipo_de_cambio_0');
+	let check = document.getElementById('Dof');
+	let checkdof_val = check.getAttribute('valor');
+	//
+
+	if (checkdof.checked){
+	    tipo_cambio.value = Number(checkdof_val);
+	} else{
+	    tipo_cambio.value = 0
+	}
+});
+
+var checkanticipo = document.getElementById("id_anticipo")
+
+document.getElementById("id_anticipo").addEventListener("change", function(element){
+	console.log('checkanticipo:'+checkanticipo.checked);
+	var lbl_anticipo = document.getElementById('anticipo')
+	var txt_anticipo = document.getElementById('id_monto_anticipo_0')
+
+	if (checkanticipo.checked){
+	    lbl_anticipo.removeAttribute('class');
+		txt_anticipo.removeAttribute('class');
+		lbl_anticipo.setAttribute("class","col-auto col-form-label");
+		txt_anticipo.setAttribute("class","form-control")
+	} else {
+	    lbl_anticipo.removeAttribute("class")
+		txt_anticipo.removeAttribute("class")
+		lbl_anticipo.setAttribute("class","col-auto col-form-label d-none");
+		txt_anticipo.setAttribute("class","form-control d-none")
+	}
+});
+
+
+
+var checkimpuesto = document.getElementById("id_impuesto")
+
+//This is the part off code that when flete swicth button change
+document.getElementById("id_impuesto").addEventListener("change", function(element){
+	console.log('checkimpuesto:'+checkimpuesto.checked);
+	var lbl_impuestos = document.getElementById('impuestos')
+	var txt_impuestos = document.getElementById('id_impuestos_adicionales_0')
+
+	if (checkimpuesto.checked){
+	    lbl_impuestos.removeAttribute('class');
+		txt_impuestos.removeAttribute('class');
+		lbl_impuestos.setAttribute("class","col-auto col-form-label");
+		txt_impuestos.setAttribute("class","form-control")
+	} else {
+	    lbl_impuestos.removeAttribute("class")
+		txt_impuestos.removeAttribute("class")
+		lbl_impuestos.setAttribute("class","col-auto col-form-label d-none");
+		txt_impuestos.setAttribute("class","form-control d-none")
+	}
+});
+
+var pago = document.getElementById("id_cond_de_pago")
+
+//This is the part off code that when condiciones de pago swicth button change
+document.getElementById("id_cond_de_pago").addEventListener("change", function(element){
+    var lbl_dias = document.getElementById('dias_credito')
+    var dias = document.getElementById('id_dias_de_credito')
+    //console.log('pago:'+pago.value);
+
+    if (pago.value == 2){
+        lbl_dias.removeAttribute("class");
+        dias.removeAttribute('class');
+        lbl_dias.setAttribute("class","col-auto col-form-label");
+        dias.setAttribute("class","form-control");
+    } else {
+        dias.removeAttribute('class');
+        lbl_dias.removeAttribute("class");
+        dias.setAttribute("class","form-control d-none");
+        lbl_dias.setAttribute("class","col-auto col-form-label d-none");
+    }
+});
+
+var moneda = document.getElementById("id_moneda")
+
+document.getElementById("id_moneda").addEventListener("change", function(element){
+    var lbl_tipo_cambio = document.getElementById('tipo_de_cambio')
+    var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio_0')
+    var div_dof = document.getElementById('Dof')
+    var precio_mod = document.getElementById("id_precio_unitario_1");
+    var flete_mod = document.getElementById("id_costo_fletes_1");
+    var impuestos_mod = document.getElementById("id_impuestos_adicionales_1");
+    var anticipo_mod = document.getElementById("id_monto_anticipo_1");
+
+    if (moneda.value == 2){
+        lbl_tipo_cambio.removeAttribute('class');
+        txt_tipo_cambio.removeAttribute('class');
+        lbl_tipo_cambio.setAttribute('class','col-auto col-form-label');
+        txt_tipo_cambio.setAttribute('class','form-control')
+        div_dof.setAttribute('class','form-check form-switch col-auto mx-4');
+        precio_mod.selectedIndex = 1;
+        flete_mod.selectedIndex = 1;
+        impuestos_mod.selectedIndex = 1;
+        anticipo_mod.selectedIndex = 1;
+    } else {
+        lbl_tipo_cambio.removeAttribute('class');
+        txt_tipo_cambio.removeAttribute('class');
+        div_dof.removeAttribute('class');
+        lbl_tipo_cambio.setAttribute('class','form-control d-none');
+        txt_tipo_cambio.setAttribute('class','col-auto col-form-label d-none');
+        div_dof.setAttribute('class','form-check form-switch col-auto mx-4 d-none');
+        precio_mod.selectedIndex = 0;
+        flete_mod.selectedIndex = 0;
+        impuestos_mod.selectedIndex = 0;
+        anticipo_mod.selectedIndex = 0;
+    }
+});
+
+
+</script>
+
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,275 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Compras devueltas{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class = "card mt-2 bg-white">
+        
+    <div class="card-header">
+        <h5>Filtro de Compras</h5>
+    </div>
+    <div class="card card-body">
+        {% csrf_token %}
+        <form method="GET">
+        <div class="row">
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.id|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                        <label style="color: #121212;" for="id_id">Folio</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                        <label style="color: #121212;" for="id_id">Proveedor</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
+                        <label style="color: #121212;" for="id_id">Requisición</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-12">
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                        <label style="color: #121212;" for="id_id">Proyecto</label>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
+                        <label style="color: #121212;" for="id_id">Subproyecto</label>
+                    </div>
+                </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                    </div>
+                </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+        </div>
+        
+                <hr>
+                </form>
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item mx-2">
+                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <!--<li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                        <li class="nav-item m-1 d-lg-none">
+                            <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                <a type="button" class="btn btn-outline-info active"  style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                              </div>
+                        </li>
+                        <li class="nav-item m-1 d-none d-lg-block">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                <a type="button" class="btn btn-outline-info active"  style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                              </div>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+</div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Compra</th>
+                    <th scope="col">Req</th>
+                    <th scope="col">Sol</th>
+                    <th scope="col">Solicitado por</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Subproyecto</th>
+                    <th scope="col">Área</th>
+                    <th scope="col">Creada</th>
+                    <th scope="col">Req. Autorizada</th>
+                    <th scope="col">Proveedor</th>
+                    <th scope="col">Costo</th>
+                    <th scope="col">Comentarios</th>
+                    <th scope="col">Status Pago</th>
+                    <th scope="col">Status Autorización</th>
+                    <th scope="col">Días de Entrega</th>
+                    <th scope="col">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras_list %}
+                <tr>
+                    <th scope="row">{{compra.get_folio}}</th>
+                    <th scope="row">{{compra.req.folio}}</th>
+                    <th scope="row">{{compra.req.orden.folio}}</th>
+                    <td>{{compra.req.orden.staff.staff.first_name}} {{compra.req.orden.staff.staff.last_name}}</td>
+                    <td>{{compra.req.orden.proyecto.nombre}}</td>
+                    <td>{{compra.req.orden.subproyecto.nombre}}</td>
+                    <td>{{compra.req.orden.area}}</td>
+                    <td>{{compra.created_at}} </td>
+                    <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
+                    <td>{{compra.proveedor}}</td>
+                    <td>${{compra.costo_oc}}</td>
+                    <td style="color:#478800">{{compra.comentarios}}</td>
+                    {% if compra.pagada %}
+                    <td>Pagada</td>
+                    {% else %}
+                    <td>No Pagada</td>
+                    {% endif %}
+                    <td>{{compra.autorizado2}}</td>
+                    <td>{{compra.dias_de_entrega}}</td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
+                            </li>
+                            <li class="nav-item mx-1">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'compra-edicion' compra.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if compras_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in compras_list.paginator.page_range %}
+                    {% if compras_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if compras_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+})
+
+
+</script>
+{% endblock %}
+</body>
+</html>

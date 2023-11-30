@@ -1,0 +1,631 @@
+from django.shortcuts import render, redirect
+from datetime import date, datetime
+from django.contrib import messages
+from django.core.mail import EmailMessage
+from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden 
+from solicitudes.models import Proyecto, Subproyecto, Operacion
+from tesoreria.models import Pago, Cuenta
+from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura
+from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, FacturaForm #Articulo_Gasto_Factura_Form,
+from tesoreria.forms import Facturas_Gastos_Form 
+from compras.views import attach_oc_pdf
+from .filters import Solicitud_Gasto_Filter
+from user.models import Profile
+from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse, HttpResponse
+from django.core.paginator import Paginator
+from django.db.models import Sum
+import json
+import xml.etree.ElementTree as ET
+import decimal
+from django.db.models import Q
+from user.decorators import perfil_seleccionado_required
+
+# Create your views here.
+@login_required(login_url='user-login')
+def crear_gasto(request):
+    colaborador = Profile.objects.all()
+    articulos_gasto = Articulo_Gasto.objects.all()
+    inventario = Inventario.objects.all()
+    usuario = colaborador.get(staff__id=request.user.id)
+    superintendentes = colaborador.filter(tipo__superintendente=True)
+    proyectos = Proyecto.objects.filter(activo=True)
+    subproyectos = Subproyecto.objects.all()
+    
+    #colaborador = Profile.objects.all()
+    #Tengo que revisar primero si ya existe una orden pendiente del usuario
+    gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False, staff=usuario)
+    
+    articulo, created = articulos_gasto.get_or_create(completo = False, staff=usuario)
+
+    productos = articulos_gasto.filter(gasto=gasto, completo = True)
+    
+
+    articulos_gasto = inventario.filter(producto__gasto = True)
+    articulos = inventario.filter(producto__gasto = False)
+    facturas = Factura.objects.filter(solicitud_gasto = gasto)
+    form_product = Articulo_GastoForm()
+    form = Solicitud_GastoForm()
+    factura_form = FacturaForm()
+
+    if request.method =='POST':
+        if "btn_agregar" in request.POST:
+            form = Solicitud_GastoForm(request.POST, instance=gasto)
+            #abrev= usuario.distrito.abreviado
+            if form.is_valid():
+                gasto = form.save(commit=False)
+                gasto.complete = True
+                gasto.created_at = date.today()
+                gasto.created_at_time = datetime.now().time()
+                gasto.staff =  usuario
+                gasto.save()
+                form.save()
+                messages.success(request, f'La solicitud {gasto.id} ha sido creada')
+                return redirect('solicitudes-gasto')
+        if "btn_producto" in request.POST:
+            form_product = Articulo_GastoForm(request.POST, request.FILES or None, instance=articulo)
+            if form_product.is_valid():
+                articulo = form_product.save(commit=False)
+                articulo.gasto = gasto
+                articulo.completo = True
+                articulo.save()
+                messages.success(request, 'La solicitud de creacion de articulo funciona')
+                return redirect('crear-gasto')
+        if "btn_factura" in request.POST:
+            factura_form = FacturaForm(request.POST, request.FILES)
+            if factura_form.is_valid():
+                factura = factura_form.save(commit=False)
+                factura.solicitud_gasto = gasto  # Asume que ya tienes una instancia de Solicitud_Gasto en 'gasto'
+                factura.fecha_subida = datetime.now()
+                factura.save()
+                messages.success(request, 'Factura agregada correctamente.')
+                return redirect('crear-gasto')
+
+    #total = sum([factura.emisor['total'] for factura in facturas if factura.emisor and 'total' in factura.emisor and factura.emisor['total']])
+
+
+
+    context= {
+        'facturas':facturas,
+        'productos':productos,
+        'colaborador':colaborador,
+        'form':form,
+        #'total': total,
+        'form_product': form_product,
+        'articulos':articulos,
+        'articulos_gasto':articulos_gasto,
+        'gasto':gasto,
+        'superintendentes':superintendentes,
+        'proyectos':proyectos,
+        'subproyectos':subproyectos,
+        'factura_form': factura_form,
+    }
+    return render(request, 'gasto/crear_gasto.html', context)
+
+def delete_gasto(request, pk):
+    articulo = Articulo_Gasto.objects.get(id=pk)
+    messages.success(request,f'El articulo {articulo.producto} ha sido eliminado exitosamente')
+    articulo.delete()
+
+    return redirect('crear-gasto')
+
+def eliminar_factura(request, pk):
+    articulo = Factura.objects.get(id=pk)
+    messages.success(request,f'La factura {articulo.id} ha sido eliminada exitosamente')
+    articulo.delete()
+
+    return redirect('crear-gasto')
+
+def editar_gasto(request, pk):
+    producto = Articulo_Gasto.objects.get(id=pk)
+
+    form = Articulo_Gasto_Edit_Form(instance=producto)
+
+    if request.method =='POST':
+        form = Articulo_Gasto_Edit_Form(request.POST, instance=producto)
+
+        if form.is_valid():
+            form.save()
+
+            messages.success(request,f'Se ha guardado el artículo {producto} correctamente')
+            return HttpResponse(status=204)
+        #else:
+            #messages.error(request,'Se lo llevo SPM')
+
+
+    context= {
+        'producto': producto,
+        'form': form,
+        }
+
+    return render(request, 'gasto/editar_gasto.html', context)
+
+@login_required(login_url='user-login')
+def solicitudes_gasto(request):
+
+    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
+    perfil = Profile.objects.get(staff__id=request.user.id)
+
+
+   
+    if perfil.tipo.nombre == "Admin" or perfil.tipo.nombre == "Gerente":
+        solicitudes = Solicitud_Gasto.objects.all().order_by('-folio')
+    else:
+        solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
+
+    myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
+    solicitudes = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(solicitudes, 10)
+    page = request.GET.get('page')
+    ordenes_list = p.get_page(page)
+
+    #if request.method =='POST' and 'btnExcel' in request.POST:
+
+        #return convert_excel_solicitud_matriz(solicitudes)
+
+    context= {
+        'ordenes_list':ordenes_list,
+        'myfilter':myfilter,
+        }
+
+    return render(request, 'gasto/solicitudes_gasto.html',context)
+
+@login_required(login_url='user-login')
+def detalle_gastos(request, pk):
+    productos = Articulo_Gasto.objects.filter(gasto__id=pk)
+    facturas = Factura.objects.filter(solicitud_gasto__id = pk)
+
+    context= {
+        'productos':productos,
+        'facturas':facturas,
+        'pk':pk,
+        }
+
+    return render(request, 'gasto/detalle_gasto.html', context)
+
+@login_required(login_url='user-login')
+def gastos_pendientes_autorizar(request):
+
+    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
+    perfil = Profile.objects.get(staff__id=request.user.id)
+
+    #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
+    #if perfil.tipo.superintendente == True:
+    #    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
+    #elif perfil.tipo.supervisor == True:
+    #    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
+    #else:
+    solicitudes = Solicitud_Gasto.objects.filter(complete=True, autorizar = None, superintendente = perfil).order_by('-folio')
+    ids_solicitudes_validadas = [solicitud.id for solicitud in solicitudes if solicitud.get_validado]
+
+    solicitudes = Solicitud_Gasto.objects.filter(id__in=ids_solicitudes_validadas)
+
+    myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
+    solicitudes = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(solicitudes, 10)
+    page = request.GET.get('page')
+    ordenes_list = p.get_page(page)
+
+    #if request.method =='POST' and 'btnExcel' in request.POST:
+
+        #return convert_excel_solicitud_matriz(solicitudes)
+
+    context= {
+        'ordenes_list':ordenes_list,
+        'myfilter':myfilter,
+        }
+
+    return render(request, 'gasto/pendientes_autorizar_gasto.html', context)
+
+@login_required(login_url='user-login')
+def gastos_pendientes_autorizar2(request):
+
+    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
+    perfil = Profile.objects.get(staff__id=request.user.id)
+
+    #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
+    #if perfil.tipo.superintendente == True:
+    #    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
+    #elif perfil.tipo.supervisor == True:
+    #    solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
+    #else:
+    solicitudes = Solicitud_Gasto.objects.filter(complete=True, autorizar = True, autorizar2 = None).order_by('-folio')
+
+    myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
+    solicitudes = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(solicitudes, 10)
+    page = request.GET.get('page')
+    ordenes_list = p.get_page(page)
+
+    #if request.method =='POST' and 'btnExcel' in request.POST:
+
+        #return convert_excel_solicitud_matriz(solicitudes)
+
+    context= {
+        'ordenes_list':ordenes_list,
+        'myfilter':myfilter,
+        }
+
+    return render(request, 'gasto/pendientes_autorizar_gasto2.html', context)
+
+@login_required(login_url='user-login')
+def autorizar_gasto(request, pk):
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    gasto = Solicitud_Gasto.objects.get(id = pk)
+    productos = Articulo_Gasto.objects.filter(gasto = gasto)
+
+    if request.method =='POST' and 'btn_autorizar' in request.POST:
+        gasto.autorizar = True
+        gasto.approved_at = date.today()
+        gasto.approved_at_time = datetime.now().time()
+        gasto.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)
+        gasto.save()
+        messages.success(request, f'{perfil.staff.first_name} {perfil.staff.last_name} has autorizado la solicitud {gasto.id}')
+        return redirect ('gastos-pendientes-autorizar')
+
+
+    context = {
+        'gasto': gasto,
+        'productos': productos,
+    }
+
+    return render(request,'gasto/autorizar_gasto.html', context)
+
+
+@login_required(login_url='user-login')
+def cancelar_gasto(request, pk):
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    gasto = Solicitud_Gasto.objects.get(id = pk)
+    productos = Articulo_Gasto.objects.filter(gasto = gasto)
+
+    if request.method =='POST' and 'btn_cancelar' in request.POST:
+        gasto.autorizar = False
+        gasto.approved_at = date.today()
+        gasto.approved_at_time = datetime.now().time()
+        gasto.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)
+        gasto.save()
+        messages.info(request, f'{perfil.staff.first_name} {perfil.staff.last_name} has cancelado la solicitud {gasto.id}')
+        return redirect ('gastos-pendientes-autorizar')
+
+    context = {
+        'gasto': gasto,
+        'productos': productos,
+    }
+
+    return render(request,'gasto/cancelar_gasto.html', context)
+
+@login_required(login_url='user-login')
+def autorizar_gasto2(request, pk):
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    gasto = Solicitud_Gasto.objects.get(id = pk)
+    productos = Articulo_Gasto.objects.filter(gasto = gasto)
+
+    if request.method =='POST' and 'btn_autorizar' in request.POST:
+        gasto.autorizar2 = True
+        gasto.approbado_fecha2 = date.today()
+        gasto.approved_at_time2 = datetime.now().time()
+        gasto.save()
+        messages.success(request, f'{perfil.staff.first_name} {perfil.staff.last_name} has autorizado el gasto {gasto.id}')
+        return redirect ('gastos-pendientes-autorizar2')
+
+
+    context = {
+        'gasto': gasto,
+        'productos': productos,
+    }
+
+    return render(request,'gasto/autorizar_gasto2.html', context)
+
+
+@login_required(login_url='user-login')
+def cancelar_gasto2(request, pk):
+    perfil = Profile.objects.get(staff__id=request.user.id)
+    gasto = Solicitud_Gasto.objects.get(id = pk)
+    productos = Articulo_Gasto.objects.filter(gasto = gasto)
+
+    if request.method =='POST' and 'btn_cancelar' in request.POST:
+        gasto.autorizar2 = False
+        gasto.approbado_fecha2 = date.today()
+        gasto.approved_at_time2 = datetime.now().time()
+        gasto.save()
+        messages.info(request, f'{perfil.staff.first_name} {perfil.staff.last_name} has cancelado la solicitud {gasto.id}')
+        return redirect ('gastos-pendientes-autorizar2')
+
+    context = {
+        'gasto': gasto,
+        'productos': productos,
+    }
+
+    return render(request,'gasto/cancelar_gasto2.html', context)
+
+
+
+
+# Create your views here.
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def pago_gastos_autorizados(request):
+    pk = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk)
+
+    if usuario.tipo.tesoreria == True:
+        gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, autorizar2=True).order_by('-folio')
+        myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
+        gastos = myfilter.qs
+
+        p = Paginator(gastos, 50)
+        page = request.GET.get('page')
+        gastos_list = p.get_page(page)
+
+
+
+        context= {
+            'gastos_list':gastos_list,
+            'gastos':gastos,
+            'myfilter':myfilter,
+            }
+    else:
+        context= {
+
+        }
+
+    return render(request, 'gasto/pago_gastos_autorizados.html',context)
+
+@login_required(login_url='user-login')
+def pago_gasto(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    gasto = Solicitud_Gasto.objects.get(id=pk)
+    
+    pagos_alt = Pago.objects.filter(gasto=gasto, hecho=True)
+    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+
+    pago, created = Pago.objects.get_or_create(tesorero = usuario, distrito = usuario.distrito, hecho=False, gasto=gasto)
+    form = Pago_Gasto_Form()
+    remanente = gasto.get_total_solicitud - gasto.monto_pagado
+
+
+    if request.method == 'POST':
+        form = Pago_Gasto_Form(request.POST or None, request.FILES or None, instance = pago)
+        if form.is_valid():
+            pago = form.save(commit = False)
+            #pago.gasto = gasto
+            pago.pagado_date = date.today()
+            pago.pagado_hora = datetime.now().time()
+            pago.hecho = True
+            total_pagado = round(gasto.monto_pagado  + pago.monto,2)
+            total_sol = round(gasto.get_total_solicitud,2)
+            #El bloque a continuación se generó para resolver los problemas de redondeo, se comparan las dos cantidades redondeadas en una variable y se activa una bandera (flag) que indica si son iguales o no!
+            if total_sol == total_pagado:
+                flag = True
+            else:
+                flag = False
+            if total_pagado > gasto.get_total_solicitud:
+                messages.error(request,f'{usuario.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del viático')
+            else:
+                if flag:
+                    gasto.pagada = True
+                    gasto.save()
+                pago.save()
+                pagos = Pago.objects.filter(gasto=gasto, hecho=True)
+                #archivo_oc = attach_oc_pdf(request, gasto.id)
+                email = EmailMessage(
+                    f'Gasto Autorizado {gasto.id}',
+                    f'Estimado(a) {gasto.staff.staff.first_name} {gasto.staff.staff.last_name}:\n\nEstás recibiendo este correo porque ha sido pagado el gasto con folio: {gasto.id}.\n\n\nVordtec de México S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordtec.com',
+                    ['ulises_huesc@hotmail.com',gasto.staff.staff.email],
+                    )
+                #email.attach(f'OC_folio_{gasto.id}.pdf',archivo_oc,'application/pdf')
+                email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
+                if pagos.count() > 0:
+                    for item in pagos:
+                        email.attach(f'Gasto{gasto.id}_P{item.id}.pdf',item.comprobante_pago.read(),'application/pdf')
+                email.send()
+
+                messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.first_name}')
+                return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+        else:
+            form = Pago_Gasto_Form()
+            messages.error(request,f'{usuario.staff.first_name}, No se pudo subir tu documento')
+
+    context= {
+        'gasto':gasto,
+        'pago':pago,
+        'form':form,
+        'pagos_alt':pagos_alt,
+        'cuentas':cuentas,
+        'remanente':remanente,
+    }
+
+    return render(request,'gasto/pago_gasto.html',context)
+
+@login_required(login_url='user-login')
+def matriz_facturas_gasto(request, pk):
+    gasto = Solicitud_Gasto.objects.get(id = pk)
+    articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
+    facturas = Factura.objects.filter(solicitud_gasto = gasto)
+    form =  Facturas_Gastos_Form(instance=gasto)
+    factura_form = FacturaForm()
+    
+    if request.method == 'POST':
+        form = Facturas_Gastos_Form(request.POST, instance=gasto)
+        if "btn_factura_completa" in request.POST:
+            if form.is_valid():
+                form.save()
+                messages.success(request,'Haz cambiado el status de facturas completas')
+                return redirect('matriz-pagos')
+            else:
+                messages.error(request,'No está validando')
+        if "btn_factura" in request.POST:
+            factura_form = FacturaForm(request.POST, request.FILES)
+            if factura_form.is_valid():
+                factura = factura_form.save(commit=False)
+                factura.solicitud_gasto = gasto  # Asume que ya tienes una instancia de Solicitud_Gasto en 'gasto'
+                factura.fecha_subida = datetime.now()
+                factura.save()
+                messages.success(request, 'Factura agregada correctamente.')
+                return redirect('matriz-pagos')
+
+    context={
+        'form':form,
+        'factura_form':factura_form,
+        'articulos_gasto':articulos_gasto,
+        'gasto':gasto,
+        'facturas':facturas,
+        }
+
+    return render(request, 'gasto/matriz_factura_gasto.html', context)
+
+def facturas_gasto(request, pk):
+    articulo = Articulo_Gasto.objects.get(id = pk)
+    #facturas = Facturas.objects.filter(pago = pago, hecho=True)
+    #factura, created = Facturas.objects.get_or_create(pago=pago, hecho=False)
+    #form = Articulo_Gasto_Factura_Form(instance= articulo)
+
+    #if request.method == 'POST':
+    #    form = Articulo_Gasto_Factura_Form(request.POST or None, request.FILES or None, instance = articulo)
+    #    if form.is_valid():
+    #        form.save()
+    #        messages.success(request,'Las facturas se subieron de manera exitosa')
+    #        return redirect('matriz-compras')
+    #    else:
+    #        form = Articulo_Gasto_Factura_Form()
+    #        messages.error(request,'No se pudo subir tu documento')
+
+    context={
+        'articulo':articulo,
+        #'form':form,
+        
+        }
+
+    return render(request, 'gasto/facturas_gasto.html', context)
+
+
+def matriz_gasto_entrada(request):
+    #articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
+
+    #articulos_gasto = Articulo_Gasto.objects.all()
+    articulos_gasto = Articulo_Gasto.objects.filter(Q(producto__producto__nombre = "MATERIALES")|Q(producto__producto__nombre = "HERRAMIENTA"), completo = True, validacion = False, gasto__autorizar = None, gasto__tipo__tipo='REEMBOLSO')
+
+    context={
+        'articulos_gasto':articulos_gasto,
+        #'form':form,
+    }
+
+    return render(request, 'gasto/matriz_entrada_almacen.html', context)
+
+def gasto_entrada(request, pk):
+    usuario = Profile.objects.get(staff__id=request.user.id)
+    #Tengo que revisar primero si ya existe una orden pendiente del usuario
+    articulo_gasto = Articulo_Gasto.objects.get(id=pk)
+    facturas = Factura.objects.filter(solicitud_gasto=articulo_gasto.gasto)
+    entrada, created = Entrada_Gasto_Ajuste.objects.get_or_create(completo= False, almacenista=usuario, gasto = articulo_gasto)
+    articulo, created = Conceptos_Entradas.objects.get_or_create(completo = False, entrada = entrada)
+    last_order = Order.objects.filter(staff__distrito = usuario.distrito).order_by('-last_folio_number').first()
+    productos = Conceptos_Entradas.objects.filter(entrada=entrada, completo = True)
+    articulos = Inventario.objects.filter(producto__gasto = False)
+    form_product = Conceptos_EntradasForm()
+    form = Entrada_Gasto_AjusteForm()
+
+    if request.method =='POST':
+        if "btn_agregar" in request.POST:
+            form = Entrada_Gasto_AjusteForm(request.POST, instance = entrada)
+            if form.is_valid():
+                entrada = form.save(commit=False)
+                entrada.completo = True
+                entrada.completado_fecha = date.today()
+                entrada.completado_hora = datetime.now().time()
+                entrada.save()
+                articulo_gasto.validacion = True
+                articulo_gasto.save()
+                messages.success(request, f'La entrada del gasto {entrada.id} ha sido creada')
+               
+                abrev= usuario.distrito.abreviado
+                if last_order == None:
+                    #No hay órdenes para este distrito todavía
+                    folio_number = 1
+                else:
+                    folio_number = last_order.last_folio_number + 1
+                last_folio_number = folio_number
+                tipo = Tipo_Orden.objects.get(tipo ='normal')
+                folio = str(abrev) + str(folio_number).zfill(4)  
+                orden_producto, created = Order.objects.get_or_create(staff = articulo_gasto.staff, complete = None, distrito = articulo_gasto.staff.distrito)
+                orden_producto.folio =folio
+                orden_producto.tipo = tipo
+                orden_producto.last_folio_number = last_folio_number
+                orden_producto.created_at = date.today()
+                orden_producto.approved_at = date.today()
+                orden_producto.created_at_time = datetime.now().time()
+                orden_producto.approved_at_time = datetime.now().time()
+                orden_producto.autorizar = True
+                orden_producto.supervisor = articulo_gasto.staff
+                orden_producto.superintendente = articulo_gasto.gasto.superintendente
+                orden_producto.proyecto = articulo_gasto.proyecto
+                orden_producto.subproyecto = articulo_gasto.subproyecto
+                area = Operacion.objects.get(nombre="GASTO")
+                orden_producto.area = area
+                orden_producto.complete = True
+                
+                for item_producto in productos:
+                    producto_inventario = Inventario.objects.get(producto= item_producto.concepto_material.producto)
+                    #productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto_inventario, requisitar = True)
+                    articulo_ordenado = ArticulosOrdenados.objects.create(producto=producto_inventario, orden = orden_producto, cantidad=item_producto.cantidad)
+                    productos_por_surtir = ArticulosparaSurtir.objects.create(
+                        articulos = articulo_ordenado,
+                        cantidad=item_producto.cantidad,
+                        precio = item_producto.precio_unitario,
+                        surtir=True,
+                        comentario="esta solicitud es proveniente de un gasto",
+                        created_at=date.today(),
+                        created_at_time=datetime.now().time(),
+                    )
+                    #Calculo el precio 
+                    producto_inventario.price = ((item_producto.precio_unitario * item_producto.cantidad)+ ((producto_inventario.cantidad_apartada + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + item_producto.cantidad + producto_inventario.cantidad_apartada)
+                    #La cantidad en inventario + la cantidad del producto en la entrada
+                    producto_inventario.cantidad_apartada = producto_inventario.cantidad_apartada + item_producto.cantidad
+                    producto_inventario.save()
+                    producto_inventario._change_reason = f'Esta es una entrada desde un gasto {item_producto.id}'
+                    producto_inventario.save()
+                email = EmailMessage(
+                    f'Entrada de producto por gasto: {articulo_gasto.producto.producto.nombre} |Gasto: {articulo_gasto.gasto.id}',
+                    f'Estimado {articulo_gasto.staff.staff.first_name} {articulo_gasto.staff.staff.last_name},\n Estás recibiendo este correo porque tu producto: {articulo_gasto.producto.producto.nombre} ha sido validado por el almacenista {usuario.staff.first_name} {usuario.staff.last_name}, favor de pasar a firmar el vale de salida para terminar con este proceso.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    'savia@vordtec.com',
+                    ['ulises_huesc@hotmail.com',articulo_gasto.staff.staff.email],
+                    )
+                email.send()
+                orden_producto.save()
+                return redirect('matriz-gasto-entrada')
+        if "btn_producto" in request.POST:
+            form_product = Conceptos_EntradasForm(request.POST, instance=articulo)
+            if form_product.is_valid():
+                articulo = form_product.save(commit=False)
+                articulo.completo = True
+                articulo.save()
+                messages.success(request, 'Has guardado exitosamente un artículo')
+                return redirect('gasto-entrada',pk= pk)
+
+    context= {
+        'facturas':facturas,
+        'articulo_gasto':articulo_gasto,
+        'productos':productos,
+        'form':form,
+        'form_product': form_product,
+        'articulos':articulos,
+        'entrada':entrada,
+    }
+
+    return render(request, 'gasto/crear_entrada.html', context)
+
+def delete_articulo_entrada(request, pk):
+   
+    articulo = Conceptos_Entradas.objects.get(id=pk)
+    gasto = articulo.entrada.gasto.id
+    messages.success(request,f'El articulo {articulo.concepto_material} ha sido eliminado exitosamente')
+    articulo.delete()
+
+    return redirect('gasto-entrada',pk= gasto)

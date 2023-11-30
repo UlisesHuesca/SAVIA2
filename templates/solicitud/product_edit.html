@@ -1,0 +1,88 @@
+{% load l10n %}
+{% load widget_tweaks %}
+<html>
+<body>
+<div class = "card bg-white">
+    
+        <div class="card-header">
+            <h3>Resumen de solicitud</h3>
+        </div>
+    <div class="col-3 my-2">
+        <a class="btn btn-outline-info" href="{% url 'solicitud-product-selection' %}">
+            <i class="fa-solid fa-arrow-left">&nbsp;Agregar productos</i>
+        </a>
+    </div>
+    
+           
+    <div class ="table-responsive-sm">
+        <table class="table table-ligth table-striped mx-1">
+            <form method="POST">
+            {% csrf_token %}
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Código</th>
+                    <th scope="col">Producto</th>
+                    <th>Cantidad</th>
+                    <th>Editar</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Comentario</th>
+                    <th>Editar</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos %}
+                <tr id="row_{{producto.id|unlocalize}}">
+                    <td><img class="row-image" src="{{producto.producto.producto.imageURL}}"></td>
+                    <td>{{producto.producto.producto.codigo}}</td>
+                    <td>{{producto.producto.producto.nombre}}</td>
+                    <td class="" id="cantidad_{{producto.id|unlocalize}}">{{producto.cantidad}}</td>
+                    <td class="d-none" id="form_cantidad_{{producto.id|unlocalize}}">
+                        <input type="number"  class="form-control" id="cantidad-input_{{ producto.id|unlocalize }}" value="{{ producto.cantidad }}">
+                    </td>
+                    <td><a id="edit_quantity_{{producto.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_cantidad('{{producto.id|unlocalize}}')">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                        <button type="button" id="save_cantidad_{{producto.id|unlocalize}}" onclick="aceptar_edicion2('{{producto.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
+                            <i class="fa-regular fa-circle-check"></i>
+                        </button>
+                        <button id="cancel_edit2_{{producto.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion2('{{producto.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </td>
+                    <td>{{producto.producto.producto.unidad}}</td>
+                    <td class="d-none" id="form_comentario_{{producto.id|unlocalize}}">
+                        <input type="textarea" class="form-control" id="comentario-input_{{ producto.id|unlocalize }}" value="{{ producto.comentario }}">
+                    </td>
+                    <td class="" id="comentario_{{producto.id|unlocalize}}">{% if producto.comentario %} {{producto.comentario}} {% endif %}</td>
+                    <td>
+                        <!--<a id="edit_quantity_{{producto.id|unlocalize}}" class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'product-quantity-edit' producto.id %}">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>-->
+                        <a id="modificar_comentario_{{producto.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{producto.id|unlocalize}}')">
+                            <i class="fa-regular fa-comment"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <button id="delete_row_{{producto.id|unlocalize}}" type="button" class="btn add-btn update-cart" style="color:ghostwhite; background-color:#980F0F ;" value="Delete" data-product={{producto.producto.id|unlocalize}} data-action="remove" aria-label="Close">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </button>
+                        <button type="button" id="save_comment_{{producto.id|unlocalize}}" onclick="aceptar_edicion('{{producto.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
+                            <i class="fa-regular fa-circle-check"></i>
+                        </button>
+                        <button id="cancel_edit_{{producto.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{producto.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </form>
+        </table>
+    </div>
+    <hr>     
+    <h5>Artículos: {{orden.get_cart_quantity}}</h5>
+</div>
+</body>
+</html>

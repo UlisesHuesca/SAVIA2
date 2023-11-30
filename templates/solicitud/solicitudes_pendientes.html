@@ -1,0 +1,188 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Solicitudes | Vista: Por orden{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row my-4">
+        <div class="card">
+           <div class="card-header">
+            <h5>Filtro de solicitudes| {{perfil.tipo.nombre}}</h5>
+            </div>
+        <div class="card-body">
+            
+            <form method="GET" class="row g-7">
+                {% csrf_token %}
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                            <label style="color: #121212;" for="id_staff">Solicitado por</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                            <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                            <label style="color: #121212;" for="id_proyecto">Folio</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-auto">
+                <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            </form>
+            <hr>
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <!--<li class="nav-item mx-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
+                    </li> -->
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>
+                    <!--<li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                    </li>-->
+                    <li class="nav-item mx-2">
+                        <a class="btn btn-outline-info" href="{% url 'solicitud-matriz-productos' %}">Productos</a>
+                    </li>
+                </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                var m = "{{ message }}";
+                swal("Excelente !", m, "success")
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<div class = "row mt-2">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Folio</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    <th class="d-none d-lg-table-cell">Autorización N1</th>
+                    <th class="d-none d-lg-table-cell">Autorización N2</th>
+                    <th>Distrito</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Área</th>
+                    <th scope="col">Creado</th>
+                    <th scope="col">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes_list %}
+                <tr>
+                    <th scope="row">{{orden.folio}}</th>
+                    <td class="d-none d-lg-table-cell">{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">{{orden.supervisor.staff.staff.first_name}} {{orden.supervisor.staff.staff.last_name}}</td>
+                    <td>{{orden.distrito.nombre}}</td>
+                    <td>{{orden.proyecto.nombre}}</td>
+                    <td>{{orden.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{orden.area}}</td>
+                    <td>{{orden.created_at}}</td>
+                    <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
+                    <a class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-shoe-prints"></i></a>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if ordenes_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in ordenes_list.paginator.page_range %}
+                    {% if ordenes_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if ordenes_list.paginator.num_pages > ordenes_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if ordenes_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+
+{% endblock %}
+</body>
+</html>

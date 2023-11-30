@@ -1,0 +1,51 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+<html>
+<head>
+{% block title %}Cancelar{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Cancelar Orden: {{orden.get_folio}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <div class='box-element-2'>
+                <div class='cart-row'>
+                    <div style="flex:1"></div>
+                    <div style="flex:1">Código</div>
+                    <div style="flex:2">Artículo</div>
+                    <div style="flex:1">Cantidad</div>
+                </div>
+                {% for producto in productos %}
+                <div class='cart-row'>
+                    <div style="flex:1"><img class='row-image' src="{{producto.producto.producto.imageURL}}"></div>
+                    <div style="flex:1">{{producto.producto.producto.codigo}}</div>
+                    <div style="flex:2">{{producto.producto.producto.nombre}}</div>
+                    <div style="flex:1">
+                        <p class='quantity'>{{producto.cantidad}}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <form action="{% url 'solicitud-cancelada' orden.id %}" method=POST>
+                {% csrf_token %}
+                <h6>¿Estás seguro que quieres cancelar la orden: {{orden.get_folio}}?</h6>
+                <button id="cancel-btn" class="btn btn-danger" type="submit">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+</body>
+</html>

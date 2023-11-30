@@ -1,0 +1,361 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %} Entrada de Gasto {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card" id="form-wrapper">
+           <div class="card-header"> 
+                <h2>Entrada Gasto</h2>
+            </div>
+			<div class="card-body"  id="Solicitud-info">
+					<form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                            <div class="row my-2">
+                                <label for="form.subproyecto" class="col-auto col-form-label my-1"><strong>Artículo Gasto: {{articulo_gasto.id}}</strong></label>
+                                <h4><strong style="color:#2a628F">Producto para Ingresar Almacén.</strong></h4>
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Producto</th>
+                                            <th scope="col">Descripción</th>
+                                            <th scope="col">Cantidad</th>
+                                            <th scope="col">P.U.</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mytbl">
+                                        <tr>
+                                            <td>{{articulo_gasto.producto}}</th>
+                                            <td>{{articulo_gasto.comentario}}</td>
+                                            <td>{{articulo_gasto.cantidad|floatformat:2}}</td>
+                                            <td>${{articulo_gasto.precio_unitario|floatformat:2}}</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            <h4><strong style="color:#2a628F">Conceptos disponibles en XML.</strong></h4>   
+                            {% for factura in facturas %}  
+                                {% if factura.archivo_xml %}
+                                <table class="table table-striped table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th scope="col">Producto [XML]</th>
+                                            <th scope="col">Cantidad [XML]</th>
+                                            <th scope="col">P.U. [XML]</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody id="mytbl">
+                                        {% for elem in factura.emisor.resultados %}
+                                        <tr>
+                                        
+                                            {% for item in elem %}
+                                            <td><label>{{item}}</label></td>
+                                            {% endfor %}
+                                        
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                                {% endif %}
+                            {% endfor %}
+                                <label for="form.subproyecto" class="col-auto col-form-label my-1"><strong>Comentario*</strong></label>
+                                <div class="col-4">
+                                    <div class="input-group">
+                                    <!--    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-industry"></i></span>-->
+                                    {{form.comentario|add_class:"form-control"}}
+                                    </div>
+                                </div>
+                            </div>
+                        {% if productos %}
+                        <input class="btn btn-outline-info btn-block my-2" name="btn_agregar" id="btn_agregar" type="submit" value="Agregar Entrada">
+                        {% endif %}
+                    </form>
+            </div>
+            
+        </div>
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">        
+            <div class="card-body"  id="form_product">
+                <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>    
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                <input type="text" list='articulos' id="txt_articulos" valor="{{articulos.id}}" placeholder="Artículos..." class="form-control">
+                                <label for="txt_articulos">Artículos*</label>
+                            </div>         
+                            <datalist id="articulos" name='articulos'>
+                                {% for item in articulos %}
+                                <option iva="{{item.producto.iva}}" gasto={{item.producto.gasto}} valor="{{item.id|unlocalize}}" value="{{item}}"></option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <label for="form_product.producto" class="col-auto col-form-label d-none"><strong>Producto:</strong></label>
+                    <div class="col-sm-6">
+                    {{form_product.concepto_material|add_class:"form-control d-none"}}
+                    </div>
+                </div>
+            <div class="row my-2">
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.cantidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_cantidad">Cantidad*</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
+                            <label style="color: #121212;" for="id_precio_unitario">Precio Unitario*</label>
+                        </div>
+                    </div>
+                </div>
+                <div id='etiqueta_responsable' class="col-lg-4 col-sm-12">
+                    <div class="alert alert-primary" role="alert">
+                        <h6 style="color: #121212;">&nbsp;Cálculo Previo:&nbsp;<div id="calculo_previo"> </div></h6>   
+                    </div>
+                </div>
+            </div>
+            <div class="row my-2">
+                <label for="form_product.comentario" class="col-sm-2 col-form-label"><strong>Comentario:</strong></label>
+                <div class="col-sm-6">
+                    {{form_product.comentario|add_class:"form-control"}}
+                </div> 
+            </div>
+            <div  class="row">
+                <div class="col-sm-1">
+                    <input class="btn btn-outline-info btn-block my-2 d-none" name="btn_producto" id="btn_producto" type="submit">
+                </div>
+            </div>
+       
+        </div>
+        <div class ="table-responsive-sm">
+            <table class="table table-light table-striped table-hover mx-2">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">P.U.</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col" class="col-sm-2">Eliminar</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for producto in productos%}
+
+                <tr>
+                    <td scope="col">{{producto.concepto_material.producto.codigo}}</td>
+                    <td scope="col">{{producto.concepto_material.producto.nombre}}</td>
+                    <td scope="col">{{producto.comentario}}</td>
+                    <td scope="col">{{producto.cantidad|floatformat:2}}</td>
+                    <td scope="col">${{producto.precio_unitario|floatformat:4}}</td>
+                    <td scope="col">${{producto.get_subtotal|floatformat:2}}</td>
+                    <td><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-articulo-entrada' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+            <table class="table table-light table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Total sin impuestos</th>
+                    <td scope="col" id="subtotal">${{entrada.get_total_entrada|floatformat:2}}</td>
+                </tr>
+            </thead>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+
+    document.getElementById('id_precio_unitario').addEventListener('change',(event)=>{
+    cantidad = document.getElementById('id_cantidad').value;
+    precio = document.getElementById('id_precio_unitario').value;
+    calculo_previo = document.getElementById('calculo_previo')
+    var other_select = document.getElementById('id_concepto_material')
+    var value = other_select.options[other_select.selectedIndex].value
+    var browserChildren = document.getElementById('articulos').children;
+    var producto = document.getElementById('btn_producto')
+    if (precio <= 0 || cantidad <= 0){
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
+        } else {
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
+        }
+
+
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+        if (valor === value) {
+            console.log(browserChildren[i])
+            let iva = browserChildren[i].getAttribute('iva');
+            console.log(iva)
+            if (iva){
+                subtotal = (precio * cantidad * 1.16) 
+                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+            } else {
+                subtotal = precio * cantidad 
+                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+            }
+            }
+    }
+    })
+
+    document.getElementById('id_cantidad').addEventListener('change',(event)=>{
+        cantidad = document.getElementById('id_cantidad').value
+        precio = document.getElementById('id_precio_unitario').value
+        calculo_previo = document.getElementById('calculo_previo')
+        var other_select = document.getElementById('id_concepto_material')
+        var value = other_select.options[other_select.selectedIndex].value
+        var producto = document.getElementById('btn_producto')
+        var browserChildren = document.getElementById('articulos').children;
+        if (precio <= 0 || cantidad <= 0){
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
+        } else {
+            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
+        }
+
+
+
+        for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].getAttribute('valor'))
+        valor = browserChildren[i].getAttribute('valor')
+
+            if (valor === value) {
+                console.log(browserChildren[i])
+                let iva = browserChildren[i].getAttribute('iva');
+                console.log(iva)
+                    //if (iva){
+                    //    subtotal = (precio * cantidad * 1.16)
+                    //    calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                    //} else {
+                    subtotal = precio * cantidad
+                    calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+                   //}
+        }}
+
+    })
+
+    
+
+    if (document.getElementById('btn_agregar')){
+    document.getElementById('btn_agregar').addEventListener('submit', (event)=>{
+
+    if ((check_colaborador.checked) &&  (!txt_colaborador.value)) {
+
+        Swal.fire({
+                "title":"Error",
+                "text":"Favor de agregar un colaborador",
+                "icon":"error",
+            })
+        event.preventDefault()
+    }
+
+    });
+    }
+
+
+var precio_mod = document.getElementById("id_precio_unitario")
+
+
+document.getElementById("txt_articulos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_articulos");
+    var browserChildren = document.getElementById('articulos').children;
+    var other_select = document.getElementById('id_concepto_material');
+
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+</script>
+{% endblock %}
+</body>
+</html>

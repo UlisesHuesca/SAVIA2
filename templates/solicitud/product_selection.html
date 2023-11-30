@@ -1,0 +1,126 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Selección{% endblock %}
+</head>
+<body>
+    {% block content %}
+    <hr>
+    <hr>
+    <h6>&nbsp;</h6>
+    <h6>&nbsp;</h6>
+    <div class="row">
+        <!-- Aqui es el encabezado de los filtros -->
+        <div class = "card bg-white">
+            <div class="col-12">
+                <div class="card card-body">
+                    <h5>Filtro de productos</h5>
+                    <hr>
+                    {% csrf_token %}
+                    <form class="row g-3" method="GET">
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                                    <label style="color: #121212;" for="id_codigo">Código*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                                    <label style="color: #121212;" for="id_codigo">Producto*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
+                                    <label style="color: #121212;" for="id_codigo">Familia*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
+                                    <label style="color: #121212;" for="id_codigo">Subfamilia*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-2 mt-3">
+                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Aquí terminan el encabezado de los filtros -->
+
+        <div class="row">
+            {% for producto in productos_list %}
+            <div class='col-md-3 my-2'>
+                <img class="thumbnail" src="{{producto.producto.imageURL}}">
+                <div class='box-element product'>
+                    <h6><strong>{{producto.producto}}</strong></h6>
+                    <h8>Disponible: {{producto.cantidad}}</h8>
+
+                    <hr>
+                    <button data-product={{producto.id|unlocalize}} data-action="add" class="btn btn-outline-secondary add-btn update-cart">Agregar a Solicitud</button>
+                    <!--<a class='btn btn-outline-info' href="#">Ver</a>-->
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+            {% if productos_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+            <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
+
+            {% for item in productos_list.paginator.page_range %}
+                {% if productos_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > productos_list.number|add:'-2' and item < productos_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if productos_list.paginator.num_pages > productos_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{ productos_list.paginator.num_pages}}">{{productos_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if productos_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+            </ul>
+        </nav>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var carro = document.getElementById('cart');
+carro.removeAttribute('class');
+carro.setAttribute('class',"form-inline my-2 my-lg-0 position-relative");
+
+</script>
+    {% endblock %}
+</body>
+</html>

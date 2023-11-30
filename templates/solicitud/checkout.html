@@ -1,0 +1,681 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+
+{% block title %}Crear Solicitud{% endblock %}
+</head>
+<body>
+{% block content %}
+
+  
+  
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+<hr>
+<hr>
+<hr>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-4 col-md-12"> 
+            <div class="card" id="Solicitud-info">
+                <div class="card-header">
+					<h2>Información de Solicitud|Folio: {{folio_preview}}</h2>
+                </div>
+                <div class="card-body">
+					<form id="myForm" method="POST" data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
+                        {% csrf_token %}
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group d-none">
+                                    {{form.proyecto|add_class:"form-select"}}
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>    
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                                <input type="text" list="proyectos" id="txt_proyectos" placeholder="Proyecto..." class="form-control">
+                                                <label for="txt_proyectos">Proyecto*</label>
+                                            </div>         
+                                            <datalist id="proyectos" name='proyectos'>
+                                            {% for item in proyectos %}
+                                            <option valor="{{item.id}}" value="{{item.nombre}} {{item.descripcion}}"></option>
+                                            {% endfor %}
+                                            </datalist>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                        <div id="input_subproyecto" class="input-group mb-3 d-none">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">
+                                                <label  style="font-size:10px; color:gray;" for="subproyecto">Subproyecto*</label>
+                                                <select style="font-size:16px" class="form-select form-select-sm" placeholder="Subproyecto" id="opt_subproyecto">
+                                                    <option style="color:gray;" value="" selected disabled>Subproyecto</option>
+                                                    {% for subproyecto in subproyectos %}
+                                                    <option id="js" target="{{subproyecto.proyecto.id}}" sub="{{subproyecto.id}}">
+                                                    {{subproyecto.nombre}}
+                                                    </option>
+                                                    {% endfor %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                </div>
+                                <div class="col-4 d-none">
+                                    <div class="input-group">
+                                    {{form.subproyecto|add_class:"form-select"}}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>    
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            <input type="text" list="sectores" id="txt_sectores" placeholder="Sector..." class="form-control">
+                                            <label for="txt_activos">Sector*</label>
+                                        </div>         
+                                        <datalist id="sectores" name='sectores'>
+                                        {% for item in sectores %}
+                                        <option valor="{{item.id}}" value="{{item.nombre}} {{item.descripcion}}"></option>
+                                        {% endfor %}
+                                        </datalist>
+                                    </div>
+                                </div>
+                                <div class="col-4 d-none">
+                                <div class="input-group">
+                                {{form.sector|add_class:"form-select"}}
+                                </div>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.operacion|add_class:"form-control"|append_attr:"placeholder= Operación"}}
+                                            <label style="color: #121212;" for="id_area">Operación*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group d-none">
+                                    {{form.activo|add_class:"form-select"}}
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>    
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                                <input type="text" list="activos" id="txt_activos" placeholder="Activo..." class="form-control">
+                                                <label for="txt_activos">Activo*</label>
+                                            </div>         
+                                            <datalist id="activos" name='activos'>
+                                            {% for item in activos %}
+                                            <option valor="{{item.id}}" value="{{item.nombre}} {{item.descripcion}}"></option>
+                                            {% endfor %}
+                                            </datalist>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div id="input_superintendente" class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">
+                                            <label  style="font-size:10px; color:gray;" for="superintendente">Superintendente*</label>
+                                            <select style="font-size:16px" class="form-select form-select-sm" placeholder="Superintendente" id="superintendentes">
+                                                {% if usuario.tipo.superintendente %}
+                                                    {% for superintendente in superintendentes %}
+                                                    <option id="js" target="{{superintendente.id}}">
+                                                        {{superintendente.staff.staff.first_name}} {{superintendente.staff.staff.last_name}}
+                                                    </option>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <option style="color:gray;" value="" selected disabled>Superintendente</option>
+                                                    {% for superintendente in superintendentes %}
+                                                    <option id="js" target="{{superintendente.id}}">
+                                                        {{superintendente.staff.first_name}} {{superintendente.staff.staff.last_name}}
+                                                </option>
+                                                {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                           
+                            <div class="row my-2 d-none">
+                                <label for="form.superintendente" class="col-auto col-form-label my-1"><strong>Superintendente*</strong></label>
+                                <div class="col-3">
+                                <!--<div class="input-group mb-3">-->
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    {{form.superintendente|add_class:"form-control"}}
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                
+                                    <div class="col-12">
+                                        <div id="input_supervisor" class="input-group mb-3">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">
+                                                <label  style="font-size:10px; color:gray;" for="supervisor">Supervisor*</label>
+                                                <select style="font-size:16px" class="form-select form-select-sm" placeholder="Supervisor" id="supervisores">
+                                                    {% if usuario.tipo.supervisor %}
+                                                        {% for supervisor in supervisores %}
+                                                        <option id="js" target="{{supervisor.id}}">
+                                                            {{supervisor.staff.staff.first_name}} {{supervisor.staff.staff.last_name}}
+                                                        </option>
+                                                        {% endfor %}
+                                                    {% else %}
+                                                        <option id="default_sel">      </option>
+                                                        {% for supervisor in supervisores %}
+                                                        <option id="js" target="{{supervisor.id}}">
+                                                            {{supervisor.staff.staff.first_name}} {{supervisor.staff.staff.last_name}}
+                                                        </option>
+                                                        {% endfor %}
+                                                    {% endif %}
+                                                </select>
+                                            </div>
+                                        </div>
+                                    
+                                </div>
+                            
+                            </div>
+                            
+                            <div class="row my-2 d-none">
+                                <label for="form.supervisor" class="col-auto col-form-label my-1 d-none"><strong>Supervisor*</strong></label>
+                                <div class="col-3">
+                                <!--<div class="input-group mb-3">-->
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    {{form.supervisor|add_class:"form-control"}}
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch col-auto mx-4" id="Soporte">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="SwitchSoporte">
+                                    <label class="form-check-label" for="SwitchSoporte">Subir Soporte/Factura/Cotización</label>
+                                </div>     
+                                <div id="subir_pdf" class="row d-none mt-2">
+                                    <div class="input-group col-lg-12"> 
+                                        <div class="input-group-text" style="background-color:white">
+                                            {{form.soporte|add_class:"form-control"}}
+                                        </div>
+                                        <span id="span-pdf" class="input-group-text">
+                                            <div class="my-3" style="color:#980f0f">
+                                                <i class="fa-solid fa-cloud-arrow-up"></i>PDF
+                                            </div>
+                                        </span>
+                                    </div>
+                                </div>
+                            </div>
+                            <input id="submit-button" class="btn btn-outline-info btn-block my-2 d-none" name="" type="submit" value="Crear Solicitud">
+                            
+                    </form>
+                </div>
+            </div>
+    </div>
+    <div class="col-lg-8 col-md-12">
+        <div class="card">
+            {% include "solicitud/product_edit.html" %}
+        </div>
+    </div>
+</div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+    ;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+    })()
+
+    var myModal = document.getElementById('dialog')
+
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+    location.reload();
+    })
+
+    {% if productos %}
+    document.getElementById('myForm').addEventListener('submit', function() {
+    var submit = document.getElementById('submit-button')
+    sessionStorage.removeItem('formulario_solicitud');
+    localStorage.removeItem('formulario_solicitud');
+    submit.setAttribute('name','agregar')
+    setTimeout(function(){
+        document.getElementById('submit-button').disabled = true;
+    }, 50);
+    });
+    {% else %}
+    Swal.fire({
+                    "title":"Error",
+                    "text":"No tienes productos seleccionados",
+                    "icon":"error",
+             })
+    {% endif %}
+
+    
+    document.getElementById("txt_proyectos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proyectos");
+    console.log(select.value)
+    var browserChildren = document.getElementById('proyectos').children;
+    var other_select = document.getElementById('id_proyecto');
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            var target = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+            //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+    //var select2 = document.getElementById("id_proyecto");
+    var input_subproyecto = document.getElementById("input_subproyecto")
+    var text_subproyectos = document.getElementById("opt_subproyecto")
+    var subproyectos = text_subproyectos.children;
+    //var current_option2 = select2.options[select.selectedIndex];
+    
+    var sub = document.getElementById('id_subproyecto')
+    console.log(target)
+    input_subproyecto.setAttribute('class','input-group mb-3')
+
+
+    text_subproyectos.value = ""
+    sub.value =""
+
+
+     for(let i = 0; i < subproyectos.length; i++){
+        proyecto_num  = subproyectos[i].getAttribute('target')
+        if (proyecto_num === target) {
+            subproyectos[i].setAttribute('class','')
+        } else {
+            subproyectos[i].setAttribute('class','d-none')
+     }
+     }
+});
+
+    document.getElementById("opt_subproyecto").addEventListener("change", function(event){
+        var select = this;
+        var current_option = select.options[select.selectedIndex];
+        var target = current_option.getAttribute('sub')
+        console.log(target)
+        var other_select = document.getElementById('id_subproyecto')
+        other_select.value = target
+    });
+
+    document.getElementById("supervisores").addEventListener("change", function(event){
+    var select = document.getElementById("supervisores");
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target')
+    var other_select = document.getElementById('id_supervisor')
+    other_select.value = target
+    });
+    document.getElementById("superintendentes").addEventListener("change", function(event){
+    var select = document.getElementById("superintendentes");
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target')
+    var other_select = document.getElementById('id_superintendente')
+    other_select.value = target
+    });
+
+    document.getElementById("txt_activos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_activos");
+    console.log(select.value)
+    var browserChildren = document.getElementById('activos').children;
+    var other_select = document.getElementById('id_activo');
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            var target = id;
+            cont = 1
+            } 
+    }
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+document.getElementById("txt_sectores").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_sectores");
+    console.log(select.value)
+    var browserChildren = document.getElementById('sectores').children;
+    var other_select = document.getElementById('id_sector');
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            var target = id;
+            cont = 1
+            } 
+    }
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+//document.addEventListener('DOMContentLoaded', function(){
+//    document.getElementById('spinner').style.display = 'none';
+//    console.log('Solo quiero ver el puto spinner')
+//    var formInputs = Array.from(document.getElementsByClassName('grupo-entrada'));
+//    var submitButton = document.querySelector('#submit-button');
+
+//    formInputs.forEach(function(input){
+//        input.addEventListener('input', function(){
+//            var allFilled = formInputs.every(function(input){
+ //               if (input.tagName === 'INPUT') {
+//                    return input.value !== '';
+//                }
+//                if (input.tagName === 'SELECT') {
+//                    return input.value && input.value !== "Subproyecto" && input.value !== "Superintendente";
+//                }
+//                return false;
+//            });
+//            submitButton.disabled = !allFilled;
+//        });
+//    });
+//});
+document.getElementById('SwitchSoporte').addEventListener("change", function(element){
+    let check_soporte = this;
+    let subir_soporte = document.getElementById('subir_pdf')
+
+    if (check_soporte.checked){
+        subir_soporte.classList.remove('d-none')
+    } else {
+        subir_soporte.classList.add('d-none')
+    }
+
+});
+document.getElementById('myForm').addEventListener('change', function() {
+    var formData = new FormData(this);
+    var object = {};
+    formData.forEach(function(value, key) {
+        object[key] = value;
+    });
+    object["txt_proyectos"] = document.getElementById("txt_proyectos").value;
+    object["opt_subproyecto"] = document.getElementById("opt_subproyecto").value;
+    object["txt_activos"] = document.getElementById("txt_activos").value;
+    object["txt_sectores"] = document.getElementById("txt_sectores").value;
+    localStorage.setItem('formulario_solicitud', JSON.stringify(object));
+    console.log(object)
+});
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM completamente cargado');
+    var submitButton = document.querySelector('#submit-button');
+
+    // Restablecer datos del formulario desde localStorage si existen
+    var datos = localStorage.getItem('formulario_solicitud');
+    if (datos) {
+        var obj = JSON.parse(datos);
+        for (var key in obj) {
+            var inputElement = document.querySelector("[name='" + key + "']") || document.getElementById(key);
+            if (inputElement && inputElement.type !== 'file') {
+                inputElement.value = obj[key];
+                if (key == "opt_subproyecto") {
+                    var parent = document.getElementById("input_subproyecto");
+                    if (parent) {
+                        parent.classList.remove('d-none');
+                    }
+                }
+            }
+        }
+    }
+
+    // Configuración del formulario y validación de entrada
+    var formInputs = Array.from(document.getElementsByClassName('grupo-entrada'));
+
+    formInputs.forEach(function(input) {
+        input.addEventListener('input', function() {
+            var allFilled = formInputs.every(function(input) {
+                if (input.tagName === 'INPUT') {
+                    return input.value !== '';
+                }
+                if (input.tagName === 'SELECT') {
+                    return input.value && input.value !== "Subproyecto" && input.value !== "Superintendente";
+                }
+                return false;
+            });
+            submitButton.disabled = !allFilled;
+        });
+    });
+});
+function modificar_cantidad(productoId){
+    var form_cantidad = document.getElementById("form_cantidad_"+productoId);
+    var cantidad = document.getElementById("cantidad_"+productoId);
+    //comentario.setAttribute('data-original-comment', comentarioElement.innerHTML);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    //var modificar_cantidad = document.getElementById("modificar_cantidad_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit2_"+productoId);
+    var save_cantidad = document.getElementById("save_cantidad_"+productoId);
+
+    form_cantidad.classList.remove("d-none");
+    cantidad.classList.add("d-none");
+    edit_quantity.classList.add("d-none");
+    delete_row.classList.add("d-none");
+    //modificar_cantidad.classList.add("d-none");
+    cancel_edit.classList.remove("d-none");
+    save_cantidad.classList.remove("d-none");
+    
+    
+};
+
+function modificar_comentario(productoId){
+    var form_comentario = document.getElementById("form_comentario_"+productoId);
+    var comentario = document.getElementById("comentario_"+productoId);
+    //comentario.setAttribute('data-original-comment', comentarioElement.innerHTML);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+productoId);
+    var save_comment = document.getElementById("save_comment_"+productoId);
+    
+    form_comentario.classList.remove("d-none");
+    comentario.classList.add("d-none");
+    edit_quantity.classList.add("d-none");
+    delete_row.classList.add("d-none");
+    modificar_comentario.classList.add("d-none");
+    cancel_edit.classList.remove("d-none");
+    save_comment.classList.remove("d-none");
+};
+
+function cancelar_edicion2(productoId){
+    var form_cantidad = document.getElementById("form_cantidad_"+productoId);
+    var cantidad = document.getElementById("cantidad_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    //var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit2_"+productoId);
+    var save_cantidad = document.getElementById("save_cantidad_"+productoId);
+    form_cantidad.classList.add("d-none");
+    cantidad.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    //modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_cantidad.classList.add("d-none");
+};
+
+function cancelar_edicion(productoId){
+    var form_comentario = document.getElementById("form_comentario_"+productoId);
+    var comentario = document.getElementById("comentario_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+productoId);
+    var save_comment = document.getElementById("save_comment_"+productoId);
+    form_comentario.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function aceptar_edicion2(productoId){
+    var form_tag = document.getElementById("form_cantidad_"+productoId);
+    var cantidad = document.getElementById("cantidad_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    //var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit2_"+productoId);
+    var save_cantidad = document.getElementById("save_cantidad_"+productoId);
+    var pk = productoId
+    var inputElement = document.getElementById('cantidad-input_' + productoId).value;
+    //var form_comentario = document.getElementById('id_form_comentario-comentario').value
+    
+    console.log(inputElement)
+    ActualizarComentario(pk,inputElement,"cantidad")
+    form_tag.classList.add("d-none");
+    cantidad.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    //modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_cantidad.classList.add("d-none");
+};
+
+
+function aceptar_edicion(productoId){
+    var form_tag = document.getElementById("form_comentario_"+productoId);
+    var comentario = document.getElementById("comentario_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+productoId);
+    var save_comment = document.getElementById("save_comment_"+productoId);
+    var pk = productoId
+    var inputElement = document.getElementById('comentario-input_' + productoId).value;
+    //var form_comentario = document.getElementById('id_form_comentario-comentario').value
+    
+    console.log(inputElement)
+    ActualizarComentario(pk,inputElement,"comentario")
+    form_tag.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function ActualizarComentario(solicitud_id,dato, tipo){
+    console.log('User is logged in, sending data...' )
+    var url = '/solicitudes/update_comentario/'
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'solicitud_id':solicitud_id, 'dato':dato, 'tipo':tipo})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        if (data.tipo == "comentario"){
+            document.getElementById('comentario_'+solicitud_id).innerHTML = data.dato;
+        } else if (data.tipo == "cantidad"){
+            let cantidadFormateada = parseFloat(data.dato).toFixed(2);
+            console.log(cantidadFormateada)
+            document.getElementById('cantidad_'+solicitud_id).innerHTML = cantidadFormateada;
+        }
+    })
+}
+
+</script>
+{% endblock %}
+</body>
+</html>

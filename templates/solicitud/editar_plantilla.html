@@ -1,0 +1,347 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Editar Plantilla{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+<hr>
+<hr>
+<hr>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-4 col-md-12">
+            
+            <div class="card" id="plantilla-info" plantilla_id ="{{plantilla.id}}">
+                <div class="card-header">
+					<h2>Información de Plantilla:</h2>
+                </div>
+                <div class="card-body">
+					<form id="myForm" method="POST">
+                        {% csrf_token %}
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.nombre|add_class:"form-control"|append_attr:"placeholder= Nombre"}}
+                                            <label style="color: #121212;" for="id_area">Nombre*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.descripcion|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
+                                            <label style="color: #121212;" for="id_area">Descripción*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row my-2">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <button id="submit-button" class="btn btn-outline-info btn-block my-2 btn-lg" name="CrearBtn" type="submit">Actualizar Plantilla</button> 
+                    </form>
+                </div>
+            </div>
+    </div>
+    <div class="col-lg-8 col-sm-12">
+        <div class = "card bg-white">
+    
+            <div class="card-header">
+                <h3>Agregar Productos Plantilla</h3>
+            </div>
+        
+        <div class="card-body">
+            <form id="myForm2" method="POST"></form>
+            <div class="row">
+                <div class="col-sm-10">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-cubes-stacked"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1"> 
+                        <input type="text" list="productos" id="txt_productos" placeholder="Productos..." class="form-control">
+               
+                        <label for="txt_productos">Productos*</label>
+                        </div>
+                        <datalist id="productos" name="productos">
+                        {% for item in productos %}
+                        <option valor="{{item.id|unlocalize}}" value="{{item}}" unidad="{{item.producto.unidad.nombre}}"></option>
+                        {% endfor %}
+                        </datalist>
+                    </div>
+                </div>
+                <div id="etiqueta_solicitado" class="col-2">
+                    <div class="alert alert-secondary" role="alert">
+                    <h6>Unidad:</h6><h6 style="color: #121212;" id="unidad"></h6>   
+                    </div>
+                </div>
+                <div class="col-3 d-none">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_producto.producto|add_class:"form-control"|append_attr:"placeholder=Productos*"}}
+                            <label for="id_producto">Productos*</label>
+                        </div>
+                    </div>
+                </div>  
+            </div> 
+            <div class="row">
+                <div class="col-3">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_producto.cantidad|add_class:"form-control"|append_attr:"placeholder=Cantidad*"}}
+                            <label for="id_producto">Cantidad*</label>
+                        </div>
+                    </div>
+                </div> 
+                <div class="col-9">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_producto.comentario_articulo|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_producto.comentario_plantilla|add_class:"form-control"|append_attr:"placeholder= Anotación Plantilla"}}
+                            <label style="color: #121212;" for="id_area">Anotación Plantilla*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <button id="btn_agregar" class="btn btn-outline-info btn-block my-2" name="agregar" type="button">Agregar</button>
+            </form>         
+        </div>
+        
+               
+        <div class ="table-responsive-sm">
+            <table class="table table-ligth table-striped mx-1">
+                <form method="POST">
+                {% csrf_token %}
+                <thead>
+                    <tr>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col">Comentario</th>
+                        <th>Anotación Plantilla</th>
+                        <th scope="col"></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for producto in productos_plantilla %}
+                    <tr>
+                        <td>{{producto.producto.producto.codigo}}</td>
+                        <td>{{producto.producto.producto.nombre}}</td>
+                        <td>{{producto.cantidad}}</td>
+                        <td>{{producto.producto.producto.unidad}}</td>
+                        <td>{% if producto.comentario_articulo %} {{producto.comentario_articulo}} {% endif %}</td>
+                        <td>{% if producto.comentario_plantilla %} {{producto.comentario_plantilla}} {% endif %}</td>
+                        <td>
+                            <button type="button" class="btn add-btn" style="color:ghostwhite; background-color:#980F0F ;" value="Delete" onclick="deleteRow(this)" product_id={{producto.producto.id|unlocalize}} action="remove" aria-label="Close">
+                                <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </form>
+            </table>
+        </div>
+        <hr>     
+        <h5>Artículos: {{orden.get_cart_quantity}}</h5>
+    </div>
+    </div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+    ;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+    })()
+
+    var myModal = document.getElementById('dialog')
+
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+    location.reload();
+    })
+
+
+
+function preventDoubleClick(button) {
+    setTimeout(function() {
+        button.disabled = true;
+    }, 50);
+}
+
+
+    document.getElementById('myForm').addEventListener('submit', function() {
+    // Deshabilita el botón de envío cuando se envía el formulario
+    btn = document.getElementById('submit-button');
+    preventDoubleClick(btn);
+    });
+
+    document.getElementById("txt_productos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_productos");
+    //console.log(select.value)
+    var unidad = document.getElementById('unidad');
+    var browserChildren = document.getElementById('productos').children;
+    var other_select = document.getElementById('id_producto');
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+            //console.log(browserChildren[i])
+            //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            let unidad_medida = browserChildren[i].getAttribute('unidad');
+            unidad.innerHTML = unidad_medida;
+            //unidad.setAttribute('id_producto', id)
+            //console.log(id)
+            other_select.value = id;
+            var target = id;
+            cont = 1
+            } 
+    }
+    
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+    
+});
+
+document.getElementById('btn_agregar').addEventListener('click',function(){
+        
+   
+        var plantilla = document.getElementById('plantilla-info');  
+       
+        var plantilla_id = plantilla.getAttribute('plantilla_id')
+        var other_select = document.getElementById('id_producto');
+        id_producto = other_select.value
+        //console.log(id_producto)
+       
+
+        var cantidad = document.getElementById('id_cantidad').value;
+        var comentario_plantilla = document.getElementById('id_comentario_plantilla').value;
+        var comentario = document.getElementById('id_comentario_articulo').value;
+        var action = "add";
+
+        if (cantidad <= 0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            ActualizarArticulos(plantilla_id,id_producto,cantidad,action, comentario, comentario_plantilla);
+            document.getElementById("id_cantidad").value= null;
+            preventDoubleClick(this)
+        }
+});
+
+    function ActualizarArticulos(plantilla_id,id_producto,cantidad,action,comentario, comentario_plantilla){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/solicitudes/update_item_plantilla/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'plantilla_id':plantilla_id, 'id_producto':id_producto, 'cantidad':cantidad, 'action':action,'comentario':comentario,'comentario_plantilla':comentario_plantilla})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        location.reload()
+    })
+}
+function deleteRow(element) {
+    console.log(element)
+    var plantilla = document.getElementById('plantilla-info');  
+    var plantilla_id = plantilla.getAttribute('plantilla_id')
+    id_producto = element.getAttribute('product_id')
+    referencia = ""
+    action = "remove" ;
+    cantidad = 0
+    comentario =""
+    comentario_plantilla =""
+    ActualizarArticulos(plantilla_id,id_producto,cantidad,action, comentario, comentario_plantilla);
+    preventDoubleClick(element);
+}
+
+</script>
+{% endblock %}
+</body>
+</html>

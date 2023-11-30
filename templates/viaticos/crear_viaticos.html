@@ -1,0 +1,426 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Viaticos {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class="col-lg-8 offset-lg-2 col-sm-12">
+    <div class="card">
+        <div class="card-header">
+		    <h2>Solicitud de Viáticos</h2>
+	    </div>
+        <div class="card-body">
+					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+                        {% csrf_token %}
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group d-none">
+                                {{form.proyecto|add_class:"form-select"}}
+                                </div>
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>    
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            <input type="text" list="proyectos" id="txt_proyectos" placeholder="Proyecto..." class="form-control">
+                                            <label for="txt_proyectos">Proyecto*</label>
+                                        </div>         
+                                        <datalist id="proyectos" name='proyectos'>
+                                        {% for item in proyectos %}
+                                        <option valor="{{item.id}}" value="{{item.nombre}} {{item.descripcion}}"></option>
+                                        {% endfor %}
+                                        </datalist>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div id="input_subproyecto" class="input-group mb-3 d-none">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        <label  style="font-size:10px; color:gray;" for="subproyecto">Subproyecto*</label>
+                                        <select style="font-size:16px" class="form-select form-select-sm" placeholder="Subproyecto" id="subproyecto">
+                                            <option style="color:gray;" value="" selected disabled>Subproyecto</option>
+                                            {% for subproyecto in subproyectos %}
+                                            <option id="js" target="{{subproyecto.proyecto.id}}" sub="{{subproyecto.id}}">
+                                            {{subproyecto.nombre}}
+                                            </option>
+                                            {% endfor %}
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-4 d-none">
+                                <div class="input-group">
+                                {{form.subproyecto|add_class:"form-select"}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row my-2 d-none">
+                            <div class="col-4">
+                                <div class="input-group">
+                                {{form.colaborador|add_class:"form-select"}}
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="form-check form-switch col-auto mx-4" id="Otro_Colaborador">
+                                <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
+                                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelColaborador">Otro Colaborador</label>
+                            </div>
+                            
+                            <div class="col-12 d-none" id="colaborador_parrafo">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>    
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        <input type="text" list="colaborador" id="txt_colaborador" placeholder="Colaboradores..." class="form-control">
+                                        <label for="txt_colaborador">Colaboradores*</label>
+                                    </div>         
+                                    <datalist id="colaborador" name='colaborador'>
+                                        {% for item in colaborador %}
+                                         <option valor="{{item.id}}" value="{{item.staff.first_name}} {{item.staff.last_name}}"></option>
+                                         {% endfor %}
+                                    </datalist>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-lg-4 col-sm-12" >
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-car"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.transporte|add_class:"form-control"|append_attr:"placeholder=Transporte marca, modelo, rendimiento"}}
+                                            <label for="id_transporte">Transporte(marca, modelo, rendimiento)*</label>
+                                        </div>
+                                </div>
+                            </div>
+                            <div id="serie" class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {% render_field form.fecha_partida type="date" class="form-control" %}
+                                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="serie" class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {% render_field form.fecha_retorno type="date" class="form-control" %}
+                                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="row">
+                                <div class="col-lg-4 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.lugar_partida|add_class:"form-control"|append_attr:"placeholder=Lugar de partida*"}}
+                                            <label for="id_lugar_partida">Lugar de partida*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.lugar_comision|add_class:"form-control"|append_attr:"placeholder=Lugar de comision*"}}
+                                            <label for="id_lugar_partida">Lugar de comision*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                    
+                                <div class="col-sm-12 col-lg-4">
+                                    <div id="input_superintendente" class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">
+                                            <label  style="font-size:10px; color:gray;" for="superintendente">Superintendente*</label>
+                                            <select style="font-size:16px" class="form-select form-select-sm" placeholder="Superintendente" id="superintendentes">
+                                                {% if usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin" %}
+                                                    {% for superintendente in superintendentes %}
+                                                    <option id="js" target="{{superintendente.id}}">
+                                                        {{superintendente.staff.first_name}} {{superintendente.staff.last_name}}
+                                                    </option>
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <option style="color:gray;" value="" selected disabled>Superintendente</option>
+                                                    {% for superintendente in superintendentes %}
+                                                    <option id="js" target="{{superintendente.id}}">
+                                                        {{superintendente.staff.first_name}} {{superintendente.staff.last_name}}
+                                                </option>
+                                                {% endfor %}
+                                                {% endif %}
+                                            </select>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">  
+                                        {{form.comentario|add_class:"form-control"|append_attr:"placeholder=Comentario"}}
+                                        <label for="id_comentario">Comentario*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+    
+                                <div class="form-check form-switch col-sm-3">
+                                    <label for="form.lugar_comision" class="col-auto col-form-label"><strong>Hospedaje*</strong></label>
+                                    {{form.hospedaje|add_class:"form-check-input mt-3"}}
+                                </div>
+                            </div>
+                           
+                            <div class="row my-2 d-none">
+                                <label for="form.superintendente" class="col-auto col-form-label my-1 d-none"><strong>Superintendente*</strong></label>
+                                <div class="col-3">
+                                    <!--<div class="input-group mb-3">-->
+                                    <span class="input-group-text"><i class="fa-solid fa-user"></i></span>
+                                    {{form.superintendente|add_class:"form-select"}}
+                                </div>
+                            </div>
+                                
+
+                            
+                            
+                        <input class="btn btn-outline-info btn-block my-2 col-sm-12 col-lg-3" id="btn_agregar" name="btn_agregar" type="submit" value="Agregar Solicitud de Viáticos">
+                    </form>
+        </div>
+    </div>
+</div>
+    
+
+
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+
+document.getElementById("txt_proyectos").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proyectos");
+    console.log(select.value)
+    var browserChildren = document.getElementById('proyectos').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_proyecto');
+
+
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            var target = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+            //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+    //var select2 = document.getElementById("id_proyecto");
+    var input_subproyecto = document.getElementById("input_subproyecto")
+    var text_subproyectos = document.getElementById("subproyecto")
+    var subproyectos = text_subproyectos.children;
+    //var current_option2 = select2.options[select.selectedIndex];
+    
+    var sub = document.getElementById('id_subproyecto')
+    console.log(target)
+    input_subproyecto.setAttribute('class','input-group mb-3')
+
+
+    text_subproyectos.value = ""
+    sub.value =""
+
+
+     for(let i = 0; i < subproyectos.length; i++){
+        proyecto_num  = subproyectos[i].getAttribute('target')
+        if (proyecto_num === target) {
+            subproyectos[i].setAttribute('class','')
+        } else {
+            subproyectos[i].setAttribute('class','d-none')
+     }
+     }
+});
+var check_colaborador = document.getElementById("SwitchColaborador");
+
+document.getElementById("btn_agregar").addEventListener('submit', (event)=>{
+        
+    if ((check_colaborador.checked) &&  (!txt_colaborador.value)) {
+        Swal.fire({
+                "title":"Error",
+                "text":"Favor de agregar un colaborador",
+                "icon":"error",
+                })
+            event.preventDefault
+    }
+         
+});
+    
+document.getElementById("txt_colaborador").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_colaborador");
+    var browserChildren = document.getElementById('colaborador').children;
+    var other_select = document.getElementById('id_colaborador');
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+          //  console.log(browserChildren[i])
+          // console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            } //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+
+
+
+
+document.getElementById("SwitchColaborador").addEventListener("change", function(element){
+	let colaboradores = document.getElementById('colaborador_parrafo');
+
+	if (check_colaborador.checked){
+	    colaboradores.classList.remove('d-none')
+	    
+	} else {
+	    colaboradores.classList.add('d-none')
+	    
+	}
+});
+
+
+
+document.getElementById("superintendentes").addEventListener("change", function(event){
+    var select = document.getElementById("superintendentes");
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target')
+    var other_select = document.getElementById('id_superintendente')
+    other_select.value = target
+    });
+
+document.addEventListener('DOMContentLoaded', function(){
+    var formInputs = Array.from(document.getElementsByClassName('grupo-entrada'));
+    var submitButton = document.querySelector('#submit-button');
+
+    formInputs.forEach(function(input){
+        input.addEventListener('input', function(){
+            var allFilled = formInputs.every(function(input){
+                if (input.tagName === 'INPUT') {
+                    return input.value !== '';
+                }
+                if (input.tagName === 'SELECT') {
+                    return input.value && input.value !== "Subproyecto" && input.value !== "Superintendente";
+                }
+                return false;
+            });
+            submitButton.disabled = !allFilled;
+        });
+    });
+});
+
+
+
+
+document.getElementById("subproyecto").addEventListener("change", function(event){
+        var select = document.getElementById("subproyecto");
+        var current_option = select.options[select.selectedIndex];
+        var target = current_option.getAttribute('sub')
+        console.log(target)
+        var other_select = document.getElementById('id_subproyecto')
+        other_select.value = target
+    });
+
+
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+
+</script>
+{% endblock %}
+</body>
+</html>

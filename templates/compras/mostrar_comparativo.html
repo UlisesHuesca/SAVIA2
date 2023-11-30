@@ -1,0 +1,193 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load djmoney %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Comparativo{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+        <div class="card">
+            <div class="card-header modal-header">
+                <h5>Comparativo: {{comparativo.nombre}}</h5>
+                <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+
+            <div class="card-body">
+                <div class="alert alert-primary" role="alert">
+                    <h6><i class="fa-solid fa-comment"></i>{{comparativo.comentarios}}</h6>
+                </div>
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                        <th class="col-2">Proveedor #1:</th>
+                        <th scope="col">{{comparativo.proveedor}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th  class="col-2">Cotización:</th>
+                            <th scope="col">
+                                {% if comparativo.cotizacion %}
+                                <a href="{{comparativo.cotizacion.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                                {% else %}
+                                No se subió documento
+                                {% endif %}
+                            <th>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                        <th  class="col-2">Proveedor #2:</th>
+                      
+                        <th scope="col">{{comparativo.proveedor2}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th  class="col-2">Cotización:</th>
+                            <th scope="col">
+                                {% if comparativo.cotizacion2 %}
+                                <a href="{{comparativo.cotizacion2.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                                {% else %}
+                                No se subió documento
+                                {% endif %}
+
+                            <th>
+                        </tr>
+                    </tbody>
+                </table>
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                        <th  class="col-2">Proveedor #3:</th>
+                        <th scope="col">{{comparativo.proveedor3}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th  class="col-2">Cotización:</th>
+                            <th scope="col">
+                                {% if comparativo.cotizacion3 %}
+                                <a href="{{comparativo.cotizacion3.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                                {% else %}
+                                No se subió documento
+                                {% endif %}
+                            <th>
+                        </tr>
+                    </tbody>
+                </table>
+                   
+                <div class ="table-responsive">
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col-3">Producto</th>
+                            <th scope="col-2">Modelo</th>
+                            <th scope="col-2">Marca</th>
+                            <th scope="col-2">Precio P #1</th>
+                            <th>Precio P #2</th>
+                            <th>Precio P #3</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in productos %}
+                        <form method="post" >
+                        {% csrf_token %}
+                        <tr>
+                            <th scope="row">{{p.producto}}</th>
+                           
+                            <td> {% if p.modelo %} {{p.modelo}} {% else %} NR {% endif %}</td>
+
+                            <td> {% if p.marca %}  {{p.marca}} {% else %} NR {% endif %}</td>
+                            <td>${{p.precio|floatformat:2}}</td>
+                            <td>${{p.precio2|floatformat:2}}</td>
+                            <td>${{p.precio3|floatformat:2}}</td>
+                        </tr>
+                        </form>
+                   {% endfor %}
+                   </tbody>
+                </table>
+
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+    <div>
+
+    </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+htmx.defineExtension('disable-on-submit', {
+  onEvent: function(name, evt) {
+    if (name === 'htmx:configRequest') {
+      var target = evt.detail.elt;
+      if (target.tagName === 'FORM') {
+        var button = target.querySelector('input[type="submit"]');
+        if (button) {
+          button.disabled = true;
+        }
+      }
+    }
+  },
+});
+
+
+
+   
+
+
+</script>
+{% endblock %}
+</body>
+</html>

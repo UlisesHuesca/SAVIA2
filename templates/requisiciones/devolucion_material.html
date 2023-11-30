@@ -1,0 +1,330 @@
+{% extends 'partials/base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Devolución{% endblock %}
+</head>
+<body>
+
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card" id="form-wrapper">
+            <div class="card-header">
+            <!-- Aqui es el encabezado de los filtros -->
+                <h5>Devolución D{{devolucion.id}}| Solicitud: {{orden.folio}}</h5>
+            </div>
+            <div id="Solicitud-info">
+                    <form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        {% if cantidad_items > 0 %}
+                        <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Comentario General:</strong></label>
+                        <div class="col-sm-8">
+                        {{form2.comentario|add_class:"form-control"}}
+                        </div>
+                        <div class="col-3">
+                            <input class="btn btn-outline-info btn-block btn-lg my-4" name="agregar_devolucion" type="submit" value="Devolver a Inventario">
+                        </div>
+                        {% endif %}
+                    </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class = "card-header">
+            <h5 id="devolucion" vale="{{devolucion.id}}">Productos</h5>
+            </div>
+
+            <div class='card-body'>
+                <form method="POST">
+                <div class="row">
+                        <div class="col-lg-8 col-sm-12">
+                            <div id="input_producto" class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    <label  style="font-size:10px; color:gray;" for="subproyecto">Productos*</label>
+                                    <select style="font-size:16px" class="form-select form-select-sm"  id="producto">
+                                            <option style="color:gray;" value="" selected disabled>Producto</option>
+                                            {% for producto in productos_sel %}
+                                                {% if producto.seleccionado == False %}
+                                                    {% if devolucion.tipo.nombre == "SALIDA" %}
+                                                    <option id="js" target="{{producto.producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.producto.articulos.cantidad}}" stock="{{producto.producto.articulos.producto.cantidad}}">
+                                                        {{producto.producto.articulos.producto}}
+                                                    </option>
+                                                    {% else %}
+                                                    <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
+                                                        {{producto.articulos.producto}}
+                                                    </option>
+                                                    {% endif %}
+                                                {% endif %}
+                                            {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="etiqueta_solicitado" class="col-4 mt-2">
+                            <div class="alert alert-secondary" role="alert">
+                            <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                            </div>
+                        </div>
+                        {{form.producto|add_class:"form-control d-none"}}
+                </div>
+                <div class="row">
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Comentario</label>
+                            </div>
+                        </div>
+                    </div>    
+                    <div class="col-sm-1 mt-3">
+                        <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                            Agregar
+                        </a>
+                    </div>
+                </div>
+                <hr>
+                <div class ="table-responsive-sm">
+                    <table class="table table-ligth table-striped mx-1">
+                    {% csrf_token %}
+                    <thead>
+                        <tr>
+                        <th scope="col" salidas="{{salidas}}">#</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <!--<th scope="col">Precio</th>-->
+                        <th scope="col">Comentario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in productos %}
+                        <tr>
+                            <th scope="col"><img class="row-image" src="{{item.producto.articulos.producto.producto.imageURL}}"></th>
+                            <th scope="col">{{item.producto.articulos.producto.producto.codigo|unlocalize}}</th>
+                            <th scope="col">{{item.producto.articulos.producto.producto.nombre}}</th>
+                            <th scope="col">{{item.cantidad}}</th>
+                            <!--<th scope="col">${{item.precio}}</th>-->
+                            <th scope="col">{{item.comentario}}</th>
+                            <th scope="col">
+                            <td>
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.vale_devolucion.id}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </form>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+            <h5 class>Artículos: {{cantidad_items}}</h5>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+document.getElementById("producto").addEventListener("change", function(element){
+    var select = document.getElementById('producto');
+    
+    var current_option = select.options[select.selectedIndex];
+    let target = current_option.getAttribute('target')
+    let producto = document.getElementById('id_producto')
+    producto.value = target
+    let cantidad = current_option.getAttribute('cantidad');
+    let cantidad_sol = current_option.getAttribute('cantidad_sol');
+    let stock = current_option.getAttribute('stock');
+
+    console.log('target:',target)
+    if (cantidad == 0) {
+        if (cantidad_sol > 0) {
+            cantidad_pendiente = cantidad_sol
+        }
+    } else {
+    var cantidad_pendiente = cantidad}
+
+    console.log('stock',stock);
+    var solicitado = document.getElementById('solicitado');
+    solicitado.innerHTML = cantidad_pendiente;
+});
+
+
+var updateBtn = document.getElementById('update-purchase')
+let count=0;
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let vale = document.getElementById('devolucion');
+        devolucion = vale.getAttribute('vale')
+        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
+        var select = document.getElementById('producto');
+        var current_option = select.options[select.selectedIndex];
+        let value = current_option.value
+        
+        var id = current_option.getAttribute('target');
+        
+        var producto = current_option.getAttribute('producto');
+        //Esta es la cantidad establecida en la requisición
+        var cantidad = current_option.getAttribute('cantidad');
+        var cantidad_sol = current_option.getAttribute('cantidad_sol');
+        console.log(cantidad_sol)
+        var quantity = document.getElementById('id_cantidad');
+        //Esta es la cantidad comprada de acuerdo a la requisición
+        var val_cantidad = quantity.value;
+        var comentario = document.getElementById("id_comentario").value
+
+
+        if (cantidad == 0) {
+            if (cantidad_sol > 0) {
+                cantidad_pendiente = cantidad_sol
+            }
+        } else {
+            var cantidad_pendiente = cantidad - val_cantidad
+        }
+
+
+        console.log(cantidad_pendiente)
+        
+
+
+        var action = "add";
+
+        if (!value) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de seleccionar algún valor de la lista",
+                    "icon":"error",
+                })
+        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
+        } else if (cantidad_pendiente < 0)  {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad disponible",
+                    "icon":"error",
+                })
+        //Si "la cantidad comprada" es menor que cero
+        } else if (quantity.value <= 0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            console.log('val:',val_cantidad)
+            console.log('devolucion:',devolucion)
+            console.log('id:',id)
+            console.log('action:',action)
+            console.log('comentario:',comentario)
+
+            ActualizarArticulos(devolucion,id,val_cantidad,action,comentario);
+            //current_option.setAttribute("class","d-none");
+            //select.value = default_sel;
+
+            //document.getElementById("id_cantidad").value= null;
+            //document.getElementById("id_precio_unitario_0").value= null;
+        }
+
+})
+
+function deleteRow(element) {
+    let devolucion = document.getElementById('delete');
+    devolucion = devolucion.getAttribute('id_salida')
+    id = element.getAttribute('producto_id');
+    val_cantidad = element.getAttribute('cantidad');
+    var action = "remove"
+    comentario = ""
+    ActualizarArticulos(devolucion,id,val_cantidad,action,comentario);
+}
+
+
+
+function ActualizarArticulos(devolucion,id,val_cantidad,action,comentario){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/requisiciones/update_devolucion/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'devolucion':devolucion, 'id':id, 'val_cantidad':val_cantidad, 'action':action,'comentario':comentario})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+</script>
+{% endblock %}
+</body>
+</html>
+

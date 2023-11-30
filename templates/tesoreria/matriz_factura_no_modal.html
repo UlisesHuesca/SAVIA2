@@ -1,0 +1,169 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load djmoney %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Facturas{% endblock %}
+</head>
+<body>
+
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="container">
+    <div class="card card-body">
+        <div class="card-header">
+            <h5 class="card-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Facturas de Compra: {{compra.get_folio}}</h5>
+        </div>
+
+        <div class="card-body">
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col">Proveedor:</th>
+                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
+                        </tr>
+                    </thead>
+                </table>
+                <hr>
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col">Importe Compra</th>
+                        <th id="importe" value={{compra.costo_oc}} moneda={{compra.moneda.nombre}} scope="col">{{compra.costo_oc}}</th>
+                        </tr>
+                    </thead>
+                </table>
+
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col-3">#</th>
+                            <th scope="col-2">Fecha</th>
+                            <th scope="col-3">Hora</th>
+                            <th scope="col-3">Comentario</th>
+                            <th scope="col-2">PDF</th>
+                            <th scope="col-2">XML</th>
+                            <th scope="col-2">Edición</th>
+                            <th scope="col-2">Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in facturas %}
+                        <tr>
+                            <th scope="row">{{p.id}}</th>
+                            <td>{{p.fecha_subido}}</td>
+                            <td>{{p.hora_subido}}</td>
+                            <td>{{p.comentario}}</td>
+                            {% if p.factura_pdf %}
+                            <td>
+                                <a href="{{p.factura_pdf.url}}" download class="btn btn-outline-danger">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                            {% else %}
+                            <td> </td>
+                            {% endif %}
+                            {% if p.factura_xml %}
+                            <td>
+                                <a href="{{p.factura_xml.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                            {% else %}
+                            <td> </td>
+                            {% endif %}
+                            
+                            <td>           
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-compra-edicion' p.id %}">               
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>    
+                            </td>
+                            <td>
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'factura-eliminar' p.id %}">               
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </a>   
+                            </td>
+                        </tr>
+                   {% endfor %}
+                   </tbody>
+                </table>
+        </div>
+        <form method="post">
+            {% csrf_token %}
+            <div class="row ms-3 my-2">
+                <div class="form-check form-switch col-sm">
+                <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas</strong></label>
+                {{form.facturas_completas|add_class:"form-check-input"}}
+                </div>
+                <hr>
+            <h6>Nueva factura</h6>
+            <ul class="nav">
+                <li class="nav-item">
+                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' compra.id %}" >Registrar</a>
+                </li>
+                <li class="nav-item ms-4">
+                    <button type="submit" name="btn_factura_completa" class="btn btn-secondary">Cerrar</button>
+                </li>
+            </ul>
+        </form>
+    </div>   
+</div>
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    ;(function(){
+        const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    
+        htmx.on('htmx:beforeSwap',(e)=>{
+            if (e.detail.target.id === "document" && !e.detail.xhr.response)
+            modal.hide()
+        })
+    })()
+    var myModal = document.getElementById('dialog')
+    
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+      location.reload();
+    })
+    
+    </script>
+{% endblock %}
+</body>
+</html>

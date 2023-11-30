@@ -1,0 +1,644 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %} Comparativo {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card" id="form-wrapper">
+            <div class="card-header text-center">
+				<h2 time="{{total_time}}">Comparativo</h2>
+            </div>
+            <div class="card-body">
+				<form method="POST" id='OrderForm'>
+                    {% csrf_token %}
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-folder-plus"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.nombre|add_class:"form-control"|append_attr:"placeholder= Comparativo"}}
+                                    <label for="id_nombre">Comparativo*</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-comment"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.comentarios|add_class:"form-control"|append_attr:"placeholder= Comentarios"}}
+                                    <label for="id_comentarios">Comentarios*</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.proveedor}}    
+                                </div>
+                            </div>  
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                            {{form.proveedor2}}  
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">  
+                            {{form.proveedor3}}
+                            </div>
+                        </div>  
+                    </div>
+                    <div class ="table-responsive-sm">
+                        <table class="table table-light table-striped table-hover">
+                        <thead>
+                            <tr>
+                            <th>
+                                Archivo
+                            </th>
+                            <th>
+                                Nombre
+                            </th>
+                            </tr>
+                        </thead>
+                        <tbody>    
+                        {% if comparativo.cotizacion %}
+                            <tr>
+                                <td>
+                                    <a href="{{comparativo.cotizacion.url}}" download class="download-link btn">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    </a>
+                                </td>
+                                <td>
+                                    {{ comparativo.cotizacion.name|default:"Archivo" }}
+                                </td>
+                            </tr>
+                        {% endif %}
+                        {% if comparativo.cotizacion2 %}
+                        <tr>
+                            <td>
+                                <a href="{{comparativo.cotizacion2.url}}" download class="download-link btn">
+                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
+                            </td>
+                            <td>
+                                {{ comparativo.cotizacion2.name|default:"Archivo" }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if comparativo.cotizacion3 %}
+                        <tr>
+                            <td>
+                                <a href="{{comparativo.cotizacion3.url}}" download class="download-link btn">
+                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
+                            </td>
+                            <td>
+                                {{ comparativo.cotizacion3.name|default:"Archivo" }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if comparativo.cotizacion4 %}
+                        <tr>
+                            <td>
+                                <a href="{{comparativo.cotizacion4.url}}" download class="download-link btn">
+                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
+                            </td>
+                            <td>
+                                {{ comparativo.cotizacion4.name|default:"Archivo" }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        {% if comparativo.cotizacion5 %}
+                        <tr>
+                            <td>
+                                <a href="{{comparativo.cotizacion5.url}}" download class="download-link btn">
+                                <i class="fa-solid fa-file-invoice-dollar"></i></a>
+                            </td>
+                            <td>
+                                {{ comparativo.cotizacion5.name|default:"Archivo" }}
+                            </td>
+                        </tr>
+                        {% endif %}
+                        </tbody>
+                    </table>
+                        
+
+                    </div>
+                    {% if productos %}
+                    <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_creacion" id="btn_agregar" type="submit" value="Crear">
+                    {% endif %}
+                </form>
+                <button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                <form method="POST" id='FileForm' enctype="multipart/form-data" class="d-none">
+                    {% csrf_token %} 
+                    <div class="mb-3">
+                        <input class="form-control" type="file" name="file" multiple>
+                        <input type="hidden" name="mi_id" value="{{comparativo.id}}">
+                    </div>
+                    <button  id="btn_files" name="btn_files" type="submit" class="btn btn-outline-info"><i class="fa-solid fa-file-arrow-up"></i></button>
+                    <button id="cancel" type="button" class="btn btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
+                    {% if error_messages %}
+                    <div>{{error_messages}}</div>
+                    {% endif %}
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card">    
+            <div id="form_product">
+                <form method="POST">
+                {% csrf_token %}
+                {% if error_messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{error_messages}}
+                </div>
+                {% endif %}
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.producto}}
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="col-lg-3 col-md-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                <label for="id_cantidad">Cantidad*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="" id="tiempoCheck">
+                    <label class="form-check-label" for="tiempoCheck">
+                        Tiempo de Entrega
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="" id="marcaCheck">
+                    <label class="form-check-label" for="marcaCheck">
+                        Marca
+                    </label>
+                </div>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" value="" id="modeloCheck">
+                    <label class="form-check-label" for="modeloCheck">
+                        Modelo
+                    </label>
+                </div>
+                
+                <div class="row">
+                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.dias_de_entrega|add_class:"form-control"|append_attr:"placeholder= Tiempo de Entrega"}}
+                                <label for="id_dias_de_entrega">Tiempo de entrega</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4 modelo-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.modelo|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
+                                <label for="id_modelo">Modelo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4 marca-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca|add_class:"form-control"|append_attr:"placeholder= Marca"}}
+                                <label for="id_marca">Marca</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.precio|add_class:"form-control"|append_attr:"placeholder= Precio"}}
+                                <label for="id_precio">Precio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div> 
+                <div class="row">
+                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.dias_de_entrega2|add_class:"form-control"|append_attr:"placeholder= Tiempo de Entrega"}}
+                                <label for="id_dias_de_entrega2">Tiempo de entrega</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4 modelo-field d-none">
+                        <div class="input-group mb-3 ">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.modelo2|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
+                                <label for="id_modelo2">Modelo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4 marca-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca2|add_class:"form-control"|append_attr:"placeholder= Marca"}}
+                                <label for="id_marca2">Marca</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.precio2|add_class:"form-control"|append_attr:"placeholder= Precio"}}
+                                <label for="id_precio2">Precio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-5 col-md-4 tiempo-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.dias_de_entrega3|add_class:"form-control"|append_attr:"placeholder= Tiempo de entrega"}}
+                                <label for="id_dias_de_entrega3">Tiempo de entrega</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4 modelo-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.modelo3|add_class:"form-control"|append_attr:"placeholder= Modelo"}}
+                                <label for="id_modelo3">Modelo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4 marca-field d-none">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.marca3|add_class:"form-control"|append_attr:"placeholder= Marca"}}
+                                <label for="id_marca3">Marca</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-md-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.precio3|add_class:"form-control"|append_attr:"placeholder= Precio"}}
+                                <label for="id_precio3">Precio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div  class="row">
+                    <div class="col-sm-1">
+                        <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
+                    </div>
+                </div>
+                </form>
+            </div>
+        
+            <div class ="table-responsive-sm">
+                <table class="table table-light table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Unidad</th>
+                            <th style="color:#478800" scope="col">P.U.</th>
+                            <th scope="col">P.U.</th>
+                            <th scope="col">P.U.</th>
+                            <th scope="col">Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mytbl">
+                        {% for producto in productos%}
+                        <tr>
+                            <td scope="col">{{producto.producto.producto.codigo}}</td>
+                            <td scope="col">{{producto.producto.producto.nombre}}</td>
+                            <td scope="col">{{producto.cantidad|floatformat:2}}</td>
+                            <td scope="col">{{producto.producto.producto.unidad.nombre}}</td>
+                            <td style="color:#478800" scope="col">${{producto.precio|floatformat:2}}</td>
+                            <td scope="col">${{producto.precio2|floatformat:2}}</td>
+                            <td scope="col">${{producto.precio3|floatformat:2}}</td>
+                            <td scope="col">
+                                <a class="btn btn-danger" value="Delete" name="btn_delete" href="{% url 'articulo-comparativo-delete' producto.id %}"   id="delete">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+tiempoCheck.addEventListener('change', function() {
+var tiempoCheck = this;
+var tiempoFields = document.getElementsByClassName("tiempo-field");
+    for (var i = 0; i < tiempoFields.length; i++) {
+        if(tiempoCheck.checked) {
+            tiempoFields[i].classList.remove("d-none");
+        } else {
+            tiempoFields[i].classList.add("d-none");
+        }
+    }
+});
+
+marcaCheck.addEventListener('change', function() {
+var marcaCheck = document.getElementById("marcaCheck");
+var marcaFields = document.getElementsByClassName("marca-field");
+    for (var i = 0; i < marcaFields.length; i++) {
+        if(marcaCheck.checked) {
+            marcaFields[i].classList.remove("d-none");
+        } else {
+            marcaFields[i].classList.add("d-none");
+        }
+    }
+});
+
+modeloCheck.addEventListener('change', function() {
+var modeloCheck = document.getElementById("modeloCheck");
+var modeloFields = document.getElementsByClassName("modelo-field");
+    for (var i = 0; i < modeloFields.length; i++) {
+        if(modeloCheck.checked) {
+            modeloFields[i].classList.remove("d-none");
+        } else {
+            modeloFields[i].classList.add("d-none");
+        }
+    }
+});
+
+document.getElementById('start_upload').addEventListener('click',show_file_input)
+document.getElementById('cancel').addEventListener('click',cancel_show)
+
+function show_file_input() {
+    var form = document.getElementById('FileForm');
+    var btn_start = document.getElementById('start_upload');
+    form.classList.remove('d-none');
+    btn_start.classList.add('d-none');
+};
+
+function cancel_show(){
+    var form = document.getElementById('FileForm');
+    var btn_start = document.getElementById('start_upload');
+    form.classList.add('d-none');
+    btn_start.classList.remove('d-none');
+};
+
+$(document).ready(function(){
+    $('#id_proveedor').select2({
+        placeholder:'Seleccione Proveedor',
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        
+        allowClear: true,
+        width: '100%',
+        ajax: {
+            url: "{% url 'carga-proveedor' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.nombre__razon_social};
+                    })
+
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
+});
+
+$(document).ready(function(){
+    $('#id_proveedor2').select2({
+        placeholder:'Seleccione Proveedor',
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        allowClear: true,
+        width: '100%',
+        ajax: {
+            url: "{% url 'carga-proveedor' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.nombre__razon_social};
+                    })
+
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
+});
+
+$(document).ready(function(){
+    $('#id_proveedor3').select2({
+        placeholder:'Seleccione Proveedor',
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        allowClear: true,
+        width: '100%',
+        
+        ajax: {
+            url: "{% url 'carga-proveedor' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.nombre__razon_social};
+                    })
+
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
+});
+
+
+
+$(document).ready(function(){
+    $('#id_producto').select2({
+        placeholder:'Selecciona el producto',
+
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        allowClear: true,
+        width: '100%',
+        
+        ajax: {
+            url: "{% url 'carga-productos' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.producto__nombre};
+                    })
+
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+document.addEventListener('DOMContentLoaded', function () {
+    var links = document.querySelectorAll('.download-link');
+    links.forEach(function(link) {
+        var url = link.getAttribute('href');
+        if (url.endsWith('.pdf')) {
+            link.classList.add('btn-outline-danger');
+        } else if (url.endsWith('.xlsx')) {
+            link.classList.add('btn-outline-success');
+        }
+    });
+});
+
+</script>
+{% endblock %}
+</body>
+</html>

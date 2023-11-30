@@ -1,0 +1,199 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Matriz de compras autorizadas{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<div class = "row mt-2 bg-white" id="response-div">
+        <div class="col-12">
+            <div class="card card-body">
+                <h5>Filtro de Compras Autorizadas</h5>
+                <hr>
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Folio:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.id|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.proveedor" class="col-sm-auto col-form-label text-right my-2"><strong>Proveedor:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.proveedor|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.req" class="col-sm-auto col-form-label text-right my-2"><strong>Requisición:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.req|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.proyecto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.proyecto|add_class:'form-control'}}
+                    </div>
+                </div>
+                <div class="row g-12">
+                    <label for="myfilter.form.subproyecto" class="col-sm-1 col-form-label text-right"><strong>Subproyecto:</strong></label>
+                    <div class="col-2">
+                        {{myfilter.form.subproyecto|add_class:'form-control'}}
+                    </div>
+                    <label for="myfilter.form.start_date" class="col-sm-1 col-form-label text-right"><strong>Desde:</strong></label>
+                    <div class="col-2">
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                    </div>
+                    <label for="myfilter.form.end_date" class="col-sm-1 col-form-label text-right"><strong>Hasta:</strong></label>
+                    <div class="col-2">
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-outline-success btn-block" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <!--<li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                        <li class="nav-item mx-2">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-autorizadas' %}">Compras</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
+                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'viaticos-autorizados-pago' %}">Viáticos</a>
+                              </div>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Viático</th>
+                    <th scope="col">Solicitado por</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Subproyecto</th>
+                    <th scope="col">Autorizado</th>
+                    <th scope="col">Colaborador</th>
+                    <th scope="col">Importe OC</th>
+                    <th scope="col">Pagado</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Comprobación</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for viatico in viaticos_list %}
+                <tr>
+                    <th scope="row">{{viatico.id}}</th>
+                    <td>{{viatico.staff.staff.first_name}} {{viatico.staff.staff.last_name}}</td>
+                    <td>{{viatico.proyecto.nombre}}</td>
+                    <td>{{viatico.subproyecto.nombre}}</td>
+                    <td>{{viatico.approved_at2}} </td>
+                    <td>{{viatico.colaborador.staff.first_name}} {{viatico.colaborador.staff.last_name}}</td>
+                    <td>${{viatico.get_total|floatformat:2}}</td>
+                    <td>${{viatico.monto_pagado}}</td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}">Detalle</a>
+                            </li>
+                            <li class="nav-item mx-1">
+                                <button id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'viaticos-pagos' viatico.id %}">Pago</button>
+                            </li>
+                        </ul>
+                    </td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                <a id="myBtn2" type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" href="{% url 'matriz-facturas-viaticos' viatico.id %}">
+                                    Comprobación
+                                </a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+</script>
+{% endblock %}
+</body>
+</html>

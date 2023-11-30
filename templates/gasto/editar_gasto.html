@@ -1,0 +1,167 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %}Editar Producto{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+<div class="modal-dialog-lg" role="document">
+    <form  hx-post="{{request.path}}" class="modal-content">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Editar Producto{{producto.id}} </h5>
+            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="color:white">
+            <div>
+                {% csrf_token %}
+                <table class="table table-dark table-striped mx-3">
+                    <thead>
+                        <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">
+                                <div class="col-2">
+                                    <img class="row-image" src="{{producto.producto.producto.imageURL}}">
+                                </div>
+                        </th>
+                        </tr>
+                        <tr>
+                             <th scope="col">Código</th>
+                               <th scope="col">
+                                <div class="col-5">
+                                    {{producto.producto.producto.codigo}}
+                                </div>
+                            </th>
+
+                        </tr>
+                        <tr>
+                            <th scope="col">Producto</th>
+                            <th scope="col">
+                                <div class="col-20">
+                                    {{producto.producto.producto.nombre}}
+                                </div>
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">
+                                <div class="col-6">
+                                    {{form.cantidad|add_class:"form-control"}}
+                                </div>
+                        </th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Precio</th>
+                            <th scope="col">
+                                <div class="col-2">
+                                    {{form.precio_unitario|add_class:"form-control"}}
+                                </div>
+                            </th>
+                        </tr>
+                        <tr>
+                             <th scope="col">Total</th>
+                             <th scope="col">
+                                <div class="col-2">
+                                    {{producto.total_parcial}}
+                                </div>
+                            </th>
+                        </tr>
+                        <tr>
+                             <th scope="col">Otros Impuestos</th>
+                             <th scope="col">
+                                <div class="col-2">
+                                    {{form.otros_impuestos}}
+                                </div>
+                            </th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Impuestos Retenidos</th>
+                              <th scope="col">
+                                <div class="col-2">
+                                    {{form.impuestos_retenidos}}
+                                </div>
+                            </th>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="modal-footer">
+                <button class="btn btn-outline-info col-2" id="editar" type="submit" >Editar</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+/*var cant = document.getElementById('id_cantidad');
+
+cant.addEventListener('change', function(){
+    var cantidad = cant.value;
+    var btn = document.getElementById('editar')
+
+    console.log(cantidad)
+    if (cant.value <= 0){
+        btn.removeAttribute('class');
+        btn.setAttribute('class','btn btn-outline-info col-2 d-none');
+        Swal.fire({
+                    "title":"Error",
+                    "text":"El valor debe ser mayor que 0",
+                    "icon":"error",
+                })
+
+    }
+    if (cant.value >0 ){
+        btn.removeAttribute('class');
+        btn.setAttribute('class','btn btn-outline-info col-2');
+    }
+
+}); */
+
+
+</script>
+{% endblock %}
+</body>
+</html>
