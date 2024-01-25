@@ -1,0 +1,34 @@
+from django.contrib import admin
+from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura
+# Register your models here.
+class Solicitud_Gasto_Admin(admin.ModelAdmin):
+    list_display = ('id','folio','staff','colaborador', 'superintendente','pagada','folio')
+    raw_id_fields = ('staff','colaborador','superintendente') 
+    search_fields = ('colaborador',)
+
+class Conceptos_Entradas_Admin(admin.ModelAdmin):
+    list_display =('id', 'concepto_material', 'entrada',)
+
+class Articulo_Gasto_Admin(admin.ModelAdmin):
+    list_display =('id','gasto','staff','proyecto', 'subproyecto','producto','comentario', 'gasto', 'created_at', 'validacion')
+
+class Entrada_Gasto_Ajuste_Admin(admin.ModelAdmin):
+    list_display =('id','gasto','almacenista','completo')
+
+class Factura_Admin(admin.ModelAdmin):
+    list_display = ('id','solicitud_gasto',)   
+    raw_id_fields = ('solicitud_gasto',) 
+    search_fields = ('solicitud_gasto__id',)
+
+
+admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)
+
+admin.site.register(Articulo_Gasto, Articulo_Gasto_Admin)
+
+admin.site.register(Tipo_Gasto)
+
+admin.site.register(Entrada_Gasto_Ajuste, Entrada_Gasto_Ajuste_Admin)
+
+admin.site.register(Conceptos_Entradas, Conceptos_Entradas_Admin)
+
+admin.site.register(Factura, Factura_Admin)

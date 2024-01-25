@@ -1,0 +1,380 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Requisiciones autorizadas{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+
+
+
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class = "col bg-white" id="response-div">
+    <div class="card">
+        <div class="card-header">
+            <h5>Filtro de Productos OC</h5>
+        </div>
+        <div class="card-body">
+            {% csrf_token %}
+            <form method="GET">
+                <div class="row">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                                <label style="color: #121212;" for="id_producto">Producto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.oc|add_class:"form-control"|append_attr:"placeholder= Folio OC"}}
+                                <label style="color: #121212;" for="id_producto">Folio OC</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+                <div class="col-2">
+                    <button  id="btnBuscar" class="btn btn-outline-success btn-block mt-3 btn-lg" onclick="regenerar()" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+            </div>
+            <hr>
+            </form>
+            <form method=POST>
+                {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <!-- Botón para iniciar la acción (por ejemplo, para iniciar la tarea de Celery) -->
+                    <li class="nav-item mx-2">
+                        <button type="submit" id="reporte_compras" name="btnExcel" class="btn btn-outline-success d-none" value='Reporte Excel'>
+                            <i class="fa-solid fa-file-excel fa-2xl"></i>
+                        </button>
+                    </li>
+                    <!-- Mensaje de estado (opcional) -->
+                    <div id="statusMessage_tag" class="alert alert-primary d-none" role="alert">Reporte en proceso...</div>
+                    <!-- Botón de descarga (inicialmente oculto) -->
+                    <a type="button" href="#" id="downloadButton" onclick="downloadLimpiar(this)" class="btn btn-outline-success d-none m-1">
+                        <i class="fa-solid fa-cloud-arrow-down"></i>
+                    </a>
+                    <li class="nav-item m-1 d-lg-none">
+                        <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
+                            <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                            <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                            
+                          </div>
+                    </li>
+                    <li class="nav-item m-2 d-none d-lg-block">
+                        <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                            <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                            <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                            
+                          </div>
+                    </li>
+                </ul>
+            </form>
+        </div>
+    </div>
+</div>
+    
+
+<div class = "card mt-2">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">OC</th>
+                    <th class="d-none d-lg-table-cell">RQ</th>
+                    <th class="d-none d-lg-table-cell">Solicitud</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    <th class="col">Proveedor</th>
+                    <th scope="col">Proyecto</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Operación</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">P.U.</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Total</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in articulos_list %}
+                <tr>
+                    <th scope="row">{{item.oc.folio}}</th>
+                    <th class="d-none d-lg-table-cell">{{item.oc.req.folio}}</th>
+                    <th class="d-none d-lg-table-cell">{{item.oc.req.orden.folio}}</th>
+                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.staff.staff.staff.first_name}} {{item.oc.req.orden.staff.staff.staff.last_name}}</td>
+                    <td>{{item.oc.proveedor.nombre.razon_social}}</td>
+                    <td>{{item.oc.req.orden.proyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.subproyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{item.oc.req.orden.operacion}}</td>
+                    <td>{{item.producto.producto.articulos.producto.producto.nombre}} </td>
+                    <td>${{item.precio_unitario|floatformat:2}}</td>
+                    <td>{{item.cantidad}}</td>
+                    <td>${{item.total|floatformat:2}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if articulos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in articulos_list.paginator.page_range %}
+                    {% if articulos_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > articulos_list.number|add:'-2' and item < articulos_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if articulos_list.paginator.num_pages > articulos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{articulos_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{articulos_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if articulos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+   
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+document.addEventListener('DOMContentLoaded', function() {
+    var task_id = '{{task_id_producto}}'
+    var cantidad = '{{cantidad| unlocalize}}'
+    if (task_id){
+        localStorage.setItem('task_id_producto', task_id)
+    }
+    
+    var task= localStorage.getItem('task_id_producto')
+    console.log(task_id)
+    console.log(task)
+    var fileDownloadUrlproductos = localStorage.getItem('fileDownloadUrl_productos');
+    var downloadButton = document.getElementById('downloadButton');
+    var btn_reporte = document.getElementById('reporte_compras');
+    var reporte = localStorage.getItem('reporte_compras') 
+    if (task){
+        intentos(cantidad)
+        localStorage.removeItem('reporte_compras')
+        var reporte = false 
+        btn_reporte.classList.add('d-none');
+    }
+    
+    if (reporte){
+        btn_reporte.classList.remove('d-none');
+    }
+    if (fileDownloadUrlproductos) {
+        downloadButton.href = fileDownloadUrlproductos;
+        downloadButton.classList.remove('d-none');
+    }
+    
+});
+
+function regenerar(){
+    var buscar = document.getElementById('btnBuscar');
+    var reporte_compras = document.getElementById('reporte_compras');
+    reporte_compras.classList.remove('d-none');
+    localStorage.removeItem('fileDownloadUrl_productos')
+    localStorage.setItem('reporte_compras', true)
+    limpiarBack()  
+}
+
+function downloadLimpiar(){
+    limpiarBack()
+    localStorage.removeItem('fileDownloadUrl_productos')
+    var downloadButton = document.getElementById('downloadButton');
+    downloadButton.classList.add('d-none');
+   
+}
+
+function limpiarBack(){
+    localStorage.removeItem('task_id_producto')
+    const url = '/compras/clear_task_id_producto/';
+    fetch( url, {  // Reemplaza con la URL correcta
+        method: 'GET', // o 'POST', dependiendo de cómo esté configurada tu vista
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin' // Necesario para incluir cookies de sesión
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Task ID cleared:', data);
+        // Aquí puedes agregar más lógica si es necesario después de borrar el task_id
+    })
+    .catch(error => {
+        console.error('Error al borrar task_id:', error);
+    });
+}
+
+
+
+
+function intentos(cantidad){
+var intentos = 0;
+    var maxIntentos
+    var intervalo
+    console.log(cantidad)
+    if (cantidad >= 20000){
+        maxintentos = 150;
+        intervalo = 10000;
+    } else if (cantidad >= 15000){
+        maxintentos = 120;
+        intervalo = 8000;
+    } else if (cantidad >= 10000){
+        maxIntentos = 100;
+        intervalo = 8000;
+    } else if (cantidad >= 5000){
+            maxIntentos = 80;
+            intervalo = 5000;
+    } else{
+            maxIntentos = 50
+            intervalo = 2500;
+    }
+const statusEndpoint = '/compras/verificar_estado_producto/'; 
+esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint)
+}
+
+function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
+    setTimeout(async () => {
+        try {
+            const response = await fetch(statusEndpoint);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log(data)
+            if (data.status === 'SUCCESS') {
+                var url = data.result.file_url_productos
+                console.log(url)
+                var downloadButton = document.getElementById('downloadButton');
+                localStorage.setItem('fileDownloadUrl_productos', data.result.file_url_productos);
+                downloadButton.classList.remove('d-none');
+                document.getElementById('statusMessage_tag').classList.add('d-none');
+                downloadButton.href = url;
+                localStorage.removeItem('task_id_producto');
+
+            } else if (data.status === 'FAILURE') {
+                console.error('La tarea ha fallado.');
+            } else {
+                console.log('La tarea todavía está pendiente...');
+                document.getElementById('statusMessage_tag').classList.remove('d-none');
+                intentos++;
+                if (intentos < maxIntentos) {
+                    esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint); // Vuelve a intentar
+                } else {
+                    console.log('Número máximo de intentos alcanzado.');
+                }
+            }
+        } catch (error) {
+            console.error('Error al verificar el estado de la tarea:', error);
+        }
+    }, intervalo);
+}
+
+</script>
+{% endblock %}
+</body>
+</html>

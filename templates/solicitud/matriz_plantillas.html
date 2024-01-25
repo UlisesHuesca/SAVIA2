@@ -1,0 +1,152 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Plantillas{% endblock %}
+</head>
+<body>
+{% block content %}
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class="col">
+    <div class="card">
+        <div class="card-header">
+            <h5>Plantillas</h5>
+        </div>
+        <div class="card-body">
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <!--<li class="nav-item mx-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
+                    </li> 
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                    </li>
+                  
+                    <li class="nav-item mx-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-matriz-productos' %}">Ver matriz por productos <i class="fa-solid fa-angle-right"></i></a>
+                    </li>-->
+                </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+
+<div class = "col mt-2">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Folio</th>
+                    <th class="d-none d-lg-table-cell">Creado por</th>
+                    <td>Nombre</td>               
+                    <th class="d-none d-lg-table-cell">Descripción</th>
+                    <th scope="col">Fecha Creación</th>
+                    <th>Fecha Modificación</th>
+                    <th scope="col">Acción</th>
+                    <th>Editar</th>
+                    <th scope="col"></th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in plantillas_list %}
+                <tr>
+                    <th scope="row">{{item.id}}</th>
+                    <td class="d-none d-lg-table-cell">{{item.creador.staff.first_name}} {{item.creador.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">{{item.nombre}}</td>
+                    <td>{{item.descripcion}}</td>
+                    <td>{{item.created_at}}</td>
+                    <td>{{item.modified_at}}</td>
+                    <td>
+                        <a type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-plantilla' item.id %}">Productos</a>
+                    </td>
+                    <td>
+                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'editar-plantilla' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                    </td>
+                    <td>
+                        <a href="{% url 'solicitud-plantilla' item.id %}" class="btn btn-outline-info" >
+                            Enviar a Solicitud
+                        </a>
+                    </td>
+                    
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if plantillas_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url plantillas_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in plantillas_list.paginator.page_range %}
+                    {% if plantillas_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > plantillas_list.number|add:'-2' and item < plantillas_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if plantillas_list.paginator.num_pages > plantillas_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{plantillas_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url plantillas_list.paginator.num_pages 'page' request.GET.urlencode %}">{{plantillas_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if plantillas_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url plantillas_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url plantillas_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,261 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load djmoney %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Autorización OC{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+
+<div class="modal-dialog modal-lg"  id="document" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Autorizar Viático: {{viatico.id}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <table class='table table-dark table striped'>
+                <thead>
+                    <tr>
+                    <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viatico para:</th>
+                    <th scope="col">{{viatico.colaborador.staff.first_name}} {{viatico.colaborador.staff.last_name}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
+                    <th scope="col">{{viatico.proyecto.nombre}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Subproyecto:</th>
+                    <th scope="col">{{viatico.subproyecto.nombre}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Partida:</th>
+                    <th scope="col">{{viatico.fecha_partida}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Retorno:</th>
+                    <th scope="col">{{viatico.fecha_retorno}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-location-dot"></i> Lugar de Partida:</th>
+                    <th scope="col">{{viatico.lugar_partida}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-route"></i> Lugar de Comisión:</th>
+                    <th scope="col">{{viatico.lugar_comision}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-car-side"></i> Transporte:</th>
+                    <th scope="col">{{viatico.transporte}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-hotel"></i> Hospedaje:</th>
+                    {% if viatico.hospedaje %}
+                    <th scope="col">Sí</th>
+                    {% else %}
+                    <th>No</th>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
+                    <th scope="col">{{viatico.comentario}}</th>
+                </tr>
+                </tbody> 
+            </table>
+            <hr>
+            <table class="class='table table-dark table striped table-hover mx-2">
+                <thead>
+                    <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Concepto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">P.U.</th>
+                        <th scope="col">Total</th>
+                    </tr>
+                </thead>
+                <tbody id="mytbl">
+                    {% for producto in conceptos%}
+                
+                    <tr>
+                        <td scope="col">{{producto.producto.producto.codigo}}</td>
+                        <td scope="col">{{producto.producto.producto.nombre}}</td>
+                        <td scope="col">{{producto.cantidad}}</td>
+                        <td scope="col">${{producto.precio|floatformat:2}}</td>
+                        <td scope="col">${{producto.get_total_parcial|floatformat:2}}</td></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </table>
+                <hr>
+                <table class='table table-dark table striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col">Importe Viático</th>
+                        <th id="importe" value={{compra.costo_oc}} scope="col">${{viatico.get_total|floatformat:2}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">Pagado:</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{viatico.monto_pagado|floatformat:2}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Remanente:</th>
+                            <th>${{remanente|floatformat:2}}</th>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table class='table table-dark table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col-3">#</th>
+                            <th scope="col-2">Pagado</th>
+                            <th scope="col-3">Cuenta</th>
+                            <th scope="col-3">Fecha</th>
+                            <th scope="col-2">Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in pagos %}
+                        <tr>
+                            <th scope="row">{{p.id}}</th>
+                            <td>{{p.monto}}</td>
+                            <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
+                            <td>{{p.pagado_date}}</td>
+                            <td>
+                                <a href="{{p.comprobante_pago.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                        </tr>
+                   {% endfor %}
+                   </tbody>
+                </table>
+        </div>
+
+        <form hx-post="{% url 'viaticos-pagos' viatico.id %}" hx-encoding='multipart/form-data' class="modal-content">
+            <div>
+                {% csrf_token %}
+                <div class="row my-2">
+                    <label class="col-auto col-form-label"><strong>Cuentas:</strong></label>
+                    <div class="col-sm-4">
+                        <div class="selector">
+                            <select class="form-select form-select-sm my-1" id="cuentas">
+                            <option id="default_sel">      </option>
+                            {% for cuenta in cuentas%}
+                            <option id="js" target={{cuenta.id}} moneda={{cuenta.moneda.nombre}}>
+                                {{cuenta.cuenta}} - {{cuenta.moneda}}
+                            </option>
+                            {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <label for="form.cuenta" class="col-auto col-form-label d-none"><strong>Cuenta:</strong></label>
+                    <div class="col-sm-3 d-none">
+                        {{form.cuenta|add_class:'form-control'}}
+                    </div>
+                    <label for="form.monto_pagado" class="col-auto col-form-label my-1"><strong>Monto:</strong></label>
+                    <div class="col-4">
+                        {{form.monto|add_class:'form-control'}}
+                    </div>
+                    <div class="col-8">
+                    <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
+                        {{form.comprobante_pago|add_class:'form-control'}}
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <h6>Registrar pago del viático: {{viático.id}}</h6>
+                <button id="myBtn" type = "submit" class="btn btn-success">Registrar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var compra = document.getElementById("importe");
+var compra_moneda = compra.getAttribute("moneda");
+var monto_moneda = document.getElementById("id_monto_1");
+var tipo_cambio = document.getElementById("id_tipo_de_cambio_1");
+if (tipo_cambio) {
+    tipo_cambio.setAttribute("class","form-control d-none");
+}
+
+
+
+if (compra_moneda == "Dólares"){
+    monto_moneda.selectedIndex = 1;
+}
+
+document.getElementById("cuentas").addEventListener("change", function(element){
+    var select = document.getElementById("cuentas");
+    var tipo_cambio_txt = document.getElementById("tipo_de_cambio_0")
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target');
+    var moneda = current_option.getAttribute('moneda');
+    var select_cuenta = document.getElementById('id_cuenta');
+
+
+    //Aquí hago que desaparezca o aparezca el campo de tipo de cambio según la moneda seleccionada
+    var lbl_tipo_cambio = document.getElementById('lbl_tipo');
+    var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio_0');
+        if (moneda == "Dólares"){
+            lbl_tipo_cambio.removeAttribute("class");
+            txt_tipo_cambio.removeAttribute("class");
+            lbl_tipo_cambio.setAttribute("class","col-auto col-form-label my-1 d-none");
+            txt_tipo_cambio.setAttribute("class","form-control d-none");
+        } else if (compra_moneda == "Dólares"){
+            lbl_tipo_cambio.removeAttribute("class");
+            txt_tipo_cambio.removeAttribute("class");
+            lbl_tipo_cambio.setAttribute("class","col-auto col-form-label my-1");
+            txt_tipo_cambio.setAttribute("class","form-control");
+        }
+    //Aqui le doy la instruccion para que cambie la seleccion de acuerdo a lo seleccionado en el primer desplegable de cuentas
+    select_cuenta.selectedIndex = target;
+});
+
+
+
+</script>
+{% endblock %}
+</body>
+</html>

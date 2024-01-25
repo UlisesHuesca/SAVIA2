@@ -1,0 +1,7 @@
+# Archivos muy pesados para subir a git
+access.log
+venv/
+assert/
+debug.log
+errors.log.save
+.env

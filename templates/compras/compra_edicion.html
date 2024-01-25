@@ -1,0 +1,967 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %} OC {% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="card" id="form-wrapper">
+            <div class="card-header mb-4">
+            <!-- Aqui es el encabezado de los filtros -->
+                <h5 id="oc" target={{oc.id}}>ORDEN DE COMPRA: {{oc.get_folio}}</h5>
+            </div>
+            <div class="card-body">
+            <form id="id_formulario" method="POST">
+                {% csrf_token %}
+                <div class="row my-2">                   
+                        {{form.proveedor | add_class:"form-select d-none" }}
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>    
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    <input type="text" list="proveedor" id="txt_proveedor" valor="{{proveedor.id}}" placeholder="Proveedores..." class="form-control">
+                                    <label for="txt_proveedor">Proveedores*</label>
+                                </div>         
+                                <datalist id="proveedor" name='proveedor'>
+                                    {% for item in proveedores %}
+                                    <option status="{{item.estatus}}" valor="{{item.id}}" value="{{item.nombre.razon_social}}"></option>
+                                    {% endfor %}
+                                </datalist>
+                            </div>
+                        </div>
+                </div>
+                <div id="comparativo" class="row my-2 d-none">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.comparativo_model|add_class:"form-control"|append_attr:"placeholder= Comparativo"}}
+                                <label style="color: #121212;" for="id_comparativo">Comparativo*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cond_de_pago|add_class:"form-select"|append_attr:"placeholder= Condiciones de pago"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Condiciones de pago*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="dias_credito" class="col-lg-6 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.dias_de_credito|add_class:"form-select"|append_attr:"placeholder= Días de crédito"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Días de crédito</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div id="colaborador" class="row my-2 d-none">                   
+                    {{form.deposito_comprador|add_class:"form-select d-none"}}
+                    <div class="col-12">
+                        <div  class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>    
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                <input type="text" list="colaborador_sel" id="txt_colaborador" valor="{{colaborador_sel.id}}" placeholder="Colaboradores..." class="form-control">
+                                <label for="txt_proveedor">Colaborador*</label>
+                            </div>         
+                            <datalist id="colaborador_sel" name='colaborador_sel'>
+                                {% for item in colaborador_sel %}
+                                <option status="" valor="{{item.id}}" value="{{item.staff.first_name}} {{item.staff.last_name}}"></option>
+                                {% endfor %}
+                            </datalist>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.moneda|add_class:"form-select"|append_attr:"placeholder= Moneda"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Moneda*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="tipo_de_cambio" class="col-lg-6 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.tipo_de_cambio|add_class:"form-control"|append_attr:"placeholder= Tipo de Cambio"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Tipo de Cambio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    <div class="form-check form-switch col-auto mx-4 d-none" id="Dof" valor = "{{tag}}">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchDof">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelDof">DOF</label>
+                    </div>
+                
+                <div class="row my-2">
+                    <div class="col-lg-6 ">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.uso_del_cfdi|add_class:"form-select"|append_attr:"placeholder= Uso del CFDI"}}
+                                <label style="color: #121212;" for="id_uso_deñ_cfdi">Uso del CFDI*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.dias_de_entrega|add_class:"form-control"|append_attr:"placeholder= Días de Entrega"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Días de Entrega</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                <div class="row my-2">
+                    <div class="form-check form-switch col-auto mx-4" id="referencia">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchReferencia">
+                        <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelReferencia"><strong>Referencia</strong></label>
+                    </div>
+                    <div id="referencialbl"  class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.referencia|add_class:"form-control"|append_attr:"placeholder= Referencia"}}
+                                <label style="color: #121212;" for="id_referencia">Referencia</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm-3">
+                    <label for="form.impuesto" class="form-check-label"><strong>Impuesto</strong></label>
+                        {{form.impuesto|add_class:"form-check-input"}}
+                    </div>
+                    <div id="impuestos" class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.impuestos_adicionales|add_class:"form-control"|append_attr:"placeholder= Impuestos Adicionales"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Impuestos Adicionales</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm-3">
+                    <label for="form.flete" class="form-check-label"><strong>Flete</strong></label>
+                        {{form.flete|add_class:"form-check-input"}}
+                    </div>
+                    <div id="fletes" class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.costo_fletes|add_class:"form-control"|append_attr:"placeholder= Costo de flete"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Costo de flete</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm-3">
+                    <label for="form.anticipo" id="anticipos" class="form-check-label"><strong>Anticipo</strong></label>
+                        {{form.anticipo|add_class:"form-check-input"}}
+                    </div>
+                    <div id="anticipo" class="col-lg-4 d-none">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.monto_anticipo|add_class:"form-control"|append_attr:"placeholder= Monto de anticipo"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Monto de anticipo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                    <label for="form.logistica" class="form-check-label"><strong>Logística</strong></label>
+                        {{form.logistica|add_class:"form-check-input"}}
+                    </div>
+                </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                    <label for="form.tesoreria_local" class="form-check-label"><strong>Tesorería Matriz</strong></label>
+                        {{form.tesoreria_matriz|add_class:"form-check-input"}}
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-message"></i></span>
+                            <span class="input-group-text d-lg-block d-none" id="basic-addon1">Opciones y Condiciones</span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.opciones_condiciones|add_class:"form-control"|append_attr:"type=text"}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="container-fluid text-end">
+                <input type="hidden" name="crear" value="crear">
+                {% if productos_comp %}
+                <button type="submit" id="crear" name="crear" class="btn btn-success col-sm-2 my-2">
+                {%else%}
+                <button type="submit" id="crear" name="crear" class="btn btn-success col-sm-2 my-2 d-none">
+                {% endif %}   
+                Crear</button>
+                <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
+            </div>
+            </form>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="box-element">
+            <div class="row">
+                <div class="col-8">
+                    <div id="input_producto" class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            <label  style="font-size:10px; color:gray;" for="subproyecto">Productos*</label>
+                            <select style="font-size:16px" class="form-select form-select-sm" placeholder="Subproyecto" id="producto">
+                                <option style="color:gray;" value="" selected disabled>Producto</option>
+                                    {% for producto in productos %}
+                                    <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad|unlocalize}}" cantidad_comprada="{{producto.cantidad_comprada|unlocalize}}" iva="{{producto.producto.articulos.producto.producto.iva}}">
+                                    {{producto.producto.articulos.producto}}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                <div id="etiqueta_solicitado" class="col-4">
+                    <div class="alert alert-secondary" role="alert">
+                    <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                    </div>
+                </div>
+            </div>
+                <!--<label class="col-auto col-form-label"><strong>Productos:</strong></label>
+                <div class="col-sm-4">
+                    <div class="selector">
+                        <select class="form-select form-select-sm" id="producto">
+                            <option id="default_sel">      </option>
+                            {% for producto in productos %}
+                            <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad|unlocalize}}" cantidad_comprada="{{producto.cantidad_comprada}}" iva="{{producto.producto.articulos.producto.producto.iva}}">
+                                {{producto.producto.articulos.producto}}
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                </div>-->
+            <div class="row">   
+                <div class="col-lg-4">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.precio_unitario|add_class:"form-control"|append_attr:"placeholder= P.U."}}
+                            <label style="color: #121212;" for="id_impuestos_adicionales">P.U.</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-sm-1 mt-3">
+                    <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                        <i class="fa-solid fa-circle-plus"></i>
+                    </a>
+                </div>
+            </div>
+            <hr>
+            <div class ="table-responsive-sm">
+                <table class="table table-light table-striped table-hover mx-2">
+                <thead>
+                    <tr>
+                        <th class="d-none d-lg-table-cell">#</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">P.U.</th>
+                        <th scope="col">Subtotal</th>
+                        <th scope="col" class="col-sm-2">Acción</th>
+                    </tr>
+                </thead>
+                <tbody id="mytbl">
+                    {% for product in productos_comp%}
+                    <tr>
+                        <td class="d-none d-lg-table-cell">{{product.producto.producto.articulos.producto.producto.codigo}}</td>
+                        <td scope="col">{{product.producto.producto.articulos.producto.producto.nombre}}</td>
+                        <td scope="col">{{product.cantidad}}</td>
+                        <td scope="col">${{product.precio_unitario|floatformat:2}}</td>
+                        {% if product.precio_unitario != None  and product.cantidad != None %}
+                        <td scope="col">${% widthratio product.precio_unitario 1 product.cantidad %}</td>
+                        {% endif %}
+                        <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad|unlocalize}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+                </table>
+            </div>
+            <table class="table table-light table-striped mx-1">
+            <thead>
+                <tr>
+                    <th scope="col">Subtotal</th>
+                    <td scope="col" id="subtotal">${{subtotal|floatformat:2}}</td>
+                </tr>
+                </thead>
+            <tbody>
+                <tr>
+                    <th scope="col">IVA</th>
+                    <td scope="col" id="iva">${{iva|floatformat:2}}</td>
+                </tr>
+                <tr id="impuestos_total" class="d-none">
+                    <th scope="col">Impuesto</th>
+                    <td scope="col" id="valor_impuesto"></td>
+                </tr>
+                <tr id="flete" class="d-none">
+                    <th scope="col">Flete</th>
+                    <td scope="col" id="valor_flete"></td>
+                </tr>
+                <tr>
+                    <th scope="col">Total</th>
+                    <td scope="col" total={{total|unlocalize}} id="total">${{total|floatformat:2}}</td>
+                </tr>
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var format = new Intl.NumberFormat('en-US', {
+  style: 'currency',
+  currency: 'USD',
+});
+
+
+var crear = document.getElementById("crear")
+var precio_mod = document.getElementById("id_precio_unitario")
+
+document.getElementById("txt_proveedor").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proveedor");
+    console.log(select.value)
+    var browserChildren = document.getElementById('proveedor').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_proveedor');
+    var status_txt = document.getElementById('comparativo')
+    var comparativo = document.getElementById('id_comparativo_model')
+    var colaborador = document.getElementById("colaborador")
+    var lbl_colaborador = document.getElementById("lbl_colaborador")
+    console.log(comparativo.value)
+    cont = 0
+    
+
+    for(let i = 0; i < browserChildren.length; i++){
+        //console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value === select.value) {
+            let id = browserChildren[i].getAttribute('valor');
+            let status = browserChildren[i].getAttribute('status')
+            console.log(status)
+            if (status=="NUEVO"){
+                status_txt.setAttribute("class","row my-2")
+                status_txt.setAttribute('status','true')
+            } else {
+                status_txt.setAttribute("class","row my-2 d-none")
+                status_txt.value = " "
+                status_txt.setAttribute('status','false')
+            }
+
+            other_select.value = id;
+            cont = 1
+            }
+            if (select.value == "COLABORADOR"){
+                colaborador.setAttribute("class", "row my-2")
+                Swal.fire({
+                "title":"Success",
+                "text":"Al seleccionar el proveedor 'COLABORADOR', se debe seleccionar uno del campo correspondiente para depositarle",
+                "icon":"success",
+            })
+            } else {
+                colaborador.setAttribute("class", "row my-2 d-none")
+            }
+
+        //else {
+            //    console.log(browserChildren[i].value)
+              //  console.log(select)
+           // }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+        status_txt.setAttribute("class","row my-2 d-none")
+    }
+});
+
+document.getElementById("txt_colaborador").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_colaborador");
+    var browserChildren = document.getElementById('colaborador_sel').children;
+    //var browserChildren = document.getElementById('proveedor')
+    //var dataList = document.getElementById(browserChildren.getAttribute("valor"))
+    var other_select = document.getElementById('id_deposito_comprador');
+    //var status_txt = document.getElementById('comparativo')
+
+    //cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        console.log(browserChildren[i].value)
+
+        if (browserChildren[i].value == select.value) {
+            //console.log(browserChildren[i])
+            //console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            //console.log(id)
+            let status = browserChildren[i].getAttribute('status')
+            console.log(id)
+
+
+            other_select.value = id;
+            cont = 1
+            }
+        }
+
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+        status_txt.setAttribute("class","row my-2 d-none")
+    }
+});
+
+function verificar() {
+    let proveedor = document.getElementById('id_proveedor');
+    let cond_pago = document.getElementById('id_cond_de_pago');
+    let uso_cfdi = document.getElementById('id_uso_del_cfdi');
+    let dias_entrega = document.getElementById('id_dias_de_entrega');
+    let checkimpuesto = document.getElementById('id_impuesto');
+    let checkflete = document.getElementById('id_flete');
+    let checktesoreria = document.getElementById('id_tesoreria_matriz');
+    let checkanticipo = document.getElementById('id_anticipo');
+    let opciones = document.getElementById('id_opciones_condiciones');
+    let dias_credito = document.getElementById('id_dias_de_credito');
+    let impuestos = document.getElementById('id_impuestos_adicionales');
+    let flete = document.getElementById('id_costo_fletes');
+    let anticipo = document.getElementById('id_monto_anticipo');
+    let moneda = document.getElementById('id_moneda');
+    let tipo_cambio = document.getElementById('id_tipo_de_cambio');
+    var status_txt = document.getElementById('comparativo');
+    let status_comparativo = status_txt.getAttribute('status');
+    let comparativo = document.getElementById('id_comparativo_model');
+    let rows = document.getElementById("mytbl").rows.length;
+    console.log(comparativo.value)
+    
+    val_moneda = moneda.value;
+    val_tipo_cambio = tipo_cambio.value;
+    if (!proveedor.value) {
+        
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Debes elegir una opción en proveedores",
+                    "icon":"error",
+                })
+                return false
+    } else if ((status_comparativo == 'true') && (comparativo.value =='')){
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir una opción en comparativo",
+                "icon":"error",
+        })
+        return false
+    } else if (!cond_pago.value){
+        
+        let dias_credito = 0;
+        Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir una opción en condiciones de pago",
+                "icon":"error",
+        })
+        return false
+    } else if ((cond_pago.value == 2) && (!dias_credito.value)){
+       
+        Swal.fire({
+                "title":"Error",
+                "text":"La cantidad de días debe ser mayor a 0",
+                "icon":"error",
+            })
+            return false
+    } else if (!val_moneda){
+       
+         Swal.fire({
+                "title":"Error",
+                "text":"Debes elegir un tipo de moneda",
+                "icon":"error",
+            })
+            return false
+    } else if ((val_moneda == 2) && (val_tipo_cambio <= 0)) {
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"El tipo de cambio debe ser mayor a 0",
+                "icon":"error",
+        })
+        return false
+    } else if (!uso_cfdi.value){
+        
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Debes elegir una opción en uso del cfdi",
+                    "icon":"error",
+                })
+                return false
+    } /*else if ((checkimpuesto.checked) && (impuestos.value<=0) || (!impuestos)){
+        
+        Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad en impuestos debe ser mayor que 0",
+                    "icon":"error",
+                })
+                return false
+    }*/ else if ((checkflete.checked) && (flete.value<=0) || (!flete)){
+       
+        Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad en flete debe ser mayor que 0",
+                    "icon":"error",
+                })
+                return false
+    } else if ((checkanticipo.checked) && (anticipo.value<=0) || (!anticipo)){
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"La cantidad en anticipo debe ser mayor que 0",
+                "icon":"error",
+            })
+            return false
+    } else if (rows<=0) {
+        
+        Swal.fire({
+                "title":"Error",
+                "text":"No tienes productos en tu listado",
+                "icon":"error",
+            })
+            return false
+    } else if (rows>0) {
+        
+        Swal.fire({
+                "title":"Success",
+                "text":"Puedes crear la OC, ahora",
+                "icon":"success",
+            })
+            return true;
+        } 
+    
+   
+
+    //if (!formValid) {
+     //   // Muestra tu mensaje de error aquí
+     //   // Puedes personalizar este mensaje según la primera condición que no se cumpla
+    //}
+
+   
+
+    // Habilita el botón si todas las condiciones son falsas
+    
+}
+
+document.getElementById("crear").addEventListener("click", function(event){
+    event.preventDefault();
+    formulario = document.getElementById("id_formulario")// Evita el comportamiento de submit predeterminado
+    boton = document.getElementById("crear")
+
+    let formValid = verificar();
+    console.log(formValid)
+
+    // Si el resultado es true (todas las condiciones se cumplen), procede con el submit
+    if (formValid) {
+        formulario.submit();
+    }
+});
+
+
+
+var checkref = document.getElementById("SwitchReferencia");
+
+
+document.getElementById("SwitchReferencia").addEventListener("change", function(element){
+	console.log('referencia check:'+checkref.checked);
+	var referencia = document.getElementById('referencialbl');
+
+   
+	if (checkref.checked){
+	    referencia.setAttribute('class','col-sm')
+	} else{
+	    referencia.setAttribute('class','col-sm d-none')
+	}
+});
+
+
+
+
+document.getElementById("producto").addEventListener("change", function(element){
+    var select = document.getElementById('producto');
+    var current_option = select.options[select.selectedIndex];
+    let cantidad = current_option.getAttribute('cantidad');
+    let cantidad_comprada = current_option.getAttribute('cantidad_comprada');
+    var cantidad_pendiente = cantidad - cantidad_comprada;
+    console.log(cantidad);
+    var solicitado = document.getElementById('solicitado');
+    solicitado.innerHTML = cantidad_pendiente;
+});
+
+
+var updateBtn = document.getElementById('update-purchase')
+let count=0;
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let oc_tag = document.getElementById('oc');
+        let oc = oc_tag.getAttribute('target');
+        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
+        var select = document.getElementById('producto');
+        var current_option = select.options[select.selectedIndex];
+        let value = current_option.value
+        var id = current_option.getAttribute('target');
+        var producto = current_option.getAttribute('producto');
+        //Esta es la cantidad establecida en la requisición
+        var cantidad = current_option.getAttribute('cantidad');
+        //Esta es la cantidad comprada de acuerdo a la requisición
+        var cantidad_comprada = current_option.getAttribute('cantidad_comprada')
+        var cantidad_pendiente = cantidad - cantidad_comprada
+        var iva = current_option.getAttribute('iva');
+        //Esta es la cantidad realmente pedida en la OC
+        var quantity = document.getElementById('id_cantidad');
+        var precio = document.getElementById('id_precio_unitario');
+        var default_op = document.getElementById('default_sel');
+        var val_cantidad = quantity.value;
+        console.log('val_cantidad',val_cantidad)
+        var val_precio = precio.value;
+        console.log('val_precio',val_precio)
+        var action = "add";
+
+        if (!value) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de seleccionar algún valor de la lista",
+                    "icon":"error",
+                })
+        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
+        } else if (cantidad_pendiente < quantity.value)  {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad requerida",
+                    "icon":"error",
+                })
+        //Si "la cantidad comprada" es menor que cero
+        } else if (quantity.value <=0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else if (val_precio <=0) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"El precio ingresado debe ser mayor que 0",
+                    "icon":"error",
+            })
+        } else {
+            ActualizarArticulos(oc,id,val_cantidad,val_precio,action);
+            document.getElementById("id_cantidad").value= null;
+            document.getElementById("id_precio_unitario").value= null;
+
+        }
+})
+
+//ActualizarArticulos(array_id_prod)
+
+function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/compras/update_oc/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'oc':oc, 'id':id, 'val_cantidad':val_cantidad, 'val_precio':val_precio, 'action':action})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+//This is the function that remove any product from render product table and remove the specific element from the array
+function deleteRow(element) {
+    let btn_delete = document.getElementById('delete');
+    let oc_tag = document.getElementById('oc');
+    let oc = oc_tag.getAttribute('target');
+    let id = btn_delete.getAttribute('producto');
+    let val_cantidad = btn_delete.getAttribute('cantidad');
+
+    let iva_resp = btn_delete.getAttribute('iva');
+    let precio = btn_delete.getAttribute('precio');
+    let val_precio = precio;
+    console.log(id)
+    console.log(precio)
+    var action = "remove";
+    ActualizarArticulos(oc, id, val_cantidad, val_precio, action);
+
+    var select = document.getElementById('producto');
+
+    var rows = document.getElementById("mytbl").rows.length;
+}
+
+var checkflete = document.getElementById("id_flete")
+
+//This is the part off code that when flete swicth button change
+document.getElementById("id_flete").addEventListener("change", function(element){
+	console.log('checkflete:'+checkflete.checked);
+	var lbl_flete = document.getElementById('fletes')
+	var txt_flete1 = document.getElementById('id_costo_fletes')
+    var valor_flete = document.getElementById('flete')
+    var total_element = document.getElementById('total')
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+    var v_flete = document.getElementById('valor_flete')
+    
+    
+
+	if (checkflete.checked){
+	    lbl_flete.removeAttribute('class');
+		txt_flete1.removeAttribute('class');
+		lbl_flete.setAttribute("class","col-auto col-form-label");
+		txt_flete1.setAttribute("class","form-control")
+	} else {
+	    lbl_flete.removeAttribute("class")
+		txt_flete1.removeAttribute("class")
+		lbl_flete.setAttribute("class","col-auto col-form-label d-none");
+		txt_flete1.setAttribute("class","form-control d-none")
+        let flete = parseFloat(v_flete.innerHTML.slice(1));
+        total_val -= flete;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+        txt_flete1.value=0
+        valor_flete.setAttribute("class", "d-none")
+	}
+});
+
+document.getElementById("id_costo_fletes").addEventListener("change", function(element) {
+    let flete_row = document.getElementById('flete');
+    let flete_valor = document.getElementById('valor_flete');
+    let total_element = document.getElementById('total');
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+    
+
+    // Verificar si el valor de flete ha cambiado
+    if (element.target.value) {
+        let flete = parseFloat(element.target.value);
+        
+        // Hacer visible la fila del flete
+        flete_row.setAttribute('class','');
+
+        // Asignar valor de flete
+        flete_valor.innerHTML = '$' + flete.toFixed(2);
+
+        // Suma el valor del flete al total y actualiza el elemento total
+        total_val += flete;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+    } else {
+        let flete = parseFloat(flete_valor.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+
+        // Si el valor del flete es 0, puedes volver a ocultar la fila y restar el valor de flete del total.
+        flete_row.setAttribute('class','d-none');
+
+        // Resta el valor del flete del total y actualiza el elemento total
+        total_val -= flete;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+    }
+});
+
+var checkdof = document.getElementById("SwitchDof");
+
+
+document.getElementById("SwitchDof").addEventListener("change", function(element){
+	console.log('Dof:'+checkdof.checked);
+	var tipo_cambio = document.getElementById('id_tipo_de_cambio');
+	let check = document.getElementById('Dof');
+	let checkdof_val = check.getAttribute('valor');
+	//
+
+	if (checkdof.checked){
+	    tipo_cambio.value = Number(checkdof_val);
+	} else{
+	    tipo_cambio.value = 0
+	}
+});
+
+var checkanticipo = document.getElementById("id_anticipo")
+
+document.getElementById("id_anticipo").addEventListener("change", function(element){
+	console.log('checkanticipo:'+checkanticipo.checked);
+	var lbl_anticipo = document.getElementById('anticipo')
+	var txt_anticipo = document.getElementById('id_monto_anticipo')
+    
+
+	if (checkanticipo.checked){
+	    lbl_anticipo.removeAttribute('class');
+		txt_anticipo.removeAttribute('class');
+		lbl_anticipo.setAttribute("class","col-auto col-form-label");
+		txt_anticipo.setAttribute("class","form-control")
+	} else {
+	    lbl_anticipo.removeAttribute("class")
+		txt_anticipo.removeAttribute("class")
+		lbl_anticipo.setAttribute("class","col-auto col-form-label d-none");
+		txt_anticipo.setAttribute("class","form-control d-none")
+	}
+});
+
+
+
+var checkimpuesto = document.getElementById("id_impuesto")
+
+//This is the part off code that when impuesto swicth button change
+document.getElementById("id_impuesto").addEventListener("change", function(element){
+	console.log('checkimpuesto:'+checkimpuesto.checked);
+	var lbl_impuestos = document.getElementById('impuestos')
+	var txt_impuestos = document.getElementById('id_impuestos_adicionales')
+    let total_element = document.getElementById('total');
+    let impuesto_row = document.getElementById('impuestos_total')
+    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
+    var v_impuesto = document.getElementById('valor_impuesto')
+    
+
+	if (checkimpuesto.checked){
+		lbl_impuestos.classList.remove('d-none'); 
+		txt_impuestos.classList.remove('d-none'); 
+	} else {
+		lbl_impuestos.classList.add('d-none');
+		txt_impuestos.classList.add('d-none');
+        impuesto_row.classList.add('d-none')
+        let impuesto = parseFloat(v_impuesto.innerHTML.slice(1));
+        total_val -= impuesto;
+        total_element.innerHTML = '$' + total_val.toFixed(2);
+        txt_impuestos.value = 0
+        v_impuesto.innerHTML = " "
+	}
+});
+
+// Evento al cambiar el impuesto adicional
+document.getElementById("id_impuestos_adicionales").addEventListener("change", function(element) {
+    let impuesto = document.getElementById("id_impuestos_adicionales").value;
+    let impuesto_row = document.getElementById('impuestos_total');
+    let impuesto_valor = document.getElementById('valor_impuesto');
+   
+    let total_element = document.getElementById('total')
+    let total_val = total_element.getAttribute('total'); // Quita el signo de dolar y convierte a float
+    //console.log(total_val)
+    
+
+    impuesto_row.setAttribute('class','');
+    impuesto_valor.innerHTML = '$' + impuesto;
+
+    // Suma el valor del impuesto al total y actualiza el elemento total
+    total_imp = parseFloat(total_val) + parseFloat(impuesto);
+    //console.log(total_imp);
+    total_element.innerHTML = '$' + parseFloat(total_imp).toFixed(2);
+});
+
+var pago = document.getElementById("id_cond_de_pago")
+
+//This is the part off code that when condiciones de pago swicth button change
+document.getElementById("id_cond_de_pago").addEventListener("change", function(element){
+    var lbl_dias = document.getElementById('dias_credito')
+    var dias = document.getElementById('id_dias_de_credito')
+    //console.log('pago:'+pago.value);
+    
+
+    if (pago.value == 2){
+        lbl_dias.classList.remove('d-none');
+        dias.classList.remove('d-none');
+    } else {
+        dias.classList.add('d-none');
+        lbl_dias.classList.add('d-none');
+    }
+});
+
+var moneda = document.getElementById("id_moneda")
+
+document.getElementById("id_moneda").addEventListener("change", function(element){
+    var lbl_tipo_cambio = document.getElementById('tipo_de_cambio')
+    var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio')
+    var div_dof = document.getElementById('Dof')
+    var precio_mod = document.getElementById("id_precio_unitario");
+    var flete_mod = document.getElementById("id_costo_fletes");
+    var impuestos_mod = document.getElementById("id_impuestos_adicionales");
+    var anticipo_mod = document.getElementById("id_monto_anticipo");
+    
+
+    if (moneda.value == 2){
+        lbl_tipo_cambio.classList.remove('d-none');
+        div_dof.classList.remove('d-none');
+        precio_mod.selectedIndex = 1;
+        flete_mod.selectedIndex = 1;
+        impuestos_mod.selectedIndex = 1;
+        anticipo_mod.selectedIndex = 1;
+    } else {
+        lbl_tipo_cambio.classList.add('d-none');
+        div_dof.classList.add('d-none');
+        precio_mod.selectedIndex = 0;
+        flete_mod.selectedIndex = 0;
+        impuestos_mod.selectedIndex = 0;
+        anticipo_mod.selectedIndex = 0;
+    }
+});
+
+
+
+</script>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,393 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}NC|Rechazo de Artículos{% endblock %}
+</head>
+<body>
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+
+<div class="row">
+    <div class="col-lg-8 offset-md-2">
+        <div class="card ">
+            <div class="card-header">   
+            <h5 class="modal-title" id="no_conformidad" value="{{no_conformidad.id}}">NC: {{no_conformidad.id}}&ensp;&ensp; Compra: {{compra.folio}}</h5>
+            </div>
+            <div class="card-body">
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col">Proveedor:</th>
+                            <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">RFC:</th>
+                            <th scope="col">{{compra.proveedor.nombre.rfc}}</th>
+                        </tr>
+                    </tbody>
+                </table>
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="row">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1"> 
+                                        {{form.articulo_comprado}}
+                                    </div>
+                            </div>
+                        </div>
+                        
+                    </div>
+                    <div class="row">
+                        <div id="etiqueta_solicitado" class="col-lg-4 col-md-12">
+                            <div class="alert alert-secondary" role="alert">
+                            <h6>Comprado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                            </div>
+                        </div>  
+                        <div class="col-lg-5 col-sm-12 mt-2">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                    <label style="color: #121212;" for="id_cantidad">Cantidad</label>
+                                </div>
+                            </div>
+                        </div>    
+                    </div>
+                   
+                    <div class="container-fluid text-end">
+                        <a class="btn btn-outline-success" id='update-no-conformidad' type="submit" name="update_articulo">
+                            Agregar
+                        </a>
+                    </div>
+                </form> 
+                <table class="table table-striped table-hover">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Cantidad</th>
+                            <th scope="col">Unidad</th>
+                            <th scope="col" class="col-sm-2">Eliminar</th>
+                        </tr>
+                    </thead>
+
+                    <tbody id="mytbl">
+                    {% for producto in articulos_nc %}
+                    <tr>
+                        <td scope="col" ></td>
+                        <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
+                        <td scope="col">{{producto.cantidad}}</td>
+                        <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
+                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id}}" nc_id="{{producto.nc.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
+
+                
+                <form id="form_crear" method="POST">
+                    <div class="row">
+                        {% csrf_token %}
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1"> 
+                                        {{form2.tipo_nc}}
+                                    </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-message"></i></span>
+                                    <span class="input-group-text d-lg-block d-none" id="basic-addon1">Comentario</span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form2.comentario|add_class:"form-control"|append_attr:"type=text"}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>  
+                    <div class="container-fluid text-end">
+                        {% if articulos_nc %}
+                        <button type="submit" name="BtnCrear" id="BtnCrear" class="btn btn-outline-success btn-lg">
+                        {% else %}
+                        <button type="submit"  name="BtnCrear" id="BtnCrear" class="btn btn-outline-success btn-lg d-none">
+                        {% endif %}
+                        Crear NC</button>
+                        <a id="cerrar" type="button" class="btn btn-outline-secondary btn-lg cerrar"  href="{% url 'pendientes_entrada' %}">Cerrar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+var cerrarBtn = document.getElementsByClassName('cerrar')
+
+for(var i=0; i< cerrarBtn.length; i++){
+    cerrarBtn[i].addEventListener('click',function(){
+    var rows = document.getElementById("mytbl").rows.length;
+    if (rows == 1) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de eliminar el producto para poder salir",
+                    "icon":"error",
+                })
+        }if (rows > 1) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de eliminar los productos para poder salir",
+                    "icon":"error",
+                })
+    }
+})
+};
+
+var rows = document.getElementById("mytbl").rows.length
+var CrearBtn = document.getElementById('BtnCrear')
+console.log('rows',rows)
+
+CrearBtn.addEventListener('click',function(){
+
+    if (rows < 1){
+        Swal.fire({
+                "title":"Error",
+                "text":"No tienes productos seleccionados",
+                "icon":"error",
+            })
+        CrearBtn.setAttribute('name','')
+        } else {
+            CrearBtn.setAttribute('name','entrada')
+
+        }
+
+})
+
+document.getElementById("form_crear").addEventListener("submit", function(event){
+    event.preventDefault(); //Detiene el envío del formulario
+    var btnCrear = document.getElementById('BtnCrear')
+
+    this.addEventListener('submit', function() {
+           preventDoubleClick(btnCrear)
+        });
+    
+    
+    /*var oc = document.getElementById("oc").getAttribute("target");
+    localStorage.removeItem("id_formulario_" + oc);
+    console.log("Datos borrados para OC:", oc);*/ 
+
+
+    // Continuar con el envío del formulario
+    event.target.submit(); 
+});
+
+
+function preventDoubleClick(button) {
+    setTimeout(function() {
+        button.disabled = true;
+    }, 50);
+}
+
+
+document.getElementById('id_cantidad').addEventListener('change', function(){
+var cantidad = document.getElementById('id_cantidad');
+
+})
+
+var updateBtn = document.getElementById('update-no-conformidad')
+    let count=0;
+    let suma=0;
+    let array_id_prod=[];
+
+
+updateBtn.addEventListener('click',function(){
+        let no_conformidad = document.getElementById('no_conformidad')
+        nc_id = no_conformidad.getAttribute('value')
+        
+        var select = document.getElementById('solicitado');
+        var product_id = select.getAttribute('data-id');
+        var current_cantidad = select.getAttribute('data-pendiente');
+        //value = current_cantidad.value 
+        var cantidad_form = document.getElementById('id_cantidad');
+        cantidad_ingresada = cantidad_form.value;
+        action = "add"
+
+
+
+        if (!product_id) {
+            Swal.fire({
+                "title":"Error",
+                "text":"Favor de seleccionar algún valor de la lista",
+                "icon":"error",
+            })
+        } else if (Number(cantidad_ingresada)>Number(current_cantidad)){
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad solicitada",
+                    "icon":"error",
+                })
+        } else if (Number(cantidad_ingresada<=0)) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            count += 1;
+            //current_option.setAttribute("class","d-none");
+            //select.value = default_sel;
+
+            console.log(JSON.stringify({ 'producto': product_id, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id':nc_id }));
+            ActualizarArticulos(product_id, cantidad_ingresada, action, nc_id);
+
+
+            }
+    });
+
+
+    function ActualizarArticulos(producto, cantidad_ingresada, action, nc_id){
+        console.log('User is logged in, sending data...' )
+
+    var url = '/entradas/no_conformidad/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id': nc_id})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+$(document).ready(function() {
+    $('#id_tipo_nc').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Tipo NC',
+        //data: datosComparativos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+});
+
+function deleteRow(element) {
+    let btn_delete = document.getElementById('delete');
+    producto = btn_delete.getAttribute('producto');
+    cantidad_ingresada = btn_delete.getAttribute('cantidad');
+    //cantidad_ingresada = cantidad.value
+    nc_id= btn_delete.getAttribute('nc_id');
+    referencia = ""
+    action = "remove" ;
+    console.log(producto, cantidad_ingresada, action, nc_id);
+    console.log(JSON.stringify({ 'producto': producto, 'cantidad_ingresada': cantidad_ingresada, 'action': action, 'nc_id':nc_id }))
+
+    ActualizarArticulos(producto, cantidad_ingresada, action, nc_id);
+}
+
+
+var datosProductos = {{ productos_para_select2|safe }};
+
+$(document).ready(function() {
+    $('#id_articulo_comprado').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona un producto',
+        data: datosProductos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_articulo_comprado').on('select2:select', function(e) {
+
+        var data = e.params.data;
+        var cantidad = data.cantidad;
+        var cantidad_pendiente = data.cantidad_pendiente;
+        var id = data.id;
+
+        console.log(id)
+        //if (!cantidad) {
+        //    cantidad_comprada = 0
+        //}
+        //
+        var cantidad_pendiente = Number(cantidad_pendiente);
+
+
+        // Envío los variables como atributos y texto de los labels
+        $('#solicitado').text(cantidad_pendiente);
+        $('#solicitado').attr('data-id',id)
+        $('#solicitado').attr('data-pendiente',cantidad_pendiente)
+       
+    });
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+</script>
+{% endblock %}
+</body>
+</html>

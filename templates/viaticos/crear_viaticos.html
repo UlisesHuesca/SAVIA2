@@ -1,0 +1,676 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Viaticos {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class="col-lg-8 offset-lg-2 col-sm-12">
+    <div class="card">
+        <div class="card-header">
+		    <h2 id="viatico" viatico_id = "{{viatico.id}}">Solicitud de Viáticos {{folio_probable}}</h2>
+	    </div>
+        <div class="card-body">
+					<form method="POST" id='SolicitudForm'>
+                        {% csrf_token %}
+                        {% if error_messages %}
+                        <div class="alert alert-danger" role="alert">
+                            {{error_messages}}
+                        </div>
+                        {% endif %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.proyecto}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.subproyecto}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.superintendente}}    
+                                    </div>
+                                </div>  
+                            </div>
+                        </div> 
+                        <div class="row">
+                            <div class="form-check form-switch col-auto mx-4" id="Otro_Colaborador">
+                                <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
+                                <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelColaborador">Otro Colaborador</label>
+                            </div>
+                            
+                            <div class="row d-none" id="colaborador_parrafo">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.colaborador}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-lg-4 col-sm-12" >
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-car"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.transporte|add_class:"form-control"|append_attr:"placeholder=Transporte marca, modelo, rendimiento"}}
+                                            <label for="id_transporte">Transporte(marca, modelo, rendimiento)*</label>
+                                        </div>
+                                </div>
+                            </div>
+                            <div id="serie" class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {% render_field form.fecha_partida type="date" class="form-control" %}
+                                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div id="serie" class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {% render_field form.fecha_retorno type="date" class="form-control" %}
+                                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="row">
+                                <div class="col-lg-4 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.lugar_partida|add_class:"form-control"|append_attr:"placeholder=Lugar de partida*"}}
+                                            <label for="id_lugar_partida">Lugar de partida*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.lugar_comision|add_class:"form-control"|append_attr:"placeholder=Lugar de comision*"}}
+                                            <label for="id_lugar_partida">Lugar de comision*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch col-auto mx-4" id="puntos_intermedios_sw">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="SwitchPuntos">
+                                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelPuntos">Puntos Intermedios</label>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">  
+                                        {{form.comentario_jefe_inmediato|add_class:"form-control"|append_attr:"placeholder=Comentario para Jefe Inmediato"}}
+                                        <label for="id_comentario">Comentario para Jefe Inmediato*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch col-sm-3">
+                                    <label for="form.lugar_comision" class="col-auto col-form-label"><strong>Hospedaje*</strong></label>
+                                    {{form.hospedaje|add_class:"form-check-input mt-3"}}
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-lg-6 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">  
+                                        {{form.comentario_general|add_class:"form-control"|append_attr:"placeholder=Comentario General"}}
+                                        <label for="id_comentario">Comentario General*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                            <input class="btn btn-outline-info btn-block my-2 col-sm-12 col-lg-3" id="btn_agregar" name="btn_agregar" type="submit" value="Crear Solicitud">
+                        </div>
+                    </form>
+                    <form method="POST" id='Lugar_Intermedio' class="d-none">
+                        {% csrf_token %}
+                          <div class="alert alert-secondary" role="alert">
+                            <h4>Puntos Intermedios</h4>
+                          </div>
+                         
+                            <div class="row">
+                                <div class="col-lg-4 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form2.nombre|add_class:"form-control"|append_attr:"placeholder=Punto Intermedio*"}}
+                                            <label for="id_lugar_partida">Punto Intermedio*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-4 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {% render_field form2.fecha_inicio type="date" class="form-control" %}
+                                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div id="serie" class="col-lg-4 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {% render_field form2.fecha_fin type="date" class="form-control" %}
+                                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="col-lg-6 col-sm-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">  
+                                            {{form2.comentario_hospedaje|add_class:"form-control"|append_attr:"placeholder=Comentario"}}
+                                            <label for="id_comentario">Comentario*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <button class="btn btn-outline-info btn-block my-2" id="btn_punto" name="btn_punto" type="submit"> <i class="fa-solid fa-circle-plus"></i></button>
+                            </div>
+                        </form>
+                            <hr>
+                            <div id="table_puntos" class ="table-responsive-sm d-none">
+                                <table class="table table-light table-striped table-hover mx-2">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Punto Intermedio</th>
+                                        <th scope="col">Fecha Llegada</th>
+                                        <th scope="col">Fecha Salida</th>
+                                        <th scope="col">Comentario</th>
+                                        <th>Eliminar</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mytbl">
+                                    {% for punto in puntos%}
+                                    <tr id="row_{{punto.id}}">
+                                        <td class="d-none d-lg-table-cell">{{punto.nombre}}</td>
+                                        <td>{{punto.fecha_inicio}}</td>
+                                        <td>{{punto.fecha_fin}}</td>
+                                        <td>{{punto.comentario_hospedaje}}</td>
+                                       
+                                        <td><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow({{punto.id}})" id="delete"><i class="fa-solid fa-trash-can"></i></button></td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                                </table>
+                            </div>
+                            
+        </div>
+    </div>
+</div>
+    
+
+
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.getElementById("SolicitudForm").addEventListener('change', function() {
+    var viatico = document.getElementById('viatico');
+    var viatico_id = viatico.getAttribute('viatico_id');
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id)) || {};
+    var formSolicitud = new FormData(this);
+
+    formSolicitud.forEach(function(value, key) {
+        if (key !== 'csrfmiddlewaretoken') {  // Omitir csrfmiddlewaretoken
+            datosGuardados[key] = value;
+        }
+    });
+    
+    datosGuardados["transporte"] = document.getElementById("id_transporte").value;
+    datosGuardados["fecha_partida"] = document.getElementById("id_fecha_partida").value;
+    datosGuardados["fecha_retorno"] = document.getElementById("id_fecha_retorno").value;
+    datosGuardados["lugar_partida"] = document.getElementById("id_lugar_partida").value;
+    datosGuardados["lugar_comision"] = document.getElementById("id_lugar_comision").value;
+    datosGuardados["comentario_jefe_inmediato"] = document.getElementById("id_comentario_jefe_inmediato").value;
+    datosGuardados["comentario_general"] = document.getElementById("id_comentario_general").value;
+    datosGuardados["SwitchColaborador"] = document.getElementById("SwitchColaborador").checked;
+    datosGuardados["SwitchPuntos"] = document.getElementById("SwitchPuntos").checked;
+    datosGuardados["SwitchHospedaje"] = document.getElementById("id_hospedaje").checked;
+    localStorage.setItem("id_solicitud_"+viatico_id , JSON.stringify(datosGuardados));
+    //console.log("Formulario guardado para OC:", datosGuardados)
+    
+});
+
+document.getElementById("SwitchColaborador").addEventListener("change", function(element){
+	let colaboradores = document.getElementById('colaborador_parrafo');
+
+	if (check_colaborador.checked){
+	    colaboradores.classList.remove('d-none')
+	    
+	} else {
+	    colaboradores.classList.add('d-none')
+	    
+	}
+});
+
+document.getElementById("SwitchPuntos").addEventListener("change", activar_seccion_puntos)
+
+function activar_seccion_puntos(){
+    var switch_puntos = document.getElementById('SwitchPuntos')
+    var form_puntos = document.getElementById('Lugar_Intermedio')
+    var tabla = document.getElementById('table_puntos')
+    console.log(switch_puntos.checked)
+    if (switch_puntos.checked){
+       form_puntos.classList.remove('d-none')
+       tabla.classList.remove('d-none')
+    } else {
+        form_puntos.classList.add('d-none')
+        tabla.classList.add('d-none')
+    }
+};
+//This is the function that remove any product from render product table and remove the specific element from the array
+function deleteRow(elemento) {
+    id = elemento
+    console.log(id)
+    var action = "remove";
+    EliminarArticulos(id);
+    //var select = document.getElementById('producto');
+
+    //var rows = document.getElementById("mytbl").rows.length;
+}
+
+function EliminarArticulos(id){
+    console.log('User is logged in, sending data...' )
+    
+    var url = '/viaticos/eliminar_punto/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'id':id,})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+
+var check_colaborador = document.getElementById("SwitchColaborador");
+
+document.getElementById('SolicitudForm').addEventListener('submit', (event)=>{
+   
+    var viatico = document.getElementById('viatico');
+    var viatico_id = viatico.getAttribute('viatico_id');
+    localStorage.removeItem("id_solicitud_"+viatico_id);
+    
+    if ((check_colaborador.checked) &&  (!txt_colaborador.value)) {
+        Swal.fire({
+                "title":"Error",
+                "text":"Favor de agregar un colaborador",
+                "icon":"error",
+                })
+                event.preventDefault();
+          
+    } 
+         
+});
+    
+document.getElementById("SwitchColaborador").addEventListener("change", function(element){
+	let colaboradores = document.getElementById('colaborador_parrafo');
+
+	if (check_colaborador.checked){
+	    colaboradores.classList.remove('d-none')
+	    
+	} else {
+	    colaboradores.classList.add('d-none')
+	    
+	}
+});
+
+function preventDoubleClick(button) {
+    setTimeout(function() {
+        button.disabled = true;
+    }, 50);
+}
+
+document.addEventListener('DOMContentLoaded', function(){
+    var formInputs = Array.from(document.getElementsByClassName('grupo-entrada'));
+    var submitButton = document.querySelector('#submit-button');
+    var viatico = document.getElementById('viatico');
+    var viatico_id = viatico.getAttribute('viatico_id');
+    
+
+    document.getElementById("Lugar_Intermedio").addEventListener("submit", function(event){
+     preventDoubleClick(document.getElementById("btn_punto"));
+    });
+
+    var datos = localStorage.getItem("id_solicitud_"+viatico_id);
+    //console.log(datosCompra)
+    if (datos) {
+        var obj = JSON.parse(datos);
+        for (var key in obj) {
+                var inputElement = document.querySelector("[name='" + key + "']") || document.getElementById(key);
+                if (inputElement && key !== 'proveedor')   {
+                    
+                    if ('value' in inputElement){
+                        if (inputElement.getAttribute('type') == "checkbox" && (obj[key] == true || obj[key] == "on")){
+                            inputElement.checked = true
+                        }
+                        else{
+                            inputElement.value = obj[key];
+                        }
+                    } else {
+                        inputElement.innerHTML = obj[key];
+                    }
+                }
+        }
+    }
+
+    activar_seccion_puntos()
+});
+
+
+
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+//AQUI COMIENZA TODO EL CÓDIGO PARA LA UTILIZACIÓN DE SELECT2
+
+var datosProyectos = {{proyectos_para_select2|safe}}
+var datosSuperintendentes = {{superintendentes_para_select2|safe}}
+var datosColaboradores = {{colaboradores_para_select2|safe}}
+
+
+$(document).ready(function() {
+    var viatico = document.getElementById('viatico');
+    var viatico_id = viatico.getAttribute('viatico_id');
+    
+    $('#id_proyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Proyecto',
+        data: datosProyectos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_proyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        proyecto_id = data.id;
+        //console.log(proyecto_id)
+        if (proyecto_id != ""){
+            mini_ajax(proyecto_id)  //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+        }   
+        cambio_en_formulario(data,'proyecto') 
+    }); //Aquí termina el select2:select
+    var proyectoSelect = $('#id_proyecto');
+    //var subproyectoSelect = $('#id_subproyecto');
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
+    
+    if (datos) {
+        if (datos.proyecto){
+            var option = new Option(datos.proyecto_text, datos.proyecto, true, true);
+            proyectoSelect.append(option).trigger('change');
+            $('#id_proyecto').on('select2:unselect', function(e){
+            datos.proyecto = '';
+            datos.proyecto_text ='';
+            var $subproyectoSelect = $('#id_subproyecto');
+            datos.subproyecto = '';
+            datos.subproyecto_text ='';
+            $subproyectoSelect.empty(); // Limpiar las opciones actuales
+            localStorage.setItem("id_solicitud_" + viatico_id, JSON.stringify(datos));
+            })
+        }
+    }
+   
+});
+
+function actualizarSubproyectos(data) {
+    //console.log(data)
+    var $subproyectoSelect = $('#id_subproyecto');
+    $subproyectoSelect.empty(); // Limpiar las opciones actuales
+
+    // Añadir una opción placeholder
+    $subproyectoSelect.append(new Option('Seleccione un subproyecto', '', true, true));
+
+    // Añadir nuevas opciones
+    $.each(data, function(index, subproyecto) {
+        $subproyectoSelect.append(new Option(subproyecto.nombre, subproyecto.id, false, false));
+    });
+
+    // Necesitas reinicializar el select2 para reflejar los cambios
+    $subproyectoSelect.trigger('change');
+}
+
+$(document).ready(function() {
+    var viatico = document.getElementById('viatico');
+    var viatico_id = viatico.getAttribute('viatico_id');
+    $('#id_subproyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Subproyecto',
+        //data: ,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_subproyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        subproyecto_id = data.id;
+        cambio_en_formulario(data,'subproyecto') 
+    }); 
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
+    var subproyectoSelect = $('#id_subproyecto');
+    if (datos) {
+        if (datos.subproyecto){
+            var option = new Option(datos.subproyecto_text, datos.subproyecto, true, true);
+            subproyectoSelect.append(option).trigger('change');
+            $('#id_subproyecto').on('select2:unselect', function(e){
+                datos.subproyecto = '';
+                datos.subproyecto_text ='';
+                localStorage.setItem("id_solicitud_" + viatico_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+$(document).ready(function() {
+    var viatico = document.getElementById('viatico');
+    var viatico_id = viatico.getAttribute('viatico_id');
+    $('#id_colaborador').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Colaborador',
+        data: datosColaboradores,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_colaborador').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
+        cambio_en_formulario(data,'colaborador') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
+    var colaboradorSelect = $('#id_colaborador');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.colaborador){
+            var option = new Option(datos.colaborador_text, datos.colaborador, true, true);
+            colaboradorSelect.append(option).trigger('change');
+            $('#id_colaborador').on('select2:unselect', function(e){
+
+                datos.colaborador = '';
+                datos.colaborador_text ='';
+                localStorage.setItem("id_solicitud_" + viatico_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+$(document).ready(function() {
+    var viatico = document.getElementById('viatico');
+    var viatico_id = viatico.getAttribute('viatico_id');
+    $('#id_superintendente').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Superintendente',
+        data: datosSuperintendentes,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_superintendente').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
+        cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+viatico_id));
+    var superintendenteSelect = $('#id_superintendente');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.superintendente){
+            var option = new Option(datos.superintendente_text, datos.superintendente, true, true);
+            superintendenteSelect.append(option).trigger('change');
+       
+        }
+    }
+    $('#id_superintendente').on('select2:unselect', function(e){
+        datos.superintendente = '';
+        datos.superintendente_text ='';
+        localStorage.setItem("id_solicitud_" + viatico_id, JSON.stringify(datos));
+
+    });
+});
+
+function mini_ajax(proyecto_id){
+    //console.log(proyecto_id)
+    $.ajax({
+            url: "{% url 'ajax_load_subproyectos' %}",
+            datatype: 'json',
+            data: {
+                'proyecto_id':proyecto_id
+            },
+            success: function (data) {
+                actualizarSubproyectos(data); 
+                //console.log(data)            
+            }  
+        })    
+
+};
+
+
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+function cambio_en_formulario(data,key) {
+    var viatico = document.getElementById('viatico')
+    var viatico_id = viatico.getAttribute('viatico_id')
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + viatico_id )) || {};
+    var value = data.id;
+    var text = data.text;
+    datosGuardados[key] = value;
+    datosGuardados[key+'_text'] = text; 
+    localStorage.setItem("id_solicitud_" + viatico_id , JSON.stringify(datosGuardados));
+    
+};
+
+</script>
+{% endblock %}
+</body>
+</html>

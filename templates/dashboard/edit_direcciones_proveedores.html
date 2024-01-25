@@ -1,0 +1,38 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Agregar Proveedor{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Agregar Proveedor</h3>
+                <hr>
+                <form method="POST" id='ProductForm'>
+                    {% csrf_token %}
+                    {{ form | crispy }}
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-product' %}">Cancelar</a>
+                    <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+  </script>
+{% endblock %}

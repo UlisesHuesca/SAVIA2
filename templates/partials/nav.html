@@ -1,0 +1,446 @@
+{% load static %}
+<head>
+    <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <!--FotAwesome CDN-->
+    <script src="https://kit.fontawesome.com/437c06e9e5.js" crossorigin="anonymous"></script>
+</head>
+<nav class="navbar fixed-top navbar-dark bg-dark">
+    {% if user.is_authenticated %}
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{% url 'dashboard-index' %}">
+                <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
+            </a>
+            <ul class="nav nav-pills" >
+                <li class="nav-item d-none d-md-table-cell">
+                    <a class="nav-link text-white" aria-current="page" href="{% url 'dashboard-index' %}">Dashboard</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white d-none d-md-table-cell" aria-current="page" href="{% url 'user-profile' %}">{{user.first_name}} {{user.last_name}} | Perfil: {{usuario.distritos.nombre}} - {{usuario.tipo.nombre}}</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-white d-md-none d-sm-table-cell" aria-current="page" href="{% url 'user-profile' %}">{{user.first_name}}</a>
+                </li>
+            </ul>
+            <ul class="nav justify-content-end">
+                <li class="nav-item">
+                    <a class="btn btn-secondary" href="{% url 'user-logout' %}">Logout</a>
+                </li>
+                <li class="nav-item">
+                <div>
+                    <div class="form-inline my-2 my-lg-0 position-relative d-none" id="cart">
+                        <a href="{% url 'solicitud-checkout' %}">
+                        <img id="cart-icon" src="{% static 'images/cart.png' %}">
+                        </a>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{productosordenados}}
+                        </span>
+                    </div>
+                    <div class="form-inline my-2 my-lg-0 position-relative d-none" id="cart2">
+                        <a href="{% url 'solicitud-checkout-resurtimiento' %}">
+                        <img id="cart-icon" src="{% static 'images/cart.png' %}">
+                        </a>
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
+                            {{productosordenadosres}}
+                        </span>
+                    </div>
+                </div>
+                </li>
+            </ul>
+            {% if request.session.selected_profile_id %} 
+            <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
+                    <span class="navbar-toggler-icon"></span>
+            </button>
+            {% endif %}
+            <div class="offcanvas offcanvas-end" tabindex="-1" id="offcanvasNavbar" aria-labelledby="offcanvasNavbarLabel">
+                <div class="offcanvas-header">
+                    <div class="row">
+                    <h4 class="offcanvas-title" id="offcanvasNavbarLabel">Menú</h4>
+                        <a href="{% url 'user-profile' %}">
+                            <img class="img-thumbnail" src="{{usuario.staff.imageURL}}" alt="Imagen de Usuario" id="menu_image">   
+                        </a>
+                    </div>
+                    <button type="button" class="btn-close text-reset" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+                </div>
+                <div class="offcanvas-body">
+                    {% if usuario.tipo.configuracion == False %}
+                        <div class="d-none">
+                    {% else %}
+                        <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Configuración</h6>
+                        <div class="dropdown-divider"></div>
+                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin"%}
+                                <div>
+                            {% else %}
+                                <div class="d-none">
+                            {% endif %}
+                                    <a class="dropdown-item" href="{% url 'dashboard-staff' %}">Usuarios</a>
+                                </div>
+                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.nombre == "Superintendente"  %}
+                                <div>
+                            {% else %}
+                                <div class="d-none">
+                            {% endif %}
+                                    <a class="dropdown-item" href="{% url 'dashboard-product' %}">Productos/Servicios</a>
+                                </div>
+                            {% if usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Gerente" %}
+                                <div>
+                            {% else %}
+                                <div class="d-none">
+                            {% endif %}
+                                    <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
+                                </div>
+                            {% if usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "Admin"%}
+                                <div>
+                            {% else %}
+                                <div class="d-none">
+                            {% endif %}
+                                    <a class="dropdown-item" href="{% url 'activos' %}">Activos</a>
+                                </div>   
+                        </div>
+                        <div class="dropdown-divider"></div>
+                
+                    <h6 class="dropdown-header">Mis Comprobaciones</h6>
+                    <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{% url 'mis-gastos' %}">Mis Gastos</a>
+                        <a class="dropdown-item" href="{% url 'mis-viaticos' %}">Mis Viáticos</a>
+                        {% if usuario.tipo.almacenista == False %}
+                        <a class="dropdown-item" href="{% url 'pendientes_entrada' %}">
+                            Servicios pendientes
+                            {% if conteo_entradas > 0 %}
+                            <span class="badge bg-danger">({{conteo_entradas}})</span>
+                             {% endif %}
+                        </a>
+                        {% endif %}
+                    <div class="dropdown-divider"></div>
+                    {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Superintendente" %}
+                    <div>
+                    {% else %}
+                    <div class="d-none">
+                    {% endif %}
+                        <h6 class="dropdown-header">Almacén</h6>
+                        <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{% url 'solicitud-inventario' %}">Inventario</a>
+                            <!--<a class="dropdown-item" href="{% url 'devolucion_a_proveedor' %}">Devolución</a>-->
+                            {% if usuario.tipo.almacen == False %}
+                            <div class="d-none">
+                            {% else %}
+                            <div>
+                            {% endif %}
+                            <a class="dropdown-item" href="{% url 'pendientes_entrada' %}">
+                                Entradas
+                                {% if conteo_entradas > 0 %}
+                                <span class="badge bg-danger">({{conteo_entradas}})</span>
+                                 {% endif %}
+                            </a>
+                            <a class="dropdown-item" href="{% url 'matriz-gasto-entrada'%}">
+                                Entrada por gasto
+                            </a>
+                            <!--<a class="dropdown-item" href="{% url 'solicitud-autorizada-firma' %}">Salidas</a>-->
+                            <a class="dropdown-item" href="{% url 'product_selection_resurtimiento' %}">Resurtimiento: Seleccionar Productos</a>
+                            <a class="dropdown-item" href="{% url 'solicitud-autorizada-orden' %}">
+                                Pendientes por requisitar
+                                {% if conteo_ordenes > 0 %}
+                                <span class="badge bg-danger">({{conteo_ordenes}})</span>
+                                {% endif %}
+                            </a>
+                            <a class="dropdown-item" href="{% url 'solicitud-autorizada' %}">
+                                Salidas | Solicitudes Pendientes
+                                {% if conteo_ordenes > 0 %}
+                                <span class="badge bg-danger">({{conteo_ordenes}})</span>
+                                {% endif %}
+                            </a>
+                        </div>
+                        <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.calidad == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Calidad</h6>
+                        <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{% url 'pendientes_calidad' %}">Liberación</a>
+                        <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.solicitudes == False %}
+                        <div class="d-none">
+                    {% else %}
+                        <div>
+                    {% endif %}
+                            <h6 class="dropdown-header">Solicitudes</h6>
+                            <div class="dropdown-divider"></div>
+                                <!--<a class="dropdown-item" href="{% url 'crear-plantilla' %}">Crear Plantilla</a>
+                                <a class="dropdown-item" href="{% url 'matriz-plantillas' %}">Matriz Plantillas</a>-->
+                                <a class="dropdown-item" href="{% url 'solicitud-product-selection' %}">Crear Solicitud</a>
+                                <a class="dropdown-item" href="{% url 'solicitud-matriz-productos' %}">Solicitudes por producto</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-pendientes' %}">Solicitudes pendientes</a>
+                            <div class="dropdown-divider"></div>
+                        <div>
+                            <h6 class="dropdown-header">Gastos y viáticos</h6>
+                            <div class="dropdown-divider"></div>
+                                <a class="dropdown-item" href="{% url 'crear-gasto' %}">Crear Solicitud de Gasto/Reembolso</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-gasto' %}">Solicitudes Gasto</a>
+                                <a class="dropdown-item" href="{% url 'solicitud-viatico' %}">Crear Viático</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">Solicitudes Viáticos</a>
+                            <div class="dropdown-divider"></div>
+                        </div>
+                    </div>
+                    <!--{% if usuario.tipo.requisiciones == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Requisiciones</h6>
+                        <div class="dropdown-divider"></div>
+                        <
+                        <div class="dropdown-divider"></div>
+                    </div>-->
+                    {% if usuario.tipo.compras == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Compras</h6>
+                        <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{% url 'requisicion-autorizada' %}">
+                                Requisiciones autorizadas
+                                {% if conteo_requis > 0 %}
+                                <span class="badge bg-danger">({{conteo_requis}})</span>
+                                {% endif %}
+                            </a>
+                            <a class="dropdown-item" href="{% url 'comparativos' %}">
+                                Comparativos
+                            </a>
+                            <a class="dropdown-item" href="{% url 'add_proveedores2' %}">
+                                Solicitud alta de proveedor
+                            </a>
+                            <a class="dropdown-item" href="{% url 'add_proveedores_comparativo' %}">
+                                Agregar Proveedor Comparativo
+                            </a>
+                        <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.proveedores == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Proveedores</h6>
+                        <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">Proveedores</a>
+                        <a class="dropdown-item" href="{% url 'matriz-revision-proveedor' %}">Matriz Revision Proveedores</a>
+                    <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.tesoreria == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Tesorería</h6>
+                        <div class="dropdown-divider"></div>
+                            <a class="dropdown-item" href="{% url 'compras-autorizadas' %}">
+                                Compras
+                                {% if conteo_pagos > 0 %}
+                                    <span class="badge bg-danger">({{conteo_pagos}})</span>
+                                {% endif %}
+                                | Gastos
+                                {% if conteo_gastos_pagar > 0 %}
+                                <span class="badge bg-danger">({{conteo_gastos_pagar}})</span>
+                                {% endif %}
+                                | Viáticos
+                                {% if conteo_viaticos_pagar > 0 %}
+                                <span class="badge bg-danger">({{conteo_viaticos_pagar}})</span>
+                                {% endif %}
+                            </a>
+                            <a class="dropdown-item" href="{% url 'viaticos_autorizados' %}">
+                                Asignar Montos Viáticos
+                                {% if conteo_asignar_montos > 0 %}
+                                    <span class="badge bg-danger">({{conteo_asignar_montos}})</span>
+                                {% endif %}
+                            </a>
+                            <a class="dropdown-item" href="{% url 'cobranza-pagos' %}">
+                                Cobranza
+                            </a>
+                        <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.autorizacion == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <div>
+                    {% endif %}
+                        <h6 class="dropdown-header">Autorización</h6>
+                        <div class="dropdown-divider"></div>
+                            {% if usuario.tipo.supervisor == False %}
+                                <div class="d-none">
+                            {% else %}
+                                <div>
+                            {% endif %}
+                                <a class="dropdown-item" href="{% url 'solicitud-pendientes-autorizacion' %}">
+                                Solicitudes
+                                {% if conteo_solicitudes > 0 %}
+                                <span class="badge bg-danger">({{conteo_solicitudes}})</span>
+                                {% endif %}
+                                </a>
+                                </div>
+                                {% if usuario.tipo.nombre == 'Admin' %}
+                                <a class="dropdown-item" href="{% url 'matriz-salida-activos' %}">Revisión Activos</a>
+                                {% endif %}
+                            {% if usuario.tipo.superintendente == False %}
+                                <div class="d-none">
+                            {% else %}
+                                <div>
+                            {% endif %}
+                                <a class="dropdown-item" href="{% url 'requisicion-autorizacion' %}">Requisiciones
+                                {% if conteo_requis_pendientes > 0 %}
+                                <span class="badge bg-danger">({{conteo_requis_pendientes}})</span>
+                                {% endif %}
+                                </a>
+                                </div>
+                            {% if usuario.tipo.oc_superintendencia == False %}
+                                <div class="d-none">
+                            {% else %}
+                                <div>
+                            {% endif %}
+                                <a class="dropdown-item" href="{% url 'autorizacion-oc1' %}">
+                                OC Superintendencia
+                                {% if conteo_oc1 > 0 %}
+                                <span class="badge bg-danger">({{conteo_oc1}})</span>
+                                {% endif %}    
+                                </a>
+                                <a class="dropdown-item" href="{% url 'matriz-autorizar-devolucion' %}">Autorización Devolución Almacén
+                                    {% if conteo_devoluciones > 0 %}
+                                    <span class="badge bg-danger">({{conteo_devoluciones}})</span>
+                                    {% endif %}
+                                </a>
+                                </div>
+                            {% if usuario.tipo.superintendente == False %}
+                                <div class="d-none">
+                            {% else %}
+                                <div>
+                            {% endif %}
+
+                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar' %}">Revisión Gasto
+                                {% if conteo_gastos_pendientes > 0 %}
+                                <span class="badge bg-danger">({{conteo_gastos_pendientes}})</span>
+                                {% endif %}
+                                </a>
+                                </div>
+
+                            {% if usuario.tipo.oc_gerencia == False %}
+                                <div class="d-none">
+                            {% else %}
+                                <div>
+                            {% endif %}
+                            <a class="dropdown-item" href="{% url 'autorizacion-oc2' %}">
+                                OC Gerencia
+                                {% if conteo_oc > 0 %}
+                                <span class="badge bg-danger">({{conteo_oc}})</span>
+
+                                {% endif %}
+                                </a>
+                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar2' %}">Autorización Gasto
+                                 {% if conteo_gastos_gerencia > 0 %}
+                                <span class="badge bg-danger">({{conteo_gastos_gerencia}})</span>
+
+                                {% endif %}
+                                </a>
+                                <a class="dropdown-item" href="{% url 'viaticos-pendientes-autorizar2' %}">Autorización Viáticos
+                                  {% if conteo_viaticos_gerencia > 0 %}
+                                <span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span>
+                                {% endif %}
+                                </a>
+                               
+                            </div>
+                            {% if usuario.tipo.superintendente == False %}
+                                <div class="d-none">
+                            {% else %}
+                                <div>
+                            {% endif %}
+                                <a class="dropdown-item" href="{% url 'viaticos-pendientes-autorizar' %}">
+                                Revision Viáticos
+                                {% if conteo_viaticos > 0 %}
+                                <span class="badge bg-danger">({{conteo_viaticos}})</span>
+
+                                {% endif %}
+                                </a>
+                                </div>
+                        <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.reportes == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <h6 class="dropdown-header">Reportes</h6>
+                    <div class="dropdown-divider"></div>
+                    <div>
+                    {% endif %}
+                        <a class="dropdown-item" href="{% url 'solicitud-matriz' %}">Matriz Solicitudes</a>
+                        {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.nombre == "Comprador" or usuario.tipo.nombre == "Tesoreria" %}
+                            <div>
+                        {% else %}
+                            <div class="d-none">
+                        {% endif %}
+                            <a class="dropdown-item" href="{% url 'reporte-entradas' %}">Matriz Entradas</a>
+                            <a class="dropdown-item" href="{% url 'reporte-salidas' %}">Matriz Salidas</a>
+                            </div>
+                        {% if usuario.tipo.compras == True or usuario.tipo.nombre == "Gerente" %}
+                            <div>
+                        {% else %}
+                            <div class="d-none">
+                        {% endif %}
+                            <a class="dropdown-item" href="{% url 'matriz-compras' %}">Matriz Compras</a>
+                            </div>
+                        <!--    or usuario.tipo.comprador == True --> 
+                        {% if usuario.tipo.tesoreria == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.comprador == True %}
+                        <div>
+                        {% else %}
+                            <div class="d-none">
+                        {% endif %}
+                            <a class="dropdown-item" href="{% url 'matriz-pagos' %}">Matriz Pagos</a>
+                            </div>
+                    <div class="dropdown-divider"></div>
+                    </div>
+                    {% if usuario.tipo.historicos == False %}
+                    <div class="d-none">
+                    {% else %}
+                    <h6 class="dropdown-header">Históricos</h6>
+                    <div class="dropdown-divider"></div>
+                    <div>
+                    {% endif %}
+                        {% if usuario.tipo.almacen ==  False %}
+                            <div class="d-none">
+                        {% else %}
+                            <div>
+                        {% endif %}
+                            <a class="dropdown-item" href="{% url 'historico-inventario' %}">Histórico Inventario</a>
+                            <a class="dropdown-item" href="{% url 'historico-producto' %}">Histórico Producto</a>
+                            <a class="dropdown-item" href="">Histórico Entradas</a>
+                            <a class="dropdown-item" href="{% url 'historico-articulos-compras' %}">Histórico Articulos Compras</a>
+                            <a class="dropdown-item" href="{% url 'historico-salidas' %}">Histórico Salidas</a>
+                            <a class="dropdown-item" href="{% url 'historico-articulos-para-surtir' %}">Históricos Artículos para Surtir</a>
+                            </div>
+                        {% if usuario.tipo.tesoreria == False %}
+                            <div class="d-none">
+                        {% else %}
+                            <div>
+                        {% endif %}
+                            <a class="dropdown-item" href="">Histórico Pagos</a>
+                            </div>
+                    <div class="dropdown-divider"></div>
+                    </div>
+                </div>
+            </div>
+    {% else %}
+            <div class="collapse navbar-collapse" id="navbarSupportedContent">
+                <a class="navbar-brand text-white" href="#">
+                    <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA" width="36" height="30">
+                </a>
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link text-white" href="{% url 'user-login' %}">Login</a>
+                    </li>
+                </ul>
+            </div>
+    {% endif %}
+        </div>
+
+</nav>

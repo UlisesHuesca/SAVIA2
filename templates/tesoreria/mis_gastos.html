@@ -1,0 +1,188 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Matriz Gastos{% endblock %}
+
+</head>
+<body>
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5>Filtro de Gastos</h5>
+                </div>
+                <div class="card-body">
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.id|add_class:"form-control"|append_attr:"placeholder=Folio"}}
+                                <label for="id_lugar_partida">Folio</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2 mt-3">
+                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                </form>
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <!--<li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Gasto</th>
+                    <th class="d-none d-lg-table-cell">Solicitado</th>
+                    <th scope="col">Autorizado</th>
+                    <th class="d-none d-lg-table-cell">Colaborador</th>
+                    <th scope="col">Importe</th>
+                    <th scope="col">Autorización Gerencia</th>
+                    <th>Detalles</th>
+                    <th scope="col">Acción</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in gastos %}
+                <tr>
+                    <th>G{{gasto.folio}}</th>
+                    <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
+                    {% if gasto.autorizar == True %}
+                    <td>Autorizado|{{gasto.superintendente.staff.last_name}}</td>
+                    {% elif gasto.autorizar == False %}
+                    <td style="color:#980F0F">No autorizado|{{gasto.superintendente.staff.staff.last_name}}</td>
+                    {% else %}
+                    <td>Pendiente Autorización|{{gasto.superintendente.staff.staff.last_name}}</td>
+                    {% endif %}
+                    {% if gasto.colaborador %}
+                    <td class="d-none d-lg-table-cell">{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
+                    {% else %}
+                    <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
+                    {% endif %}
+                    <td>${{gasto.get_total_solicitud}}</td>
+                    {% if gasto.autorizar2 == True %}
+                    <td>{{gasto.approbado_fecha2}}</td>
+                    {% elif gasto.autorizar2 == False %}
+                    <td>No autorizado</td>
+                    {% else %}
+                    <td>Pendiente Autorización</td>
+                    {% endif %}
+                    <td>
+                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-gastos' gasto.id %}">
+                            Conceptos
+                        </a>
+                    </td>
+                    <td>
+                        {% if gasto.autorizar2 == True %}
+                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}">
+                        <i class="fa-solid fa-file-pdf"></i>
+                        </a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    </div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document">
+
+    </div>
+</div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+//var modal = document.getElementById('dialog')
+//modal.on('hidden.bs.modal', function () {
+//    location.reload();
+//});
+
+</script>
+{% endblock %}
+</body>
+</html>

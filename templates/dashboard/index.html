@@ -1,0 +1,75 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+<html>
+<head>
+<link rel="stylesheet" href="{% static 'css/style.css' %}">
+{% block title %}Home Page{% endblock %}
+</head>
+
+{% block content %}
+<body id="dashboard_image">
+<!--<body>-->
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+
+
+{% include 'partials/topside.html' %}
+
+<!-- Graphs -->
+<div class="row">
+    <div class="col-md-6">
+
+    <!--<div class="card mt-2">
+            <div class="card-header">
+                Actualizaciones Gráfico de proyectos
+            </div>
+            <div class="card-body">
+                <ul class="list-group list-group-flush">
+                    <li class="list-group-item">[Reporte de Compras] Mejorar reporte de compras, añadir celda Status Crédito-Contado, Status Autorizado, Status Pago. Implementado </li>
+                    <li class="list-group-item">[Compras Autorizadas] Configurar las compras autorizadas para móvil. Implementado </li>
+                    <li class="list-group-item">[Compras Autorizadas] Crear botón para saldos a favor. Implementado </li>
+                    <li class="list-group-item">[Crear solicitudes] Agregar en el filtro de Solicitudes familia y subfamilia. Implementado</li>
+                    <li class="list-group-item">[Crear solicitudes] Configurar la creación de solicitudes para móvil. Implementado</li>
+                  </ul>   
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6">
+        <div class="card">
+            <div class="card-header">
+                Gráfico de inventarios
+            </div>
+            <div class="card-body">
+               <div>
+                    {{ graph_inventarios|safe }}
+                </div>-->
+            </div>
+        </div>
+    </div>
+</div>
+<!-- End Graphs -->
+
+
+
+
+
+
+
+
+
+
+
+
+<!--<div class="circle rounded-circle" style="display: grid; grid-template-areas: 'layer'; place-items: center; background: #838b9b; --radius: 50vmin; width: calc(2 * var(--radius)); height: calc(2 * var(--radius));">
+    <a href="#" class="deg0" style="display: grid;place-items: center;transform:rotate(30deg) translate(400px) rotate(-30deg);"><img src="{% static 'images/button2.jpg' %}" class="rounded-circle"></a>
+    <a href="#" class="deg60" style="display: grid;place-items: center;transform:rotate(90deg) translate(400px) rotate(-90deg);"><img src="{% static 'images/button2.jpg' %}" class="rounded-circle"></a>
+    <a href="#" class="deg120" style="display: grid;place-items: center;transform: rotate(150deg) translate(400px)  rotate(-150deg);"><img src="{% static 'images/button2.jpg' %}" class="rounded-circle"></a>
+    <a href="#" class="deg180" style="display: grid;place-items: center;transform: rotate(210deg) translate(400px) rotate(-210deg);"><img src="{% static 'images/button2.jpg' %}" class="rounded-circle"></a>
+    <a href="#" class="deg240" style="display: grid;place-items: center;transform: rotate(270deg) translate(400px) rotate(-270deg);"><img src="{% static 'images/button2.jpg' %}" class="rounded-circle"></a>
+    <a href="#" class="deg300" style="display: grid;place-items: center;transform: rotate(330deg) translate(400px) rotate(-330deg);"><img src="{% static 'images/button2.jpg' %}" class="rounded-circle"></a>
+</div>-->
+   
+</body>
+{% endblock %}
+
+</html>

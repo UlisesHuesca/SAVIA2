@@ -1,0 +1,60 @@
+{% extends 'partials/base.html' %}
+{% block title %} Profile Page {% endblock %}
+{% load widget_tweaks %}
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+    <div class="container">
+        <div class="col-md-6 offset-md-3">
+            <div class="card">
+                <div class="card-header">
+                    <h3><i class="fa-solid fa-users-gear"></i>&nbsp;Perfil</h3s>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                    {% csrf_token %}
+                    <div id="dias_credito" class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.profile|add_class:"form-select"|append_attr:"placeholder= Perfiles"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Perfiles</label>
+                            </div>
+                        </div>
+                    </div>
+                    <button class="btn btn-outline-info mt-3" type="submit">Enviar</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

@@ -1,0 +1,30 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %}Página de Eliminación de Producto{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Eliminar Artículo</h3>
+                <hr>
+                <div>
+                    <h4>¿Confirmas la eliminación del producto?</h4>
+                </div>
+                <form method="POST">
+                    {% csrf_token %}
+                    {{form | crispy}}
+                    <a class="btn btn" href="{% url 'dashboard-product' %}">Cancelar</a>
+                    <input class="btn btn-outline-danger" type='submit' value="Confirmar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+</body>

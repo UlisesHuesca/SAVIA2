@@ -1,0 +1,751 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+
+{% block title %}Crear Solicitud{% endblock %}
+</head>
+<body>
+{% block content %}
+
+  
+  
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+<hr>
+<hr>
+<hr>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-4 col-md-12"> 
+            <div class="card" id="Solicitud-info">
+                <div class="card-header">
+					<h2 id="order" orden="{{order.id|unlocalize}}">Información de Solicitud|Folio: {{folio_preview}}</h2>
+                </div>
+                {% if error_messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{error_messages}}
+                </div>
+                {% endif %}
+                <div class="card-body">
+					<form id="formulario_encabezado" method="POST">
+                        {% csrf_token %}
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.proyecto}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.subproyecto}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.sector}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.operacion}}
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row">
+                               
+                                    <div class="col-12">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.activo}}    
+                                            </div>
+                                        </div>  
+                                    </div>                                
+                                
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.superintendente}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>                         
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.supervisor}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                            <label style="color: #121212;" for="id_area">Comentario*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="form-check form-switch col-auto mx-4" id="Soporte">
+                                    <input class="form-check-input" type="checkbox" role="switch" id="SwitchSoporte">
+                                    <label class="form-check-label" for="SwitchSoporte">Subir Soporte/Factura/Cotización</label>
+                                </div>     
+                                <div id="subir_pdf" class="row d-none">
+                                        <div class="input-group mb-3" style="height:60px" >
+                                            {{form.soporte|add_class:"form-control"}}
+                                            <label class="input-group-text" for="id_soporte" style="color:#980F0F"><i class="fa-solid fa-cloud-arrow-up"></i>PDF</label>
+                                        </div>
+                                </div>
+                            </div>
+                            <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                                <input id="submit-button" class="btn btn-lg btn-outline-info d-none" name="agregar" type="submit" value="Crear Solicitud">
+                            </div>
+                    </form>
+                </div>
+            </div>
+    </div>
+    <div class="col-lg-8 col-md-12">
+        <div class="card">
+            {% include "solicitud/product_edit.html" %}
+        </div>
+    </div>
+</div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+  
+
+    {% if productos %}
+    var submit = document.getElementById('submit-button');
+    submit.classList.remove('d-none');
+    
+    {% else %}
+    Swal.fire({
+                    "title":"Error",
+                    "text":"No tienes productos seleccionados",
+                    "icon":"error",
+             })
+    {% endif %}
+
+    document.getElementById('formulario_encabezado').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var submit = document.getElementById('submit-button')
+        var orden = document.getElementById('order');
+        var orden_id = orden.getAttribute('orden');
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id));
+        //Limpio el local storage
+        localStorage.removeItem('id_solicitud'+orden_id);
+
+        //Deshabilito el botón para prevenir dobles clicks
+        setTimeout(function(){
+            document.getElementById('submit-button').disabled = true;
+        }, 50);
+       
+        this.submit();
+
+    });
+
+
+document.getElementById('SwitchSoporte').addEventListener("change", function(element){
+    var orden = document.getElementById('order')
+    var orden_id = orden.getAttribute('orden')
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id ))
+    var check_soporte = this;
+    var soporte = check_soporte.value
+    var subir_soporte = document.getElementById('subir_pdf')
+    
+
+    if (check_soporte.checked){
+        subir_soporte.classList.remove('d-none')
+        datosGuardados['soporte'] = true;
+    } else {
+        subir_soporte.classList.add('d-none')
+        datosGuardados['soporte'] = false;
+    }
+
+    localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datosGuardados));
+
+});
+
+function cambio_en_formulario(data,key) {
+    //console.log(data)
+
+    //var formulario = document.getElementById('formulario_encabezado')
+    //var formData = new FormData(formulario);
+    var orden = document.getElementById('order')
+    var orden_id = orden.getAttribute('orden')
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id )) || {};
+    var value = data.id;
+    var text = data.text;
+    datosGuardados[key] = value;
+    datosGuardados[key+'_text'] = text; 
+    localStorage.setItem("id_solicitud_" + orden_id , JSON.stringify(datosGuardados));
+    
+};
+
+document.getElementById('id_comentario').addEventListener("change",function(){
+    var orden = document.getElementById('order')
+    var orden_id = orden.getAttribute('orden')
+    comentario = this.value 
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id ))
+    datosGuardados['comentario'] = comentario;
+    localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datosGuardados));
+});
+
+//la carga del DOM
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('DOM completamente cargado');
+
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id));
+
+    if (datos.comentario){
+        var inputElement = document.getElementById('id_comentario');
+        inputElement.innerHTML = datos.comentario;
+    } 
+    console.log(datos.soporte)
+    if (datos.soporte == true){
+        var inputSwitch = document.getElementById('SwitchSoporte');
+        var soporte = document.getElementById('subir_pdf');
+        inputSwitch.checked = true;
+        soporte.classList.remove('d-none')
+    }
+    
+});
+   
+
+function modificar_cantidad(productoId){
+    var form_cantidad = document.getElementById("form_cantidad_"+productoId);
+    var cantidad = document.getElementById("cantidad_"+productoId);
+    //comentario.setAttribute('data-original-comment', comentarioElement.innerHTML);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    //var modificar_cantidad = document.getElementById("modificar_cantidad_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit2_"+productoId);
+    var save_cantidad = document.getElementById("save_cantidad_"+productoId);
+
+    form_cantidad.classList.remove("d-none");
+    cantidad.classList.add("d-none");
+    edit_quantity.classList.add("d-none");
+    delete_row.classList.add("d-none");
+    //modificar_cantidad.classList.add("d-none");
+    cancel_edit.classList.remove("d-none");
+    save_cantidad.classList.remove("d-none");
+    
+    
+};
+
+function modificar_comentario(productoId){
+    var form_comentario = document.getElementById("form_comentario_"+productoId);
+    var comentario = document.getElementById("comentario_"+productoId);
+    //comentario.setAttribute('data-original-comment', comentarioElement.innerHTML);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+productoId);
+    var save_comment = document.getElementById("save_comment_"+productoId);
+    
+    form_comentario.classList.remove("d-none");
+    comentario.classList.add("d-none");
+    edit_quantity.classList.add("d-none");
+    delete_row.classList.add("d-none");
+    modificar_comentario.classList.add("d-none");
+    cancel_edit.classList.remove("d-none");
+    save_comment.classList.remove("d-none");
+};
+
+function cancelar_edicion2(productoId){
+    var form_cantidad = document.getElementById("form_cantidad_"+productoId);
+    var cantidad = document.getElementById("cantidad_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    //var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit2_"+productoId);
+    var save_cantidad = document.getElementById("save_cantidad_"+productoId);
+    form_cantidad.classList.add("d-none");
+    cantidad.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    //modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_cantidad.classList.add("d-none");
+};
+
+function cancelar_edicion(productoId){
+    var form_comentario = document.getElementById("form_comentario_"+productoId);
+    var comentario = document.getElementById("comentario_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+productoId);
+    var save_comment = document.getElementById("save_comment_"+productoId);
+    form_comentario.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function aceptar_edicion2(productoId){
+    var form_tag = document.getElementById("form_cantidad_"+productoId);
+    var cantidad = document.getElementById("cantidad_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    //var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit2_"+productoId);
+    var save_cantidad = document.getElementById("save_cantidad_"+productoId);
+    var pk = productoId
+    var inputElement = document.getElementById('cantidad-input_' + productoId).value;
+    //var form_comentario = document.getElementById('id_form_comentario-comentario').value
+    
+    console.log(inputElement)
+    ActualizarComentario(pk,inputElement,"cantidad")
+    form_tag.classList.add("d-none");
+    cantidad.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    //modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_cantidad.classList.add("d-none");
+};
+
+
+function aceptar_edicion(productoId){
+    var form_tag = document.getElementById("form_comentario_"+productoId);
+    var comentario = document.getElementById("comentario_"+productoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+productoId);
+    var delete_row = document.getElementById("delete_row_"+productoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+productoId);
+    var save_comment = document.getElementById("save_comment_"+productoId);
+    var pk = productoId
+    var inputElement = document.getElementById('comentario-input_' + productoId).value;
+    //var form_comentario = document.getElementById('id_form_comentario-comentario').value
+    
+    console.log(inputElement)
+    ActualizarComentario(pk,inputElement,"comentario")
+    form_tag.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    edit_quantity.classList.remove("d-none");
+    delete_row.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function ActualizarComentario(solicitud_id,dato, tipo){
+    console.log('User is logged in, sending data...' )
+    var url = '/solicitudes/update_comentario/'
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'solicitud_id':solicitud_id, 'dato':dato, 'tipo':tipo})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        if (data.tipo == "comentario"){
+            document.getElementById('comentario_'+solicitud_id).innerHTML = data.dato;
+        } else if (data.tipo == "cantidad"){
+            let cantidadFormateada = parseFloat(data.dato).toFixed(2);
+            console.log(cantidadFormateada)
+            document.getElementById('cantidad_'+solicitud_id).innerHTML = cantidadFormateada;
+        }
+    })
+}
+var datosProyectos = {{proyectos_para_select2|safe}}
+var datosSectores = {{sectores_para_select2|safe}};
+var datosOperaciones = {{operaciones_para_select2|safe}};
+var datosActivos = {{activos_para_select2|safe}};
+var datosSuperintendentes = {{ superintendentes_para_select2|safe }};
+var datosSupervisores = {{ supervisores_para_select2|safe }};
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    
+    $('#id_proyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Proyecto',
+        data: datosProyectos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_proyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        cambio_en_formulario(data,'proyecto') //Acá lo que hago es mediante esta función guardo los valores en el local storage, como argumentos los parámetros que serán los valores guardados y la palabra que definira la variable donde se guardara ese valor
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        proyecto_id = datos.proyecto
+        console.log(datos)
+        if (proyecto_id != ""){
+            mini_ajax(proyecto_id)  //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+        }
+    }); //Aquí termina el select2:select
+    var proyectoSelect = $('#id_proyecto');
+    var subproyectoSelect = $('#id_subproyecto');
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    if (datos) {
+        if (datos.proyecto){
+            var option = new Option(datos.proyecto_text, datos.proyecto, true, true);
+            proyectoSelect.append(option).trigger('change');
+            if (!datos.subproyecto){
+                proyecto_id = datos.proyecto
+                //console.log(proyecto_id)
+                if (proyecto_id != ""){
+                    mini_ajax(proyecto_id) //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+                }
+            }
+        }
+        $('#id_proyecto').on('select2:unselect', function(e){
+            //Limpiar las entradas de proyecto y subproyecto en el objeto almacenado
+            var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+            datos.proyecto_text = '';
+            datos.proyecto = '';
+            datos.subproyecto = '';
+            datos.subproyecto_text ='';
+            localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+        
+            //console.log(datos)
+            // Limpiar la selección actual en #id_subproyecto
+            $('#id_subproyecto').val(null).trigger('change');
+        });//Aquí termina el select2:unselect
+
+    }
+});
+
+function mini_ajax(proyecto_id){
+    //console.log(proyecto_id)
+    $.ajax({
+            url: "{% url 'ajax_load_subproyectos' %}",
+            datatype: 'json',
+            data: {
+                'proyecto_id':proyecto_id
+            },
+            success: function (data) {
+                actualizarSubproyectos(data); 
+                //console.log(data)            
+            }  
+        })    
+
+};
+
+function actualizarSubproyectos(data) {
+    //console.log(data)
+    var $subproyectoSelect = $('#id_subproyecto');
+    $subproyectoSelect.empty(); // Limpiar las opciones actuales
+
+    // Añadir una opción placeholder
+    $subproyectoSelect.append(new Option('Seleccione un subproyecto', '', true, true));
+
+    // Añadir nuevas opciones
+    $.each(data, function(index, subproyecto) {
+        $subproyectoSelect.append(new Option(subproyecto.nombre, subproyecto.id, false, false));
+    });
+
+    // Necesitas reinicializar el select2 para reflejar los cambios
+    $subproyectoSelect.trigger('change');
+}
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_subproyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Subproyecto',
+        //data: ,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+
+    $('#id_subproyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'subproyecto') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var subproyectoSelect = $('#id_subproyecto');
+    if (datos) {
+        if (datos.subproyecto){
+            var option = new Option(datos.subproyecto_text, datos.subproyecto, true, true);
+            subproyectoSelect.append(option).trigger('change');
+        }
+        $('#id_subproyecto').on('select2:unselect', function(e){
+
+            datos.subproyecto = '';
+            datos.subproyecto_text ='';
+            localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+        })
+    }
+});
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_sector').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Sector',
+        data: datosSectores,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    //Se rellena el local storage con los datos
+    $('#id_sector').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'sector') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var sectorSelect = $('#id_sector');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.sector){
+            var option = new Option(datos.sector_text, datos.sector, true, true);
+            sectorSelect.append(option).trigger('change');
+            $('#id_sector').on('select2:unselect', function(e){
+
+                datos.sector = '';
+                datos.sector_text ='';
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_operacion').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Operación',
+        data: datosOperaciones,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_operacion').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'operacion') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var operacionSelect = $('#id_operacion');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.operacion){
+            var option = new Option(datos.operacion_text, datos.operacion, true, true);
+            operacionSelect.append(option).trigger('change');
+            $('#id_operacion').on('select2:unselect', function(e){
+
+                datos.operacion = '';
+                datos.operacion_text ='';
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_activo').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Activo',
+        data: datosActivos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_activo').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'activo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var activoSelect = $('#id_activo');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.activo){
+            var option = new Option(datos.activo_text, datos.activo, true, true);
+            activoSelect.append(option).trigger('change');
+            $('#id_activo').on('select2:unselect', function(e){
+
+                datos.activo = '';
+                datos.activo_text ='';
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_superintendente').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Superintendente',
+        data: datosSuperintendentes,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_superintendente').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var superintendenteSelect = $('#id_superintendente');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.superintendente){
+            var option = new Option(datos.superintendente_text, datos.superintendente, true, true);
+            superintendenteSelect.append(option).trigger('change');
+            $('#id_superintendente').on('select2:unselect', function(e){
+
+                datos.superintendente = '';
+                datos.superintendente_text ='';
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_supervisor').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Supervisor',
+        data: datosSupervisores,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_supervisor').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'supervisor') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var supervisorSelect = $('#id_supervisor');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.supervisor){
+            var option = new Option(datos.supervisor_text, datos.supervisor, true, true);
+            supervisorSelect.append(option).trigger('change');
+            $('#id_supervisor').on('select2:unselect', function(e){
+
+                datos.supervisor = '';
+                datos.supervisor_text ='';
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+</script>
+{% endblock %}
+</body>
+</html>

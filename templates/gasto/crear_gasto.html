@@ -1,0 +1,819 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %} Gasto {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card" id="form-wrapper"> 
+            <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
+					<h2>Solicitud de gasto:</h2>
+            </div>
+            <div class="card-body">   
+				<form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.tipo}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="form-check form-switch col-auto mx-4" id="Otro_Colaborador">
+                                <input class="form-check-input" type="checkbox" role="switch" id="SwitchColaborador">
+                                <label class="form-check-label" for="SwitchColaborador" id="LabelColaborador">Otro Colaborador</label>
+                            </div>
+
+                            <div class="row d-none" id="colaborador_parrafo">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.colaborador}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>
+                            
+                            <div class="row">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.superintendente}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div> 
+
+                        {% if productos %}
+                        <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value="Crear Solicitud">
+                        {% endif %}
+
+                </form>         
+                <hr>
+                <form method="post" enctype="multipart/form-data">
+                        {% csrf_token %}
+                   
+                        <div id="subir_xml" class="row">
+                            <div class="input-group mb-3" style="height:60px" >
+                                    {{factura_form.archivo_pdf|add_class:"form-control"}}
+                                <label class="input-group-text" for="id_archivo_pdf" style="color:#980f0f"><i class="fa-solid fa-cloud-arrow-up"></i>PDF</label>
+                                
+                            </div>
+                        </div>
+                        <div id="subir_xml" class="row">
+                            <div class="input-group mb-3" style="height:60px" >
+                                {{factura_form.archivo_xml|add_class:"form-control"}}
+                                <label class="input-group-text" for="id_archivo_xml"><i class="fa-solid fa-cloud-arrow-up"></i>XML</label>
+                            </div>
+                        </div>
+                        <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Factura</button>
+                </form>
+                <div class ="table-responsive-sm">
+                    <table class="table table-light table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Archivo PDF</th>
+                                <th>Archivo XML</th>
+                                <th>Fecha de Subida</th>
+                                <th>Concepto</th>
+                                <th>Total</th>
+                                <th>Eliminar</th>
+                                <!-- Agrega más columnas si lo necesitas -->
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for factura in facturas %}
+                            <tr>
+                                <td>{{ factura.id }}</td>
+                                <td>
+                                    {% if factura.archivo_pdf %}
+                                    <a class="btn btn-outline-danger" href="{{factura.archivo_pdf.url}}" download class="btn btn-outline-info">
+                                        <i class="fa-solid fa-file-pdf"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if factura.archivo_xml %}
+                                    <a class="btn btn-outline-light" style="background-color:#9a9b9d" href="{{factura.archivo_xml.url}}" download class="btn btn-outline-light">
+                                        <i class="fa-solid fa-file-code"></i>
+                                    </a>
+                                    {% endif %}
+                                </td>
+                                <td>{% if factura.archivo_xml %} {{factura.fecha_subida|date:"d-m-Y H:i" }} {% endif %}</td>
+                                <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
+                                <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% endif %}</td>
+                                <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'eliminar-factura' factura.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                            </tr>
+                            {% endfor %}
+                        
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            <table class="table table-light table-striped">
+            <thead>
+               <tr>
+                    <th scope="col">Total</th>
+                    <td scope="col" id="total-sum">0.00</td>
+                </tr>
+            </thead> 
+           
+            </table>
+        </div>
+           
+    </div>
+
+    <div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h2 id="linea_gasto">Líneas de Gasto</h2>
+            </div>
+            <div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
+                <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
+                <label class="form-check-label" for="SwitchUsarXML">Usar XML</label>
+            </div>            
+            <div id="form_product">
+                <form method="post" enctype="multipart/form-data">
+                {% csrf_token %}    
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.proyecto}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+               
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.subproyecto}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.producto}}
+                            </div>
+                    </div>
+                </div>
+               
+                <div class="form-check form-switch col-auto mx-4 d-none">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchGasto">
+                        <label class="form-check-label" for="SwitchGasto" id="LabelAlmacén">Almacén</label>
+                </div>
+
+            
+            <div class="row my-2">
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.comentario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Comentario"}}
+                            <label style="color: #121212;" for="id_comentario">Comentario*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
+                            <label style="color: #121212;" for="id_precio_unitario">Precio Unitario*</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.cantidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_cantidad">Cantidad*</label>
+                        </div>
+                    </div>
+                </div>
+                <div id='etiqueta_responsable' class="col-lg-4 col-sm-12">
+                    <div class="alert alert-primary" role="alert">
+                        <h6 style="color: #121212;">&nbsp;Cálculo Previo:&nbsp;<div id="calculo_previo"> </div></h6>   
+                    </div>
+                </div>
+            </div>
+
+            <div  class="row">
+                <div class="form-check form-switch col-auto mx-4 mt-3" id="Otros_impuestos">
+                        <input class="form-check-input" type="checkbox" role="switch" id="Switch_Otros_impuestos">
+                        <label class="form-check-label" for="Switch_Otros_impuestos" id="LabelOtros_Impuestos">Otros Impuestos</label>
+                </div>
+                <div class="col-4">
+                    <div id="otros_impuestos" class="input-group mb-3 mt-3 d-none">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-plus"></i>&nbsp;$</span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.otros_impuestos|add_class:"form-control"|append_attr:"placeholder= Otros Impuestos"}}
+                            <label style="color: #121212;" for="id_otros_impuestos">Otros Impuestos*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div  class="row my-1">
+                <div class="form-check form-switch col-auto mx-4" id="Impuestos_retenidos">
+                        <input class="form-check-input" type="checkbox" role="switch" id="Switch_Impuestos_retenidos">
+                        <label class="form-check-label" for="Switch_Impuestos_retenidos" id="LabelOtros_Impuestos">Impuestos Retenidos</label>
+                </div>
+                <div class="col-4">
+                    <div id="impuestos_retenidos" class="input-group mb-3 d-none">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-minus"></i>&nbsp;$</span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form_product.impuestos_retenidos|add_class:"form-control form1"|append_attr:"placeholder= Impuestos Retenidos"}}
+                        <label style="color: #121212;" for="id_impuestos_retenidos">Impuestos Retenidos*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check form-switch col-auto mx-4 d-none" id="Entrada_Salida">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
+                        <label class="form-check-label" for="SwitchEntrada_Salida" id="LabelAlmacén">Entrada-Salida Express</label>
+                </div>
+            <div  class="row">
+                <div class="col-sm-1">
+                    <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
+                </div>
+            </div>
+        </form>
+        </div>
+        
+        <div class ="table-responsive-sm">
+            <table class="table table-light table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Descripción/Comentario</th>
+                    <th>Proyecto</th>
+                    <th>Subproyecto</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">P.U.</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col">Total</th>
+                    <!--<th scope="col">Facturas</th>-->
+                    <th scope="col" class="col-sm-2">Acción</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for producto in productos%}
+
+                <tr>
+                    <td scope="col">{{producto.producto.codigo}}</td>
+                    <td scope="col">{{producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.comentario}}</td>
+                    <td>{{producto.proyecto.nombre}}</td>
+                    <td>{{producto.subproyecto.nombre}}</td>
+                    <td scope="col">{{producto.cantidad|floatformat:2}}</td>
+                    <td scope="col">${{producto.precio_unitario|floatformat:4}}</td>
+                    <td scope="col">${{producto.get_subtotal|floatformat:2}}</td></td>
+                    <td scope="col">${{producto.total_parcial|floatformat:2}}</td>
+                    <!--<td>
+                        {% if producto.factura_pdf %}
+                        <a class="btn btn-outline-danger" href="{{producto.factura_pdf.url}}" download class="btn btn-outline-info">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </a>
+                        {% endif %}
+
+                        {% if producto.factura_xml %}
+                        <a class="btn btn-outline-light" style="background-color:#9a9b9d" href="{{producto.factura_xml.url}}" download class="btn btn-outline-light">
+                            <i class="fa-solid fa-file-code"></i>
+                        </a>
+                        {% endif %}
+                    </td>-->
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-gasto' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <!--<a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'editar-gasto' producto.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i></td>-->
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+            <table class="table table-light table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">Subtotal</th>
+                    <td scope="col" id="subtotal">${{gasto.get_subtotal_solicitud}}</td>
+                </tr>
+                </thead>
+            <tbody>
+                <tr>
+                    <th scope="col">Impuestos</th>
+                    <td scope="col" id="iva">${{gasto.get_total_impuesto}}</td>
+                </tr>
+                <tr>
+                    <th scope="col">Total</th>
+                    <td scope="col" id="total">${{gasto.get_total_solicitud|floatformat:2}}</td>
+                </tr>
+                
+            </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    function sumarTotales() {
+        let total = 0;
+        const totales = document.querySelectorAll('.factura-total');
+        
+        totales.forEach((element) => {
+            const value = parseFloat(element.textContent.trim()) || 0;
+            total += value;
+        });
+
+        // Mostrar el total en el elemento correspondiente
+        document.getElementById('total-sum').textContent = total.toFixed(2); // Puedes ajustar el número de decimales según necesites
+    }
+
+    
+
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        const btnAgregar = document.getElementById('btn_agregar');
+        sumarTotales();
+
+        form.addEventListener('submit', function() {
+            setTimeout(function() {
+                btnAgregar.disabled = true;
+            }, 50); // desactivar el botón 50ms después del clic
+        });
+    });
+    
+    function f_calculo_previo(){
+        cantidad = document.getElementById('id_cantidad').value
+        precio = document.getElementById('id_precio_unitario').value
+        otros_impuestos = document.getElementById('id_otros_impuestos').value
+        retenidos = document.getElementById('id_impuestos_retenidos').value
+        var iva = linea_gasto.getAttribute('iva_producto')
+        console.log(iva)
+        calculo_previo = document.getElementById('calculo_previo')
+        if (iva == "True"){
+            subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
+            calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+        } else {
+            console.log(precio, cantidad, otros_impuestos, retenidos)
+            subtotal = Number(precio) * Number(cantidad) + Number(otros_impuestos) - Number(retenidos)
+            calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+        }
+
+    }
+
+    document.getElementById('id_otros_impuestos').addEventListener('change',f_calculo_previo);
+    document.getElementById('id_impuestos_retenidos').addEventListener('change',f_calculo_previo);
+    document.getElementById('id_cantidad').addEventListener('change', f_calculo_previo);
+    document.getElementById('id_precio_unitario').addEventListener('change',f_calculo_previo);
+
+
+
+
+    if (document.getElementById('btn_agregar')){
+    document.getElementById('btn_agregar').addEventListener('submit', (event)=>{
+
+    if ((check_colaborador.checked) &&  (!txt_colaborador.value)) {
+
+        Swal.fire({
+                "title":"Error",
+                "text":"Favor de agregar un colaborador",
+                "icon":"error",
+            })
+        event.preventDefault()
+    }
+
+    });
+    }
+
+
+
+var precio_mod = document.getElementById("id_precio_unitario")
+var check_colaborador = document.getElementById("SwitchColaborador");
+
+
+document.getElementById("SwitchColaborador").addEventListener("change", function(element){
+	let colaboradores = document.getElementById('colaborador_parrafo');
+
+	if (check_colaborador.checked){
+	    colaboradores.setAttribute('class','col-sm-12')
+
+	} else {
+	    colaboradores.setAttribute('class','col-sm-12 d-none')
+
+	}
+});
+
+
+var check_gasto = document.getElementById("SwitchGasto");
+
+
+document.getElementById("SwitchGasto").addEventListener("change", function(element){
+	let articulos = document.getElementById('txt_articulos');
+	let articulos_gasto = document.getElementById('txt_articulos_gasto');
+	let form_art = document.getElementById('id_producto')
+	let entrada_salida = document.getElementById('Entrada_Salida')
+
+
+	articulos.value = ""
+	articulos_gasto.value=""
+	form_art.value = ""
+
+	if (check_gasto.checked){
+	    articulos.setAttribute('class','form-control')
+	    articulos_gasto.setAttribute('class','form-control d-none')
+	    entrada_salida.setAttribute('class','form-check form-switch col-auto mx-4')
+	    //impuestos_retenidos.setAttribute('class','form-check form-switch col-auto mx-4')
+	} else {
+	    articulos.setAttribute('class','form-control d-none')
+	    articulos_gasto.setAttribute('class','form-control')
+	    entrada_salida.setAttribute('class','form-check form-switch col-auto mx-4 d-none')
+	    //impuestos_retenidos.setAttribute('class','form-check form-switch col-auto mx-4 d-none')
+	}
+});
+
+var check_otros_imp = document.getElementById("Switch_Otros_impuestos")
+
+check_otros_imp.addEventListener("change", function(element){
+    var otros_impuestos = document.getElementById('otros_impuestos')
+    var text_otros_impuestos = document.getElementById('id_otros_impuestos')
+
+    if (check_otros_imp.checked){
+        otros_impuestos.classList.remove('d-none')
+       
+    } else {
+        otros_impuestos.classList.add('d-none')
+        text_otros_impuestos.value = 0
+        f_calculo_previo()
+    }
+    
+
+});
+
+let check_impuestos_retenidos = document.getElementById('Switch_Impuestos_retenidos')
+
+check_impuestos_retenidos.addEventListener("change", function(element){
+    let impuestos_retenidos = document.getElementById('impuestos_retenidos');
+    let text_impuestos_retenidos = document.getElementById('id_impuestos_retenidos');
+
+    if (check_impuestos_retenidos.checked){
+        impuestos_retenidos.classList.remove('d-none')
+    } else {
+        impuestos_retenidos.classList.add('d-none')
+        text_impuestos_retenidos.value = 0;
+        f_calculo_previo()
+    }
+
+
+});
+
+
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+document.getElementById('SwitchUsarXML').addEventListener('change', function() {
+// Obtener los formularios
+var form_product = document.getElementById('form_product');
+var form_product2 = document.getElementById('form_product2');
+
+// Obtener los campos de los formularios
+var inputs_form_product = form_product.getElementsByTagName('input');
+var inputs_form_product2 = form_product2.getElementsByTagName('input');
+
+if(this.checked) {
+// Limpiar los campos del formulario form_product
+for (var i = 0; i < inputs_form_product.length; i++) {
+    if (inputs_form_product[i].type == "text") {
+        inputs_form_product[i].value = "";
+        }
+    }
+
+    form_product.classList.add('d-none');
+    form_product2.classList.remove('d-none');
+    } else {
+    // Limpiar los campos del formulario form_product2
+    for (var i = 0; i < inputs_form_product2.length; i++) {
+    if (inputs_form_product2[i].type == "text") {
+        inputs_form_product2[i].value = "";
+        }
+    }
+
+    form_product.classList.remove('d-none');
+    form_product2.classList.add('d-none');
+    }
+});
+
+
+var datosProyectos = {{proyectos_para_select2|safe}}
+var datosProductos = {{productos_para_select2|safe}}
+var datosSuperintendentes = {{superintendentes_para_select2|safe}}
+var datosColaboradores = {{colaboradores_para_select2|safe}}
+var datosTipo = {{tipos_para_select2|safe}}
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    
+    $('#id_proyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Proyecto',
+        data: datosProyectos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_proyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        proyecto_id = data.id;
+        //console.log(proyecto_id)
+        if (proyecto_id != ""){
+            mini_ajax(proyecto_id)  //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+        }
+    }); //Aquí termina el select2:select
+    var proyectoSelect = $('#id_proyecto');
+    var subproyectoSelect = $('#id_subproyecto');
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+});
+
+function actualizarSubproyectos(data) {
+    //console.log(data)
+    var $subproyectoSelect = $('#id_subproyecto');
+    $subproyectoSelect.empty(); // Limpiar las opciones actuales
+
+    // Añadir una opción placeholder
+    $subproyectoSelect.append(new Option('Seleccione un subproyecto', '', true, true));
+
+    // Añadir nuevas opciones
+    $.each(data, function(index, subproyecto) {
+        $subproyectoSelect.append(new Option(subproyecto.nombre, subproyecto.id, false, false));
+    });
+
+    // Necesitas reinicializar el select2 para reflejar los cambios
+    $subproyectoSelect.trigger('change');
+}
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    $('#id_subproyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Subproyecto',
+        //data: ,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+});
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    $('#id_producto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Conceptos',
+        data: datosProductos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_producto').on('select2:select', function(e){
+        var data = e.params.data;
+        var iva = data.iva
+        var linea_gasto = document.getElementById('linea_gasto');
+        linea_gasto.setAttribute('iva_producto',iva)
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+        cambio_en_formulario(data,'producto') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+});
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    $('#id_superintendente').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Superintendente',
+        data: datosSuperintendentes,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_superintendente').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+        cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+    var superintendenteSelect = $('#id_superintendente');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.superintendente){
+            var option = new Option(datos.superintendente_text, datos.superintendente, true, true);
+            superintendenteSelect.append(option).trigger('change');
+            $('#id_superintendente').on('select2:unselect', function(e){
+
+                datos.superintendente = '';
+                datos.superintendente_text ='';
+                localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    $('#id_colaborador').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Colaborador',
+        data: datosColaboradores,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_colaborador').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+        cambio_en_formulario(data,'colaborador') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+    var colaboradorSelect = $('#id_colaborador');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.colaborador){
+            var option = new Option(datos.colaborador_text, datos.colaborador, true, true);
+            colaboradorSelect.append(option).trigger('change');
+            $('#id_colaborador').on('select2:unselect', function(e){
+
+                datos.colaborador = '';
+                datos.colaborador_text ='';
+                localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    $('#id_tipo').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Tipo',
+        data: datosTipo,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_tipo').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+        cambio_en_formulario(data,'tipo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+    var tipoSelect = $('#id_tipo');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.tipo){
+            var option = new Option(datos.tipo_text, datos.tipo, true, true);
+            tipoSelect.append(option).trigger('change');
+            $('#id_tipo').on('select2:unselect', function(e){
+
+                datos.tipo = '';
+                datos.tipo_text ='';
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+function mini_ajax(proyecto_id){
+    //console.log(proyecto_id)
+    $.ajax({
+            url: "{% url 'ajax_load_subproyectos' %}",
+            datatype: 'json',
+            data: {
+                'proyecto_id':proyecto_id
+            },
+            success: function (data) {
+                actualizarSubproyectos(data); 
+                //console.log(data)            
+            }  
+        })    
+
+};
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+function cambio_en_formulario(data,key) {
+    var gasto = document.getElementById('Gasto')
+    var gasto_id = gasto.getAttribute('gasto')
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id )) || {};
+    var value = data.id;
+    var text = data.text;
+    datosGuardados[key] = value;
+    datosGuardados[key+'_text'] = text; 
+    localStorage.setItem("id_solicitud_" + gasto_id , JSON.stringify(datosGuardados));
+    
+};
+
+
+</script>
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,69 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Selección{% endblock %}
+</head>
+<body>
+    {% block content %}
+    <hr>
+    <hr>
+    <div class="row">
+        <!-- Aqui es el encabezado de los filtros -->
+        <div class = "row mt-2 bg-white">
+            <div class="col-12">
+                <div class="card card-body">
+                    <h5>Filtro de productos</h5>
+                    <hr>
+                    {% csrf_token %}
+                    <form class="row g-3" method="GET">
+                        <label for="myfilter.form.codigo" class="col-sm-1 col-form-label text-right"><strong>Código:</strong></label>
+                        <div class="col-2">
+                            {{myfilter.form.codigo|add_class:'form-control'}}
+                        </div>
+                        <label for="myfilter.form.producto" class="col-sm-1 col-form-label text-right"><strong>Producto:</strong></label>
+                        <div class="col-5">
+                            {{myfilter.form.producto|add_class:'form-control'}}
+                        </div>
+                        <div class="col-2">
+                             <input class="btn btn-outline-success btn-block" type="submit" value="Buscar">
+                        </div>
+
+                    </form>
+                </div>
+            </div>
+        </div>
+        <!-- Aquí terminan el encabezado de los filtros -->
+
+        <div class="row">
+            {% for producto in productos %}
+            <div class='col-lg-3 my-2'>
+                <img class="thumbnail" src="{{producto.producto.imageURL}}">
+                <div class='box-element product'>
+                    <h6><strong>{{producto.producto}}</strong></h6>
+                    <h8>Disponible: {{producto.cantidad}}</h8>
+                    <br>
+                    <h8>Mínimo: {{producto.minimo}}</h8>
+                    <hr>
+                    <button data-product={{producto.id|unlocalize}} data-action="add" class="btn btn-outline-secondary add-btn actualizar-carro">Agregar a Solicitud</button>
+                    <a class='btn btn-outline-info' href="#">Ver</a>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var carro = document.getElementById('cart2');
+carro.removeAttribute('class');
+carro.setAttribute('class',"form-inline my-2 my-lg-0 position-relative");
+</script>
+    {% endblock %}
+</body>
+</html>

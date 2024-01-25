@@ -1,0 +1,98 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Actualización de Producto {% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog-lg" role="document">
+    <form  hx-post="{{request.path}}" class="modal-content" id='ProductForm' enctype='multipart/form-data' data-subfamilias-url="{% url 'ajax_load_subfamilias' %}" novalidate>
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Actualizar Productos</h5>
+            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="color:white">
+                {% csrf_token %}
+                <label for="form.codigo" class="col-auto col-form-label"><strong>Código: {{item.codigo}}</strong></label>
+                <br>
+                <label for="form.nombre" class="col-auto col-form-label"><strong>Producto: {{item.nombre}}</strong></label>
+                <br>
+                <!--<label for="form.unidad" class="col-auto col-form-label my-1"><strong>Marca:</strong></label>
+                    <div class="col-4">
+                        {{ form.unidad|add_class:"form-control"}}
+                    </div>
+                <label for="form.familia" class="col-auto col-form-label my-1"><strong>Familia:</strong></label>
+                    <div class="col-4">
+                        {{ form.familia|add_class:"form-control"}}
+                    </div>
+                <label for="form.subfamilia" class="col-auto col-form-label my-1"><strong>Subfamilia:</strong></label>
+                    <div class="col-4">
+                        {{ form.subfamilia|add_class:"form-control"}}
+                    </div>
+                <label for="form.especialista" class="col-auto col-form-label my-1"><strong>Especialista:</strong></label>
+                    <div class="col-4">
+                        {{ form.especialista|add_class:"form-check-input"}}
+                    </div>
+                <label for="form.iva" class="col-auto col-form-label my-1"><strong>Iva:</strong></label>
+                    <div class="col-4">
+                        {{ form.iva|add_class:"form-check-input"}}
+                    </div>
+                <label for="form.activo" class="col-auto col-form-label my-1"><strong>Activo:</strong></label>
+                    <div class="col-4">
+                        {{ form.activo|add_class:"form-check-input"}}
+                    </div>
+                <label for="form.servicio" class="col-auto col-form-label my-1"><strong>Servicio:</strong></label>
+                    <div class="col-4">
+                        {{ form.servicio|add_class:"form-check-input"}}
+                    </div>
+                <label for="form.baja_item" class="col-auto col-form-label my-1"><strong>Baja Item:</strong></label>
+                    <div class="col-4">
+                        {{ form.baja_item|add_class:"form-check-input"}}
+                    </div>
+                <div class="col-10">
+                        {{form.image|add_class:"form-control"}}
+                </div>-->
+                {{form|crispy}}
+        </div>
+        <div class="modal-footer">
+                <button class="btn btn-success col-auto" id="crear" type="submit" >Actualizar</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$("#id_familia").change(function () {
+      const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
+      const familiaId = $(this).val();  // get the selected familia ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'familia_id': familiaId       // add the familia id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
+          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
+        }
+      });
+    });
+</script>
+{% endblock %}
+</body>
+</html>

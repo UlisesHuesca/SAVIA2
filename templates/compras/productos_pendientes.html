@@ -1,0 +1,180 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Requisiciones autorizadas{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<h6>&nbsp;</h6>
+
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row mt-2 bg-white" id="response-div">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Filtro de Productos Pendientes</h5>
+            </div>
+            <div class="card-body">
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Producto:</strong></label>
+                    <div class="col-auto my-2">
+                        {{myfilter.form.producto|add_class:'form-control'}}
+                    </div>
+                    <div class="col-2">
+                        <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item mx-2">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
+                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;"href="{% url 'productos-pendientes' %}">Productos RQ</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-compras' %}">Matriz</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-oc-productos' %}">Productos OC</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
+                            </div>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+    
+
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th>RQ</th>
+                    <th>Solicitud</th>
+                    <th>Solicitado por</th>
+                    <th>Proyecto</th>
+                    <th>Subproyecto</th>
+                    <th>Operación</th>
+                    <th>Producto</th>
+                    <!--<th scope="col">Acción</th>-->
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in articulos_list %}
+                <tr>
+                    <th>{{item.req.folio}}</th>
+                    <th>{{item.req.orden.folio}}</th>
+                    <th>{{item.req.orden.staff.staff.staff.first_name}} {{item.req.orden.staff.staff.staff.last_name}}</th>
+                    <td>{{item.req.orden.proyecto.nombre}}</td>
+                    <td>{{item.req.orden.subproyecto.nombre}}</td>
+                    <td>{{item.req.orden.operacion}}</td>
+                    <td>{{item.producto.articulos.producto.producto.nombre}} </td>
+                    <!--<td></td>-->
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if articulos_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+
+            {% for item in articulos_list.paginator.page_range %}
+                {% if articulos_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > articulos_list.number|add:'-2' and item < articulos_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if articulos_list.paginator.num_pages > articulos_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{articulos_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{articulos_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if articulos_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url articulos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+</script>
+{% endblock %}
+</body>
+</html>

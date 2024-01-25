@@ -1,0 +1,124 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Reporte Calidad {% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class="modal-dialog-lg" role="document">
+    <form  hx-post="{{request.path}}" class="modal-content">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Reporte Calidad</h5>
+            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="color:white">
+            <div>
+                {% csrf_token %}
+                    <label for="form.producto" class="col-auto col-form-label my-1"><strong>Producto:</strong></label>
+                    <div class="col-8">
+                        <label>{{articulo_entrada.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</label>
+                    </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad:(Entradas:{{restantes_liberacion}})</strong></label>
+                    <div class="col-4">
+                        {{ form.cantidad|add_class:"form-control"}}
+                    </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Comentarios:</strong></label>
+                    <div class="col-4">
+                        {{ form.comentarios|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Liberado:</strong></label>
+                    <div class="col-4">
+                        {{ form.autorizado|add_class:"form-control"}}
+                    </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+                <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+//var price1 = document.getElementById("id_price")
+//price1.setAttribute("class","form-control d-none")
+
+//document.getElementById("productos").addEventListener("change", function(element){
+//    var select = document.getElementById("productos");
+//    var current_option = select.options[select.selectedIndex];
+//    var target = current_option.getAttribute('target')
+//    var other_select = document.getElementById('id_producto')
+//    other_select.value = target
+//    console.log(current_option)
+//});
+
+document.getElementById("txt_producto").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_producto");
+    var browserChildren = document.getElementById('producto').children;
+    var other_select = document.getElementById('id_producto');
+    //console.log(select.getAttribute("valor"))
+    //other_select.value = select.valor
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        if (browserChildren[i].value === select.value){
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+</script>
+{% endblock %}
+</body>
+</html>

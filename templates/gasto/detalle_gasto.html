@@ -1,0 +1,97 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load humanize %}
+<html>
+<head>
+{% block title %}Detalle Gasto{% endblock %}
+</head>
+
+<body>
+{% block content %}
+
+<div class="modal-dialog-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Gasto: G{{pk}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <div class='box-element-2'>
+                <table class="table" style="color:white">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Artículo</th>
+                            <th>Proyecto</th>
+                            <th>Subproyecto</th>
+                            <th>Cantidad</th>
+                            <th>Precio</th>
+                            <th>Total</th>
+                            <th>Comentario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for producto in productos %}
+                        <tr>
+                            <td>{{producto.producto.codigo}}</td>
+                            <td>{{producto.producto.nombre}}</td>
+                            <td>{{producto.proyecto.nombre}}</td>
+                            <td>{{producto.subproyecto.nombre}}</td>
+                            <td><p class='quantity' id='prod_quantity'>{{producto.cantidad|floatformat:2}}</p></td>
+                            <td>${{producto.precio_unitario|floatformat:2}}</td>
+                            <td>${{producto.total_parcial}}</td>
+                            <td>{{producto.comentario}}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+        <h4>Contenido de Facturas</h4>
+        <table class="table" style="color:white">
+            <thead>
+                <tr>
+                    <th>Archivo PDF</th>
+                    <th>Archivo XML</th>
+                    <th>Fecha de Subida</th>
+                    <th>Concepto</th>
+                    <th>Total</th>
+                </tr>
+            </thead>
+            <tbody>
+            {% for factura in facturas %}
+            <tr>
+                <td>
+                    {% if factura.archivo_pdf %}
+                    <a class="btn btn-outline-danger" href="{{factura.archivo_pdf.url}}" download class="btn btn-outline-info">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </a>
+                    {% endif %}
+                </td>
+                <td>
+                    {% if factura.archivo_xml %}
+                    <a class="btn btn-outline-light" style="background-color:#9a9b9d" href="{{factura.archivo_xml.url}}" download class="btn btn-outline-light">
+                        <i class="fa-solid fa-file-code"></i>
+                    </a>
+                    {% endif %}
+                </td>
+                <!-- Lo estoy desapareciendo por su falta de link con las  facturas
+                <td>|% if factura.archivo_xml %| ||factura.fecha_subida|date:"d-m-Y H:i" || |% endif %|</td>
+                <td>|% if factura.archivo_xml %| ||factura.emisor.resultados|| |% endif %|</td>
+                <td class="factura-total">|% if factura.archivo_xml %| ||factura.emisor.total|| |% endif %|</td>-->
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+</body>
+</html>

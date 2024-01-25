@@ -1,0 +1,47 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+<html>
+<head>
+{% block title %}Requisiciones{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog modal-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Solicitud: {{orden.folio}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <div class='box-element-2'>
+                <div class='cart-row'>
+                    <div style="flex:1"></div>
+                    <div style="flex:1">Código</div>
+                    <div style="flex:2">Artículo</div>
+                    <div style="flex:1">Cantidad</div>
+                </div>
+                {% for producto in productos %}
+                <div class='cart-row'>
+                    <div style="flex:1"><img class='row-image' src="{{producto.articulos.producto.producto.imageURL}}"></div>
+                    <div style="flex:1">{{producto.articulos.producto.producto.codigo}}</div>
+                    <div style="flex:2">{{producto.articulos.producto.producto.nombre}}</div>
+                    <div style="flex:1"><p class='quantity' id='prod_quantity'>{{producto.cantidad_requisitar}}</p></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <form method= "POST" action="{% url 'requisicion-detalle' orden.id%}">
+                {% csrf_token %}
+                <input class="btn btn-success" type="submit" value='Requisición'>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>

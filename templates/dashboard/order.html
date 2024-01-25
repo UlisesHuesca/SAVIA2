@@ -1,0 +1,41 @@
+{% extends 'partials/base.html' %}
+<html>
+<head>
+{% block title %}Order Page{% endblock %}
+</head>
+<body>
+{% block content %}
+{% include 'partials/topside.html' %}
+<div class="container">
+<div class="row my-4">
+    <div class="col-md-4"></div>
+
+    <div class="col-md-8">
+        <table class="table bg-white">
+            <thead class="card-header text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Producto</th>
+                    <th scope="col">Ordenado por</th>
+                    <th scope="col">Cantidad</th>
+                    <th scope="col">Fecha</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for order in orders %}
+                <tr>
+
+                    <th scope="row">{{order.product}}</th>
+                    <td>{{order.staff.username}}</td>
+                    <td>{{order.order_quantity}}</td>
+                    <td>{{order.date}}</td>
+
+                </tr>
+                 {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+</div>
+{% endblock %}
+</body>
+</html>

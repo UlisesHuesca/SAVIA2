@@ -1,0 +1,375 @@
+{% extends 'partials/base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Devolución{% endblock %}
+</head>
+<body>
+
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card" id="form-wrapper">
+            <div class="card-header">
+            <!-- Aqui es el encabezado de los filtros -->
+                <h5>Devolución D{{devolucion.id}}| Solicitud: {{orden.folio}}</h5>
+            </div>
+            <div id="Solicitud-info">
+                    <form method="POST" id='formulario_encabezado'>
+                        {% csrf_token %}
+                        {% if cantidad_items > 0 %}
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form2.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                    <label style="color: #121212;" for="id_area">Comentario*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form2.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
+                                    <label style="color: #121212;" for="id_tipo">Tipo*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-3">
+                            <input class="btn btn-outline-info btn-block btn-lg my-4" id ='submit-button' name="agregar_devolucion" type="submit" value="Devolver">
+                        </div>
+                        {% endif %}
+                    </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card">
+            <div class = "card-header">
+            <h5 id="devolucion" vale="{{devolucion.id}}">Productos</h5>
+            </div>
+
+            <div class='card-body'>
+                <form method="POST">
+                <div class="row">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1"> 
+                                    {{form.producto}}
+                                </div>
+                        </div>
+                <div>
+                <div class="row">
+                        <div id="etiqueta_solicitado" class="col-4">
+                            <div class="alert alert-secondary" role="alert">
+                            <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                            </div>
+                        </div>
+                    <div class="col-lg-5">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Cantidad</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                <label style="color: #121212;" for="id_impuestos_adicionales">Comentario</label>
+                            </div>
+                        </div>
+                    </div>    
+                    <div class="col-sm-1 mt-3">
+                        <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                            Agregar
+                        </a>
+                    </div>
+                </div>
+                <hr>
+                <div class ="table-responsive-sm">
+                    <table class="table table-ligth table-striped mx-1">
+                    {% csrf_token %}
+                    <thead>
+                        <tr>
+                        <th scope="col" salidas="{{salidas}}">#</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <!--<th scope="col">Precio</th>-->
+                        <th scope="col">Comentario</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in productos %}
+                        <tr>
+                            <th scope="col"><img class="row-image" src="{{item.producto.articulos.producto.producto.imageURL}}"></th>
+                            <th scope="col">{{item.producto.articulos.producto.producto.codigo|unlocalize}}</th>
+                            <th scope="col">{{item.producto.articulos.producto.producto.nombre}}</th>
+                            <th scope="col">{{item.cantidad}}</th>
+                            <!--<th scope="col">${{item.precio}}</th>-->
+                            <th scope="col">{{item.comentario}}</th>
+                            <th scope="col">
+                            <td>
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.vale_devolucion.id}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </form>
+                    </table>
+                </div>
+            </div>
+            <div class="card-footer">
+            <h5 class>Artículos: {{cantidad_items}}</h5>
+            </div>
+
+        </div>
+    </div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+/*document.getElementById("producto").addEventListener("change", function(element){
+    var select = document.getElementById('producto');
+    
+    var current_option = select.options[select.selectedIndex];
+    let target = current_option.getAttribute('target')
+    let producto = document.getElementById('id_producto')
+    producto.value = target
+    let cantidad = current_option.getAttribute('cantidad');
+    let cantidad_sol = current_option.getAttribute('cantidad_sol');
+    let stock = current_option.getAttribute('stock');
+
+    console.log('target:',target)
+    if (cantidad == 0) {
+        if (cantidad_sol > 0) {
+            cantidad_pendiente = cantidad_sol
+        }
+    } else {
+    var cantidad_pendiente = cantidad}
+
+    console.log('stock',stock);
+    var solicitado = document.getElementById('solicitado');
+    solicitado.innerHTML = cantidad_pendiente;
+});*/
+
+
+var updateBtn = document.getElementById('update-purchase')
+let count=0;
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let vale = document.getElementById('devolucion');
+        devolucion = vale.getAttribute('vale')
+        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
+        var select = document.getElementById('solicitado');
+        
+        var id = select.getAttribute('data-id');
+        var cantidad_sol = select.getAttribute('data-pendiente')
+        console.log(cantidad_sol)
+        var cantidad_box = document.getElementById('id_cantidad');
+        //Esta es la cantidad comprada de acuerdo a la requisición
+        var cantidad_devolucion = cantidad_box.value
+        var comentario = document.getElementById("id_comentario").value
+
+
+        cantidad_pendiente = cantidad_sol - cantidad_devolucion
+
+
+        console.log(cantidad_pendiente)
+        
+
+
+        var action = "add";
+        if (cantidad_pendiente < 0)  {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad disponible",
+                    "icon":"error",
+                })
+        //Si "la cantidad comprada" es menor que cero
+        } else if (cantidad_devolucion.value <= 0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            console.log('val:',cantidad_devolucion)
+            console.log('devolucion:',devolucion)
+            console.log('id:',id)
+            console.log('action:',action)
+            console.log('comentario:',comentario)
+
+            ActualizarArticulos(devolucion,id,cantidad_devolucion,action,comentario);
+            //current_option.setAttribute("class","d-none");
+            //select.value = default_sel;
+
+            //document.getElementById("id_cantidad").value= null;
+            //document.getElementById("id_precio_unitario_0").value= null;
+        }
+
+})
+
+function deleteRow(element) {
+    let devolucion = document.getElementById('delete');
+    devolucion = devolucion.getAttribute('id_salida')
+    id = element.getAttribute('producto_id');
+    val_cantidad = element.getAttribute('cantidad');
+    var action = "remove"
+    comentario = ""
+    ActualizarArticulos(devolucion,id,val_cantidad,action,comentario);
+}
+
+
+
+function ActualizarArticulos(devolucion,id,val_cantidad,action,comentario){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/requisiciones/update_devolucion_inventario/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'devolucion':devolucion, 'id':id, 'val_cantidad':val_cantidad, 'action':action,'comentario':comentario})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+        const form2 = document.getElementById('formulario_encabezado');
+        const btnCrear = document.getElementById('submit-button');
+
+        form2.addEventListener('submit', function() {
+           preventDoubleClick(btnCrear)
+        });
+});
+
+function preventDoubleClick(button) {
+    setTimeout(function() {
+        button.disabled = true;
+    }, 50);
+}
+
+var datosProductos = {{productos_para_select2 | safe}}
+console.log(datosProductos)
+
+$(document).ready(function() {
+    $('#id_producto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona un producto',
+        data: datosProductos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_producto').on('select2:select', function(e) {
+
+        var data = e.params.data;
+        var cantidad = data.cantidad;
+        var cantidad_comprada = data.cantidad_comprada;
+        var id = data.id;
+
+        console.log(cantidad)
+        if (!cantidad_comprada) {
+            cantidad_comprada = 0
+        }
+        var cantidad_pendiente = Number(cantidad) - Number(cantidad_comprada);
+
+
+        // Envío los variables como atributos y texto de los labels
+        $('#solicitado').text(cantidad_pendiente);
+        $('#solicitado').attr('data-id',id)
+        $('#solicitado').attr('data-pendiente',cantidad_pendiente)
+       
+    });
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+</script>
+{% endblock %}
+</body>
+</html>
+

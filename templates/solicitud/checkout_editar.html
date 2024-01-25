@@ -1,0 +1,70 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+<html>
+<head>
+{% block title %}Crear Solicitud{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="row">
+    <div class="col-lg-6">
+        <div class="box-element" id="form-wrapper">
+            <div id="Solicitud-info">
+                <hr>
+					<h2>Información de Solicitud:</h2>
+					<hr>
+					<form method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}" novalidate>
+                        {% csrf_token %}
+                        {{ form|crispy }}
+                        <input class="btn btn-outline-info btn-block" type="submit" value="Agregar Solicitud">
+                    </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="box-element">
+            <a class="btn btn-outline-dark" href="{% url 'solicitud-cart' %}">&#x2190;De vuelta al carro</a>
+            <hr>
+            <h3>Resumen de solicitud</h3>
+            <hr>
+            {% for producto in productos %}
+            <div class='cart-row'>
+                <div style="flex:2"><img class="row-image" src="{{producto.producto.producto.imageURL}}"></div>
+                <div style="flex:1">{{producto.producto.producto.codigo}}</div>
+                <div style="flex:2">{{producto.producto.producto.nombre}}</div>
+                <div style="flex:1">
+                <p class='quantity'>{{producto.cantidad}}</p>
+                </div>
+            </div>
+            {% endfor %}
+            <hr>
+            <h5>Artículos: {{orden.get_cart_quantity}}</h5>
+
+        </div>
+    </div>
+</div>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $("#id_proyecto").change(function () {
+      const url = $("#OrderForm").attr("data-subproyecto-url");  // get the url of the `load_subproyectos` view
+      const proyectoId = $(this).val();  // get the selected proyecto ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'proyecto_id': proyectoId       // add the proyecto id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_subproyectos` view function
+          $("#id_subproyecto").html(data);  // replace the contents of the subproyectos input with the data that came from the server
+        }
+      });
+
+    });
+  </script>
+{% endblock %}
+</body>
+</html>
