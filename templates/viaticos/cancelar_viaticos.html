@@ -1,0 +1,84 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{& load humanize %}
+<html>
+<head>
+{% block title %}Autorización viaticos{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Autorizar Viático: {{viatico.id}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <table class='table table-dark table striped'>
+                <thead>
+                    <tr>
+                    <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viatico para:</th>
+                    <th scope="col">{{viatico.colaborador.staff.first_name}} {{viatico.colaborador.staff.last_name}}</th>
+                    </tr>
+                </thead>
+                <tbody>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
+                    <th scope="col">{{viatico.proyecto.nombre}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-diagram-project"></i> Subproyecto:</th>
+                    <th scope="col">{{viatico.subproyecto.nombre}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Partida:</th>
+                    <th scope="col">{{viatico.fecha_partida}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Retorno:</th>
+                    <th scope="col">{{viatico.fecha_retorno}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-location-dot"></i> Lugar de Partida:</th>
+                    <th scope="col">{{viatico.lugar_partida}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-route"></i> Lugar de Comisión:</th>
+                    <th scope="col">{{viatico.lugar_comision}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-car-side"></i> Transporte:</th>
+                    <th scope="col">{{viatico.transporte}}</th>
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-hotel"></i> Hospedaje:</th>
+                    {% if viatico.hospedaje %}
+                    <th scope="col">Sí</th>
+                    {% else %}
+                    <th>No</th>
+                    {% endif %}
+                </tr>
+                <tr>
+                    <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
+                    <th scope="col">{{viatico.comentario}}</th>
+                </tr>
+                </tbody> 
+            </table>
+        </div>   
+                
+
+        <div class="modal-footer">
+            <form action="{% url 'cancelar-viaticos' viatico.id %}" method=POST>
+                {% csrf_token %}
+                <button id="btn_cancelar" name="btn_cancelar" class="btn btn-danger" type="submit">Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
+</body>
+</html>

@@ -1,0 +1,130 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Inventario {% endblock %}
+</head>
+<body>
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-8 offset-md-2 col-sm-12">
+            
+            <div class="card">
+                <div class="card-header">
+                    Agregar Producto a Inventario
+                </div>
+                <form method="POST" >
+                <div class="card-body" style="color:white">
+                    
+                        {% csrf_token %}
+                
+                        <div class="row"> 
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"> 
+                                    <i class="fa-solid fa-box"></i>
+                                </span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.producto|add_class:"form-control flex-grow-1"}}
+                                </div>
+                            </div>   
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                                        <label style="color: #121212;" for="id_producto">Cantidad</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.price|add_class:"form-control"|append_attr:"placeholder= Precio"}}
+                                        <label style="color: #121212;" for="id_price">Precio</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                        <label style="color: #121212;" for="id_price">Comentario</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    
+                </div>
+                <div class="card-footer">
+                    <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>
+                    <a type="button" class="btn btn-secondary" id="cerrar" href="{% url 'solicitud-inventario' %}">Cancelar</a>
+                </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+//var datosProductos = {{productos_para_select2|safe}}
+
+$(document).ready(function() {
+    //var orden = document.getElementById('order');
+    //var orden_id = orden.getAttribute('orden');
+    
+    $('#id_producto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Producto',
+        //data: datosProductos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+</script>
+{% endblock %}
+</body>
+</html>

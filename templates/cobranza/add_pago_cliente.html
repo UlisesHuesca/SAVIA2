@@ -1,0 +1,107 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Agregar Pagos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-6 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Agregar Pago</h3>
+                <hr>
+                <form method="POST">
+                {% csrf_token %}
+                    <label for="form.proyecto" class="col-auto col-form-label my-1"><strong>Proyecto:</strong></label>
+                    <div class="col-8">
+                    {{form.proyecto|add_class:"form-control d-none"}}
+                    </div>
+                    <div class="col-12">
+                        <input type="text" list="proyecto" id="txt_proyecto" valor="{{proyecto.id}}" placeholder="Proyectos..." class="form-control">
+
+                        <datalist id="proyecto" name='proyecto'>
+                        {% for proyecto in proyectos %}
+                            <option valor="{{proyecto.id}}" value="ID:{{proyecto.id}} Proyecto:{{proyecto.nombre}} Cliente:{{proyecto.cliente}} Cotización:{{proyecto.folio_cotizacion}}"></option>
+                        {% endfor %}
+                        </datalist>
+                    </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Monto Abono:</strong></label>
+                    <div class="col-4">
+                        {{ form.monto_abono|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Fecha:</strong></label>
+                    <div class="col-4">
+                        {% render_field form.fecha_pago type="date" class="form-control" %}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
+                    <div class="col-12">
+                        {{ form.comentario|add_class:"form-control"}}
+                    </div>
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'cobranza-pagos' %}">Cancelar</a>
+                    <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+//var price1 = document.getElementById("id_price")
+//price1.setAttribute("class","form-control d-none")
+
+//document.getElementById("productos").addEventListener("change", function(element){
+//    var select = document.getElementById("productos");
+//    var current_option = select.options[select.selectedIndex];
+//    var target = current_option.getAttribute('target')
+//    var other_select = document.getElementById('id_producto')
+//    other_select.value = target
+//    console.log(current_option)
+//});
+
+document.getElementById("txt_proyecto").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proyecto");
+    var browserChildren = document.getElementById('proyecto').children;
+    var other_select = document.getElementById('id_proyecto');
+    //console.log(select.getAttribute("valor"))
+    //other_select.value = select.valor
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        if (browserChildren[i].value === select.value){
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+</script>
+{% endblock %}
+</body>
+</html>

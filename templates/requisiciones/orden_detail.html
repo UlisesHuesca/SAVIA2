@@ -1,0 +1,48 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+
+<html>
+<head>
+{% block title %}Solicitudes{% endblock %}
+</head>
+
+<body>
+{% block content %}
+
+<div class="modal-dialog-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Orden: {{orden.folio}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+            <div class='box-element-2'>
+                <div class='cart-row'>
+                    <div style="flex:1"></div>
+                    <div style="flex:1">Código</div>
+                    <div style="flex:2">Artículo</div>
+                    <div style="flex:1">Cantidad</div>
+                </div>
+                {% for producto in productos %}
+                <div class='cart-row'>
+                    <div style="flex:1"><img class='row-image' src="{{producto.producto.producto.imageURL}}"></div>
+                    <div style="flex:1">{{producto.producto.producto.codigo}}</div>
+                    <div style="flex:2">{{producto.producto.producto.nombre}}</div>
+                    <div style="flex:1"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="modal-footer">
+
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+</body>
+</html>

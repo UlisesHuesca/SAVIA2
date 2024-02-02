@@ -1,0 +1,55 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+<html>
+<head>
+{% block title %}Solicitudes{% endblock %}
+</head>
+<body>
+{% block content %}
+    <div class='row'>
+        <div class='col-lg-12'>
+            <div class='box-element'>
+                <a class='btn btn-outline-dark' href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-arrow-left"></i>Agregar más productos</a>
+            <br>
+            <br>
+            <table class="table">
+                <tr>
+                    <th><h5>Productos: <strong>{{productosordenados}}</strong></h5></th>
+                    <th>
+                        <a style="float:right; margin:5px" class='btn btn-info' href="{% url 'solicitud-checkout' orden.id %}">Cargar artículos a solicitud</a>
+                    </th>
+                </tr>
+            </table>
+            </div>
+            <br>
+            <div class='box-element'>
+                <div class='cart-row'>
+                    <div style="flex:1"></div>
+                    <div style="flex:1">Código</div>
+                    <div style="flex:2">Artículo</div>
+                    <div style="flex:1">Cantidad</div>
+                </div>
+                {% for producto in productos %}
+                <div class='cart-row'>
+                    <div style="flex:1"><img class='row-image' src="{{producto.producto.producto.imageURL}}"></div>
+                    <div style="flex:1">{{producto.producto.producto.codigo}}</div>
+                    <div style="flex:2">{{producto.producto.producto.nombre}}</div>
+                    <div style="flex:1">
+                        <p class='quantity'>{{producto.cantidad}}</p>
+                        <div class='quantity'>
+                            <img data-product={{producto.producto.id}} data-action="add" class="chg-quantity update-cart" src="{% static 'images/arrow-up.png' %}">
+
+                            <img data-product={{producto.producto.id}} data-action="remove" class="chg-quantity update-cart" src="{% static 'images/arrow-down.png' %}">
+                        </div>
+                    </div>
+                </div>
+                <hr>
+                {% endfor %}
+
+            </div>
+        </div>
+    </div>
+{% endblock %}
+</body>
+</html>

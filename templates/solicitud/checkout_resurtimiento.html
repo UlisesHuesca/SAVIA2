@@ -1,0 +1,347 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Crear Solicitud{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card" id="form-wrapper">
+            <div class="card-header">
+            <h2 id="order" orden="{{order.id|unlocalize}}">Información de Solicitud</h2>
+            </div>
+            {% if error_messages %}
+            <div class="alert alert-danger" role="alert">
+                {{error_messages}}
+            </div>
+            {% endif %}
+            <div class="card-body"   id="Solicitud-info">
+					<form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        <form id="formulario_encabezado" method="POST">
+                            {% csrf_token %}
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                                {{form.proyecto}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                                {{form.subproyecto}}
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                              
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="input-group mb-3">
+                                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.superintendente}}    
+                                            </div>
+                                        </div>  
+                                    </div>
+                                </div>  
+                            
+                                <input class="btn btn-outline-info btn-block my-2" name="agregar" type="submit" value="Agregar Solicitud">
+                        </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8 col-sm-12">
+        <div class="card">
+            <div class="card-header">
+            <h3>Resumen de Solicitud</h3>
+            </div>
+            <div class="col-3">
+            <a class="btn btn-outline-info m-2" href="{% url 'product_selection_resurtimiento' %}"><i class="fa-solid fa-arrow-left">Agregar productos</i></a>
+            </div>
+           
+            <div class ="table-responsive-sm">
+
+                <table class="table table-ligth table-striped mx-1">
+               
+                <thead>
+                        <tr>
+                        <th scope="col">#</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Unidad</th>
+                        <th scope="col"></th>
+                        </tr>
+                </thead>
+                {% for producto in productos %}
+                <form method="POST">
+                    {% csrf_token %}
+                <tbody>
+                        <tr>
+                            <th scope="col"><img class="row-image" src="{{producto.producto.producto.imageURL}}"></th>
+                            <th scope="col">{{producto.producto.producto.codigo}}</th>
+                            <th scope="col">{{producto.producto.producto.nombre}}</th>
+                            <th scope="col">{{producto.cantidad}}</th>
+                            <th scope="col">{{producto.producto.producto.unidad}}</th>
+                            <th scope="col">
+                            <td>
+                                <a class="btn btn-outline-info m-1" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'product-quantity-edit' producto.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger actualizar-carro m-1" value="Delete" data-product={{producto.producto.id|unlocalize}} data-action="remove" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button>
+                            </td>
+                        </tr>
+                </tbody>
+                {% endfor %}
+                </form>
+                </table>
+            </div>
+            <hr>
+           
+            <h5>Artículos: {{orden.get_cart_quantity}}</h5>
+
+        </div>
+    </div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+    ;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+    })()
+
+    function cambio_en_formulario(data,key) {
+    //console.log(data)
+
+    //var formulario = document.getElementById('formulario_encabezado')
+    //var formData = new FormData(formulario);
+    var orden = document.getElementById('order')
+    var orden_id = orden.getAttribute('orden')
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id )) || {};
+    var value = data.id;
+    var text = data.text;
+    datosGuardados[key] = value;
+    datosGuardados[key+'_text'] = text; 
+    localStorage.setItem("id_solicitud_" + orden_id , JSON.stringify(datosGuardados));
+    
+};
+
+var datosProyectos = {{proyectos_para_select2|safe}};
+var datosSuperintendentes = {{ superintendentes_para_select2|safe }};
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    
+    $('#id_proyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Proyecto',
+        data: datosProyectos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_proyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        cambio_en_formulario(data,'proyecto') //Acá lo que hago es mediante esta función guardo los valores en el local storage, como argumentos los parámetros que serán los valores guardados y la palabra que definira la variable donde se guardara ese valor
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        proyecto_id = datos.proyecto
+        console.log(datos)
+        if (proyecto_id != ""){
+            mini_ajax(proyecto_id)  //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+        }
+    }); //Aquí termina el select2:select
+    var proyectoSelect = $('#id_proyecto');
+    var subproyectoSelect = $('#id_subproyecto');
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    if (datos) {
+        if (datos.proyecto){
+            var option = new Option(datos.proyecto_text, datos.proyecto, true, true);
+            proyectoSelect.append(option).trigger('change');
+            if (!datos.subproyecto){
+                proyecto_id = datos.proyecto
+                //console.log(proyecto_id)
+                if (proyecto_id != ""){
+                    mini_ajax(proyecto_id) //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+                }
+            }
+        }
+        $('#id_proyecto').on('select2:unselect', function(e){
+            //Limpiar las entradas de proyecto y subproyecto en el objeto almacenado
+            var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+            datos.proyecto_text = '';
+            datos.proyecto = '';
+            datos.subproyecto = '';
+            datos.subproyecto_text ='';
+            localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+        
+            //console.log(datos)
+            // Limpiar la selección actual en #id_subproyecto
+            $('#id_subproyecto').val(null).trigger('change');
+        });//Aquí termina el select2:unselect
+
+    }
+});
+
+function mini_ajax(proyecto_id){
+    //console.log(proyecto_id)
+    $.ajax({
+            url: "{% url 'ajax_load_subproyectos' %}",
+            datatype: 'json',
+            data: {
+                'proyecto_id':proyecto_id
+            },
+            success: function (data) {
+                actualizarSubproyectos(data); 
+                //console.log(data)            
+            }  
+        })    
+
+};
+
+function actualizarSubproyectos(data) {
+    //console.log(data)
+    var $subproyectoSelect = $('#id_subproyecto');
+    $subproyectoSelect.empty(); // Limpiar las opciones actuales
+
+    // Añadir una opción placeholder
+    $subproyectoSelect.append(new Option('Seleccione un subproyecto', '', true, true));
+
+    // Añadir nuevas opciones
+    $.each(data, function(index, subproyecto) {
+        $subproyectoSelect.append(new Option(subproyecto.nombre, subproyecto.id, false, false));
+    });
+
+    // Necesitas reinicializar el select2 para reflejar los cambios
+    $subproyectoSelect.trigger('change');
+}
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_subproyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Subproyecto',
+        //data: ,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+
+    $('#id_subproyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'subproyecto') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var subproyectoSelect = $('#id_subproyecto');
+    if (datos) {
+        if (datos.subproyecto){
+            var option = new Option(datos.subproyecto_text, datos.subproyecto, true, true);
+            subproyectoSelect.append(option).trigger('change');
+        }
+        $('#id_subproyecto').on('select2:unselect', function(e){
+
+            datos.subproyecto = '';
+            datos.subproyecto_text ='';
+            localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+        })
+    }
+});
+
+$(document).ready(function() {
+    var orden = document.getElementById('order');
+    var orden_id = orden.getAttribute('orden');
+    $('#id_superintendente').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Superintendente',
+        data: datosSuperintendentes,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_superintendente').on('select2:select', function(e){
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+        cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+    var superintendenteSelect = $('#id_superintendente');
+    //Si hay datos se rellena el campo con los datos del local storage
+    if (datos) {
+        if (datos.superintendente){
+            var option = new Option(datos.superintendente_text, datos.superintendente, true, true);
+            superintendenteSelect.append(option).trigger('change');
+            $('#id_superintendente').on('select2:unselect', function(e){
+
+                datos.superintendente = '';
+                datos.superintendente_text ='';
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+
+            })
+        }
+    }
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+    
+    
+
+    var myModal = document.getElementById('dialog')
+
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+    location.reload();
+    })
+</script>
+{% endblock %}
+</body>
+</html>

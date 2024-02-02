@@ -1,0 +1,7 @@
+venv/
+env/
+access.log
+errors.log
+errors.log.save
+debug.log
+.env

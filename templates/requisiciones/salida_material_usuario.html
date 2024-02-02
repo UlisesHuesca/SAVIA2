@@ -1,0 +1,61 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load widget_tweaks %}
+{% load static %}
+<html>
+<head>
+{% block title %}Productos{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class="modal-dialog-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Surtir Solicitud: {{productos.producto.articulos.orden.get_folio}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body">
+            <div class='box-element-2'>
+                <div class='cart-row'>
+                    <div style="flex:1"></div>
+                    <div style="flex:1">Código</div>
+                    <div style="flex:2">Artículo</div>
+                    <div style="flex:1">Cantidad</div>
+                </div>
+                <div class='cart-row'>
+                    <div style="flex:1"><img class='row-image' src="{{productos.producto.articulos.producto.producto.imageURL}}"></div>
+                    <div style="flex:1">{{productos.producto.articulos.producto.producto.codigo}}</div>
+                    <div style="flex:2">{{productos.producto.articulos.producto.producto.nombre}}</div>
+                    <div style="flex:1"><p class='quantity' id='prod_quantity'>{{productos.cantidad}}</p></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <form method="POST" action="{% url 'salida-material-usuario' productos.id %}">
+                {% csrf_token %}
+                <h6>Confirmar salida: {{productos.producto.articulos.orden.get_folio}}</h6>
+                <input class="btn btn-success" type="submit" value='Firma Virtual'>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </form>
+        </div>
+    </div>
+</div>
+
+
+{% endblock %}
+</body>
+</html>

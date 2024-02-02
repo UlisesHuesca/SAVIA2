@@ -1,0 +1,368 @@
+{% extends 'partials/base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %}Productos{% endblock %}
+</head>
+<body>
+
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<hr>
+<hr>
+<div class="row">
+    <div class="col-lg-6">
+        <div class="box-element" id="form-wrapper">
+            <div class="card-header mt-3 mb-4">
+            <!-- Aqui es el encabezado de los filtros -->
+                <h5 target="">Vale de Salida Proyectos Alternos</h5>
+            </div>
+            <div id="Solicitud-info">
+                    <form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        <div class="row my-5">
+                            <div class="row">
+                            <label class="col-auto col-form-label"><strong>Proyecto:</strong></label>
+                            <label class="col-auto col-form-label">{{orden.proyecto.nombre}}</label>
+                            <label class="col-auto col-form-label"><strong>Subproyecto:</strong></label>
+                            <label class="col-auto col-form-label">{{orden.subproyecto.nombre}}</label>
+                            </div>
+                            <div class="row">
+                            <label for="formVale.proyecto" class="col-auto col-form-label my-1"><strong>Proyecto:</strong></label>
+                            {{ formVale.proyecto|add_class:"form-select my-1 d-none"}}
+                            <div class="col-5">
+                                <input type="text" list="proyecto" id="txt_proyecto" valor="{{proyecto.id}}" placeholder="Proyectos..." class="form-control">
+                                <datalist id="proyecto" name='proyecto'>
+                                    {% for proyecto in proyectos %}
+                                        <option valor="{{proyecto.id}}" value="{{proyecto.nombre}}"></option>
+                                    {% endfor %}
+                                </datalist>
+                            </div>
+                            </div>
+                            <div class="row">
+                            <label for="formVale.proyecto" class="col-auto col-form-label my-1"><strong>Subproyecto:</strong></label>
+
+                                {{ formVale.subproyecto|add_class:"form-select my-1 d-none"}}
+
+                            <div class="col-sm-6 my-2">
+                                <div class="selector">
+                                    <select class="form-select form-select-sm" id="subproyecto">
+                                    <option id="default_sel">      </option>
+                                    {% for subproyecto in subproyectos %}
+                                    <option id="js" proyecto="{{subproyecto.proyecto.id}}" subproyecto="{{subproyecto.id}}">
+                                        {{subproyecto.nombre}}
+                                    </option>
+                                    {% endfor %}
+                                    </select>
+                                </div>
+                            </div>
+
+                            </div>
+                            <div class="row-5">
+                            <label for="formVale.material" class="col-auto col-form-label my-1"><strong>Material entregado a:</strong></label>
+                                {{ formVale.material_recibido_por|add_class:"form-select my-1 d-none" }}
+                            <div class="col-6">
+                                <input type="text" list="user" id="txt_usuario" valor="{{user.id}}" placeholder="Usuarios..." class="form-control">
+                                <datalist id="user" name='user'>
+                                    {% for user in users %}
+                                        <option valor="{{user.id}}" value="{{user.staff.first_name}} {{user.staff.last_name}}"></option>
+                                    {% endfor %}
+                                </datalist>
+                            </div>
+                            </div>
+                                <div class="col-3">
+                                <input class="btn btn-outline-info btn-block my-4" name="agregar" type="submit" value="Guardar vale">
+                                </div>
+                        </div>
+                    </form>
+            </div>
+            <hr>
+        </div>
+    </div>
+    <div class="col-lg-6">
+        <div class="box-element">
+            <h3 id="vale" vale="{{vale_salida.id}}">Resumen</h3>
+            <hr>
+
+            <div class='cart-row'>
+                <form method="POST">
+                <div class="row">
+                    <label class="col-auto col-form-label"><strong>Productos:</strong></label>
+                    <div class="col-sm-5">
+                        <div class="selector">
+                            <select class="form-select form-select-sm" id="producto">
+                            <option id="default_sel">      </option>
+                            {% for producto in productos %}
+                            {% if producto.seleccionado == False %}
+                            <option id="js" target="{{producto.id}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}">
+                                {{producto.articulos.producto}}
+                            </option>
+                            {% endif %}
+                            {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-sm-2">
+                    <label class="col-auto col-form-label"><strong>Solicitado:</strong></label>
+                    </div>
+                    <label id="solicitado" class="col-sm-1 col-form-label"><strong> </strong></label>
+                    <label for="form_product.cantidad" class="col-auto col-form-label"><strong>Cantidad:</strong></label>
+                    <div class="col-sm-2">
+                        {{form.cantidad|add_class:"form-control"}}
+                    </div>
+                    <div class="col-sm-1">
+                        <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
+                            <i class="fa-solid fa-circle-plus"></i>
+                        </a>
+                    </div>
+                </div>
+                <hr>
+
+                <table class="table table-ligth table-striped mx-1">
+                {% csrf_token %}
+                <thead>
+                        <tr>
+                        <th scope="col" salidas="{{salidas}}">#</th>
+                        <th scope="col">Código</th>
+                        <th scope="col">Producto</th>
+                        <th scope="col">Cantidad</th>
+                        <th scope="col">Precio</th>
+                        <th scope="col">Entrada</th>
+                        </tr>
+                </thead>
+                <tbody>
+                    {% for item in salidas %}
+                        <tr>
+                            <th scope="col"><img class="row-image" src="{{item.producto.articulos.producto.producto.imageURL}}"></th>
+                            <th scope="col">{{item.producto.articulos.producto.producto.codigo}}</th>
+                            <th scope="col">{{item.producto.articulos.producto.producto.nombre}}</th>
+                            <th scope="col">{{item.cantidad}}</th>
+                            <th scope="col">{{item.precio}}</th>
+                            <th scope="col">{{item.entrada}}</th>
+                            <th scope="col">
+                            <td>
+                                <a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.id}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id}}" action="remove">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+                </form>
+                </table>
+            </div>
+            <hr>
+            <h5>Artículos: {{cantidad_items}}</h5>
+
+        </div>
+    </div>
+    <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+        <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+        </div>
+    </div>
+</div>
+
+
+
+
+
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+document.getElementById("producto").addEventListener("change", function(element){
+    var select = document.getElementById('producto');
+    var current_option = select.options[select.selectedIndex];
+    let cantidad = current_option.getAttribute('cantidad');
+    let cantidad_comprada = current_option.getAttribute('cantidad_comprada');
+    var cantidad_pendiente = cantidad - cantidad_comprada;
+    console.log(cantidad);
+    var solicitado = document.getElementById('solicitado');
+    solicitado.innerHTML = cantidad_pendiente;
+});
+
+document.getElementById("subproyecto").addEventListener("change", function(element){
+    var select = document.getElementById('subproyecto');
+    var current_option = select.options[select.selectedIndex];
+    var other_select = document.getElementById('id_subproyecto')
+
+    other_select.selectedIndex = current_option.getAttribute('subproyecto')
+
+});
+
+document.getElementById("txt_proyecto").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_proyecto");
+    var subproyecto = document.getElementById("subproyecto").children;
+
+
+    var browserChildren = document.getElementById('proyecto').children;
+    var other_select = document.getElementById('id_proyecto');
+    cont = 0
+
+
+    for(let i = 0; i < browserChildren.length; i++){
+        if (browserChildren[i].value === select.value){
+            console.log(browserChildren[i])
+            let id = browserChildren[i].getAttribute('valor');
+            other_select.value = id;
+            cont = 1
+            for(let j = 0; j < subproyecto.length; j++){
+            id_proyecto_sub = subproyecto[j].getAttribute('proyecto')
+                if (id == id_proyecto_sub) {
+                    subproyecto[j].setAttribute('class','')
+                } else {
+                    subproyecto[j].setAttribute('class','d-none')
+                }
+            }
+        }
+    }
+
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+document.getElementById("txt_usuario").addEventListener("change", (event)=>{
+    var select = document.getElementById("txt_usuario");
+    var browserChildren = document.getElementById('user').children;
+    var other_select = document.getElementById('id_material_recibido_por');
+    console.log(browserChildren)
+    //other_select.value = select.valor
+    cont = 0
+
+    for(let i = 0; i < browserChildren.length; i++){
+        if (browserChildren[i].value === select.value){
+            console.log(browserChildren[i])
+            console.log(select.value)
+            let id = browserChildren[i].getAttribute('valor');
+            console.log(id)
+            other_select.value = id;
+            cont = 1
+            }
+    }
+    //console.log(select.value)
+    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
+    if ((!select.value) || (cont = 0)){
+        other_select.value = 0
+    }
+});
+
+var updateBtn = document.getElementById('update-purchase')
+let count=0;
+let suma = 0;
+let suma_iva = 0;
+
+updateBtn.addEventListener('click',function(){
+        let vale = document.getElementById('vale');
+        salida = vale.getAttribute('vale')
+        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
+        var select = document.getElementById('producto');
+        var current_option = select.options[select.selectedIndex];
+        let value = current_option.value
+        var id = current_option.getAttribute('target');
+        var producto = current_option.getAttribute('producto');
+
+        //Esta es la cantidad establecida en la requisición
+        var cantidad = current_option.getAttribute('cantidad');
+        var quantity = document.getElementById('id_cantidad');
+        //Esta es la cantidad comprada de acuerdo a la requisición
+        var val_cantidad = quantity.value;
+        var cantidad_pendiente = cantidad - val_cantidad
+        id_salida = 0
+
+
+        var action = "add";
+
+        if (!value) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de seleccionar algún valor de la lista",
+                    "icon":"error",
+                })
+        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
+        } else if (cantidad_pendiente < 0)  {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada es mayor que la cantidad requerida",
+                    "icon":"error",
+                })
+        //Si "la cantidad comprada" es menor que cero
+        } else if (quantity.value <= 0 ) {
+            Swal.fire({
+                    "title":"Error",
+                    "text":"La cantidad ingresada debe ser mayor que 0",
+                    "icon":"error",
+                })
+        } else {
+            console.log(current_option)
+
+            ActualizarArticulos(salida,id,val_cantidad,action,id_salida);
+            //current_option.setAttribute("class","d-none");
+            //select.value = default_sel;
+
+            //document.getElementById("id_cantidad").value= null;
+            //document.getElementById("id_precio_unitario_0").value= null;
+        }
+
+})
+
+function deleteRow(element) {
+    let vale = document.getElementById('vale');
+    salida = vale.getAttribute('vale')
+    id_salida = element.getAttribute('id_salida')
+    id = element.getAttribute('producto_id');
+    val_cantidad = element.getAttribute('cantidad');
+    var action = "remove";
+    ActualizarArticulos(salida, id, val_cantidad, action, id_salida);
+}
+
+
+
+function ActualizarArticulos(oc,id,val_cantidad,action){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/requisiciones/update_salida/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'salida':salida, 'id':id, 'val_cantidad':val_cantidad, 'action':action,'id_salida':id_salida})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+
+</script>
+{% endblock %}
+</body>
+</html>
+

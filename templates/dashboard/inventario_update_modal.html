@@ -1,0 +1,104 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Inventario {% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="modal-dialog-lg" role="document">
+    <form  hx-post="{{request.path}}" class="modal-content">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Actualizar Inventario de Producto</h5>
+            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body" style="color:white">
+            <div>
+                {% csrf_token %}
+                    <label for="form.producto" class="col-auto col-form-label"><strong>Producto: {{item.producto}}</strong></label>
+                    <br>
+                    {% if flag_perfil %}
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad:</strong></label>
+                    <div class="col-4">
+                        {{ form.cantidad|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Precio:</strong></label>
+                    <div class="col-4">
+                        {{ form.price|add_class:"form-control"}}
+                    </div>
+                    {% endif %}
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Mínimo:</strong></label>
+                    <div class="col-4">
+                        {{ form.minimo|add_class:"form-control"}}
+                    </div>
+                    <label for="form.ubicacion" class="col-auto col-form-label my-1"><strong>Ubicación:</strong></label>
+                    <div class="col-4">
+                        {{ form.ubicacion|add_class:"form-control"}}
+                    </div>
+
+                    <label for="form.estante" class="col-auto col-form-label my-1"><strong>Estante:</strong></label>
+                    <div class="col-4">
+                        {{ form.estante|add_class:"form-control"}}
+                    </div>
+                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
+                     <div class="col-12">
+                        {{ form.comentario|add_class:"form-control"}}
+                    </div>
+            </div>
+        </div>
+        <div class="modal-footer">
+                <button class="btn btn-success col-2" name="btnUpdate" id="crear" type="submit" ><i class="fa-solid fa-floppy-disk"></i></button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+var price1 = document.getElementById("id_price_1")
+price1.setAttribute("class","form-control d-none")
+</script>
+{% endblock %}
+</body>
+</html>

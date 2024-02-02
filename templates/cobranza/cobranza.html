@@ -1,0 +1,166 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Cobranza{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<div class="row my-4">
+        <div class="col-md-12">
+        <div class="card card-body">
+            <h5>Filtro de proyectos</h5>
+            <hr>
+            <form method="GET" class="row g-7">
+                {% csrf_token %}
+                <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right"><strong>ID proyecto:</strong></label>
+                <div class="col-auto">
+                {{myfilter.form.id|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.proyecto" class="col-sm-auto col-form-label text-right"><strong>Proyecto:</strong></label>
+                <div class="col-auto">
+                {{myfilter.form.proyecto|add_class:'form-control'}}
+                </div>
+                <label for="myfilter.form.folio" class="col-sm-auto col-form-label text-right"><strong>Monto Abono</strong></label>
+                <div class="col-auto">
+                {{myfilter.form.monto_abono|add_class:'form-control'}}
+                </div>
+                 <label for="myfilter.form.fecha" class="col-sm-auto col-form-label text-right"><strong>Fecha:</strong></label>
+                <div class="col-auto">
+                {% render_field myfilter.form.fecha_pago type="date" class="form-control" %}
+                </div>
+                <div class="col-auto">
+                <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            </form>
+            <hr>
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                    </li>
+                     <li class="nav-item mx-2">
+                        <a class="btn btn-outline-info" href="{% url 'add-pago-cliente' %}"><i class="fa-solid fa-dollar-sign"></i></a>
+                    </li>
+                    <!--
+                    <li class="nav-item mx-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-matriz-productos' %}">Ver matriz por productos <i class="fa-solid fa-angle-right"></i></a>
+                    </li>-->
+                </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                var m = "{{ message }}";
+                swal("Excelente !", m, "success")
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<div class = "row mt-2">
+    <div class="col-md-10">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">ID</th>
+                    <th scope="col">Proyecto</th>
+                    <th scope="col">Cliente</th>
+                    <th scope="col">Factura</th>
+                    <th scope="col">Folio Cotización</th>
+                    <th scope="col">OC Cliente</th>
+                    <th scope="col">Status de entrega</th>
+                    <th scope="col">Pago</th>
+                    <th scope="col">Fecha de pago</th>
+                    <th scope="col">Editar</th>
+                    <th scope="col">Solicitud Factura</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos_list %}
+                <tr>
+                    <th scope="row">{{pago.id}}</th>
+                    <td>{{pago.proyecto.nombre}}</td>
+                    {% if not pago.proyecto.cliente %}
+                    <td></td>
+                    {% else %}
+                    <td>{{pago.proyecto.cliente}}</td>
+                    {% endif %}
+                    {% if not pago.proyecto.factura %}
+                    <td></td>
+                    {% else %}
+                    <td>{{pago.proyecto.factura}}</td>
+                    {% endif %}
+                    {% if not pago.proyecto.folio_cotizacion %}
+                    <td></td>
+                    {% else %}
+                    <td>{{pago.proyecto.folio_cotizacion}}</td>
+                    {% endif %}
+                    {% if not pago.proyecto.oc_cliente %}
+                    <td></td>
+                    {% else %}
+                    <td>{{pago.proyecto.oc_cliente}}</td>
+                    {% endif %}
+                    <td>{{pago.proyecto.status_de_entrega}}</td>
+                    <td>{{pago.monto_abono}}</td>
+
+                    <td>{{pago.fecha_pago}}</td>
+                    <td>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'pagos-edit' pago.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                    </td>
+                    <td>
+                         <a type="button" class="btn btn-outline-info" href=#><i class="fa-regular fa-envelope"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if pagos_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url proyectos_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+                {% for page in pagos_list.paginator  %}
+                {% if pagos_list.number == page.number %}
+                <li class="page-item active" aria-current="page"><a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if pagos_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url proyectos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+
+{% endblock %}
+</body>
+</html>

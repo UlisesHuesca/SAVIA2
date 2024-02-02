@@ -1,0 +1,228 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Editar Proveedor{% endblock %}
+
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<div class="container">
+    <div class="row mt-5">
+        <div class="col-md-8 offset-md-3">
+            <div class="border bg-white p-3">
+                <h3>Editar Proveedor</h3>
+                <hr>
+                <form method="POST" id='ProductForm'  enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón Social"}}
+                            <label for="id_lugar_partida">Razón Social*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card-clip"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC"}}
+                            <label for="id_lugar_partida">RFC*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.nombre_comercial|add_class:"form-control"|append_attr:"placeholder=Nombre Comercial"}}
+                            <label for="id_lugar_partida">Nombre Comercial*</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    {{ formset.management_form}}
+                    <hr>
+                    {% for f in formset %}
+                    <div class="col-12">
+                        {{f.id}}
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.domicilio|add_class:"form-control required"|append_attr:"placeholder=Domicilio"}}
+                            <label for="id_lugar_partida">Domicilio*</label>
+                            </div>
+                        </div>
+                    </div>
+                   
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.contacto|add_class:"form-control required"|append_attr:"placeholder=Contacto"}}
+                            <label for="id_lugar_partida">Contacto*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-map-location"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.estado|add_class:"form-select required"|append_attr:"placeholder=Estado"}}
+                            <label for="id_lugar_partida">Estado*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.telefono|add_class:"form-control required"|append_attr:"placeholder=Teléfono"}}
+                            <label for="id_lugar_partida">Teléfono*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-at"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.email|add_class:"form-control required"|append_attr:"placeholder=Email"}}
+                            <label for="id_lugar_partida">Email*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.email_opt|add_class:"form-control"|append_attr:"placeholder=Email 2"}}
+                            <label for="id_lugar_partida">Email 2*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.banco|add_class:"form-control"|append_attr:"placeholder=Banco"}}
+                            <label for="id_lugar_partida">Banco*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta"}}
+                            <label for="id_lugar_partida">Cuenta*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
+                            <label for="id_lugar_partida">Clabe*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
+                            <label for="id_lugar_partida">Financiamiento*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
+                            <label for="id_lugar_partida">Días de crédito*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.estatus|add_class:"form-control"|append_attr:"placeholder=Status"}}
+                            <label for="id_lugar_partida">Status*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    {% endfor %}
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-product' %}">Cancelar</a>
+                    <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+        var inputs = document.querySelectorAll("input");
+        inputs.forEach(function(input) {
+            if (input.name.endsWith('-DELETE')) {
+                input.style.display = 'none'; // Oculta el checkbox
+                var label = document.querySelector("label[for='"+input.id+"']"); // Busca el label asociado
+                if (label) { // Si existe un label asociado...
+                    label.style.display = 'none'; // Oculta el label
+                }
+            }
+        });
+    });
+    // Selecciona todos los campos requeridos
+let requiredFields = document.querySelectorAll('.required');
+console.log(requiredFields)
+// Selecciona el botón de envío
+let submitButton = document.getElementById('BtnEnviar');
+
+// Escucha los eventos de entrada en los campos requeridos
+requiredFields.forEach(function(field) {
+    field.addEventListener('input', function() {
+        // Verifica si todos los campos requeridos están llenos
+        let isFormValid = Array.from(requiredFields).every(function(field) {
+            console.log(field.value)
+            return field.value;      
+        });
+
+        // Muestra el botón de envío solo si todos los campos requeridos están llenos
+        if (isFormValid) {
+            submitButton.setAttribute('class','btn btn-outline-info')
+        } else {
+            submitButton.setAttribute('class','btn btn-outline-info d-none');
+        }
+    });
+});
+
+
+  </script>
+{% endblock %}

@@ -1,0 +1,293 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Solicitudes para Surtir{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+    <!-- Aqui es el encabezado de los filtros -->
+<div class = "row mt-2 bg-white">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Salidas | Filtro de Solicitudes Autorizadas</h5>
+            </div>
+            <div class="card-body">
+        
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder=Solicitud"}}
+                                <label style="color: #121212;" for="id_solicitud">Solicitud</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder=Código"}}
+                                <label style="color: #121212;" for="id_solicitud">Código</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder=Producto"}}
+                                <label style="color: #121212;" for="id_producto">Producto</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Usuario"}}
+                                <label style="color: #121212;" for="id_producto">Usuario</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder=Proyecto"}}
+                                <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder=Subproyecto"}}
+                                <label style="color: #121212;" for="id_subproyecto">Subproyecto</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                <div class="row g-12 my-2">
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_start_date">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_end_date">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2 mt-1">
+                        <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                <form method=POST>
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item m-1">
+                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item m-1">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>
+                        {% if usuario.tipo.almacenista == True %}
+                        <ul class="nav nav-pills">
+                            <li class="nav-item m-1">
+                                <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                    <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'solicitud-autorizada' %}">Surtir</a>
+                                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitudes-autorizadas-pendientes' %}">Pendientes</a>
+                                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-autorizada-orden' %}">Requisitar</a>
+                                  </div>
+                            </li>
+                        </ul>
+                        {% else %}
+                        <div class="d-none">
+                        {% endif %}
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<!-- Aquí empieza la generación de la tabla -->
+
+    <div class="col-md-12">
+        <div class="table-responsive-sm">
+        <table class="table table-striped table-hover bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Folio</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    <th scope="col">Proyecto</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th scope="col">Descripción</th>
+                    <th scope="col">Cantidad Solicitada</th>
+                    <th scope="col">[Apartada]</th>
+                    <th class="d-none d-lg-table-cell">Status</th>
+                    <th class="d-none d-lg-table-cell">Creado</th>
+                    <th scope="col">Acción</th>
+                    <th class="d-none d-lg-table-cell">Documentos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for producto in productos_list %}
+                <tr>
+                    <th scope="row">{{producto.articulos.orden.folio}}</th>
+                    <td class="d-none d-lg-table-cell">{{producto.articulos.orden.staff.staff.staff.first_name}} {{producto.articulos.orden.staff.staff.staff.last_name}}</td>
+                    <td>{{producto.articulos.orden.proyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{producto.articulos.orden.subproyecto.nombre}}</td>
+                    <td>{{producto.articulos.producto.producto}}</td>
+                    <td>{{producto.articulos.cantidad}}</td>
+                    <td>{{producto.articulos.producto.apartada}}</td>
+                    {% if producto.salida == True %}
+                    <td class="d-none d-lg-table-cell">Salida realizada</td>
+                    {% else %}
+                    <td class="d-none d-lg-table-cell">Salida no realizada aún</td>
+                    {% endif %}
+                    <td class="d-none d-lg-table-cell">{{producto.articulos.orden.created_at}}</td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item m-1">
+                                <a type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-orden' producto.articulos.orden.id %}">Detalle</a>
+                            </li>
+                            <!--<li class="nav-item mx-2">
+                                {% if orden.requisitar == True and producto.requisitar == True %}
+                                <div class='visible'>
+                                {% else %}
+                                <div class='invisible'>
+                                {% endif %}
+                                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-detalle' producto.articulos.orden.id %}">Requisitar</a>
+                                </div>
+                            </li>-->
+                            <li class="nav-item m-1">
+                                {% if producto.surtir == True %}
+                                <div class='visible'>
+                                {% else %}
+                                <div class='invisible'>
+                                {% endif %}
+                                    <a type="button" class="btn btn-outline-success" href="{% url 'salida-material' producto.articulos.orden.id %}">Surtir</a>
+                                </div>
+                            </li>
+                            <li class="nav-item m-1">
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'devolucion-material' producto.articulos.orden.id %}">R<i class="fa-solid fa-backward"></i></a>
+                            </li>
+                        </ul>
+                    </td>
+                    <td class="d-none d-lg-table-cell">
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-2">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' producto.articulos.orden.id %}">
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <div>
+    </div>
+    <div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if productos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in productos_list.paginator.page_range %}
+                    {% if productos_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > productos_list.number|add:'-2' and item < productos_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if productos_list.paginator.num_pages > productos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{productos_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{productos_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if productos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url productos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+{% endblock %}
+
+</body>
+</html>

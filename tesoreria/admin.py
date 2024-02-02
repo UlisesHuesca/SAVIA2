@@ -1,0 +1,23 @@
+from django.contrib import admin
+from .models import Cuenta, Pago, Facturas
+
+class CuentaAdmin(admin.ModelAdmin):
+    raw_id_fields = ('encargado',)
+
+class PagoAdmin(admin.ModelAdmin):
+    list_display = ('id','oc','gasto','viatico','tesorero','monto', 'hecho')
+    #list_filter = ('familia',)
+    search_fields = ['id','hecho']
+    raw_id_fields = ('oc','gasto','viatico','tesorero',)
+
+
+class FacturasAdmin(admin.ModelAdmin):
+    search_fields = ['oc__folio']
+    raw_id_fields = ('oc',)
+
+# Register your models here.
+admin.site.register(Cuenta, CuentaAdmin)
+
+admin.site.register(Facturas, FacturasAdmin)
+
+admin.site.register(Pago, PagoAdmin)

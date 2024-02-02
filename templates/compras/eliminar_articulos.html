@@ -1,0 +1,106 @@
+{% extends 'partials/base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+
+<html>
+<head>
+{% block title %}Eliminar Artículos{% endblock %}
+</head>
+
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="row">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title">Requisicion: {{requis.folio}}</h5>
+        </div>
+
+        <div class="card-body">
+           
+            <div class='box-element-2'>
+            <table class="table table-striped table-hover mx-2">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">Código</th>
+                    <th scope="col">Artículo</th>
+                    <th scope="col">Unidad</th>
+                    <th scope="col">Cantidad Restante</th>
+                    <th scope="col">Comentario</th>
+                    <th scope="col">Seleccionar</th>
+                    <th scope="col">Eliminar Artículo</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for producto in productos %}
+                <form method="POST">
+                {% csrf_token %}
+                <tr>
+                    <td scope="col"><img class='row-image' src="{{producto.producto.articulos.producto.producto.imageURL}}"></td>
+                    <td scope="col">{{producto.producto.articulos.producto.producto.codigo}}</td>
+                    <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
+                    <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
+                    <td scope="col">{{form.comentario_cancelacion|add_class:"form-control"}}</td>
+                    <td scope="col"><div class="form-check form-switch col-sm">{{form.cancelado|add_class:"form-check-input"}}</div></td>
+                    <td>
+                        <input type="hidden" value="{{producto.id|unlocalize}}" name="id">
+                        <button type="submit" name="btn_eliminar" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-eraser"></i>
+                        </button>
+                    </td>
+                </tr>
+                </form>
+                {% endfor %}
+            </tbody>
+            </table>
+            {% if requis.comentario_super %}
+            <h6>Comentario SuperIntendente: {{requis.comentario_super}}</h6>
+            {% endif %}
+            {% if requis.comentario_compras %}
+            <h6>Comentario Almacén: {{requis.comentario_compras}}</h6>
+            {% endif %}
+            </div>
+        </div>
+
+        <div class="card-footer">
+        </div>
+    </div>
+</div>
+
+
+
+{% endblock %}
+</body>
+</html>

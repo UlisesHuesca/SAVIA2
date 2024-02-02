@@ -1,0 +1,156 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Agregar Dirección Proveedor{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+
+    <div class="col">
+        <div class="card col-md-6 offset-md-3">
+            <div class="card card-header">
+                <h3>{% if direccion %} Editar Dirección {% else %} Agregar Dirección {% endif %}</h3>
+            </div>
+            <div class="card card-body">
+                <form method="POST" id='ProductForm'>
+                    {% csrf_token %}
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.domicilio|add_class:"form-control required"|append_attr:"placeholder=Domicilio"}}
+                            <label for="id_lugar_partida">Domicilio*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.contacto|add_class:"form-control required"|append_attr:"placeholder=Contacto"}}
+                            <label for="id_lugar_partida">Contacto*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-map-location"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.estado|add_class:"form-select required"|append_attr:"placeholder=Estado"}}
+                            <label for="id_lugar_partida">Estado*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.telefono|add_class:"form-control required"|append_attr:"placeholder=Teléfono"}}
+                            <label for="id_lugar_partida">Teléfono*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-at"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.email|add_class:"form-control required"|append_attr:"placeholder=Email"}}
+                            <label for="id_lugar_partida">Email*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.email_opt|add_class:"form-control"|append_attr:"placeholder=Email 2"}}
+                            <label for="id_lugar_partida">Email 2*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.banco|add_class:"form-control"|append_attr:"placeholder=Banco"}}
+                            <label for="id_lugar_partida">Banco*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta"}}
+                            <label for="id_lugar_partida">Cuenta*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
+                            <label for="id_lugar_partida">Clabe*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
+                            <label for="id_lugar_partida">Financiamiento*</label>
+                            </div>
+                        </div>
+                    </div>
+                    </div>
+                    <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
+                            <label for="id_lugar_partida">Días de crédito*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.estatus|add_class:"form-control"|append_attr:"placeholder=Status"}}
+                            <label for="id_estatus">Status*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                    
+                    <hr>
+                    <a class="btn btn-outline-secondary" href="{% url 'proveedor-direcciones' proveedor.id %}">Cancelar</a>
+                    <input class="btn btn-outline-info" type='submit' value="Guardar">
+                </form>
+            </div>
+        </div>
+
+    </div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+
+  </script>
+{% endblock %}
