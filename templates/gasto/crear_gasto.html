@@ -250,6 +250,16 @@
                         </div>
                     </div>
                 </div>
+                <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1">IVA</span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.iva|add_class:"form-select grupo-entrada"}}
+                            </div>
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
                 <div id='etiqueta_responsable' class="col-lg-4 col-sm-12">
                     <div class="alert alert-primary" role="alert">
                         <h6 style="color: #121212;">&nbsp;Cálculo Previo:&nbsp;<div id="calculo_previo"> </div></h6>   
@@ -406,17 +416,27 @@
         precio = document.getElementById('id_precio_unitario').value
         otros_impuestos = document.getElementById('id_otros_impuestos').value
         retenidos = document.getElementById('id_impuestos_retenidos').value
-        var iva = linea_gasto.getAttribute('iva_producto')
+        iva = document.getElementById('id_iva').value
         console.log(iva)
         calculo_previo = document.getElementById('calculo_previo')
-        if (iva == "True"){
-            subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
-            calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
-        } else {
-            console.log(precio, cantidad, otros_impuestos, retenidos)
-            subtotal = Number(precio) * Number(cantidad) + Number(otros_impuestos) - Number(retenidos)
-            calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+
+        var valor_iva;
+        switch(iva) {
+            case "1":
+                valor_iva = 0.10;
+                break;
+            case "2":
+                valor_iva = 0.16;
+                break;
+            default:
+                valor_iva = 0;
+                break;
         }
+        
+        console.log(precio, cantidad, otros_impuestos, retenidos)
+        subtotal = (Number(precio) * Number(cantidad) + Number(otros_impuestos) - Number(retenidos)) * (1 + valor_iva) 
+        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+        
 
     }
 
@@ -424,7 +444,7 @@
     document.getElementById('id_impuestos_retenidos').addEventListener('change',f_calculo_previo);
     document.getElementById('id_cantidad').addEventListener('change', f_calculo_previo);
     document.getElementById('id_precio_unitario').addEventListener('change',f_calculo_previo);
-
+    document.getElementById('id_iva').addEventListener('change',f_calculo_previo);
 
 
 

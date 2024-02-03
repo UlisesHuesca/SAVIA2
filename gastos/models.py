@@ -3,6 +3,7 @@ from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector
 from dashboard.models import Inventario, Activo, Product
 from user.models import Profile, Distrito
 from django.core.validators import FileExtensionValidator
+from decimal import Decimal
 import decimal
 import xml.etree.ElementTree as ET
 import os
@@ -88,6 +89,12 @@ class Solicitud_Gasto(models.Model):
 
     def __str__(self):
         return f'{self.id}'
+    
+class Porcentaje_iva(models.Model):
+    porcentaje = models.DecimalField(max_digits=2, decimal_places=0, null=True)
+
+    def __str__(self):
+        return f'{self.porcentaje}'
 
 class Articulo_Gasto(models.Model):
     staff = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
@@ -100,6 +107,7 @@ class Articulo_Gasto(models.Model):
     gasto = models.ForeignKey(Solicitud_Gasto, on_delete = models.CASCADE, null=True)
     cantidad = models.DecimalField(max_digits=10, decimal_places=6, null=True, blank=True)
     precio_unitario = models.DecimalField(max_digits=14, decimal_places=6, null=True, blank=True)
+    iva = models.ForeignKey(Porcentaje_iva, on_delete = models.CASCADE, null=True, blank=True)
     #entrada_salida_express = models.BooleanField(null=True, default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     #factura_pdf = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
@@ -123,11 +131,14 @@ class Articulo_Gasto(models.Model):
     @property
     def get_iva(self):
         iva = 0
-
-        if self.precio_unitario and self.cantidad and self.producto.iva:
-            iva = self.precio_unitario * decimal.Decimal(str(0.16))*self.cantidad
-        else:
-            iva = 0
+        if self.precio_unitario and self.cantidad and self.iva:
+            if self.iva.id == 1:
+                valor_iva = .1
+            elif self.iva.id == 2:
+                valor_iva = .16
+            else:
+                valor_iva = 0
+            iva = self.precio_unitario * self.cantidad *  Decimal(str(valor_iva)) #Esta conversión (Decimal(str ....es una estrategia para convertir float a decimal sin introducir errores
         return iva
 
     @property
@@ -147,8 +158,7 @@ class Articulo_Gasto(models.Model):
 
     @property
     def total_parcial(self):
-        impuesto = self.get_iva
-        total = round(self.get_subtotal + impuesto + self.get_otros_impuestos,2)
+        total = round(self.get_subtotal + self.get_iva + self.get_otros_impuestos,2)
         return total
     
 class Factura(models.Model):

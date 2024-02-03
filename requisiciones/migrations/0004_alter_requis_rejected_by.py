@@ -17,4 +17,24 @@ class Migration(migrations.Migration):
             name='rejected_by',
             field=models.ForeignKey(blank=True, null=True, on_delete=django.db.models.deletion.CASCADE, related_name='compras', to='user.profile'),
         ),
+        migrations.AddField(
+            model_name='historicalsalidas',
+            name='cancelada',
+            field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name='historicalsalidas',
+            name='cancelada_at',
+            field=models.DateTimeField(null=True),
+        ),
+        migrations.AddField(
+            model_name='salidas',
+            name='cancelada',
+            field=models.BooleanField(default=False),
+        ),
+        migrations.AddField(
+            model_name='salidas',
+            name='cancelada_at',
+            field=models.DateTimeField(null=True),
+        ),
     ]

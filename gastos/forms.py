@@ -34,7 +34,7 @@ class Articulo_GastoForm(forms.ModelForm):
 
     class Meta:
         model = Articulo_Gasto
-        fields = ['producto','comentario','proyecto','subproyecto','cantidad','precio_unitario','otros_impuestos','impuestos_retenidos']
+        fields = ['producto','comentario','proyecto','subproyecto','cantidad','precio_unitario','otros_impuestos','impuestos_retenidos', 'iva']
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
