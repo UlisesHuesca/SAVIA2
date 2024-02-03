@@ -224,6 +224,8 @@ def update_devolucion(request):
 
 @login_required(login_url='user-login')
 def autorizar_devolucion(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
     devolucion= Devolucion.objects.get(id=pk)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
     salida = Salidas.objects.filter(id=devolucion.salida.id)
@@ -232,7 +234,7 @@ def autorizar_devolucion(request, pk):
         for producto in productos:
             if devolucion.tipo.nombre == "SALIDA":
                 producto_surtir = Salidas.objects.get(id=devolucion.salida.id)
-                inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto) 
+                inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto, distrito = usuario.dsitritos ) 
                 inv_del_producto._change_reason = f'Esta es una devolucion desde un salida {devolucion.id}'
             else:
                 producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
@@ -1090,7 +1092,7 @@ def render_pdf_view(request, pk):
     c.drawString(30,caja_proveedor-40,'Distrito:')
     c.drawString(30,caja_proveedor-60,'Proyecto')
     c.drawString(30,caja_proveedor-80,'Subproyecto:')
-    c.drawString(30,caja_proveedor-100,'Fecha:')
+    c.drawString(30,caja_proveedor-100,'Fecha de Aprobación:')
     
     c.setFont('Helvetica-Bold',12)
     c.drawString(500,caja_proveedor-20,'FOLIO:')
@@ -1100,44 +1102,25 @@ def render_pdf_view(request, pk):
 
     c.setFillColor(black)
     c.setFont('Helvetica',9)
-    c.drawString(100,caja_proveedor-20, orden.staff.staff.staff.first_name+' '+ orden.staff.staff.staff.last_name)
-    c.drawString(100,caja_proveedor-40, orden.staff.distritos.nombre)
-    c.drawString(100,caja_proveedor-60, orden.proyecto.nombre)
-    c.drawString(100,caja_proveedor-80, orden.subproyecto.nombre)
-    c.drawString(100,caja_proveedor-100, orden.approved_at.strftime("%d/%m/%Y"))
-
+    c.drawString(130,caja_proveedor-20, orden.staff.staff.staff.first_name+' '+ orden.staff.staff.staff.last_name)
+    c.drawString(130,caja_proveedor-40, orden.staff.distritos.nombre)
+    c.drawString(130,caja_proveedor-60, orden.proyecto.nombre)
+    c.drawString(130,caja_proveedor-80, orden.subproyecto.nombre)
+    if orden.approved_at:
+        c.drawString(130,caja_proveedor-100, orden.approved_at.strftime("%d/%m/%Y"))
+    else:
+        c.setFillColor(rojo)
+        c.drawString(130,caja_proveedor-100, "No Aprobado aún")
     #Create blank list
     data =[]
 
-    data.append(['''Código''', '''Nombre''', '''Cantidad''','''Comentario'''])
+    encabezado = [['''Código''', '''Nombre''', '''Cantidad''','''Comentario''']]
 
 
-    high = 750
+    high = 540
     for producto in productos:
         data.append([producto.producto.producto.codigo, producto.producto.producto.nombre,producto.cantidad, producto.comentario])
         high = high - 18
-
-
-    c.setFillColor(prussian_blue)
-    c.rect(20,high-50,565,25, fill=True, stroke=False)
-    c.setFillColor(white)
-    c.drawCentredString(320,high-45,'Observaciones')
-    c.setFillColor(black)
-    c.drawCentredString(230,high-170, orden.staff.staff.staff.first_name +' '+ orden.staff.staff.staff.last_name)
-    c.line(180,high-175,280,high-175)
-    c.drawCentredString(230,high-195, 'Solicitado')
-    #if orden.sol_autorizada_por == None:
-    #    c.setFillColor(rojo)
-    #    c.drawCentredString(410, high-190, '{Esta orden no ha sido autorizada}')
-    #    c.drawString(370,680, 'No aprobada')
-    #else:
-    #    c.setFillColor(black)
-    #    c.drawCentredString(410,high-190, orden.sol_autorizada_por.staff.first_name+' '+ orden.staff.staff.last_name)
-    #    c.drawString(370,680, 'Aprobada')
-    c.setFillColor(black)
-    c.line(360,high-175,460,high-175)
-    c.drawCentredString(410,high-195,'Aprobado por')
-
 
 
     c.setFillColor(prussian_blue)
@@ -1168,18 +1151,44 @@ def render_pdf_view(request, pk):
     else:
         comentario = "No hay comentarios"
 
+    c.setFillColor(prussian_blue)
+    c.rect(20,230,565,25, fill=True, stroke=False)
+    c.setFillColor(white)
+    c.drawCentredString(320,235,'Observaciones')
     options_conditions_paragraph = Paragraph(comentario, styleN)
     # Crear un marco (frame) en la posición específica
-    frame = Frame(135, 0, width-145, high-45, id='normal')
-    #frame = Frame(135, 60, width-145, height-648, id='normal')
-
+    frame = Frame(20, -110, width-40, high-50, id='normal')
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
 
-    table = Table(data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
+    c.setFillColor(black)
+    c.drawCentredString(180,high-240, orden.staff.staff.staff.first_name +' '+ orden.staff.staff.staff.last_name)
+    c.line(140,high-241,220,high-241)
+    c.drawCentredString(180,high-250, 'Solicitado')
+    if orden.autorizar == False:
+        c.setFillColor(rojo)
+        c.drawCentredString(410, high-240, '{Esta orden ha sido Cancelada}')
+        c.setFont('Helvetica-Bold',14)
+        c.drawString(370,670, 'CANCELADA')
+    elif orden.autorizar:
+        c.setFillColor(prussian_blue)
+        c.drawCentredString(410,high-240, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
+        c.setFont('Helvetica-Bold',14)
+        c.drawString(370,670, 'APROBADA')
+    else:
+        c.setFillColor(rojo)
+        c.drawCentredString(410,high-240, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
+        c.setFont('Helvetica-Bold',14)
+        c.drawString(370,670, 'NO AUTORIZADA AÚN')
+    c.setFillColor(black)
+    c.setFont('Helvetica',12)
+    c.line(360,high-241,460,high-241)
+    c.drawCentredString(410,high-250,'Supervisor')
+
+    #table = Table(data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
@@ -1192,81 +1201,34 @@ def render_pdf_view(request, pk):
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
         ('FONTSIZE',(0,1),(-1,-1), 6),
         ])
-    table_style2 = TableStyle([ #estilos de la tabla
-        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
-        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
-        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-        #ENCABEZADO
-        ('TEXTCOLOR',(0,0),(-1,0), colors.black),
-        ('FONTSIZE',(0,0),(-1,0), 6),
-        #('BACKGROUND',(0,0),(-1,0), prussian_blue),
-        #CUERPO
-        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
-        ('FONTSIZE',(0,1),(-1,-1), 6),
-        ])
-    table.setStyle(table_style)
-    
+    #table.setStyle(table_style)
     rows_per_page = 15
-    total_rows = len(data) - 1 # Incluye el encabezado
-    remaining_rows = total_rows - rows_per_page
+    data_len = len(data) 
+    for page_start in range(0, data_len, rows_per_page):
+        page_end = min(page_start + rows_per_page, data_len)
+        #page_data = data[page_start:page_end + 1]  # +1 para incluir el encabezado en cada página
+        page_data = encabezado + data[page_start:page_end] 
+        table = Table(page_data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm])
+        table.setStyle(table_style)
+         # Calcular el alto de la tabla para la página actual
+        table_height = data_len * 18 #espacio_por_fila
+        # Calcular la posición 'y' inicial para la tabla basada en el alto de la tabla
+        table_y_position = height - table_height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
+        #table_y_position = height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
+        
 
-    if remaining_rows <= 0:
-        # Si no hay suficientes filas para una segunda página, dibuja la tabla completa en la primera página.
-        table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        table.drawOn(c, 20, high)  # Ajusta la posición 'y' según sea necesario.
-    else:
-        # Dibujar las primeras 15 filas (o el número que sea 'rows_per_page') en la primera página.
-        first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado.
-        first_page_table = Table(first_page_data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
-        first_page_table.setStyle(table_style)
-        first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        first_page_table.drawOn(c, 20, high)  # Ajusta la posición 'y' según sea necesario.
+        table.wrapOn(c, width, height)  # Preparar la tabla
+        table.drawOn(c, 20, table_y_position)  # Dibujar la tabla en la posición calculada
 
-        # Agregar una nueva página para las filas restantes.
-        c.showPage()
-        # Aquí debes dibujar el encabezado y cualquier otro contenido fijo para la segunda página.
+        if page_end < data_len:  # Si hay más páginas, preparar una nueva página
+            c.showPage()
+    
+   
+    
+    #pdf size
+    #table.wrapOn(c, width, height)
+    #table.drawOn(c, 20, high)
 
-        # Dibuja las filas restantes en la segunda página.
-        remaining_data = data[rows_per_page + 1:]
-        remaining_table = Table(remaining_data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
-        remaining_table.setStyle(table_style2)
-        remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        remaining_table_height = len(remaining_data) * 18
-        remaining_table_y = c._pagesize[1] - 70 - remaining_table_height - 10  # Espacio para el encabezado
-        remaining_table.drawOn(c, 20, remaining_table_y)  # Posición en la segunda página
-
-        #Encabezado
-        c.setFillColor(black)
-        c.setLineWidth(.2)
-        c.setFont('Helvetica',8)
-        c.drawString(420,caja_iso,'Preparado por:')
-        c.drawString(420,caja_iso-10,'SUP. ADMON')
-        c.drawString(520,caja_iso,'Aprobación')
-        c.drawString(520,caja_iso-10,'SUB ADM')
-        c.drawString(150,caja_iso-20,'Número de documento')
-        c.drawString(160,caja_iso-30,'F-ADQ-N4-01.02')
-        c.drawString(245,caja_iso-20,'Clasificación del documento')
-        c.drawString(275,caja_iso-30,'Controlado')
-        c.drawString(355,caja_iso-20,'Nivel del documento')
-        c.drawString(380,caja_iso-30, 'N5')
-        c.drawString(440,caja_iso-20,'Revisión No.')
-        c.drawString(452,caja_iso-30,'000')
-        c.drawString(510,caja_iso-20,'Fecha de Emisión')
-        c.drawString(525,caja_iso-30,'1-Sep.-18')
-
-        caja_proveedor = caja_iso - 65
-        c.setFont('Helvetica',12)
-        c.setFillColor(prussian_blue)
-        # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-        c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
-        c.setFillColor(white)
-        c.setLineWidth(.2)
-        c.setFont('Helvetica-Bold',14)
-        c.drawCentredString(280,755,'Solicitud')
-        c.setLineWidth(.3) #Grosor
-        c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen Vordcab
-
-    # Finaliza la última página
     #c.showPage()
     c.save()
     buf.seek(0)
@@ -1720,7 +1682,6 @@ def render_salida_pdf(request, pk):
     c.showPage()
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename='vale_salida_'+str(vale.folio) +'.pdf')
-
 
 def render_entrada_pdf(request, pk):
     #Configuration of the PDF object

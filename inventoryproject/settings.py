@@ -15,6 +15,7 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 from dotenv import load_dotenv
 import moneyed
 import os
+load_dotenv()
 
 MXN = moneyed.add_currency(
     code='MXN',
@@ -165,9 +166,28 @@ LOGGING = {
     "disable_existing_loggers": False,
     "handlers": {
         "file": {
+            "level": "ERROR",
+            "class": "logging.FileHandler",
+            "filename": "errors.log",
+        },
+    },
+    "loggers": {
+        "django": {
+            "handlers": ["file"],
+            "level": "ERROR",
+            "propagate": True,
+        },
+    },
+}
+
+LOGGING = {
+    "version": 1,
+    "disable_existing_loggers": False,
+    "handlers": {
+        "file": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
-            "filename": os.path.join(BASE_DIR, "debug.log"),
+            "filename": "debug.log",
         },
     },
     "loggers": {
@@ -178,7 +198,6 @@ LOGGING = {
         },
     },
 }
-
 
 REST_FRAMEWORK = {
     # Use Django's standard `django.contrib.auth` permissions,

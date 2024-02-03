@@ -508,7 +508,7 @@ def factura_eliminar(request, pk):
 def mis_gastos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    gastos = Solicitud_Gasto.objects.filter(complete=True, staff = usuario)
+    gastos = Solicitud_Gasto.objects.filter(complete=True, staff = usuario).order_by('-folio')
     myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
     gastos = myfilter.qs
 

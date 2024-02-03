@@ -9,7 +9,7 @@ from django.db.models import Q
 class Solicitud_Gasto_Filter(django_filters.FilterSet):
     #staff = CharFilter(field_name='staff__staff', lookup_expr='icontains')
     staff = CharFilter(method ='my_filter', label="Search")
-    id = CharFilter(method='filter_id_custom')
+    folio = CharFilter(method='filter_id_custom')
     #id = CharFilter(field_name='id', lookup_expr='icontains')
     #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
     #subproyecto = CharFilter(field_name='subproyecto__nombre', lookup_expr='icontains')
@@ -24,8 +24,8 @@ class Solicitud_Gasto_Filter(django_filters.FilterSet):
         return queryset.filter(Q(staff__staff__staff__first_name__icontains = value) | Q(staff__staff__staff__last_name__icontains = value))
     
    
-    def filter_id_custom(self, queryset, name, value):
+    def filter_folio_custom(self, queryset, name, value):
         if len(value) == 1:
-            return queryset.filter(id=value)
+            return queryset.filter(folio=value)
         else:
-            return queryset.filter(id__icontains=value)
+            return queryset.filter(folio__icontains=value)

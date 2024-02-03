@@ -26,7 +26,7 @@
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.id|add_class:"form-control"|append_attr:"placeholder=Folio"}}
+                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio"}}
                                 <label for="id_lugar_partida">Folio</label>
                             </div>
                         </div>
@@ -122,14 +122,14 @@
             <tbody>
                 {% for gasto in gastos %}
                 <tr>
-                    <th>G{{gasto.folio}}</th>
+                    <th>{{gasto.folio}}</th>
                     <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
                     {% if gasto.autorizar == True %}
-                    <td>Autorizado|{{gasto.superintendente.staff.last_name}}</td>
+                    <td>Autorizado|{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}</td>
                     {% elif gasto.autorizar == False %}
-                    <td style="color:#980F0F">No autorizado|{{gasto.superintendente.staff.staff.last_name}}</td>
+                    <td style="color:#980F0F">No autorizado|{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}</td>
                     {% else %}
-                    <td>Pendiente Autorización|{{gasto.superintendente.staff.staff.last_name}}</td>
+                    <td>Pendiente Autorización|{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}</td>
                     {% endif %}
                     {% if gasto.colaborador %}
                     <td class="d-none d-lg-table-cell">{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
