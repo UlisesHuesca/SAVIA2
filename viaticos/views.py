@@ -650,6 +650,9 @@ def render_pdf_viatico(request, pk):
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico)
     
+    #Configuraciones por default 
+    styles = getSampleStyleSheet()
+    width, height = letter
 
    #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
@@ -720,8 +723,8 @@ def render_pdf_viatico(request, pk):
     c.drawString(320,caja_proveedor-60,'Clabe:')
     c.drawString(320,caja_proveedor-80,'Colaborador:')
     c.drawString(320,caja_proveedor-100,'Nivel:')
-    c.drawString(320, caja_proveedor-120,'Transporte')
-    c.drawString(320, caja_proveedor-140,'Hospedaje')
+    c.drawString(320, caja_proveedor-120,'Transporte:')
+    c.drawString(320, caja_proveedor-140,'Hospedaje:')
 
     c.drawString(320,caja_proveedor-200,'Fecha de Elaboración:')
 
@@ -742,22 +745,40 @@ def render_pdf_viatico(request, pk):
     c.drawString(120,caja_proveedor-80, viatico.subproyecto.nombre)
    
     c.drawString(120,caja_proveedor-100, viatico.lugar_partida)
-    c.drawString(120,caja_proveedor-120, viatico.lugar_comision)
+    #c.drawString(120,caja_proveedor-120, viatico.lugar_comision)
+    style = styles['Normal']
+    y_inicial = caja_proveedor - 120
+    paragraph = Paragraph(viatico.lugar_comision, style)
+    paragraph.wrapOn(c, 200, height)
+    longitud_umbral = 38
+    num_lineas_esperadas = len(viatico.lugar_comision) / longitud_umbral
+    if num_lineas_esperadas > 1:
+        y_inicial -= 10
+    paragraph.drawOn(c, 120, y_inicial)
+
+    
     c.drawString(120,caja_proveedor-140, viatico.fecha_partida.strftime("%d/%m/%Y"))
-    c.drawString(120,caja_proveedor-160, viatico.fecha_retorno.strftime("%d/%m/%Y"))
+    
+    if viatico.fecha_retorno:
+        c.drawString(120,caja_proveedor-160, viatico.fecha_retorno.strftime("%d/%m/%Y"))
     if viatico.motivo:
-        c.drawString(120,caja_proveedor-180, viatico.motivo)
+        #c.drawString(120,caja_proveedor-180, viatico.motivo)
+        y_inicial = caja_proveedor - 180
+        style = styles['Normal']
+        paragraph = Paragraph(viatico.motivo, style)
+        paragraph.wrapOn(c, 450, height)
+        longitud_umbral = 75
+        num_lineas_esperadas = len(viatico.motivo) / longitud_umbral
+        if num_lineas_esperadas > 1:
+            y_inicial -= 12
+        paragraph.drawOn(c, 120, y_inicial)
     # Segunda Columna del encabezado
    
-        
-   
-   
-
     if viatico.colaborador:
         c.drawString(380, caja_proveedor-80, viatico.colaborador.staff.staff.first_name+' '+viatico.colaborador.staff.staff.last_name)
         c.drawString(380, caja_proveedor-100, str(viatico.colaborador.staff.nivel))
         if viatico.colaborador.staff.banco:
-            c.drawString(120,caja_proveedor-20, viatico.colaborador.staff.banco.nombre)
+            c.drawString(380,caja_proveedor-20, viatico.colaborador.staff.banco.nombre)
         else:
             c.drawString(380,caja_proveedor-20, "Sin registro")
         if viatico.colaborador.staff.cuenta_bancaria:
@@ -772,7 +793,7 @@ def render_pdf_viatico(request, pk):
         c.drawString(380, caja_proveedor-80,'Solicitante')
         c.drawString(380, caja_proveedor-100, viatico.staff.staff.staff.first_name+' '+viatico.staff.staff.staff.last_name)
         if viatico.staff.staff.banco:
-            c.drawString(120,caja_proveedor-20, viatico.staff.staff.banco.nombre)
+            c.drawString(380,caja_proveedor-20, viatico.staff.staff.banco.nombre)
         else:
             c.drawString(380,caja_proveedor-20, "Sin registro")
         if viatico.staff.staff.cuenta_bancaria:
@@ -785,7 +806,19 @@ def render_pdf_viatico(request, pk):
             c.drawString(380,caja_proveedor-60, "Sin registro")
    
     
-    c.drawString(380, caja_proveedor-120, str(viatico.transporte))
+    #c.drawString(380, caja_proveedor-120, str(viatico.transporte))
+    style = styles['Normal']
+    y_inicial = caja_proveedor - 120
+    paragraph = Paragraph(viatico.transporte, style)
+    paragraph.wrapOn(c, 200, height)
+    longitud_umbral = 38
+    num_lineas_esperadas = len(viatico.transporte) / longitud_umbral
+    if num_lineas_esperadas > 1:
+        y_inicial -= 10
+    paragraph.drawOn(c, 380, y_inicial)
+    
+
+
     if viatico.hospedaje:
         c.drawString(380, caja_proveedor-140, "Requerido")
     else:
@@ -796,16 +829,17 @@ def render_pdf_viatico(request, pk):
     #Create blank list
     data =[]
 
-    data.append(['''Código''', '''Nombre''', '''Cantidad''','''Precio''', '''Subtotal''', '''Total''','''Comentario'''])
+    data.append(['''Código''', '''Nombre''', '''Cantidad''','''Precio''', '''Subtotal''','''Comentario'''])
 
 
     high = 440
+    total = 0
     for concepto in conceptos:
          # Convert to Decimal and round to two decimal places
         cantidad_redondeada = Decimal(concepto.cantidad).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         precio_unitario_redondeado = Decimal(concepto.precio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         subtotal = Decimal(cantidad_redondeada * precio_unitario_redondeado).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        #total = Decimal(subtotal) + Decimal(concepto.otros_impuestos)
+        total += subtotal
         data.append([
             concepto.producto.codigo, 
             concepto.producto.nombre,
@@ -836,8 +870,8 @@ def render_pdf_viatico(request, pk):
     c.drawCentredString(550,34,'001')
 
     c.setFillColor(black)
-    width, height = letter
-    styles = getSampleStyleSheet()
+    
+    
     styleN = styles["BodyText"]
 
     if viatico.comentario_general is not None:
@@ -848,12 +882,12 @@ def render_pdf_viatico(request, pk):
     
    
     # Crear un marco (frame) en la posición específica
-    frame = Frame(50, 0, width, high-50, id='normal')
+    frame = Frame(20, 0, width-40, high-50, id='normal')
     options_conditions_paragraph = Paragraph(comentario, styleN)
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
     c.setFillColor(prussian_blue)
-    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.rect(20,30,500,30, fill=True, stroke=False)
     c.setFillColor(white)
     # Personalizar el estilo de los párrafos
     custom_style = ParagraphStyle(
@@ -869,7 +903,7 @@ def render_pdf_viatico(request, pk):
             if i!=0 and j == 6:
                 data[i][j] = Paragraph(item, custom_style)
 
-    table = Table(data, colWidths=[1.2 * cm, 6 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 1.5* cm, 7 * cm,])
+    table = Table(data, colWidths=[1.5 * cm, 6.5 * cm, 2 * cm, 2 * cm, 1.7 * cm, 6 * cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
@@ -891,9 +925,10 @@ def render_pdf_viatico(request, pk):
     data_secundaria = []
     data_secundaria.append(['Proyecto', 'Subproyecto'])  # Encabezados de la tabla secundaria
 
-  
-
     c.setFillColor(prussian_blue)
+    c.drawString(290, high-20, 'Total:')
+    c.drawString(320, high-20, '$' + str(total))
+   
     c.rect(20,high-50,565,25, fill=True, stroke=False)
     c.setFillColor(white)
     c.drawCentredString(320,high-45,'Comentario General')
