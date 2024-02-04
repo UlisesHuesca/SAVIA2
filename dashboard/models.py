@@ -50,7 +50,7 @@ class Product(models.Model):
     image = models.ImageField(null=True, blank=True, upload_to='product_images')
     completado = models.BooleanField(default = False)
     precioref = models.DecimalField(max_digits=14, decimal_places=2, null=True)
-    porcentaje = models.DecimalField(max_digits=3, decimal_places=2, null=True)
+    porcentaje = models.DecimalField(max_digits=4, decimal_places=2, null=True)
 
     #Estas opciones de guardado de creación y actualización las voy a utilizar en todos mis modelos
     created_at = models.DateTimeField(auto_now_add=True)
@@ -239,7 +239,7 @@ class Order(models.Model):
     #approved_at_time = models.TimeField(null=True)
     comentario =  models.TextField(max_length=200, null=True, blank=True)
     soporte = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
-
+   
 
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 

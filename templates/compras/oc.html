@@ -269,7 +269,18 @@
                     </div>
                 </div>
             </div>
-            <div class="row">   
+           
+            <div class="row">  
+                <div id="etiqueta_precio_ref" class="col-lg-3 col-sm-12 d-none">
+                    <div class="alert alert-primary" role="alert">
+                    <h6>Precio Referencia:</h6><h6 style="color: #121212;" id="precio_ref"></h6>   
+                    </div>
+                </div> 
+                <div id="etiqueta_porcentaje" class="col-lg-3 col-sm-12 d-none">
+                    <div class="alert alert-primary" role="alert">
+                    <h6>Porcentaje:</h6><h6 style="color: #121212;" id="porcentaje"></h6>   
+                    </div>
+                </div> 
                 <div class="col-lg-4">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
@@ -1056,7 +1067,7 @@ $(document).ready(function(){
         datosCompra.lbl_domicilio = domicilio;
         datosCompra.lbl_status = status;
         datosCompra.lbl_distrito = distrito;
-        precio_ref()
+        //precio_ref()
         //if (status == "NUEVO"){
         //    comparativo.classList.remove('d-none');
         //} else {
@@ -1066,6 +1077,12 @@ $(document).ready(function(){
         localStorage.setItem("id_formulario_"+ oc, JSON.stringify(datosCompra));
         console.log("Formulario guardado para OC:",oc, datosCompra)
         
+    });
+    $('#id_proveedor').on('select2:unselect', function(e) {
+        $('#lbl_distrito').text('');
+        $('#lbl_domicilio').text('');
+        $('#lbl_status').text('');  
+
     });
 }); 
 
@@ -1103,8 +1120,22 @@ $(document).ready(function() {
 
         var data = e.params.data;
         var cantidad = data.cantidad;
-        var cantidad_comprada = data.cantidad_comprada;
+        console.log(data)
+        var cantidad_comprada = data.cantidad_pendiente;
         var id = data.id;
+        var precioref = Number(data.precioref);
+        //console.log(precioref)
+        var porcentaje = data.porcentaje;
+        if (precioref > 0) {
+            $('#etiqueta_precio_ref').removeClass('d-none');
+        } else {
+            $('#etiqueta_precio_ref').addClass('d-none');
+        }
+        if (porcentaje > 0) {
+            $('#etiqueta_porcentaje').removeClass('d-none');
+        } else {
+            $('#etiqueta_porcentaje').addClass('d-none');
+        }
 
         console.log(cantidad)
         if (!cantidad_comprada) {
@@ -1117,7 +1148,14 @@ $(document).ready(function() {
         $('#solicitado').text(cantidad_pendiente);
         $('#solicitado').attr('data-id',id)
         $('#solicitado').attr('data-pendiente',cantidad_pendiente)
-       
+        $('#precio_ref').text(precioref)
+        $('#porcentaje').text(porcentaje + "%")
+    });
+    $('#id_producto').on('select2:unselect', function(e) {
+        $('#etiqueta_precio_ref').addClass('d-none');
+        $('#etiqueta_porcentaje').addClass('d-none');
+        $('#solicitado').text('')
+        
     });
 });
 
@@ -1168,6 +1206,7 @@ function precio_ref() {
     console.log("Función precio_ref llamada");
     var lbl_status = document.getElementById('lbl_status');
     var status = lbl_status.innerHTML
+    console.log(status)
     var comparativo = document.getElementById('comparativo')
 
     if (status == "NUEVO"){
@@ -1175,10 +1214,10 @@ function precio_ref() {
             
             var precio_unitario = Number(datosProductos_comp[data].precio_unitario) || 0;
             var precio_ref = Number(datosProductos_comp[data].precio_ref) || 0;
-            var porcentaje = Number(datosProductos_comp[data].porcentaje) || 1;
-            precio_ref_max = precio_ref * porcentaje;
-            console.log(precio_ref_max)
-            if ((precio_ref_max >0) && (precio_ref_max >= precio_unitario)){
+            var porcentaje = Number(datosProductos_comp[data].porcentaje);
+            precio_ref_max = precio_ref * (1 + (porcentaje/100));
+            console.log(precio_ref_max >= precio_unitario)
+            if ((precio_ref_max >0) && (precio_unitario >= precio_ref_max )){
                 //Se cumplen todas las condiciones por tanto no es necesario el cuadro de comparativo
                 comparativo.classList.add('d-none')
             } else {

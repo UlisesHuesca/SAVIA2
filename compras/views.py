@@ -273,6 +273,8 @@ def compra_edicion(request, pk):
          'text': str(producto), 
          'cantidad': str(producto.cantidad), 
          'cantidad_pendiente': str(producto.cantidad_comprada),
+         'precioref': str(producto.producto.articulos.producto.producto.precioref),
+         'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje)
         } for producto in productos]
     
     productos_comp_to_function = [
@@ -444,8 +446,8 @@ def oc_modal(request, pk):
         folio = last_oc.folio + 1
     else:
         folio = 1
-    abrev = req.orden.distrito.abreviado
-    folio_preview = str(abrev)+ str(folio)
+    #abrev = req.orden.distrito.abreviado
+    folio_preview = folio
     error_messages = {}
 
     productos_para_select2 = [
@@ -453,6 +455,8 @@ def oc_modal(request, pk):
          'text': str(producto), 
          'cantidad': str(producto.cantidad), 
          'cantidad_pendiente': str(producto.cantidad_comprada),
+         'precioref': str(producto.producto.articulos.producto.producto.precioref),
+         'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje)
         } for producto in productos]
     
     productos_comp_to_function = [
@@ -1376,7 +1380,11 @@ def carga_proveedor(request):
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
     term = request.GET.get('term')
-    proveedores = Proveedor_direcciones.objects.filter(distrito = usuario.distritos, nombre__razon_social__icontains = term).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre')
+    proveedores = Proveedor_direcciones.objects.filter(
+         Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO"),
+         distrito = usuario.distritos, 
+         nombre__razon_social__icontains = term
+    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre')
     data = list(proveedores)
         
     return JsonResponse(data, safe=False)
