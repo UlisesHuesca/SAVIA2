@@ -191,25 +191,15 @@
                 {% csrf_token %}
                 <div class="row my-2">
                     
-                        <div class="col-12">
-                            <div id="input_subproyecto" class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-brands fa-cc-visa"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">
-                                    <label  style="font-size:10px; color:gray;" for="superintendente">Cuentas*</label>
-                                    <select style="font-size:16px" class="form-select form-select-sm" placeholder="Cuentas" id="cuentas">
-                                         <option style="color:gray;" value="" selected disabled>Cuentas</option>
-                                            {% for cuenta in cuentas%}
-                                            <option id="js" target={{cuenta.id}} moneda={{cuenta.moneda.nombre}}>
-                                                {{cuenta.cuenta}} - {{cuenta.moneda}}
-                                            </option>
-                                            {% endfor %}
-                                    </select>
-                                </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-sm-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1"> 
+                                        {{form.cuenta}}
+                                    </div>
                             </div>
                         </div>
-                    <label for="form.cuenta" class="col-auto col-form-label d-none"><strong>Cuenta:</strong></label>
-                    <div class="col-sm-3 d-none">
-                        {{form.cuenta|add_class:'form-control'}}
                     </div>
                     <div class="col-lg-4 col-sm-12">
                         <div class="input-group mb-3">
@@ -353,7 +343,7 @@ document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>
 })
 }
 
-document.getElementById("cuentas").addEventListener("change", function(element){
+/*document.getElementById("cuentas").addEventListener("change", function(element){
     var select = document.getElementById("cuentas");
     var tipo_cambio_txt = document.getElementById("tipo_de_cambio")
     var current_option = select.options[select.selectedIndex];
@@ -391,8 +381,65 @@ document.getElementById("cuentas").addEventListener("change", function(element){
     }
     //Aqui le doy la instruccion para que cambie la seleccion de acuerdo a lo seleccionado en el primer desplegable de cuentas
     select_cuenta.selectedIndex = target;
+});*/
+
+
+var datosCuenta = {{cuentas_para_select2|safe }};
+
+
+$(document).ready(function() {
+  
+    $('#id_cuenta').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona una cuenta',
+        data: datosCuenta,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_cuenta').on('select2:select', function(e) {
+        var data = e.params.data;
+        var moneda = data.moneda;
+        console.log(moneda)
+        if (compra_moneda == "DOLARES"){
+            if (moneda == "PESOS"){
+            monto.classList.add('d-none');
+            monto_dolares.classList.remove('d-none');
+            lbl_calculo.classList.remove('d-none'); 
+            lbl_tipo_cambio.classList.remove('d-none');
+            txt_tipo_cambio.classList.remove('d-none');
+            } else if (moneda =="DOLARES") {
+            monto.value = ""
+            tipo_cambio.value=""
+            calculo_previo.innerHTML = ""
+            lbl_calculo.classList.add('d-none');
+            lbl_tipo_cambio.classList.add('d-none');
+            txt_tipo_cambio.classList.add('d-none');
+            monto_dolares.classList.add('d-none')
+            monto.classList.remove('d-none');
+            }
+        }
+    });
 });
 
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
 //This is the function that remove any product from render product table and remove the specific element from the array
 /*function deleteRow(element) {
      producto="{{p.id|unlocalize}}"

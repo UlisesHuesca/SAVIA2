@@ -97,6 +97,12 @@ def compras_pagos(request, pk):
     if compra.moneda.nombre == 'DOLARES':
         cuentas = Cuenta.objects.all()
 
+    cuentas_para_select2 = [
+        {'id': cuenta.id,
+         'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
+         'moneda': str(cuenta.moneda),
+        } for cuenta in cuentas]
+
 
     pago, created = Pago.objects.get_or_create(tesorero = usuario, oc__req__orden__distrito = usuario.distritos, oc=compra, hecho=False)
     form = PagoForm(instance=pago)
@@ -242,7 +248,7 @@ def compras_pagos(request, pk):
         'monto':suma_pago,
         'suma_pagos': suma_pago,
         'pagos_alt':pagos_alt,
-        'cuentas':cuentas,
+        'cuentas_para_select2': cuentas_para_select2,
         'remanente':remanente,
     }
 

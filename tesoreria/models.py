@@ -24,7 +24,7 @@ class Cuenta(models.Model):
 
 
     def __str__(self):
-        return f'{self.id} - {self.cuenta} - {self.monto_inicial}'
+        return f'{self.id} - {self.cuenta} -{self.moneda}'
 
 class Pago(models.Model):
     tesorero = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Tesorero')

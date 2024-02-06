@@ -10,17 +10,17 @@ class PagoForm(forms.ModelForm):
         model = Pago
         fields = ['monto','comprobante_pago','tipo_de_cambio','cuenta','pagado_real']
     
-    #def __init__(self,*args, **kwargs):
-    #    super().__init__(*args, **kwargs)
-    #    self.fields['cuenta'].queryset = Cuenta.objects.none()
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cuenta'].queryset = Cuenta.objects.none()
 
-    #    if 'cuenta' in self.data:
-    #        try:
-    #            seleccion_actual = int(self.data.get('cuenta'))
+        if 'cuenta' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('cuenta'))
                 # Lógica para determinar el nuevo queryset basado en la selección actual
-    #            self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
-    #        except (ValueError, TypeError):
-    #            pass  # Manejo de errores en caso de entrada no válida
+                self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida
 
 class Facturas_Form(forms.ModelForm):
     class Meta:
