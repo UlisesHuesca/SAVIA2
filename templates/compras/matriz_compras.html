@@ -217,7 +217,7 @@
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.activo}}</td>
                     <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
                     <td>{{compra.proveedor}}</td>
-                    <td>${{compra.costo_oc}}</td>
+                    <td>${{compra.costo_oc|floatformat:2}}</td>
                     <td>{{compra.moneda.nombre}}</td>
                     <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
                     {% if compra.pagada %}
