@@ -17,9 +17,16 @@ class NC_ArticuloAdmin(admin.ModelAdmin):
     raw_id_fields = ('articulo_comprado',)
 
 class EntradaArticuloAdmin(admin.ModelAdmin):
-    list_display = ('id','entrada','cantidad','articulo_comprado','liberado','cantidad_por_surtir')
+    list_display = ('id','get_entrada_folio','cantidad','articulo_comprado','liberado','cantidad_por_surtir')
     search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre']
     raw_id_fields = ('entrada','articulo_comprado')
+
+    def get_entrada_folio(self, obj):
+        return obj.entrada.folio
+    get_entrada_folio.short_description = 'Folio de Entrada'  # Establece un nombre de columna personalizado
+    get_entrada_folio.admin_order_field = 'entrada__folio'  # Permite ordenar por este campo
+
+
 
 admin.site.register(Entrada, EntradaAdmin)
 
