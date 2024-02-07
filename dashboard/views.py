@@ -778,7 +778,7 @@ def edit_proveedor_direccion(request, pk):
             direccion.completo = True
             direccion.save()
             messages.success(request,'Has actualizado correctamente la direccion del proveedor')
-            return redirect('dashboard-proveedores')
+            return redirect('proveedor-direcciones', pk= proveedor.id)
     else:
         form = ProveedoresDireccionesForm(instance = direccion)
 
