@@ -16,7 +16,7 @@ from .models import Pago, Cuenta, Facturas
 from gastos.models import Solicitud_Gasto, Articulo_Gasto
 from viaticos.models import Solicitud_Viatico
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -328,6 +328,26 @@ def edit_pago(request, pk):
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
+def edit_comprobante_pago(request, pk):
+    pago = Pago.objects.get(id = pk)
+    print(pago.id)
+    form = ComprobanteForm(instance = pago)
+
+    if request.method == 'POST':
+        form = ComprobanteForm(request.POST, request.FILES)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    
+    context = {
+        'pago':pago,
+        'form':form, 
+    }
+    
+    return render(request, 'tesoreria/edit_comprobante_pago.html',context)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def saldo_a_favor(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -424,6 +444,7 @@ def matriz_facturas(request, pk):
 def matriz_facturas_nomodal(request, pk):
     compra = Compra.objects.get(id = pk)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
+    pagos = Pago.objects.filter(oc = compra)
     form = Facturas_Completas_Form(instance=compra)
 
     if request.method == 'POST':
@@ -438,6 +459,7 @@ def matriz_facturas_nomodal(request, pk):
                 messages.error(request,'No está validando')
 
     context={
+        'pagos':pagos,
         'form':form,
         'facturas':facturas,
         'compra':compra,

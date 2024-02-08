@@ -46,3 +46,8 @@ class Saldo_Form(forms.ModelForm):
     class Meta:
         model = Compra
         fields = ['saldo_a_favor']
+
+class ComprobanteForm(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['comprobante_pago']
