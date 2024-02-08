@@ -107,14 +107,9 @@ def compras_pagos(request, pk):
     pago, created = Pago.objects.get_or_create(tesorero = usuario, oc__req__orden__distrito = usuario.distritos, oc=compra, hecho=False)
     form = PagoForm(instance=pago)
 
-    if compra.impuestos:
-        remanente = compra.costo_oc - suma_pago
-        if compra.costo_fletes:
-            remanente = remanente - compra.costo_fletes        
-    else:
-        remanente = compra.costo_oc - suma_pago
-        if compra.costo_fletes:
-            remanente = remanente - compra.costo_fletes  
+    
+    remanente = compra.costo_plus_adicionales - suma_pago
+  
 
     if request.method == 'POST':
         form = PagoForm(request.POST, request.FILES or None, instance = pago)
@@ -144,9 +139,7 @@ def compras_pagos(request, pk):
             #actualizar la cuenta de la que se paga
             monto_total= monto_actual + suma_pago
             compra.monto_pagado = monto_total
-            costo_oc = compra.costo_oc
-            if compra.costo_fletes:
-                costo_oc = compra.costo_oc + compra.costo_fletes
+            costo_oc = compra.costo_plus_adicionales
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
             elif round(monto_total,2) <= round(costo_oc,2):
@@ -330,11 +323,11 @@ def edit_pago(request, pk):
 @perfil_seleccionado_required
 def edit_comprobante_pago(request, pk):
     pago = Pago.objects.get(id = pk)
-    print(pago.id)
+    #print(pago.id)
     form = ComprobanteForm(instance = pago)
 
     if request.method == 'POST':
-        form = ComprobanteForm(request.POST, request.FILES)
+        form = ComprobanteForm(request.POST, request.FILES, instance=pago)
         if form.is_valid():
             form.save()
             return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
@@ -565,7 +558,7 @@ def mis_gastos(request):
 def mis_viaticos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    viaticos = Solicitud_Viatico.objects.filter(complete=True, staff = usuario)
+    viaticos = Solicitud_Viatico.objects.filter(complete=True, staff = usuario).order_by('-folio')
     myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
 

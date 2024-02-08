@@ -182,7 +182,7 @@
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
                     <td class="d-none d-md-table-cell">{{compra.autorizado_at_2}}</td>
                     <td>{{compra.proveedor}}</td>
-                    <td>${{compra.costo_oc}}</td>
+                    <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>${{compra.costo_fletes}}</td>
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>

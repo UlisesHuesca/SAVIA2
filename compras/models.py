@@ -197,6 +197,8 @@ class Compra(models.Model):
                 total = total + self.impuestos
             if self.retencion:
                 total = total - self.retencion
+            if self.costo_fletes:
+                total = total - self.costo_fletes
         return total
 
 

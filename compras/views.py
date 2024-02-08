@@ -1688,7 +1688,7 @@ def generar_pdf(compra):
     c.drawRightString(montos_align,210,'Sub Total:')
     c.drawRightString(montos_align,200,'IVA 16%:')
     c.drawRightString(montos_align,190,'Importe Neto:')
-    c.drawRightString(montos_align,180,'Costo fletes:')
+    
     c.setFillColor(prussian_blue)
     c.setFillColor(black)
     c.drawString(20,130,'Opciones y condiciones:')
@@ -1710,61 +1710,57 @@ def generar_pdf(compra):
 
     c.setFont('Helvetica',10)
     subtotal = compra.costo_oc - compra.costo_iva
+    
+    importe_neto = compra.costo_oc
     if compra.impuestos:
         subtotal = subtotal - compra.impuestos
         c.setFillColor(black)
         c.setFont('Helvetica-Bold',9)
         c.drawRightString(montos_align,170,'Impuestos Adicionales:')
         c.setFont('Helvetica',10)
+        costo_impuestos = format(float(compra.impuestos), '.2f')
+        c.drawRightString(montos_align + 90, 180, '$' + str(costo_impuestos))
+        c.drawRightString(montos_align, 180, 'Impuestos:')
+        #importe_neto = importe_neto + compra.impuestos
     if compra.retencion:
         subtotal = subtotal + compra.retencion
-    c.drawRightString(montos_align + 90,210,'$ ' + str(subtotal))
-    c.drawRightString(montos_align + 90,200,'$ ' + str(compra.costo_iva))
+        costo_retencion = format(float(compra.retencion), '.2f')
+        c.drawRightString(montos_align + 90, 180, '$' + str(costo_retencion))
+        c.drawRightString(montos_align, 180, 'Retención:')
+        #importe_neto = importe_neto - compra.retencion
+    costo_subtotal = format(float(subtotal), '.2f')
+    c.drawRightString(montos_align + 90,210,'$ ' + str(costo_subtotal))
+    costo_con_iva = format(float(compra.costo_iva), '.2f')
+    c.drawRightString(montos_align + 90,200,'$ ' + str(costo_con_iva))
+    costo_oc =  format(float(compra.costo_oc), '.2f')
+    c.drawRightString(montos_align + 90,190,'$ ' + str(costo_oc))
+    
    
     #if compra.costo_fletes is None:
+    #c.setFillColor(prussian_blue)
        
-
+    total =  format(float(compra.costo_plus_adicionales), '.2f')
+    if compra.costo_fletes:
+        importe_neto = importe_neto + compra.costo_fletes
+        c.drawRightString(montos_align,160,'Total:')
+        c.drawRightString(montos_align,180,'Costo fletes:')
+        c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
+        c.drawRightString(montos_align + 90,160,'$ ' + str(total))
+    else:
+        c.drawRightString(montos_align,170,'Total:')
+        
+        c.drawRightString(montos_align + 90,170,'$ ' + str(total))
+    
     
     c.setFillColor(prussian_blue)
-
-
-    if compra.impuestos:
-        importe_neto = compra.costo_oc - compra.impuestos
-        c.drawRightString(montos_align + 90,170,'$ ' + str(compra.impuestos))
-        
-        c.setFillColor(prussian_blue)
-        c.drawRightString(montos_align,160,'Total:')
+    
        
-        if compra.costo_fletes:
+   
             
-            c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
-            importe_neto = compra.costo_fletes + importe_neto
-            c.drawRightString(montos_align + 90,190,'$ ' + str(importe_neto))
-            costo_total = compra.costo_oc + compra.costo_fletes
-            c.drawRightString(montos_align + 90,160,'$ ' + str(costo_total))
-        else:
-            c.drawRightString(montos_align + 90,160,'$ ' + str(compra.costo_oc))
-            compra.costo_fletes = 0
-            c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
-            c.drawRightString(montos_align + 90,190,'$ ' + str(importe_neto))
-    else:
-        importe_neto = compra.costo_oc
-        c.drawRightString(montos_align,170,'Total:')
-        #c.drawRightString(montos_align + 90,170,'$ ' + str(compra.costo_oc))
+  
+           
+   
        
-        if compra.costo_fletes:
-            c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
-            importe_neto = compra.costo_fletes + compra.costo_oc
-            c.drawRightString(montos_align + 90,170,'$ ' + str(importe_neto))
-            costo_total = compra.costo_oc + compra.costo_fletes
-            c.drawRightString(montos_align + 90,190,'$ ' + str(costo_total))
-    
-        else:
-            compra.costo_fletes = 0
-            c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
-            c.drawRightString(montos_align + 90, 170,'$ ' + str(importe_neto))
-            c.drawRightString(montos_align + 90,190,'$ ' + str(compra.costo_oc))
-    
     c.setFont('Helvetica', 9)
     
    
