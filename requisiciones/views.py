@@ -234,7 +234,7 @@ def autorizar_devolucion(request, pk):
         for producto in productos:
             if devolucion.tipo.nombre == "SALIDA":
                 producto_surtir = Salidas.objects.get(id=devolucion.salida.id)
-                inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto, distrito = usuario.dsitritos ) 
+                inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto, distrito = usuario.distritos ) 
                 inv_del_producto._change_reason = f'Esta es una devolucion desde un salida {devolucion.id}'
             else:
                 producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)

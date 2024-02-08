@@ -89,6 +89,9 @@ class Concepto_Viatico(models.Model):
                 self.rendimiento = 0
             total = self.cantidad/self.rendimiento *self.precio
         else:
+        
+        #print(self.cantidad)
+        #print(self.precio)
             total = self.cantidad * self.precio
         return total
 
