@@ -121,10 +121,9 @@ def crear_gasto(request):
         } for item in articulos_gasto
     ]
 
-    if request.method =='POST':
+    if request.method =='POST': 
         if "btn_agregar" in request.POST:
             form = Solicitud_GastoForm(request.POST, instance=gasto)
-            #abrev= usuario.distrito.abreviado
             if form.is_valid():
                 max_folio = Solicitud_Gasto.objects.filter(distrito = usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
                 gasto = form.save(commit=False)
@@ -140,11 +139,9 @@ def crear_gasto(request):
             else:
                 for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
-        else:
-            messages.error(request,'No se pudo subir tu documento')
-            
+    
         if "btn_producto" in request.POST:
-            form_product = Articulo_GastoForm(request.POST, request.FILES or None, instance=articulo)
+            form_product = Articulo_GastoForm(request.POST, instance=articulo)
             if form_product.is_valid():
                 articulo = form_product.save(commit=False)
                 articulo.gasto = gasto
@@ -162,6 +159,8 @@ def crear_gasto(request):
                 factura.save()
                 messages.success(request, 'Factura agregada correctamente.')
                 return redirect('crear-gasto')
+        else:
+            messages.error(request,'No se pudo subir tu documento, verificar cantidad o precio')
             
 
     #total = sum([factura.emisor['total'] for factura in facturas if factura.emisor and 'total' in factura.emisor and factura.emisor['total']])
