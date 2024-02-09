@@ -1169,20 +1169,8 @@ def render_pdf_gasto(request, pk):
     
 
     table_factura.setStyle(table_facturas_style)
-
-    # 4. Posición de la tabla de facturas en el PDF
-    # Asumiendo que 'y_pos' es la posición Y después de dibujar la tabla secundaria y cualquier otro contenido
-    y_facturas_pos = y_pos - (len(data_secundaria) * 18 + 40 )  # Ajusta según sea necesario
-    
     #Parrafó de totales
-    total_str = "${:,.2f}".format(suma_total)  # Convierte Decimal a string y formatea
-    #total_paragraph = Paragraph(total_str, styleN)
-    #frame = Frame(50, 0, width, y_facturas_pos-100, id='normal')
-    #frame.addFromList([total_paragraph], c)
-    # Dibujar la tabla de facturas en el canvas
-    table_factura.wrapOn(c, width, height)
-    table_factura.drawOn(c, 20, y_facturas_pos)
-
+    data_totales = []
     diferencia_totales = suma_total - Decimal(gasto.get_total_solicitud)
     if diferencia_totales > 0:
         color_diferencia = colors.green
@@ -1190,7 +1178,10 @@ def render_pdf_gasto(request, pk):
         color_diferencia = colors.red
     else:
         color_diferencia = colors.black 
-    data_totales = []
+    total_str = "${:,.2f}".format(suma_total)  # Convierte Decimal a string y formatea
+    # 4. Posición de la tabla de facturas en el PDF
+    # Asumiendo que 'y_pos' es la posición Y después de dibujar la tabla secundaria y cualquier otro contenido
+    
 
     data_totales = [
     ['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
@@ -1204,7 +1195,7 @@ def render_pdf_gasto(request, pk):
     # Añadir filas de proyectos y subproyectos
    
     table_totales.wrapOn(c, width, height)
-    y_totales_pos = y_facturas_pos - (len(data_facturas) * 15 + 30) 
+    y_totales_pos = y_pos - (len(data_totales) * 15 + 30) 
     table_totales.drawOn(c, 20, y_totales_pos)
 
     c.setFillColor(prussian_blue)
@@ -1229,6 +1220,19 @@ def render_pdf_gasto(request, pk):
 
 
     c.showPage()
+    y_facturas_pos =height - (len(data_facturas) * 18) - 220  # Ajusta según sea necesario
+    
+    
+    #total_paragraph = Paragraph(total_str, styleN)
+    #frame = Frame(50, 0, width, y_facturas_pos-100, id='normal')
+    #frame.addFromList([total_paragraph], c)
+    # Dibujar la tabla de facturas en el canvas
+    table_factura.wrapOn(c, width, height)
+    table_factura.drawOn(c, 20, y_facturas_pos)
+
+    
+    
+
     c.save()
     buf.seek(0)
 
