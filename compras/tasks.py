@@ -192,7 +192,8 @@ def convert_excel_solicitud_matriz_productos_task(productos):
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
 
-    columns = ['OC','RQ','Sol','Solicitante','Proyecto','Subproyecto','Fecha','Proveedor','Área','Cantidad','Código', 'Producto','P.U.','Moneda','Tipo de Cambio','Subtotal','IVA','Total']
+
+    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -206,8 +207,8 @@ def convert_excel_solicitud_matriz_productos_task(productos):
 
     columna_max = len(columns)+2
 
-    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}')).style = messages_style
-    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Grupo Vordcab S.A. de C.V.}')).style = messages_style
     ws.column_dimensions[get_column_letter(columna_max)].width = 20
     
     
@@ -218,17 +219,23 @@ def convert_excel_solicitud_matriz_productos_task(productos):
         # Extract the needed attributes
         compra_id = articulo.oc.id
         moneda_nombre = articulo.oc.moneda.nombre
-        nombre_completo = articulo.oc.req.orden.staff.staff.staff.first_name + " " + articulo.oc.req.orden.staff.staff.staff.last_name
+        #nombre_completo = articulo.oc.req.orden.staff.staff.staff.first_name + " " + articulo.oc.req.orden.staff.staff.staff.last_name
         proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
         operacion_nombre = articulo.oc.req.orden.operacion.nombre if articulo.oc.req.orden.operacion else "Desconocido"
-        fecha_creacion = articulo.created_at
+        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+
 
         # Calculate total, subtotal, and IVA using attributes from producto
         subtotal_parcial = articulo.subtotal_parcial
         iva_parcial = articulo.iva_parcial
         total = articulo.total
-        
+        if articulo.oc.autorizado2 is not None:
+            status = 'Autorizado Gerente' if articulo.oc.autorizado2 else 'Cancelada'
+        elif articulo.oc.autorizado1 is not None:
+            status = 'Autorizado Superintendente' if articulo.oc.autorizado1 else 'Cancelada'
+        else:
+            status = 'Sin autorizaciones aún'
         # Handling the currency conversion logic
         pagos = Pago.objects.filter(oc_id=compra_id)
         tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
@@ -240,23 +247,30 @@ def convert_excel_solicitud_matriz_productos_task(productos):
         # Constructing the row
         row = [
             articulo.oc.folio,
-            articulo.oc.req.folio,
-            articulo.oc.req.orden.folio,
-            nombre_completo,
-            proyecto_nombre,
-            subproyecto_nombre,
-            fecha_creacion,
-            articulo.oc.proveedor.nombre.razon_social,
-            operacion_nombre,
-            articulo.cantidad,
             articulo.producto.producto.articulos.producto.producto.codigo,
             articulo.producto.producto.articulos.producto.producto.nombre,
+            articulo.cantidad,
+            articulo.producto.producto.articulos.producto.producto.unidad,
+            articulo.producto.producto.articulos.producto.producto.familia.nombre,
+            articulo.producto.producto.articulos.producto.producto.subfamilia.nombre,
             articulo.precio_unitario,
             moneda_nombre,
             tipo_de_cambio,
             subtotal_parcial,
             iva_parcial,
-            total
+            total,
+            articulo.oc.proveedor.nombre.razon_social,
+            fecha_creacion,
+            #nombre_completo,
+            proyecto_nombre,
+            subproyecto_nombre,
+            #operacion_nombre,
+            articulo.oc.req.orden.distrito.nombre,
+            articulo.oc.req.folio,
+            articulo.oc.req.orden.folio,
+            status,
+            articulo.oc.pagada,
+
         ]
         rows.append(row)
 

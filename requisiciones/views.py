@@ -181,7 +181,7 @@ def update_devolucion(request):
         inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto, distrito =producto.vale_salida.solicitud.distrito)
     else:
         producto = ArticulosparaSurtir.objects.get(id = producto_id)
-        inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto, distrito =producto.vale_salida.solicitud.distrito)
+        inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto, distrito =producto.articulos.orden.distrito)
         
 
 
@@ -228,7 +228,8 @@ def autorizar_devolucion(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     devolucion= Devolucion.objects.get(id=pk)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
-    salida = Salidas.objects.filter(id=devolucion.salida.id)
+    if devolucion.tipo.nombre == "SALIDA":
+        salida = Salidas.objects.filter(id=devolucion.salida.id)
     
     if request.method == 'POST' and 'btnAutorizar' in request.POST:
         for producto in productos:
@@ -262,8 +263,9 @@ def autorizar_devolucion(request, pk):
             inv_del_producto.save()
             messages.success(request,'Has autorizado exitosamente una devolución')
         devolucion.autorizada = True
-        salida.cancelada = True
-        salida.save()
+        if devolucion.tipo.nombre == "SALIDA":
+            salida.cancelada = True
+            salida.save()
         devolucion.save()
         return redirect('matriz-autorizar-devolucion')
 
