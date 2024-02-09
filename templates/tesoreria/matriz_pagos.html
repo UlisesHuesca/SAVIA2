@@ -176,7 +176,7 @@
                     {% endif %}
                    
                     {% if pago.gasto %}
-                        <td>G{{pago.gasto.id}}</td>
+                        <td>G{{pago.gasto.folio}}</td>
                         <td class="d-none d-lg-table-cell">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
                         <td>{{pago.gasto.proyecto.nombre}}</td>
                         <td  class="d-none d-lg-table-cell">{{pago.gasto.subproyecto.nombre}}</td>
@@ -193,7 +193,7 @@
                         {% endif %}
                     {% endif %}
                     {% if pago.viatico %}
-                    <td>V{{pago.viatico.id}}</td>
+                    <td>V{{pago.viatico.}}</td>
                     <td class="d-none d-lg-table-cell">{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
                     <td>{{pago.viatico.proyecto.nombre}}</td>
                     <td  class="d-none d-lg-table-cell">{{pago.viatico.subproyecto.nombre}}</td>
@@ -221,7 +221,13 @@
                             {% endif %}
                             {% if pago.gasto %}
                             <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-gasto' pago.gasto.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="OC">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-gasto' pago.gasto.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de gasto">
+                                    <i class="fa-solid fa-file-pdf"></i></a>
+                            </li>
+                            {% endif %}
+                            {% if pago.viatico %}
+                            <li class="nav-item mx-1">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-viatico' pago.viatico.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de viático">
                                     <i class="fa-solid fa-file-pdf"></i></a>
                             </li>
                             {% endif %}
