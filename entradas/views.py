@@ -257,7 +257,7 @@ def update_entrada(request):
     if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': #si es resurtimiento
         producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto_comprado.producto.producto.articulos, surtir=False, articulos__orden__tipo__tipo = 'resurtimiento')
     else:
-        producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto_comprado.producto.producto.articulos)
+        producto_surtir = ArticulosparaSurtir.objects.get(id= producto_comprado.producto.producto.articulos.id)
 
     if producto_inv.producto.servicio == False:
         monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.apartada_entradas * producto_inv.price

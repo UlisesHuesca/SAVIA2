@@ -22,6 +22,7 @@ from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, 
 from requisiciones.forms import Articulo_Cancelado_Form
 from tesoreria.forms import Facturas_Form
 from requisiciones.views import get_image_base64
+from django.utils.timezone import make_aware, is_aware
 
 import json
 import time
@@ -607,8 +608,32 @@ def matriz_oc(request):
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
     compras_data = list(compras.values())
+    # Obtienes las fechas de inicio y finalización del filtro
+    start_date = myfilter.form.cleaned_data.get('start_date')
+    end_date = myfilter.form.cleaned_data.get('end_date')
+   
+    num_approved_requis = 0
+    num_requis_atendidas = 0
+    # Asegúrate de que start_date y end_date son objetos datetime "aware"
+    if start_date is not None and end_date is not None:
+    # Si las fechas no tienen información de la zona horaria, hazlas "aware"
+        # Filtrar las requisiciones aprobadas dentro del rango de fechas
+        approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True, orden__distrito = usuario.distritos)
+        approved_requis_ids = approved_requis.values_list('id', flat=True)
+        num_approved_requis = approved_requis.count() 
 
-  
+        # Contar el número de requisiciones aprobadas
+        compras_colocadas_ids = Compra.objects.filter(
+            created_at__gte=start_date, 
+            created_at__lte=end_date, 
+            req__colocada=True,
+            req_id__in=approved_requis_ids,
+            req__orden__distrito = usuario.distritos
+        ).values_list('req', flat=True).distinct()
+
+        num_requis_atendidas = len(set(compras_colocadas_ids))
+
+
     # Calcular el total de órdenes de compra
     total_de_oc = compras.count()
      # Calcular el número de OC que cumplen el criterio (created_at - approved_at <= 3)
@@ -617,10 +642,10 @@ def matriz_oc(request):
     oc_cumplen = compras_con_criterio.count()
 
      # Calcular el indicador de cumplimiento (oc_cumplen / total_de_oc)
-    if total_de_oc > 0:
-        cumplimiento = (oc_cumplen / total_de_oc)*100
-    else:
-        cumplimiento = 0
+    #if total_de_oc > 0:
+    #    cumplimiento = (oc_cumplen / total_de_oc)*100
+    #else:
+    #    cumplimiento = 0
 
      #Set up pagination
     p = Paginator(compras, 50)
@@ -628,16 +653,18 @@ def matriz_oc(request):
     compras_list = p.get_page(page)
 
     context= {
+        #'num_requis_atendidas': num_requis_atendidas,
+        #'num_approved_requis': num_approved_requis,
         'compras_list':compras_list,
         'compras':compras,
         'myfilter':myfilter,
-        'cumplimiento': cumplimiento,
+        #'cumplimiento': cumplimiento,
         }
     task_id = request.session.get('task_id')
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
         if not task_id:
-            task = convert_excel_matriz_compras_task.delay(compras_data)
+            task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
             task_id = task.id
             request.session['task_id'] = task_id
             context['task_id'] = task_id 

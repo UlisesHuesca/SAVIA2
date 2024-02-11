@@ -15,7 +15,7 @@ import datetime as dt
 from datetime import date
 
 @shared_task
-def convert_excel_matriz_compras_task(compras):
+def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobadas, start_date, end_date):
     #response= HttpResponse(content_type = "application/ms-excel")
     #response['Content-Disposition'] = 'attachment; filename = Matriz_compras_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
@@ -50,12 +50,12 @@ def convert_excel_matriz_compras_task(compras):
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
     percent_style = NamedStyle(name='percent_style', number_format='0.00%')
-    percent_style.font = Font(name ='Calibri', size = 10)
+    percent_style.font = Font(name ='Calibri', size = 12)
     wb.add_named_style(percent_style)
 
-    columns = ['Compra','Requisición','Solicitud','Solicitante','Proyecto','Subproyecto','Área','Creado','Req. Autorizada','Proveedor',
+    columns = ['Compra','Requisición','Solicitud','Proyecto','Subproyecto','Área','Solicitante','Creado','Req. Autorizada','Proveedor',
                'Crédito/Contado','Costo','Monto_Pagado','Status Pago','Status Autorización','Días de entrega','Moneda',
-               'Tipo de cambio','Diferencia de Fechas',"Total en pesos"]
+               'Tipo de cambio','Entregada',"Total en pesos",]
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -72,17 +72,34 @@ def convert_excel_matriz_compras_task(compras):
     ws.column_dimensions[get_column_letter(columna_max + 1)].width = 30
 
     # Agregar los encabezados de las nuevas columnas debajo de los mensajes
-    ws.cell(row=3, column = columna_max, value="Total de OC's").style = head_style
-    ws.cell(row=4, column = columna_max, value="OC dentro de tiempo").style = head_style
-    ws.cell(row=5, column = columna_max, value="% de cumplimiento").style = head_style
-    ws.cell(row=6, column = columna_max, value="Monto total de OC's").style = head_style
+    ws.cell(row=3, column = columna_max, value="Fecha Inicial").style = head_style
+    ws.cell(row=4, column = columna_max, value="Fecha Final").style = head_style
+    ws.cell(row=5, column = columna_max, value="Total de OC's").style = head_style
+    ws.cell(row=6, column = columna_max, value="Requisiciones Aprobadas").style = head_style
+    ws.cell(row=7, column = columna_max, value="Requisiciones Colocadas").style = head_style
+    ws.cell(row=8, column = columna_max, value="KPI Colocadas/Aprobadas").style = head_style
+    ws.cell(row=9, column = columna_max, value="OC Entregadas").style = head_style
+    ws.cell(row=10, column = columna_max, value="OC Autorizadas").style = head_style
+    ws.cell(row=11, column = columna_max, value="KPI OC Entregadas/Total de OC").style = head_style
+    #ws.cell(row=6, column = columna_max, value="Monto total de OC's").style = head_style
 
+    indicador = requis_atendidas/requis_aprobadas
+    letra_columna = get_column_letter(columna_max + 1 )
+    formula = f"={letra_columna}9/{letra_columna}10"
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
-    ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=COUNTIF({get_column_letter(len(columns)-1)}:{get_column_letter(len(columns)-1)}, \"<=3\")").style = body_style
-    ws.cell(row=5, column=columna_max + 1, value=f"={get_column_letter(columna_max+1)}4/{get_column_letter(columna_max+1)}3").style = percent_style
-    ws.cell(row=6, column=columna_max + 1, value=f"=SUM({get_column_letter(len(columns))}:{get_column_letter(len(columns))})").style = money_resumen_style
+    ws.cell(row=3, column=columna_max + 1, value=start_date).style = date_style
+    ws.cell(row=4, column=columna_max + 1, value=end_date).style = date_style
+    ws.cell(row=5, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
+    ws.cell(row=6, column=columna_max + 1, value=requis_aprobadas).style = body_style
+    ws.cell(row=7, column=columna_max + 1, value=requis_atendidas).style = body_style
+    ws.cell(row=8, column=columna_max + 1, value=indicador).style = percent_style
+    ws.cell(row=9, column=columna_max + 1, value=f'=COUNTIF(S:S,"Entregada")').style = body_style
+    ws.cell(row=10, column = columna_max + 1, value=f'=COUNTIF(O:O,"Autorizado")').style = body_style
+    ws.cell(row=11, column=columna_max + 1, value=formula).style = percent_style
+    #ws.cell(row=4, column=columna_max + 1, value=f"=COUNTIF({get_column_letter(len(columns)-1)}:{get_column_letter(len(columns)-1)}, \"<=3\")").style = body_style
+    #ws.cell(row=5, column=columna_max + 1, value=f"={get_column_letter(columna_max+1)}4/{get_column_letter(columna_max+1)}3").style = percent_style
+    #ws.cell(row=6, column=columna_max + 1, value=f"=SUM({get_column_letter(len(columns))}:{get_column_letter(len(columns))})").style = money_resumen_style
 
     rows = []
     for compra_list in compras:
@@ -98,9 +115,10 @@ def convert_excel_matriz_compras_task(compras):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or compra.tipo_de_cambio
         autorizado_text = 'Autorizado' if compra.autorizado2 else 'No Autorizado' if compra.autorizado2 == False or compra.autorizado1 == False else 'Pendiente Autorización'
         pagado_text = 'Pagada' if compra.pagada else 'No Pagada'
-        
+        entrada_text = 'Entregada' if compra.entrada_completa else 'No Entregada' 
+
         row = [
-        compra.id,
+        compra.folio,
         compra.req.folio,
         compra.req.orden.folio,
         compra.req.orden.proyecto.nombre if compra.req.orden.proyecto else '',
@@ -118,6 +136,7 @@ def convert_excel_matriz_compras_task(compras):
         compra.dias_de_entrega,
         compra.moneda.nombre,
         tipo_de_cambio,
+        entrada_text,   
     ]
         if row[16] == "DOLARES":
             if row[17] is None or row[17] < 15:
@@ -133,13 +152,15 @@ def convert_excel_matriz_compras_task(compras):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 8 or col_num == 7:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [10, 11, 12, 16]:
+            if col_num in [10, 11, 12, 19]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
         # Agregamos la fórmula DATEDIF. Asumiendo que las columnas 'Creado' y 'Req. Autorizada'
         # están en las posiciones 8 y 9 respectivamente (empezando desde 0), las posiciones en Excel serán 9 y 10 (empezando desde 1).
-        ws.cell(row=row_num, column=len(columns)-1, value=f"=NETWORKDAYS(I{row_num}, H{row_num})").style = body_style
+        #ws.cell(row=row_num, column=len(columns)-1, value=f"=NETWORKDAYS(I{row_num}, H{row_num})").style = body_style
         # Agregar la fórmula de "Total en pesos"
         ws.cell(row=row_num, column = len(columns), value=f"=IF(ISBLANK(R{row_num}), L{row_num}, L{row_num}*R{row_num})").style = money_style
+        #Agregar la columna para entregas
+      
     
     file_name='Matriz_compras_' + str(date.today()) + '.xlsx'
     file_storage_location = os.path.join(settings.MEDIA_ROOT,'reportes',file_name)
