@@ -341,8 +341,9 @@ def proveedor_direcciones(request, pk):
 @login_required(login_url='user-login')
 def proyectos_add(request):
     #usuario = Profile.objects.get(staff=request.user
-    selected_profile = request.session.get('selected_profile')
-    distrito = selected_profile.distrito
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    distrito = usuario.distritos
 
     form = Proyectos_Add_Form()
 
