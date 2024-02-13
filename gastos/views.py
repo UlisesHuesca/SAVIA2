@@ -55,10 +55,10 @@ def crear_gasto(request):
     conceptos = Product.objects.all()
     pk = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk)
-    if usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
-        superintendentes = colaborador.filter(staff =  usuario.staff )  
+    if usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin" and not usuario.tipo.nombre == "GERENCIA":
+        superintendentes = colaborador.filter(staff =  usuario.staff)  
     else:
-        superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos).exclude(tipo__nombre="Admin")
+        superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
     
     proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
