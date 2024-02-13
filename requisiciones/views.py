@@ -229,7 +229,7 @@ def autorizar_devolucion(request, pk):
     devolucion= Devolucion.objects.get(id=pk)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
     if devolucion.tipo.nombre == "SALIDA":
-        salida = Salidas.objects.filter(id=devolucion.salida.id)
+        salida = Salidas.objects.get(id=devolucion.salida.id)
     
     if request.method == 'POST' and 'btnAutorizar' in request.POST:
         for producto in productos:
