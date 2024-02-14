@@ -359,7 +359,6 @@ def viaticos_autorizados(request):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
     perfil = colaborador.get(id = pk_perfil)
-
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     #if perfil.tipo.superintendente == True:
     #    solicitudes = Solicitud_viatico.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
@@ -598,6 +597,7 @@ def matriz_facturas_viaticos(request, pk):
     concepto_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico =viatico, hecho=True)
     form = Facturas_Viaticos_Form(instance=viatico)
+    next_url = request.GET.get('next', 'matriz-pagos')
 
     if request.method == 'POST':
         form = Facturas_Viaticos_Form(request.POST, instance=viatico)
@@ -608,8 +608,11 @@ def matriz_facturas_viaticos(request, pk):
                 return redirect('matriz-pagos')
             else:
                 messages.error(request,'No está validando')
+        
+            
 
     context={
+        'next_url':next_url,
         'facturas':facturas,
         'form':form,
         'concepto_viatico': concepto_viatico,

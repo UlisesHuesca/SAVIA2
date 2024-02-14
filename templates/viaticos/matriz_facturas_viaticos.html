@@ -12,6 +12,7 @@
 <hr>
 <hr>
 <hr>
+<h6>&nbsp;</h6>
 <div class = "row mt-2 bg-white" id="response-div">
         <div class="col-12">
             <div class="card card-body">
@@ -20,11 +21,11 @@
                     {% csrf_token %}
                     <ul class="nav nav-pills">
                     <li class="nav-item mx-1">
-                        <a href="{% url 'mis-gastos' %}" class="btn btn-outline-info">
+                        <a href="{{ next_url }}" class="btn btn-outline-info">
                             <i class="fa-solid fa-backward"></i>
                         </a>
                     </li>
-                    {% if usuario.tipo.tesoreria == True %}
+                    <!--{% if usuario.tipo.tesoreria == True %}
                         <li class="nav-item mx-1">
                             <a href="{% url 'viaticos-autorizados-pago' %}" class="btn btn-outline-info">
                                 <i class="fa-solid fa-backward"> VIATICOS</i>
@@ -36,7 +37,7 @@
                             </a>
                         </li>
                         {% endif %}
-                        <!--<li class="nav-item mx-2">
+                        <li class="nav-item mx-2">
                             <button type="button" class="btn btn-outline-danger">
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
