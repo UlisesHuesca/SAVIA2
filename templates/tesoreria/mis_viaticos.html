@@ -155,7 +155,7 @@
                     <td>{{viatico.approved_at2}}</td>
                     <td>
                         {% if viatico.autorizar2 == True %}
-                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}">
+                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}">
                         <i class="fa-solid fa-file-pdf"></i>      
                         </a>
                         {% endif %}

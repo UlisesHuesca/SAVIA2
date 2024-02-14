@@ -248,7 +248,7 @@
                                 </a>
                                 {% endif %}
                                 {% if pago.viatico %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}">
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
                                     <i class="fa-solid fa-file-pdf"></i>
                                 </a>
                                 {% endif %}
