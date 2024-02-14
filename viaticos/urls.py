@@ -23,4 +23,5 @@ urlpatterns = [
     path('viaticos/matriz_facturas/<int:pk>', views.facturas_viaticos, name='facturas-viaticos'),
     path('viaticos/factura_viatico_edicion/<int:pk>', views.factura_viatico_edicion, name='factura-viatico-edicion'),
     path('viaticos/render_viatico/<int:pk>', views.render_pdf_viatico, name='render-pdf-viatico'),
+    path('viaticos/eliminar_factura_viatico/<int:pk>/', views.eliminar_factura_viatico, name='eliminar-factura-viatico'),
 ]

@@ -4,6 +4,7 @@ from user.models import Profile, Distrito
 from dashboard.models import Inventario, Product
 from django.core.validators import FileExtensionValidator
 import decimal
+import xml.etree.ElementTree as ET
 
 # Create your models here.
 
@@ -67,7 +68,7 @@ class Puntos_Intermedios(models.Model):
 
 class Concepto_Viatico(models.Model):
     staff = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
-    producto = models.ForeignKey(Product, on_delete = models.CASCADE, null=True, blank=True)
+    producto = models.ForeignKey(Product, on_delete = models.CASCADE, null=True)
     comentario = models.CharField(max_length=255, null=True, blank=True)
     viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True)
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=1)
@@ -84,15 +85,15 @@ class Concepto_Viatico(models.Model):
 
     @property
     def get_total_parcial(self):
-        if self.producto.nombre == "GASOLINA":
-            if self.rendimiento == None:
-                self.rendimiento = 0
-            total = self.cantidad/self.rendimiento *self.precio
-        else:
+        #if self.producto.nombre == "GASOLINA":
+        #    if self.rendimiento == None:
+        #        self.rendimiento = 0
+        #    total = self.cantidad/self.rendimiento *self.precio
+        #else:
         
         #print(self.cantidad)
         #print(self.precio)
-            total = self.cantidad * self.precio
+        total = self.cantidad * self.precio
         return total
 
 class Viaticos_Factura(models.Model):
@@ -107,7 +108,52 @@ class Viaticos_Factura(models.Model):
 
     #def __str__(self):
     #    return f'Factura de viatico:{self.solicitud_viatico.folio}'
+    @property   
+    def emisor(self):
+        #with open(self.factura_xml.path,'r') as file:
+            #data = file.read()
+        try:
+            tree = ET.parse(self.factura_xml.path)
+        except ET.ParseError as e:
+            print(f"Error al parsear el archivo XML: {e}")
+        # Manejo adicional del error
+        #tree = ET.parse(self.archivo_xml.path)
+        root = tree.getroot()
+        # Buscar la versión en el documento XML
+        version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
 
+        if 'http://www.sat.gob.mx/cfd/3' in version:
+            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
+        elif 'http://www.sat.gob.mx/cfd/4' in version:
+            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4'}
+        else:
+            # Manejo de error si no se encuentra ninguna versión conocida
+            raise ValueError("Versión del documento XML no reconocida")
+        #comprobante = root.findall('cfdi:Comprobante')
+        
+        emisor = root.find('cfdi:Emisor', ns)
+        
+        receptor = root.find('cfdi:Receptor', ns)
+        impuestos = root.find('cfdi:Impuestos', ns)
+        conceptos = root.find('cfdi:Conceptos', ns)
+        resultados = []
+        for concepto in conceptos.findall('cfdi:Concepto', ns):
+            descripcion = concepto.get('Descripcion')
+            cantidad = concepto.get('Cantidad')
+            precio = concepto.get('ValorUnitario') 
+            # Aquí agrupamos los valores en una tupla antes de añadirlos a la lista
+            resultados.append((descripcion, cantidad, precio))
+        # Obtener los datos requeridos
+      
+        rfc = emisor.get('Rfc')
+        nombre = emisor.get('Nombre')
+        regimen_fiscal = emisor.get('RegimenFiscal')
+        total = root.get('Total')
+        subtotal = root.get('Subtotal')
+        impuestos = root.get('TotalImpuestosTrasladados')
+
+
+        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}
 
 
 
