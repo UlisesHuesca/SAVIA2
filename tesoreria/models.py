@@ -6,6 +6,7 @@ from viaticos.models import Solicitud_Viatico
 #from djmoney.models.fields import MoneyField
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
+import xml.etree.ElementTree as ET
 # Create your models here.
 
 
@@ -63,3 +64,50 @@ class Facturas(models.Model):
 
     def __str__(self):
         return f'id:{self.id} oc:{self.oc}'
+    
+    @property   
+    def emisor(self):
+        #with open(self.factura_xml.path,'r') as file:
+            #data = file.read()
+        try:
+            tree = ET.parse(self.factura_xml.path)
+        except ET.ParseError as e:
+            print(f"Error al parsear el archivo XML: {e}")
+        # Manejo adicional del error
+        #tree = ET.parse(self.archivo_xml.path)
+        root = tree.getroot()
+        # Buscar la versión en el documento XML
+        version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
+
+        if 'http://www.sat.gob.mx/cfd/3' in version:
+            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
+        elif 'http://www.sat.gob.mx/cfd/4' in version:
+            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4'}
+        else:
+            # Manejo de error si no se encuentra ninguna versión conocida
+            raise ValueError("Versión del documento XML no reconocida")
+        #comprobante = root.findall('cfdi:Comprobante')
+        
+        emisor = root.find('cfdi:Emisor', ns)
+        
+        receptor = root.find('cfdi:Receptor', ns)
+        impuestos = root.find('cfdi:Impuestos', ns)
+        conceptos = root.find('cfdi:Conceptos', ns)
+        resultados = []
+        for concepto in conceptos.findall('cfdi:Concepto', ns):
+            descripcion = concepto.get('Descripcion')
+            cantidad = concepto.get('Cantidad')
+            precio = concepto.get('ValorUnitario') 
+            # Aquí agrupamos los valores en una tupla antes de añadirlos a la lista
+            resultados.append((descripcion, cantidad, precio))
+        # Obtener los datos requeridos
+      
+        rfc = emisor.get('Rfc')
+        nombre = emisor.get('Nombre')
+        regimen_fiscal = emisor.get('RegimenFiscal')
+        total = root.get('Total')
+        subtotal = root.get('Subtotal')
+        impuestos = root.get('TotalImpuestosTrasladados')
+
+
+        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}

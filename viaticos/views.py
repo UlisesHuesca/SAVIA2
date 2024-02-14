@@ -596,6 +596,7 @@ def facturas_viaticos(request, pk):
 def matriz_facturas_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id = pk)
     concepto_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
+    facturas = Viaticos_Factura.objects.filter(solicitud_viatico =viatico, hecho=True)
     form = Facturas_Viaticos_Form(instance=viatico)
 
     if request.method == 'POST':
@@ -609,12 +610,21 @@ def matriz_facturas_viaticos(request, pk):
                 messages.error(request,'No está validando')
 
     context={
+        'facturas':facturas,
         'form':form,
         'concepto_viatico': concepto_viatico,
         'viatico': viatico,
         }
 
     return render(request, 'viaticos/matriz_facturas_viaticos.html', context)
+
+def eliminar_factura_viatico(request, pk):
+    factura = Viaticos_Factura.objects.get(id=pk)
+    viatico = factura.solicitud_viatico
+    messages.success(request,f'La factura {factura.id} ha sido eliminada exitosamente')
+    factura.delete()
+
+    return redirect('matriz-facturas-viaticos', pk= viatico.id)
 
 def factura_viatico_edicion(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
