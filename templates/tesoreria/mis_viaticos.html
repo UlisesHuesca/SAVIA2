@@ -154,7 +154,7 @@
                     <td>${{viatico.get_total|floatformat:2}}</td>
                     <td>{{viatico.approved_at2}}</td>
                     <td>
-                        {% if viatico.autorizar2 == True %}
+                        {% if viatico.autorizar2 %}
                         <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}">
                         <i class="fa-solid fa-file-pdf"></i>      
                         </a>

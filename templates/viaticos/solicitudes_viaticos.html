@@ -43,7 +43,7 @@
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.id|add_class:"form-control"|append_attr:"placeholder=Folio"}}
+                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio"}}
                             <label for="id_lugar_partida">Folio</label>
                         </div>
                     </div>
@@ -115,7 +115,8 @@
                     <th scope="col">Folio</th>
                     <th scope="col">Solicitado por:</th>
                     <th scope="col">Solicitado para:</th>
-                    <th scope="col">Autorización N1</th>
+                    <th scope="col">Autorización Sptte</th>
+                    <th scope="col">Autorización Gerencia</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th scope="col">Creado</th>
@@ -128,7 +129,8 @@
                     <th scope="row">{{orden.folio}}</th>
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
                     <td>{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}</td>
-                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}</td>
+                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}} |{% if orden.autorizar %} Autorizado {% elif not orden.autorizar %} Cancelado {% else %} No autorizado aún {% endif %} </td>
+                    <td>{% if orden.autorizar2 %} Autorizado {% elif not orden.autorizar2 %} Cancelado {% else %} No autorizado aún {% endif %} </td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
                     <td>{{orden.created_at}}</td>

@@ -195,10 +195,10 @@ def compras_pagos(request, pk):
                             </html>
                             """
                         email = EmailMessage(
-                        f'Compra Autorizada {compra.folio}|SAVIA Pruebas',
+                        f'Compra Autorizada {compra.folio}|SAVIA',
                         body=html_message2,
                         from_email = 'savia@vordcab.com',
-                        to= ['ulises_huesc@hotmail.com'],# compra.req.orden.staff.staff.staff.email, compra.creada_por.staff.staff.email],
+                        to= ['ulises_huesc@hotmail.com',compra.req.orden.staff.staff.staff.email, compra.creada_por.staff.staff.email],
                         headers={'Content-Type': 'text/html'}
                         )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
