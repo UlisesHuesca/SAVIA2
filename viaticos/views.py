@@ -591,6 +591,37 @@ def facturas_viaticos(request, pk):
 
     return render(request, 'viaticos/matriz_facturas.html', context)
 
+def factura_nueva_viatico(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    viatico = Solicitud_Viatico.objects.get(id = pk)
+    #facturas = Facturas.objects.filter(pago = pago, hecho=True)
+    factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico=viatico, hecho=False)
+    
+
+    form = Viaticos_Factura_Form(instance=factura)
+
+    if request.method == 'POST':
+        if 'btn_registrar' in request.POST:
+            form = Viaticos_Factura_Form(request.POST or None, request.FILES or None, instance = factura)
+            if form.is_valid():
+                factura = form.save(commit=False)
+                factura.hecho=True
+                factura.fecha_subido =datetime.now()
+                #factura.hora_subido = datetime.now().time()
+                factura.subido_por =  usuario
+                factura.save()
+                messages.success(request,'La factura se registró de manera exitosa')
+            else:
+                messages.error(request,'No se pudo subir tu documento')
+
+
+    context={
+        'form': form, 
+    }
+
+    return render(request, 'viaticos/registrar_nueva_factura_viatico.html', context)
+
 @login_required(login_url='user-login')
 def matriz_facturas_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id = pk)
