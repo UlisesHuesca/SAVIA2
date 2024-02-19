@@ -464,7 +464,8 @@ def autorizar_gasto(request, pk):
 
 @login_required(login_url='user-login')
 def cancelar_gasto(request, pk):
-    perfil = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)    
     gasto = Solicitud_Gasto.objects.get(id = pk)
     productos = Articulo_Gasto.objects.filter(gasto = gasto)
 
@@ -486,7 +487,8 @@ def cancelar_gasto(request, pk):
 
 @login_required(login_url='user-login')
 def autorizar_gasto2(request, pk):
-    perfil = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)    
     gasto = Solicitud_Gasto.objects.get(id = pk)
     productos = Articulo_Gasto.objects.filter(gasto = gasto)
 
@@ -509,7 +511,8 @@ def autorizar_gasto2(request, pk):
 
 @login_required(login_url='user-login')
 def cancelar_gasto2(request, pk):
-    perfil = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)    
     gasto = Solicitud_Gasto.objects.get(id = pk)
     productos = Articulo_Gasto.objects.filter(gasto = gasto)
 
