@@ -553,24 +553,25 @@ def add_proveedores_old(request):
 
 @login_required(login_url='user-login')
 def add_proveedor_direccion(request, pk):
-
-    usuario = Profile.objects.get(staff=request.user)
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
     proveedor = Proveedor.objects.get(id=pk)
     form = ProveedoresDireccionesForm()
+    error_messages = {}
 
     if request.method =='POST':
         item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, creado_por = usuario, completo = False)
         form = ProveedoresDireccionesForm(request.POST, instance = item)
         if form.is_valid():
             item = form.save(commit=False)
-            item.disitrito = usuario.distrito
+            item.disitrito = usuario.distritos
             item.completo = True
             item.save()
             messages.success(request,f'Has agregado correctamente la direccion del proveedor {item.nombre.razon_social}')
             return redirect('dashboard-proveedores')
         else:
-            errors = form.errors.as_text()
-            messages.error(request,f'No esta validando. Errores:{errors}')
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
     else:
         form = ProveedoresDireccionesForm()
 
@@ -579,6 +580,7 @@ def add_proveedor_direccion(request, pk):
         'form': form,
         #'item':item,
         'proveedor':proveedor,
+        'error_messages': error_messages,
         }
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 

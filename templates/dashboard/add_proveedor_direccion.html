@@ -17,6 +17,11 @@
             <div class="card card-header">
                 <h3>{% if direccion %} Editar Dirección {% else %} Agregar Dirección {% endif %}</h3>
             </div>
+            {% if error_messages %}
+            <div class="alert alert-danger" role="alert">
+                {{error_messages}}
+            </div>
+            {% endif %}
             <div class="card card-body">
                 <form method="POST" id='ProductForm'>
                     {% csrf_token %}
@@ -97,25 +102,27 @@
                     </div>
                     </div>
                     <div class="row">
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
-                            <label for="id_lugar_partida">Clabe*</label>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
+                                <label for="id_lugar_partida">Clabe*</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
-                            <label for="id_lugar_partida">Financiamiento*</label>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
+                                <label for="id_lugar_partida">Financiamiento*</label>
+                                </div>
                             </div>
-                        </div>
+                        </div>+
                     </div>
-                    </div>
+                  
+                   
                     <div class="row">
                     <div class="col-6">
                         <div class="input-group mb-3">
@@ -123,6 +130,15 @@
                             <div class="form-floating form-floating-group flex-grow-1">   
                             {{form.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
                             <label for="id_lugar_partida">Días de crédito*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito"}}
+                            <label for="id_lugar_partida">Distrito*</label>
                             </div>
                         </div>
                     </div>
