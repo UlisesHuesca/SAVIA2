@@ -253,7 +253,8 @@ def autorizar_viaticos(request, pk):
 
 @login_required(login_url='user-login')
 def autorizar_viaticos2(request, pk):
-    perfil = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id = pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico, completo = True)
 
@@ -276,7 +277,8 @@ def autorizar_viaticos2(request, pk):
 
 @login_required(login_url='user-login')
 def cancelar_viaticos(request, pk):
-    perfil = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id = pk)
 
 
@@ -285,7 +287,7 @@ def cancelar_viaticos(request, pk):
         viatico.approved_at = date.today()
         viatico.approved_at_time = datetime.now().time()
         viatico.save()
-        messages.info(request, f'{perfil.staff.first_name} {perfil.staff.last_name} has cancelado la solicitud {viatico.id}')
+        messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud {viatico.folio}')
         return redirect ('viaticos-pendientes-autorizar')
 
     context = {
