@@ -605,8 +605,8 @@ def convert_excel_matriz_compras_autorizadas(compras):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio','Fecha Autorización','Proyecto','Subproyecto','Distrito','Proveedor',
-               'Importe', 'Moneda','Tipo de cambio','Total en Pesos','Fecha Creación']
+    columns = ['Folio','Fecha Autorización','Proyecto','Subproyecto','Distrito','Proveedor','C. Pago',
+               'Importe', 'Moneda','Tipo de cambio','Total en Pesos','Fecha Creación','Recibida']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -651,6 +651,9 @@ def convert_excel_matriz_compras_autorizadas(compras):
             created_at_naive = compra.created_at.astimezone(pytz.utc).replace(tzinfo=None)
         else:
             created_at_naive = ''
+
+        recibida = "Recibida" if compra.entrada_completa else "No Recibida"
+
         row = [
             compra.folio,
             autorizado_at_2_naive,
@@ -658,19 +661,21 @@ def convert_excel_matriz_compras_autorizadas(compras):
             compra.req.orden.subproyecto.nombre,
             compra.req.orden.distrito.nombre,
             compra.proveedor.nombre.razon_social,
+            compra.cond_de_pago.nombre,
             compra.costo_plus_adicionales,
             compra.moneda.nombre,
             compra.tipo_de_cambio if compra.tipo_de_cambio else '',
-            f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
+            f'=IF(J{row_num}="",H{row_num},H{row_num}*J{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             created_at_naive,
+            recibida,
         ]
 
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num ==1 or col_num == 10:
+            if col_num == 1 or col_num == 11:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 6 or col_num == 8 or col_num == 9:
+            if col_num == 7 or col_num == 9 or col_num == 10:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
@@ -780,6 +785,7 @@ def convert_excel_matriz_pagos(pagos):
             facturas_completas = None
             tipo_de_cambio = ''
 
+       
 
         row = [
             pago.id,

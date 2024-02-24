@@ -114,7 +114,7 @@ def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobada
         # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or compra.tipo_de_cambio
         autorizado_text = 'Autorizado' if compra.autorizado2 else 'No Autorizado' if compra.autorizado2 == False or compra.autorizado1 == False else 'Pendiente Autorización'
-        pagado_text = 'Pagada' if compra.pagada else 'No Pagada'
+        
         entrada_text = 'Entregada' if compra.entrada_completa else 'No Entregada' 
 
         row = [
@@ -152,7 +152,7 @@ def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobada
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 8 or col_num == 7:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [10, 11, 12, 19]:
+            if col_num in [7, 8, 10, 11, 12, 19]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
         # Agregamos la fórmula DATEDIF. Asumiendo que las columnas 'Creado' y 'Req. Autorizada'
         # están en las posiciones 8 y 9 respectivamente (empezando desde 0), las posiciones en Excel serán 9 y 10 (empezando desde 1).
@@ -214,7 +214,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
     wb.add_named_style(money_resumen_style)
 
 
-    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
+    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -245,7 +245,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
         operacion_nombre = articulo.oc.req.orden.operacion.nombre if articulo.oc.req.orden.operacion else "Desconocido"
         fecha_creacion = articulo.created_at.replace(tzinfo=None)
-
+        pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
 
         # Calculate total, subtotal, and IVA using attributes from producto
         subtotal_parcial = articulo.subtotal_parcial
@@ -281,6 +281,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             iva_parcial,
             total,
             articulo.oc.proveedor.nombre.razon_social,
+            articulo.oc.proveedor.estatus.nombre,
             fecha_creacion,
             #nombre_completo,
             proyecto_nombre,
@@ -290,8 +291,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             articulo.oc.req.folio,
             articulo.oc.req.orden.folio,
             status,
-            articulo.oc.pagada,
-
+            pagado_text,
         ]
         rows.append(row)
 
@@ -302,7 +302,9 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num in [12, 14, 15, 16, 17]:
+            if col_num == 15:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num in [7, 10, 11, 12, 16, 17]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
 
     file_name='Matriz_compras_por_producto' + str(date.today()) + '.xlsx'
