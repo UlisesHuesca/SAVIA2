@@ -92,7 +92,7 @@ def devolucion_a_proveedor(request):
 def articulos_entrada(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    
+    vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
     if usuario.tipo.almacen == True:
         articulos = ArticuloComprado.objects.filter(oc=pk, entrada_completa = False,  seleccionado = False, producto__producto__articulos__producto__producto__servicio = False)
     else:
@@ -106,21 +106,24 @@ def articulos_entrada(request, pk):
     entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
     articulos_entrada = EntradaArticulo.objects.filter(entrada = entrada)
     form = EntradaArticuloForm()
-    max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-
+    #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+    max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+    nuevo_folio = (max_folio or 0) + 1
+    
     for articulo in articulos:
         if articulo.cantidad_pendiente == None:
             articulo.cantidad_pendiente = articulo.cantidad
 
 
     if request.method == 'POST' and 'entrada' in request.POST:
-        num_art_comprados = ArticuloComprado.objects.filter(oc=compra).count()
-        max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-        entrada.completo = True
-        entrada.folio = max_folio
-        entrada.entrada_date = date.today()
-        entrada.entrada_hora = datetime.now().time()
         articulos_comprados = ArticuloComprado.objects.filter(oc=pk)
+        num_art_comprados = articulos_comprados.count()
+        max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+        nuevo_folio = (max_folio or 0) + 1
+        entrada.completo = True
+        entrada.folio = nuevo_folio
+        entrada.entrada_date = datetime.now()
+        #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
         articulos_entregados = articulos_comprados.filter(entrada_completa=True)
         articulos_seleccionados = articulos_entregados.filter(seleccionado = True)
         num_art_entregados = articulos_entregados.count()
@@ -151,7 +154,7 @@ def articulos_entrada(request, pk):
                     articulos__orden__tipo__tipo = 'normal',
                     cantidad_requisitar__gt=0
                     )
-                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
+                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
                 for producto in productos_pendientes_surtir:    #Recorremos todas las solicitudes pendientes por surtir una por una
                     if producto_surtir.cantidad > 0:
                         inv_de_producto.cantidad = inv_de_producto.cantidad - producto.cantidad
@@ -207,7 +210,7 @@ def articulos_entrada(request, pk):
 
     context = {
         'articulos':articulos,
-        'max_folio': max_folio,
+        'max_folio': nuevo_folio,
         'entrada':entrada,
         'compra':compra,
         'form':form,

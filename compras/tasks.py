@@ -107,12 +107,13 @@ def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobada
         oc_id = compra_list.get('id')
         compra = Compra.objects.get(id=oc_id)
         pagos = Pago.objects.filter(oc=oc_id)
-
+        pagado_text = 'Pagada' if compra.pagada else 'No Pagada'
         # Calcula el tipo de cambio promedio de estos pagos
         tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
 
         # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
-        tipo_de_cambio = tipo_de_cambio_promedio_pagos or compra.tipo_de_cambio
+        tipo = tipo_de_cambio_promedio_pagos or compra.tipo_de_cambio
+        tipo_de_cambio = '' if tipo == 0 else tipo
         autorizado_text = 'Autorizado' if compra.autorizado2 else 'No Autorizado' if compra.autorizado2 == False or compra.autorizado1 == False else 'Pendiente Autorización'
         
         entrada_text = 'Entregada' if compra.entrada_completa else 'No Entregada' 
@@ -150,9 +151,9 @@ def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobada
         row_num += 1
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 8 or col_num == 7:
+            if col_num == 7 or col_num == 8:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [7, 8, 10, 11, 12, 19]:
+            if col_num in [ 11, 12, 13, 15]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
         # Agregamos la fórmula DATEDIF. Asumiendo que las columnas 'Creado' y 'Req. Autorizada'
         # están en las posiciones 8 y 9 respectivamente (empezando desde 0), las posiciones en Excel serán 9 y 10 (empezando desde 1).

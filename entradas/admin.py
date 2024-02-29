@@ -3,8 +3,9 @@ from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, N
 
 # Register your models here.
 class EntradaAdmin(admin.ModelAdmin):
-    list_display = ('id','almacenista','oc','completo')
+    list_display = ('id','folio','almacenista','oc','completo')
     list_filter = ('oc',)
+    raw_id_fields = ('oc','almacenista')
 
 class Tipo_NcAdmin(admin.ModelAdmin):
     list_display = ('nombre',)
