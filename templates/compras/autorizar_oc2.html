@@ -53,8 +53,8 @@
                             <th scope="col" id="subproyecto" value={{compra.req.orden.subproyecto}}>{{compra.req.orden.subproyecto.presupuesto}}</th>
                         </tr>
                         <tr style="color:#3e92cc">
-                            <th scope="col">Importe OC:</th>
-                            <th scope="col">${{costo_oc}}</th>
+                            <th scope="col">Subtotal:</th>
+                            <th scope="col">${{costo_oc|floatformat:2}}</th>
                         </tr>
                         {% if compra.costo_fletes %}
                         <tr style="color:#3e92cc">
@@ -70,7 +70,7 @@
                         {% endif %}
                         <tr style="color:#3e92cc">
                             <th scope="col">Total OC:</th>
-                            <th scope="col">$ {{compra.costo_plus_adicionales}}</th>
+                            <th scope="col">$ {{compra.costo_plus_adicionales|floatformat:2}}</th>
                         </tr>
                         <tr>
                             <th scope="col">Porcentaje Gasto/Subproyecto:</th>
@@ -107,7 +107,7 @@
                             <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
                             <td>{{producto}}</td>
                             <td>{{producto.cantidad}}</td>
-                            <td>${{producto.precio_unitario}}</td>
+                            <td>${{producto.precio_unitario|floatformat:2}}</td>
                         </tr>
                    {% endfor %}
                    </tbody>

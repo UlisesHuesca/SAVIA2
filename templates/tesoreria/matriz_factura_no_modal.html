@@ -54,8 +54,10 @@
                         </tr>
                     </thead>
                     <tbody>
+                        
                         {% for pago in pagos %}
                         <tr>
+                            {% if pago.comprobante_pago %}
                         <th scope="col">Pago:</th>
                         <th scope="col">
                             <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
@@ -66,8 +68,10 @@
                             </a>   
                             
                         </th>
+                            {% endif %}
                         </tr>
                         {% endfor %}
+                        
                     </tbody>
                 </table>
                 <hr>

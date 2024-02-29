@@ -956,7 +956,9 @@ def back_oc(request, pk):
     perfil = Profile.objects.get(id = pk_perfil)
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc = pk)
-    #Traigo la requisición para poderla activar de nuevo
+    #Traigo la requisición para poderla activar de nuevo, aunque esto ya no es necesario porque no se reactiva propiamente la requi
+    #Crearé la cancelación de la OC?
+    #Esto está afectando de alguna forma a los productos pendientes cuando se eliminan partidas de la OC?
     requi = Requis.objects.get(id=compra.req.id)
 
     if compra.costo_fletes == None or compra.costo_fletes == 0:
