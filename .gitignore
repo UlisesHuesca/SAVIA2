@@ -1,5 +1,8 @@
 venv/
 env/
+facturas/
+media/
+xml/
 access.log
 errors.log
 errors.log.save

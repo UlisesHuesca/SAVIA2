@@ -36,7 +36,7 @@ class Subfamilia(models.Model):
 
 class Product(models.Model):
     codigo = models.CharField(max_length=6,null=True, unique=True)
-    nombre = models.CharField(max_length=400, null=True)
+    nombre = models.TextField(null=True)
     unidad = models.ForeignKey(Unidad, on_delete = models.CASCADE, null=True)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     subfamilia = models.ForeignKey(Subfamilia, on_delete =models.CASCADE, null=True, blank=True)
@@ -198,7 +198,7 @@ class Activo(models.Model):
     tipo_activo = models.ForeignKey(Tipo_Activo, on_delete=models.CASCADE, null=True)
     responsable = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True)
     creado_por = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='Creado_por')
-    eco_unidad = models.CharField(max_length=50, null=True, unique=True)
+    eco_unidad = models.CharField(max_length=50, null=True)
     serie = models.CharField(max_length=30, null=True)
     cuenta_contable = models.CharField(max_length=25, null=True)
     factura_interna = models.CharField(max_length=15, null=True)

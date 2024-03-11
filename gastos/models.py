@@ -100,7 +100,7 @@ class Articulo_Gasto(models.Model):
     staff = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     clase = models.BooleanField(null=True, default=False)   #Se refiere a si el producto es del True == almacén o entrara al almacén o si va por fuera
     producto = models.ForeignKey(Product, on_delete = models.CASCADE, null=True)
-    comentario = models.CharField(max_length=255, null=True)
+    comentario = models.TextField(null=True)
     descripcion = models.CharField(max_length=255, null=True)
     otros_impuestos = models.DecimalField(default=0,max_digits=14, decimal_places=4, null=True, blank=True)
     impuestos_retenidos = models.DecimalField(default=0, max_digits=14, decimal_places=4, null=True, blank=True)

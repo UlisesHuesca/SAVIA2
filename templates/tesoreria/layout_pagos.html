@@ -1,0 +1,157 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Matriz de compras autorizadas{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="card bg-white my-2">
+    <form id="mass_payment_form" method="post">
+    {% csrf_token %}
+    <div class="col-md-12">
+        <div class ="table-responsive-sm">
+            <table class="table table-striped table-hover bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Compra</th>
+                    <th class="d-none d-lg-table-cell">Banco</th>
+                    <th class="d-none d-lg-table-cell">Cuenta</th>
+                    <th  class="d-none d-lg-table-cell">Asunto Ordenante</th>
+                    <th  class="d-none d-lg-table-cell">Divisa</th>
+                    <th scope="col">Importe OC</th>
+                    <th>Importe</th>
+                    <th class="d-none d-md-table-cell">Motivo de Pago</th>
+                    <th scope="col">Proveedor</th>
+                  
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras %}
+                <tr>
+                    <th scope="row">{{compra.folio}}</th>
+                    <td class="d-none d-lg-table-cell">{{compra.proveedor.banco.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.proveedor.cuenta}}</td>
+                    <td>
+                        <select name="cuenta_{{ forloop.counter }}">
+                        {% for cuenta in cuentas_disponibles %}
+                        <option value="{{ cuenta.id }}">{{ cuenta.cuenta }}</option>
+                        {% endfor %}
+                        </select>
+                    </td>
+                    <td class="d-none d-lg-table-cell">{{compra.moneda.nombre}}</td>
+                    <td class="d-none d-md-table-cell">{{compra.costo_plus_adicionales}}</td>
+                    <td>
+                    <input type="number" step="any" name="monto_{{ forloop.counter }}" value="" placeholder="Ingresa el monto">
+                    </td>
+                    <td>{{compra.folio}}</td>
+                    <td>{{compra.proveedor}}</td>
+                </tr>  
+                {% endfor %}
+            </tbody>
+            </table>
+            <input type="submit" class="btn btn-lg btn-outline-info" value="Generar TXT">
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if compras_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in compras_list.paginator.page_range %}
+                    {% if compras_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if compras_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+</script>
+{% endblock %}
+</body>
+</html>
