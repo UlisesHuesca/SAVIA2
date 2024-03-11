@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum, Max, Exists, OuterRef
+from django.db.models import Q, Sum, Max, Exists, OuterRef, Subquery
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.core.mail import EmailMessage
@@ -45,7 +45,11 @@ def pendientes_entrada(request):
             servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
             cant_entradas = articulos_entrada.count()
             cant_servicios = servicios_pendientes.count()
-            #subquery_pago = Pago.objects.filter(oc=OuterRef('id'), hecho = True)
+            # Definir la subconsulta para obtener la fecha del primer pago realizado para cada compra
+            #primer_pago_subquery = Pago.objects.filter(
+            #    oc=OuterRef('pk'),  # Referencia a la compra en la consulta principal
+            #    hecho=True
+            #    ).order_by('pagado_real').values('pagado_real')[:1]  # Selecciona la fecha del primer pago
             if  cant_entradas == cant_servicios and cant_entradas > 0:
                 compra.solo_servicios = True
                 compra.save()
@@ -107,10 +111,18 @@ def articulos_entrada(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
     compra = Compra.objects.get(id = pk)
-    if usuario.tipo.almacen == True and not compra.req.orden.staff == usuario:
-        articulos = ArticuloComprado.objects.filter(oc=pk, entrada_completa = False,  seleccionado = False, producto__producto__articulos__producto__producto__servicio = False)
+    if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
+        articulos = ArticuloComprado.objects.filter(
+            oc=pk, 
+            entrada_completa = False,  
+            seleccionado = False, 
+            producto__producto__articulos__producto__producto__servicio = False)
     else:
-        articulos = ArticuloComprado.objects.filter(oc=pk, entrada_completa = False,  seleccionado = False, producto__producto__articulos__producto__producto__servicio = True)
+        articulos = ArticuloComprado.objects.filter(
+            oc=pk, 
+            entrada_completa = False,  
+            seleccionado = False, 
+            producto__producto__articulos__producto__producto__servicio = True)
 
 
     compra = Compra.objects.get(id=pk)

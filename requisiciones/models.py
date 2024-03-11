@@ -109,6 +109,9 @@ class ValeSalidas(models.Model):
         suma =  sum([item.get_costo_salida for item in salidas])
         return suma
 
+    def __str__(self):
+        return f'{self.folio}'
+
 
 class Salidas(models.Model):
     vale_salida = models.ForeignKey(ValeSalidas, on_delete = models.CASCADE, null=True)

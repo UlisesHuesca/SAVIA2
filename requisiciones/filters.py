@@ -26,7 +26,7 @@ class ArticulosparaSurtirFilter(django_filters.FilterSet):
 
 
 class SalidasFilter(django_filters.FilterSet):
-    solicitud = CharFilter(field_name='producto__articulos__orden__folio', lookup_expr='icontains')
+    solicitud = CharFilter(field_name='vale_salida__solicitud__folio', lookup_expr='icontains')
     producto = CharFilter(field_name='producto__articulos__producto__producto__nombre', lookup_expr='icontains')
     codigo = CharFilter(field_name='producto__articulos__producto__producto__codigo', lookup_expr='icontains')
     nombre = CharFilter(method ='my_custom_filter', label="Search")

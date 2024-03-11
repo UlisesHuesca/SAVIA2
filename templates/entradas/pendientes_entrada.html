@@ -187,7 +187,7 @@
                 {% for compra in compras_list %}
                 <tr>
                     <td id="folio" class="compra-row" folio="{{compra.folio}}">{{compra.folio}}</th>
-                    <td id="fecha_pago_{{compra.folio}}" dias_entrega="{{compra.dias_de_entrega}}" fecha_pago="{{compra.fecha_pago|date:'Y-m-d'}}" class="d-none d-lg-table-cell">{{compra.req.folio}}</td>
+                    <td id="fecha_pago_{{compra.folio}}" dias_entrega="{{compra.dias_de_entrega}}" fecha_pago="{{compra|date:'Y-m-d'}}" class="d-none d-lg-table-cell">{{compra.req.folio}}</td>
                     <td id="tipo_pago_{{compra.folio}}" tipo_pago="{{compra.cond_de_pago.nombre}}" status_pago = "{{compra.pagada}}">{{compra.req.orden.folio}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.staff.first_name}} {{compra.req.orden.staff.staff.staff.last_name}}</td>
                     <td>{{compra.req.orden.proyecto.nombre}}</td>
@@ -302,22 +302,25 @@ function indicador_retraso(folio) {
     var fecha_pago = new Date(obj_dias_entrega.getAttribute('fecha_pago'))
     var elementoSpan = document.getElementById("text_span_" + folio);
     var tipo_pago = obj_tipo_pago.getAttribute('tipo_pago');
+    console.log(tipo_pago)
     var status_pago = obj_tipo_pago.getAttribute('status_pago');
     var hoy = new Date()
     hoy.setHours(0,0,0,0);
-    console.log(hoy)
+    //console.log(hoy)
 
     
     if (tipo_pago == "CONTADO") {
+        console.log(fecha_pago, fecha_pago.getDate(), Number(dias_entrega))
         fecha_pago.setDate(fecha_pago.getDate() + Number(dias_entrega));
         var fecha_limite = new Date(fecha_pago);
+        console.log(fecha_limite)
         fecha_limite.setHours(0,0,0,0)
     } else if (tipo_pago == "CREDITO"){
         
         fecha_autorizacion.setDate(fecha_autorizacion.getDate() + Number(dias_entrega));
-        //console.log(fecha_autorizacion, dias_entrega, )
+        console.log(fecha_autorizacion, dias_entrega, )
         var fecha_limite = new Date(fecha_autorizacion);
-        
+        console.log(fecha_limite)
         fecha_limite.setHours(0,0,0,0)
     }
     console.log(folio, fecha_limite)

@@ -227,6 +227,8 @@ class Compra(models.Model):
         pagos = self.pago_set.all()
         return pagos
 
+    
+
     @property
     def get_subtotal(self):
         productos = self.articulocomprado_set.all()
