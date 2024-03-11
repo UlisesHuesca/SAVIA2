@@ -18,7 +18,11 @@ class Articulos_RequisitadosAdmin(admin.ModelAdmin):
 
 class SalidasAdmin(admin.ModelAdmin):
     list_display = ('id','vale_salida','producto','cantidad','precio','complete','entrada')
+<<<<<<< HEAD
     search_fields = ['producto__articulos__producto__producto__nombre','vale_salida__folio']
+=======
+    search_fields = ['producto__articulos__producto__producto__nombre']
+>>>>>>> origin/main
     raw_id_fields = ('producto', 'vale_salida',)
 
 class DevolucionAdmin(admin.ModelAdmin):

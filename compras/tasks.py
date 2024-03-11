@@ -6,7 +6,8 @@ from django.core.files.storage import FileSystemStorage
 from celery import shared_task
 from .models import Compra, ArticuloComprado
 from tesoreria.models import Pago
-from django.db.models import F, Avg 
+from django.db.models import F, Avg
+from entradas.models import Entrada 
 # Import Excel Stuff
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -55,7 +56,7 @@ def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobada
 
     columns = ['Compra','Requisición','Solicitud','Proyecto','Subproyecto','Área','Solicitante','Creado','Req. Autorizada','Proveedor',
                'Crédito/Contado','Costo','Monto_Pagado','Status Pago','Status Autorización','Días de entrega','Moneda',
-               'Tipo de cambio','Entregada',"Total en pesos",]
+               'Tipo de cambio','Entregada',"Total en pesos",'Fecha Entrada']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -115,8 +116,9 @@ def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobada
         tipo = tipo_de_cambio_promedio_pagos or compra.tipo_de_cambio
         tipo_de_cambio = '' if tipo == 0 else tipo
         autorizado_text = 'Autorizado' if compra.autorizado2 else 'No Autorizado' if compra.autorizado2 == False or compra.autorizado1 == False else 'Pendiente Autorización'
-        
+        pagado_text = 'Pagada' if compra.pagada else 'No Pagada'
         entrada_text = 'Entregada' if compra.entrada_completa else 'No Entregada' 
+
 
         row = [
         compra.folio,

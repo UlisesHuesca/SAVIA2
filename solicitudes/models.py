@@ -80,7 +80,7 @@ class Status_Subproyecto(models.Model):
 
 class Subproyecto(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True)
-    nombre = models.CharField(max_length=50, null=True)
+    nombre = models.CharField(max_length=100, null=True)
     descripcion = models.CharField(max_length=255, null=True, blank=True)
     presupuesto = models.DecimalField(max_digits=14, decimal_places=2, null=True)
     created_at = models.DateTimeField(auto_now_add=True)

@@ -824,7 +824,7 @@ def requisicion_detalle(request, pk):
         folio = 1
     
     abrev = usuario.distritos.abreviado
-    folio_preview = str(abrev)+ str(folio)
+    folio_preview = str(folio)
     #for producto in productos:
     productos_requisitados = ArticulosRequisitados.objects.filter(req = requi)
     error_messages = {}

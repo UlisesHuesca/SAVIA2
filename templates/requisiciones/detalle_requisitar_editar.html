@@ -265,13 +265,19 @@ updateBtn.addEventListener('click',function(){
                 })
         } else {
             ActualizarArticulos(requi,id,cantidad,action);
-
+            
+            
         }
 })
-
+function preventDoubleClick(button) {
+    setTimeout(function() {
+        button.disabled = true;
+    }, 50);
+}
 //ActualizarArticulos(array_id_prod)
 
 function ActualizarArticulos(requi,id,cantidad,action){
+    preventDoubleClick(updateBtn);
     console.log('User is logged in, sending data...' )
 
     var url = '/requisiciones/update_requi/'

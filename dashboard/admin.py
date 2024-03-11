@@ -20,7 +20,7 @@ class InventarioAdmin(SimpleHistoryAdmin):
     search_fields = ['producto__nombre']
 
 class ActivoAdmin(admin.ModelAdmin):
-    list_display = ('eco_unidad','tipo_activo','serie','cuenta_contable','factura_interna')
+    list_display = ('id','eco_unidad','tipo_activo','serie','cuenta_contable','factura_interna')
     search_fields = ['nombre']
 
 class ArticulosOrdenadosAdmin(admin.ModelAdmin):
@@ -37,7 +37,7 @@ class ArticulosparaSurtirAdmin(admin.ModelAdmin):
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id','folio','staff','proyecto','subproyecto','tipo','approved_at','requisitado','requisitar')
     search_fields = ['folio']
-    #raw_id_fields = ('created_at','staff','proyecto','subproyecto','superintendente','supervisor','activo',)
+    raw_id_fields = ('staff','proyecto','subproyecto','superintendente','supervisor','activo',)
 
 
 class SubfamiliaAdmin(admin.ModelAdmin):
@@ -70,5 +70,5 @@ admin.site.register(Proveedor_Batch)
 
 admin.site.register(Tipo_Orden)
 
-admin.site.register(Activo)
+admin.site.register(Activo, ActivoAdmin)
 

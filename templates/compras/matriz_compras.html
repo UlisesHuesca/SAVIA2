@@ -200,7 +200,11 @@
                     <th class="d-none d-lg-table-cell">Status Pago</th>
                     <th class="d-none d-lg-table-cell">Status Autorización</th>
                     <th class="d-none d-lg-table-cell">Días de Entrega</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Detalle</th>
+                    <th>Documentos</th>
+                    {% if usuario.tipo.nombre == "Admin" %}
+                    <th>BACK BUTTON</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -228,10 +232,10 @@
                     <td class="d-none d-lg-table-cell">{{compra.autorizado2}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
                     <td>
+                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
+                    </td>
+                    <td>
                         <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
-                            </li>
                             <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas"><i class="fa-solid fa-file-pdf"></i></a>
                             </li>
@@ -239,6 +243,9 @@
                                 <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                             </li>
                         </ul>
+                    </td>
+                    <td>
+
                     </td>
                 </tr>
                 {% endfor %}

@@ -14,6 +14,7 @@ class PagoAdmin(admin.ModelAdmin):
 class FacturasAdmin(admin.ModelAdmin):
     search_fields = ['oc__folio']
     raw_id_fields = ('oc',)
+    list_display = ('id','oc')
 
 # Register your models here.
 admin.site.register(Cuenta, CuentaAdmin)

@@ -653,7 +653,7 @@ def matriz_oc(request):
     compras_list = p.get_page(page)
 
     context= {
-        #'num_requis_atendidas': num_requis_atendidas,
+        'usuario':usuario,
         #'num_approved_requis': num_approved_requis,
         'compras_list':compras_list,
         'compras':compras,
@@ -988,16 +988,16 @@ def back_oc(request, pk):
                 compra.oc_autorizada_por = perfil
                 compra.autorizado1 = None
                 compra.complete = False
-                compra.autorizado_date1 = date.today()
-                compra.autorizado_hora1 = datetime.now().time()
+                compra.autorizado_at = datetime.now()
+                #compra.autorizado_hora1 = datetime.now().time()
                 compra.regresar_oc = True
             else:
                 compra.oc_autorizada_por2 = perfil
                 compra.autorizado2 = None
                 compra.autorizado1 = None
                 compra.complete = False
-                compra.autorizado_date2 = date.today()
-                compra.autorizado_hora2 = datetime.now().time()
+                compra.autorizado_at_2 = datetime.now()
+                #compra.autorizado_hora2 = datetime.now().time()
                 compra.regresar_oc = True
             #Esta línea es la que activa a la requi
             #requi.colocada = False
