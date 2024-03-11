@@ -109,6 +109,8 @@ class ValeSalidas(models.Model):
         suma =  sum([item.get_costo_salida for item in salidas])
         return suma
 
+    def __str__(self):
+        return f'{self.id} {self.solicitud}'
 
 class Salidas(models.Model):
     vale_salida = models.ForeignKey(ValeSalidas, on_delete = models.CASCADE, null=True)
@@ -137,6 +139,9 @@ class Salidas(models.Model):
 
 class Tipo_Devolucion(models.Model):
     nombre = models.CharField(max_length=20, null=True)
+
+def __str__(self):
+        return f'{self.id} {self.producto}'
 
 class Devolucion(models.Model):
     solicitud = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)

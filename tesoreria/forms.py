@@ -43,7 +43,6 @@ class Facturas_Viaticos_Form(forms.ModelForm):
         fields = ['facturas_completas']
 
 class Saldo_Form(forms.ModelForm):
-    class Meta:
         model = Compra
         fields = ['saldo_a_favor']
 
@@ -51,3 +50,21 @@ class ComprobanteForm(forms.ModelForm):
     class Meta:
         model = Pago
         fields = ['comprobante_pago']
+
+
+class TxtForm(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['monto','cuenta']
+    
+    #def __init__(self,*args, **kwargs):
+    #    super().__init__(*args, **kwargs)
+    #    self.fields['cuenta'].queryset = Cuenta.objects.none()
+
+        #if 'cuenta' in self.data:
+        #    try:
+        #        seleccion_actual = int(self.data.get('cuenta'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+        #        self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
+        #    except (ValueError, TypeError):
+        #        pass  # Manejo de errores en caso de entrada no válida

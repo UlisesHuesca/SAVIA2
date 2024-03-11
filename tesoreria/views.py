@@ -16,7 +16,7 @@ from .models import Pago, Cuenta, Facturas
 from gastos.models import Solicitud_Gasto, Articulo_Gasto
 from viaticos.models import Solicitud_Viatico
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -816,4 +816,74 @@ def convert_excel_matriz_pagos(pagos):
     wb.save(response)
 
     return(response)
+
+def mass_payment_view(request):
+    if request.method == 'POST':
+        request.session['compras_ids'] = request.POST.getlist('compra_id')
+        return redirect('layout_pagos')  # No pasamos 'ids' porque usaremos la sesión
+
+# Si necesitas pasar las IDs como parte del contexto a un nuevo template puedes hacerlo así:
+def layout_pagos(request):
+    compras_ids = request.session.get('compras_ids', [])
+    #print(compras_ids)
+    # Se asegura de que los IDs sean enteros
+      
+    
+    # Se asegura de que los IDs sean enteros
+    compras_ids = [int(id) for id in compras_ids if str(id).isdigit()]
+    #print(compras_ids)
+    compras = Compra.objects.filter(id__in=compras_ids)
+    cuentas_disponibles = Cuenta.objects.filter()
+
+    if request.method == 'POST':
+        # Asumimos que este POST es para generar el archivo TXT
+        # Puedes validar el formulario aquí si es necesario
+        
+        
+            # Construyes el contenido del archivo TXT con la información de compras y el formulario
+        if request.method == 'POST':
+            lineas = []
+
+            for count, compra in enumerate(compras, start=1):
+                # Obtiene el ID de la cuenta de pago de la fila actual
+                cuenta_pago_id = request.POST.get(f'cuenta_{count}')
+                # Obtiene el monto de la fila actual, asegurándose de incluir el índice
+                monto_str = request.POST.get(f'monto_{count}', '0')
+
+                if monto_str is None or monto_str.strip() == '':
+                    # Maneja el caso de un monto vacío o ausente
+                    monto_formateado = "Valor requerido"
+                else:
+                    # Convierte el monto a float y lo formatea
+                    monto = float(monto_str)
+                    monto_formateado = "{:015.2f}".format(monto)
+
+                # Aquí, obtienes la cuenta de pago usando el ID y la formateas
+                cuenta_pago = cuentas_disponibles.get(id=cuenta_pago_id)
+                str_cuenta = str(cuenta_pago.cuenta).zfill(18)
+
+                divisa = 'USD' if compra.moneda.nombre == 'DOLARES' else 'MXP'
+
+                # Construye cada línea del archivo TXT
+                banco = 'PTC' if compra.proveedor.banco.nombre == "BBVA" else 'PSC'
+                cuenta = str(compra.proveedor.cuenta).zfill(18)
+                motivo_pago = '-' + str(compra.folio) + '-'
+                titular = compra.proveedor.nombre.razon_social
+                linea = f"{banco}{cuenta}{str_cuenta}{divisa}{monto_formateado}{motivo_pago}{titular}\n"
+                lineas.append(linea)
+            
+            # Genera la respuesta HTTP con el contenido del archivo TXT
+            response = HttpResponse(lineas, content_type='text/plain')
+            response['Content-Disposition'] = 'attachment; filename="pagos.txt"'
+            return response
+        else:
+            # Si el formulario no es válido, puedes manejar los errores aquí
+            pass
+
+    context = {
+        'compras': compras,
+        'cuentas_disponibles': cuentas_disponibles,
+    }
+
+    return render(request, 'tesoreria/layout_pagos.html', context)
 
