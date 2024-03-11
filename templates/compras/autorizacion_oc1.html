@@ -87,7 +87,7 @@
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.operacion}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.created_at}} </td>
                     <td class="numeric">{{compra.proveedor}}</td>
-                    <td class="numeric">${{compra.costo_plus_adicionales}}</td>
+                    <td class="numeric">${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td class="numeric">{{compra.moneda}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.cond_de_pago}}</td>
                     <td class="numeric">
