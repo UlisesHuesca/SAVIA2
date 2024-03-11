@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum, Max
+from django.db.models import Q, Sum, Max, Exists, OuterRef
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.core.mail import EmailMessage
@@ -32,22 +32,35 @@ def pendientes_entrada(request):
     
 
     if usuario.tipo.nombre == "Admin":
-         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
     elif usuario.tipo.almacen == True:
-        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), req__orden__distrito = usuario.distritos, solo_servicios= False, entrada_completa = False, autorizado2= True).order_by('-folio')
+        compras = Compra.objects.filter(
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
+            Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
+            req__orden__distrito = usuario.distritos,  
+            entrada_completa = False, 
+            autorizado2= True).order_by('-folio')
         for compra in compras:
             articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
             servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
             cant_entradas = articulos_entrada.count()
             cant_servicios = servicios_pendientes.count()
-            pago = Pago.objects.filter(oc=compra).first()
+            #subquery_pago = Pago.objects.filter(oc=OuterRef('id'), hecho = True)
             if  cant_entradas == cant_servicios and cant_entradas > 0:
                 compra.solo_servicios = True
                 compra.save()
-        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), req__orden__distrito = usuario.distritos, solo_servicios= False, entrada_completa = False, autorizado2= True).order_by('-folio')
+        #El filtro devuelve todas las compras a crédito (O) pagadas (O) cuyo monto de los pagado sea mayor que 0 (Y)
+        # que NO sea un servicio (O) que sea un servicio (Y) del usuario que generó la order (Y)
+        # que sea del distrito del usuario (Y) que la entrada NO este completa (Y) que este autorizada 
+        compras = Compra.objects.filter(
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
+            Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
+            req__orden__distrito = usuario.distritos,  
+            entrada_completa = False, 
+            autorizado2= True).order_by('-folio')
         #compras = Compra.objects.filter(autorizado2= True)
     else:
-        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
 
 
     myfilter = CompraFilter(request.GET, queryset=compras)
@@ -92,8 +105,9 @@ def devolucion_a_proveedor(request):
 def articulos_entrada(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    
-    if usuario.tipo.almacen == True:
+    vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
+    compra = Compra.objects.get(id = pk)
+    if usuario.tipo.almacen == True and not compra.req.orden.staff == usuario:
         articulos = ArticuloComprado.objects.filter(oc=pk, entrada_completa = False,  seleccionado = False, producto__producto__articulos__producto__producto__servicio = False)
     else:
         articulos = ArticuloComprado.objects.filter(oc=pk, entrada_completa = False,  seleccionado = False, producto__producto__articulos__producto__producto__servicio = True)
@@ -106,21 +120,24 @@ def articulos_entrada(request, pk):
     entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
     articulos_entrada = EntradaArticulo.objects.filter(entrada = entrada)
     form = EntradaArticuloForm()
-    max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-
+    #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+    max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+    nuevo_folio = (max_folio or 0) + 1
+    
     for articulo in articulos:
         if articulo.cantidad_pendiente == None:
             articulo.cantidad_pendiente = articulo.cantidad
 
 
     if request.method == 'POST' and 'entrada' in request.POST:
-        num_art_comprados = ArticuloComprado.objects.filter(oc=compra).count()
-        max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-        entrada.completo = True
-        entrada.folio = max_folio
-        entrada.entrada_date = date.today()
-        entrada.entrada_hora = datetime.now().time()
         articulos_comprados = ArticuloComprado.objects.filter(oc=pk)
+        num_art_comprados = articulos_comprados.count()
+        max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+        nuevo_folio = (max_folio or 0) + 1
+        entrada.completo = True
+        entrada.folio = nuevo_folio
+        entrada.entrada_date = datetime.now()
+        #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
         articulos_entregados = articulos_comprados.filter(entrada_completa=True)
         articulos_seleccionados = articulos_entregados.filter(seleccionado = True)
         num_art_entregados = articulos_entregados.count()
@@ -151,7 +168,7 @@ def articulos_entrada(request, pk):
                     articulos__orden__tipo__tipo = 'normal',
                     cantidad_requisitar__gt=0
                     )
-                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
+                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
                 for producto in productos_pendientes_surtir:    #Recorremos todas las solicitudes pendientes por surtir una por una
                     if producto_surtir.cantidad > 0:
                         inv_de_producto.cantidad = inv_de_producto.cantidad - producto.cantidad
@@ -207,7 +224,7 @@ def articulos_entrada(request, pk):
 
     context = {
         'articulos':articulos,
-        'max_folio': max_folio,
+        'max_folio': nuevo_folio,
         'entrada':entrada,
         'compra':compra,
         'form':form,

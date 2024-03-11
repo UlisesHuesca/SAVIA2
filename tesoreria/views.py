@@ -119,7 +119,7 @@ def compras_pagos(request, pk):
             pago.pagado_hora = datetime.now().time()
             pago.hecho = True
             #Traigo la cuenta que se capturo en el form
-            cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta)
+            cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)
             #La utilizo para sacar la información de todos los pagos relacionados con esa cuenta y sumarlos
 
             # Actualizo el saldo de la cuenta
