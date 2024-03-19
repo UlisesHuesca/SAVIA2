@@ -1,6 +1,6 @@
 venv/
 env/
-savia2_mod-sql
+savia2_mod.sql
 savia2.sql.gz
 access.log
 errors.log
