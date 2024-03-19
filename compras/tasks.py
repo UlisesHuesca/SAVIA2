@@ -276,7 +276,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             articulo.cantidad,
             articulo.producto.producto.articulos.producto.producto.unidad,
             articulo.producto.producto.articulos.producto.producto.familia.nombre,
-            articulo.producto.producto.articulos.producto.producto.subfamilia.nombre,
+            articulo.producto.producto.articulos.producto.producto.subfamilia.nombre if articulo.producto.producto.articulos.producto.producto.subfamilia else 'Desconocido',
             articulo.precio_unitario,
             moneda_nombre,
             tipo_de_cambio,

@@ -4,15 +4,17 @@ from .models import Salidas, Requis, ArticulosRequisitados, ValeSalidas, Devoluc
 class RequisAdmin(admin.ModelAdmin):
     list_display = ('id','folio','orden','autorizar')
     list_filter = ('folio',)
+    search_fields = ['folio']
     raw_id_fields = ('orden','created_by','requi_autorizada_por', 'rejected_by',)
 
 class ValeSalidasAdmin(admin.ModelAdmin):
     list_display = ('id','folio','solicitud','complete','created_at')
+    search_fields = ['folio']
     raw_id_fields = ('solicitud','almacenista','material_recibido_por')
 
 class Articulos_RequisitadosAdmin(admin.ModelAdmin):
     list_display = ('id','req','producto','cantidad')
-    search_fields = ['producto__articulos__producto__producto__nombre']
+    search_fields = ['producto__articulos__producto__producto__nombre','req__folio']
     raw_id_fields = ('producto','req',)
 
 class SalidasAdmin(admin.ModelAdmin):

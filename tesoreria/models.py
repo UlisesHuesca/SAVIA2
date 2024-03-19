@@ -30,7 +30,7 @@ class Cuenta(models.Model):
 class Pago(models.Model):
     tesorero = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Tesorero')
     folio = models.PositiveIntegerField(null=True)
-    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, blank=True)
+    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, blank=True, related_name = 'pagos')
     gasto = models.ForeignKey(Solicitud_Gasto, on_delete = models.CASCADE, null=True, blank=True)
     viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True, blank=True)
     cuenta = models.ForeignKey (Cuenta, on_delete = models.CASCADE, null=True)

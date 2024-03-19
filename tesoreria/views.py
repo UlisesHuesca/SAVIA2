@@ -230,9 +230,9 @@ def compras_pagos(request, pk):
                 messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {compra.costo_oc}')
             else:
                 form = PagoForm()
-                messages.error(request,f'{usuario.staff.first_name}, No se pudo subir tu documento')
+                messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
         else:
-            messages.error(request,f'{usuario.staff.first_name}, No está validando')
+            messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
 
     context= {
         'compra':compra,
@@ -773,7 +773,7 @@ def convert_excel_matriz_pagos(pagos):
             else:
                 tipo_de_cambio = ''  # default si no se cumplen las condiciones anteriores
         elif pago.gasto:
-            proveedor = pago.gasto.staff.staff.first_name
+            proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             facturas_completas = pago.gasto.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para gastos
         elif pago.viatico:
@@ -790,7 +790,7 @@ def convert_excel_matriz_pagos(pagos):
         row = [
             pago.id,
             get_transaction_id(pago),
-            pago.oc.req.orden.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.last_name if pago.oc else '',
+            pago.oc.req.orden.staff.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.staff.last_name if pago.oc else '',
             pago.oc.req.orden.proyecto.nombre if pago.oc else '',
             pago.oc.req.orden.subproyecto.nombre if pago.oc else '',
             proveedor,

@@ -32,6 +32,10 @@ from io import BytesIO
 from datetime import date, datetime
 # Import Excel Stuff
 
+import xlsxwriter
+#from django.http import HttpResponse
+from io import BytesIO
+
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -100,10 +104,14 @@ def product_selection_resurtimiento(request):
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
 
+    #Set up pagination
+    p = Paginator(productos, 30)
+    page = request.GET.get('page')
+    productos_list = p.get_page(page)
 
     context= {
         'myfilter': myfilter,
-        'productos':productos,
+        'productos_list':productos_list,
         'productosordenadosres':cartItems,
         }
     return render(request, 'solicitud/product_selection_resurtimiento.html', context)
@@ -270,7 +278,7 @@ def checkout(request):
     activos_para_select2 = [
         {
             'id': item.id, 
-            'text': str(item.nombre)
+            'text': str(item.eco_unidad)
         } for item in activos
     ]
     
@@ -579,12 +587,9 @@ def checkout_resurtimiento(request):
     ]
 
 
-    if order.staff != usuario:
-        productos = None
-        cartItems = 0
-    else:
-        productos = order.articulosordenados_set.all()
-        cartItems = order.get_cart_quantity
+    
+    productos = order.articulosordenados_set.all()
+    cartItems = order.get_cart_quantity
 
     form = OrderForm(instance = order)
 
@@ -1419,75 +1424,12 @@ def cancelada_sol(request, pk):
 def status_sol(request, pk):
     solicitud = Order.objects.get(id = pk)
     product_solicitudes = ArticulosOrdenados.objects.filter(orden=pk)
-    product_surtir = ArticulosparaSurtir.objects.filter(articulos__orden = pk)
-    listo_surtir = False
-    for item in product_surtir:
-        if item.surtir == True:
-            listo_surtir = True
-
-    num_prod_sol= product_solicitudes.count
+    #product_surtir = ArticulosparaSurtir.objects.filter(articulos__orden = pk)
+    
     context = {
-        'listo_surtir':listo_surtir,
-        'solicitud': solicitud,
-        'product_solicitudes': product_solicitudes,
-        'num_prod_sol': num_prod_sol,
+        'productos_solicitados': product_solicitudes,
+        'solicitud':solicitud,
     }
-
-    try:
-        requi = Requis.objects.get(orden = solicitud, complete = True )
-    except Requis.DoesNotExist:
-        requi = False
-
-    salidas = ValeSalidas.objects.filter(solicitud = solicitud)
-    if salidas and not requi:
-        exist_salida = True
-        context.update({
-            'exist_salida':exist_salida,
-            'salidas':salidas,
-        })
-
-    if requi:
-        exist_req = True
-        prod_req = ArticulosRequisitados.objects.filter(req__id = requi.id)
-        num_prod_req = prod_req.count()
-        compras = Compra.objects.filter(req = requi, complete = True)
-
-        context.update({
-            'requi': requi,
-            'exist_req': exist_req,
-            'num_prod_req': num_prod_req,
-            'prod_req':prod_req,
-            'compras':compras,
-        })
-
-        if compras:
-            pagos = Pago.objects.filter(oc__req = requi)
-            exist_oc = True
-            context.update({
-                'exist_oc': exist_oc,
-                'pagos':pagos,
-            })
-
-            if pagos:
-                exist_pago = True
-                entradas = Entrada.objects.filter(oc__req = requi, completo = True)
-                exist_entradas = bool(entradas)
-                salidas = ValeSalidas.objects.filter(solicitud = solicitud)
-                exist_salidas = bool(salidas)
-
-                context.update({
-                    'exist_pago': exist_pago,
-                    'exist_entradas': exist_entradas,
-                    'entradas': entradas,
-                    'salidas':salidas,
-                    'exist_salidas': exist_salidas,
-                })
-
-                if entradas:
-                    articulos_entradas = EntradaArticulo.objects.filter(entrada__oc__req = requi)
-                    context.update({
-                        'articulos_entradas': articulos_entradas,
-                    })
 
     return render(request,'solicitud/detalle.html', context)
 
@@ -1812,3 +1754,70 @@ def convert_excel_solicitud_matriz(ordenes):
     wb.save(response)
 
     return(response)
+
+
+def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entradas, dict_resultados):
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet('Inventario')
+
+    # Definir los estilos antes de usarlos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'white', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    money_resumen_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 14, 'bold': True})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+
+    # Definir las columnas antes de utilizar la variable `columns`
+    columns = ['Código', 'Producto', 'Distrito', 'Unidad', 'Cantidad', 'Cantidad Apartada', 'Minimos', 'Ubicación', 'Estante', 'Precio', 'Total']
+    
+    # Escribir el encabezado con los estilos definidos
+    #worksheet.write_row('A1', columns, head_style)
+
+    # Establecer los anchos de las columnas después de definir `columns`
+    worksheet.set_column('A:A', 10)
+    worksheet.set_column('B:B', 30)
+    for i in range(2, len(columns) + 1):  # Ajustado para abarcar todas las columnas definidas
+        worksheet.set_column(i, i, 15)
+        
+
+    # Escribir los datos
+    row_num = 0
+    for inventario in existencia:
+        row_num += 1
+        inventario.total_entradas = dict_entradas.get(inventario.id, 0)
+        inventario.total_apartado = dict_resultados.get(inventario.id, 0)
+        total_value = (inventario.cantidad + inventario.total_apartado) * inventario.price
+    
+        row = [
+            inventario.producto.codigo,
+            inventario.producto.nombre,
+            inventario.distrito.nombre,
+            inventario.producto.unidad.nombre,
+            inventario.cantidad,
+            inventario.total_apartado,
+            #inventario.total_entradas,
+            inventario.minimo,
+            inventario.ubicacion,
+            inventario.estante,
+        ]
+    
+        for col_num, item in enumerate(row, start=1):  # Enumerate empieza con 1 para A1, ajusta según sea necesario
+            worksheet.write(row_num, col_num - 1, item, body_style)
+    
+        # Ahora escribe los valores con formateo especial directamente
+        worksheet.write(row_num, 9, inventario.price, money_style)  # Columna 10 (J) para el precio
+        worksheet.write(row_num, 10, total_value, money_style)  # Columna 11 (K) para el valor total
+
+    # Escribir el total del inventario
+    worksheet.set_column('N:N', 30)
+    worksheet.set_column('O:O', 30)
+    worksheet.write('N2', 'Inventario Costo Total:', head_style)
+    worksheet.write('O2', valor_inventario, money_resumen_style)
+
+    workbook.close()
+    output.seek(0)
+
+    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=Inventario_{dt.date.today()}.xlsx'
+    return response

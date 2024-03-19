@@ -53,23 +53,14 @@
                         <div class="row my-5">
                            
                            
-                            <div class="col-5 d-none">
-                                {{formVale.material_recibido_por|add_class:"form-select"}}
-                            </div>
+                           
                             
                             <label for="form.moneda" class="col-auto col-form-label my-1"><strong><h4>Material entregado a:</h4></strong></label>
                             <div class="col-12">
                                 <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>    
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        <input type="text" list="user" id="txt_usuario" valor="{{user.id}}" placeholder="Usuarios..." class="form-control">
-                                        <label for="txt_usuario">Usuarios*</label>
-                                    </div>         
-                                    <datalist id="user" name='user'>
-                                        {% for user in users %}
-                                            <option valor="{{user.id}}" value="{{user.staff.staff.first_name}} {{user.staff.staff.last_name}}"></option>
-                                        {% endfor %}
-                                    </datalist>
+                                    <div class="col-12">
+                                        {{formVale.material_recibido_por}}
+                                    </div>
                                 </div>
                             </div>
                             <div class="row">
@@ -276,7 +267,7 @@ document.getElementById("producto").addEventListener("change", function(element)
     solicitado.innerHTML = cantidad_pendiente;
 });
 
-document.getElementById("txt_usuario").addEventListener("change", (event)=>{
+/*document.getElementById("txt_usuario").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_usuario");
     var browserChildren = document.getElementById('user').children;
     var other_select = document.getElementById('id_material_recibido_por');
@@ -299,7 +290,7 @@ document.getElementById("txt_usuario").addEventListener("change", (event)=>{
     if ((!select.value) || (cont = 0)){
         other_select.value = 0
     }
-});
+});*/
 
 var updateBtn = document.getElementById('update-salida')
 let count=0;
@@ -335,6 +326,7 @@ updateBtn.addEventListener('click',function(){
 
         console.log(cantidad_pendiente)
         id_salida = 0
+        
 
 
         var action = "add";
@@ -412,7 +404,7 @@ function ActualizarArticulos(oc,id,val_cantidad,action){
 
 {% if salidas %}
 document.addEventListener('DOMContentLoaded', function(){
-    var inputUsuario = document.getElementById('txt_usuario');
+    var inputUsuario = document.getElementById('id_material_recibido_por');
     var submitButton = document.getElementById('submit-button');
 
     // Deshabilitar el botón al cargar la página
@@ -472,6 +464,58 @@ if (activo == 'True'){
     }
 }
 })
+
+var datosRecibidopor = {{material_recibido_por| safe}}
+console.log(datosRecibidopor)
+
+
+$(document).ready(function() {
+    // Inicializa el Select2 en tu elemento de selección.
+    $('#id_material_recibido_por').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona un Usuario',
+        data: datosRecibidopor,
+        templateResult: formatRepo, // Opcional: Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Opcional: Función para renderizar la selección
+    });
+
+    // Evento cuando se selecciona una opción.
+    $('#id_material_recibido_por').on('select2:select', function (e) {
+        // Habilita el botón cuando hay una selección.
+        $('#submit-button').prop('disabled', false);
+    });
+
+    // Evento cuando se elimina la selección actual.
+    $('#id_material_recibido_por').on('select2:unselect', function (e) {
+        // Deshabilita el botón cuando la selección se limpia.
+        $('#submit-button').prop('disabled', true);
+    });
+});
+
+
+
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+
 
 </script>
 {% endblock %}

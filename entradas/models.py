@@ -8,7 +8,7 @@ from user.models import Profile
 class Entrada(models.Model):
     almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True)
     folio = models.PositiveIntegerField(null=True)
-    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True)
+    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, related_name ='vale_entrada')
     comentario = models.CharField(max_length=250, null=True, blank=True)
     entrada_date = models.DateTimeField(null=True, blank=True)
     #entrada_hora = models.TimeField(null=True, blank=True)

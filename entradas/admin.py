@@ -5,6 +5,10 @@ from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, N
 class EntradaAdmin(admin.ModelAdmin):
     list_display = ('id','folio','almacenista','oc','completo')
     list_filter = ('oc',)
+<<<<<<< HEAD
+=======
+    search_fields = ['oc__folio']
+>>>>>>> origin/main
     raw_id_fields = ('oc','almacenista')
 
 class Tipo_NcAdmin(admin.ModelAdmin):
@@ -19,7 +23,7 @@ class NC_ArticuloAdmin(admin.ModelAdmin):
 
 class EntradaArticuloAdmin(admin.ModelAdmin):
     list_display = ('id','get_entrada_folio','cantidad','articulo_comprado','liberado','cantidad_por_surtir')
-    search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre']
+    search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre', 'entrada__folio',]
     raw_id_fields = ('entrada','articulo_comprado')
 
     def get_entrada_folio(self, obj):

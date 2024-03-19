@@ -167,6 +167,7 @@ class Factura(models.Model):
     archivo_xml = models.FileField(blank=True, null=True, upload_to='xmltb', validators=[FileExtensionValidator(['xml'])])
     fecha_subida= models.DateTimeField(null=True, blank=True)
     hecho = models.BooleanField(default=False)
+    monto = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True)
     # Puedes agregar más campos si es necesario, como fecha, descripción, etc.
 
     @property   
@@ -177,6 +178,7 @@ class Factura(models.Model):
             tree = ET.parse(self.archivo_xml.path)
         except ET.ParseError as e:
             print(f"Error al parsear el archivo XML: {e}")
+            return {'error': f"Error al parsear el archivo XML: {e}"}
         # Manejo adicional del error
         #tree = ET.parse(self.archivo_xml.path)
         root = tree.getroot()
@@ -189,7 +191,7 @@ class Factura(models.Model):
             ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4'}
         else:
             # Manejo de error si no se encuentra ninguna versión conocida
-            raise ValueError("Versión del documento XML no reconocida")
+            return {'error': "Versión del documento XML no reconocida"}
         #comprobante = root.findall('cfdi:Comprobante')
         
         emisor = root.find('cfdi:Emisor', ns)

@@ -105,3 +105,8 @@ class Compra_ComentarioForm(forms.ModelForm):
     class Meta:
         model = Compra
         fields = ['comentarios']
+
+class Compra_ComentarioGerForm(forms.ModelForm):
+    class Meta:
+        model = Compra
+        fields = ['comentario_gerencia']

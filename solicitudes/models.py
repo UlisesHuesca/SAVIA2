@@ -101,7 +101,7 @@ class Sector(models.Model):
         return f'{self.nombre}'
 
 class Activo(models.Model):
-    eco_unidad = models.CharField(max_length=15, null=True, unique=True)
+    eco_unidad = models.CharField(max_length=15, null=True)
     distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE, null=True)
     tipo = models.CharField(max_length=15, null=True)
     serie = models.CharField(max_length=15, null=True)
