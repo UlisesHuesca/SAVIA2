@@ -1206,7 +1206,7 @@ def autorizar_oc2(request, pk):
                     f'Compra Autorizada {compra.folio}',
                     body=html_message2,
                     from_email = 'savia@vordcab.com',
-                    to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                    to= ['ulises_huesc@hotmail.com', compra.proveedor.email],#[requi.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML

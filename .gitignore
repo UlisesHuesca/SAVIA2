@@ -1,13 +1,7 @@
 venv/
 env/
-<<<<<<< HEAD
-facturas/
-media/
-xml/
-=======
 savia2_mod.sql
 savia2.sql.gz
->>>>>>> origin/main
 access.log
 errors.log
 errors.log.save
