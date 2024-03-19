@@ -1209,6 +1209,7 @@ def autorizar_oc2(request, pk):
                     to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
+                email.content_subtype = "html " # Importante para que se interprete como HTML
                 email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
                 email.send()
                 html_message = f"""
