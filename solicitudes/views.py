@@ -24,6 +24,10 @@ import json
 from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter, HistoricalInventarioFilter, HistoricalProductoFilter
 import decimal
 
+
+import xlsxwriter
+from django.http import HttpResponse
+from io import BytesIO
 # Import Pagination Stuff
 from datetime import date, datetime
 # Import Excel Stuff
@@ -978,7 +982,8 @@ def inventario(request):
     cuenta_productos = existencia.count()
 
     if request.method =='POST' and 'btnExcel' in request.POST:
-        return convert_excel_inventario(existencia, valor_inv, dict_entradas, dict_resultados)
+        #return convert_excel_inventario(existencia, valor_inv, dict_entradas, dict_resultados)
+        return convert_excel_inventario_xlsxwriter(existencia, valor_inv, dict_entradas, dict_resultados)
 
     context = {
         'conteo':conteo,
@@ -1596,6 +1601,68 @@ def convert_excel_inventario(existencia, valor_inventario, dict_entradas, dict_r
     wb.save(response)
 
     return(response)
+
+
+
+
+def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entradas, dict_resultados):
+    # Create a workbook in memory
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output)
+    worksheet = workbook.add_worksheet('Inventario')
+
+    # Estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'white', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    money_resumen_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 14, 'bold': True})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+
+    # Anchos de las columnas
+    worksheet.set_column('A:A', 10)
+    worksheet.set_column('B:B', 30)
+    for i in range(2, len(columns)):
+        worksheet.set_column(i, i, 15)
+
+    # Escribir el encabezado
+    columns = ['Código','Producto','Distrito','Unidad','Cantidad','Cantidad Apartada','Cantidad Entradas','Minimos','Ubicación','Estante','Precio','Total']
+    worksheet.write_row('A1', columns, head_style)
+
+    # Escribir los datos
+    row_num = 1
+    for inventario in existencia:
+        row_num += 1
+        inventario.total_entradas = dict_entradas.get(inventario.id, 0)
+        inventario.total_apartado = dict_resultados.get(inventario.id, 0)
+        row = [
+            inventario.producto.codigo,
+            inventario.producto.nombre,
+            inventario.distrito.nombre,
+            inventario.producto.unidad.nombre,
+            inventario.cantidad,
+            inventario.total_apartado,
+            inventario.total_entradas,
+            inventario.minimo,
+            inventario.ubicacion,
+            inventario.estante,
+            inventario.price,
+            inventario.cantidad * inventario.price + inventario.total_apartado * inventario.price
+        ]
+        worksheet.write_row(f'A{row_num}', row, body_style)
+
+    # Escribir el total del inventario
+    worksheet.write('L2', 'Inventario Costo Total:', body_style)
+    worksheet.write('M2', valor_inventario, money_resumen_style)
+
+    # Cerrar el libro de trabajo y descargarlo
+    workbook.close()
+    output.seek(0)
+
+    # Crear la respuesta y enviar el archivo para la descarga
+    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response['Content-Disposition'] = f'attachment; filename=Inventario_{dt.date.today()}.xlsx'
+    return response
+
 
 def convert_excel_solicitud_matriz_productos(productos):
     response= HttpResponse(content_type = "application/ms-excel")

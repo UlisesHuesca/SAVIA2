@@ -30,7 +30,7 @@ import os
 import io
 import ssl
 import decimal
-
+from io import BytesIO
 from datetime import date, datetime, timedelta
 from num2words import num2words
 
@@ -50,6 +50,8 @@ from bs4 import BeautifulSoup
 import urllib.request, urllib.parse, urllib.error
 
 # Import Excel Stuff
+import xlsxwriter
+
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -660,16 +662,18 @@ def matriz_oc(request):
         'myfilter':myfilter,
         #'cumplimiento': cumplimiento,
         }
-    task_id = request.session.get('task_id')
+    #task_id = request.session.get('task_id')
 
-    if request.method == 'POST' and 'btnReporte' in request.POST:
-        if not task_id:
-            task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
-            task_id = task.id
-            request.session['task_id'] = task_id
-            context['task_id'] = task_id 
-            cantidad = compras.count()
-            context['cantidad'] = cantidad
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_matriz_compras(compras)
+        print('Si entra al bucle')
+        #if not task_id:
+            #task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
+            #task_id = task.id
+            #request.session['task_id'] = task_id
+            #context['task_id'] = task_id 
+            #cantidad = compras.count()
+            #context['cantidad'] = cantidad
             #messages.success(request, f'Tu reporte se está generando {task_id}')
         
 
@@ -763,16 +767,19 @@ def matriz_oc_productos(request):
         'myfilter':myfilter,
         }
     
-    task_id_producto = request.session.get('task_id_producto')
+    #task_id_producto = request.session.get('task_id_producto')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        if not task_id_producto:
-            task = convert_excel_solicitud_matriz_productos_task.delay(articulos_data)
-            task_id = task.id
-            request.session['task_id_producto'] = task_id
-            context['task_id_producto'] = task_id 
-            cantidad = articulos.count()
-            context['cantidad'] = cantidad
+        return convert_excel_matriz_compras(compras)
+ 
+        #if not task_id:
+            #task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
+            #task_id = task.id
+            #request.session['task_id'] = task_id
+            #context['task_id'] = task_id 
+            #cantidad = compras.count()
+            #context['cantidad'] = cantidad
+            #messages.success(request, f'Tu reporte se está generando {task_id}')
 
     return render(request, 'compras/matriz_oc_productos.html',context)
 
@@ -2487,4 +2494,82 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
     return FileResponse(buf, as_attachment=True, filename='Carta_Proveedor' + str(proveedor.id) +'.pdf')
 
 
+def convert_excel_matriz_compras(compras):
+    #print('si entra a la función')
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
 
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Ejemplo")
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+
+    columns = ['Compra', 'Requisición', 'Solicitud', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante', 'Creado', 'Req. Autorizada', 'Proveedor',
+               'Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago', 'Status Autorización', 'Días de entrega', 'Moneda',
+               'Tipo de cambio', 'Entregada', "Total en pesos", 'Fecha Entrada']
+
+    worksheet.set_row(0, 20, head_style)
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    # Asumiendo que ya tienes tus datos de compras
+    row_num = 0
+    for compra_list in compras:
+        row_num += 1
+        # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
+        # y tienes todas las variables necesarias definidas como en tu código original
+        # Usando el ejemplo de tu código para crear una fila
+        #pagos = Pago.objects.filter(oc=compra_list.id)
+        # Calcula el tipo de cambio promedio de estos pagos
+        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
+        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio or ''
+        created_at = compra_list.created_at.replace(tzinfo=None)
+        approved_at = compra_list.req.approved_at
+
+        row = [
+            compra_list.folio,
+            compra_list.req.folio,
+            compra_list.req.orden.folio,
+            compra_list.req.orden.proyecto.nombre if compra_list.req.orden.proyecto else '',
+            compra_list.req.orden.subproyecto.nombre if compra_list.req.orden.subproyecto else '',
+            compra_list.req.orden.operacion.nombre if compra_list.req.orden.operacion else '',
+            f"{compra_list.req.orden.staff.staff.staff.first_name} {compra_list.req.orden.staff.staff.staff.last_name}",
+            created_at,
+            approved_at,
+            compra_list.proveedor.nombre.razon_social,
+            compra_list.cond_de_pago.nombre,
+            compra_list.costo_oc,
+            compra_list.monto_pagado,
+            'Pagada' if compra_list.pagada else 'No Pagada',
+            'Autorizado' if compra_list.autorizado2 else 'No Autorizado' if compra_list.autorizado2 == False or compra_list.autorizado1 == False else 'Pendiente Autorización',
+            compra_list.dias_de_entrega,
+            compra_list.moneda.nombre,
+            '',  # Asegúrate de que tipo_de_cambio sea un valor que pueda ser escrito directamente
+            'Entregada' if compra_list.entrada_completa else 'No Entregada',
+        ]
+        
+        for col_num, item in enumerate(row, start=1):  # Enumerate empieza con 1 para A1, ajusta según sea necesario
+            worksheet.write(row_num, col_num - 1, item, body_style)
+    
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Matriz_compras_{dt.date.today()}.xlsx'
+    output.close()
+    return response

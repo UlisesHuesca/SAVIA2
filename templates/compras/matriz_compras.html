@@ -92,17 +92,19 @@
                         </div>
                     </div>
                     <div class="col-2">
-                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg" onclick="regenerar()" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
                 <hr>
                 </form>
-                <form method=POST>
+                <form method="POST">
                     {% csrf_token %}
                     <ul class="nav nav-pills">
-                        <!-- Botón para iniciar la acción (por ejemplo, para iniciar la tarea de Celery) -->
                         <li class="nav-item m-1">
-                            <button type="submit" id="reporte_compras" name="btnReporte" class="btn btn-outline-success d-none" value='Reporte Excel'>
+                            <!--<button type="submit" id ="reporte_compras" name="btnReporte" value='Reporte Excel' class="btn btn-outline-success">
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>-->
+                            <button type="submit" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success">
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
@@ -299,7 +301,7 @@ dataSpyList.forEach(function (dataSpyEl) {
     .refresh()
 })
 
-document.addEventListener('DOMContentLoaded', function() {
+/*document.addEventListener('DOMContentLoaded', function() {
     var task_id = '{{task_id}}'
     var cantidad = '{{cantidad| unlocalize}}'
     if (task_id){
@@ -437,7 +439,7 @@ function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
     }, intervalo);
 }
 
-
+*/
 
 
 </script>
