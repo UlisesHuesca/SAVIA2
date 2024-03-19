@@ -9,13 +9,13 @@ from dashboard.models import Activo
 #from djmoney.models.fields import MoneyField
 # Create your models here.
 class Requis(models.Model):
-    orden = models.ForeignKey(Order, on_delete = models.CASCADE, null = True)
+    orden = models.ForeignKey(Order, on_delete = models.CASCADE, null = True, related_name ='requis')
     folio = models.IntegerField(null=True)
     colocada = models.BooleanField(default=False)
     complete = models.BooleanField(null=True)
     created_at = models.DateTimeField(auto_now_add=True)
-    created_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name="requi")
-    rejected_by = models.ForeignKey(Profile, on_delete = models.CASCADE, blank=True,null=True, related_name ="compras") 
+    created_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name="creador_requi")
+    rejected_by = models.ForeignKey(Profile, on_delete = models.CASCADE, blank=True,null=True, related_name ="rechazo_compras") 
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     requi_autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     comentario_super = models.CharField(max_length=200, null=True, blank= True)
@@ -88,7 +88,7 @@ class ArticulosRequisitados(models.Model):
         return f'{self.producto.articulos.producto}'
 
 class ValeSalidas(models.Model):
-    solicitud = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)
+    solicitud = models.ForeignKey(Order, on_delete = models.CASCADE, null=True, related_name ='vale_salida')
     folio = models.IntegerField(null=True)
     almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Almacen')
     proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True, blank=True)

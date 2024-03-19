@@ -164,9 +164,9 @@
                     <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
                     <td>{% if factura.archivo_xml %} {{factura.emisor.nombre}} {% endif %}</td>
                     {% if factura.archivo_xml %}
-                    <td class="total-xml" total={{factura.emisor.total}}> ${{factura.emisor.total}} </td>
+                    <td class="total-xml" total={{factura.emisor.total}}>${{factura.emisor.total}}</td>
                     {%else%}
-                    <td></td>
+                    <td>{{factura.monto}}</td>
                     {% endif %}
                     <td>
                     <ul class="nav nav-pills">

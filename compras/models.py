@@ -143,7 +143,7 @@ class Item_Comparativo(models.Model):
     completo = models.BooleanField(default=False)
 
 class Compra(models.Model):
-    req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True)
+    req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True, related_name = 'compras')
     folio = models.IntegerField(null=True)
     complete = models.BooleanField(default=False)
     creada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Generacion')
@@ -155,7 +155,7 @@ class Compra(models.Model):
     autorizado_at_2 = models.DateTimeField(null=True, blank=True)
     autorizado2 = models.BooleanField(null=True, default=None)
     proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True)
-    tesorero = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Tesorería')
+    tesorero = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Tesoreria')
     referencia = models.CharField(max_length=20, null=True, blank=True)
     cond_de_pago = models.ForeignKey(Cond_pago, on_delete = models.CASCADE, null=True)
     formas_de_pago = models.ForeignKey(Formas_pago, on_delete = models.CASCADE, null=True)
@@ -186,6 +186,7 @@ class Compra(models.Model):
     solo_servicios = models.BooleanField(default=False)
     regresar_oc = models.BooleanField(default=False)
     comentarios = models.TextField(max_length=400, null=True)
+    comentario_gerencia = models.TextField(null=True, blank=True)
     saldo_a_favor = models.DecimalField(max_digits=14,decimal_places=2, default=0)
 
     @property
@@ -198,7 +199,7 @@ class Compra(models.Model):
             if self.retencion:
                 total = total - self.retencion
             if self.costo_fletes:
-                total = total - self.costo_fletes
+                total = total + self.costo_fletes
         return total
 
 

@@ -887,7 +887,7 @@ def render_pdf_gasto(request, pk):
     c = canvas.Canvas(buf, pagesize=letter)
     #Here ends conf.
     gasto = Solicitud_Gasto.objects.get(id=pk)
-    productos = Articulo_Gasto.objects.filter(gasto=gasto)
+    productos = Articulo_Gasto.objects.filter(gasto=gasto, completo=True)
     facturas = Factura.objects.filter(solicitud_gasto = gasto)
 
    #Azul Vordcab
@@ -1007,7 +1007,8 @@ def render_pdf_gasto(request, pk):
         precio = producto.precio_unitario if producto.cantidad is not None else 0
         precio_unitario_redondeado = Decimal(precio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         subtotal = Decimal(cantidad_redondeada * precio_unitario_redondeado).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
-        total = Decimal(subtotal) + Decimal(producto.otros_impuestos)
+        otros_impuestos = producto.otros_impuestos if producto.otros_impuestos is not None else 0
+        total = Decimal(subtotal) + Decimal(otros_impuestos)
         data.append([
             producto.producto.codigo, 
             producto.producto.nombre,
@@ -1128,14 +1129,19 @@ def render_pdf_gasto(request, pk):
         
         if factura.archivo_xml:
             emisor = factura.emisor  # Aquí emisor es un diccionario
-            # Convertir el total a Decimal (o float) antes de formatear
-            descripciones = [tupla[0] for tupla in emisor['resultados']]
-            descripciones_str = ', '.join(descripciones)
-           
             try:
-                total_factura = Decimal(emisor['total'])
-            except (InvalidOperation, ValueError):
-                total_factura = Decimal('0.00')  # Si no es convertible, usa 0.00
+                descripciones = [tupla[0] for tupla in emisor['resultados']]
+                descripciones_str = ', '.join(descripciones)
+            except KeyError:
+                descripciones_str = "No disponible"
+
+           
+        try:
+            total_factura_str = emisor.get('total', '0.00')  # Obtén el valor o usa '0.00' como predeterminado
+            total_factura = Decimal(total_factura_str)
+        except (InvalidOperation, ValueError):
+            total_factura = Decimal('0.00')  # Si no es convertible, usa 0.00
+
 
             suma_total += total_factura  # Suma al total acumulado
             data_facturas.append([

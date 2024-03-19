@@ -59,7 +59,7 @@ class Product(models.Model):
 
 
     def __str__(self):
-        return f'{self.codigo}-{self.nombre}'
+        return f'{self.codigo}|{self.id}|{self.nombre}'
 
 
     @property
@@ -94,8 +94,7 @@ class Marca(models.Model):
     nombre = models.CharField(max_length=20, null=True, unique=True)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True, blank=True)
 
-    def __str__(self):
-        return f'{self.nombre}'
+   
 
 
 
@@ -245,7 +244,7 @@ class Order(models.Model):
 
 
     def __str__(self):
-        return f'{self.id} -{self.folio} ordered by {self.staff}'
+        return f'{self.folio}|{self.distrito}'
     
     @property
     def get_total_vales(self):
@@ -292,7 +291,7 @@ class ArticulosOrdenados(models.Model):
     comentario = models.TextField(max_length=100, null=True, blank=True)
 
     def __str__(self):
-        return f'{self.orden} - {self.producto}'
+        return f'{self.orden}|{self.producto}'
     
     @property
     def articulos_salidas(self):
@@ -321,8 +320,8 @@ class ArticulosOrdenados(models.Model):
     def get_total(self):
         total = self.producto.price * self.cantidad
         return total
-
-
+    
+    
 class ArticulosparaSurtir(models.Model):
     articulos = models.ForeignKey(ArticulosOrdenados, on_delete = models.CASCADE, null=True)
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)

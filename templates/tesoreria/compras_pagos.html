@@ -130,8 +130,8 @@
                             <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:2}}</th>
                         </tr>
                         <tr>
-                            <th scope="col">Remanente:</th>
-                            <th>${{remanente|floatformat:2}}</th>
+                            <th>Remanente:</th>
+                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
                         </tr>
                     </tbody>
                 </table>
@@ -190,6 +190,9 @@
             <div class="col">
                 {% csrf_token %}
                 <div class="row my-2">
+                    <div class="card-footer text-end">
+                        <button onclick="pagarTodo()"  class="btn btn-outline-info">Pagar todo</button>
+                    </div>
                     
                     <div class="row">
                         <div class="col-lg-12 col-sm-12">
@@ -255,6 +258,18 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+function pagarTodo() {
+    // Opción A: Obtener el valor de 'remanente' desde el elemento oculto
+    var remanente = document.getElementById('remanente');
+    var valor_remanente = remanente.getAttribute('remanente')
+    console.log(valor_remanente)
+    valor= Number(valor_remanente).toFixed(4)
+    // Actualizar el campo 'monto' del formulario con el valor de 'remanente'
+    document.getElementById('id_monto').value = valor // Asegúrate de que el selector apunte correctamente al campo 'monto'
+}
+
+
 var compra = document.getElementById("importe");
 var compra_moneda = compra.getAttribute("moneda");
 var monto_moneda = document.getElementById("id_monto");

@@ -43,7 +43,7 @@
     <div class="col-lg-5">
         <div class="card" id="form-wrapper"> 
             <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
-					<h2>Solicitud de gasto:</h2>
+					<h2>Encabezado Gasto</h2>
             </div>
             <div class="card-body">   
 				<form method="POST" id='OrderForm'>
@@ -91,11 +91,19 @@
                             </div> 
 
                         {% if productos %}
-                        <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value="Crear Solicitud">
+                        <div class="container-fluid text-end">
+                            <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value="Crear Solicitud">
+                        </div>
                         {% endif %}
 
-                </form>         
-                <hr>
+                </form> 
+            </div>
+        </div>
+        <div class="card mt-2"> 
+            <div class="card-header">
+					<h2>Subir Facturas</h2>
+            </div>
+            <div class="card-body">  
                 <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
                    
@@ -112,7 +120,15 @@
                                 <label class="input-group-text" for="id_archivo_xml"><i class="fa-solid fa-cloud-arrow-up"></i>XML</label>
                             </div>
                         </div>
-                        <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Factura</button>
+                        <div class="row">
+                            <div class="input-group mb-3">
+                                <label class="input-group-text" ><i class="fa-solid fa-dollar-sign"></i></label>
+                                {{factura_form.monto|add_class:"form-control"}}
+                            </div>
+                        </div>
+                        <div class="container-fluid text-end">
+                            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Factura</button>
+                        </div>
                 </form>
                 <div class ="table-responsive-sm">
                     <table class="table table-light table-striped table-hover">
@@ -148,7 +164,7 @@
                                 </td>
                                 <td>{% if factura.archivo_xml %} {{factura.fecha_subida|date:"d-m-Y H:i" }} {% endif %}</td>
                                 <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
-                                <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% endif %}</td>
+                                <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% else %} {{factura.monto|floatformat:2}} {% endif %}</td>
                                 <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'eliminar-factura' factura.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
                             </tr>
                             {% endfor %}
@@ -303,10 +319,8 @@
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
                         <label class="form-check-label" for="SwitchEntrada_Salida" id="LabelAlmacén">Entrada-Salida Express</label>
                 </div>
-            <div  class="row">
-                <div class="col-sm-1">
-                    <input class="btn btn-outline-info btn-block my-2" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
-                </div>
+            <div class="container-fluid text-end">
+                    <input class="btn btn-outline-info btn-block btn-lg" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
             </div>
         </form>
         </div>
@@ -384,6 +398,12 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+$(document).ready(function(){
+    $('#examplePopover').popover(); // Esto activa el popover en el botón con id="examplePopover"
+});
+
+
     function sumarTotales() {
         let total = 0;
         const totales = document.querySelectorAll('.factura-total');

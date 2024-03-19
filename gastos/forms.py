@@ -123,4 +123,4 @@ class Conceptos_EntradasForm(forms.ModelForm):
 class FacturaForm(forms.ModelForm):
     class Meta:
         model = Factura
-        fields = ['archivo_pdf', 'archivo_xml',]
+        fields = ['archivo_pdf', 'archivo_xml','monto']

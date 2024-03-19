@@ -110,7 +110,9 @@ def solicitud_autorizada(request):
     if usuario.tipo.almacen == True:
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True)
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal")
-        productos= ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal", articulos__orden__distrito = usuario.distritos).order_by('-articulos__orden__approved_at')
+        #productos= ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal", articulos__orden__distrito = usuario.distritos, articulos__orden__complete = True).order_by('-articulos__orden__id')
+        productos = ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar=True, articulos__orden__tipo__tipo="normal", articulos__orden__distrito=usuario.distritos, articulos__orden__complete=True).order_by('-id')
+
     #else:
         #productos = Requis.objects.filter(complete=None)
     myfilter = ArticulosparaSurtirFilter(request.GET, queryset=productos)
@@ -118,7 +120,7 @@ def solicitud_autorizada(request):
     #Here is where call a function to generate XLSX, using Openpyxl library
 
     #Set up pagination
-    p = Paginator(productos, 20)
+    p = Paginator(productos, 15)
     page = request.GET.get('page')
     productos_list = p.get_page(page)
 
@@ -343,7 +345,6 @@ def salida_material(request, pk):
     vale_salida, created = vale_salidas.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
     salidas = Salidas.objects.filter(vale_salida = vale_salida)
     cantidad_items = salidas.count()
-    
     # Obtener el valor máximo actual de folio para los objetos ValeSalidas del distrito del usuario
     max_folio = vale_salidas.aggregate(Max('folio'))['folio__max']
     # Calcular el nuevo folio como el consecutivo del máximo actual
@@ -355,6 +356,12 @@ def salida_material(request, pk):
     formVale = ValeSalidasForm()
     form = SalidasForm()
     users = Profile.objects.filter(distritos = usuario.distritos, st_activo = True )
+
+    material_recibido_por = [
+        {'id': user.id, 
+         'text': str(user.staff.staff.first_name) + (' ') + str(user.staff.staff.last_name)
+         #'distrito': proveedor.
+        } for user in users]
 
     if request.method == 'POST':
         formVale = ValeSalidasForm(request.POST, instance=vale_salida)
@@ -389,6 +396,7 @@ def salida_material(request, pk):
         'form':form,
         'formVale':formVale,
         'users': users,
+        'material_recibido_por':material_recibido_por,
         'nuevo_folio':nuevo_folio,
         'vale_salida':vale_salida,
         'cantidad_items':cantidad_items,
@@ -445,7 +453,7 @@ def devolucion_material(request, pk):
         'productos_sel': productos_sel,
         }
 
-    return render(request, 'requisiciones/devolucion_material.html',context)
+    return render(request, 'requisiciones/devolucion_material_no_salida.html',context)
 
 @login_required(login_url='user-login')
 def devolucion_material_salida(request, pk):
@@ -457,7 +465,7 @@ def devolucion_material_salida(request, pk):
     orden = Order.objects.get(id = vale_salida.solicitud.id)
     #Esta es la parte que varía de devolución de material, aquí los productos deben ser salida = True
     #productos_sel = ArticulosparaSurtir.objects.filter(articulos__orden = orden, salida=True)
-    productos_sel = salidas.filter(id=pk)
+    productos_sel = salidas.get(id=pk)
     tipo = Tipo_Devolucion.objects.get(nombre ="SALIDA" )
     devolucion, created = Devolucion.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden,tipo =tipo, salida =salida)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
@@ -465,7 +473,6 @@ def devolucion_material_salida(request, pk):
     form = DevolucionArticulosForm()
     form2 = DevolucionForm()
 
-    form.fields['producto'].queryset = productos_sel
 
     if request.method == 'POST':
         if "agregar_devolucion" in request.POST:
@@ -616,8 +623,8 @@ def update_salida(request):
                 producto.requisitar = False
             salida.precio = inv_del_producto.price
             inv_del_producto._change_reason = f'Esta es la salida de inventario de un artículo'
-            #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad
-        inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
+            #salida.save() #Se supone que sucede al final
+        #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
         producto.save()
         inv_del_producto.save()
         salida.save()

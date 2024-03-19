@@ -66,42 +66,21 @@
     <div class="col-lg-7">
         <div class="card">
             <div class = "card-header">
-            <h5 id="devolucion" vale="{{devolucion.id}}">Productos</h5>
+            <h5 id="devolucion" vale="{{devolucion.id}}">Producto Devolución</h5>
             </div>
 
             <div class='card-body'>
                 <form method="POST">
                 <div class="row">
-                        <div class="col-lg-8 col-sm-12">
-                            <div id="input_producto" class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">
-                                    <label  style="font-size:10px; color:gray;" for="subproyecto">Productos*</label>
-                                    <select style="font-size:16px" class="form-select form-select-sm"  id="producto">
-                                            <option style="color:gray;" value="" selected disabled>Producto</option>
-                                            {% for producto in productos_sel %}
-                                                {% if producto.seleccionado == False %}
-                                                    {% if devolucion.tipo.nombre == "SALIDA" %}
-                                                    <option id="js" target="{{producto.producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.producto.articulos.cantidad}}" stock="{{producto.producto.articulos.producto.cantidad}}">
-                                                        {{producto.producto.articulos.producto}}
-                                                    </option>
-                                                    {% else %}
-                                                    <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.articulos.producto}}" cantidad="{{producto.cantidad}}" cantidad_sol ="{{producto.articulos.cantidad}}" stock="{{producto.articulos.producto.cantidad}}">
-                                                        {{producto.articulos.producto}}
-                                                    </option>
-                                                    {% endif %}
-                                                {% endif %}
-                                            {% endfor %}
-                                    </select>
-                                </div>
-                            </div>
-                        </div>
+                    <div class="alert alert-dark" role="alert" id="producto" cantidad_sol="{{productos_sel.producto.articulos.producto.cantidad}}" cantidad={{productos_sel.cantidad}} valor={{productos_sel.producto.id|unlocalize}}>
+                        {{productos_sel.producto.articulos.producto}}
+                      </div>
                         <div id="etiqueta_solicitado" class="col-4 mt-2">
                             <div class="alert alert-secondary" role="alert">
-                            <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                            <h6>Solicitado:</h6>{{productos_sel.cantidad}}<h6 style="color: #121212;" id="solicitado"></h6>   
                             </div>
                         </div>
-                        {{form.producto|add_class:"form-control d-none"}}
+                       
                 </div>
                 <div class="row">
                     <div class="col-lg-4">
@@ -186,30 +165,6 @@
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
 
-document.getElementById("producto").addEventListener("change", function(element){
-    var select = document.getElementById('producto');
-    
-    var current_option = select.options[select.selectedIndex];
-    let target = current_option.getAttribute('target')
-    let producto = document.getElementById('id_producto')
-    producto.value = target
-    let cantidad = current_option.getAttribute('cantidad');
-    let cantidad_sol = current_option.getAttribute('cantidad_sol');
-    let stock = current_option.getAttribute('stock');
-
-    console.log('target:',target)
-    if (cantidad == 0) {
-        if (cantidad_sol > 0) {
-            cantidad_pendiente = cantidad_sol
-        }
-    } else {
-    var cantidad_pendiente = cantidad}
-
-    console.log('stock',stock);
-    var solicitado = document.getElementById('solicitado');
-    solicitado.innerHTML = cantidad_pendiente;
-});
-
 
 var updateBtn = document.getElementById('update-purchase')
 let count=0;
@@ -219,50 +174,25 @@ let suma_iva = 0;
 updateBtn.addEventListener('click',function(){
         let vale = document.getElementById('devolucion');
         devolucion = vale.getAttribute('vale')
-        //Con esta parte mando a llamar al selector es probable que todo lo de arriba esté mal
-        var select = document.getElementById('producto');
-        var current_option = select.options[select.selectedIndex];
-        let value = current_option.value
+        var label_producto = document.getElementById('producto');
+        let id = label_producto.getAttribute('valor')
         
-        var id = current_option.getAttribute('target');
-        
-        var producto = current_option.getAttribute('producto');
-        //Esta es la cantidad establecida en la requisición
-        var cantidad = current_option.getAttribute('cantidad');
-        var cantidad_sol = current_option.getAttribute('cantidad_sol');
-        console.log(cantidad_sol)
+        var cantidad = label_producto.getAttribute('cantidad');
+       
+        //Esta es la cantidad que se está devolviendo
         var quantity = document.getElementById('id_cantidad');
-        //Esta es la cantidad comprada de acuerdo a la requisición
         var val_cantidad = quantity.value;
+
         var comentario = document.getElementById("id_comentario").value
-
-
-        if (cantidad == 0) {
-            if (cantidad_sol > 0) {
-                cantidad_pendiente = cantidad_sol
-            }
-        } else {
-            var cantidad_pendiente = cantidad - val_cantidad
-        }
-
-
-        console.log(cantidad_pendiente)
-        
-
 
         var action = "add";
 
-        if (!value) {
-            Swal.fire({
-                    "title":"Error",
-                    "text":"Favor de seleccionar algún valor de la lista",
-                    "icon":"error",
-                })
+       
         //Si la "cantidad requisitada" es menor que "la cantidad comprada"
-        } else if (cantidad_pendiente < 0)  {
+        if (val_cantidad > cantidad)  {
             Swal.fire({
                     "title":"Error",
-                    "text":"La cantidad ingresada es mayor que la cantidad disponible",
+                    "text":"La cantidad a devolver es mayor que la cantidad de la salida",
                     "icon":"error",
                 })
         //Si "la cantidad comprada" es menor que cero

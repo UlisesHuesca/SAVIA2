@@ -1,6 +1,7 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
+{% load widget_tweaks %}
 <html>
 <head>
 {% block title %}Autorización OC{% endblock %}
@@ -78,7 +79,7 @@
                         </tr>
                         <tr>
                             <th scope="col">Presupuesto remanente:*</th>
-                            <th scope="col" id="resta">{{resta}}</th>
+                            <th scope="col" id="resta">{{resta|floatformat:2}}</th>
                         </tr>
                         <tr>
                             <th scope="col">Comentarios:*</th>
@@ -96,6 +97,7 @@
                             <th scope="col-3">#</th>
                             <th scope="col-2">Código</th>
                             <th scope="col-3">Artículos</th>
+                            <th>Comentario</th>
                             <th scope="col-3">Cantidad</th>
                             <th scope="col-3">P.U.</th>
                         </tr>
@@ -105,7 +107,8 @@
                         <tr>
                             <th scope="row"><img class='row-image' src="{{producto.producto.producto.articulos.producto.producto.imageURL}}"></th>
                             <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
-                            <td>{{producto}}</td>
+                            <td>{{producto.producto.producto.articulos.producto.producto}}</td>
+                            <td>{{producto.producto.producto.articulos.comentario}}</td>
                             <td>{{producto.cantidad}}</td>
                             <td>${{producto.precio_unitario|floatformat:2}}</td>
                         </tr>
@@ -117,7 +120,18 @@
         <div class="modal-footer">
             <form action="{% url 'autorizar-oc2' compra.id %}" method=POST>
                 {% csrf_token %}
-                <h6>¿Autorizar la OC: {{compra.folio}}?</h6>
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-message"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.comentario_gerencia|add_class:"form-control"|append_attr:"placeholder=Comentario*"}}
+                                    <label for="id_nombre">Comentario*</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                <h6>¿Autorizar OC: {{compra.folio}}?</h6>
                 <button class="btn btn-success" type="submit">Autorizar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </form>
