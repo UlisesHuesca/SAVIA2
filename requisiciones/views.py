@@ -340,7 +340,7 @@ def salida_material(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     orden = Order.objects.get(id = pk)
-    productos= ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
+    productos= ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True, seleccionado = False)
     vale_salidas = ValeSalidas.objects.filter(solicitud__distrito = usuario.distritos)
     vale_salida, created = vale_salidas.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
     salidas = Salidas.objects.filter(vale_salida = vale_salida)
