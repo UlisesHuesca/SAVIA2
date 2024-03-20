@@ -2,6 +2,7 @@ venv/
 env/
 media/
 facturas/
+xml/
 savia2_mod.sql
 savia2.sql.gz
 access.log
