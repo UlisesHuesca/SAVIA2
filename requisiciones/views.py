@@ -18,6 +18,7 @@ import decimal
 import io
 import qrcode
 
+from decimal import Decimal
 from PIL import Image
 from solicitudes.models import Proyecto, Subproyecto
 from solicitudes.filters import SolicitudesFilter
@@ -373,10 +374,12 @@ def salida_material(request, pk):
             cantidad_productos = productos.count()
             for producto in productos:
                 producto.seleccionado = False
+                print(producto,"cantidad:", producto.cantidad)
                 if producto.cantidad == 0:
                     producto.salida=True
                     producto.surtir=False
                     cantidad_salidas = cantidad_salidas + 1
+                    print(producto)
                 producto.save()
             if cantidad_productos == cantidad_salidas:
                 orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
@@ -538,6 +541,7 @@ def update_salida(request):
     producto_id = data["id"]
     id_salida =data["id_salida"]
     producto = ArticulosparaSurtir.objects.get(id = producto_id)
+    print(producto_id, producto)
     vale_salida = ValeSalidas.objects.get(id = salida)
     inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto, distrito = producto.articulos.orden.distrito)
     entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden).aggregate(cantidad_surtir=Sum('cantidad_por_surtir'))
@@ -608,6 +612,7 @@ def update_salida(request):
                         producto.requisitar = False
                     if entrada.cantidad_por_surtir == 0:
                         entrada.agotado = True
+                    print(salida)
                     entrada.save()
                     inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
                     inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario {salida.id}'
@@ -623,8 +628,10 @@ def update_salida(request):
                 producto.requisitar = False
             salida.precio = inv_del_producto.price
             inv_del_producto._change_reason = f'Esta es la salida de inventario de un artículo'
+            #print(salida,producto.cantidad)
             #salida.save() #Se supone que sucede al final
         #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
+        producto.seleccionado = False #Este seleccionado determina no solo la presencia del artículo en el seleccionable sino también si se va a marcar para surtir o no
         producto.save()
         inv_del_producto.save()
         salida.save()

@@ -108,7 +108,7 @@ class Inventario(models.Model):
     marca = models.ManyToManyField(Marca, blank=True)
     almacen = models.ForeignKey(Almacen, on_delete = models.CASCADE, null=True)
     cantidad = models.DecimalField(max_digits = 14, decimal_places=2, default=0)
-    cantidad_apartada = models.DecimalField(max_digits = 14, decimal_places=2, null=True)
+    cantidad_apartada = models.DecimalField(max_digits = 14, decimal_places=2, default=0) #Una vez más cambié el null=True por default = 0
     cantidad_entradas = models.DecimalField(max_digits = 14, decimal_places=2, default=0)
     price = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     minimo = models.PositiveIntegerField(default =0)
