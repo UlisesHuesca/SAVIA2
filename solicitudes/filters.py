@@ -32,7 +32,7 @@ class SolicitudesFilter(django_filters.FilterSet):
     staff = CharFilter(method ='my_filter', label="Search")
     folio = CharFilter(field_name='folio', lookup_expr='icontains')
     proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
-    activo = CharFilter(field_name='activo__nombre', lookup_expr='icontains')
+    activo = CharFilter(field_name='activo__eco_unidad', lookup_expr='icontains')
     start_date = DateFilter(field_name ='created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at', lookup_expr='lte')
 

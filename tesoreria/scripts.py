@@ -288,7 +288,7 @@ def migrate_tablafacturasgastos_to_files():
         host='localhost',
         user='root',
         password='peruzzi25',
-        database='saviauno'
+        database='savia_activo'
     )
     cursor = conn.cursor()
     
@@ -298,7 +298,7 @@ def migrate_tablafacturasgastos_to_files():
         os.makedirs(directory)
 
     # Consultar los campos BLOB
-    query = "SELECT IDFACTURAGASTO, FACTURA, XML, IDGASTO FROM saviauno.facturasgastostb"
+    query = "SELECT IDFACTURAGASTO, FACTURA, XML, IDGASTO FROM savia_activo.facturasgastostb"
     cursor.execute(query)
     rows = cursor.fetchall()
 
@@ -311,7 +311,7 @@ def migrate_tablafacturasgastos_to_files():
             factura_path_r = f"/gastos_facturatb/FACTURA_{IDFACTURAGASTO}_{IDGASTO}.pdf"
             with open(factura_path, 'wb') as file:
                 file.write(FACTURA)
-            cursor.execute("UPDATE saviauno.facturasgastostb SET ruta_factura=%s WHERE IDFACTURAGASTO=%s ", (factura_path_r,IDFACTURAGASTO))
+            cursor.execute("UPDATE savia_activo.facturasgastostb SET ruta_factura=%s WHERE IDFACTURAGASTO=%s ", (factura_path_r,IDFACTURAGASTO))
         
         # Guardar XML
         if XML is not None:
@@ -319,7 +319,7 @@ def migrate_tablafacturasgastos_to_files():
             xml_path_r =f"/gastos_xmltb/XML_{IDFACTURAGASTO}_{IDGASTO}.xml"
             with open(xml_path, 'wb') as file:
                 file.write(XML)
-            cursor.execute("UPDATE saviauno.facturasgastostb SET ruta_xml=%s WHERE IDFACTURAGASTO=%s", (xml_path_r, IDFACTURAGASTO))
+            cursor.execute("UPDATE savia_activo.facturasgastostb SET ruta_xml=%s WHERE IDFACTURAGASTO=%s", (xml_path_r, IDFACTURAGASTO))
 
     conn.commit()
     cursor.close()
