@@ -343,7 +343,59 @@ def migrate_tablafacturasgastos_to_files():
     print("Migración completada")
 
 
-
+def migrate_tablafacturasgastos_to_files_v2():
+    # Establecer conexión con la base de datos
+    conn = mysql.connector.connect(
+        host='localhost',
+        user='root',
+        password='peruzzi25',
+        database='savia_activo'
+    )
+    cursor = conn.cursor()
     
+    # Crear el directorio si no existe
+    directory = 'media/'
+    if not os.path.exists(directory):
+        os.makedirs(directory)
 
+    # Consultar los campos BLOB
+    query = "SELECT IDFACTURAGASTO, FACTURA, XML, IDGASTO FROM savia_activo.facturasgastostb ORDER BY IDGASTO, IDFACTURAGASTO"
+    cursor.execute(query)
+    rows = cursor.fetchall()
 
+    # Diccionario para manejar los índices de cada IDGASTO
+    indice_por_idgasto = {}
+    idgasto_actual = None
+    indice_actual = 0
+
+    for row in rows:
+        IDFACTURAGASTO, FACTURA, XML, IDGASTO = row
+        
+        # Verificar si cambió el IDGASTO para reiniciar el índice
+        if IDGASTO != idgasto_actual:
+            idgasto_actual = IDGASTO
+            indice_actual = 1
+        else:
+            indice_actual += 1
+        
+        #Guardar FACTURA y XML con el índice correspondiente
+        if FACTURA is not None or XML is not None:
+            if FACTURA is not None:
+                factura_path = f"{directory}gastos_facturatb/FACTURA_{IDFACTURAGASTO}_{IDGASTO}_{indice_actual}.pdf"
+                factura_path_r = f"/gastos_facturatb/FACTURA_{IDFACTURAGASTO}_{IDGASTO}_{indice_actual}.pdf"
+                with open(factura_path, 'wb') as file:
+                    file.write(FACTURA)
+                cursor.execute("UPDATE savia_activo.facturasgastostb SET ruta_factura=%s, INDICE=%s WHERE IDFACTURAGASTO=%s ", (factura_path_r, indice_actual, IDFACTURAGASTO))
+            
+            if XML is not None:
+                xml_path = f"{directory}gastos_xmltb/XML_{IDFACTURAGASTO}_{IDGASTO}_{indice_actual}.xml"
+                xml_path_r = f"/gastos_xmltb/XML_{IDFACTURAGASTO}_{IDGASTO}_{indice_actual}.xml"
+                with open(xml_path, 'wb') as file:
+                    file.write(XML)
+                cursor.execute("UPDATE savia_activo.facturasgastostb SET ruta_xml=%s, INDICE=%s WHERE IDFACTURAGASTO=%s", (xml_path_r, indice_actual, IDFACTURAGASTO))
+
+    conn.commit()
+    cursor.close()
+    conn.close()
+
+    print("Migración completada")
