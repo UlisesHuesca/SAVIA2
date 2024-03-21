@@ -625,6 +625,7 @@ def update_salida(request):
             inv_del_producto._change_reason = f'Esta es la salida de inventario de un artículo'
             #salida.save() #Se supone que sucede al final
         #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
+        producto.seleccionado = False #Este seleccionado determina no solo la presencia del artículo en el seleccionable sino también si se va a marcar para surtir o no
         producto.save()
         inv_del_producto.save()
         salida.save()
