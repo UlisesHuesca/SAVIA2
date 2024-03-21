@@ -68,24 +68,39 @@ def actualizar_gastos_factura_con_xml():
 
     # Obtener pares únicos de IDGASTO y IDFACTURAGASTO
     cursor_savia1.execute("""
-        SELECT DISTINCT IDGASTO, IDFACTURAGASTO, ruta_xml 
-        FROM facturasgastostb 
-        WHERE ruta_xml IS NOT NULL
-        ORDER BY IDGASTO, IDFACTURAGASTO
+        SELECT DISTINCT f.IDGASTO, f.IDFACTURAGASTO, f.ruta_xml 
+        FROM facturasgastostb f
+        JOIN gastostb g ON f.IDGASTO = g.IDGASTO
+        WHERE f.ruta_xml IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 3
+        ORDER BY f.IDGASTO, f.IDFACTURAGASTO
     """)
     pares_unicos = cursor_savia1.fetchall()
 
     # Actualizar gastos_factura con cada par único
     for idgasto, idfacturagasto, ruta_xml in pares_unicos:
         cursor_savia2_default.execute("""
-            UPDATE gastos_factura 
+             UPDATE gastos_factura 
             SET archivo_xml = %s 
-            WHERE solicitud_gasto_id = %s AND archivo_xml IS NULL
+            WHERE solicitud_gasto_id = %s
             LIMIT 1
         """, (ruta_xml, idgasto))
+        #cursor_savia2_default.execute("""
+        #    SELECT id FROM gastos_factura
+        #    WHERE solicitud_gasto_id = %s
+        #    LIMIT 1
+        #""", (idgasto + 2000,))
+        #resultado = cursor_savia2_default.fetchone()
+        #if resultado:
+        #    gasto_factura_id = resultado[0]
+            # Actualizar el registro seleccionado con la ruta_xml correspondiente
+        #    cursor_savia2_default.execute("""
+        #        UPDATE gastos_factura
+        #        SET archivo_xml = %s
+        #        WHERE id = %s
+        #    """, (ruta_xml, gasto_factura_id))
 
-    # Confirmar los cambios
-    conn_savia2_default.commit()
+            # Confirmar los cambios
+        conn_savia2_default.commit()
 
     # Cerrar las conexiones
     cursor_savia1.close()
@@ -326,3 +341,9 @@ def migrate_tablafacturasgastos_to_files():
     conn.close()
 
     print("Migración completada")
+
+
+
+    
+
+
