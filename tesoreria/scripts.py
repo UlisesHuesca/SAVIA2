@@ -46,69 +46,62 @@ def verificar_gastos_pagados():
             gasto.save()
 
 
-#verificar_compras_colocadas()
-def actualizar_gastos_factura_con_xml():
-    # Establecer la conexión con la base de datos SAVIA1
+def actualizar_gastos_factura_con_pdf():
     conn_savia1 = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='*$HbAq*/4528*',
+        host='localhost', 
+        user='root', 
+        password='*$HbAq*/4528*', 
         database='SAVIA1'
     )
     cursor_savia1 = conn_savia1.cursor()
 
-    # Establecer la conexión con la base de datos savia2_default
     conn_savia2_default = mysql.connector.connect(
-        host='localhost',
-        user='root',
-        password='*$HbAq*/4528*',
+        host='localhost', 
+        user='root', 
+        password='*$HbAq*/4528*', 
         database='savia2_default'
     )
     cursor_savia2_default = conn_savia2_default.cursor()
 
-    # Obtener pares únicos de IDGASTO y IDFACTURAGASTO
-    cursor_savia1.execute("""
-        SELECT DISTINCT f.IDGASTO, f.IDFACTURAGASTO, f.ruta_xml 
-        FROM facturasgastostb f
-        JOIN gastostb g ON f.IDGASTO = g.IDGASTO
-        WHERE f.ruta_xml IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 3
-        ORDER BY f.IDGASTO, f.IDFACTURAGASTO
-    """)
-    pares_unicos = cursor_savia1.fetchall()
+    consulta_facturas = """
+    SELECT f.IDGASTO, f.indice, f.ruta_factura
+    FROM facturasgastostb f
+    JOIN gastostb g ON g.IDGASTO = f.IDGASTO
+    WHERE f.ruta_factura IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 3
+    ORDER BY f.IDGASTO, f.indice;
+    """
+    cursor_savia1.execute(consulta_facturas)
+    facturas = cursor_savia1.fetchall()
 
-    # Actualizar gastos_factura con cada par único
-    for idgasto, idfacturagasto, ruta_xml in pares_unicos:
-        cursor_savia2_default.execute("""
-             UPDATE gastos_factura 
-            SET archivo_xml = %s 
-            WHERE solicitud_gasto_id = %s
-            LIMIT 1
-        """, (ruta_xml, idgasto))
-        #cursor_savia2_default.execute("""
-        #    SELECT id FROM gastos_factura
-        #    WHERE solicitud_gasto_id = %s
-        #    LIMIT 1
-        #""", (idgasto + 2000,))
-        #resultado = cursor_savia2_default.fetchone()
-        #if resultado:
-        #    gasto_factura_id = resultado[0]
-            # Actualizar el registro seleccionado con la ruta_xml correspondiente
-        #    cursor_savia2_default.execute("""
-        #        UPDATE gastos_factura
-        #        SET archivo_xml = %s
-        #        WHERE id = %s
-        #    """, (ruta_xml, gasto_factura_id))
+    idgasto_actual = None
 
-            # Confirmar los cambios
-        conn_savia2_default.commit()
+    for idgasto, indice, ruta_factura in facturas:
+        if idgasto_actual != idgasto:
+            idgasto_actual = idgasto
+            # Obtener todos los registros de gastos_factura para el IDGASTO actual
+            cursor_savia2_default.execute("""
+                SELECT id FROM gastos_factura WHERE solicitud_gasto_id = %s ORDER BY id;
+            """, (idgasto + 2000,))
+            gastos_ids = cursor_savia2_default.fetchall()
+            print(gastos_ids)
 
-    # Cerrar las conexiones
+        # Asumiendo que el indice corresponde al orden de los registros obtenidos
+        if indice - 1 < len(gastos_ids):
+            gasto_id = gastos_ids[indice - 1][0]  # Obtiene el id basado en el índice
+            cursor_savia2_default.execute("""
+                UPDATE gastos_factura SET archivo_pdf = %s WHERE id = %s;
+            """, (ruta_factura, gasto_id))
+            print(ruta_factura, gasto_id)
+
+    conn_savia2_default.commit()
+
     cursor_savia1.close()
     conn_savia1.close()
     cursor_savia2_default.close()
     conn_savia2_default.close()
 
-    print("Actualización de gastos_factura completada")
+    print("Las actualizaciones se han completado.")
+
 
 
 def migrate_blob_to_files():

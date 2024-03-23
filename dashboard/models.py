@@ -212,7 +212,7 @@ class Activo(models.Model):
    
 
     def __str__(self):
-        return f'{self.nombre}'
+        return f'{self.eco_unidad}'
 
 class Order(models.Model):
     folio = models.IntegerField(null=True)

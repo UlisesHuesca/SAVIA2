@@ -25,6 +25,7 @@ from requisiciones.views import get_image_base64
 from django.utils.timezone import make_aware, is_aware
 import pytz
 from io import BytesIO
+import socket
 
 import json
 import time
@@ -152,7 +153,7 @@ def eliminar_articulos(request, pk):
             email = EmailMessage(
                 f'Producto Eliminado {producto.producto.articulos.producto.producto.nombre}',
                 f'Estimado(a) {producto.req.orden.staff.staff.staff.first_name}:\n\nEstás recibiendo este correo porque el producto: {producto.producto.articulos.producto.producto.nombre} de la solicitud: {producto.req.orden.folio} ha sido eliminado, por la siguiente razón: {producto.comentario_cancelacion} \n\n Atte.{perfil.staff.staff.first_name}{perfil.staff.staff.last_name}  \nGRUPO VORDCAB S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDCAB',
-                'savia@vordcab.com',
+                settings.DEFAULT_FROM_EMAIL,
                 ['ulises_huesc@hotmail.com',],producto.req.orden.staff.staff.staff.email,
                 )
             email.send()
@@ -231,10 +232,11 @@ def oc(request, pk):
     return render(request, 'compras/oc.html',context)
 
 def compras_devueltas(request):
-    #productos = ArticulosRequisitados.objects.filter(req = pk)
-    #req = Requis.objects.get(id = pk)
-    usuario = Profile.objects.get(staff__id=request.user.id)
-    compras = Compra.objects.filter(regresar_oc = True)
+    pk_perfil = request.session.get('selected_profile_id')
+    colaborador = Profile.objects.all()
+    usuario = colaborador.get(id = pk_perfil)
+    #usuario = Profile.objects.get(staff__id=request.user.id)
+    compras = Compra.objects.filter(regresar_oc = True, req__orden__distrito = usuario.distritos)
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
 
@@ -556,7 +558,7 @@ def oc_modal(request, pk):
                 f'OC Elaborada {oc.folio}',
                 body=html_message,
                 #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                from_email = 'savia@vordcab.com',
+                from_email = settings.DEFAULT_FROM_EMAIL,
                 to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email],
                 headers={'Content-Type': 'text/html'}
                 )
@@ -770,19 +772,18 @@ def matriz_oc_productos(request):
         'myfilter':myfilter,
         }
     
-    #task_id_producto = request.session.get('task_id_producto')
+    task_id_producto = request.session.get('task_id_producto')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        return convert_excel_matriz_compras(compras)
- 
-        #if not task_id:
-            #task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
-            #task_id = task.id
-            #request.session['task_id'] = task_id
-            #context['task_id'] = task_id 
-            #cantidad = compras.count()
-            #context['cantidad'] = cantidad
-            #messages.success(request, f'Tu reporte se está generando {task_id}')
+        #return convert_excel_matriz_compras(compras)
+        if not task_id_producto:
+            task = convert_excel_solicitud_matriz_productos_task.delay(articulos_data)
+            task_id_producto = task.id
+            request.session['task_id_producto'] = task_id_producto
+            context['task_id_producto'] = task_id_producto
+            cantidad = articulos.count()
+            context['cantidad'] = cantidad
+            messages.success(request, f'Tu reporte se está generando {task_id_producto}')
 
     return render(request, 'compras/matriz_oc_productos.html',context)
 
@@ -1097,7 +1098,7 @@ def autorizar_oc1(request, pk):
                 f'OC Autorizada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
                 body=html_message,
                 #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                from_email = 'savia@vordcab.com',
+                from_email = settings.DEFAULT_FROM_EMAIL,
                 to= ['ulises_huesc@hotmail.com',compra.req.orden.staff.staff.staff.email],
                 headers={'Content-Type': 'text/html'}
                 )
@@ -1203,12 +1204,12 @@ def autorizar_oc2(request, pk):
                     </html>
                 """
                 email = EmailMessage(
-                    f'Compra Autorizada {compra.folio}',
-                    body=html_message2,
-                    from_email = 'savia@vordcab.com',
-                    to= ['ulises_huesc@hotmail.com', compra.proveedor.email],#[requi.orden.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
+                f'Compra Autorizada {compra.folio}|SAVIA',
+                body=html_message2,
+                from_email =settings.DEFAULT_FROM_EMAIL,
+                to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                headers={'Content-Type': 'text/html'}
+                )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
                 email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
                 email.send()
@@ -1231,7 +1232,7 @@ def autorizar_oc2(request, pk):
                     f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
                     body=html_message,
                     #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                    from_email = 'savia@vordcab.com',
+                    from_email = settings.DEFAULT_FROM_EMAIL,
                     to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
@@ -1242,8 +1243,8 @@ def autorizar_oc2(request, pk):
                         archivo_oc = attach_oc_pdf(request, compra.id)
                         email = EmailMessage(
                             f'Compra Autorizada {compra.folio}',
-                            f'Estimado proveedor,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                            'savia@vordtec.com',
+                            f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                            settings.DEFAULT_FROM_EMAIL,
                             ['ulises_huesc@hotmail.com'],
                             )
                         email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
@@ -1268,14 +1269,15 @@ def autorizar_oc2(request, pk):
                     f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
                     body=html_message,
                     #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                    from_email = 'savia@vordcab.com',
+                    from_email = settings.DEFAULT_FROM_EMAIL,
                     to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
                 email.send()
+            #if error_message:
+                #message.error        
             messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la solicitud {compra.get_folio}')
-
             return redirect('autorizacion-oc2')
 
     context={
@@ -2505,11 +2507,6 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename='Carta_Proveedor' + str(proveedor.id) +'.pdf')
 
-
-def convert_excel_matriz_compras(compras):
-    #print('si entra a la función')
-    # Crea un objeto BytesIO para guardar el archivo Excel
-    output = BytesIO()
 
 def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):
       #print('si entra a la función')
