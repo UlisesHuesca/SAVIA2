@@ -674,7 +674,7 @@ def matriz_oc(request):
             #task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
             #task_id = task.id
             #request.session['task_id'] = task_id
-            #context['task_id'] = task_id 
+            #context['task_id'] = task_id yes
             #cantidad = compras.count()
             #context['cantidad'] = cantidad
             #messages.success(request, f'Tu reporte se está generando {task_id}')

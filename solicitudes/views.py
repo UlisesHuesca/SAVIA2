@@ -415,6 +415,7 @@ def checkout(request):
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
                 email.send()
+                
                 order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)    
                 messages.success(request, f'La solicitud {order.folio} ha sido creada')
                 cartItems = '0'
