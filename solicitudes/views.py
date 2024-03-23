@@ -3,6 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
 import os
+import socket
 from django.contrib import messages
 from django.db.models.functions import Concat
 from django.core.mail import EmailMessage
@@ -409,13 +410,12 @@ def checkout(request):
                 email = EmailMessage(
                     f'Solicitud Autorizada {order.folio}',
                     body=html_message,
-                    from_email='savia@vordcab.com',
+                    from_email=settings.DEFAULT_FROM_EMAIL,
                     to=[order.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.send()
-                
+                #email.send()
                 order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)    
                 messages.success(request, f'La solicitud {order.folio} ha sido creada')
                 cartItems = '0'
@@ -445,16 +445,15 @@ def checkout(request):
                     </body>
                 </html>
                 """
-                #abrev= usuario.distrito.abreviado
                 email = EmailMessage(
                     f'Solicitud Autorizada {order.folio}',
                     body=html_message,
-                    from_email='savia@vordcab.com',
+                    from_email= settings.DEFAULT_FROM_EMAIL,
                     to=[order.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.send()
+                #email.send()
                 messages.success(request, f'La solicitud {order.folio} ha sido creada')
             order.complete = True
             order.save()
@@ -1492,7 +1491,7 @@ def convert_excel_inventario(existencia, valor_inventario, dict_entradas, dict_r
 
     columna_max = len(columns)+3
 
-    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia Vordtec. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}')).style = messages_style
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
     (ws.cell(column = columna_max, row = 3, value='Inventario Costo Total:')).style = messages_style
     (ws.cell(column = columna_max +1, row=3, value = valor_inventario)).style = money_resumen_style
@@ -1544,67 +1543,6 @@ def convert_excel_inventario(existencia, valor_inventario, dict_entradas, dict_r
     wb.save(response)
 
     return(response)
-
-
-
-
-def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entradas, dict_resultados):
-    # Create a workbook in memory
-    output = BytesIO()
-    workbook = xlsxwriter.Workbook(output)
-    worksheet = workbook.add_worksheet('Inventario')
-
-    # Estilos
-    head_style = workbook.add_format({'bold': True, 'font_color': 'white', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
-    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
-    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
-    money_resumen_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 14, 'bold': True})
-    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
-
-    # Anchos de las columnas
-    worksheet.set_column('A:A', 10)
-    worksheet.set_column('B:B', 30)
-    for i in range(2, len(columns)):
-        worksheet.set_column(i, i, 15)
-
-    # Escribir el encabezado
-    columns = ['Código','Producto','Distrito','Unidad','Cantidad','Cantidad Apartada','Cantidad Entradas','Minimos','Ubicación','Estante','Precio','Total']
-    worksheet.write_row('A1', columns, head_style)
-
-    # Escribir los datos
-    row_num = 1
-    for inventario in existencia:
-        row_num += 1
-        inventario.total_entradas = dict_entradas.get(inventario.id, 0)
-        inventario.total_apartado = dict_resultados.get(inventario.id, 0)
-        row = [
-            inventario.producto.codigo,
-            inventario.producto.nombre,
-            inventario.distrito.nombre,
-            inventario.producto.unidad.nombre,
-            inventario.cantidad,
-            inventario.total_apartado,
-            inventario.total_entradas,
-            inventario.minimo,
-            inventario.ubicacion,
-            inventario.estante,
-            inventario.price,
-            inventario.cantidad * inventario.price + inventario.total_apartado * inventario.price
-        ]
-        worksheet.write_row(f'A{row_num}', row, body_style)
-
-    # Escribir el total del inventario
-    worksheet.write('L2', 'Inventario Costo Total:', body_style)
-    worksheet.write('M2', valor_inventario, money_resumen_style)
-
-    # Cerrar el libro de trabajo y descargarlo
-    workbook.close()
-    output.seek(0)
-
-    # Crear la respuesta y enviar el archivo para la descarga
-    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = f'attachment; filename=Inventario_{dt.date.today()}.xlsx'
-    return response
 
 
 def convert_excel_solicitud_matriz_productos(productos):
@@ -1759,7 +1697,7 @@ def convert_excel_solicitud_matriz(ordenes):
 
 def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entradas, dict_resultados):
     output = BytesIO()
-    workbook = xlsxwriter.Workbook(output)
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
     worksheet = workbook.add_worksheet('Inventario')
 
     # Definir los estilos antes de usarlos
@@ -1778,9 +1716,9 @@ def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entra
     # Establecer los anchos de las columnas después de definir `columns`
     worksheet.set_column('A:A', 10)
     worksheet.set_column('B:B', 30)
-    for i in range(2, len(columns) + 1):  # Ajustado para abarcar todas las columnas definidas
-        worksheet.set_column(i, i, 15)
-        
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
 
     # Escribir los datos
     row_num = 0
@@ -1819,6 +1757,15 @@ def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entra
     workbook.close()
     output.seek(0)
 
-    response = HttpResponse(output, content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    
+
+    
     response['Content-Disposition'] = f'attachment; filename=Inventario_{dt.date.today()}.xlsx'
+    output.close()
     return response

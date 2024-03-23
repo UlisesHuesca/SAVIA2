@@ -171,7 +171,7 @@ def compras_pagos(request, pk):
                         email = EmailMessage(
                         f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
                         body=html_message,
-                        from_email = 'savia@vordcab.com',
+                        from_email = settings.DEFAULT_FROM_EMAIL,
                         to= ['ulises_huesc@hotmail.com', compra.req.orden.staff.staff.staff.email],
                         headers={'Content-Type': 'text/html'}
                         )
@@ -197,7 +197,7 @@ def compras_pagos(request, pk):
                         email = EmailMessage(
                         f'Compra Autorizada {compra.folio}|SAVIA',
                         body=html_message2,
-                        from_email = 'savia@vordcab.com',
+                        from_email =settings.DEFAULT_FROM_EMAIL,
                         to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
                         headers={'Content-Type': 'text/html'}
                         )
@@ -214,7 +214,7 @@ def compras_pagos(request, pk):
                             email = EmailMessage(
                             f'Compra Autorizada {compra.folio}',
                             f'Estimado Especialista,\n Estás recibiendo este correo porque ha sido pagada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.codigo} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA X',
-                            'savia@vordcab.com',
+                            settings.DEFAULT_FROM_EMAIL,
                             ['ulises_huesc@hotmail.com'],
                             )
                             email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')

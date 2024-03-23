@@ -253,7 +253,7 @@ AUTHENTICATION_BACKENDS = ['user.backends.EmailBackend']
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 DEFAULT_FROM_EMAIL ='savia@grupovordcab.com.mx'
-#DEFAULT_FROM_EMAIL ='savia@vordcab.com'
+#DEFAULT_FROM_EMAIL = 'savia@grupovordcab.com.mx'
 
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'

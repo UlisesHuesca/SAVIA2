@@ -341,7 +341,8 @@ def salida_material(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     orden = Order.objects.get(id = pk)
-    productos= ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True, seleccionado = False)
+    productos = ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
+    productos_no_seleccionados = productos.filter(seleccionado = False)
     vale_salidas = ValeSalidas.objects.filter(solicitud__distrito = usuario.distritos)
     vale_salida, created = vale_salidas.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
     salidas = Salidas.objects.filter(vale_salida = vale_salida)
@@ -395,7 +396,7 @@ def salida_material(request, pk):
             messages.error(request,'No capturaste el usuario')
 
     context= {
-        'productos':productos,
+        'productos':productos_no_seleccionados,
         'form':form,
         'formVale':formVale,
         'users': users,
@@ -440,7 +441,7 @@ def devolucion_material(request, pk):
                 email = EmailMessage(
                     f'Cancelación de solicitud: {orden.folio}',
                     f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                    'savia@vordcab.com',
+                    settings.DEFAULT_FROM_EMAIL,
                     ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
                     )
                 email.send()
@@ -493,7 +494,7 @@ def devolucion_material_salida(request, pk):
                 email = EmailMessage(
                     f'Cancelación de solicitud: {orden.folio}',
                     f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                    'savia@vordcab.com',
+                    settings.DEFAULT_FROM_EMAIL,
                     ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
                     )
                 email.send()
@@ -631,7 +632,7 @@ def update_salida(request):
             #print(salida,producto.cantidad)
             #salida.save() #Se supone que sucede al final
         #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
-        producto.seleccionado = False #Este seleccionado determina no solo la presencia del artículo en el seleccionable sino también si se va a marcar para surtir o no
+        #producto.seleccionado = False #Este seleccionado determina no solo la presencia del artículo en el seleccionable sino también si se va a marcar para surtir o no
         producto.save()
         inv_del_producto.save()
         salida.save()
@@ -950,7 +951,7 @@ def requisicion_autorizar(request, pk):
                 f'Requisición Autorizada {requi.folio}',
                 body=html_message,
                 #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                from_email = 'savia@vordcab.com',
+                from_email = settings.DEFAULT_FROM_EMAIL,
                 to= ['ulises_huesc@hotmail.com',requi.orden.staff.staff.staff.email],
                 headers={'Content-Type': 'text/html'}
                 )
@@ -988,7 +989,7 @@ def requisicion_cancelar_compras(request, pk):
             email = EmailMessage(
                 f'Requisición Rechazada {requis.folio}',
                 f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {requis.comentario_compras} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                'savia@vordcab.com',
+                settings.DEFAULT_FROM_EMAIL,
                 ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
                 )
             email.send()
@@ -1024,7 +1025,7 @@ def requisicion_cancelar(request, pk):
             email = EmailMessage(
                 f'Requisición Rechazada {requis.folio}',
                 f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {requis.comentario_compras} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                'savia@vordcab.com',
+                settings.DEFAULT_FROM_EMAIL,
                 ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
                 )
             email.send()
