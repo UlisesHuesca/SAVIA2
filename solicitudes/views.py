@@ -6,7 +6,8 @@ import os
 import socket
 from django.contrib import messages
 from django.db.models.functions import Concat
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, BadHeaderError
+from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max
 from dashboard.models import Activo, Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden, Plantilla, ArticuloPlantilla
@@ -407,17 +408,21 @@ def checkout(request):
                     </body>
                 </html>
                 """
-                email = EmailMessage(
-                    f'Solicitud Autorizada {order.folio}',
-                    body=html_message,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[order.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
-                #email.send()
+                try:
+                    email = EmailMessage(
+                        f'Solicitud Autorizada {order.folio}',
+                        body=html_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=[order.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                    email.send()
+                    messages.success(request, f'La solicitud {order.folio} ha sido creada')
+                except (BadHeaderError, SMTPException) as e:
+                    error_message = f'La solicitud {order.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
+                    messages.success(request, error_message)
                 order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)    
-                messages.success(request, f'La solicitud {order.folio} ha sido creada')
                 cartItems = '0'
             else:
                 for producto in productos:
@@ -445,16 +450,20 @@ def checkout(request):
                     </body>
                 </html>
                 """
-                email = EmailMessage(
-                    f'Solicitud Autorizada {order.folio}',
-                    body=html_message,
-                    from_email= settings.DEFAULT_FROM_EMAIL,
-                    to=[order.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
-                #email.send()
-                messages.success(request, f'La solicitud {order.folio} ha sido creada')
+                try:
+                    email = EmailMessage(
+                        f'Solicitud Autorizada {order.folio}',
+                        body=html_message,
+                        from_email= settings.DEFAULT_FROM_EMAIL,
+                        to=[order.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                    email.send()
+                    messages.success(request, f'La solicitud {order.folio} ha sido creada')
+                except (BadHeaderError, SMTPException) as e:
+                    error_message = f'La solicitud {order.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
+                    messages.success(request, error_message)
             order.complete = True
             order.save()
             return redirect('solicitud-matriz')

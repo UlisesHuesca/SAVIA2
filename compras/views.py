@@ -7,7 +7,8 @@ from django.db.models.functions import Concat
 from django.utils import timezone
 from django.contrib import messages
 from django.core.files.base import ContentFile
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, BadHeaderError
+from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.conf import settings
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task
@@ -554,18 +555,21 @@ def oc_modal(request, pk):
                 </body>
             </html>
             """
-            email = EmailMessage(
-                f'OC Elaborada {oc.folio}',
-                body=html_message,
-                #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                from_email = settings.DEFAULT_FROM_EMAIL,
-                to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email],
-                headers={'Content-Type': 'text/html'}
-                )
-            email.content_subtype = "html " # Importante para que se interprete como HTML
-            email.send()
-            messages.success(request,f'{usuario.staff.staff.first_name}, Has generado la OC {oc.folio} correctamente')
-
+            try:
+                email = EmailMessage(
+                    f'OC Elaborada {oc.folio}',
+                    body=html_message,
+                    #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    from_email = settings.DEFAULT_FROM_EMAIL,
+                    to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email],
+                    headers={'Content-Type': 'text/html'}
+                    )
+                email.content_subtype = "html " # Importante para que se interprete como HTML
+                email.send()
+                messages.success(request,f'{usuario.staff.staff.first_name}, Has generado la OC {oc.folio} correctamente')
+            except (BadHeaderError, SMTPException) as e:
+                error_message = f'{usuario.staff.staff.first_name}, Has generado la OC {oc.folio} correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                messages.success(request, error_message)
             return redirect('requisicion-autorizada')
         else:
             for field, errors in form.errors.items():
@@ -1094,17 +1098,22 @@ def autorizar_oc1(request, pk):
                     </body>
                 </html>
             """
-            email = EmailMessage(
-                f'OC Autorizada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                body=html_message,
-                #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                from_email = settings.DEFAULT_FROM_EMAIL,
-                to= ['ulises_huesc@hotmail.com',compra.req.orden.staff.staff.staff.email],
-                headers={'Content-Type': 'text/html'}
-                )
-            email.content_subtype = "html " # Importante para que se interprete como HTML
-            email.send()
-            messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
+            try:
+                email = EmailMessage(
+                    f'OC Autorizada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                    body=html_message,
+                    #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    from_email = settings.DEFAULT_FROM_EMAIL,
+                    to= ['ulises_huesc@hotmail.com',compra.req.orden.staff.staff.staff.email],
+                    headers={'Content-Type': 'text/html'}
+                    )
+                email.content_subtype = "html " # Importante para que se interprete como HTML
+                email.send()
+                messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
+            except (BadHeaderError, SMTPException) as e:
+                error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                messages.success(request, error_message)    
+            
             return redirect('autorizacion-oc1')
 
     context={
@@ -1203,16 +1212,20 @@ def autorizar_oc2(request, pk):
                         </body>
                     </html>
                 """
-                email = EmailMessage(
-                f'Compra Autorizada {compra.folio}|SAVIA',
-                body=html_message2,
-                from_email =settings.DEFAULT_FROM_EMAIL,
-                to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
-                headers={'Content-Type': 'text/html'}
-                )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-                email.send()
+                try:
+                    email = EmailMessage(
+                    f'Compra Autorizada {compra.folio}|SAVIA',
+                    body=html_message2,
+                    from_email =settings.DEFAULT_FROM_EMAIL,
+                    to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                    headers={'Content-Type': 'text/html'}
+                    )
+                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                    email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+                    email.send()
+                except (BadHeaderError, SMTPException) as e:
+                    error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
+
                 html_message = f"""
                     <html>
                         <head>
@@ -1228,27 +1241,34 @@ def autorizar_oc2(request, pk):
                         </body>
                     </html>
                 """
-                email = EmailMessage(
-                    f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                    body=html_message,
-                    #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                    from_email = settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.send()
-                for producto in productos:
-                    if producto.producto.producto.articulos.producto.producto.especialista == True:
-                        archivo_oc = attach_oc_pdf(request, compra.id)
-                        email = EmailMessage(
-                            f'Compra Autorizada {compra.folio}',
-                            f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                            settings.DEFAULT_FROM_EMAIL,
-                            ['ulises_huesc@hotmail.com'],
-                            )
-                        email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-                        email.send()
+                try:
+                    email = EmailMessage(
+                        f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                        body=html_message,
+                        #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                    email.send()
+                    
+                    for producto in productos:
+                        if producto.producto.producto.articulos.producto.producto.especialista == True:
+                            archivo_oc = attach_oc_pdf(request, compra.id)
+                            email = EmailMessage(
+                                f'Compra Autorizada {compra.folio}',
+                                f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                                settings.DEFAULT_FROM_EMAIL,
+                                ['ulises_huesc@hotmail.com'],
+                                )
+                            email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+                            email.send()
+                    messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
+                except (BadHeaderError, SMTPException) as e:
+                    error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                    messages.warning(request, error_message)    
+                
             else:
                 html_message = f"""
                     <html>
@@ -1265,19 +1285,21 @@ def autorizar_oc2(request, pk):
                         </body>
                     </html>
                 """
-                email = EmailMessage(
-                    f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                    body=html_message,
-                    #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                    from_email = settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.send()
-            #if error_message:
-                #message.error        
-            messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la solicitud {compra.get_folio}')
+                try:
+                    email = EmailMessage(
+                        f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                        body=html_message,
+                        #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                    email.send()
+                    messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
+                except (BadHeaderError, SMTPException) as e:
+                    error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                    messages.success(request, error_message)    
             return redirect('autorizacion-oc2')
 
     context={

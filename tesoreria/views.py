@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.http import HttpResponse
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, BadHeaderError
+from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.db.models import Sum, Q
 from django.db.models.functions import Concat
@@ -168,15 +169,18 @@ def compras_pagos(request, pk):
                                 </body>
                             </html>
                             """
-                        email = EmailMessage(
-                        f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                        body=html_message,
-                        from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com', compra.req.orden.staff.staff.staff.email],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                        email.content_subtype = "html " # Importante para que se interprete como HTML
-                        email.send()
+                        try:
+                            email = EmailMessage(
+                            f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                            body=html_message,
+                            from_email = settings.DEFAULT_FROM_EMAIL,
+                            to= ['ulises_huesc@hotmail.com', compra.req.orden.staff.staff.staff.email],
+                            headers={'Content-Type': 'text/html'}
+                            )
+                            email.content_subtype = "html " # Importante para que se interprete como HTML
+                            email.send()
+                        except (BadHeaderError, SMTPException) as e:
+                            error_message = f'Correo de notificación 1: No enviado'
                         html_message2 = f"""
                             <html>
                                 <head>
@@ -194,37 +198,43 @@ def compras_pagos(request, pk):
                                 </body>
                             </html>
                             """
-                        email = EmailMessage(
-                        f'Compra Autorizada {compra.folio}|SAVIA',
-                        body=html_message2,
-                        from_email =settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                        email.content_subtype = "html " # Importante para que se interprete como HTML
-                        email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
-                        email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
-                        if pagos.count() > 0:
-                            for pago in pagos:
-                                email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
-                        email.send()
-                    for producto in productos:
-                        if producto.producto.producto.articulos.producto.producto.especialista == True:
-                            archivo_oc = attach_oc_pdf(request, compra.id)
+                        try:
                             email = EmailMessage(
-                            f'Compra Autorizada {compra.folio}',
-                            f'Estimado Especialista,\n Estás recibiendo este correo porque ha sido pagada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.codigo} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA X',
-                            settings.DEFAULT_FROM_EMAIL,
-                            ['ulises_huesc@hotmail.com'],
+                            f'Compra Autorizada {compra.folio}|SAVIA',
+                            body=html_message2,
+                            from_email =settings.DEFAULT_FROM_EMAIL,
+                            to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                            headers={'Content-Type': 'text/html'}
                             )
-                            email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
+                            email.content_subtype = "html " # Importante para que se interprete como HTML
+                            email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                            email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
+                            if pagos.count() > 0:
+                                for pago in pagos:
+                                    email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
                             email.send()
+                            for producto in productos:
+                                if producto.producto.producto.articulos.producto.producto.especialista == True:
+                                    archivo_oc = attach_oc_pdf(request, compra.id)
+                                    email = EmailMessage(
+                                    f'Compra Autorizada {compra.folio}',
+                                    f'Estimado Especialista,\n Estás recibiendo este correo porque ha sido pagada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.codigo} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA X',
+                                    settings.DEFAULT_FROM_EMAIL,
+                                    ['ulises_huesc@hotmail.com'],
+                                    )
+                                    email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
+                                    email.send()
+                            messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                        except (BadHeaderError, SMTPException) as e:
+                            error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
+                            messages.warning(request, error_message) 
+                        
                 pago.save()
                 compra.save()
                 form.save()
                 sub.save()
                 cuenta.save()
-                messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+               
                 return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
             elif monto_total > compra.costo_oc:
                 messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {compra.costo_oc}')
