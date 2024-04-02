@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Matriz de compras autorizadas{% endblock %}
@@ -163,9 +164,11 @@
                             <li class="nav-item mx-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}">Detalle</a>
                             </li>
+                            {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" %}
                             <li class="nav-item mx-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info"  href="{% url 'viaticos-pagos' viatico.id %}">Pago</a>
                             </li>
+                            {% endif %}
                         </ul>
                     </td>
                     <td>
@@ -189,6 +192,33 @@
                 {% endfor %}
             </tbody>
         </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if viaticos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in viaticos_list.paginator.page_range %}
+                    {% if viaticos_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > viaticos_list.number|add:'-2' and item < viaticos_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if viaticos_list.paginator.num_pages > viaticos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{viaticos_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{viaticos_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if viaticos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 </div>
 

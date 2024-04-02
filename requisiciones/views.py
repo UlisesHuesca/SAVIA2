@@ -311,7 +311,7 @@ def cancelar_devolucion(request, pk):
 def matriz_autorizar_devolucion(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    devoluciones= Devolucion.objects.filter(complete=True, autorizada=None)
+    devoluciones= Devolucion.objects.filter(complete=True, autorizada=None, solicitud__distrito = usuario.distritos)
     #print(devoluciones)
 
     
@@ -539,12 +539,12 @@ def update_salida(request):
     data= json.loads(request.body)
     action = data["action"]
     cantidad = decimal.Decimal (data["val_cantidad"])
-    salida = data["salida"]
+    vale_salida_id = data["salida"]
     producto_id = data["id"]
     id_salida =data["id_salida"]
     producto = ArticulosparaSurtir.objects.get(id = producto_id)
     print(producto_id, producto)
-    vale_salida = ValeSalidas.objects.get(id = salida)
+    vale_salida = ValeSalidas.objects.get(id = vale_salida_id)
     inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto, distrito = producto.articulos.orden.distrito)
     entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden).aggregate(cantidad_surtir=Sum('cantidad_por_surtir'))
     suma_entradas = entradas['cantidad_surtir']
@@ -599,9 +599,9 @@ def update_salida(request):
                     inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
                     #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad si hago una salida que proviene de entradas voy a obtener un inv_del_producto negativo
                     inv_del_producto.save()
-        elif entrada_res:   #si hay resurtimiento
+        elif entrada_res.exists():   #si hay resurtimiento
             for entrada in entrada_res:
-                if producto.cantidad > 0:
+                if producto.cantidad > 0: 
                     salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
                     salida.cantidad = cantidad
                     #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad #    Este falló ya con el nuevo método salida.precio = entrada_res.articulo_comprado.precio_unitario
@@ -998,7 +998,7 @@ def requisicion_cancelar_compras(request, pk):
                     ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
                     )
                 email.send()
-                messages.error(request,f'Has cancelado la requisición {requis.folio}')
+                messages.success(request,f'Has cancelado la requisición {requis.folio}')
             except (BadHeaderError, SMTPException) as e:
                 error_message = f'Has cancelado la requisición {requis.folio} con éxito, pero el correo de notificación no ha sido enviado debido a un error: {e}'
                 messages.success(request, error_message)
@@ -1012,7 +1012,7 @@ def requisicion_cancelar_compras(request, pk):
         'requis': requis,
         'form':form,
      }
-    return render(request,'requisiciones/requisiciones_cancelar.html', context)
+    return render(request,'requisiciones/requisiciones_cancelar_compra.html', context)
 
 @perfil_seleccionado_required
 def requisicion_cancelar(request, pk):

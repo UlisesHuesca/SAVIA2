@@ -7,7 +7,7 @@ class CuentaAdmin(admin.ModelAdmin):
 class PagoAdmin(admin.ModelAdmin):
     list_display = ('id','oc','gasto','viatico','tesorero','monto', 'hecho')
     #list_filter = ('familia',)
-    search_fields = ['id','hecho']
+    search_fields = ['id','hecho','oc__folio','viatico__folio', 'gasto__folio']
     raw_id_fields = ('oc','gasto','viatico','tesorero',)
 
 

@@ -706,11 +706,11 @@ def convert_excel_matriz_pagos(pagos):
     # Función para manejar los IDs de las compras, gastos o viáticos
     def get_transaction_id(pago):
         if pago.oc:
-            return 'OC'+str(pago.oc.id)
+            return 'OC'+str(pago.oc.folio)
         elif pago.gasto:
-            return 'G'+str(pago.gasto.id)
+            return 'G'+str(pago.gasto.folio)
         elif pago.viatico:
-            return 'V'+str(pago.viatico.id)
+            return 'V'+str(pago.viatico.folio)
         else:
             return None
 

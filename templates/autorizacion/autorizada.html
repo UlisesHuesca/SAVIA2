@@ -15,24 +15,30 @@
         </div>
 
         <div class="modal-body">
-            <div class='box-element-2'>
-                <div class='cart-row'>
-                    <div style="flex:1"></div>
-                    <div style="flex:1">Código</div>
-                    <div style="flex:2">Artículo</div>
-                    <div style="flex:1">Cantidad</div>
-                </div>
-                {% for producto in productos %}
-                <div class='cart-row'>
-                    <div style="flex:1"><img class='row-image' src="{{producto.producto.producto.imageURL}}"></div>
-                    <div style="flex:1">{{producto.producto.producto.codigo}}</div>
-                    <div style="flex:2">{{producto.producto.producto.nombre}}</div>
-                    <div style="flex:1">
-                        <p class='quantity'>{{producto.cantidad}}</p>
-                    </div>
-                </div>
-                {% endfor %}
+            <div class='box-element-2 table-responsive-sm'>
+                <table class='table table-dark table striped'>
+                    <thead>
+                    <tr>
+                        <th>Código</th>
+                        <th>Artículo</th>
+                        <th>Cantidad</th>
+                        <th>Comentario</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for producto in productos %}
+                    <tr>
+                        <td>{{producto.producto.producto.codigo}}</td>
+                        <td>{{producto.producto.producto.nombre}}</td>
+                        <td><p class='quantity'>{{producto.cantidad}}</p></td>
+                        <td>{% if producto.comentario %}{{producto.comentario}} {% endif %}</td>
+                    </tr>
+                    {% endfor %}
+                    </tbody>
+                </table>
             </div>
+            <p scope="col">Comentario Solicitante:</p>
+            <p scope="col">{% if producto.orden.comentario %} {{producto.orden.comentario}} {%else%} No hay comentarios {% endif %}</th>
         </div>
 
         <div class="modal-footer">

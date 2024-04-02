@@ -21,6 +21,7 @@ from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloComprad
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm
 from requisiciones.forms import Articulo_Cancelado_Form
+from requisiciones.filters import RequisFilter
 from tesoreria.forms import Facturas_Form
 from requisiciones.views import get_image_base64
 from django.utils.timezone import make_aware, is_aware
@@ -85,6 +86,9 @@ def requisiciones_autorizadas(request):
         requis = Requis.objects.filter(autorizar=True, colocada=False, complete =True)
     #requis = Requis.objects.filter(autorizar=True, colocada=False)
 
+    myfilter = RequisFilter(request.GET, queryset=requis)
+    requis = myfilter.qs
+
     tag = dof()
 
      #Set up pagination
@@ -93,6 +97,7 @@ def requisiciones_autorizadas(request):
     requis_list = p.get_page(page)
 
     context= {
+        'myfilter': myfilter,
         'requis':requis,
         'tags':tag,
         'requis_list':requis_list,
@@ -155,7 +160,7 @@ def eliminar_articulos(request, pk):
                 f'Producto Eliminado {producto.producto.articulos.producto.producto.nombre}',
                 f'Estimado(a) {producto.req.orden.staff.staff.staff.first_name}:\n\nEstás recibiendo este correo porque el producto: {producto.producto.articulos.producto.producto.nombre} de la solicitud: {producto.req.orden.folio} ha sido eliminado, por la siguiente razón: {producto.comentario_cancelacion} \n\n Atte.{perfil.staff.staff.first_name}{perfil.staff.staff.last_name}  \nGRUPO VORDCAB S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDCAB',
                 settings.DEFAULT_FROM_EMAIL,
-                ['ulises_huesc@hotmail.com',],producto.req.orden.staff.staff.staff.email,
+                ['ulises_huesc@hotmail.com',producto.req.orden.staff.staff.staff.email],
                 )
             email.send()
             messages.success(request,f' Has eliminado el {producto.producto.articulos.producto} correctamente')
@@ -1654,6 +1659,7 @@ def generar_pdf(compra):
     c.drawString(30,caja_proveedor-100,'Fecha:')
     c.drawString(30,caja_proveedor-120,'Proveedor Calif:')
     c.drawString(30,caja_proveedor-140,'Tiempo de Entrega:')
+    c.drawString(30,caja_proveedor-160,'A.F.:')
 
     c.setFont('Helvetica-Bold',12)
     c.drawString(500,caja_proveedor-20,'FOLIO:')
@@ -1686,9 +1692,14 @@ def generar_pdf(compra):
     if compra.dias_de_entrega:
         c.drawString(110,caja_proveedor-140, str(compra.dias_de_entrega)+' '+'días hábiles')
 
+    if compra.req.orden.activo:
+        c.drawString(60,caja_proveedor-160, compra.req.orden.activo.eco_unidad + ' '+ compra.req.orden.activo.descripcion)
+    else:
+        c.drawString(60,caja_proveedor-160, 'NA')
 
 
     c.drawString(inicio_central + 90,caja_proveedor-35, str(compra.req.folio))
+    c.drawString(inicio_central + 90,caja_proveedor-55, 'Transferencia Electrónica')
     c.drawString(inicio_central + 90,caja_proveedor-95, 'tesoreria@grupovordcab.com') #Esta parte hay que configurarla para que cambie de acuerdo al distrito
     if compra.proveedor.nombre.razon_social == 'COLABORADOR':
         c.drawString(inicio_central + 90,caja_proveedor-115, compra.deposito_comprador.banco.nombre)
@@ -1703,9 +1714,9 @@ def generar_pdf(compra):
 
 
     if compra.cond_de_pago.nombre == "CREDITO":
-        c.drawString(inicio_central + 90,caja_proveedor-55, compra.cond_de_pago.nombre + '  ' + str(compra.dias_de_credito) + 'días')
+        c.drawString(inicio_central + 100,caja_proveedor-75, compra.cond_de_pago.nombre + '  ' + str(compra.proveedor.dias_credito) + ' días')
     else:
-        c.drawString(inicio_central + 90,caja_proveedor-55, compra.cond_de_pago.nombre )
+        c.drawString(inicio_central + 100,caja_proveedor-75, compra.cond_de_pago.nombre )
 
 
     data =[]

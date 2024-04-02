@@ -1136,26 +1136,26 @@ def render_pdf_gasto(request, pk):
                 descripciones_str = "No disponible"
 
            
-        try:
-            total_factura_str = emisor.get('total', '0.00')  # Obtén el valor o usa '0.00' como predeterminado
-            total_factura = Decimal(total_factura_str)
-        except (InvalidOperation, ValueError):
-            total_factura = Decimal('0.00')  # Si no es convertible, usa 0.00
+            try:
+                total_factura_str = emisor.get('total', '0.00')  # Obtén el valor o usa '0.00' como predeterminado
+                total_factura = Decimal(total_factura_str)
+            except (InvalidOperation, ValueError):
+                total_factura = Decimal('0.00')  # Si no es convertible, usa 0.00
 
 
-            suma_total += total_factura  # Suma al total acumulado
-            data_facturas.append([
-                descripciones_str, 
-                emisor['nombre'],
-                f"${total_factura:,.2f}",  # Formatea el total como una cadena de texto
-            ])
+                suma_total += total_factura  # Suma al total acumulado
+                data_facturas.append([
+                    descripciones_str, 
+                    emisor['nombre'],
+                    f"${total_factura:,.2f}",  # Formatea el total como una cadena de texto
+                ])
 
-    for i, row in enumerate(data_facturas):
-        for j, item in enumerate(row):
-            if i!=0 and j == 0:
-                 # Proporcionar un valor predeterminado si 'item' es None
-                text = '' if item is None else str(item)
-                data_facturas[i][j] = Paragraph(text, custom_style)
+        for i, row in enumerate(data_facturas):
+            for j, item in enumerate(row):
+                if i!=0 and j == 0:
+                    # Proporcionar un valor predeterminado si 'item' es None
+                    text = '' if item is None else str(item)
+                    data_facturas[i][j] = Paragraph(text, custom_style)
     # Crear un marco (frame) en la posición específica
     
     # 2. Crear la tabla de facturas

@@ -62,7 +62,7 @@
                 </div>
             </div>
             {% endif %}
-            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "Admin" or usuario.tipo.almacenista == True %}
+            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "Admin" or usuario.tipo.almacenista == True or usuario.tipo.nombre == "ACTIVOS_SISTEMAS" %}
             <div class="card my-2 mx-1" style="width: 15rem;">
                 <div class="card-body">
                     <h5 class="card-title">Agregar Productos:</h5>

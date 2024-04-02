@@ -113,10 +113,11 @@ def articulos_entrada(request, pk):
     compra = Compra.objects.get(id = pk)
     if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
         articulos = ArticuloComprado.objects.filter(
+            Q(producto__producto__articulos__producto__producto__servicio = False) | 
+            (Q(producto__producto__articulos__producto__producto__servicio = True) & Q(oc__req__orden__staff=usuario)),
             oc=pk, 
             entrada_completa = False,  
-            seleccionado = False, 
-            producto__producto__articulos__producto__producto__servicio = False)
+            seleccionado = False)
     else:
         articulos = ArticuloComprado.objects.filter(
             oc=pk, 
@@ -247,7 +248,7 @@ def articulos_entrada(request, pk):
 
 def evalua_entrada_completa(articulos_comprados, num_art_comprados, compra):
     for articulo in articulos_comprados:
-        if articulo.cantidad_pendiente == 0:  #Si la cantidad de la compra es igual a la cantida entonces la entrada está completamente entregada
+        if articulo.cantidad_pendiente == 0:  #Si la cantidad de la compra es igual a la cantidad entonces la entrada está completamente entregada
             articulo.entrada_completa = True
         articulo.seleccionado = False
         articulo.save()
@@ -272,8 +273,8 @@ def update_entrada(request):
         entrada = entrada, 
         entrada__completo = True
     ).aggregate(
-        suma_cantidad = Sum('cantidad'),
-        suma_cantidad_por_surtir = Sum('cantidad_por_surtir')
+        suma_cantidad = Sum('cantidad'),                       #Suma de todos los artículos que han entrado
+        suma_cantidad_por_surtir = Sum('cantidad_por_surtir') #Suma de todos los articulos que no se han despachado y que ya se les dio entrada
     )
 
     suma_cantidad = aggregation['suma_cantidad'] or 0
@@ -299,7 +300,7 @@ def update_entrada(request):
     if action == "add":
         #if not entrada_item.cantidad:
         entrada_item.cantidad = cantidad
-        entrada_item.cantidad_por_surtir = cantidad
+        #entrada_item.cantidad_por_surtir = cantidad
         entrada_item.referencia = referencia
         entrada_item.save()
         total_entradas_pendientes = pendientes_surtir + entrada_item.cantidad
@@ -310,7 +311,7 @@ def update_entrada(request):
         else:
             entrada_item.cantidad_por_surtir = cantidad
             producto_comprado.cantidad_pendiente = producto_comprado.cantidad - total_entradas
-            
+            producto_comprado.save()
             
             if producto_inv.producto.servicio == False:
                 if cantidad_inventario == 0:
@@ -334,8 +335,8 @@ def update_entrada(request):
                     producto_inv.save()
                 producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para resurtimiento'
             else:
-                producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad
-                producto_inv.cantidad_apartada = producto_inv.apartada_entradas
+                producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #Todo lo que está pendiente en una entrada más la entrada misma
+                producto_inv.cantidad_apartada = producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
                 producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad                       #Al producto disponible para surtir se le suma lo que entra
                 producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
                 producto_inv.save()

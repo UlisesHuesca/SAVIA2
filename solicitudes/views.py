@@ -101,7 +101,7 @@ def product_selection_resurtimiento(request):
     usuario = Profile.objects.get(id = pk_perfil)
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
-    productos = Inventario.objects.filter(cantidad__lt =F('minimo'))
+    productos = Inventario.objects.filter(cantidad__lt =F('minimo'), distrito = usuario.distritos)
     cartItems = order.get_cart_quantity
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
@@ -255,7 +255,7 @@ def checkout(request):
         supervisores = usuarios.filter(id = pk)
         order.supervisor = usuario
     else:
-        supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True)
+        supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True)
 
     if usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
         superintendentes = usuarios.filter(staff=usuario.staff)

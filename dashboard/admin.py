@@ -18,6 +18,7 @@ class InventarioAdmin(SimpleHistoryAdmin):
     list_filter = ('producto',)
     history_list_display = ('status')
     search_fields = ['producto__nombre']
+    raw_id_fields = ('producto',) 
 
 class ActivoAdmin(admin.ModelAdmin):
     list_display = ('id','eco_unidad','tipo_activo','serie','cuenta_contable','factura_interna')

@@ -78,7 +78,7 @@
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'dashboard-staff' %}">Usuarios</a>
                                 </div>
-                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.nombre == "Superintendente"  %}
+                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "ACTIVOS_SISTEMAS"  %}
                                 <div>
                             {% else %}
                                 <div class="d-none">
@@ -124,7 +124,7 @@
                         <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{% url 'solicitud-inventario' %}">Inventario</a>
                             <!--<a class="dropdown-item" href="{% url 'devolucion_a_proveedor' %}">Devolución</a>-->
-                            {% if usuario.tipo.almacen == False %}
+                            {% if usuario.tipo.almacenista == False %}
                             <div class="d-none">
                             {% else %}
                             <div>
@@ -139,6 +139,7 @@
                                 Entrada por gasto
                             </a>
                             <!--<a class="dropdown-item" href="{% url 'solicitud-autorizada-firma' %}">Salidas</a>-->
+
                             <a class="dropdown-item" href="{% url 'product_selection_resurtimiento' %}">Resurtimiento: Seleccionar Productos</a>
                             <a class="dropdown-item" href="{% url 'solicitud-autorizada-orden' %}">
                                 Pendientes por requisitar

@@ -1,9 +1,21 @@
 import django_filters
 from dashboard.models import ArticulosparaSurtir
-from requisiciones.models import Salidas, Devolucion
+from requisiciones.models import Salidas, Devolucion, Requis
 from entradas.models import EntradaArticulo
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
+
+class RequisFilter(django_filters.FilterSet):
+    requisicion = CharFilter(field_name='folio', lookup_expr='icontains')
+    solicitud = CharFilter(field_name='orden__folio', lookup_expr='icontains')
+    solicitante = CharFilter(method ='my_custom_filter', label="Search")
+
+    class Meta:
+        model = Requis
+        fields = ['requisicion','solicitud','solicitante',]
+
+    def my_custom_filter(self, queryset, name, value):
+        return queryset.filter(Q(orden__staff__staff__staff__first_name__icontains = value) | Q(orden__staff__staff__staff__last_name__icontains=value))
 
 class ArticulosparaSurtirFilter(django_filters.FilterSet):
     solicitud = CharFilter(field_name='articulos__orden__folio', lookup_expr='icontains')
