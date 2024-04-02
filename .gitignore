@@ -3,7 +3,7 @@ env/
 media/
 facturas/
 xml/
-savia2.sql.gz
+*.sql.gz
 access.log
 errors.log
 errors.log.save

@@ -2,7 +2,7 @@ from django.contrib import admin
 from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Porcentaje_iva
 # Register your models here.
 class Solicitud_Gasto_Admin(admin.ModelAdmin):
-    list_display = ('id','folio','staff','colaborador', 'superintendente','pagada')
+    list_display = ('id','created_at','folio','staff','colaborador', 'superintendente','pagada',)
     raw_id_fields = ('staff','colaborador','superintendente') 
     search_fields = ('colaborador',)
 
@@ -17,9 +17,9 @@ class Entrada_Gasto_Ajuste_Admin(admin.ModelAdmin):
     list_display =('id','gasto','almacenista','completo')
 
 class Factura_Admin(admin.ModelAdmin):
-    list_display = ('id','solicitud_gasto',)   
+    list_display = ('id','solicitud_gasto', 'fecha_subida', 'archivo_pdf', 'archivo_xml')   
     raw_id_fields = ('solicitud_gasto',) 
-    search_fields = ('solicitud_gasto__id',)
+    search_fields = ('solicitud_gasto__id', 'solicitud_gasto__folio')
 
 
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)

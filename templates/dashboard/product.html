@@ -128,7 +128,7 @@
                     <td>{{item.unidad}}</td>
                     <td>{{item.iva}}</td>
                     <td>{{item.servicio}}</td>
-                    {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" %}
+                    {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or  usuario.tipo.nombre == "ACTIVOS_SISTEMAS" %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-product-update' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
