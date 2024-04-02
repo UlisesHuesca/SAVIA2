@@ -146,11 +146,13 @@
                     <td>${{gasto.get_total_solicitud|floatformat:2}}</td>
                     <td>${{gasto.monto_pagado|floatformat:2}}</td>
                     <td>
+                        {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" %}
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'pago-gasto' gasto.id %}">Pago</a>
                             </li>
                         </ul>
+                        {% endif %}
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">

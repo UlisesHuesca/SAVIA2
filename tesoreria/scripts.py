@@ -102,6 +102,115 @@ def actualizar_gastos_factura_con_pdf():
 
     print("Las actualizaciones se han completado.")
 
+def actualizar_gastos_factura_con_xml():
+    conn_savia1 = mysql.connector.connect(
+        host='localhost', 
+        user='root', 
+        password='*$HbAq*/4528*',  # Cambia [TU_PASSWORD] por la contraseña real
+        database='SAVIA1'
+    )
+    cursor_savia1 = conn_savia1.cursor()
+
+    conn_savia2_default = mysql.connector.connect(
+        host='localhost', 
+        user='root', 
+        password='*$HbAq*/4528*',  # Cambia [TU_PASSWORD] por la contraseña real
+        database='savia2_default'
+    )
+    cursor_savia2_default = conn_savia2_default.cursor()
+
+    consulta_facturas = """
+    SELECT f.IDGASTO, f.indice, f.ruta_xml  # Asumiendo que existe ruta_xml en la tabla
+    FROM facturasgastostb f
+    JOIN gastostb g ON g.IDGASTO = f.IDGASTO
+    WHERE f.ruta_xml IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 3
+    ORDER BY f.IDGASTO, f.indice;
+    """
+    cursor_savia1.execute(consulta_facturas)
+    facturas = cursor_savia1.fetchall()
+
+    idgasto_actual = None
+
+    for idgasto, indice, ruta_xml in facturas:
+        if idgasto_actual != idgasto:
+            idgasto_actual = idgasto
+            cursor_savia2_default.execute("""
+                SELECT id FROM gastos_factura WHERE solicitud_gasto_id = %s ORDER BY id;
+            """, (idgasto + 2000,))
+            gastos_ids = cursor_savia2_default.fetchall()
+            print(gastos_ids)
+
+        if indice - 1 < len(gastos_ids):
+            gasto_id = gastos_ids[indice - 1][0]  # Obtiene el id basado en el índice
+            #if gasto_id not in (19095, 19096):  # Excluir los ids no deseados
+            cursor_savia2_default.execute("""
+            UPDATE gastos_factura SET archivo_xml = %s WHERE id = %s;
+            """, (ruta_xml, gasto_id))
+            print(ruta_xml, gasto_id)
+
+    conn_savia2_default.commit()
+
+    cursor_savia1.close()
+    conn_savia1.close()
+    cursor_savia2_default.close()
+    conn_savia2_default.close()
+
+    print("Las actualizaciones de XML se han completado.")
+
+# No olvides cambiar '[TU_PASSWORD]' por tu contraseña real antes de ejecutar el script.
+
+
+def actualizar_gastos_factura_con_xml_general():
+    conn_savia1 = mysql.connector.connect(
+        host='localhost', 
+        user='root', 
+        password='*$HbAq*/4528*',  # Asegúrate de usar la contraseña correcta
+        database='SAVIA1'
+    )
+    cursor_savia1 = conn_savia1.cursor()
+
+    conn_savia2_default = mysql.connector.connect(
+        host='localhost', 
+        user='root', 
+        password='*$HbAq*/4528*',  # Asegúrate de usar la contraseña correcta
+        database='savia2_default'
+    )
+    cursor_savia2_default = conn_savia2_default.cursor()
+
+    consulta_facturas = """
+    SELECT f.IDGASTO, f.indice, f.ruta_xml
+    FROM facturasgastostb f
+    JOIN gastostb g ON g.IDGASTO = f.IDGASTO
+    WHERE f.ruta_xml IS NOT NULL AND f.IDGASTO <= 16349
+    ORDER BY f.IDGASTO, f.indice;
+    """
+    cursor_savia1.execute(consulta_facturas)
+    facturas = cursor_savia1.fetchall()
+
+    for idgasto, indice, ruta_xml in facturas:
+        # Obtén el gasto_id basado en el IDGASTO y el índice proporcionado
+        cursor_savia2_default.execute("""
+            SELECT id FROM gastos_factura WHERE solicitud_gasto_id = %s ORDER BY id LIMIT %s,1;
+        """, (idgasto, indice - 1))  # Ajusta el OFFSET según el índice
+        gasto_factura = cursor_savia2_default.fetchone()
+
+        if gasto_factura:
+            gasto_id = gasto_factura[0]
+            cursor_savia2_default.execute("""
+                UPDATE gastos_factura SET archivo_xml = %s WHERE id = %s;
+            """, (ruta_xml, gasto_id))
+            print(ruta_xml, gasto_id)
+
+    conn_savia2_default.commit()
+
+    cursor_savia1.close()
+    conn_savia1.close()
+    cursor_savia2_default.close()
+    conn_savia2_default.close()
+
+    print("Las actualizaciones de XML se han completado.")
+
+
 
 
 def migrate_blob_to_files():

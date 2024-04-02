@@ -5,12 +5,13 @@ from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Punto
 
 class Solicitud_ViaticoAdmin(admin.ModelAdmin):
     list_display = ('id','folio','staff','lugar_comision','lugar_partida','autorizar','autorizar2')
-    search_fields = ('id',)
+    search_fields = ('id','folio')
+    raw_id_fields =('staff','colaborador','proyecto','subproyecto','superintendente','gerente')
 
 class Concepto_ViaticoAdmin(admin.ModelAdmin):
     list_display = ('id','viatico','producto','precio','cantidad','comentario')
     search_fields = ('id',)
-    raw_id_fields =('producto',)
+    raw_id_fields =('producto','viatico',)
 
 
 class Viatico_Factura_Admin(admin.ModelAdmin):

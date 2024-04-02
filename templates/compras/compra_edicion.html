@@ -344,7 +344,7 @@
             <thead>
                 <tr>
                     <th scope="col">Subtotal</th>
-                    <td scope="col" id="subtotal">${{subtotal|floatformat:2}}</td>
+                    <td scope="col" id="subtotal" valor="{{subtotal|unlocalize}}">${{subtotal|floatformat:2}}</td>
                 </tr>
                 </thead>
             <tbody>
@@ -732,7 +732,7 @@ function f_checkflete(element){
 		txt_flete1.classList.add('d-none')
         valor_flete.classList.add('d-none')
         flete = parseFloat(v_flete.innerHTML.slice(1).replace(/,/g, ''))
-        console.log(flete)
+        //console.log(flete)
         total_val -= flete;
         total_element.innerHTML = '$' + total_val.toFixed(2);
         txt_flete1.value = 0
@@ -741,37 +741,20 @@ function f_checkflete(element){
 	}
 };
 
-document.getElementById("id_costo_fletes").addEventListener("change", function(element) {
+document.getElementById("id_costo_fletes").addEventListener("change", flete_v);
+
+function flete_v() {
+    var costo_fletes= document.getElementById("id_costo_fletes")
     let flete_row = document.getElementById('flete');
     let flete_valor = document.getElementById('valor_flete');
-    let total_element = document.getElementById('total');
-    let total_val = parseFloat(total_element.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
     
-
-    // Verificar si el valor de flete ha cambiado
-    if (element.target.value) {
-        let flete = parseFloat(element.target.value);
-        
-        // Hacer visible la fila del flete
-        flete_row.setAttribute('class','');
-
-        // Asignar valor de flete
-        flete_valor.innerHTML = '$' + flete.toFixed(2);
-
-        // Suma el valor del flete al total y actualiza el elemento total
-        total_val += flete;
-        total_element.innerHTML = '$' + total_val.toFixed(2);
-    } else {
-        let flete = parseFloat(flete_valor.innerHTML.slice(1)); // Quita el signo de dolar y convierte a float
-
-        // Si el valor del flete es 0, puedes volver a ocultar la fila y restar el valor de flete del total.
-        flete_row.setAttribute('class','d-none');
-
-        // Resta el valor del flete del total y actualiza el elemento total
-        total_val -= flete;
-        total_element.innerHTML = '$' + total_val.toFixed(2);
-    }
-});
+    let flete = parseFloat(flete_valor.innerHTML.slice(1).replace(/,/g, '')); // Quita el signo de dolar y convierte a float
+    console.log(flete)
+    
+    flete_row.classList.remove('d-none');
+    flete_valor.innerHTML = '$' + costo_fletes.value
+    flete_valor.setAttribute('valor',costo_fletes.value)
+};
 
 var checkimpuesto = document.getElementById("SwitchImpuesto")
 //This is the part off code that when impuesto swicth button change
@@ -943,6 +926,65 @@ document.getElementById("id_moneda").addEventListener("change", function(element
         impuestos_mod.selectedIndex = 0;
         anticipo_mod.selectedIndex = 0;
     }
+});
+
+
+function calcular_total(){
+    var total_element = document.getElementById('total');
+    var subtotal_element = document.getElementById('subtotal');
+    var iva_element = document.getElementById('iva');
+    var impuesto_element = document.getElementById('valor_impuesto');
+    var flete_element = document.getElementById('valor_flete');
+    var retencion_element = document.getElementById('valor_retencion');
+    valor_subtotal = subtotal_element.getAttribute('valor');
+    console.log(valor_subtotal)
+    valor_iva = iva_element.getAttribute('valor');
+    valor_impuesto = impuesto_element.getAttribute('valor');
+    valor_flete = flete_element.getAttribute('valor');
+    valor_retencion = retencion_element.getAttribute('valor');
+    if (Number(valor_impuesto)) {
+        var impuesto = Number(valor_impuesto);
+    } else {
+        var impuesto = 0;
+    };
+    if (Number(valor_flete)){
+        var flete = Number(valor_flete);
+    } else {
+        var flete = 0;
+    }
+    if (Number(valor_retencion)){
+        var retencion = Number(valor_retencion);
+    } else {
+        var retencion = 0
+    }
+    //console.log('retencion:',retencion);
+    //console.log('flete', flete);
+    //console.log('impuestos',impuesto);
+    total = Number(valor_subtotal) + Number(valor_iva) + impuesto + flete - retencion;
+    //console.log('total',total);
+    total_element.innerHTML = '$' + total.toFixed(2);
+};
+
+document.getElementById("id_formulario").addEventListener('change', function() {
+    var oc = document.getElementById("oc").getAttribute("target");
+    var datosGuardados = JSON.parse(localStorage.getItem("id_formulario_" + oc)) || {};
+    var formCompra = new FormData(this);
+    
+    formCompra.forEach(function(value, key) {
+        if (key !== 'csrfmiddlewaretoken') {  // Omitir csrfmiddlewaretoken
+            datosGuardados[key] = value;
+        }
+    });
+
+    datosGuardados["oc"] = oc;
+    datosGuardados["ocInner"] = document.getElementById("oc").innerHTML;
+    datosGuardados["SwitchDof"] = document.getElementById("SwitchDof").checked;
+    datosGuardados["SwitchReferencia"] = document.getElementById("SwitchReferencia").checked;
+    datosGuardados["SwitchImpuesto"] = document.getElementById("SwitchImpuesto").checked;
+    datosGuardados["SwitchFlete"] = document.getElementById("SwitchFlete").checked;
+    localStorage.setItem("id_formulario_" + oc, JSON.stringify(datosGuardados));
+    console.log("Formulario guardado para OC:",oc, datosGuardados)
+    calcular_total();
 });
 
 var datosProveedor = {{ proveedor_para_select2 | safe}}

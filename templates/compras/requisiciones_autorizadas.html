@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load tt_extras %}
+{% load widget_tweaks %}
 <html>
 <head>
 {% block title %}Requisiciones autorizadas{% endblock %}
@@ -94,6 +95,56 @@
             </div>
         </div>
     </div>
+
+    <div class="col-7" >
+        <div class="card text-center">
+            <div class="card-header">
+                <h5 class="card-title">Filtros</h5>
+            </div>
+            <div class="card-body">
+                {% csrf_token %}
+                <form method="GET">
+                    <div class="row">
+                        <div class="col-lg-3 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.requisicion|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
+                                    <label style="color: #121212;" for="id_producto">Requisición</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder= Solicitud"}}
+                                    <label style="color: #121212;" for="id_producto">Solicitud</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-3 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.solicitante|add_class:"form-control"|append_attr:"placeholder= Solicitante"}}
+                                    <label style="color: #121212;" for="id_producto">Solicitante</label>
+                                </div>
+                            </div>
+                        </div>
+                     
+                        <div class="col-1">
+                            <button  id="btnBuscar" class="btn btn-outline-success btn-block mt-1 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            <div class="card-footer text-muted">
+                    <h6>&nbsp;</h6>
+            </div>
+        </div>
+    </div>
+
 </div>
 
 <div class = "row mt-2">

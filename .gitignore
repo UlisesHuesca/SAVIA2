@@ -10,3 +10,4 @@ errors.log.save
 debug.log
 .env
 *.sql
+*.sql.gz
