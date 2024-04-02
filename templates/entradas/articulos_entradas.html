@@ -247,8 +247,9 @@ var select = document.getElementById('producto');
 var current_option = select.options[select.selectedIndex];
 let solicitado =  current_option.getAttribute('cantidad');
 var boton =document.getElementById('update-entrada');
-
-if (cantidad.value <= solicitado){
+console.log(cantidad.value)
+console.log(solicitado)
+if (Number(cantidad.value) <= Number(solicitado)){
     boton.setAttribute('class','btn btn-success')
 } else if (cantidad.value == 0){
     boton.setAttribute('class','btn btn-success d-none')

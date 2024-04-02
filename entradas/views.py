@@ -270,7 +270,7 @@ def update_entrada(request):
     entrada = Entrada.objects.get(id = pk, completo = False)
     aggregation = EntradaArticulo.objects.filter(
         articulo_comprado = producto_comprado,
-        entrada = entrada, 
+        #entrada = entrada, 
         entrada__completo = True
     ).aggregate(
         suma_cantidad = Sum('cantidad'),                       #Suma de todos los artículos que han entrado
@@ -280,7 +280,7 @@ def update_entrada(request):
     suma_cantidad = aggregation['suma_cantidad'] or 0
     pendientes_surtir = aggregation['suma_cantidad_por_surtir'] or 0
     #print(suma_cantidad)
-    #print(pendientes_surtir)
+    print('suma_cantidad:',suma_cantidad)
     entrada_item, created = EntradaArticulo.objects.get_or_create(entrada = entrada, articulo_comprado = producto_comprado)
     producto_inv = Inventario.objects.get(producto = producto_comprado.producto.producto.articulos.producto.producto, distrito = producto_comprado.oc.req.orden.distrito)
 
@@ -305,12 +305,15 @@ def update_entrada(request):
         entrada_item.save()
         total_entradas_pendientes = pendientes_surtir + entrada_item.cantidad
         total_entradas = suma_cantidad + entrada_item.cantidad
-
+        print('total entradas:',total_entradas)
         if total_entradas > producto_comprado.cantidad: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
             messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {suma_cantidad} > {cantidad}')
         else:
             entrada_item.cantidad_por_surtir = cantidad
+            print('cantidad pendiente:',producto_comprado.cantidad_pendiente)
+            #print(total_entradas)
             producto_comprado.cantidad_pendiente = producto_comprado.cantidad - total_entradas
+            print('cantidad pendiente2:',producto_comprado.cantidad_pendiente)
             producto_comprado.save()
             
             if producto_inv.producto.servicio == False:
