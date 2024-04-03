@@ -277,31 +277,17 @@ def solicitudes_gasto(request):
     articulos_gasto_prefetch = Prefetch('articulo_gasto_set', queryset=Articulo_Gasto.objects.filter(completo=True, producto__isnull=False, proyecto__isnull=False), to_attr='articulos_filtrados')
     
     if perfil.tipo.nombre == "Admin":  
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True,  distrito = perfil.distritos).prefetch_related(articulos_gasto_prefetch).order_by('-created_at') #Temporalmente le metí el filtro de distrito
+        solicitudes = Solicitud_Gasto.objects.filter(complete=True,  distrito = perfil.distritos).order_by('-created_at') #Temporalmente le metí el filtro de distrito
     elif perfil.tipo.nombre == "Gerente" or perfil.tipo.superintendente == True:
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos).prefetch_related(articulos_gasto_prefetch).order_by('-folio')
+        solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos).order_by('-folio')
     else:
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).prefetch_related(articulos_gasto_prefetch).order_by('-folio')
+        solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
 
     
 
     myfilter = Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
     solicitudes = myfilter.qs
 
-    for solicitud in solicitudes:
-        articulos_gasto = Articulo_Gasto.objects.filter(gasto=solicitud)
-
-        proyectos = set()
-        subproyectos = set()
-
-        for articulo in articulos_gasto:
-            if articulo.proyecto:
-                proyectos.add(str(articulo.proyecto.nombre))
-            if articulo.subproyecto:
-                subproyectos.add(str(articulo.subproyecto.nombre))
-
-        solicitud.proyectos = ', '.join(proyectos)
-        solicitud.subproyectos = ', '.join(subproyectos)
     #Set up pagination
     p = Paginator(solicitudes, 10)
     page = request.GET.get('page')
@@ -711,10 +697,18 @@ def facturas_gasto(request, pk):
 
 @login_required(login_url='user-login')
 def matriz_gasto_entrada(request):
-    #articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
+    pk_usuario = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_usuario)
 
     #articulos_gasto = Articulo_Gasto.objects.all()
-    articulos_gasto = Articulo_Gasto.objects.filter(Q(producto__nombre = "MATERIALES")|Q(producto__nombre = "HERRAMIENTA"), completo = True, validacion = False, gasto__autorizar = None, gasto__tipo__tipo='REEMBOLSO')
+    articulos_gasto = Articulo_Gasto.objects.filter(
+        Q(producto__nombre = "MATERIALES")|Q(producto__nombre = "HERRAMIENTA"), 
+        completo = True, 
+        validacion = False, 
+        gasto__autorizar = None, 
+        gasto__tipo__tipo='REEMBOLSO',
+        gasto__distrito = usuario.distritos
+        )
 
     context={
         'articulos_gasto':articulos_gasto,

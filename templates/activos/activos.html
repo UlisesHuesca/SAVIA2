@@ -134,7 +134,7 @@
             <tbody>
                 {% for item in activos %}
                 <tr>
-                    <th scope="row">{{item.nombre}}</th>
+                    <th scope="row">{{item.eco_unidad}}</th>
                     <td>{{item.responsable.staff.staff.first_name}} {{item.responsable.staff.staff.last_name}}</td>
                     <td>{{item.tipo_activo}}</td>
                     <td>{% if item.serie %} {{item.serie}} {% endif %}</td>

@@ -46,7 +46,7 @@ class Solicitud_Gasto(models.Model):
 
     @property
     def get_validado(self):
-        productos = self.articulo_gasto_set.all()
+        productos = self.articulos.all()
         productos = productos.filter(producto__nombre="MATERIALES", completo=True, validacion = False, gasto__tipo__tipo = "REEMBOLSO")
         conteo_productos = productos.count()
         if productos == None:
@@ -68,21 +68,21 @@ class Solicitud_Gasto(models.Model):
 
     @property
     def get_subtotal_solicitud(self):
-        productos = self.articulo_gasto_set.all()
+        productos = self.articulos.all()
         productos = productos.filter(completo=True)
         total = sum([producto.get_subtotal for producto in productos])
         return total
 
     @property
     def get_total_impuesto(self):
-        productos = self.articulo_gasto_set.all()
+        productos = self.articulos.all()
         productos = productos.filter(completo=True)
         suma = round(sum([(producto.get_iva + producto.get_otros_impuestos) for producto in productos]),2)
         return suma
 
     @property
     def get_total_solicitud(self):
-        productos = self.articulo_gasto_set.all()
+        productos = self.articulos.all()
         productos = productos.filter(completo=True)
         total = sum([producto.total_parcial for producto in productos])
         return total
@@ -104,7 +104,7 @@ class Articulo_Gasto(models.Model):
     descripcion = models.CharField(max_length=255, null=True)
     otros_impuestos = models.DecimalField(default=0,max_digits=14, decimal_places=4, null=True, blank=True)
     impuestos_retenidos = models.DecimalField(default=0, max_digits=14, decimal_places=4, null=True, blank=True)
-    gasto = models.ForeignKey(Solicitud_Gasto, on_delete = models.CASCADE, null=True)
+    gasto = models.ForeignKey(Solicitud_Gasto, on_delete = models.CASCADE, null=True,  related_name ='articulos')
     cantidad = models.DecimalField(max_digits=10, decimal_places=6, null=True)
     precio_unitario = models.DecimalField(max_digits=14, decimal_places=6, null=True)
     iva = models.ForeignKey(Porcentaje_iva, on_delete = models.CASCADE, null=True, blank=True)

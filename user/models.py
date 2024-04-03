@@ -48,6 +48,7 @@ class Tipo_perfil(models.Model):
     configuracion = models.BooleanField(null=True, default=False)
     almacen = models.BooleanField(null=True, default=False)
     solicitudes = models.BooleanField(null=True, default=False)
+    activos = models.BooleanField(null=True, default = False)
     requisiciones = models.BooleanField(null=True, default=False)
     compras = models.BooleanField(null=True, default=False)
     tesoreria = models.BooleanField(null=True, default=False)

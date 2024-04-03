@@ -10,6 +10,10 @@ class Activo_Form(forms.ModelForm):
         model = Activo
         fields = ['activo','tipo_activo','descripcion','eco_unidad','serie','marca','modelo','comentario']
 
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['responsable'].queryset = Profile.objects.none()
+
 class Edit_Activo_Form(forms.ModelForm):
     class Meta:
         model = Activo

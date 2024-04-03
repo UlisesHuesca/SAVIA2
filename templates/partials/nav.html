@@ -92,7 +92,7 @@
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
                                 </div>
-                            {% if usuario.tipo.nombre == "ACTIVOS" or usuario.tipo.nombre == "Admin"%}
+                            {% if usuario.tipo.activos == True or usuario.tipo.nombre == "Admin"%}
                                 <div>
                             {% else %}
                                 <div class="d-none">

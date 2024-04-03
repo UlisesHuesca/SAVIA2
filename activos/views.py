@@ -17,8 +17,9 @@ import json
 # Create your views here.
 @login_required(login_url='user-login')
 def activos(request):
-    
-    activos = Activo.objects.filter(completo=True)
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+    activos = Activo.objects.filter(completo=True, responsable__distritos = usuario.distritos)
     myfilter = ActivoFilter(request.GET, queryset=activos)
     activos = myfilter.qs 
 
@@ -86,7 +87,8 @@ def add_activo(request):
 @login_required(login_url='user-login')
 def add_activo2(request, pk):
     personal = Profile.objects.all()
-    perfil = personal.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id') 
+    perfil = Profile.objects.get(id = pk_perfil)
     producto_salida = Salidas.objects.get(id=pk)
     perfil_salida = producto_salida.vale_salida.material_recibido_por
     inventarios = Inventario.objects.all()
@@ -200,15 +202,23 @@ def add_activo2(request, pk):
 
 @login_required(login_url='user-login')
 def edit_activo(request, pk):
-    perfil = Profile.objects.get(staff__id=request.user.id)
-    producto = Salidas.objects.get(id=pk)
-    activo = Activo.objects.filter(activo = producto.producto.articulos.producto)
-    personal = Profile.objects.all()
+    pk_perfil = request.session.get('selected_profile_id') 
+    perfil = Profile.objects.get(id = pk_perfil)
+    #producto = Salidas.objects.get(id=pk)
+    activo = Activo.objects.get(id=pk)
+    responsables = Profile.objects.filter(distritos = perfil.distritos)
     marcas = Marca.objects.all() 
     
-    form = Edit_Activo_Form()
+    form = Edit_Activo_Form(instance = activo)
 
-    
+    responsables_para_select2 = [
+        {
+            'id': super.id, 
+            'text': str(super.staff.staff.first_name) + (' ') + str(super.staff.staff.last_name)
+        } for super in responsables
+    ]
+
+
     if request.method =='POST':
         form = Edit_Activo_Form(request.POST, instance = activo)
         if form.is_valid():
@@ -224,8 +234,9 @@ def edit_activo(request, pk):
 
 
     context = {
+        'responsables_para_select2':responsables_para_select2,
         'activo':activo,
-        'personal':personal,
+        #'personal':personal,
         'marcas':marcas,
         'form':form,
     }

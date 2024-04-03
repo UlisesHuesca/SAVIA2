@@ -124,12 +124,18 @@
                 <tr>
                     <th>{{gasto.folio}}</th>
                     <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
-                    {% if gasto.autorizar == True %}
-                    <td>Autorizado|{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}</td>
-                    {% elif gasto.autorizar == False %}
-                    <td style="color:#980F0F">No autorizado|{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}</td>
+                    {% if gasto.get_validado %}
+                    <td>{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}
+                        {% if gasto.autorizar %} 
+                        <span class="badge bg-primary">Autorizado</span> 
+                        {% elif gasto.autorizar == False %} 
+                        <span class="badge bg-danger">Cancelado</span>
+                        {% else %} 
+                        <span class="badge bg-warning">No Autorizado Aún</span> 
+                        {% endif %}
+                    </td>
                     {% else %}
-                    <td>Pendiente Autorización|{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}</td>
+                    <td><span class="badge bg-warning">Llevar Material a Almacén</span></td>
                     {% endif %}
                     {% if gasto.colaborador %}
                     <td class="d-none d-lg-table-cell">{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
@@ -137,13 +143,15 @@
                     <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
                     {% endif %}
                     <td>${{gasto.get_total_solicitud}}</td>
-                    {% if gasto.autorizar2 == True %}
-                    <td>{{gasto.approbado_fecha2}}</td>
-                    {% elif gasto.autorizar2 == False %}
-                    <td>No autorizado</td>
-                    {% else %}
-                    <td>Pendiente Autorización</td>
-                    {% endif %}
+                    <td>Gerente 
+                        {% if gasto.autorizar2 %} 
+                        <span class="badge bg-primary">Autorizado</span> 
+                        {% elif gasto.autorizar2 == False %} 
+                        <span class="badge bg-danger">Cancelado</span>
+                        {% else %} 
+                        <span class="badge bg-warning">No Autorizado Aún</span> 
+                        {% endif %} 
+                    </td> 
                     <td>
                         <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-gastos' gasto.id %}">
                             Conceptos

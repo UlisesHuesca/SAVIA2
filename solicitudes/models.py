@@ -37,7 +37,7 @@ class Proyecto(models.Model):
     created_at = models.DateField(auto_now_add=True)
     updated_at = models.DateField(auto_now=True)
     complete = models.BooleanField(default=False)
-    cuenta_contable = models.ForeignKey(Cuenta_Contable, on_delete=models.CASCADE, null=True)
+    cuenta_contable = models.ForeignKey(Cuenta_Contable, on_delete=models.CASCADE, null=True, blank=True)
     tipo = models.ForeignKey(Tipo_Proyecto, on_delete=models.CASCADE, null=True)
 
     class Meta:
