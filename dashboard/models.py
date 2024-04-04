@@ -94,7 +94,9 @@ class Marca(models.Model):
     nombre = models.CharField(max_length=20, null=True, unique=True)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True, blank=True)
 
-   
+    def __str__(self):
+        return f'{self.id}|{self.nombre}'
+
 
 
 
@@ -188,6 +190,11 @@ class Tipo_Activo(models.Model):
     def __str__(self):
         return f'{self.nombre}'
 
+class Estatus_Activo(models.Model):
+    nombre = models.CharField(max_length= 30, null=True)
+
+    def __str__(self):
+        return f'{self.nombre}'
 
 class Activo(models.Model):
     nombre = models.CharField(max_length= 20, null =True)
@@ -202,14 +209,16 @@ class Activo(models.Model):
     cuenta_contable = models.CharField(max_length=25, null=True)
     factura_interna = models.CharField(max_length=15, null=True)
     descripcion = models.CharField(max_length=100, null=True)
-    marca = models.ForeignKey(Marca, on_delete = models.CASCADE, null=True)
+    marca = models.ForeignKey(Marca, on_delete = models.CASCADE, null=True, blank=True)
     modelo = models.CharField(max_length=30, null=True, blank=True)
     codigo = models.CharField(max_length=10, null=True)
     comentario = models.CharField(max_length=100, null=True)
-    estatus = models.BooleanField(default = True)
+    estatus = models.ForeignKey(Estatus_Activo, on_delete = models.CASCADE, default=1)
     mantenimiento = models.BooleanField(default = False)
     completo = models.BooleanField(default=False)
-   
+    modified_by = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='modified_by')
+    modified_at = models.DateField(null=True)
+    history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
     def __str__(self):
         return f'{self.eco_unidad}'

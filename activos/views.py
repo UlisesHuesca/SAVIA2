@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from dashboard.models import Inventario, Profile, Marca
 from django.core import serializers
+from django.db.models import Value, F, Q
+from django.db.models.functions import Concat
 from dashboard.models import Activo
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm
@@ -11,8 +13,12 @@ from django.http import JsonResponse, HttpResponse, FileResponse
 #Todo para construir el código QR
 import qrcode
 from io import BytesIO
+import datetime as dt
+from datetime import date, datetime, timedelta
 import json
-
+#Excel
+import xlsxwriter
+from xlsxwriter.utility import xl_col_to_name
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -22,6 +28,9 @@ def activos(request):
     activos = Activo.objects.filter(completo=True, responsable__distritos = usuario.distritos)
     myfilter = ActivoFilter(request.GET, queryset=activos)
     activos = myfilter.qs 
+
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        return convert_activos_to_xls(activos)
 
     context = {
         'activos':activos,
@@ -203,38 +212,72 @@ def add_activo2(request, pk):
 @login_required(login_url='user-login')
 def edit_activo(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
-    perfil = Profile.objects.get(id = pk_perfil)
+    empleados = Profile.objects.all()
+    perfil = empleados.get(id = pk_perfil)
     #producto = Salidas.objects.get(id=pk)
     activo = Activo.objects.get(id=pk)
-    responsables = Profile.objects.filter(distritos = perfil.distritos)
+    responsable = empleados.get(id=activo.responsable.id )
+    responsables = empleados.filter(distritos = perfil.distritos, st_activo = True)
     marcas = Marca.objects.all() 
-    
+    if activo.marca:
+        marca_p = marcas.get(id = activo.marca.id)
+    else:
+        marca_p = None
+
+
     form = Edit_Activo_Form(instance = activo)
 
     responsables_para_select2 = [
         {
-            'id': super.id, 
-            'text': str(super.staff.staff.first_name) + (' ') + str(super.staff.staff.last_name)
-        } for super in responsables
+            'id': responsable.id, 
+            'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name)
+        } for responsable in responsables
     ]
 
+    responsable_predeterminado = {
+        'id': activo.responsable.id,
+        'text': f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}"
+    }
+    
+    if marca_p != None:
+        marca_predeterminada = {
+            'id': marca_p.id,
+            'text': marca_p.nombre
+        }
+    else:
+        marca_predeterminada = 'null'
+    
+    marcas_para_select2 = [
+        {
+            'id': marca.id, 
+            'text': marca.nombre if marca.nombre is not None else "",
+        } for marca in marcas
+    ]
+
+    error_messages = {}    
 
     if request.method =='POST':
         form = Edit_Activo_Form(request.POST, instance = activo)
         if form.is_valid():
             activo = form.save(commit=False)
             activo.completo = True
+            activo.modified_at = date.today()
+            activo.modified_by = perfil
             activo.save()
             messages.success(request,f'Has modificado correctamente el activo {activo.eco_unidad}')
             return redirect('activos')
         else:
-            print(form.errors) 
-            messages.success(request,'No está validando')
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
 
 
 
     context = {
+        'error_messages': error_messages,
+        'responsable_predeterminado':responsable_predeterminado,
         'responsables_para_select2':responsables_para_select2,
+        'marcas_para_select2':marcas_para_select2,
+        'marca_predeterminada':marca_predeterminada,
         'activo':activo,
         #'personal':personal,
         'marcas':marcas,
@@ -242,6 +285,7 @@ def edit_activo(request, pk):
     }
 
     return render(request,'activos/edit_activos.html', context)
+
 
 def asignar_activo(request, pk):
     salida = Salidas.objects.get(id=pk)
@@ -337,3 +381,121 @@ def generate_qr(request, pk):
     response.seek(0)
     
     return FileResponse(response, as_attachment=True, filename='qr.png')
+
+def convert_activos_to_xls(activos):
+      #print('si entra a la función')
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Matriz_Compras")
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    columns = ['Eco', 'Responsable', 'Tipo Activo', 'Serie', 'Marca', 'Modelo', 'Descripción', 'Status']
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.0. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Vordcab S.A. de C.V.', messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+    
+    # Escribir encabezados debajo de los mensajes
+    #worksheet.write(2, columna_max - 1, "Fecha Inicial", head_style)
+    #worksheet.write(3, columna_max - 1, "Fecha Final", head_style)
+    #worksheet.write(4, columna_max - 1, "Total de OC's", head_style)
+    #worksheet.write(5, columna_max - 1, "Requisiciones Aprobadas", head_style)
+    #worksheet.write(6, columna_max - 1, "Requisiciones Atendidas", head_style)
+    #worksheet.write(7, columna_max - 1, "KPI Colocadas/Aprobadas", head_style)
+    #worksheet.write(8, columna_max - 1, "OC Entregadas", head_style)
+    #worksheet.write(9, columna_max - 1, "OC Autorizadas", head_style)
+    #worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
+    
+    #indicador = num_requis_atendidas/num_approved_requis
+    #letra_columna = xl_col_to_name(columna_max)
+    #formula = f"={letra_columna}9/{letra_columna}10"
+    # Escribir datos y fórmulas
+    #worksheet.write(2, columna_max, start_date, date_style)  # Ejemplo de escritura de fecha
+    #worksheet.write(3, columna_max, end_date, date_style)
+    #worksheet.write_formula(4, columna_max, '=COUNTA(A:A)-1', body_style)  # Ejemplo de fórmula
+    #worksheet.write(5, columna_max, num_approved_requis, body_style)
+    #worksheet.write(6, columna_max, num_requis_atendidas, body_style)
+    #worksheet.write(7, columna_max, indicador, percent_style)  # Ajuste del índice de fila y columna para xlsxwriter
+    #worksheet.write_formula(8, columna_max, '=COUNTIF(S:S, "Entregada")', body_style)
+    # Escribir otra fórmula COUNTIF, también con el estilo corporal
+    #worksheet.write_formula(9, columna_max, '=COUNTIF(O:O, "Autorizado")', body_style)
+    #worksheet.write_formula(10, columna_max, formula, percent_style)
+
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    #worksheet.set_column('L:L', 12,  money_style)
+    #worksheet.set_column('M:M', 12, money_style) 
+    
+    row_num = 0
+    for activo in activos:
+        row_num += 1
+        # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
+        #pagos = Pago.objects.filter(oc=compra_list)
+        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+
+        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
+        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
+        #tipo_de_cambio = '' if tipo == 0 else tipo
+        #created_at = compra_list.created_at.replace(tzinfo=None)
+        #approved_at = compra_list.req.approved_at
+
+        row = [
+            activo.eco_unidad,
+            f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}",
+            activo.tipo_activo.nombre,
+            activo.serie,
+            activo.marca,
+            activo.modelo,
+            activo.descripcion,
+            activo.estatus
+        ]
+        
+        for col_num, cell_value in enumerate(row):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Aplica el formato de fecha para las columnas con fechas
+            #if col_num in [7, 8]:  # Asume que estas son tus columnas de fechas
+            #    cell_format = date_style
+        
+            # Aplica el formato de dinero para las columnas con valores monetarios
+            #elif col_num in [11, 12]:  # Asume que estas son tus columnas de dinero
+            #    cell_format = money_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+      
+        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Matriz_compras_{dt.date.today()}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response

@@ -93,7 +93,7 @@
                     </div>
                     <div class="col-2">
                         <!--onclick="regenerar()"-->
-                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
                 <hr>
@@ -107,7 +107,7 @@
                             </button>
                         </li>
                         <li class="nav-item m-1">
-                            <button type="submit" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success">
+                            <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success d-none">
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
@@ -329,8 +329,11 @@ function getCookie(name) {
 }
 
 function mostrarIndicadorCarga() {
+    var btn = document.getElementById('btnExcel')
     document.getElementById('loadingIndicator').style.display = 'block';
+    
     verificarDescargaIniciada();
+    btn.classList.add('d-none')
 }
 
 function verificarDescargaIniciada(){
@@ -344,9 +347,31 @@ function verificarDescargaIniciada(){
             document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
             
             clearInterval(checkDescarga);
+
         }
     }, 1000); // Revisar cada segundo
 }
+
+function guardar_variable(){
+    localStorage.setItem('mostrarBotonExcel', 'true');
+}
+
+function aparecer_excel(){
+    var btn = document.getElementById('btnExcel')
+    btn.classList.remove('d-none')
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var mostrarBotonExcel = localStorage.getItem('mostrarBotonExcel');
+    if (mostrarBotonExcel === 'true') {
+        var btn = document.getElementById('btnExcel');
+        btn.classList.remove('d-none');
+
+        // Opcional: resetear el valor en el almacenamiento local si solo quieres mostrar el botón una vez
+        localStorage.removeItem('mostrarBotonExcel');
+    }
+});
+
 
 /*document.addEventListener('DOMContentLoaded', function() {
     var task_id = '{{task_id}}'

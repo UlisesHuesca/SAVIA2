@@ -1720,6 +1720,7 @@ def generar_pdf(compra):
 
 
     data =[]
+    cont = 0
     high = 495
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''', '''P.Unitario''', '''Importe'''])
     for producto in productos:
@@ -1733,7 +1734,9 @@ def generar_pdf(compra):
             producto.precio_unitario,
             importe_rounded
         ])
-        high = high - 18
+        cont = cont + 1
+        if cont < 16:
+            high = high - 18
 
     c.setFillColor(black)
     c.setFont('Helvetica',8)
@@ -1836,14 +1839,6 @@ def generar_pdf(compra):
     
     
     c.setFillColor(prussian_blue)
-    
-       
-   
-            
-  
-           
-   
-       
     c.setFont('Helvetica', 9)
     
    
@@ -2267,220 +2262,7 @@ def generar_pdf_proveedor(request, pk):
     c.drawString(370,cuarta_tabla-60, proveedor.telefono)
     c.drawString(370,cuarta_tabla-80, proveedor.email)
    
-   
-    """c.setLineWidth(.3)
-    c.line(370,220,370,160) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
-    c.line(370,160,580,160)
 
-    c.setFillColor(black)
-    c.setFont('Helvetica-Bold',9)
-
-    montos_align = 480
-    c.drawRightString(montos_align,210,'Sub Total:')
-    c.drawRightString(montos_align,200,'IVA 16%:')
-    c.drawRightString(montos_align,190,'Importe Neto:')
-    c.drawRightString(montos_align,180,'Costo fletes:')
-    c.setFillColor(prussian_blue)
-    c.setFillColor(black)
-    c.drawString(20,130,'Opciones y condiciones:')
-    c.setFont('Helvetica',8)
-    letras = 320
-    c.drawString(20,140,'Total con letra:')
-    #c.line(135,90,215,90 ) #Linea de Autorizacion
-    #c.line(350,90,430,90)
-    c.drawCentredString(175,70,'Autorización')
-    c.drawCentredString(390,70,'Autorización')
-
-    c.drawCentredString(175,80,'Superintendente Administrativo')
-    c.drawCentredString(390,80,'Gerencia Zona')
-    c.setFont('Helvetica-Bold',8)
-    if compra.autorizado1 ==  True:
-        c.drawCentredString(175,90,compra.oc_autorizada_por.staff.staff.first_name + ' ' +compra.oc_autorizada_por.staff.staff.last_name)
-    if compra.autorizado2 == True:
-        c.drawCentredString(390,90,compra.oc_autorizada_por2.staff.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.staff.last_name)
-
-    c.setFont('Helvetica',10)
-    subtotal = compra.costo_oc - compra.costo_iva
-    c.drawRightString(montos_align + 90,210,'$ ' + str(subtotal))
-    c.drawRightString(montos_align + 90,200,'$ ' + str(compra.costo_iva))
-    c.drawRightString(montos_align + 90,190,'$ ' + str(compra.costo_oc))
-    if compra.costo_fletes is None:
-        compra.costo_fletes = 0
-
-    c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
-    c.setFillColor(prussian_blue)
-
-    if compra.impuestos:
-        c.setFillColor(black)
-        c.setFont('Helvetica-Bold',9)
-        c.drawRightString(montos_align,170,'Impuestos Adicionales:')
-        c.setFont('Helvetica',10)
-
-    if compra.impuestos:
-        c.drawRightString(montos_align + 90,170,'$ ' + str(compra.impuestos))
-        c.setFillColor(prussian_blue)
-        c.drawRightString(montos_align,160,'Total:')
-        c.drawRightString(montos_align + 90,160,'$ ' + str(compra.costo_plus_adicionales))
-    else:
-        c.drawRightString(montos_align,170,'Total:')
-        c.drawRightString(montos_align + 90,170,'$ ' + str(compra.costo_plus_adicionales))
-    c.setFont('Helvetica', 9)
-    
-    if compra.moneda.nombre == "PESOS":
-        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN'))
-    if compra.moneda.nombre == "DOLARES":
-        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
-
-    c.setFillColor(black)
-    width, height = letter
-    styles = getSampleStyleSheet()
-    styleN = styles["BodyText"]
-
-    if compra.opciones_condiciones is not None:
-        options_conditions = compra.opciones_condiciones
-    else:
-        options_conditions = "NA"
-
-    options_conditions_paragraph = Paragraph(options_conditions, styleN)
-
-
-    # Crear un marco (frame) en la posición específica
-    frame = Frame(135, 0, width-145, height-648, id='normal')
-
-    # Agregar el párrafo al marco
-    frame.addFromList([options_conditions_paragraph], c)
-    c.setFillColor(prussian_blue)
-    c.rect(20,30,565,30, fill=True, stroke=False)
-    c.setFillColor(white)
-
-    
-    table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
-    table_style = TableStyle([ #estilos de la tabla
-        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
-        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
-        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-        #ENCABEZADO
-        ('TEXTCOLOR',(0,0),(-1,0), white),
-        ('FONTSIZE',(0,0),(-1,0), 8),
-        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
-        #CUERPO
-        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
-        ('FONTSIZE',(0,1),(-1,-1), 6),
-        ])
-    table_style2 = TableStyle([ #estilos de la tabla
-        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
-        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
-        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-        #ENCABEZADO
-        ('TEXTCOLOR',(0,0),(-1,0), colors.black),
-        ('FONTSIZE',(0,0),(-1,0), 6),
-        #('BACKGROUND',(0,0),(-1,0), prussian_blue),
-        #CUERPO
-        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
-        ('FONTSIZE',(0,1),(-1,-1), 6),
-        ])
-    table.setStyle(table_style)
-
-    rows_per_page = 15
-    total_rows = len(data) - 1  # Excluye el encabezado
-    remaining_rows = total_rows - rows_per_page
-
-    if remaining_rows <= 0:
-        # Si no hay suficientes filas para una segunda página, dibujar la tabla completa en la primera página
-        table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        table.drawOn(c, 20, high)  # Posición en la primera página
-    else:
-        # Dibujar las primeras 15 filas en la primera página
-        first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
-        first_page_table = Table(first_page_data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-        first_page_table.setStyle(table_style)
-        first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        first_page_table.drawOn(c, 20, high)  # Posición en la primera página
-
-        # Agregar una nueva página y dibujar las filas restantes en la segunda página
-        c.showPage()
-        remaining_data = data[rows_per_page + 1:]
-        remaining_table = Table(remaining_data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-        remaining_table.setStyle(table_style2)
-        remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        remaining_table_height = len(remaining_data) * 18
-        remaining_table_y = c._pagesize[1] - 70 - remaining_table_height - 10  # Espacio para el encabezado
-        remaining_table.drawOn(c, 20, remaining_table_y)  # Posición en la segunda página
-
-        # Agregar el encabezado en la segunda página
-        c.setFont('Helvetica', 8)
-        c.drawString(420, caja_iso, 'Preparado por:')
-        c.drawString(420, caja_iso - 10, 'SUP. ADMON')
-        c.drawString(520, caja_iso, 'Aprobación')
-        c.drawString(520, caja_iso - 10, 'SUB ADM')
-        c.drawString(150, caja_iso - 20, 'Número de documento')
-        c.drawString(160, caja_iso - 30, 'F-ADQ-N4-01.02')
-        c.drawString(245, caja_iso - 20, 'Clasificación del documento')
-        c.drawString(275, caja_iso - 30, 'Controlado')
-        c.drawString(355, caja_iso - 20, 'Nivel del documento')
-        c.drawString(380, caja_iso - 30, 'N5')
-        c.drawString(440, caja_iso - 20, 'Revisión No.')
-        c.drawString(452, caja_iso - 30, '000')
-        c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
-        c.drawString(525, caja_iso - 30, '1-Sep.-18')
-
-        caja_proveedor = caja_iso - 65
-        c.setFont('Helvetica', 12)
-        c.setFillColor(prussian_blue)
-        c.rect(150, 750, 250, 20, fill=True, stroke=False)  # Barra azul superior Orden de Compra
-        c.setFillColor(colors.white)
-        c.setFont('Helvetica-Bold', 14)
-        c.drawCentredString(280, 755, 'Orden de compra')
-        c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)  # Imagen vortec
-    
-    c.showPage()
-    # Agregar el encabezado en la segunda página
-    c.setFont('Helvetica', 8)
-    c.drawString(430, caja_iso, 'Preparado por:')
-    c.drawString(420, caja_iso - 10, 'ASIST. TEC. SUBAD')
-    c.drawString(525, caja_iso, 'Aprobación')
-    c.drawString(520, caja_iso - 10, 'SUBD-ADTVO')
-    c.drawString(50, caja_iso - 35, 'Número de documento')
-    c.drawString(50, caja_iso - 45, 'SEOV-ADQ-N4-01.04')
-    c.drawString(145, caja_iso - 35, 'Clasificación del documento')
-    c.drawString(175, caja_iso - 45, 'No Controlado')
-    c.drawString(255, caja_iso - 35, 'Nivel del documento')
-    c.drawString(280, caja_iso - 45, 'N5')
-    c.drawString(340, caja_iso - 35, 'Revisión No.')
-    c.drawString(352, caja_iso - 45, '001')
-    c.drawString(410, caja_iso - 35, 'Fecha de Emisión')
-    c.drawString(425, caja_iso - 45, '03/05/23')
-    c.drawString(500, caja_iso - 35, 'Fecha de Revisión')
-    c.drawString(525, caja_iso - 45, '06/09/23')
-
-    caja_proveedor = caja_iso - 65
-    c.setFont('Helvetica', 12)
-    c.setFillColor(prussian_blue)
-    c.rect(155, 735, 250, 35, fill=True, stroke=False)  # Barra azul superior encabezado
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 13)
-    c.drawCentredString(280, 755, 'Requisitos en Materia de Gestión')
-    c.drawCentredString(280, 740, 'de Seguridad, Salud y Medio Ambiente')
-    c.drawInlineImage('static/images/logo_vordcab.jpg', 60, 735, 2 * cm, 1 * cm)  # Imagen vortec
-
-
-    
-    #c.setFont("Helvetica-Bold", 12)
-    #c.setFillColor(prussian_blue)  # Asumiendo que prussian_blue está definido
-    #c.drawCentredString(300, 680, )  # Ajusta la posición según sea necesario
-    styles = getSampleStyleSheet()
-    styleN = styles["Normal"]
-    styleN.fontSize = 10
-    #styleN.color = prussian_blue
-    styleN.leading = 13  # Espaciado entre líneas
-    styleN = ParagraphStyle('Justicado', parent=styles['Normal'], alignment=TA_JUSTIFY)
-
-    styleT = styles["Normal"]
-    styleT.fontSize = 13
-    styleT.fontName = 'Helvetica-Bold'
-    styleT.textColor = prussian_blue
-    styleT.leading = 17
-    styleT = ParagraphStyle('Center', parent=styles['Normal'], alignment= TA_CENTER)"""
 
     texto = """El objeto del presente escrito es poner en conocimiento, de los proveedores que realizan trabajos para nuestra empresa, 
                 los requerimientos mínimos que le sean de aplicación, que debe de cumplir en lo referente a la seguridad y salud en el 

@@ -3,7 +3,7 @@ from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, N
 
 # Register your models here.
 class EntradaAdmin(admin.ModelAdmin):
-    list_display = ('id','folio','almacenista','oc','completo')
+    list_display = ('id','folio','almacenista','oc','completo','entrada_date')
     list_filter = ('oc',)
     search_fields = ['oc__folio']
     raw_id_fields = ('oc','almacenista')
@@ -19,7 +19,7 @@ class NC_ArticuloAdmin(admin.ModelAdmin):
     raw_id_fields = ('articulo_comprado',)
 
 class EntradaArticuloAdmin(admin.ModelAdmin):
-    list_display = ('id','get_entrada_folio','cantidad','articulo_comprado','liberado','cantidad_por_surtir')
+    list_display = ('id','get_entrada_folio','cantidad','articulo_comprado','liberado','cantidad','cantidad_por_surtir')
     search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre', 'entrada__folio',]
     raw_id_fields = ('entrada','articulo_comprado')
 

@@ -23,7 +23,6 @@
             <div class="card-body">
             <form id="id_formulario" method="POST">
                 {% csrf_token %}
-                {% csrf_token %}
                 {% if error_messages %}
                 <div class="alert alert-danger" role="alert">
                     {{error_messages}}

@@ -9,5 +9,6 @@ urlpatterns = [
     path('activos/edit/<int:pk>', views.edit_activo, name='edit-activo'),
     path('activos/qr/<int:pk>', views.generate_qr, name='generate-qr'),
     path('activos/asignar_activo/<int:pk>', views.asignar_activo, name='asignar-activo'),
+    #path('carga_responsable', views.carga_responsable, name='carga-responsable')
     #path('configuracion/proyectos/editar/<int:pk>', views.proyectos_edit, name='proyectos-edit'),
     ]

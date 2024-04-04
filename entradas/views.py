@@ -300,7 +300,7 @@ def update_entrada(request):
     if action == "add":
         #if not entrada_item.cantidad:
         entrada_item.cantidad = cantidad
-        #entrada_item.cantidad_por_surtir = cantidad
+        entrada_item.cantidad_por_surtir = cantidad
         entrada_item.referencia = referencia
         entrada_item.save()
         total_entradas_pendientes = pendientes_surtir + entrada_item.cantidad
@@ -309,7 +309,6 @@ def update_entrada(request):
         if total_entradas > producto_comprado.cantidad: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
             messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {suma_cantidad} > {cantidad}')
         else:
-            entrada_item.cantidad_por_surtir = cantidad
             print('cantidad pendiente:',producto_comprado.cantidad_pendiente)
             #print(total_entradas)
             producto_comprado.cantidad_pendiente = producto_comprado.cantidad - total_entradas

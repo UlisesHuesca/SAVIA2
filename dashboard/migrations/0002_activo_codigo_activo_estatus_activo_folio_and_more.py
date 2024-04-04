@@ -15,11 +15,11 @@ class Migration(migrations.Migration):
             name='codigo',
             field=models.CharField(max_length=20, null=True),
         ),
-        migrations.AddField(
-            model_name='activo',
-            name='estatus',
-            field=models.BooleanField(default=True),
-        ),
+        #migrations.AddField(
+        #    model_name='activo',
+        #    name='estatus',
+        #    field=models.BooleanField(default=True),
+        #),
         migrations.AddField(
             model_name='activo',
             name='folio',

@@ -26,7 +26,7 @@
                                 <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder= ECO"}}
+                                        {{myfilter.form.eco_unidad|add_class:"form-control"|append_attr:"placeholder= ECO"}}
                                         <label style="color: #121212;" for="id_id">ECO</label>
                                     </div>
                                 </div>
@@ -49,6 +49,15 @@
                                     </div>
                                 </div>
                             </div>
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{myfilter.form.estatus|add_class:"form-control"|append_attr:"placeholder= Status"}}
+                                        <label style="color: #121212;" for="id_id">Estatus</label>
+                                    </div>
+                                </div>
+                            </div>
                     
                            
                             <div class="col-2">
@@ -67,12 +76,12 @@
                                     </i>
                                 </a>
                             </li>
-                            <!--<li class="nav-item mx-2">
-                                <button type="button" class="btn btn-outline-danger">
-                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            <li class="nav-item">
+                                <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success">
+                                    <i class="fa-solid fa-file-excel fa-2xl"></i>
                                 </button>
                             </li>
-                            <li class="nav-item mx-2">
+                            <!--<li class="nav-item mx-2">
                                 <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                     <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="#"></a>
                                     <a type="button" class="btn btn-outline-info" href="#">Gastos</a>
@@ -127,6 +136,7 @@
                     <th scope="col">Marca</th>
                     <th scope="col">Modelo</th>
                     <th scope="col">Descripción</th>
+                    <th>Status</th>
                     <th scope="col">QR</th>
                     <th scope="col">Editar</th>
                 </tr>
@@ -138,9 +148,10 @@
                     <td>{{item.responsable.staff.staff.first_name}} {{item.responsable.staff.staff.last_name}}</td>
                     <td>{{item.tipo_activo}}</td>
                     <td>{% if item.serie %} {{item.serie}} {% endif %}</td>
-                    <td>{{item.marca}}</td>
+                    <td>{% if item.marca == "None" %} {{item.marca}} {% else %} NR {% endif %}</td>
                     <td>{% if item.modelo %} {{item.modelo}} {% endif %}</td>
                     <td>{{item.descripcion}}</td>
+                    <td>{% if item.estatus.nombre == "ALTA" %}<span class="badge bg-primary"> {{item.estatus.nombre}}</span> {% elif item.estatus.nombre == "BAJA" %}<span class="badge bg-danger">{{item.estatus.nombre}}</span>{% else %} <span class="badge bg-warning">{{item.estatus.nombre}}</span> {% endif %}</td>
                     <td>
                         <a type="button" class="btn btn-secondary" href="{% url 'generate-qr' item.id %}">
                             <i class="fa-solid fa-qrcode"></i>
