@@ -243,7 +243,7 @@ def autorizar_devolucion(request, pk):
                 inv_del_producto._change_reason = f'Esta es una devolucion desde un salida {devolucion.id}'
             else:
                 producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
-                inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto)
+                inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos )
                 inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
                 try:
                     entrada = EntradaArticulo.objects.get(articulo_comprado__producto__producto=producto_surtir, entrada__oc__req__orden=producto_surtir.articulos.orden, agotado = False)

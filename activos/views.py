@@ -12,6 +12,7 @@ from activos.filters import ActivoFilter
 from django.http import JsonResponse, HttpResponse, FileResponse
 #Todo para construir el código QR
 import qrcode
+import io
 from io import BytesIO
 import datetime as dt
 from datetime import date, datetime, timedelta
@@ -19,6 +20,18 @@ import json
 #Excel
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
+
+#PDF generator
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.colors import Color, black, blue, red, white
+from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import letter, portrait
+from reportlab.rl_config import defaultPageSize 
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
+from bs4 import BeautifulSoup
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -257,7 +270,7 @@ def edit_activo(request, pk):
     error_messages = {}    
 
     if request.method =='POST':
-        form = Edit_Activo_Form(request.POST, instance = activo)
+        form = Edit_Activo_Form(request.POST, request.FILES, instance = activo)
         if form.is_valid():
             activo = form.save(commit=False)
             activo.completo = True
@@ -460,10 +473,10 @@ def convert_activos_to_xls(activos):
             f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}",
             activo.tipo_activo.nombre,
             activo.serie,
-            activo.marca,
+            activo.marca.nombre if activo.marca else " ",
             activo.modelo,
             activo.descripcion,
-            activo.estatus
+            activo.estatus.nombre
         ]
         
         for col_num, cell_value in enumerate(row):
@@ -499,3 +512,240 @@ def convert_activos_to_xls(activos):
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
     return response
+
+
+
+def render_pdf_responsiva_activos(request, pk):
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    #Here ends conf.
+    todos_activos = Activo.objects.all()
+    activo = todos_activos.get(id=pk)
+    activos = todos_activos.filter(responsable=activo.responsable, estatus__nombre = "ALTA")
+
+   #Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    ##Elaborar caja
+    c.line(caja_iso,500,caja_iso,720)
+
+     #Encabezado
+    c.drawString(420,caja_iso,'Preparado por:')
+    c.drawString(420,caja_iso-10,'SUP. ADMON')
+    c.drawString(520,caja_iso,'Aprobación')
+    c.drawString(520,caja_iso-10,'SUB ADM')
+    c.drawString(150,caja_iso-20,'Número de documento')
+    #c.drawString(160,caja_iso-30,'F-ADQ-N4-01.02')
+    c.drawString(245,caja_iso-20,'Clasificación del documento')
+    #c.drawString(275,caja_iso-30,'Controlado')
+    c.drawString(355,caja_iso-20,'Nivel del documento')
+    c.drawString(380,caja_iso-30, 'N5')
+    c.drawString(440,caja_iso-20,'Revisión No.')
+    c.drawString(452,caja_iso-30,'000')
+    c.drawString(510,caja_iso-20,'Fecha de Emisión')
+    c.drawString(525,caja_iso-30,'01/2024')
+
+    caja_proveedor = caja_iso - 65
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
+    c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
+    c.rect(20,575,565,2, fill=True, stroke=False) #Linea posterior horizontal
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(280,755,'Responsiva Activos')
+    c.setLineWidth(.3) #Grosor
+    c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    #c.drawString(120,caja_proveedor,'Infor')
+    c.drawString(300,caja_proveedor, 'Detalles')
+    inicio_central = 300
+    #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+    c.drawString(30,caja_proveedor-20,'Nombre:')
+    c.drawString(30,caja_proveedor-40,'Distrito:')
+    c.drawString(30,caja_proveedor-60,'Firma:')
+    c.drawString(30,caja_proveedor-100,'Fecha:')
+    # Segunda columna del encabezado
+    c.drawString(280,caja_proveedor-20,'Nombre:')
+    c.drawString(280,caja_proveedor-40,'Distrito:')
+    c.drawString(280,caja_proveedor-60,'Firma:')
+    c.drawString(350,caja_proveedor-20, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
+    c.drawString(350,caja_proveedor-40, activo.responsable.distritos.nombre)
+
+    #Create blank list
+    data =[]
+
+    data.append(['''Eco''', '''Descripción''', '''Tipo Activo''', '''Serie''','''Marca''', '''Modelo'''])
+
+
+    high = 540
+    cont = 0
+    for activo in activos:
+        data.append([
+            activo.eco_unidad, 
+            activo.descripcion,
+            activo.tipo_activo, 
+            activo.serie,
+            activo.marca.nombre if activo.marca else "NR", 
+            activo.modelo,
+            ])
+        cont = cont + 1
+        if cont < 21:
+            high = high - 18
+
+
+    c.setFillColor(prussian_blue)
+    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.setFillColor(white)
+    #Primer renglón
+    c.drawCentredString(70,48,'Clasificación:')
+    c.drawCentredString(140,48,'Nivel:')
+    c.drawCentredString(240,48,'Preparado por:')
+    c.drawCentredString(350,48,'Aprobado:')
+    c.drawCentredString(450,48,'Fecha emisión:')
+    c.drawCentredString(550,48,'Rev:')
+    #Segundo renglón
+    c.drawCentredString(70,34,'Controlado')
+    c.drawCentredString(140,34,'N5')
+    c.drawCentredString(240,34,'SEOV-ALM-N4-01-01')
+    c.drawCentredString(350,34,'SUB ADM')
+    c.drawCentredString(450,34,'24/Oct/2018')
+    c.drawCentredString(550,34,'001')
+
+    c.setFillColor(black)
+    width, height = letter
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+
+    
+    texto_responsiva = """
+    RESPONSIVA: A partir de la emisión de la presente, queda asignado a mi cargo y bajo mi responsabilidad el equipo arriba descrito, 
+    comprometiéndome a darle buen uso, solicitar oportunamente su mantenimiento preventivo y en los casos necesarios el mantenimiento 
+    correctivo para el continuo uso del equipo, vigilar la operación correcta de quienes lo operen, y dar aviso inmediato de cualquier 
+    anomalía al departamento correspondiente.
+    """
+
+    c.setFillColor(prussian_blue)
+    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.setFillColor(white)
+    # Personalizar el estilo de los párrafos
+    custom_style = ParagraphStyle(
+    'CustomStyle',
+        parent=styles['BodyText'],
+        fontSize=10,  # Reducir el tamaño de la fuente a 6
+        leading=10,   # Aumentar el espacio entre líneas para asegurar que el texto no se superponga
+        alignment=TA_JUSTIFY,  # Alineación del texto
+        # Puedes añadir más ajustes si es necesario
+    )
+
+    parrafo_responsiva = Paragraph(texto_responsiva, custom_style)
+    ancho_disponible = width - 40  # Asumiendo un margen de 20 por cada lado
+
+    # Calcula el espacio que el párrafo necesita (ancho, alto)
+    w, h = parrafo_responsiva.wrap(ancho_disponible, height)
+
+    # La posición inicial del párrafo en Y, ajusta según necesites
+    posicion_inicio_parrafo = 100  # Ajusta este valor según el espacio necesario para los elementos anteriores
+
+    # Dibuja el párrafo en la posición calculada
+    parrafo_responsiva.drawOn(c, 20, posicion_inicio_parrafo)
+
+    table = Table(data, colWidths=[2 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
+    table_style = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
+        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        #ENCABEZADO
+        ('TEXTCOLOR',(0,0),(-1,0), white),
+        ('FONTSIZE',(0,0),(-1,0), 8),
+        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        #CUERPO
+        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    table_style2 = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
+        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        #ENCABEZADO
+        ('TEXTCOLOR',(0,0),(-1,0), colors.black),
+        ('FONTSIZE',(0,0),(-1,0), 6),
+        #('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        #CUERPO
+        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    table.setStyle(table_style)
+
+    rows_per_page = 20
+    total_rows = len(data) - 1  # Excluye el encabezado
+    remaining_rows = total_rows - rows_per_page
+
+    if remaining_rows <= 0:
+        # Si no hay suficientes filas para una segunda página, dibujar la tabla completa en la primera página
+        table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        table.drawOn(c, 20, high)  # Posición en la primera página
+    else:
+        # Dibujar las primeras 15 filas en la primera página
+        first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
+        first_page_table = Table(first_page_data, colWidths=[2 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
+        first_page_table.setStyle(table_style)
+        first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        first_page_table.drawOn(c, 20, high)  # Posición en la primera página
+
+        # Agregar una nueva página y dibujar las filas restantes en la segunda página
+        c.showPage()
+        remaining_data = data[rows_per_page + 1:]
+        remaining_table = Table(remaining_data, colWidths=[2 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
+        remaining_table.setStyle(table_style2)
+        remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        remaining_table_height = len(remaining_data) * 18
+        remaining_table_y = c._pagesize[1] - 70 - remaining_table_height - 10  # Espacio para el encabezado
+        remaining_table.drawOn(c, 20, remaining_table_y)  # Posición en la segunda página
+
+        # Agregar el encabezado en la segunda página
+        c.setFont('Helvetica', 8)
+        c.drawString(420, caja_iso, 'Preparado por:')
+        c.drawString(420, caja_iso - 10, 'SUP. ADMON')
+        c.drawString(520, caja_iso, 'Aprobación')
+        c.drawString(520, caja_iso - 10, 'SUB ADM')
+        c.drawString(150, caja_iso - 20, 'Número de documento')
+        c.drawString(160, caja_iso - 30, 'F-ADQ-N4-01.02')
+        c.drawString(245, caja_iso - 20, 'Clasificación del documento')
+        c.drawString(275, caja_iso - 30, 'Controlado')
+        c.drawString(355, caja_iso - 20, 'Nivel del documento')
+        c.drawString(380, caja_iso - 30, 'N5')
+        c.drawString(440, caja_iso - 20, 'Revisión No.')
+        c.drawString(452, caja_iso - 30, '000')
+        c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
+        c.drawString(525, caja_iso - 30, '1-Sep.-18')
+
+        caja_proveedor = caja_iso - 65
+        c.setFont('Helvetica', 12)
+        c.setFillColor(prussian_blue)
+        c.rect(150, 750, 250, 20, fill=True, stroke=False)  # Barra azul superior Orden de Compra
+        c.setFillColor(colors.white)
+        c.setFont('Helvetica-Bold', 14)
+        c.drawCentredString(280, 755, 'Responsiva Activos')
+        c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)  # Imagen vortec
+        parrafo_responsiva.drawOn(c, 20, posicion_inicio_parrafo)
+
+    c.showPage()
+    c.save()
+    buf.seek(0)
+
+    return FileResponse(buf, as_attachment=True, filename='Responsiva_' + str(activo.responsable) +'.pdf')

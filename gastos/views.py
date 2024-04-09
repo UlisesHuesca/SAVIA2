@@ -636,6 +636,7 @@ def matriz_facturas_gasto(request, pk):
     gasto = Solicitud_Gasto.objects.get(id = pk)
     articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
     facturas = Factura.objects.filter(solicitud_gasto = gasto, hecho=True)
+    pagos = Pago.objects.filter(gasto = gasto)
     form =  Facturas_Gastos_Form(instance=gasto)
     #factura_form = FacturaForm()
     
@@ -661,7 +662,7 @@ def matriz_facturas_gasto(request, pk):
 
     context={
         'form':form,
-        #'factura_form':factura_form,
+        'pagos':pagos,
         'articulos_gasto':articulos_gasto,
         'gasto':gasto,
         'facturas':facturas,

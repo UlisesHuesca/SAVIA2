@@ -621,7 +621,10 @@ def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
-    compras = Compra.objects.filter(complete=True, req__orden__distrito = usuario.distritos).order_by('-folio')
+    if usuario.tipo.nombre == "PROVEEDORES":
+        compras = Compra.objects.filter(complete = True).order_by('-folio')
+    else:
+        compras = Compra.objects.filter(complete=True, req__orden__distrito = usuario.distritos).order_by('-folio')
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
     compras_data = list(compras.values())
@@ -764,7 +767,12 @@ def matriz_oc_productos(request):
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
     compras = Compra.objects.filter(complete=True)
-    articulos = ArticuloComprado.objects.filter(oc__complete = True, oc__req__orden__distrito = usuario.distritos).order_by('-oc__created_at')
+    if usuario.tipo.nombre == "PROVEEDORES":
+        articulos = ArticuloComprado.objects.filter(oc__complete = True).order_by('-oc__created_at')
+    else:
+        articulos = ArticuloComprado.objects.filter(oc__complete = True, oc__req__orden__distrito = usuario.distritos).order_by('-oc__created_at')
+    
+    #articulos = ArticuloComprado.objects.filter(oc__complete = True, oc__req__orden__distrito = usuario.distritos).order_by('-oc__created_at')
     myfilter = ArticuloCompradoFilter(request.GET, queryset=articulos)
     articulos = myfilter.qs
     articulos_data = list(articulos.values())

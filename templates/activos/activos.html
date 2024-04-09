@@ -139,6 +139,7 @@
                     <th>Status</th>
                     <th scope="col">QR</th>
                     <th scope="col">Editar</th>
+                    <th>Responsiva</th>
                 </tr>
             </thead>
             <tbody>
@@ -148,7 +149,7 @@
                     <td>{{item.responsable.staff.staff.first_name}} {{item.responsable.staff.staff.last_name}}</td>
                     <td>{{item.tipo_activo}}</td>
                     <td>{% if item.serie %} {{item.serie}} {% endif %}</td>
-                    <td>{% if item.marca == "None" %} {{item.marca}} {% else %} NR {% endif %}</td>
+                    <td>{% if item.marca == Null %} NR {% else %} {{item.marca}} {% endif %}</td>
                     <td>{% if item.modelo %} {{item.modelo}} {% endif %}</td>
                     <td>{{item.descripcion}}</td>
                     <td>{% if item.estatus.nombre == "ALTA" %}<span class="badge bg-primary"> {{item.estatus.nombre}}</span> {% elif item.estatus.nombre == "BAJA" %}<span class="badge bg-danger">{{item.estatus.nombre}}</span>{% else %} <span class="badge bg-warning">{{item.estatus.nombre}}</span> {% endif %}</td>
@@ -161,6 +162,9 @@
                         <a type="button" class="btn btn-outline-info" href="{% url 'edit-activo' item.id %}">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
+                    </td>
+                    <td>
+                        <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-responsiva-activos' item.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

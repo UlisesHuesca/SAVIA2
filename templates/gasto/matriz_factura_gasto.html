@@ -13,46 +13,7 @@
 <hr>
 <hr>
 <h6>&nbsp;</h6>
-<div class = "card mt-2 bg-white" id="response-div">
-        <div class="col-12">
-            <div class="card-body">
-                <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-1">
-                            <a href="{% url 'mis-gastos' %}" class="btn btn-outline-info">
-                                <i class="fa-solid fa-backward"></i>
-                            </a>
-                        </li>
-                        {% if usuario.tipo.tesoreria == True %}
-                        <li class="nav-item mx-1">
-                            <a href="{% url 'pago-gastos-autorizados' %}" class="btn btn-outline-info">
-                                <i class="fa-solid fa-backward"> GASTOS</i>
-                            </a>                 
-                        </li>
-                        <li class="nav-item mx-2">
-                            <a href="{% url 'matriz-pagos' %}" class="btn btn-outline-info">
-                                <i class="fa-solid fa-backward"> MATRIZ PAGOS</i>
-                            </a>
-                        </li>
-                        {% endif %}
-                        
-                        <!--<li class="nav-item mx-2">
-                            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
-                    </ul>
-                </form>
-            </div>
-        </div>
-</div>
-    <!-- Aquí terminan el encabezado de los filtros -->
+
 
 <!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
 <div class="row my-4">
@@ -82,8 +43,39 @@
     </div>
 </div>
 
-<div class = "card mt-2">
-    <div class="col-md-12">
+<div class="container">
+<div class = "card">
+    <div class="card-header">
+        <h5>Facturas de Gasto: {{gasto.folio}}</h5>
+    </div>
+    <div class="card-body">
+        <table class='table table-striped'>
+            <thead>
+                <tr>
+                    <th scope="col">Nombre:</th>
+                    <th scope="col">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for pago in pagos %}
+                <tr>
+                    {% if pago.comprobante_pago %}
+                <th scope="col">Pago:</th>
+                <th scope="col">
+                    <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
+                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </a>
+                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">               
+                        <i class="fa-solid fa-cloud-arrow-up"></i>
+                    </a>   
+                    
+                </th>
+                    {% endif %}
+                </tr>
+                {% endfor %}  
+            </tbody>
+        </table>
+
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -118,36 +110,6 @@
             </tbody>
         </table>
 
-        <!--<form method="post" enctype="multipart/form-data">
-            {% csrf_token %}
-
-       
-            <div id="factura_pdf" class="row mt-2">
-                <div class="input-group col-lg-12"> 
-                     <div class="input-group-text" style="background-color:white">
-                        {{factura_form.archivo_pdf|add_class:"form-control"}}
-                    </div>
-                    <span class="input-group-text">
-                        <div class="my-3" style="color:#980f0f">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>PDF
-                        </div>
-                    </span>
-                </div>
-            </div>
-            <div id="factura_xml" class="row d-none d-lg-block mt-2">
-                <div class="input-group"> 
-                    <div class="input-group-text" style="background-color:white">
-                        {{factura_form.archivo_xml|add_class:"form-control"}}
-                    </div>
-                    <span class="input-group-text">
-                        <div class="my-3" style="color:#9a9b9d">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>XML
-                        </div>
-                    </span>
-                </div>
-            </div>
-            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Factura</button>
-        </form>-->
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -222,6 +184,7 @@
         </ul>
         </div>
     </form>
+</div>
 </div>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
