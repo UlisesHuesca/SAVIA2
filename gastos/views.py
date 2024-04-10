@@ -434,9 +434,9 @@ def autorizar_gasto(request, pk):
         gasto.autorizar = True
         gasto.approved_at = datetime.now()
         #gasto.approved_at_time = datetime.now().time()
-        gasto.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)
+        gasto.sol_autorizada_por = perfil
         gasto.save()
-        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {gasto.id}')
+        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {gasto.folio}')
         return redirect ('gastos-pendientes-autorizar')
 
 

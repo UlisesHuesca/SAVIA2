@@ -129,8 +129,8 @@
                     <th scope="row">{{orden.folio}}</th>
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
                     <td>{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}</td>
-                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}} |{% if orden.autorizar %} Autorizado {% elif not orden.autorizar %} Cancelado {% else %} No autorizado aún {% endif %} </td>
-                    <td>{% if orden.autorizar2 %} Autorizado {% elif not orden.autorizar2 %} Cancelado {% else %} No autorizado aún {% endif %} </td>
+                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}} |{% if orden.autorizar %}<span class="badge bg-primary">Autorizado</span> {% elif orden.autorizar == False %} <span class="badge bg-danger">Cancelado</span>{% else %}  <span class="badge bg-warning">No Autorizado Aún</span> {% endif %} </td>
+                    <td>{% if orden.autorizar2 %} <span class="badge bg-primary">Autorizado</span>{% elif orden.autorizar2 == False %}<span class="badge bg-danger">Cancelado</span> {% else %} <span class="badge bg-warning">No Autorizado Aún</span> {% endif %} </td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
                     <td>{{orden.created_at}}</td>
