@@ -360,6 +360,7 @@ def saldo_a_favor(request, pk):
     form2 = Saldo_Form(instance = saldo)
     form = CompraSaldo_Form(instance = compra)
     
+    suma_pago = 0
     for item in pagos:
         if item.oc.moneda.nombre == "DOLARES":
             if item.cuenta.moneda.nombre == "PESOS":
