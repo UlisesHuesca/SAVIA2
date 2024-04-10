@@ -45,7 +45,8 @@
             <h6>Activo: {% if requis.orden.activo %} {{requis.orden.activo}} {% else %} No hay activo definido {% endif %} </h6>
             <h6>Comentario Superintendente:   {%if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentario {%endif%}</h6>
             <h6>Comentario Almacén: {%if requis.comentario_compras %} {{requis.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
-            <h6>Comentario Usuario: {%if requis.orden.comentario %} {{requis.orden.comentario}} {% else %} No hay comentario {% endif %}</h6>    
+            <h6>Comentario Usuario: {%if requis.orden.comentario %} {{requis.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
+            <h6>{{requis.orden.soporte}}</h6>   
         </div>
         </div>
 

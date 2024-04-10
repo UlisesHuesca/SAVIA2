@@ -58,7 +58,7 @@
                 </div>
                 {% endif %}
                 <div class="card-body">
-					<form id="formulario_encabezado" method="POST">
+					<form id="formulario_encabezado" method="POST" enctype="multipart/form-data">
                         {% csrf_token %}
                             <div class="row">
                                 <div class="col-12">
