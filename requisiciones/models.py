@@ -30,7 +30,7 @@ class Requis(models.Model):
 
     @property
     def comprado_parcial(self):
-        articulos = self.articulosrequisitados_set.all()
+        articulos = self.productos.all()
         if articulos:
             for articulo in articulos:
                 if articulo.cantidad_comprada > 0:
@@ -73,7 +73,7 @@ class Requis(models.Model):
 
 class ArticulosRequisitados(models.Model):
     producto = models.ForeignKey(ArticulosparaSurtir, on_delete = models.CASCADE, null=True)
-    req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True)
+    req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True, related_name ="productos")
     cantidad =  models.DecimalField(max_digits=14, decimal_places=2, default=0)
     cantidad_comprada =  models.DecimalField(max_digits=14, decimal_places=2, default=0)
     art_surtido = models.BooleanField(null=True, default=False)
