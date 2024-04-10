@@ -3,7 +3,7 @@ from .models import Pago, Facturas, Cuenta
 from compras.models import Compra
 from gastos.models import Solicitud_Gasto
 from viaticos.models import Solicitud_Viatico
-
+from tesoreria.models import Comprobante_saldo_favor
 
 class PagoForm(forms.ModelForm):
     class Meta:
@@ -43,6 +43,12 @@ class Facturas_Viaticos_Form(forms.ModelForm):
         fields = ['facturas_completas']
 
 class Saldo_Form(forms.ModelForm):
+    class Meta:
+        model = Comprobante_saldo_favor
+        fields = ['comprobante_pdf','comprobante_xml','comentario']
+
+class CompraSaldo_Form(forms.ModelForm):
+    class Meta:
         model = Compra
         fields = ['saldo_a_favor']
 
