@@ -359,7 +359,7 @@ def saldo_a_favor(request, pk):
     saldo, created = Comprobante_saldo_favor.objects.get_or_create(oc=compra, hecho=False)
     form2 = Saldo_Form(instance = saldo)
     form = CompraSaldo_Form(instance = compra)
-    
+    suma_pago = 0
     for item in pagos:
         if item.oc.moneda.nombre == "DOLARES":
             if item.cuenta.moneda.nombre == "PESOS":
@@ -387,11 +387,13 @@ def saldo_a_favor(request, pk):
             if remanente <= compra.saldo_a_favor:
                 compra.pagada = True
             compra.save()
-            messages.success(request,f'El saldo se ha registrado correctamente, {usuario.staff.first_name}')
+            messages.success(request,f'El saldo se ha registrado correctamente, {usuario.staff.staff.first_name}')
             return HttpResponse(status=204) 
 
     context= {
         'compra':compra,
+        'monto':suma_pago,
+        'remanente':remanente,
         'form':form,
         'form2':form2,
     }
