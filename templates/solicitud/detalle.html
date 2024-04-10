@@ -55,6 +55,7 @@
                                     {% elif requi.autorizar == False %}
                                     <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                         Requisición:&nbsp<strong>{{ requi.folio }}</strong>&nbsp  <i class="fa-solid fa-circle-check"></i>&nbsp Cancelada
+                                    
                                     {% else %}
                                     <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                         Requisición:&nbsp<strong>{{ requi.folio }}</strong>&nbsp  <i class="fa-solid fa-circle-check"></i>&nbsp No Autorizada Aún
@@ -63,8 +64,14 @@
                                 </h2>
                                 <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                                     <div class="accordion-body" style="color:black">
+                                    {% for producto in requi.productos.all %}
+                                        <ul>
+                                            <li>{{producto.producto.articulos.producto.producto.nombre}} &nbsp| &nbspCantidad:{{producto.cantidad}}</li>
+                                        </ul>
+                                    {% endfor %}
                                     </div>
                                 </div>
+                            </div>
                                     {% if requi.autorizar %}
                                         {% for compra in requi.compras.all %}
                                             <h2 class="accordion-header" id="headingSol">
@@ -92,6 +99,11 @@
                                             <div id="collapseOne" class="accordion-collapse collapse" aria-labelledby="headingOne" data-bs-parent="#accordionExample">
                                                 <div class="accordion-body" style="color:black">
                                                     <p>Creada: {{ compra.created_at|date:"d/m/Y" }}</p>
+                                                    {% for producto in compra.articulocomprado_set.all %}
+                                                    <ul>
+                                                        <li>{{producto.producto.producto.articulos.producto.producto.nombre}} &nbsp| &nbspCantidad:{{producto.cantidad}}</li>
+                                                    </ul>
+                                                    {% endfor %}
                                                 </div>
                                             </div>
                                             {% if compra.autorizado2 %}

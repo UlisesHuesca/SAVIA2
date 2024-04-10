@@ -184,7 +184,12 @@
                         </div>
                     </div>
                 </div>
-            <div class="modal-footer">
+                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante PDF:</strong></label>
+                {{form2.comprobante_pdf|add_class:'form-control'}}         
+                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante XML:</strong></label>
+                 {{form2.comprobante_xml|add_class:'form-control'}}
+            
+                 <div class="modal-footer">
                 <h6>Registrar saldo de la OC: {{compra.get_folio}}</h6>
                 <button id="myBtn" type="submit" class="btn btn-success">Registrar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>

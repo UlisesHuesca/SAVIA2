@@ -13,11 +13,11 @@ from compras.forms import CompraForm
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf #convert_excel_matriz_compras
 from dashboard.models import Subproyecto
-from .models import Pago, Cuenta, Facturas
+from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor
 from gastos.models import Solicitud_Gasto, Articulo_Gasto
 from viaticos.models import Solicitud_Viatico
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -355,13 +355,36 @@ def saldo_a_favor(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     compra = Compra.objects.get(id=pk)
-    form = Saldo_Form(instance = compra)
+    pagos = Pago.objects.filter(oc=compra.id, hecho=True) #.aggregate(Sum('monto'))
+    saldo, created = Comprobante_saldo_favor.objects.get_or_create(oc=compra, hecho=False)
+    form2 = Saldo_Form(instance = saldo)
+    form = CompraSaldo_Form(instance = compra)
+    
+    for item in pagos:
+        if item.oc.moneda.nombre == "DOLARES":
+            if item.cuenta.moneda.nombre == "PESOS":
+                monto_pago = item.monto/item.tipo_de_cambio
+                suma_pago = suma_pago + monto_pago
+            else:
+                suma_pago = suma_pago + item.monto
+        else:
+            suma_pago = suma_pago + item.monto
+
+    remanente = compra.costo_oc - suma_pago
+
 
     if request.method == 'POST':
-        form = Saldo_Form(request.POST, instance = compra)
-        if form.is_valid():
+        form2 = Saldo_Form(request.POST, request.FILES, instance = saldo)
+        form = CompraSaldo_Form( request.POST, instance = compra)
+        if form.is_valid() and form2.is_valid():
             form.save()
-            if compra.costo_plus_adicionales == compra.saldo_a_favor:
+            saldo = form2.save(commit=False)
+            saldo.subido_por = usuario
+            saldo.fecha_subido = date.today()
+            saldo.hora_subido = datetime.now().time()
+            saldo.hecho = True
+            saldo.save()
+            if remanente <= compra.saldo_a_favor:
                 compra.pagada = True
             compra.save()
             messages.success(request,f'El saldo se ha registrado correctamente, {usuario.staff.first_name}')
@@ -370,6 +393,7 @@ def saldo_a_favor(request, pk):
     context= {
         'compra':compra,
         'form':form,
+        'form2':form2,
     }
 
     return render(request, 'tesoreria/saldo_a_favor.html',context)

@@ -111,3 +111,16 @@ class Facturas(models.Model):
 
 
         return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}
+
+class Comprobante_saldo_favor(models.Model):
+    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True)
+    subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    fecha_subido = models.DateField(null=True, blank=True)
+    hora_subido = models.TimeField(null=True, blank=True)
+    comentario = models.CharField(max_length=100, null=True, blank=True)
+    hecho = models.BooleanField(default=False)
+    comprobante_pdf = models.FileField(blank=True, null=True, upload_to='saldo_pdf',validators=[FileExtensionValidator(['pdf'])])
+    comprobante_xml = models.FileField(blank=True, null=True, upload_to='saldo_xml', validators=[FileExtensionValidator(['xml'])])
+
+    def __str__(self):
+        return f'id:{self.id} oc:{self.oc}'
