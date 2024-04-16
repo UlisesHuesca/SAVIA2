@@ -287,7 +287,7 @@ class Order(models.Model):
     sector = models.ForeignKey(Sector, on_delete = models.CASCADE, null=True)
     superintendente = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='intendente')
     supervisor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='supervisor')
-    activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True )
+    activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True, blank = True)
     requisitar = models.BooleanField(null=True, default=False)
     requisitado = models.BooleanField(null=True, default=False)
     complete = models.BooleanField(null=True)

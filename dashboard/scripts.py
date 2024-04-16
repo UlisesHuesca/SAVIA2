@@ -5,8 +5,8 @@ from compras.models import Compra
 from datetime import datetime
 
 def actualizar_articulos():
-    folios_a_verificar = [19992, 19868, 19778, 19775, 19762, 19757,19747, 19743,19740,19678,19651,19648,19551,19548,19537,19535,19525,19449,19445,19440,19413,19401,19387,19173,19056,19053,18869,17019,14059,14007,13724,13678]  # Lista de folios a verificar.
-    distrito_id = 3  # El ID del distrito que quieres filtrar.
+    folios_a_verificar = []  # Lista de folios a verificar.
+    distrito_id = 2  # El ID del distrito que quieres filtrar.
 
     # Filtra los artículos cuyos folios sean mayores a 20000 o estén en la lista de folios a verificar, y cuyo distrito_id sea 3.
     articulos_a_actualizar = ArticulosparaSurtir.objects.filter(
@@ -25,8 +25,7 @@ def actualizar_articulos():
 
 
 def marcar_articulos_agotados(producto_id):
-    # Filtra los objetos EntradaArticulo basados en el ID del producto proporcionado
-    # Ajusta esta consulta según la estructura exacta de tus modelos y relaciones
+   
     entradas_a_actualizar = EntradaArticulo.objects.filter(
         Q(articulo_comprado__producto__producto__articulos__producto__producto__id=producto_id) &
         Q(entrada__oc__req__orden__distrito__id=5)
@@ -39,15 +38,16 @@ def marcar_articulos_agotados(producto_id):
     return num_entradas_actualizadas
 
 def marcar_articulos_agotados_todos():
-    productos = Inventario.objects.filter(distrito_id=3)
+    distrito = 2
+    productos = Inventario.objects.filter(distrito_id= distrito)
     
     total_entradas_actualizadas = 0  # Inicializa el contador de entradas actualizadas
-    fecha_limite = datetime(2024, 3, 9) 
+    fecha_limite = datetime(2024, 4, 15) 
 
     for producto in productos:
         entradas_a_actualizar = EntradaArticulo.objects.filter(
             Q(articulo_comprado__producto__producto__articulos__producto__producto__id=producto.producto_id) &
-            Q(entrada__oc__req__orden__distrito__id=3) &
+            Q(entrada__oc__req__orden__distrito__id=distrito) &
             Q(entrada__entrada_date__lt=fecha_limite) 
         )
         

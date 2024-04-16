@@ -52,7 +52,7 @@ class SalidasFilter(django_filters.FilterSet):
         fields = ['solicitud','producto','codigo','nombre','proyecto','subproyecto','start_date','end_date',]
     
     def my_custom_filter(self, queryset, name, value):
-        return queryset.filter(Q(producto__articulos__orden__staff__staff__first_name__icontains = value) | Q(producto__articulos__orden__staff__staff__last_name__icontains=value))
+        return queryset.filter(Q(producto__articulos__orden__staff__staff__staff__first_name__icontains = value) | Q(producto__articulos__orden__staff__staff__staff__last_name__icontains=value))
 
 class EntradasFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='articulo_comprado__producto__producto__articulos__producto__producto__nombre', lookup_expr='icontains')

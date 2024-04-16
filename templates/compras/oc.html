@@ -224,6 +224,19 @@
                         {{form.tesoreria_matriz|add_class:"form-check-input"}}
                     </div>
                 </div>
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                    <label for="form.tesoreria_local" class="form-check-label"><strong>Incluir comentario solicitud</strong></label>
+                        {{form.comentario_solicitud|add_class:"form-check-input"}}
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div id="etiqueta_domicilio" class="col-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Comentario Solicitud:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{oc.req.orden.comentario}}</h6>   
+                        </div>
+                    </div>
+                </div>
                 <div class="row my-2">
                     <div class="col-sm-12">
                         <div class="input-group mb-3">
@@ -235,9 +248,6 @@
                         </div>
                     </div>
                 </div>
-            </div>
-            <div class="row my-2">
-                Comentario Usuario: {{oc.req.orden.comentario}}
             </div>
             <div class="container-fluid text-end">
                 <input type="hidden" name="crear" value="crear">

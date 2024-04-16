@@ -46,7 +46,8 @@
             <h6>Comentario Superintendente:   {%if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentario {%endif%}</h6>
             <h6>Comentario Almacén: {%if requis.comentario_compras %} {{requis.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
             <h6>Comentario Usuario: {%if requis.orden.comentario %} {{requis.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
-            <h6>{{requis.orden.soporte}}</h6>   
+            <h6>Soporte:{% if requis.orden.soporte %}<a href="{{requis.orden.soporte.url}}" download class="btn btn-outline-info"><i class="fa-solid fa-file-invoice-dollar"></i></a></h6>{%else%}NR{% endif %}
+               
         </div>
         </div>
 

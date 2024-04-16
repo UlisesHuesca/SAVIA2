@@ -621,7 +621,7 @@ def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
-    if usuario.tipo.nombre == "PROVEEDORES":
+    if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
         compras = Compra.objects.filter(complete = True).order_by('-folio')
     else:
         compras = Compra.objects.filter(complete=True, req__orden__distrito = usuario.distritos).order_by('-folio')
@@ -1786,6 +1786,7 @@ def generar_pdf(compra):
     c.setFillColor(prussian_blue)
     c.setFillColor(black)
     c.drawString(20,130,'Opciones y condiciones:')
+    c.drawString(20,105,'Comentario Solicitud:')
     c.setFont('Helvetica',8)
     letras = 320
     c.drawString(20,140,'Total con letra:')
@@ -1860,7 +1861,9 @@ def generar_pdf(compra):
     width, height = letter
     styles = getSampleStyleSheet()
     styleN = styles["BodyText"]
+    styleN.fontSize = 6
 
+    #Comentario de opciones y condiciones
     if compra.opciones_condiciones is not None:
         options_conditions = compra.opciones_condiciones
     else:
@@ -1870,7 +1873,7 @@ def generar_pdf(compra):
 
 
     # Crear un marco (frame) en la posición específica
-    frame = Frame(135, 0, width-145, height-648, id='normal')
+    frame = Frame(135, 0, width-155, height-648, id='normal')
 
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
@@ -1878,7 +1881,23 @@ def generar_pdf(compra):
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
 
+    #Comentario de solicitud
+    if compra.comentario_solicitud:
+        paragraph_content = compra.req.orden.comentario
+    else:
+        paragraph_content = "NA"  # O cualquier valor por defecto que prefieras
+
+    # Crear el párrafo con el contenido basado en la condición
+    conditional_paragraph = Paragraph(paragraph_content, styleN)
+
+    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
+    # Asumiendo 'width' y 'height' ya están definidos como antes
+    new_frame = Frame(120, 0, width-155, height-675, id='conditional_frame')
+
+    # Agregar el párrafo al nuevo marco
+    new_frame.addFromList([conditional_paragraph], c)
     
+
     table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
