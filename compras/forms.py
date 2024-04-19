@@ -13,7 +13,7 @@ class CompraForm(forms.ModelForm):
     class Meta:
         model = Compra
         fields = ['proveedor','cond_de_pago','uso_del_cfdi','dias_de_credito','tesorero',
-                  'monto_anticipo','dias_de_entrega','impuestos','costo_fletes', 'retencion',
+                  'monto_anticipo','dias_de_entrega','impuestos','costo_fletes', 'retencion','comentario_solicitud',
                   'tesoreria_matriz','opciones_condiciones','moneda','tipo_de_cambio','logistica', 'referencia','comparativo_model']
     
     def __init__(self,*args, **kwargs):

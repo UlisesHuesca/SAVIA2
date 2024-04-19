@@ -12,7 +12,7 @@ from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.conf import settings
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task
-from dashboard.models import Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir
+from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
@@ -621,7 +621,7 @@ def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
-    if usuario.tipo.nombre == "PROVEEDORES":
+    if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
         compras = Compra.objects.filter(complete = True).order_by('-folio')
     else:
         compras = Compra.objects.filter(complete=True, req__orden__distrito = usuario.distritos).order_by('-folio')
@@ -1333,7 +1333,10 @@ def handle_uploaded_file(file, model_instance, field_name):
     model_instance.save()
 
 def comparativos(request):
-    comparativos = Comparativo.objects.filter(completo = True)
+    #creada_por 
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+    comparativos = Comparativo.objects.filter(completo = True, creada_por__distritos = usuario.distritos)
     form = UploadFileForm()
     error_messages = {}
 
@@ -1699,11 +1702,17 @@ def generar_pdf(compra):
     c.drawString(100,caja_proveedor-120, compra.proveedor.estatus.nombre)
     if compra.dias_de_entrega:
         c.drawString(110,caja_proveedor-140, str(compra.dias_de_entrega)+' '+'días hábiles')
-
-    if compra.req.orden.activo:
-        c.drawString(60,caja_proveedor-160, compra.req.orden.activo.eco_unidad + ' '+ compra.req.orden.activo.descripcion)
-    else:
-        c.drawString(60,caja_proveedor-160, 'NA')
+    
+    
+    try:
+        if compra.req.orden.activo is not None:
+            eco_unidad = compra.req.orden.activo.eco_unidad
+            descripcion = compra.req.orden.activo.descripcion
+            c.drawString(60, caja_proveedor-160, f'{eco_unidad} {descripcion}')
+        else:
+            c.drawString(60, caja_proveedor-160, 'NA')
+    except Activo.DoesNotExist:
+        c.drawString(60, caja_proveedor-160, 'NA')
 
 
     c.drawString(inicio_central + 90,caja_proveedor-35, str(compra.req.folio))
@@ -1786,6 +1795,7 @@ def generar_pdf(compra):
     c.setFillColor(prussian_blue)
     c.setFillColor(black)
     c.drawString(20,130,'Opciones y condiciones:')
+    c.drawString(20,105,'Comentario Solicitud:')
     c.setFont('Helvetica',8)
     letras = 320
     c.drawString(20,140,'Total con letra:')
@@ -1860,7 +1870,9 @@ def generar_pdf(compra):
     width, height = letter
     styles = getSampleStyleSheet()
     styleN = styles["BodyText"]
+    styleN.fontSize = 6
 
+    #Comentario de opciones y condiciones
     if compra.opciones_condiciones is not None:
         options_conditions = compra.opciones_condiciones
     else:
@@ -1870,7 +1882,7 @@ def generar_pdf(compra):
 
 
     # Crear un marco (frame) en la posición específica
-    frame = Frame(135, 0, width-145, height-648, id='normal')
+    frame = Frame(135, 0, width-155, height-648, id='normal')
 
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
@@ -1878,7 +1890,25 @@ def generar_pdf(compra):
     c.rect(20,30,565,30, fill=True, stroke=False)
     c.setFillColor(white)
 
+    #Comentario de solicitud
+    if compra.comentario_solicitud:
+        paragraph_content = compra.req.orden.comentario
+    else:
+        paragraph_content = "NA"  # O cualquier valor por defecto que prefieras
+
+    # Crear el párrafo con el contenido basado en la condición
+    if paragraph_content is None:
+        paragraph_content = " "    
+    conditional_paragraph = Paragraph(paragraph_content, styleN)
+
+    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
+    # Asumiendo 'width' y 'height' ya están definidos como antes
+    new_frame = Frame(120, 0, width-155, height-675, id='conditional_frame')
+
+    # Agregar el párrafo al nuevo marco
+    new_frame.addFromList([conditional_paragraph], c)
     
+
     table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),

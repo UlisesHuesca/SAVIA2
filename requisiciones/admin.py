@@ -14,7 +14,7 @@ class ValeSalidasAdmin(admin.ModelAdmin):
 
 class Articulos_RequisitadosAdmin(admin.ModelAdmin):
     list_display = ('id','req','producto','cantidad')
-    search_fields = ['producto__articulos__producto__producto__nombre','req__folio']
+    search_fields = ['producto__articulos__producto__producto__nombre','req__folio', 'req__folio']
     raw_id_fields = ('producto','req',)
 
 class SalidasAdmin(admin.ModelAdmin):

@@ -187,6 +187,7 @@ class Compra(models.Model):
     regresar_oc = models.BooleanField(default=False)
     comentarios = models.TextField(max_length=400, null=True)
     comentario_gerencia = models.TextField(null=True, blank=True)
+    comentario_solicitud = models.BooleanField(default = False)
     saldo_a_favor = models.DecimalField(max_digits=14,decimal_places=2, default=0)
 
     @property

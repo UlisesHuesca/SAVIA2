@@ -81,16 +81,16 @@ def compras_pagos(request, pk):
     sub = Subproyecto.objects.get(id=compra.req.orden.subproyecto.id)
     pagos_alt = Pago.objects.filter(oc=compra.id, hecho=True)
     suma_pago = 0
-
+    suma_pago_usd = 0
     for pago in pagos:
+        suma_pago = suma_pago + pago.monto
         if pago.oc.moneda.nombre == "DOLARES":
             if pago.cuenta.moneda.nombre == "PESOS":
-                monto_pago = pago.monto/pago.tipo_de_cambio
-                suma_pago = suma_pago + monto_pago
+                monto_pago_usd = pago.monto/pago.tipo_de_cambio
+                suma_pago_usd = suma_pago_usd + monto_pago_usd
             else:
-                suma_pago = suma_pago + pago.monto
-        else:
-            suma_pago = suma_pago + pago.monto
+                suma_pago_usd = suma_pago + pago.monto
+           
 
 
     if compra.moneda.nombre == 'PESOS':
@@ -249,7 +249,7 @@ def compras_pagos(request, pk):
         'pago':pago,
         'form':form,
         'monto':suma_pago,
-        'suma_pagos': suma_pago,
+        'suma_pago_usd': suma_pago_usd,
         'pagos_alt':pagos_alt,
         'cuentas_para_select2': cuentas_para_select2,
         'remanente':remanente,

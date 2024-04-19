@@ -111,7 +111,7 @@
                     <tbody>
                         <tr>
                             <th scope="col">Impuestos</th>
-                            <th scope="col">${{compra.costo_iva}}</th>
+                            <th scope="col">${{compra.costo_iva|floatformat:2}}</th>
                         </tr>
                         {% if compra.impuestos %}
                         <tr>
@@ -129,6 +129,12 @@
                             <th scope="col">Pagado:</th>
                             <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:2}}</th>
                         </tr>
+                        {% if suma_pago_usd > 0 %}
+                        <tr>
+                            <th scope="col">Pagado USD:</th>
+                            <th id="total" value={{suma_pago_usd}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{suma_pago_usd|floatformat:2}}</th>
+                        </tr>
+                        {% endif %}
                         <tr>
                             <th>Remanente:</th>
                             <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
@@ -222,20 +228,33 @@
                             <div class="form-floating form-floating-group flex-grow-1">   
                                     {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
                                     <label style="color: #121212;" for="id_area">Monto*</label>
-                                </div>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row my-2">
-                    <label for="form.monto_pagado" id="lbl_tipo" class="col-auto col-form-label my-1 d-none"><strong>Tipo de Cambio:</strong></label>
-                    <div class="col-2">
-                        {{form.tipo_de_cambio|add_class:'form-control'}}
+                    <div class="col-lg-6 col-md-12 d-none" id="text_tc">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1">TC</span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.tipo_de_cambio|add_class:'form-control'|append_attr:"placeholder= Tipo de Cambio"}}
+                                <label style="color: #121212;" for="id_area">TC</label>
+                            </div>           
+                        </div>
                     </div>
-                    <label for="form_product.precio_unitario" class="col-sm-2 col-form-label d-none" id="lbl_calculo"><strong>Cálculo previo:</strong></label>
-                    <div id="calculo_previo" class="col-sm-2">
-
+                    <div id="lbl_tipo_cambio" class="col-lg-3 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>TC: {{compra.tipo_de_cambio}}</h6>   
+                        </div>
                     </div>
+                </div>
+                <div class="row my-2">
+                    <div id="lbl_calculo" class="col-lg-3 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Cálculo previo: </h6>   
+                        </div>
+                    </div>
+                </div>
                     <div class="row my-2">
                         <div class="col-12">
                             {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
@@ -273,12 +292,12 @@ function pagarTodo() {
 var compra = document.getElementById("importe");
 var compra_moneda = compra.getAttribute("moneda");
 var monto_moneda = document.getElementById("id_monto");
-var tipo_cambio = document.getElementById("id_tipo_de_cambio");
-var lbl_tipo = document.getElementById("lbl_tipo");
-if (tipo_cambio) {
-    tipo_cambio.setAttribute("class","form-control d-none");
+//var tipo_cambio = document.getElementById("id_tipo_de_cambio");
+//var lbl_tipo = document.getElementById("lbl_tipo");
+//if (tipo_cambio) {
+//    tipo_cambio.setAttribute("class","form-control d-none");
 
-}
+//}
 document.getElementById('myForm').addEventListener('submit', function() {
     // Espera 150 milisegundos antes de deshabilitar el botón de envío
     setTimeout(function() {
@@ -301,12 +320,13 @@ htmx.defineExtension('disable-on-submit', {
     }
   },
 });*/
-document.getElementById('monto_dolares').addEventListener('change',(event)=>{
+document.getElementById('id_monto').addEventListener('change',(event)=>{
     var tipo = document.getElementById("id_tipo_de_cambio").value;
-    var monto = document.getElementById('monto_dolares').value;
-    var monto_real = document.getElementById('id_monto')
+    //var monto = document.getElementById('').value;
+    var monto = document.getElementById('id_monto')
     console.log(tipo)
-    calculo_previo = document.getElementById('calculo_previo')
+    calculo_previo = document.getElementById('lbl_calculo')
+    var alertDiv = document.querySelector('#lbl_calculo .alert');
     var mybtn = document.getElementById('myBtn')
 
     if (compra_moneda == "PESOS"){
@@ -320,9 +340,10 @@ document.getElementById('monto_dolares').addEventListener('change',(event)=>{
     if (monto <= 0 || tipo <= 0){
             mybtn.classList.add('d-none')
         } else {
-            total_dolares = monto*tipo
-            calculo_previo.innerHTML = parseFloat(total_dolares).toFixed(4)
-            monto_real.value = parseFloat(total_dolares).toFixed(4)
+            total_dolares = monto.value/tipo
+            console.log(total_dolares)
+            alertDiv.innerHTML = '<h6>Cálculo previo: </h6>$ ' + parseFloat(total_dolares).toFixed(2) + ' USD';
+            //monto_real.value = parseFloat(total_dolares).toFixed(4)
             mybtn.classList.remove('d-none')
         }
     }
@@ -332,10 +353,10 @@ document.getElementById('monto_dolares').addEventListener('change',(event)=>{
 if (compra_moneda == "DOLARES"){
 document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>{
     var tipo = document.getElementById("id_tipo_de_cambio").value;
-    var monto = document.getElementById('monto_dolares').value;
-    var monto_real = document.getElementById('id_monto')
+    var alertDiv = document.querySelector('#lbl_calculo .alert');
+    var monto = document.getElementById('id_monto')
     console.log(tipo)
-    calculo_previo = document.getElementById('calculo_previo')
+    calculo_previo = document.getElementById('lbl_calculo')
     var mybtn = document.getElementById('myBtn')
     if (compra_moneda == "PESOS"){
         if (monto <= 0 || tipo_cambio <= 0){
@@ -345,12 +366,12 @@ document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>
         }
     }
     if (compra_moneda == "DOLARES"){
-        if (monto <= 0 || tipo_cambio <= 0){
+        if (monto <= 0 || tipo <= 0){
             mybtn.classList.add('d-none')
             } else {
-            total_dolares = monto*tipo
-            calculo_previo.innerHTML = parseFloat(total_dolares).toFixed(4)
-            monto_real.value = parseFloat(total_dolares).toFixed(4)
+            total_dolares = monto.value / tipo
+            alertDiv.innerHTML = '<h6>Cálculo previo: </h6>$ ' + parseFloat(total_dolares).toFixed(2) + ' USD';
+            //monto_real.value = parseFloat(total_dolares).toFixed(4)
             mybtn.classList.remove('d-none')
             }
         }
@@ -415,22 +436,21 @@ $(document).ready(function() {
     $('#id_cuenta').on('select2:select', function(e) {
         var data = e.params.data;
         var moneda = data.moneda;
+        var tipo_cambio = document.getElementById('text_tc')
         console.log(moneda)
         if (compra_moneda == "DOLARES"){
             if (moneda == "PESOS"){
-            monto.classList.add('d-none');
-            monto_dolares.classList.remove('d-none');
             lbl_calculo.classList.remove('d-none'); 
             lbl_tipo_cambio.classList.remove('d-none');
-            txt_tipo_cambio.classList.remove('d-none');
+            tipo_cambio.classList.remove('d-none');
             } else if (moneda =="DOLARES") {
             monto.value = ""
             tipo_cambio.value=""
             calculo_previo.innerHTML = ""
             lbl_calculo.classList.add('d-none');
             lbl_tipo_cambio.classList.add('d-none');
-            txt_tipo_cambio.classList.add('d-none');
-            monto_dolares.classList.add('d-none')
+            tipo_cambio.classList.add('d-none');
+            //monto_dolares.classList.add('d-none')
             monto.classList.remove('d-none');
             }
         }

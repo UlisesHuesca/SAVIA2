@@ -10,7 +10,7 @@ import os
 def verificar_compras_colocadas():
     print('Procesando...')
     # Obtener todas las compras que cumplen con las condiciones
-    compras = Compra.objects.filter(autorizado2=True, pagada=False)
+    compras = Compra.objects.filter(autorizado2=True, pagada=False, req__orden__distrito__id = 2)
     print(f"Encontradas {compras.count()} compras para verificar.")
     
     count = 0
