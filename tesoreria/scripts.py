@@ -219,7 +219,7 @@ def migrate_blob_to_files():
     host='localhost',
     user='root',
     password='peruzzi25',
-    database='savia_activo'
+    database='saviauno_pr'
     )
     cursor = conn.cursor()
     #Se crea el directorio
@@ -227,7 +227,7 @@ def migrate_blob_to_files():
         os.makedirs('media/comprobantes/')
 
     # Consultar el campo BLOB
-    query = "SELECT IDPAGO, FOLIO, COMPROBANTE FROM savia_activo.pagostb"
+    query = "SELECT IDPAGO, FOLIO, COMPROBANTE FROM saviauno_pr.pagostb"
     cursor.execute(query)
     rows = cursor.fetchall()
 
@@ -246,7 +246,7 @@ def migrate_blob_to_files():
                 file.write(COMPROBANTE)
 
             # Actualiza la columna con la ruta del archivo en la base de datos
-            cursor.execute("UPDATE savia_activo.pagostb SET ruta_comprobante=%s WHERE IDPAGO=%s", (path, IDPAGO))
+            cursor.execute("UPDATE saviauno_pr.pagostb SET ruta_comprobante=%s WHERE IDPAGO=%s", (path, IDPAGO))
         else:
             print(f"El registro con ID {IDPAGO} tiene un comprobante BLOB nulo o vacío.")   
 
@@ -261,12 +261,12 @@ def migrate_compras_to_directory():
         host='localhost',
         user='root',
         password='peruzzi25',
-        database='savia_activo'
+        database='saviauno_pr'
     )
     cursor = conn.cursor()
 
     # Consultar el campo BLOB
-    query = "SELECT IDFACTURACOMPRA, FACTURA, XML, IDCOMPRA FROM savia_activo.facturascomprastb ORDER BY IDCOMPRA, IDFACTURACOMPRA"
+    query = "SELECT IDFACTURACOMPRA, FACTURA, XML, IDCOMPRA FROM saviauno_pr.facturascomprastb ORDER BY IDCOMPRA, IDFACTURACOMPRA"
     cursor.execute(query)
     rows = cursor.fetchall()
 
@@ -285,7 +285,7 @@ def migrate_compras_to_directory():
             path = f"facturas/{file_name}"
             with open(path, 'wb') as file:
                 file.write(FACTURA)
-            cursor.execute("UPDATE savia_activo.facturascomprastb SET ruta_factura=%s, indice=%s WHERE IDFACTURACOMPRA=%s", (path, indice, IDFACTURACOMPRA))
+            cursor.execute("UPDATE saviauno_pr.facturascomprastb SET ruta_factura=%s, indice=%s WHERE IDFACTURACOMPRA=%s", (path, indice, IDFACTURACOMPRA))
 
         if XML:
             counters[IDCOMPRA]['xml'] += 1
@@ -294,7 +294,7 @@ def migrate_compras_to_directory():
             path = f"xml/{file_name}"
             with open(path, 'wb') as file:
                 file.write(XML)
-            cursor.execute("UPDATE savia_activo.facturascomprastb SET ruta_xml=%s, indice=%s WHERE IDFACTURACOMPRA=%s", (path, indice, IDFACTURACOMPRA))
+            cursor.execute("UPDATE saviauno_pr.facturascomprastb SET ruta_xml=%s, indice=%s WHERE IDFACTURACOMPRA=%s", (path, indice, IDFACTURACOMPRA))
 
     conn.commit()
     cursor.close()
@@ -308,7 +308,7 @@ def migrate_gastosfacturas_to_files():
         host='localhost',
         user='root',
         password='peruzzi25',
-        database='savia_activo'
+        database='saviauno_pr'
     )
     cursor = conn.cursor()
     print('Iniciando proceso')
@@ -318,7 +318,7 @@ def migrate_gastosfacturas_to_files():
         os.makedirs(directory)
 
     # Consultar los campos BLOB
-    query = "SELECT IDGASTO, PDF, PDFCOMPROBACION, FACTURA, XML FROM savia_activo.gastostb"
+    query = "SELECT IDGASTO, PDF, PDFCOMPROBACION, FACTURA, XML FROM saviauno_pr.gastostb"
     cursor.execute(query)
     rows = cursor.fetchall()
 
@@ -331,7 +331,7 @@ def migrate_gastosfacturas_to_files():
             pdf_path_r = f"/gastos_pdf/PDF_ID{IDGASTO}.pdf"
             with open(pdf_path, 'wb') as file:
                 file.write(PDF)
-            cursor.execute("UPDATE savia_activo.gastostb SET ruta_pdf=%s WHERE IDGASTO=%s", (pdf_path_r, IDGASTO))
+            cursor.execute("UPDATE saviauno_pr.gastostb SET ruta_pdf=%s WHERE IDGASTO=%s", (pdf_path_r, IDGASTO))
 
         #Guarda comprabación
         if PDFCOMPROBACION is not None:
@@ -339,7 +339,7 @@ def migrate_gastosfacturas_to_files():
             pdfc_path_r = f"/gastos_comprobacion/PDFC_ID{IDGASTO}.pdf"
             with open(pdfc_path, 'wb') as file:
                 file.write(PDFCOMPROBACION)
-            cursor.execute("UPDATE savia_activo.gastostb SET ruta_comprobacion = %s WHERE IDGASTO=%s",(pdfc_path_r, IDGASTO))
+            cursor.execute("UPDATE saviauno_pr.gastostb SET ruta_comprobacion = %s WHERE IDGASTO=%s",(pdfc_path_r, IDGASTO))
 
         # Guardar FACTURA
         if FACTURA is not None:
@@ -347,7 +347,7 @@ def migrate_gastosfacturas_to_files():
             factura_path_r = f"/gastos_factura/FACTURA_ID{IDGASTO}.pdf"
             with open(factura_path, 'wb') as file:
                 file.write(FACTURA)
-            cursor.execute("UPDATE savia_activo.gastostb SET ruta_factura=%s WHERE IDGASTO=%s", (factura_path_r,IDGASTO))
+            cursor.execute("UPDATE saviauno_pr.gastostb SET ruta_factura=%s WHERE IDGASTO=%s", (factura_path_r,IDGASTO))
         
         # Guardar XML
         if XML is not None:
@@ -355,7 +355,7 @@ def migrate_gastosfacturas_to_files():
             xml_path_r = f"/gastos_xml/XML_ID{IDGASTO}.xml"
             with open(xml_path, 'wb') as file:
                 file.write(XML)
-            cursor.execute("UPDATE savia_activo.gastostb SET ruta_xml=%s WHERE IDGASTO=%s", (xml_path_r, IDGASTO))
+            cursor.execute("UPDATE saviauno_pr.gastostb SET ruta_xml=%s WHERE IDGASTO=%s", (xml_path_r, IDGASTO))
 
     conn.commit()
     cursor.close()
