@@ -12,7 +12,7 @@ from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.conf import settings
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task
-from dashboard.models import Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir
+from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
@@ -1333,7 +1333,10 @@ def handle_uploaded_file(file, model_instance, field_name):
     model_instance.save()
 
 def comparativos(request):
-    comparativos = Comparativo.objects.filter(completo = True)
+    #creada_por 
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+    comparativos = Comparativo.objects.filter(completo = True, creada_por__distritos = usuario.distritos)
     form = UploadFileForm()
     error_messages = {}
 
@@ -1699,11 +1702,17 @@ def generar_pdf(compra):
     c.drawString(100,caja_proveedor-120, compra.proveedor.estatus.nombre)
     if compra.dias_de_entrega:
         c.drawString(110,caja_proveedor-140, str(compra.dias_de_entrega)+' '+'días hábiles')
-
-    if compra.req.orden.activo:
-        c.drawString(60,caja_proveedor-160, compra.req.orden.activo.eco_unidad + ' '+ compra.req.orden.activo.descripcion)
-    else:
-        c.drawString(60,caja_proveedor-160, 'NA')
+    
+    
+    try:
+        if compra.req.orden.activo is not None:
+            eco_unidad = compra.req.orden.activo.eco_unidad
+            descripcion = compra.req.orden.activo.descripcion
+            c.drawString(60, caja_proveedor-160, f'{eco_unidad} {descripcion}')
+        else:
+            c.drawString(60, caja_proveedor-160, 'NA')
+    except Activo.DoesNotExist:
+        c.drawString(60, caja_proveedor-160, 'NA')
 
 
     c.drawString(inicio_central + 90,caja_proveedor-35, str(compra.req.folio))
@@ -1888,6 +1897,8 @@ def generar_pdf(compra):
         paragraph_content = "NA"  # O cualquier valor por defecto que prefieras
 
     # Crear el párrafo con el contenido basado en la condición
+    if paragraph_content is None:
+        paragraph_content = " "    
     conditional_paragraph = Paragraph(paragraph_content, styleN)
 
     # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario

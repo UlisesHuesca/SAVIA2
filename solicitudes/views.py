@@ -422,7 +422,7 @@ def checkout(request):
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'La solicitud {order.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
                     messages.success(request, error_message)
-                order.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)    
+                order.sol_autorizada_por = Profile.objects.get(id=usuario.id)    
                 cartItems = '0'
             else:
                 for producto in productos:

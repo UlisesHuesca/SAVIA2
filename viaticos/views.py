@@ -310,7 +310,7 @@ def cancelar_viaticos2(request, pk):
         viatico.approbado_fecha2 = date.today()
         viatico.approved_at_time2 = datetime.now().time()
         viatico.save()
-        messages.info(request, f'{perfil.staff.first_name} {perfil.staff.last_name} has cancelado la solicitud {viatico.id}')
+        messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud de viático {viatico.folio}')
         return redirect ('viaticos-pendientes-autorizar2')
 
     context = {

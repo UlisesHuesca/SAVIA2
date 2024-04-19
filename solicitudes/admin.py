@@ -4,9 +4,11 @@ from .models import Proyecto, Subproyecto, Sector, Operacion, St_Entrega, Client
 class ProyectoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre','distrito')
     list_filter = ('distrito',)
+    search_fields = ['nombre']
 
 class SubproyectoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre','proyecto')
+    search_fields = ['nombre']
 
 
 # Register your models here.

@@ -85,6 +85,15 @@
                 <div class="row g-12 my-2">
                     <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
                         <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.vale|add_class:'form-control'|append_attr:"placeholder= Vale"}}
+                            <label style="color: #121212;" for="id_solicitud">Vale</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                        <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
@@ -102,7 +111,7 @@
                         </div>
                     </div>
                     <div class="col-2 mt-1">
-                        <button id="btnBuscar" onclick="regenerar()" class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
                 
@@ -270,7 +279,7 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script>
-document.addEventListener('DOMContentLoaded', function() {
+/*document.addEventListener('DOMContentLoaded', function() {
     var task_id = '{{task_id_salidas}}'
     var cantidad = '{{cantidad| unlocalize}}'
     if (task_id){
@@ -299,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function() {
         downloadButton.classList.remove('d-none');
     }
 
-});
+});*/
 
 function intentos(cantidad){
 var intentos = 0;
