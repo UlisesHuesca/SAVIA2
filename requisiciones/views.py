@@ -11,6 +11,7 @@ from django.http import JsonResponse, HttpResponse, FileResponse
 from django.conf import settings
 
 import xlsxwriter
+from xlsxwriter.utility import xl_col_to_name
 from io import BytesIO
 
 import os
@@ -1311,7 +1312,7 @@ def reporte_salidas(request):
     salidas_list = p.get_page(page)
 
     if request.method == "POST" and 'btnExcel' in request.POST:
-        generate_excel_report(salidas_filtradas)
+        return generate_excel_report(salidas_filtradas)
 
     context = {
         'salidas':salidas,
@@ -1898,51 +1899,70 @@ def render_entrada_pdf(request, pk):
 
 
 def generate_excel_report(salidas):
+    #print(salidas)
     output = BytesIO()
 
     # Crea un libro de trabajo y añade una hoja
-    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-    worksheet = workbook.add_worksheet("Matriz_Compras")
+    workbook = xlsxwriter.Workbook(output, {'constant_memory': True})
+    worksheet = workbook.add_worksheet("Matriz_Salidas")
 
     # Define los formatos que necesitas
-    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '003366', 'font_name': 'Arial', 'font_size': 11})
-    body_format = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
-    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
 
     # Escribe los encabezados
-    columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Material recibido por','Cantidad','Precio','Total']
+    columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Material recibido por',
+               'Cantidad','Precio','Total']
+    
     for i, column in enumerate(columns):
         worksheet.write(0, i, column, head_style)
         worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
 
     # Preparar los datos
-    row_num = 1
-    #for salida in salidas:
-    #    if salida.precio > 0:
-    #        precio_condicional = salida.precio
-    #    elif salida.producto.precio > 0:
-    #        precio_condicional = salida.producto.precio
-    #    else:
-    #        precio_condicional = salida.producto.articulos.producto.price
+    row_num = 0
+    for salida in salidas:
+        row_num += 1
+        if salida.precio > 0:
+            precio_condicional = salida.precio
+        elif salida.producto.precio > 0:
+            precio_condicional = salida.producto.precio
+        else:
+            precio_condicional = salida.producto.articulos.producto.price
 
-    #    data = [
-    #        salida.vale_salida.folio,
-    #        salida.vale_salida.solicitud.folio,
-    #        salida.created_at.strftime('%d/%m/%Y'),  # Formatea la fecha para la celda
-    #        f"{salida.producto.articulos.orden.staff.staff.staff.first_name} {salida.producto.articulos.orden.staff.staff.staff.last_name}",
-    #        salida.producto.articulos.orden.proyecto.nombre if salida.producto.articulos.orden.proyecto else " ",
-    #        salida.producto.articulos.orden.subproyecto.nombre if salida.producto.articulos.orden.subproyecto else " ",
-    #        salida.producto.articulos.orden.operacion.nombre if salida.producto.articulos.orden.operacion else "Sin operación",
-    #        salida.producto.articulos.producto.producto.codigo,
-    #        salida.producto.articulos.producto.producto.nombre,
-    #        f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}",
-    #        salida.cantidad,
-    #        precio_condicional
-    #    ]
+        rows = [
+            salida.vale_salida.folio,
+            salida.vale_salida.solicitud.folio,
+            salida.created_at.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
+            f"{salida.producto.articulos.orden.staff.staff.staff.first_name} {salida.producto.articulos.orden.staff.staff.staff.last_name}",
+            salida.producto.articulos.orden.proyecto.nombre if salida.producto.articulos.orden.proyecto else " ",
+            salida.producto.articulos.orden.subproyecto.nombre if salida.producto.articulos.orden.subproyecto else " ",
+            salida.producto.articulos.orden.operacion.nombre if salida.producto.articulos.orden.operacion else "Sin operación",
+            salida.producto.articulos.producto.producto.codigo,
+            salida.producto.articulos.producto.producto.nombre,
+            f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}",
+            salida.cantidad,
+            precio_condicional
+        ]
 
          # Escribe la fila en el archivo
-    #    worksheet.write_row('A' + str(row_num + 1), data, body_format)
-    #    row_num += 1
+        for col_num, cell_value in enumerate(rows):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Aplica el formato de fecha para las columnas con fechas
+            if col_num in [3]:  # Asume que estas son tus columnas de fechas
+                cell_format = date_style
+        
+            # Aplica el formato de dinero para las columnas con valores monetarios
+            elif col_num in [11]:  # Asume que estas son tus columnas de dinero
+                cell_format = money_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+        worksheet.write_formula(row_num, 12, f'=K{row_num + 1}*L{row_num + 1}', money_style)
     
     workbook.close()
 
@@ -1953,7 +1973,7 @@ def generate_excel_report(salidas):
         output.read(), 
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-    response['Content-Disposition'] = f'attachment; filename=Matriz_compras_{dt.date.today()}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=Matriz_Salidas_{dt.date.today()}.xlsx'
       # Establecer una cookie para indicar que la descarga ha iniciado
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
