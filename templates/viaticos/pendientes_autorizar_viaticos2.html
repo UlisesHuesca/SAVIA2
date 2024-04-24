@@ -65,9 +65,9 @@
                 {% for orden in ordenes_list %}
                 <tr>
                     <th scope="row">{{orden.folio}}</th>
-                    <td>{{orden.staff.staff.first_name}} {{orden.staff.staff.last_name}}</td>
-                    <td>{{orden.colaborador.staff.first_name}} {{orden.colaborador.staff.first_name}}</td>
-                    <td>{{orden.superintendente.staff.first_name}} {{orden.superintendente.staff.last_name}}</td>
+                    <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
+                    <td>{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.first_name}}</td>
+                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}</td>
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
                     <td>{{orden.created_at}}</td>
