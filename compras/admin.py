@@ -5,7 +5,7 @@ class CompraAdmin(admin.ModelAdmin):
     list_display = ('id','folio', 'req','proveedor','oc_autorizada_por2','cond_de_pago','autorizado1','autorizado2')
     list_filter = ('proveedor',)
     search_fields = ['folio']
-    raw_id_fields = ('req','oc_autorizada_por','oc_autorizada_por2','proveedor','creada_por')
+    raw_id_fields = ('req','oc_autorizada_por','oc_autorizada_por2','proveedor','creada_por','comparativo_model')
 
 class ArticuloComprado_Admin(admin.ModelAdmin):
     list_display = ('id','oc','producto','cantidad')
@@ -19,7 +19,7 @@ class ProveedorAdmin(admin.ModelAdmin):
 class Proveedor_direccionesAdmin(admin.ModelAdmin):
     search_fields = ('nombre__razon_social',)
     raw_id_fields = ('nombre','creado_por',)
-    list_display = ('id','nombre',) 
+    list_display = ('id','nombre','distrito') 
    
 
 class Comparativo_Admin(admin.ModelAdmin):

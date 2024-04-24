@@ -1472,9 +1472,9 @@ def carga_proveedor(request):
          Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO"),
          distrito = usuario.distritos, 
          nombre__razon_social__icontains = term
-    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre')
+    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito')
     data = list(proveedores)
-        
+    #print(proveedores)
     return JsonResponse(data, safe=False)
 
 def carga_proveedor_comparativo(request):
@@ -1731,7 +1731,7 @@ def generar_pdf(compra):
 
 
     if compra.cond_de_pago.nombre == "CREDITO":
-        c.drawString(inicio_central + 100,caja_proveedor-75, compra.cond_de_pago.nombre + '  ' + str(compra.proveedor.dias_credito) + ' días')
+        c.drawString(inicio_central + 100,caja_proveedor-75, compra.cond_de_pago.nombre + '  ' + str(compra.dias_de_credito) + ' días')
     else:
         c.drawString(inicio_central + 100,caja_proveedor-75, compra.cond_de_pago.nombre )
 
@@ -2386,8 +2386,8 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
 
     columna_max = len(columns)+2
 
-    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por Savia Vordcab. UH', messages_style)
-    worksheet.write(1, columna_max - 1, 'Software desarrollado por Vordcab S.A. de C.V.', messages_style)
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
     
     # Escribir encabezados debajo de los mensajes

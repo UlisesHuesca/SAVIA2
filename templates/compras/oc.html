@@ -78,11 +78,11 @@
                             </div>
                         </div>
                     </div>
-                    <div id="dias_credito" class="col-lg-6 d-none">
+                    <div id="credito_dias" class="col-lg-6 d-none">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-day"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.dias_de_credito|add_class:"form-select"|append_attr:"placeholder= Días de crédito"}}
+                                {{form.dias_de_credito|add_class:"form-control"|append_attr:"placeholder= Días de crédito"}}
                                 <label style="color: #121212;" for="id_cond_de_pago">Días de crédito</label>
                             </div>
                         </div>
@@ -802,17 +802,20 @@ function impuestos_v(element) {
 
 var pago = document.getElementById("id_cond_de_pago")
 
-//This is the part off code that when condiciones de pago swicth button change
 document.getElementById("id_cond_de_pago").addEventListener("change", function(element){
-    var lbl_dias = document.getElementById('dias_credito')
+    var lbl_dias = document.getElementById('credito_dias')
     var dias = document.getElementById('id_dias_de_credito')
-
+    var distrito = document.getElementById('lbl_distrito')
+    var dias_c = distrito.getAttribute('dias')
+    console.log(dias_c)
     if (pago.value == 2){
         lbl_dias.classList.remove('d-none');
-        dias.classList.remove('d-none');
+        dias.value = dias_c
+        //dias.classList.remove('d-none');
     } else {
-        dias.classList.add('d-none');
+        //dias.classList.add('d-none');
         lbl_dias.classList.add('d-none');
+        dias.value = ""
     }
 });
 
@@ -969,6 +972,7 @@ document.addEventListener('DOMContentLoaded', function() {
                             inputElement.checked = true
                         }
                         else{
+                            console.log(obj[key])
                             inputElement.value = obj[key];
                         }
                     } else {
@@ -1015,7 +1019,9 @@ $(document).ready(function(){
                             text: item.nombre__razon_social, 
                             distrito: item.distrito__nombre,
                             status: item.estatus__nombre,
-                            domicilio: item.domicilio
+                            domicilio: item.domicilio,
+                            financiamiento: item.financiamiento,
+                            dias_credito: item.dias_credito
                         };
                     })
 
@@ -1051,10 +1057,14 @@ $(document).ready(function(){
          datosCompra.lbl_domicilio ='';
          datosCompra.lbl_status ='';
          datosCompra.proveedor='';
+         datosCompra.dias_de_credito = '';
+         datosCompra.financiamiento='';
          datosCompra.proveedor_text =''; 
          $('#lbl_distrito').text('');
          $('#lbl_domicilio').text('');
          $('#lbl_status').text(''); 
+         $('#id_cond_de_pago').val('').trigger('change');
+         $('#id_dias_de_credito').val('')
          localStorage.setItem("id_formulario_" + oc, JSON.stringify(datosCompra));    
     })
     }
@@ -1063,15 +1073,35 @@ $(document).ready(function(){
         var distrito = data.distrito; // Aquí obtienes el valor de distrito
         var domicilio = data.domicilio;
         var status = data.status;
+        var financiamiento = data.financiamiento;
+        var dias = data.dias_credito;
+        if (dias === ""){
+            dias = 0
+        }
+
         var proveedor = data.id;
         var lbl_nombre = data.text;
         var encabezado = document.getElementById("oc")
         var oc = encabezado.getAttribute("target"); 
+        var dias_campo = $('#id_dias_de_credito');
+        var lbl_dias = $('#credito_dias');
         //var comparativo = document.getElementById("comparativo") 
         //localStorage.setItem("id_formulario_" + oc, JSON.stringify(object));
         $('#lbl_distrito').text(distrito);
         $('#lbl_domicilio').text(domicilio);
-        $('#lbl_status').text(status);   
+        $('#lbl_status').text(status);  
+        $('#lbl_distrito').attr('dias',dias)
+        
+        if (data.financiamiento) {
+            $('#id_cond_de_pago').val('2').trigger('change');
+            lbl_dias.removeClass('d-none');
+            //dias.removeClass('d-none');
+            dias_campo.val(dias);
+        } else {
+            lbl_dias.addClass('d-none');
+            //dias.addClass('d-none');
+            dias_campo.val(''); // Limpia el valor
+        }
         
         var datosCompra = JSON.parse(localStorage.getItem("id_formulario_" + oc)) || {};
         
@@ -1080,6 +1110,8 @@ $(document).ready(function(){
         datosCompra.lbl_domicilio = domicilio;
         datosCompra.lbl_status = status;
         datosCompra.lbl_distrito = distrito;
+        datosCompra.financiamiento = financiamiento;
+        datosCompra.dias_de_credito = dias;
         precio_ref()
         //if (status == "NUEVO"){
         //    comparativo.classList.remove('d-none');
@@ -1095,6 +1127,7 @@ $(document).ready(function(){
         $('#lbl_distrito').text('');
         $('#lbl_domicilio').text('');
         $('#lbl_status').text('');  
+        $('#id_cond_de_pago').val('').trigger('change');
 
     });
 }); 
