@@ -54,6 +54,7 @@ def activos(request):
 
 @login_required(login_url='user-login')
 def add_activo(request):
+    #perfil = Profile.objects.get(staff__id=request.user.id)
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
     #activos = Activo.objects.filter(completo=True)
