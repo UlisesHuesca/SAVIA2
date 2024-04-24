@@ -78,7 +78,7 @@
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'dashboard-staff' %}">Usuarios</a>
                                 </div>
-                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "ACTIVOS_SISTEMAS"  %}
+                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "ACTIVOS_SISTEMAS" or usuario.tipo.nombre == "SISTEMAS" %}
                                 <div>
                             {% else %}
                                 <div class="d-none">

@@ -8,7 +8,7 @@ from dashboard.models import Profile
 class Activo_Form(forms.ModelForm):
     class Meta:
         model = Activo
-        fields = ['activo','tipo_activo','descripcion','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna','factura_pdf','factura_xml']
+        fields = ['activo','tipo_activo','descripcion','eco_unidad','serie','marca','modelo','comentario','cuenta_contable','factura_interna','factura_pdf','factura_xml']
 
     
 class Edit_Activo_Form(forms.ModelForm):

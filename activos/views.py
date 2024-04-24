@@ -87,6 +87,7 @@ def add_activo(request):
         if form.is_valid():
             activo = form.save(commit=False)
             activo.completo = True
+            activo.estatus.nombre = "ALTA"
             activo.save()
             messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
             return redirect('activos')
