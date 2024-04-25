@@ -111,7 +111,7 @@
                         </div>
                     </div>
                     <div class="col-2 mt-1">
-                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button id="btnBuscar" onclick="regenerar()" class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
                 
@@ -125,11 +125,11 @@
                 <h5>Reporte de Salidas</h5>
             </div>
             <div class="card-body">
-                <form method=POST onsubmit="mostrarIndicadorCarga();">
+                <form method=POST>
                     {% csrf_token %}
                     <ul class="nav nav-pills">
                        <li class="nav-item mx-2 pl-5">
-                            <button  type="submit" id="reporte_salidas" name="btnExcel" class="btn btn-outline-success btn-lg" value='Reporte Excel'>
+                            <button  type="submit" id="reporte_salidas" name="btnExcel" class="btn btn-outline-success btn-lg d-none" value='Reporte Excel'>
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
@@ -286,7 +286,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script>
 
-function getCookie(name) {
+/*function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
@@ -323,8 +323,8 @@ function verificarDescargaIniciada(){
 
         }
     }, 1000); // Revisar cada segundo
-}
-/*document.addEventListener('DOMContentLoaded', function() {
+}*/
+document.addEventListener('DOMContentLoaded', function() {
     var task_id = '{{task_id_salidas}}'
     var cantidad = '{{cantidad| unlocalize}}'
     if (task_id){
@@ -353,7 +353,7 @@ function verificarDescargaIniciada(){
         downloadButton.classList.remove('d-none');
     }
 
-});*/
+});
 
 function intentos(cantidad){
 var intentos = 0;

@@ -446,6 +446,11 @@ def matriz_facturas(request, pk):
     if request.method == 'POST':
         if "btn_factura" in request.POST:
             form = Facturas_Form(request.POST or None, request.FILES or None, instance = factura)
+            
+            
+            
+            
+            
             if form.is_valid():
                 factura = form.save(commit = False)
                 factura.fecha_subido = date.today()
@@ -813,7 +818,7 @@ def convert_excel_matriz_pagos(pagos):
             facturas_completas = pago.gasto.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para gastos
         elif pago.viatico:
-            proveedor = pago.viatico.staff.staff.first_name
+            proveedor = pago.viatico.staff.staff.staff.first_name
             facturas_completas = pago.viatico.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para viáticos
         else:

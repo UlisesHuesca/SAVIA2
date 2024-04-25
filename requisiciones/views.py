@@ -1305,14 +1305,14 @@ def reporte_salidas(request):
     myfilter = SalidasFilter(request.GET, queryset=salidas)
     salidas = myfilter.qs
     salidas_filtradas = salidas.filter(producto__articulos__producto__producto__servicio = False)
-    #salidas_data =  list(salidas_filtradas.values())
+    salidas_data =  list(salidas_filtradas.values())
     #Set up pagination
     p = Paginator(salidas, 50)
     page = request.GET.get('page')
     salidas_list = p.get_page(page)
 
-    if request.method == "POST" and 'btnExcel' in request.POST:
-        return generate_excel_report(salidas_filtradas)
+    #if request.method == "POST" and 'btnExcel' in request.POST:
+    #    return generate_excel_report(salidas_filtradas)
 
     context = {
         'salidas':salidas,
@@ -1320,14 +1320,14 @@ def reporte_salidas(request):
         'myfilter':myfilter,
         }
 
-    #task_id_salidas = request.session.get('task_id_salidas')
+    task_id_salidas = request.session.get('task_id_salidas')
     
-    
-        #if not task_id_salidas:
-        #    task =  convert_salidas_to_xls_task.delay(salidas_data)
-        #    task_id = task.id
-        #    request.session['task_id_salidas'] = task_id
-        #    context['task_id_salidas'] = task_id 
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        if not task_id_salidas:
+            task =  convert_salidas_to_xls_task.delay(salidas_data)
+            task_id = task.id
+            request.session['task_id_salidas'] = task_id
+            context['task_id_salidas'] = task_id 
 
     return render(request,'requisiciones/reporte_salidas.html', context)
 
