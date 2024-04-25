@@ -3,6 +3,7 @@ from django.http import HttpResponse
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
+from django.core.files.base import ContentFile
 from django.db.models import Sum, Q
 from django.db.models.functions import Concat
 from django.contrib import messages
@@ -28,6 +29,7 @@ from datetime import date, datetime
 import decimal
 import os
 import io
+import re
 #Excel stuff
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -432,6 +434,27 @@ def matriz_pagos(request):
     return render(request, 'tesoreria/matriz_pagos.html',context)
 
 
+def eliminar_caracteres_invalidos(archivo_xml):
+    # Definir la expresión regular para encontrar caracteres inválidos
+    regex = re.compile(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]')
+    
+    # Leer el contenido del archivo XML
+    xml_content = archivo_xml.read().decode('utf-8')
+    
+    # Eliminar los caracteres inválidos específicos ("o;?") de los primeros tres espacios
+    xml_content = xml_content[:3].replace("o;?", "") + xml_content[3:]
+    
+    # Reemplazar los caracteres inválidos con una cadena vacía
+    xml_content = regex.sub('', xml_content)
+    
+    # Volver a escribir el contenido corregido al archivo XML en memoria
+    new_file = ContentFile(xml_content.encode('utf-8'))
+    
+    # Guardar el nuevo archivo si es necesario, o retornarlo
+    return new_file
+
+
+
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def matriz_facturas(request, pk):
@@ -452,8 +475,13 @@ def matriz_facturas(request, pk):
                 factura.hora_subido = datetime.now().time()
                 factura.hecho = True
                 factura.subido_por = usuario
+                archivo_xml = request.FILES.get('factura_xml')
+                if archivo_xml:
+                    # Procesar el archivo XML para eliminar caracteres inválidos
+                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                    # Guardar el archivo procesado de nuevo en el objeto factura
+                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
                 factura.save()
-                form.save()
                 messages.success(request,'Haz registrado tu factura')
                 return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
             else:
@@ -513,8 +541,14 @@ def factura_nueva(request, pk):
                 factura.fecha_subido =date.today()
                 factura.hora_subido = datetime.now().time()
                 factura.subido_por =  usuario
+                archivo_xml = request.FILES.get('factura_xml')
+                if archivo_xml:
+                    # Procesar el archivo XML para eliminar caracteres inválidos
+                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                    # Guardar el archivo procesado de nuevo en el objeto factura
+                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
                 factura.save()
-                messages.success(request,'Las factura se registró de manera exitosa')
+                messages.success(request,'La factura se registró de manera exitosa')
             else:
                 messages.error(request,'No se pudo subir tu documento')
 
