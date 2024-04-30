@@ -452,7 +452,7 @@ def migrate_tablafacturasgastos_to_files_v2():
         host='localhost',
         user='root',
         password='peruzzi25',
-        database='savia_activo'
+        database='saviauno_pr'
     )
     cursor = conn.cursor()
     
@@ -462,7 +462,7 @@ def migrate_tablafacturasgastos_to_files_v2():
         os.makedirs(directory)
 
     # Consultar los campos BLOB
-    query = "SELECT IDFACTURAGASTO, FACTURA, XML, IDGASTO FROM savia_activo.facturasgastostb ORDER BY IDGASTO, IDFACTURAGASTO"
+    query = "SELECT IDFACTURAGASTO, FACTURA, XML, IDGASTO FROM saviauno_pr.facturasgastostb ORDER BY IDGASTO, IDFACTURAGASTO"
     cursor.execute(query)
     rows = cursor.fetchall()
 
@@ -484,7 +484,7 @@ def migrate_tablafacturasgastos_to_files_v2():
             factura_path_r = f"/gastos_facturatb/FACTURA_{IDGASTO}_{indice_factura_por_idgasto[IDGASTO]}.pdf"
             with open(factura_path, 'wb') as file:
                 file.write(FACTURA)
-            cursor.execute("UPDATE savia_activo.facturasgastostb SET ruta_factura=%s, indice=%s WHERE IDFACTURAGASTO=%s", (factura_path_r, indice_factura_por_idgasto[IDGASTO], IDFACTURAGASTO))
+            cursor.execute("UPDATE saviauno_pr.facturasgastostb SET ruta_factura=%s, indice=%s WHERE IDFACTURAGASTO=%s", (factura_path_r, indice_factura_por_idgasto[IDGASTO], IDFACTURAGASTO))
         
         # Incrementar o inicializar índice para XML si existe
         if XML is not None:
@@ -497,7 +497,7 @@ def migrate_tablafacturasgastos_to_files_v2():
             xml_path_r = f"/gastos_xmltb/XML_{IDGASTO}_{indice_xml_por_idgasto[IDGASTO]}.xml"
             with open(xml_path, 'wb') as file:
                 file.write(XML)
-            cursor.execute("UPDATE savia_activo.facturasgastostb SET ruta_xml=%s, indice=%s WHERE IDFACTURAGASTO=%s", (xml_path_r, indice_xml_por_idgasto[IDGASTO], IDFACTURAGASTO))
+            cursor.execute("UPDATE saviauno_pr.facturasgastostb SET ruta_xml=%s, indice=%s WHERE IDFACTURAGASTO=%s", (xml_path_r, indice_xml_por_idgasto[IDGASTO], IDFACTURAGASTO))
 
     conn.commit()
     cursor.close()

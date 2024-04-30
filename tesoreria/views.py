@@ -24,6 +24,8 @@ from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
 from user.models import Profile
 import pytz  # Si estás utilizando pytz para manejar zonas horarias
+import fitz  # PyMuPDF
+import re
 
 from datetime import date, datetime
 import decimal
@@ -72,6 +74,77 @@ def compras_autorizadas(request):
 
     return render(request, 'tesoreria/compras_autorizadas.html',context)
 
+
+def encontrar_variables(texto):
+    # Diccionario para almacenar los valores extraídos
+    variables = {}
+
+    # Definir los patrones de regex para cada variable
+    patrones = {
+        'fecha': r'Fecha de creación:\s?([^\n\r]+)',
+        'importe_operacion': r'Importe de la operación:\s?([\d,.]+)',
+        'cuenta_retiro': r'Cuenta de retiro:\s?(\d+)',
+        'divisa_cuenta': r'Divisa de la cuenta:\s?([^\n\r]+)'
+    }
+
+    # Buscar cada patrón y extraer el valor
+    for clave, patron in patrones.items():
+        coincidencia = re.search(patron, texto)
+        if coincidencia:
+            variables[clave] = coincidencia.group(1).replace('MXP','').replace(',', '') if 'importe_operacion' in clave else coincidencia.group(1)
+
+    return variables
+
+
+def extraer_texto_de_pdf(pdf_file):
+    pdf_file = fitz.open(stream= pdf_file, filetype='pdf')
+    texto = ""
+    for pagina in pdf_file:
+        texto += pagina.get_text()
+    return texto
+
+from django.http import JsonResponse
+
+def prellenar_formulario(request):
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        pdf_content = request.FILES['comprobante_pago'].read()
+        texto_extraido = extraer_texto_de_pdf(pdf_content)
+        datos_extraidos = encontrar_variables(texto_extraido)
+        fecha_str = datos_extraidos.get('fecha', '').strip()
+        try:
+            fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y')
+            fecha_formato_correcto = fecha_obj.strftime('%Y-%m-%d')  # Convertir a formato 'YYYY-MM-DD'
+        except ValueError:
+            # Manejar el error si la fecha no está en el formato esperado
+            fecha_formato_correcto = None
+
+        numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip()
+        divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
+
+        # Determinas el texto de la divisa basado en la divisa extraída
+        texto_divisa = "PESOS" if divisa_cuenta_extraida == "MXP" else "DOLARES"  # O la divisa que corresponda
+        cuenta_objeto = Cuenta.objects.get(cuenta=numero_cuenta_extraido)
+#        Combinas el número de cuenta y el texto de la divisa para prellenar el formulario
+        #cuenta_formulario = f"{numero_cuenta_extraido} {texto_divisa}"
+        print(cuenta_objeto)
+        # Limpia y prepara los datos como sea necesario
+        datos_para_formulario = {
+            'monto': datos_extraidos.get('importe_operacion', '').replace('MXP', '').replace(',', '').strip(),
+            'pagado_real': fecha_formato_correcto, # Usa el valor de fecha convertido
+            'cuenta': cuenta_objeto.id,
+            # Asegúrate de que 'divisa_cuenta' sea un campo en tu formulario si lo estás incluyendo aquí
+            'divisa_cuenta': datos_extraidos.get('divisa_cuenta', ''),
+        }
+        
+        # Devuelve los datos en formato JSON
+        return JsonResponse(datos_para_formulario)
+    
+    # Si algo falla o no es un POST AJAX, puedes decidir cómo manejarlo
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def compras_pagos(request, pk):
@@ -112,9 +185,9 @@ def compras_pagos(request, pk):
 
     
     remanente = compra.costo_plus_adicionales - suma_pago
-  
 
-    if request.method == 'POST':
+    
+    if request.method == 'POST' and "envio" in request.POST:
         form = PagoForm(request.POST, request.FILES or None, instance = pago)
         if form.is_valid():
             pago = form.save(commit = False)
@@ -134,7 +207,7 @@ def compras_pagos(request, pk):
                 if pago.cuenta.moneda.nombre == "PESOS": #Si la cuenta es en pesos
                     sub.gastado = sub.gastado + monto_actual * pago.tipo_de_cambio
                     monto_actual = monto_actual/pago.tipo_de_cambio
-            #        cuenta.saldo = cuenta_pagos['monto__sum'] + monto_actual * decimal.Decimal(request.POST['tipo_de_cambio'])
+                #        cuenta.saldo = cuenta_pagos['monto__sum'] + monto_actual * decimal.Decimal(request.POST['tipo_de_cambio'])
                 if pago.cuenta.moneda.nombre == "DOLARES":
                     tipo_de_cambio = decimal.Decimal(dof())
                     sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
@@ -230,13 +303,13 @@ def compras_pagos(request, pk):
                         except (BadHeaderError, SMTPException) as e:
                             error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
                             messages.warning(request, error_message) 
-                        
+                            
                 pago.save()
                 compra.save()
                 form.save()
                 sub.save()
                 cuenta.save()
-               
+                
                 return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
             elif monto_total > compra.costo_oc:
                 messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {compra.costo_oc}')
