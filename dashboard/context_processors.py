@@ -74,7 +74,7 @@ def contadores_processor(request):
         if usuario.tipo.oc_gerencia == True:
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None, req__orden__distrito = usuario.distritos)
             gastos_gerencia = Solicitud_Gasto.objects.filter(complete=True, autorizar=True, autorizar2=None, distrito = usuario.distritos)
-            viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True)
+            viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True, distrito = usuario.distritos)
            
             conteo_oc = oc.count()
             conteo_viaticos_gerencia = viaticos_gerencia.count()

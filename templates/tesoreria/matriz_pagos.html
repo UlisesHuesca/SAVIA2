@@ -138,10 +138,10 @@
     </div>
 </div>
 
-<div class = "card col">
+<div class = "card">
     <div class ="table-responsive-sm">
         <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
+            <thead class="text-black sticky-header" style="background-color: #F5F5F5;">
                 <tr>
                     <th class="d-none d-lg-table-cell">Id</th>
                     <th scope="col">Compra/Gasto</th>
@@ -308,6 +308,7 @@ var modal = document.getElementById('dialog')
 modal.on('hidden.bs.modal', function () {
     location.reload();
 });
+
 
 </script>
 {% endblock %}

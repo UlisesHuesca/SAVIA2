@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum, Max, Exists, OuterRef, Subquery
+from django.db.models import Q, Sum, Max, Exists, OuterRef, Subquery, Avg
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse
 from django.core.mail import EmailMessage
@@ -22,6 +22,12 @@ import decimal
 import os
 from datetime import date, datetime
 from user.decorators import perfil_seleccionado_required
+from io import BytesIO
+
+# Import Excel Stuff
+import xlsxwriter
+from xlsxwriter.utility import xl_col_to_name
+import datetime as dt
 
 # Create your views here.
 @perfil_seleccionado_required
@@ -69,6 +75,13 @@ def pendientes_entrada(request):
 
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
+
+    
+    # Ahora, usamos este queryset de compras para filtrar ArticuloComprado.
+    articulos_comprados = ArticuloComprado.objects.filter(oc__in=compras).order_by('-oc__folio')
+
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_matriz_compras_pendientes(articulos_comprados)
 
     #Set up pagination
     p = Paginator(compras, 50)
@@ -649,3 +662,100 @@ def update_no_conformidad(request):
         #Guardado de bases de datos
         nc_item.delete()
     return JsonResponse('Item was '+action, safe=False)
+
+
+def convert_excel_matriz_compras_pendientes(articulos_comprados):
+      #print('si entra a la función')
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Producto_pendientes")
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    columns = ['Compra', 'Solicitud', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
+               'Usuario Solicitante']
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+    
+   
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    worksheet.set_column('L:L', 12,  money_style)
+    worksheet.set_column('M:M', 12, money_style) 
+    # Asumiendo que ya tienes tus datos de compras
+    row_num = 0
+    for articulo in articulos_comprados:
+        row_num += 1
+        # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
+        pagos = Pago.objects.filter(oc=articulo.oc)
+        
+        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+
+        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
+        
+        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
+        #tipo_de_cambio = '' if tipo == 0 else tipo
+        #created_at = compra_list.created_at.replace(tzinfo=None)
+        #approved_at = compra_list.req.approved_at
+
+        row = [
+            articulo.oc.folio,
+            articulo.oc.req.orden.folio,
+            articulo.producto.producto.articulos.producto.producto.codigo,
+            articulo.producto.producto.articulos.producto.producto.nombre,
+            articulo.cantidad_pendiente,
+            articulo.producto.producto.articulos.producto.producto.unidad.nombre,
+            articulo.oc.proveedor.nombre.razon_social,
+            f"{articulo.oc.req.orden.staff.staff.staff.first_name} {articulo.oc.req.orden.staff.staff.staff.last_name}",
+        ]
+        
+        for col_num, cell_value in enumerate(row):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Aplica el formato de fecha para las columnas con fechas
+            if col_num in [7, 8]:  # Asume que estas son tus columnas de fechas
+                cell_format = date_style
+        
+            # Aplica el formato de dinero para las columnas con valores monetarios
+            elif col_num in [11, 12]:  # Asume que estas son tus columnas de dinero
+                cell_format = money_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+      
+        worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Producto_pendientes_entrada_{dt.date.today()}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response

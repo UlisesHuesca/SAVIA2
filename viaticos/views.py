@@ -146,17 +146,11 @@ def eliminar_punto(request):
 
 @login_required(login_url='user-login')
 def viaticos_pendientes_autorizar(request):
-
+    #Autoriza
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
 
-    #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    #if perfil.tipo.superintendente == True:
-    #    solicitudes = Solicitud_viatico.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
-    #elif perfil.tipo.supervisor == True:
-    #    solicitudes = Solicitud_viatico.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
-    #else:
     viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = None, distrito = perfil.distritos).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
@@ -183,8 +177,10 @@ def viaticos_pendientes_autorizar2(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
 
-    viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None).order_by('-folio')
+
+    viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs

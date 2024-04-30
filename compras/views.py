@@ -26,7 +26,6 @@ from tesoreria.forms import Facturas_Form
 from requisiciones.views import get_image_base64
 from django.utils.timezone import make_aware, is_aware
 import pytz
-from io import BytesIO
 import socket
 
 import json

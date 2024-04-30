@@ -1608,11 +1608,13 @@ def convert_excel_solicitud_matriz_productos(productos):
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
-            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 5:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
+            cell_value = row[col_num]
+            if col_num == 8 and isinstance(cell_value, datetime):  # Asumiendo que 'orden__created_at' es un objeto datetime
+                cell_value = cell_value.replace(tzinfo=None)  # Convertir a 'naive'
+            (ws.cell(row = row_num, column = col_num+1, value=str(cell_value))).style = body_style
             if col_num == 8:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+                (ws.cell(row = row_num, column = col_num+1, value=cell_value)).style = date_style
+    # Continuación del código...
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)
@@ -1695,8 +1697,12 @@ def convert_excel_solicitud_matriz(ordenes):
         row_num += 1
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            cell_value = row[col_num]
+            if col_num == 5 and isinstance(cell_value, datetime):
+                cell_value = cell_value.replace(tzinfo=None)  # Remover información de zona horaria
+            (ws.cell(row = row_num, column = col_num+1, value=str(cell_value))).style = body_style
             if col_num == 5:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+                (ws.cell(row = row_num, column = col_num+1, value=cell_value)).style = date_style
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)

@@ -17,7 +17,7 @@ from tesoreria.models import Pago, Cuenta
 from tesoreria.forms import Facturas_Gastos_Form 
 from compras.views import attach_oc_pdf
 from requisiciones.views import get_image_base64
-
+from tesoreria.views import eliminar_caracteres_invalidos
 #PDF generator
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -156,6 +156,12 @@ def crear_gasto(request):
                 factura.solicitud_gasto = gasto  # Asume que ya tienes una instancia de Solicitud_Gasto en 'gasto'
                 factura.fecha_subida = datetime.now()
                 factura.hecho = True
+                archivo_xml = request.FILES.get('factura_xml')
+                if archivo_xml:
+                    # Procesar el archivo XML para eliminar caracteres inválidos
+                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                    # Guardar el archivo procesado de nuevo en el objeto factura
+                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
                 factura.save()
                 messages.success(request, 'Factura agregada correctamente.')
                 return redirect('crear-gasto')
@@ -231,6 +237,12 @@ def factura_nueva_gasto(request, pk):
                 factura.fecha_subida =datetime.now()
                 #factura.hora_subido = datetime.now().time()
                 factura.subido_por =  usuario
+                archivo_xml = request.FILES.get('factura_xml')
+                if archivo_xml:
+                    # Procesar el archivo XML para eliminar caracteres inválidos
+                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                    # Guardar el archivo procesado de nuevo en el objeto factura
+                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
                 factura.save()
                 messages.success(request,'Las factura se registró de manera exitosa')
             else:

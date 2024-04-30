@@ -470,10 +470,6 @@ def matriz_facturas(request, pk):
         if "btn_factura" in request.POST:
             form = Facturas_Form(request.POST or None, request.FILES or None, instance = factura)
             
-            
-            
-            
-            
             if form.is_valid():
                 factura = form.save(commit = False)
                 factura.fecha_subido = date.today()

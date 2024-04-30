@@ -67,7 +67,7 @@ def actualizar_gastos_factura_con_pdf():
     SELECT f.IDGASTO, f.indice, f.ruta_factura
     FROM facturasgastostb f
     JOIN gastostb g ON g.IDGASTO = f.IDGASTO
-    WHERE f.ruta_factura IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 3
+    WHERE f.ruta_factura IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 2
     ORDER BY f.IDGASTO, f.indice;
     """
     cursor_savia1.execute(consulta_facturas)
@@ -123,7 +123,7 @@ def actualizar_gastos_factura_con_xml():
     SELECT f.IDGASTO, f.indice, f.ruta_xml  # Asumiendo que existe ruta_xml en la tabla
     FROM facturasgastostb f
     JOIN gastostb g ON g.IDGASTO = f.IDGASTO
-    WHERE f.ruta_xml IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 3
+    WHERE f.ruta_xml IS NOT NULL AND f.IDGASTO > 16349 AND g.IDALMACEN = 2
     ORDER BY f.IDGASTO, f.indice;
     """
     cursor_savia1.execute(consulta_facturas)
@@ -136,7 +136,7 @@ def actualizar_gastos_factura_con_xml():
             idgasto_actual = idgasto
             cursor_savia2_default.execute("""
                 SELECT id FROM gastos_factura WHERE solicitud_gasto_id = %s ORDER BY id;
-            """, (idgasto + 2000,))
+            """, (idgasto + 200,))
             gastos_ids = cursor_savia2_default.fetchall()
             print(gastos_ids)
 

@@ -119,7 +119,7 @@
                 {% csrf_token %}
                 <ul class="nav nav-pills">
                    <li class="nav-item mx-2 pl-5">
-                        <button type="submit" id="reporte_entradas" name="btnExcel" class="btn btn-outline-success btn-lg" value='Reporte Excel'>
+                        <button type="submit" id="reporte_entradas" name="btnExcel" class="btn btn-outline-success btn-lg d-none" value='Reporte Excel'>
                             <i class="fa-solid fa-file-excel fa-2xl"></i>
                         </button>
                     </li>
@@ -266,7 +266,10 @@ document.addEventListener('DOMContentLoaded', function() {
         localStorage.removeItem('reporte_entradas')
         var reporte = false 
         btn_reporte.classList.add('d-none');
+    } else {
+        localStorage.removeItem('reporte_entradas')
     }
+
     
     if (reporte){
         btn_reporte.classList.remove('d-none');
@@ -376,7 +379,7 @@ function limpiarBack(){
 function regenerar(){
     var buscar = document.getElementById('btnBuscar');
     var reporte_entradas = document.getElementById('reporte_entradas');
-    reporte_entradas.classList.remove('d-none');
+    //reporte_entradas.classList.remove('d-none');
     localStorage.removeItem('fileDownloadUrl_entradas')
     localStorage.setItem('reporte_entradas', true)
     limpiarBack()  
