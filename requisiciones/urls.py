@@ -3,6 +3,7 @@ from . import views
 
 
 urlpatterns = [
+    path('requisiciones/estatus', views.requisiciones_status, name='requisiciones-status'),
     path('sol_autorizadas/', views.solicitud_autorizada, name='solicitud-autorizada'),
     path('sol_autorizadas_pendientes/', views.solicitudes_autorizadas_pendientes, name='solicitudes-autorizadas-pendientes'),
     path('salida_material/<int:pk>/', views.salida_material, name='salida-material'),

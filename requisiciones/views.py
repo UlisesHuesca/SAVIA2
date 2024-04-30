@@ -37,7 +37,7 @@ from user.decorators import perfil_seleccionado_required
 from compras.models import Compra
 from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos, Tipo_Devolucion
 from .tasks import convert_entradas_to_xls_task, convert_salidas_to_xls_task
-from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter
+from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter
 from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
 #from compras.views import clear_task_id, verificar_estado
 from openpyxl import Workbook
@@ -59,6 +59,35 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from bs4 import BeautifulSoup
 
 import urllib.request, urllib.parse, urllib.error
+
+
+@login_required(login_url='user-login')
+def requisiciones_status(request):
+    pk = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk)
+    if perfil.tipo.compras == True:
+        requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True).order_by('-folio')
+   
+    #requis = Requis.objects.filter(autorizar=True, colocada=False)
+
+    myfilter = RequisFilter(request.GET, queryset=requis)
+    requis = myfilter.qs
+
+     #Set up pagination
+    p = Paginator(requis, 50)
+    page = request.GET.get('page')
+    requis_list = p.get_page(page)
+
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_matriz_requis(requis)
+
+    context= {
+        'myfilter': myfilter,
+        'requis':requis,
+        'requis_list':requis_list,
+        }
+
+    return render(request, 'requisiciones/requisiciones.html',context)
 
 
 # Create your views here.
@@ -1895,6 +1924,137 @@ def render_entrada_pdf(request, pk):
     c.showPage()
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename='vale_salida_'+str(vale.folio) +'.pdf')
+
+def convert_excel_matriz_requis(requis):
+      #print('si entra a la función')
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Matriz_Requisiciones")
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    columns = ['Requisición', 'Solicitud', 'Proyecto', 'Subproyecto', 'Area', 'Solicitante', 'Creado','Autorización',   'Status']
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.0 Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+    
+    # Escribir encabezados debajo de los mensajes
+    #worksheet.write(2, columna_max - 1, "Fecha Inicial", head_style)
+    #worksheet.write(3, columna_max - 1, "Fecha Final", head_style)
+    #worksheet.write(4, columna_max - 1, "Total de OC's", head_style)
+    #worksheet.write(5, columna_max - 1, "Requisiciones Aprobadas", head_style)
+    #worksheet.write(6, columna_max - 1, "Requisiciones Atendidas", head_style)
+    #worksheet.write(7, columna_max - 1, "KPI Colocadas/Aprobadas", head_style)
+    #worksheet.write(8, columna_max - 1, "OC Entregadas", head_style)
+    #worksheet.write(9, columna_max - 1, "OC Autorizadas", head_style)
+    #worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
+    
+    #indicador = num_requis_atendidas/num_approved_requis
+    #letra_columna = xl_col_to_name(columna_max)
+    #formula = f"={letra_columna}9/{letra_columna}10"
+    # Escribir datos y fórmulas
+    #worksheet.write(2, columna_max, start_date, date_style)  # Ejemplo de escritura de fecha
+    #worksheet.write(3, columna_max, end_date, date_style)
+    #worksheet.write_formula(4, columna_max, '=COUNTA(A:A)-1', body_style)  # Ejemplo de fórmula
+    #worksheet.write(5, columna_max, num_approved_requis, body_style)
+    #worksheet.write(6, columna_max, num_requis_atendidas, body_style)
+    #worksheet.write(7, columna_max, indicador, percent_style)  # Ajuste del índice de fila y columna para xlsxwriter
+    #worksheet.write_formula(8, columna_max, '=COUNTIF(S:S, "Entregada")', body_style)
+    # Escribir otra fórmula COUNTIF, también con el estilo corporal
+    #worksheet.write_formula(9, columna_max, '=COUNTIF(O:O, "Autorizado")', body_style)
+    #worksheet.write_formula(10, columna_max, formula, percent_style)
+
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    #worksheet.set_column('L:L', 12,  money_style)
+    #worksheet.set_column('M:M', 12, money_style) 
+    # Asumiendo que ya tienes tus datos de compras
+    row_num = 0
+    for req in requis:
+        row_num += 1
+
+        if req.colocada:
+            status = 'Colocada'
+        elif req.autorizar:
+            status= 'Autorizada'
+        elif req.autorizar == False: 
+            status= 'Cancelada'
+        else:
+            status= 'No Autorizado Aún'
+        # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
+        #pagos = Pago.objects.filter(oc=compra_list)
+        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+
+        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
+        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
+        #tipo_de_cambio = '' if tipo == 0 else tipo
+        #created_at = compra_list.created_at.replace(tzinfo=None)
+        #approved_at = compra_list.req.approved_at
+
+        row = [
+            req.folio,
+            req.orden.folio,
+            req.orden.proyecto.nombre if req.orden.proyecto else '',
+            req.orden.subproyecto.nombre if req.orden.subproyecto else '',
+            req.orden.operacion.nombre if req.orden.operacion else '',
+            f"{req.orden.staff.staff.staff.first_name} {req.orden.staff.staff.staff.last_name}",
+            req.created_at if req.created_at else ' ',  # Convertir a 'naive'
+            req.approved_at if req.approved_at else ' ',  # Convertir a 'naive'
+            status,
+        ]
+        
+        for col_num, cell_value in enumerate(row):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Aplica el formato de fecha para las columnas con fechas
+            if col_num in [6, 7]:  # Índices 6 y 7 corresponden a las columnas 7 y 8
+                cell_format = date_style
+                if isinstance(cell_value, datetime):  # Verificar que el valor sea un objeto datetime
+                    if cell_value.tzinfo is not None:  # Verificar si el objeto datetime tiene información de zona horaria
+                        cell_value = cell_value.astimezone()  # Convertir a zona horaria local o UTC
+                        cell_value = cell_value.replace(tzinfo=None)  # Eliminar la información de zona horaria
+            # Aplica el formato de dinero para las columnas con valores monetarios
+            #elif col_num in [11, 12]:  # Asume que estas son tus columnas de dinero
+                #cell_format = money_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+      
+        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Matriz_requisiciones_{dt.date.today()}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response
 
 
 
