@@ -11,14 +11,14 @@ class InventarioForm(forms.ModelForm):
 
     def __init__(self, *args, **kwargs):
 
-        #item_creado = Inventario.objects.get(complete=False)
-
+        # Recibir el distrito como un argumento adicional del formulario
+        distrito = kwargs.pop('distrito', None)
 
         super(InventarioForm, self).__init__(*args, **kwargs)
-        #distrito = kwargs.pop('distrito')
+        
         # Get a 'value list' of products already in the inventario model
-        #existing = Inventario.objects.filter(distrito=item_creado.distrito).values_list('producto')
-        existing = Inventario.objects.all().values_list('producto')
+        existing = Inventario.objects.filter(distrito=distrito).values_list('producto')
+        #existing = Inventario.objects.all().values_list('producto')
 
         # Override the product query set with a list of product excluding those already in the pricelist
         self.fields['producto'].queryset = Product.objects.exclude(id__in=existing)

@@ -1177,7 +1177,7 @@ def inventario_add(request):
     perfil = Profile.objects.get(id = pk)
 
     #productos = Product.objects.exclude(id__in=existing)
-    form = InventarioForm()
+    form = InventarioForm(distrito = perfil.distritos)
     #form.fields['producto'].queryset = productos
 
 
