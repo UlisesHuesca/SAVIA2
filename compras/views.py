@@ -637,7 +637,10 @@ def matriz_oc(request):
     if start_date is not None and end_date is not None:
     # Si las fechas no tienen información de la zona horaria, hazlas "aware"
         # Filtrar las requisiciones aprobadas dentro del rango de fechas
-        approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True, orden__distrito = usuario.distritos)
+        if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
+            approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True)
+        else:
+            approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True, orden__distrito = usuario.distritos)
         approved_requis_ids = approved_requis.values_list('id', flat=True)
         num_approved_requis = approved_requis.count() 
 

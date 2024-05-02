@@ -14,3 +14,9 @@ def my_url(value, field_name, urlencode=None):
 
     return url
 
+@register.filter(name='multiply')
+def multiply(value, arg):
+    try:
+        return value * arg
+    except (TypeError, ValueError):
+        return value  # Retorna el valor original si hay algún error en la multiplicación
