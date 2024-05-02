@@ -35,6 +35,12 @@ class ProductForm(forms.ModelForm):
         elif self.instance.pk:
             self.fields['subfamilia'].queryset = self.instance.familia.subfamilia_set.order_by('nombre')
 
+
+class PrecioRef_Form(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ['precioref', 'porcentaje']
+
 class ProveedoresForm(forms.ModelForm):
     class Meta:
         model = Proveedor

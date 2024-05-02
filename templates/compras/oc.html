@@ -1171,7 +1171,7 @@ $(document).ready(function() {
         var id = data.id;
         var precioref = Number(data.precioref);
         //console.log(precioref)
-        var porcentaje = data.porcentaje;
+        var porcentaje = data.porcentaje * 100;
         if (precioref > 0) {
             $('#etiqueta_precio_ref').removeClass('d-none');
         } else {
@@ -1258,12 +1258,15 @@ function precio_ref() {
     if (status == "NUEVO"){
         for (data in datosProductos_comp){
             
-            var precio_unitario = Number(datosProductos_comp[data].precio_unitario) || 0;
+            var precio_unitario = Number(datosProductos_comp[data].precio) || 0;
+            console.log('precio_unitario',precio_unitario)
             var precio_ref = Number(datosProductos_comp[data].precio_ref) || 0;
+            console.log('precio_referencia', precio_ref)
             var porcentaje = Number(datosProductos_comp[data].porcentaje);
-            precio_ref_max = precio_ref * (1 + (porcentaje/100));
+            precio_ref_max = precio_ref * (1 + (porcentaje));
+            console.log('precio_ref_limite',precio_ref_max)
             console.log(precio_ref_max >= precio_unitario)
-            if ((precio_ref_max >0) && (precio_unitario >= precio_ref_max )){
+            if ((precio_ref_max >0) && (precio_unitario <= precio_ref_max )){
                 //Se cumplen todas las condiciones por tanto no es necesario el cuadro de comparativo
                 comparativo.classList.add('d-none')
             } else {
