@@ -2,8 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
-from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q
-from django.db.models.functions import Concat
+from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField
+from django.db.models.functions import Concat, Coalesce
 from django.utils import timezone
 from django.contrib import messages
 from django.core.files.base import ContentFile
@@ -2417,7 +2417,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
     columns = ['Compra', 'Requisición', 'Solicitud', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante', 'Creado', 'Req. Autorizada', 'Proveedor',
-               'Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago', 'Status Autorización', 'Días de entrega', 'Moneda',
+               'Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización', 'Días de entrega', 'Moneda',
                'Tipo de cambio', 'Entregada', "Total en pesos"]
 
     columna_max = len(columns)+2
@@ -2447,9 +2447,9 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(5, columna_max, num_approved_requis, body_style)
     worksheet.write(6, columna_max, num_requis_atendidas, body_style)
     worksheet.write(7, columna_max, indicador, percent_style)  # Ajuste del índice de fila y columna para xlsxwriter
-    worksheet.write_formula(8, columna_max, '=COUNTIF(S:S, "Entregada")', body_style)
+    worksheet.write_formula(8, columna_max, '=COUNTIF(T:T, "Entregada")', body_style)
     # Escribir otra fórmula COUNTIF, también con el estilo corporal
-    worksheet.write_formula(9, columna_max, '=COUNTIF(O:O, "Autorizado")', body_style)
+    worksheet.write_formula(9, columna_max, '=COUNTIF(P:P, "Autorizado")', body_style)
     worksheet.write_formula(10, columna_max, formula, percent_style)
 
     for i, column in enumerate(columns):
@@ -2463,7 +2463,17 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     for compra_list in compras:
         row_num += 1
         # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
-        pagos = Pago.objects.filter(oc=compra_list)
+        pagos = Pago.objects.filter(oc=compra_list, hecho = True).annotate(
+            fecha_orden=Coalesce('pagado_real', 'pagado_date', output_field=DateField())
+        ).order_by('pagado_date')
+
+        if pagos.exists():
+            primer_pago = pagos.first()
+            primera_fecha_pago = primer_pago.pagado_real if primer_pago.pagado_real else primer_pago.pagado_date
+            primera_fecha_pago = primera_fecha_pago.strftime('%Y-%m-%d')
+        else:
+            primera_fecha_pago = " "
+
         tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
     
         # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
@@ -2487,6 +2497,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             compra_list.costo_oc,
             compra_list.monto_pagado,
             'Pagada' if compra_list.pagada else 'No Pagada',
+            primera_fecha_pago,
             'Autorizado' if compra_list.autorizado2 else 'No Autorizado' if compra_list.autorizado2 == False or compra_list.autorizado1 == False else 'Pendiente Autorización',
             compra_list.dias_de_entrega,
             compra_list.moneda.nombre,
@@ -2510,7 +2521,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+        worksheet.write_formula(row_num, 20, f'=IF(ISBLANK(S{row_num+1}), L{row_num+1}, L{row_num+1}*S{row_num+1})', money_style)
     
    
     workbook.close()
