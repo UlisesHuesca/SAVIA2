@@ -5,6 +5,7 @@ from solicitudes.models import Proyecto, Subproyecto
 from simple_history.models import HistoricalRecords
 from django.db.models import Avg,  F, ExpressionWrapper, DecimalField
 from dashboard.models import Activo
+from django.utils import timezone
 
 #from djmoney.models.fields import MoneyField
 # Create your models here.
@@ -94,7 +95,7 @@ class ValeSalidas(models.Model):
     proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True, blank=True)
     subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True, blank=True)
     material_recibido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Vale')
-    created_at = models.DateField(auto_now_add=True)
+    created_at = models.DateField(default=timezone.now)
     complete = models.BooleanField(null=True, default=False)
     cancelada = models.BooleanField(null=True, default = False)
     firmado = models.BooleanField(null=True, default=False)

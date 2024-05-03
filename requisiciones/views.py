@@ -419,6 +419,7 @@ def salida_material(request, pk):
             if cantidad_productos == cantidad_salidas:
                 orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
                 orden.save()
+            vale.created_at = date.today()
             vale.complete = True
             max_folio = vale_salidas.aggregate(Max('folio'))['folio__max']
             nuevo_folio = (max_folio or 0) + 1
@@ -1330,7 +1331,7 @@ def reporte_entradas(request):
 def reporte_salidas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    salidas = Salidas.objects.filter(vale_salida__solicitud__distrito = usuario.distritos, vale_salida__complete = True).order_by('-vale_salida')
+    salidas = Salidas.objects.filter(vale_salida__solicitud__distrito = usuario.distritos, vale_salida__complete = True).order_by('-vale_salida__folio')
     myfilter = SalidasFilter(request.GET, queryset=salidas)
     salidas = myfilter.qs
     salidas_filtradas = salidas.filter(producto__articulos__producto__producto__servicio = False)
@@ -1630,7 +1631,7 @@ def render_salida_pdf(request, pk):
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''']) #,'''P.Unitario''', '''Importe'''
     for producto in productos:
         producto_nombre = Paragraph(producto.producto.articulos.producto.producto.nombre, styles["BodyText"])
-        data.append([producto.producto.articulos.producto.producto.codigo, producto_nombre, producto.cantidad, producto.producto.articulos.producto.producto.unidad, producto.precio, producto.precio * producto.cantidad])
+        data.append([producto.producto.articulos.producto.producto.codigo, producto_nombre, producto.cantidad, producto.producto.articulos.producto.producto.unidad])
         high = high - 18
         #Lo vuelvo a captura de otra manera para el código QR
         nombre_producto = producto.producto.articulos.producto.producto.nombre

@@ -217,7 +217,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
     wb.add_named_style(money_resumen_style)
 
 
-    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Producto/Servicio','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
+    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
