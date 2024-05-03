@@ -155,7 +155,7 @@ def convert_salidas_to_xls_task(salidas):
     number_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(number_style)
 
-    columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Cantidad','Precio','Total']
+    columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Comentario','Cantidad','Precio','Total']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -201,9 +201,11 @@ def convert_salidas_to_xls_task(salidas):
             salida.vale_salida.solicitud.operacion if salida.vale_salida.solicitud.operacion else "Sin operación",
             salida.producto.articulos.producto.producto.codigo,
             salida.producto.articulos.producto.producto.nombre,
+            salida.comentario if salida.comentario else " ",
             #f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}",
             salida.cantidad,
             precio_condicional,
+            
         ]
 
         rows.append(row)
@@ -219,9 +221,9 @@ def convert_salidas_to_xls_task(salidas):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
             if col_num == 10: #11:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
-        ws.cell(row=row_num, column=len(row) + 1, value=f'=K{row_num} * J{row_num}').style = money_style
+        ws.cell(row=row_num, column=len(row) + 1, value=f'=K{row_num} * L{row_num}').style = money_style
     
-    (ws.cell(column = columna_max , row = 3, value=f'=SUM(L2:L{row_num})')).style = money_resumen_style
+    (ws.cell(column = columna_max , row = 3, value=f'=SUM(M2:M{row_num})')).style = money_resumen_style
 
     sheet = wb['Sheet']
     wb.remove(sheet)

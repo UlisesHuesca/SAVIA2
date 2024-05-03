@@ -78,7 +78,7 @@ def pendientes_entrada(request):
 
     
     # Ahora, usamos este queryset de compras para filtrar ArticuloComprado.
-    articulos_comprados = ArticuloComprado.objects.filter(oc__in=compras).order_by('-oc__folio')
+    articulos_comprados = ArticuloComprado.objects.filter(oc__in=compras, entrada_completa = False).order_by('-oc__folio')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
         return convert_excel_matriz_compras_pendientes(articulos_comprados)
@@ -683,7 +683,7 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Compra', 'Solicitud', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
+    columns = ['Compra', 'Requisición','Solicitud','Sector', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
                'Usuario Solicitante']
 
     columna_max = len(columns)+2
@@ -709,7 +709,10 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
         #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
 
         # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
-        
+        if articulo.oc.req.orden.sector:
+            sector = f"{articulo.oc.req.orden.sector.nombre}"
+        else:
+            sector = ' '
         #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
         #tipo_de_cambio = '' if tipo == 0 else tipo
         #created_at = compra_list.created_at.replace(tzinfo=None)
@@ -717,7 +720,9 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
 
         row = [
             articulo.oc.folio,
+            articulo.oc.req.folio,
             articulo.oc.req.orden.folio,
+            sector,
             articulo.producto.producto.articulos.producto.producto.codigo,
             articulo.producto.producto.articulos.producto.producto.nombre,
             articulo.cantidad_pendiente,
@@ -742,7 +747,7 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
     
    
     workbook.close()

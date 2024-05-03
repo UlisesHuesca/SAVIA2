@@ -130,4 +130,4 @@ class Proyectos_Add_Form(forms.ModelForm):
 class Subproyectos_Add_Form(forms.ModelForm):
     class Meta:
         model = Subproyecto
-        fields = ['nombre','descripcion','presupuesto']
+        fields = ['nombre','descripcion','presupuesto','status']

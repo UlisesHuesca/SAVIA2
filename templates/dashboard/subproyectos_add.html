@@ -39,24 +39,59 @@
 <div class="container">
     <div class="row mt-5">
         <div class="col-md-6 offset-md-3">
-            <div class="border bg-white p-3">
-                <h3>Agregar Subproyecto</h3>
+            <div class="card">
+                <div class="card-header">
+                    <h3>Agregar Subproyecto</h3>
+                </div>
+                <div class="card-body">
                 <h6>Proyecto: {{proyecto.nombre}}</h6>
                 <h6>Descripción: {{proyecto.descripcion}}</h6>
                 <hr>
                 <form method="POST">
                     {% csrf_token %}
-                    <label for="form.nombre" class="col-auto col-form-label my-1"><strong>Subproyecto:</strong></label>
-                    <div class="col-12">
-                        {{ form.nombre|add_class:"form-control"}}
+                    <div class="row my-3">
+                        <div class="col-lg-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.nombre|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
+                                    <label style="color: #121212;" for="id_cond_de_pago">Subproyecto*</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                    <label for="form.descripcion" class="col-auto col-form-label my-1"><strong>Descripción:</strong></label>
-                    <div class="col-12">
-                        {{ form.descripcion|add_class:"form-control"}}
+                    <div class="row my-3">
+                        <div class="col-lg-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.descripcion|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
+                                    <label style="color: #121212;" for="id_cond_de_pago">Descripción*</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
-                     <label for="form.presupuesto" class="col-auto col-form-label my-1"><strong>Monto:</strong></label>
-                    <div class="col-6">
-                        {{ form.presupuesto|add_class:"form-control"}}
+                    <div class="row my-3">
+                        <div class="col-lg-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.presupuesto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
+                                    <label style="color: #121212;" for="id_cond_de_pago">Monto*</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="col-lg-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.status|add_class:"form-control"|append_attr:"placeholder= Status"}}
+                                    <label style="color: #121212;" for="id_cond_de_pago">Status*</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <hr>
                     <a class="btn btn-outline-secondary" href="{% url 'subproyectos' proyecto.id %}">Cancelar</a>

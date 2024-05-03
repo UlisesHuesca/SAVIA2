@@ -46,6 +46,17 @@
                 <hr>
                 <form method="POST">
                     {% csrf_token %}
+                    <div class="row my-3">
+                        <div class="col-lg-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form.cond_de_pago|add_class:"form-select"|append_attr:"placeholder= Condiciones de pago"}}
+                                    <label style="color: #121212;" for="id_cond_de_pago">Condiciones de pago*</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <label for="form.nombre" class="col-auto col-form-label my-1"><strong>Subproyecto:</strong></label>
                     <div class="col-12">
                         {{ form.nombre|add_class:"form-control"}}

@@ -1627,7 +1627,7 @@ def render_salida_pdf(request, pk):
     data =[]
     productos_data = []
     high = 670
-    data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''','''P.Unitario''', '''Importe'''])
+    data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''']) #,'''P.Unitario''', '''Importe'''
     for producto in productos:
         producto_nombre = Paragraph(producto.producto.articulos.producto.producto.nombre, styles["BodyText"])
         data.append([producto.producto.articulos.producto.producto.codigo, producto_nombre, producto.cantidad, producto.producto.articulos.producto.producto.unidad, producto.precio, producto.precio * producto.cantidad])
@@ -1640,8 +1640,8 @@ def render_salida_pdf(request, pk):
             'nombre': nombre_producto,
             'cantidad': str(producto.cantidad),
             'unidad': str(producto.producto.articulos.producto.producto.unidad),
-            'precio_unitario': str(producto.precio),
-            'importe': str(producto.precio * producto.cantidad)
+            #'precio_unitario': str(producto.precio),
+            #'importe': str(producto.precio * producto.cantidad)
         }
         productos_data.append(producto_info)
     
@@ -1727,7 +1727,7 @@ def render_salida_pdf(request, pk):
     c.setFillColor(white)
 
     width, height = letter
-    table = Table(data, colWidths=[1.5 * cm, 10.5 * cm, 2.0 * cm, 2.0 * cm, 2.0 * cm, 2.0 * cm])
+    table = Table(data, colWidths=[2.0 * cm, 12 * cm, 3.0 * cm, 3.0 * cm]) #, 2.0 * cm, 2.0 * cm
     table.setStyle(TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),

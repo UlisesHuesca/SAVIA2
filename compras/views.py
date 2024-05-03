@@ -1604,6 +1604,31 @@ def attach_oc_pdf(request, pk):
     return buf.getvalue()
 
 
+from reportlab.pdfbase.pdfmetrics import stringWidth
+from reportlab.lib.styles import ParagraphStyle
+from reportlab.platypus import Paragraph
+from reportlab.lib.units import cm
+
+def wrap_text_to_fit(text, width, style):
+    # Determinar la anchura máxima del texto que cabe en la columna
+    words = text.split()
+    lines = []
+    line = []
+
+    for word in words:
+        # Comprueba si agregar la palabra excedería la longitud de la línea
+        test_line = ' '.join(line + [word])
+        if stringWidth(test_line, style.fontName, style.fontSize) > width:
+            # Si la línea es demasiado larga, guarda la línea actual y comienza una nueva
+            lines.append(' '.join(line))
+            line = [word]
+        else:
+            line.append(word)
+    lines.append(' '.join(line))  # Añade la última línea
+    wrapped_text = '\n'.join(lines)
+    return wrapped_text
+
+
 def generar_pdf(compra):
     #Configuration of the PDF object
     buf = io.BytesIO()
@@ -1737,21 +1762,29 @@ def generar_pdf(compra):
     else:
         c.drawString(inicio_central + 100,caja_proveedor-75, compra.cond_de_pago.nombre )
 
-
+    
     data =[]
     cont = 0
     high = 495
+    styles = getSampleStyleSheet()
+    style_desc = styles["BodyText"]
+    style_desc.wordWrap = 'CJK'
+    style_desc.fontSize = 6
+    style_desc.leading = 8
+
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''', '''P.Unitario''', '''Importe'''])
     for producto in productos:
         importe = producto.precio_unitario * producto.cantidad
         importe_rounded = round(importe, 4)
+        descripcion = Paragraph(producto.producto.producto.articulos.producto.producto.nombre, style_desc)
+        precio_unitario = f"{producto.precio_unitario:,.4f}"
         data.append([
             producto.producto.producto.articulos.producto.producto.codigo,
-            producto.producto.producto.articulos.producto.producto.nombre,
+            descripcion,
             producto.cantidad, 
             producto.producto.producto.articulos.producto.producto.unidad,
-            producto.precio_unitario,
-            importe_rounded
+            precio_unitario,
+            f"{importe_rounded:,.4f}"
         ])
         cont = cont + 1
         if cont < 16:
@@ -1824,28 +1857,28 @@ def generar_pdf(compra):
         c.setFont('Helvetica-Bold',9)
         c.drawRightString(montos_align,170,'Impuestos Adicionales:')
         c.setFont('Helvetica',10)
-        costo_impuestos = format(float(compra.impuestos), '.2f')
+        costo_impuestos = format(float(compra.impuestos), ',.2f')
         c.drawRightString(montos_align + 90, 180, '$' + str(costo_impuestos))
         c.drawRightString(montos_align, 180, 'Impuestos:')
         #importe_neto = importe_neto + compra.impuestos
     if compra.retencion:
         subtotal = subtotal + compra.retencion
-        costo_retencion = format(float(compra.retencion), '.2f')
+        costo_retencion = format(float(compra.retencion), ',.2f')
         c.drawRightString(montos_align + 90, 180, '$' + str(costo_retencion))
         c.drawRightString(montos_align, 180, 'Retención:')
         #importe_neto = importe_neto - compra.retencion
-    costo_subtotal = format(float(subtotal), '.2f')
+    costo_subtotal = format(float(subtotal), ',.2f')
     c.drawRightString(montos_align + 90,210,'$ ' + str(costo_subtotal))
-    costo_con_iva = format(float(compra.costo_iva), '.2f')
+    costo_con_iva = format(float(compra.costo_iva), ',.2f')
     c.drawRightString(montos_align + 90,200,'$ ' + str(costo_con_iva))
-    costo_oc =  format(float(compra.costo_oc), '.2f')
+    costo_oc =  format(float(compra.costo_oc), ',.2f')
     c.drawRightString(montos_align + 90,190,'$ ' + str(costo_oc))
     
    
     #if compra.costo_fletes is None:
     #c.setFillColor(prussian_blue)
        
-    total =  format(float(compra.costo_plus_adicionales), '.2f')
+    total =  format(float(compra.costo_plus_adicionales), ',.2f')
     if compra.costo_fletes:
         importe_neto = importe_neto + compra.costo_fletes
         c.drawRightString(montos_align,160,'Total:')
@@ -1870,7 +1903,7 @@ def generar_pdf(compra):
 
     c.setFillColor(black)
     width, height = letter
-    styles = getSampleStyleSheet()
+   
     styleN = styles["BodyText"]
     styleN.fontSize = 6
 
@@ -1909,6 +1942,7 @@ def generar_pdf(compra):
 
     # Agregar el párrafo al nuevo marco
     new_frame.addFromList([conditional_paragraph], c)
+    
     
 
     table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
@@ -2431,7 +2465,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
         pagos = Pago.objects.filter(oc=compra_list)
         tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
-
+    
         # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
         tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
         tipo_de_cambio = '' if tipo == 0 else tipo
