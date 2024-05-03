@@ -880,11 +880,14 @@ def autorizacion_oc1(request):
     else:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos)
     #compras = Compra.objects.filter(complete=True, autorizado1= None).order_by('-folio')
-
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
     form = Compra_ComentarioForm()
 
     context= {
+        'form':form,
         'compras':compras,
+        'myfilter':myfilter,
         }
 
     return render(request, 'compras/autorizacion_oc1.html',context)
@@ -1153,10 +1156,12 @@ def autorizacion_oc2(request):
     #else:
     #    compras = Compra.objects.filter(flete=True,costo_fletes='1')
     compras = Compra.objects.filter(complete = True, autorizado1 = True, autorizado2= None, req__orden__distrito = usuario.distritos).order_by('-folio')
-
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
     
     context= {
         'compras':compras,
+        'myfilter':myfilter,
         }
 
     return render(request, 'compras/autorizacion_oc2.html',context)

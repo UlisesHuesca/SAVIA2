@@ -12,19 +12,90 @@
 <hr>
 <hr>
 <hr>
-<div class = "row mt-2 bg-white">
-    <ul class="nav nav-pills" >
-        <!--<li class="nav-item mx-2 pl-5">
-            <button type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                <i class="fa-solid fa-file-excel fa-2xl"></i>
-            </button>
-        </li>
-        <li class="nav-item mx-2">
-            <button type="button" class="btn btn-outline-danger">
-                <i class="fa-solid fa-file-pdf fa-2xl"></i>
-            </button>
-        </li>-->
-    </ul>
+<div class = "card">
+        
+    <div class="card-header">
+        <h5>Filtro de Compras {{num_approved_requis}} {{num_requis_atendidas}}</h5>
+    </div>
+    <div class="card-body">
+       
+        {% csrf_token %}
+        <form method="GET">
+        <div class="row g-12">
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                        <label style="color: #121212;" for="id_id">Folio</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                        <label style="color: #121212;" for="id_id">Proveedor</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
+                        <label style="color: #121212;" for="id_id">Requisición</label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="row g-12">
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                        <label style="color: #121212;" for="id_id">Proyecto</label>
+                    </div>
+                </div>
+            </div>
+        
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
+                        <label style="color: #121212;" for="id_id">Subproyecto</label>
+                    </div>
+                </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                    </div>
+                </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-2">
+                <!--onclick="regenerar()"-->
+                <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+        </div>
+        <hr>
+        </form>
+    </div>
 </div>
 
 <!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
@@ -84,7 +155,7 @@
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.proyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.operacion}}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.created_at}} </td>
+                    <td class="d-none d-lg-table-cell">{{compra.created_at|date:"d/M/Y"}} </td>
                     <td>{{compra.proveedor}}</td>
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>{{compra.moneda.nombre}} </td>
@@ -109,6 +180,9 @@
                                 </li>
                                 {% endif %}
                             {% endif %}
+                            <li class="nav-item m-1">
+                                <a type="button" class="btn btn-outline-info btn-lg" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                            </li>
                         </ul>
                     </td>
                 </tr>
