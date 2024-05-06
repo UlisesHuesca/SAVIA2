@@ -405,6 +405,13 @@
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'matriz-pagos' %}">Matriz Pagos</a>
                             </div>
+                            {% if usuario.tipo.calidad == True %}
+                            <div>
+                            {% else %}
+                                <div class="d-none">
+                            {% endif %}
+                                <a class="dropdown-item" href="{% url 'matriz-reportes-calidad' %}">Matriz Reportes Calidad</a>
+                                </div>
                     <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.historicos == False %}

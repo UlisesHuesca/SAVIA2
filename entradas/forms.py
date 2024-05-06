@@ -10,7 +10,7 @@ class EntradaArticuloForm(forms.ModelForm):
 class Reporte_CalidadForm(forms.ModelForm):
     class Meta:
         model = Reporte_Calidad
-        fields = ['cantidad','comentarios','autorizado']
+        fields = ['cantidad','comentarios','image','autorizado']
 
 class NoConformidadForm(forms.ModelForm):
     class Meta:

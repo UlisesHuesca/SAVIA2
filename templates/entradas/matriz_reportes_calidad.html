@@ -4,7 +4,7 @@
 {% load widget_tweaks %}
 <html>
 <head>
-{% block title %}Pendientes Calidad{% endblock %}
+{% block title %}Matriz Reportes Calidad{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -16,7 +16,7 @@
         <div class="col-12">
             <div class="card">
                 <div class="card-header">
-                <h5>Liberación Calidad</h5>
+                <h5>Matriz Reportes Calidad</h5>
                 </div>
                 <div class="card-body">
                 {% csrf_token %}
@@ -83,16 +83,16 @@
                 </tr>
             </thead>
             <tbody>
-                {% for articulo in articulos_entrada %}
+                {% for reporte in reportes %}
                 <tr>
-                    <td scope="col">{{articulo.articulo_comprado.oc.folio}}</th>
-                    <td scope="col">{{articulo.articulo_comprado.oc.proveedor}}</td>
-                    <td scope="col">{{articulo.articulo_comprado.producto.producto.articulos.producto.producto.codigo}} | {{articulo.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
-                    <td>{{articulo.articulo_comprado.producto.producto.articulos.orden.proyecto.nombre}}</td>
-                    <td>{{articulo.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}}</td>
-                    <td>{{articulo.entrada.entrada_date}} </td>
+                    <td scope="col">{{reporte.articulo.articulo_comprado.oc.folio}}</th>
+                    <td scope="col">{{reporte.articulo.articulo_comprado.oc.proveedor}}</td>
+                    <td scope="col">{{reporte.articulo.articulo_comprado.producto.producto.articulos.producto.producto.codigo}} | {{reporte.articulo.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
+                    <td>{{reporte.articulo.articulo_comprado.producto.producto.articulos.orden.proyecto.nombre}}</td>
+                    <td>{{reporte.articulo.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}}</td>
+                    <td>{{reporte.articulo.entrada.entrada_date}} </td>
                     <td>
-                        <a class="btn btn-outline-info btn-block mx-auto" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get={% url 'reporte_calidad' articulo.id %}><i class="fa-solid fa-list-ul"></i></a>
+                        <a class="btn btn-outline-info btn-block mx-auto" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get=#><i class="fa-solid fa-list-ul"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

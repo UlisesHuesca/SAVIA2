@@ -35,7 +35,7 @@
     </div>
 </div>
 <div class="modal-dialog-lg" role="document">
-    <form  hx-post="{{request.path}}" class="modal-content">
+    <form  hx-post="{{request.path}}" class="modal-content"  hx-encoding="multipart/form-data">
     <div class="modal-content">
         <div class="modal-header">
             <h5 class="modal-title">Reporte Calidad</h5>
@@ -48,16 +48,20 @@
                     <div class="col-8">
                         <label>{{articulo_entrada.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</label>
                     </div>
-                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad:(Entradas:{{restantes_liberacion}})</strong></label>
-                    <div class="col-4">
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad Entradas: {{restantes_liberacion}}</strong></label>
+                    <div class="col-12">
                         {{ form.cantidad|add_class:"form-control"}}
                     </div>
                     <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Comentarios:</strong></label>
-                    <div class="col-4">
+                    <div class="col-12">
                         {{ form.comentarios|add_class:"form-control"}}
                     </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Imagen:</strong></label>
+                    <div class="col-12">
+                        {{form.image|add_class:"form-control"}}
+                    </div>
                     <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Liberado:</strong></label>
-                    <div class="col-4">
+                    <div class="col-12">
                         {{ form.autorizado|add_class:"form-control"}}
                     </div>
             </div>

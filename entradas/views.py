@@ -174,7 +174,9 @@ def articulos_entrada(request, pk):
         for articulo in articulos_entrada:
             producto_surtir = ArticulosparaSurtir.objects.get(articulos = articulo.articulo_comprado.producto.producto.articulos)
             producto_surtir.seleccionado = False
+            print(producto_surtir)
             if producto_surtir.articulos.producto.producto.especialista == True:
+                print('Esta entrado al ciclo de calidad')
                 producto_surtir.surtir = False
                 articulo.liberado = False
                 archivo_oc = attach_oc_pdf(request, articulo.articulo_comprado.oc.id)
@@ -207,17 +209,6 @@ def articulos_entrada(request, pk):
                             producto.cantidad_requisitar = producto.cantidad_requisitar - producto_surtir.cantidad
                             producto.cantidad = producto.cantidad + producto_surtir.cantidad
                             producto_surtir.cantidad = 0
-
-                        #if producto_surtir.cantidad > producto.cantidad_requisitar:
-                        #    producto.cantidad = producto.cantidad_requisitar
-                        #    producto.cantidad_requisitar = 0
-                        #    solicitud = Order.objects.get(id = producto_surtir.articulos.orden.id)
-                        #    solicitud.requisitar = False
-                        #    solicitud.save()
-                        #    inv_de_producto.cantidad = inv_de_producto.cantidad - producto.cantidad   #Se reduce el inventario en la medida que existan solicitudes pendientes por surtir
-                        #    inv_de_producto.cantidad_apartada = inv_de_producto.cantidad_apartada + producto.cantidad    #A la vez que aumenta la cantidad apartada
-                        #    producto_surtir.cantidad = producto_surtir.cantidad - producto.cantidad_requisitar
-                        #    producto.requisitar = False
                             producto.surtir = True
                             producto.save()
                             producto_surtir.save()
@@ -233,17 +224,8 @@ def articulos_entrada(request, pk):
                 else:
                     producto_surtir.surtir = True
             producto_surtir.save()
+            articulo.save()    
         evalua_entrada_completa(articulos_comprados,num_art_comprados, compra)
-        #for articulo in articulos_comprados:
-        #    if articulo.cantidad_pendiente == 0:  #Si la cantidad de la compra es igual a la cantida entonces la entrada está completamente entregada
-        #        articulo.entrada_completa = True
-        #    articulo.seleccionado = False
-        #    articulo.save()
-        #Se compara los articulos comprados contra los articulos que han entrado y que están totalmente entregados
-        #num_art_entregados = articulos_comprados.filter(entrada_completa=True).count()
-        #if num_art_comprados == num_art_entregados:
-        #    compra.entrada_completa = True
-        #compra.save()
         entrada.save()
         messages.success(request, f'La entrada {entrada.folio} se ha realizado con éxito')
         return redirect('pendientes_entrada')
@@ -446,7 +428,7 @@ def reporte_calidad(request, pk):
 
 
     if request.method =='POST':
-        form = Reporte_CalidadForm(request.POST, instance = reporte_actual)
+        form = Reporte_CalidadForm(request.POST, request.FILES, instance = reporte_actual)
         if decimal.Decimal(request.POST['cantidad']) <=  restantes_liberacion:
             if not request.POST['autorizado'] == None:
                 if form.is_valid():
@@ -485,6 +467,30 @@ def reporte_calidad(request, pk):
         }
 
     return render(request,'entradas/calidad_entrada.html',context)
+
+
+def matriz_reportes_calidad(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
+    reportes = Reporte_Calidad.objects.filter(completo = True, articulo__entrada__oc__req__orden__distrito = perfil.distritos)
+    form = Reporte_CalidadForm()
+    #articulos_reportes = Reporte_Calidad.objects.filter(articulo = articulo_entrada, completo = True)
+    #reporte_actual, created = Reporte_Calidad.objects.get_or_create(articulo = articulo_entrada, completo = False)
+    #sum_articulos_reportes = 0
+
+    #for item in articulos_reportes:
+    #    sum_articulos_reportes = item.cantidad + sum_articulos_reportes
+
+    #restantes_liberacion = articulo_entrada.cantidad - sum_articulos_reportes
+
+
+    context = {
+        #'form': form,
+        'reportes':reportes,
+        #'restantes_liberacion': restantes_liberacion,
+        }
+
+    return render(request,'entradas/matriz_reportes_calidad.html',context)
 
 def productos(request, pk):
     compra = Compra.objects.get(id=pk)

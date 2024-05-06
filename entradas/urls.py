@@ -12,4 +12,5 @@ urlpatterns = [
     path('entradas/no_conformidad/<int:pk>', views.no_conformidad, name='no-conformidad'),
     path('entradas/productos/<int:pk>', views.productos, name="productos"),
     path('no_conformidad/', views.update_no_conformidad, name="update_no_conformidad"),
+    path('entradas/reportes_calidad',views.matriz_reportes_calidad, name='matriz-reportes-calidad'),
     ]
