@@ -17,7 +17,7 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
 from user.decorators import perfil_seleccionado_required
-from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter
+from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter #, HistoricalCompraFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm
 from requisiciones.forms import Articulo_Cancelado_Form
@@ -705,6 +705,7 @@ def matriz_oc(request):
     
 
 from celery.result import AsyncResult
+from celery.exceptions import CeleryError
 
 def verificar_estado_productos(request):
     task_id = request.session.get('task_id_producto')  # Asumiendo que el task_id se pasa como parámetro GET
@@ -712,19 +713,21 @@ def verificar_estado_productos(request):
     if not task_id:
         return JsonResponse({'error': 'No se proporcionó task_id'}, status=400)
 
+    try:
+        task_result = AsyncResult(task_id)
 
-    task_result = AsyncResult(task_id)
-
-    if task_result.ready():
-        if task_result.successful():
-            result = task_result.result
-            response_data = {'task_id': task_id, 'status': 'SUCCESS', 'result': result}
-        elif task_result.failed():
-            response_data = {'task_id': task_id, 'status': 'FAILURE', 'result': str(task_result.result)}
+        if task_result.ready():
+            if task_result.successful():
+                result = task_result.result
+                response_data = {'task_id': task_id, 'status': 'SUCCESS', 'result': result}
+            elif task_result.failed():
+                response_data = {'task_id': task_id, 'status': 'FAILURE', 'result': str(task_result.result)}
+            else:
+                response_data = {'task_id': task_id, 'status': task_result.status}
         else:
-            response_data = {'task_id': task_id, 'status': task_result.status}
-    else:
-        response_data = {'task_id': task_id, 'status': 'PENDING'}
+            response_data = {'task_id': task_id, 'status': 'PENDING'}
+    except CeleryError as e:
+        response_data = {'error': str(e), 'status': 'ERROR'}
 
     return JsonResponse(response_data)
 
@@ -1593,6 +1596,7 @@ def historico_articulos_compras(request):
         }
 
     return render(request,'compras/historico_articulos_comprados.html',context)
+
 
 def descargar_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)

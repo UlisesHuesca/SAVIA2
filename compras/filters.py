@@ -1,7 +1,7 @@
 import django_filters
 from requisiciones.models import ArticulosRequisitados
 from .models import Compra, ArticuloComprado
-from django_filters import CharFilter, DateFilter, ChoiceFilter
+from django_filters import CharFilter, DateFilter, ChoiceFilter, BooleanFilter
 from django.db.models import Q
 from datetime import timedelta, datetime
 from django.utils.timezone import now
@@ -114,3 +114,4 @@ class HistoricalArticuloCompradoFilter(django_filters.FilterSet):
     
     def nombre(self, queryset, name, value):
         return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
+    

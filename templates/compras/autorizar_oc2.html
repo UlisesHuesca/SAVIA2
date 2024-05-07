@@ -43,6 +43,18 @@
                             <th scope="col">Proveedor</th>
                             <th scope="col">{{compra.proveedor}}</th>
                         </tr>
+                        {% if compra.opciones_condiciones %}
+                        <tr>
+                            <th scope="col">Comentarios OC:</th>
+                            <th scope="col" > {{compra.opciones_condiciones}}</th>
+                        </tr>
+                        {% endif %}
+                        {% if compra.req.orden.comentario and compra.comentario_solicitud %}
+                        <tr>
+                            <th scope="col">Comentarios Solicitud:</th>
+                            <th scope="col"> {{compra.req.orden.comentario}}</th>
+                        </tr>
+                        {% endif %}
                         {% if compra.deposito_comprador %}
                         <tr>
                             <th scope="col">Comentario:</th>

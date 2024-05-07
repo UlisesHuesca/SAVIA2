@@ -65,8 +65,8 @@ import urllib.request, urllib.parse, urllib.error
 def requisiciones_status(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
-    if perfil.tipo.compras == True:
-        requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True).order_by('-folio')
+   
+    requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True).order_by('-folio')
    
     #requis = Requis.objects.filter(autorizar=True, colocada=False)
 

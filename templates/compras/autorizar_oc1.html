@@ -80,6 +80,18 @@
                             <th scope="col"  style="color:#3e92cc" id="subproyecto">Esta OC se depositará a la cuenta del colaborador(a): {{compra.deposito_colaborador.staff.first_name}} {{compra.deposito_colaborador.staff.last_name}}</th>
                         </tr>
                         {% endif %}
+                        {% if compra.opciones_condiciones %}
+                        <tr>
+                            <th scope="col">Comentarios OC:</th>
+                            <th scope="col" > {{compra.opciones_condiciones}}</th>
+                        </tr>
+                        {% endif %}
+                        {% if compra.req.orden.comentario and compra.comentario_solicitud %}
+                        <tr>
+                            <th scope="col">Comentarios Solicitud:</th>
+                            <th scope="col"> {{compra.req.orden.comentario}}</th>
+                        </tr>
+                        {% endif %}
                         <tr style="color:#3e92cc">
                             <th scope="col">Subtotal OC:</th>
                             <th scope="col">$ {{costo_oc|floatformat:2}}</th>
@@ -111,6 +123,7 @@
                         </tr>
                     </tbody>
                 </table>
+                
                 {% if tipo_cambio %}
                 <p style="color:#3e92cc">Esta OC se realizó en dólares, su valor es estimado al tipo de cambio: {{tipo_cambio}}</p>
                 {% endif %}
