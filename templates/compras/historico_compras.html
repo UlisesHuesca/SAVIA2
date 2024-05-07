@@ -43,13 +43,13 @@
             <div class="col-auto my-2">
                 {{myfilter.form.history_user|add_class:'form-control'}}
             </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Producto:</strong></label>
+            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>OC:</strong></label>
             <div class="col-auto my-2">
                 {{myfilter.form.folio|add_class:'form-control'}}
             </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>OC:</strong></label>
+            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Autorizado Gerente:</strong></label>
             <div class="col-auto my-2">
-                {{myfilter.form.autorizado|add_class:'form-control'}}
+                {{myfilter.form.autorizado2|add_class:'form-control'}}
             </div>
             <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Tipo:</strong></label>
             <div class="col-auto my-2">
@@ -77,12 +77,14 @@
                 <tr>
                     <th scope="col">Usuario</th>
                     <th scope="col">Fecha</th>
-                    <th scope="col">Razón del cambio</th>
                     <th scope="col">Tipo de cambio</th>
                     <th scope="col">OC</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Cantidad Actual</th>
-                    <th scope="col">Cantidad Anterior</th>
+                    <th scope="col">Autorizado Sppte</th>
+                    <th scope="col">Autorizado Gerente</th>
+                    <th scope="col">Devolucion OC</th>
+                    <th scope="col">Status Previo |Autorizado Sppte</th>
+                    <th scope="col">Status Previo |Autorizado Gerente</th>
+                    <th scope="col">Status Previo |Devolucion OC</th>
                 </tr>
             </thead>
             <tbody>
@@ -90,12 +92,14 @@
                 <tr>
                     <th scope="row">{{registro.history_user.first_name}} {{registro.history_user.last_name}}</th>
                     <td>{{registro.history_date}}</td>
-                    <td>{{registro.history_change_reason}}</td>
                     <td>{{registro.history_type}}</td>
-                    <td>{{registro.oc.id}}</td>
-                    <td>{{registro.producto.producto.articulos.producto}}</td>
-                    <td>{{registro.cantidad}}</td>
-                    <td>{{registro.prev_record.cantidad}}</td>
+                    <td>{{registro.folio}}</td>
+                    <td>{{registro.autorizado1}}</td>
+                    <td>{{registro.autorizado2}}</td>
+                    <td>{{registro.regresar_oc}}</td>
+                    <td>{{registro.prev_record.autorizado1}}</td>
+                    <td>{{registro.prev_record.autorizado2}}</td>
+                    <td>{{registro.prev_record.regresar_oc}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

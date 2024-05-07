@@ -17,7 +17,7 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
 from user.decorators import perfil_seleccionado_required
-from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter #, HistoricalCompraFilter
+from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm
 from requisiciones.forms import Articulo_Cancelado_Form
@@ -1596,6 +1596,23 @@ def historico_articulos_compras(request):
         }
 
     return render(request,'compras/historico_articulos_comprados.html',context)
+
+
+@login_required(login_url='user-login')
+def historico_compras(request):
+    registros = Compra.history.all()
+    myfilter = HistoricalCompraFilter(request.GET, queryset=registros)
+    registros = myfilter.qs
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+    
+    context = {
+        'registros_list':registros_list,
+        'myfilter':myfilter,
+        }
+    return render(request,'compras/historico_compras.html',context)
 
 
 def descargar_pdf(request, pk):

@@ -115,3 +115,20 @@ class HistoricalArticuloCompradoFilter(django_filters.FilterSet):
     def nombre(self, queryset, name, value):
         return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
     
+class HistoricalCompraFilter(django_filters.FilterSet):
+    history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
+    history_user = CharFilter(method='nombre', lookup_expr='icontains')
+    history_type = CharFilter(field_name='history_type', lookup_expr='icontains')
+    folio = CharFilter(field_name ='folio',lookup_expr='icontains')
+    autorizado2 = BooleanFilter(field_name='autorizado2', lookup_expr='exact')
+    autorizado1 = BooleanFilter(field_name='autorizado2', lookup_expr='exact')
+    regresar_oc = BooleanFilter(field_name='autorizado2', lookup_expr='exact')
+    start_date = DateFilter(field_name='history_date', lookup_expr='gte')
+    end_date = DateFilter(field_name='history_date', lookup_expr='lte')
+
+    class Meta:
+        model = Compra.history.model
+        fields = ['history_id','history_user','folio','autorizado2','autorizado1','regresar_oc','start_date','end_date']
+        
+    def nombre(self, queryset, name, value):
+        return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
