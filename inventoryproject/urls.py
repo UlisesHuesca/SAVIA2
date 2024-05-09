@@ -24,7 +24,6 @@ from django.conf import settings
 from django.conf.urls.static import static
 from user.forms import EmailLoginForm
 
-
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('', include('dashboard.urls')),

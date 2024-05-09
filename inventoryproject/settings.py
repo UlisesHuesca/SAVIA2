@@ -88,6 +88,7 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'simple_history.middleware.HistoryRequestMiddleware',
     'user.middleware.LogUserAccessMiddleware',
+    'user.middleware.Handle404Middleware',
 ]
 
 ROOT_URLCONF = 'inventoryproject.urls'

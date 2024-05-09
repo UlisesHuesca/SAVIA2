@@ -28,6 +28,7 @@ from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
 
+
 # Create your views here.
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
