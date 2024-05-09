@@ -151,7 +151,7 @@ def articulos_entrada(request, pk):
     nuevo_folio = (max_folio or 0) + 1
     
     for articulo in articulos:
-        if articulo.cantidad_pendiente == None:
+        if articulo.cantidad_pendiente == None or articulo.cantidad_pendiente == "":
             articulo.cantidad_pendiente = articulo.cantidad
 
 
