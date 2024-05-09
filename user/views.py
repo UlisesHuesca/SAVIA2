@@ -11,6 +11,7 @@ from .forms import UserForm
 import os
 
 # Create your views here.
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def register(request):
     if request.method == 'POST':

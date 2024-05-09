@@ -365,7 +365,7 @@ def checkout(request):
                     elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or producto.producto.producto.servicio == True:
                         ordensurtir.requisitar = True
                         ordensurtir.cantidad_requisitar = producto.cantidad
-                        order.requisitar = True
+                        #order.requisitar = True
                         print(producto.producto.producto.servicio)
                         if producto.producto.producto.servicio == True:
                             requi, created = Requis.objects.get_or_create(complete = True, orden = order)
@@ -374,7 +374,8 @@ def checkout(request):
                             #last_requi = requis.order_by('-folio').first()
                             max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
                             requi.folio = max_folio + 1
-                            if productos.count() == 1: 
+                            numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
+                            if productos.count() == numero_servicios: 
                                 order.requisitar=False
                                 order.requisitado = True
                             ordensurtir.requisitar = False
@@ -1373,14 +1374,15 @@ def autorizada_sol(request, pk):
             elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True:
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
-                order.requisitar = True
+                #order.requisitar = True
                 if producto.producto.producto.servicio == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                     requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
                     requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True)
                     max_folio = Requis.objects.filter(orden__distrito=perfil.distritos, complete=True).aggregate(Max('folio'))['folio__max']
                     requi.folio = max_folio + 1
-                    if productos.count() == 1: 
+                    numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
+                    if productos.count() == numero_servicios: #No tengo claridad que es lo que pretendo contar acá
                         order.requisitar=False
                         order.requisitado = True
                     ordensurtir.requisitar = False

@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load l10n %}
 <html>
 <head>
 {% block title %}Asignar Montos{% endblock %}
@@ -109,11 +110,9 @@
         <div class="box-element">
             <form method="post" enctype="multipart/form-data">
             {% csrf_token %}
-            {% if error_messages %}
-            <div class="alert alert-danger" role="alert">
-                {{error_messages}}
+            <div class="alert alert-danger d-none" id="alert" role="alert">
+                Este producto ya está añadido
             </div>
-            {% endif %}
             <div class="row-3">
                     <label for="form.producto" id="lbl_producto"><strong>Concepto:*</strong></label>
                     {{form.producto|add_class:"form-control"}}
@@ -155,7 +154,7 @@
             <tbody id="mytbl">
                 {% for producto in conceptos%}
             
-                <tr>
+                <tr class="producto-row" data-id="{{ producto.producto.id|unlocalize}}">
                     <td scope="col">{{producto.producto.codigo}}</td>
                     <td scope="col">{{producto.producto.nombre}}</td>
                     <td scope="col">{{producto.cantidad}}</td>
@@ -207,14 +206,16 @@
     id_via = via_id.getAttribute('solicitud')
 
 
-    viatico.value= id_via
+    //viatico.value= id_via
 
 
     document.getElementById("id_producto").addEventListener("change", (event)=>{
     var select = document.getElementById("id_producto");
     var rendimiento = document.getElementById('rendimiento')
     var lbl_cantidad = document.getElementById('lbl_cantidad')
-    
+    var boton = document.getElementById("btn_producto")
+    var alert = document.getElementById("alert")
+
     console.log(lbl_cantidad)
     if (select.value == '795'){
         rendimiento.setAttribute('class','row-3')
@@ -223,7 +224,32 @@
         rendimiento.setAttribute('class','row-3 d-none')
         lbl_cantidad.innerHTML = '<strong>Cantidad:*</strong>'
     }
-});
+
+    var productosSeleccionados = [];
+    var filas = document.querySelectorAll(".producto-row");  
+    // Iterar sobre cada fila de la tabla para obtener los productos ya seleccionados
+    filas.forEach(function(row) {
+        var productoId = row.getAttribute('data-id'); // Obtiene el data-id de cada fila
+        if (productoId) {
+            console.log(productoId)
+            productosSeleccionados.push(productoId);
+        }
+    });
+    console.log(select.value)
+    if (productosSeleccionados.includes(select.value)){
+            alert.classList.remove('d-none')
+            this.value = ''; // Resetea el select a un estado sin selección
+            boton.disabled = true;
+        } else {
+            alert.classList.add('d-none')
+            productosSeleccionados.push(this.value); // Agrega la selección actual a la lista de control
+            boton.disabled = false;
+        }
+    });
+
+    
+
+
 
 document.getElementById("btn_producto").addEventListener("click",(event)=>{
     var rendimiento = document.getElementById('id_rendimiento')
@@ -240,8 +266,6 @@ document.getElementById("btn_producto").addEventListener("click",(event)=>{
 
 });
 
-   
-   
    
 </script>
 {% endblock %}

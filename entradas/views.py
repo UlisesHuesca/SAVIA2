@@ -731,7 +731,7 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
             sector,
             articulo.producto.producto.articulos.producto.producto.codigo,
             articulo.producto.producto.articulos.producto.producto.nombre,
-            articulo.cantidad_pendiente,
+            articulo.cantidad_pendiente if articulo.cantidad_pendiente != None else articulo.cantidad,
             articulo.producto.producto.articulos.producto.producto.unidad.nombre,
             articulo.oc.proveedor.nombre.razon_social,
             f"{articulo.oc.req.orden.staff.staff.staff.first_name} {articulo.oc.req.orden.staff.staff.staff.last_name}",

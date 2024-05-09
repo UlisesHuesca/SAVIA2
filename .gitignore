@@ -4,10 +4,8 @@ media/
 facturas/
 xml/
 *.sql.gz
-access.log
-errors.log
 errors.log.save
-debug.log
+*.log
 .env
 *.sql
 *.sql.gz

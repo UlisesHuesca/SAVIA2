@@ -1,0 +1,30 @@
+{% extends 'partials/base.html' %}
+<html>
+<head>
+{% block title %}Acceso Denegado{% endblock %}
+</head>
+<body>
+{% block content %}
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<h6>>&nbsp;</h6>
+<h6>>&nbsp;</h6>
+<h6>>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-6 col-md-12 offset-md-3">
+        <div class="card">
+            <div class="card-header">
+                <h3 style="color: #990f0f"><i class="fa-solid fa-skull-crossbones"></i>Acceso Denegado</h3>
+            </div>
+            <div class="card-body" style="color: #990f0f">
+                <p><h3>Usuario Detectado: {{request.user.first_name}} {{request.user.last_name}}</h3></p>
+                <strong>No tienes permiso para acceder a está página, tu actividad está siendo monitoreada</strong>
+            </div>
+        </div>  
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>
+

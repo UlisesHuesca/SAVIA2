@@ -16,7 +16,7 @@ from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, Arti
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
-from user.decorators import perfil_seleccionado_required
+from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm
@@ -62,6 +62,9 @@ from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
+from user.logger_config import get_custom_logger
+
+logger = get_custom_logger(__name__)
 #from urllib.parse import (
 #    ParseResult,
 #    SplitResult,
@@ -75,6 +78,7 @@ import datetime as dt
 
 # Create your views here.
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def requisiciones_autorizadas(request):
     pk = request.session.get('selected_profile_id')
@@ -104,6 +108,7 @@ def requisiciones_autorizadas(request):
 
     return render(request, 'compras/requisiciones_autorizadas.html',context)
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def productos_pendientes(request):
     perfil = Profile.objects.get(staff__id=request.user.id)
@@ -176,6 +181,8 @@ def eliminar_articulos(request, pk):
 
     return render(request,'compras/eliminar_articulos.html', context)
 
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def articulos_restantes(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     #productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"))
@@ -217,6 +224,8 @@ def dof():
         # Manejo de la excepción - log, mensaje de error, etc.
         return f"Error al obtener datos: {e}"
 
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def oc(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk)
     req = Requis.objects.get(id = pk)
@@ -236,6 +245,8 @@ def oc(request, pk):
 
     return render(request, 'compras/oc.html',context)
 
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def compras_devueltas(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -257,135 +268,141 @@ def compras_devueltas(request):
 
     return render(request, 'compras/compras_devueltas.html',context)
 
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def compra_edicion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
     usuario = colaborador.get(id = pk_perfil)
-    oc = Compra.objects.get(id =pk)
-    colaborador_sel = Profile.objects.all()
+    oc = get_object_or_404(Compra, id=pk)
+    #colaborador_sel = Profile.objects.all()
     productos_comp = ArticuloComprado.objects.filter(oc = oc)
     productos = ArticulosRequisitados.objects.filter(req = oc.req, sel_comp = False)
     req = Requis.objects.get(id = oc.req.id)
     comparativos = Comparativo.objects.filter(creada_por__distritos = usuario.distritos, completo =True)
     #proveedores = Proveedor_direcciones.objects.filter(
     #    Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO'))
-    
-    proveedores = Proveedor_direcciones.objects.filter(id = oc.proveedor.id)
-    form_product = ArticuloCompradoForm()
-    form = CompraForm(instance=oc)
-    error_messages = {}
-    #'distrito__nombre','domicilio','estatus__nombre'
-    proveedor_para_select2 = [
-        {'id': proveedor.id, 
-         'text': proveedor.nombre.razon_social,
-         #'distrito': proveedor.
-        } for proveedor in proveedores]
-
-
-    productos_para_select2 = [
-        {'id': producto.id,
-         'text': str(producto), 
-         'cantidad': str(producto.cantidad), 
-         'cantidad_pendiente': str(producto.cantidad_comprada),
-         'precioref': str(producto.producto.articulos.producto.producto.precioref),
-         'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje)
-        } for producto in productos]
-    
-    productos_comp_to_function = [
-        {
-            'id': producto.id,
-            'precio': str(producto.precio_unitario),
-            'precio_ref': str(producto.producto.producto.articulos.producto.producto.precioref),
-            'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
-        } for producto in productos_comp
-    ] 
-
-    comparativos_para_select2 = [
-        {
-            'id': comparativo.id, 
-            'text': str(comparativo.nombre)
-        } for comparativo in comparativos
-    ]
-
-
-
-    tag = dof()
-    subtotal = 0
-    iva = 0
-    total = 0
-    dif_cant = 0
-    #form.fields['deposito_comprador'].queryset = colaborador_sel
-    for item in productos_comp:
-        subtotal = decimal.Decimal(subtotal + item.cantidad * item.precio_unitario)
-        if item.producto.producto.articulos.producto.producto.iva == True:
-            iva = round(subtotal * decimal.Decimal(0.16),2)
-        total = decimal.Decimal(subtotal + decimal.Decimal(iva))
-
-    if request.method == 'POST' and  "crear" in request.POST:
-        form = CompraForm(request.POST, instance=oc)
-        costo_oc = 0
-        costo_iva = 0
-        articulos = ArticuloComprado.objects.filter(oc=oc)
-        requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
-        cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
-        cuenta_art_totales = requisitados.count()
-        if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0:
-            req.colocada = True
-        else:
-            req.colocada = False
-        for articulo in articulos:
-            costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
-            if articulo.producto.producto.articulos.producto.producto.iva == True:
-                costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
-        for producto in requisitados:
-            dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
-            if producto.art_surtido == False:
-                producto.sel_comp = False
-                producto.save()
-        oc.complete = True
-        if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
-            oc.costo_iva = decimal.Decimal(costo_iva)
-            oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
-        else:
-            oc.costo_iva = decimal.Decimal(costo_iva)
-            oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
-        if form.is_valid():
-            #abrev= usuario.distrito.abreviado
-            #oc.folio = str(abrev) + str(consecutivo).zfill(4)
-            oc.regresar_oc = False
-            form.save()
-            oc.save()
-            req.save()
-            messages.success(request,f'{usuario.staff.staff.first_name}, Has modificado la OC {oc.folio} correctamente')
-            return redirect('compras-devueltas')
+    if not (oc.complete == False and oc.regresar_oc == True):
+        logger.warning(f"Intento acceso no autorizado a compra edición por usuario  {request.user.first_name} {request.user.last_name}")
+        return render(request,'partials/acceso_denegado.html') 
     else:
-        for field, errors in form.errors.items():
-            error_messages[field] = errors.as_text()
+        proveedores = Proveedor_direcciones.objects.filter(id = oc.proveedor.id)
+        form_product = ArticuloCompradoForm()
+        form = CompraForm(instance=oc)
+        error_messages = {}
+        #'distrito__nombre','domicilio','estatus__nombre'
+        proveedor_para_select2 = [
+            {'id': proveedor.id, 
+            'text': proveedor.nombre.razon_social,
+            #'distrito': proveedor.
+            } for proveedor in proveedores]
+
+
+        productos_para_select2 = [
+            {'id': producto.id,
+            'text': str(producto), 
+            'cantidad': str(producto.cantidad), 
+            'cantidad_pendiente': str(producto.cantidad_comprada),
+            'precioref': str(producto.producto.articulos.producto.producto.precioref),
+            'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje)
+            } for producto in productos]
+        
+        productos_comp_to_function = [
+            {
+                'id': producto.id,
+                'precio': str(producto.precio_unitario),
+                'precio_ref': str(producto.producto.producto.articulos.producto.producto.precioref),
+                'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
+            } for producto in productos_comp
+        ] 
+
+        comparativos_para_select2 = [
+            {
+                'id': comparativo.id, 
+                'text': str(comparativo.nombre)
+            } for comparativo in comparativos
+        ]
 
 
 
-    context= {
-        'comparativos_para_select2': comparativos_para_select2,
-        'proveedor_para_select2': proveedor_para_select2,
-        'productos_comp_to_function': productos_comp_to_function,
-        'error_messages': error_messages,
-        'req':req,
-        'form':form,
-        'form_product':form_product,
-        'productos_para_select2':productos_para_select2,
-        #'proveedores':proveedores,
-        'productos':productos,
-        'oc':oc,
-        'productos_comp':productos_comp,
-        'subtotal':subtotal,
-        'iva':iva,
-        'total':total,
-        }
+        tag = dof()
+        subtotal = 0
+        iva = 0
+        total = 0
+        dif_cant = 0
+        #form.fields['deposito_comprador'].queryset = colaborador_sel
+        for item in productos_comp:
+            subtotal = decimal.Decimal(subtotal + item.cantidad * item.precio_unitario)
+            if item.producto.producto.articulos.producto.producto.iva == True:
+                iva = round(subtotal * decimal.Decimal(0.16),2)
+            total = decimal.Decimal(subtotal + decimal.Decimal(iva))
 
-    return render(request, 'compras/compra_edicion.html',context)
+        if request.method == 'POST' and  "crear" in request.POST:
+            form = CompraForm(request.POST, instance=oc)
+            costo_oc = 0
+            costo_iva = 0
+            articulos = ArticuloComprado.objects.filter(oc=oc)
+            requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
+            cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
+            cuenta_art_totales = requisitados.count()
+            if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0:
+                req.colocada = True
+            else:
+                req.colocada = False
+            for articulo in articulos:
+                costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
+                if articulo.producto.producto.articulos.producto.producto.iva == True:
+                    costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+            for producto in requisitados:
+                dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
+                if producto.art_surtido == False:
+                    producto.sel_comp = False
+                    producto.save()
+            oc.complete = True
+            if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
+                oc.costo_iva = decimal.Decimal(costo_iva)
+                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+            else:
+                oc.costo_iva = decimal.Decimal(costo_iva)
+                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+            if form.is_valid():
+                #abrev= usuario.distrito.abreviado
+                #oc.folio = str(abrev) + str(consecutivo).zfill(4)
+                oc.regresar_oc = False
+                form.save()
+                oc.save()
+                req.save()
+                messages.success(request,f'{usuario.staff.staff.first_name}, Has modificado la OC {oc.folio} correctamente')
+                return redirect('compras-devueltas')
+        else:
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
 
 
 
+        context= {
+            'comparativos_para_select2': comparativos_para_select2,
+            'proveedor_para_select2': proveedor_para_select2,
+            'productos_comp_to_function': productos_comp_to_function,
+            'error_messages': error_messages,
+            'req':req,
+            'form':form,
+            'form_product':form_product,
+            'productos_para_select2':productos_para_select2,
+            #'proveedores':proveedores,
+            'productos':productos,
+            'oc':oc,
+            'productos_comp':productos_comp,
+            'subtotal':subtotal,
+            'iva':iva,
+            'total':total,
+            }
+
+        return render(request, 'compras/compra_edicion.html',context)
+
+
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def update_oc(request):
     data= json.loads(request.body)
     action = data["action"]
@@ -434,12 +451,13 @@ def update_oc(request):
 
 #@cache_page(60 * 60)  # Cache la vista durante 1 hora
 @perfil_seleccionado_required
+@login_required(login_url='user-login')
 def oc_modal(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
     usuario = colaborador.get(id = pk_perfil)
     req = Requis.objects.get(id = pk)
-
+    
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False, sel_comp = False)
     compras = Compra.objects.all()
     comparativos = Comparativo.objects.filter(creada_por__distritos = usuario.distritos, completo =True)
@@ -447,161 +465,164 @@ def oc_modal(request, pk):
     productos_comp = ArticuloComprado.objects.filter(oc=oc)
     form = CompraForm(instance=oc)
     form_product = ArticuloCompradoForm()
-    
-    
-    tag = dof()
-    subtotal = 0
-    iva = 0
-    total = 0
-    dif_cant = 0
-
-    last_oc = compras.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
-    if last_oc:
-        folio = last_oc.folio + 1
+    if (req.colocada != False):
+        logger.warning(f"Intento acceso no autorizado a compra cuya requisición {req.id} por usuario  {colaborador.staff.staff.first_name} {colaborador.staff.staff.last_name}")
+        return render(request,'partials/acceso_denegado.html') 
     else:
-        folio = 1
-    #abrev = req.orden.distrito.abreviado
-    folio_preview = folio
-    error_messages = {}
+        tag = dof()
+        subtotal = 0
+        iva = 0
+        total = 0
+        dif_cant = 0
 
-    productos_para_select2 = [
-        {'id': producto.id,
-         'text': str(producto), 
-         'cantidad': str(producto.cantidad), 
-         'cantidad_pendiente': str(producto.cantidad_comprada),
-         'precioref': str(producto.producto.articulos.producto.producto.precioref),
-         'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje)
-        } for producto in productos]
-    
-    productos_comp_to_function = [
-        {
-            'id': producto.id,
-            'precio': str(producto.precio_unitario),
-            'precio_ref': str(producto.producto.producto.articulos.producto.producto.precioref),
-            'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
-        } for producto in productos_comp
-    ] 
-    comparativos_para_select2 = [
-        {
-            'id': comparativo.id, 
-            'text': str(comparativo.nombre)
-        } for comparativo in comparativos
-    ]
-
-    for item in productos_comp:
-        subtotal = decimal.Decimal(subtotal + item.cantidad * item.precio_unitario)
-        if item.producto.producto.articulos.producto.producto.iva == True:
-            iva = round(subtotal * decimal.Decimal(0.16),2)
-        total = decimal.Decimal(subtotal + decimal.Decimal(iva))
-
-    if request.method == 'POST' and  "crear" in request.POST:
-        form = CompraForm(request.POST, instance=oc)
-        
-        if form.is_valid():
-            costo_oc = 0
-            costo_iva = 0
-            articulos = ArticuloComprado.objects.filter(oc=oc)
-            requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
-            cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
-            cuenta_art_totales = requisitados.count()
-            if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0: #Compara los artículos comprados vs artículos requisitados
-                req.colocada = True
-            else:
-                req.colocada = False
-            for articulo in articulos:
-                costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
-                if articulo.producto.producto.articulos.producto.producto.iva == True:
-                    costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
-            for producto in requisitados:
-                dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
-                if producto.art_surtido == False:
-                    producto.sel_comp = False
-                    producto.save()
-           
-            if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
-                oc.costo_iva = decimal.Decimal(costo_iva)
-                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
-            else:
-                oc.costo_iva = decimal.Decimal(costo_iva)
-                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
-
-            last_oc = Compra.objects.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
-            if last_oc:
-                folio = last_oc.folio + 1
-            else:
-                folio = 1
-            oc.complete = True
-            oc.folio = folio
-            oc.created_at = date.today()
-            form.save()
-            oc.save()
-            req.save()
-            static_path = settings.STATIC_ROOT
-            img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-            img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-       
-            image_base64 = get_image_base64(img_path)
-            logo_v_base64 = get_image_base64(img_path2)
-            # Crear el mensaje HTML
-            html_message = f"""
-            <html>
-                <head>
-                    <meta charset="UTF-8">
-                </head>
-                <body>
-                    <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                    <p>Estimado {oc.req.orden.staff.staff.staff.first_name} {oc.req.orden.staff.staff.staff.last_name},</p>
-                    <p>Estás recibiendo este correo porque tu solicitud: {oc.req.orden.folio}| Req: {oc.req.folio} se ha convertido en la OC: {oc.folio},</p>
-                    <p>creada por {oc.creada_por.staff.staff.first_name} {oc.creada_por.staff.staff.last_name}.</p>
-                    <p>El siguiente paso del sistema: Autorización de OC por Superintedencia Administrativa</p>
-                    <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                    <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                </body>
-            </html>
-            """
-            try:
-                email = EmailMessage(
-                    f'OC Elaborada {oc.folio}',
-                    body=html_message,
-                    #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                    from_email = settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.send()
-                messages.success(request,f'{usuario.staff.staff.first_name}, Has generado la OC {oc.folio} correctamente')
-            except (BadHeaderError, SMTPException) as e:
-                error_message = f'{usuario.staff.staff.first_name}, Has generado la OC {oc.folio} correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
-                messages.success(request, error_message)
-            return redirect('requisicion-autorizada')
+        last_oc = compras.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
+        if last_oc:
+            folio = last_oc.folio + 1
         else:
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
-    
+            folio = 1
+        #abrev = req.orden.distrito.abreviado
+        folio_preview = folio
+        error_messages = {}
+
+        productos_para_select2 = [
+            {'id': producto.id,
+            'text': str(producto), 
+            'cantidad': str(producto.cantidad), 
+            'cantidad_pendiente': str(producto.cantidad_comprada),
+            'precioref': str(producto.producto.articulos.producto.producto.precioref),
+            'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje)
+            } for producto in productos]
+        
+        productos_comp_to_function = [
+            {
+                'id': producto.id,
+                'precio': str(producto.precio_unitario),
+                'precio_ref': str(producto.producto.producto.articulos.producto.producto.precioref),
+                'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
+            } for producto in productos_comp
+        ] 
+        comparativos_para_select2 = [
+            {
+                'id': comparativo.id, 
+                'text': str(comparativo.nombre)
+            } for comparativo in comparativos
+        ]
+
+        for item in productos_comp:
+            subtotal = decimal.Decimal(subtotal + item.cantidad * item.precio_unitario)
+            if item.producto.producto.articulos.producto.producto.iva == True:
+                iva = round(subtotal * decimal.Decimal(0.16),2)
+            total = decimal.Decimal(subtotal + decimal.Decimal(iva))
+
+        if request.method == 'POST' and  "crear" in request.POST:
+            form = CompraForm(request.POST, instance=oc)
+            
+            if form.is_valid():
+                costo_oc = 0
+                costo_iva = 0
+                articulos = ArticuloComprado.objects.filter(oc=oc)
+                requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
+                cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
+                cuenta_art_totales = requisitados.count()
+                if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0: #Compara los artículos comprados vs artículos requisitados
+                    req.colocada = True
+                else:
+                    req.colocada = False
+                for articulo in articulos:
+                    costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
+                    if articulo.producto.producto.articulos.producto.producto.iva == True:
+                        costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+                for producto in requisitados:
+                    dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
+                    if producto.art_surtido == False:
+                        producto.sel_comp = False
+                        producto.save()
+            
+                if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
+                    oc.costo_iva = decimal.Decimal(costo_iva)
+                    oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+                else:
+                    oc.costo_iva = decimal.Decimal(costo_iva)
+                    oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
+
+                last_oc = Compra.objects.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
+                if last_oc:
+                    folio = last_oc.folio + 1
+                else:
+                    folio = 1
+                oc.complete = True
+                oc.folio = folio
+                oc.created_at = date.today()
+                form.save()
+                oc.save()
+                req.save()
+                static_path = settings.STATIC_ROOT
+                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+        
+                image_base64 = get_image_base64(img_path)
+                logo_v_base64 = get_image_base64(img_path2)
+                # Crear el mensaje HTML
+                html_message = f"""
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body>
+                        <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                        <p>Estimado {oc.req.orden.staff.staff.staff.first_name} {oc.req.orden.staff.staff.staff.last_name},</p>
+                        <p>Estás recibiendo este correo porque tu solicitud: {oc.req.orden.folio}| Req: {oc.req.folio} se ha convertido en la OC: {oc.folio},</p>
+                        <p>creada por {oc.creada_por.staff.staff.first_name} {oc.creada_por.staff.staff.last_name}.</p>
+                        <p>El siguiente paso del sistema: Autorización de OC por Superintedencia Administrativa</p>
+                        <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                        <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                    </body>
+                </html>
+                """
+                try:
+                    email = EmailMessage(
+                        f'OC Elaborada {oc.folio}',
+                        body=html_message,
+                        #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                    email.send()
+                    messages.success(request,f'{usuario.staff.staff.first_name}, Has generado la OC {oc.folio} correctamente')
+                except (BadHeaderError, SMTPException) as e:
+                    error_message = f'{usuario.staff.staff.first_name}, Has generado la OC {oc.folio} correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                    messages.success(request, error_message)
+                return redirect('requisicion-autorizada')
+            else:
+                for field, errors in form.errors.items():
+                    error_messages[field] = errors.as_text()
+        
 
 
-    
-    context= {
-        'comparativos_para_select2': comparativos_para_select2,
-        'productos_comp_to_function': productos_comp_to_function,
-        'error_messages': error_messages,
-        'req':req,
-        'form':form,
-        'form_product':form_product,
-        'productos_para_select2':productos_para_select2,
-        'oc':oc,
-        'folio':folio_preview,
-        'productos':productos,
-        'tag':tag,
-        'productos_comp':productos_comp,
-        'subtotal':subtotal,
-        'iva':iva,
-        'total':total,
-        }
-    
-    return render(request, 'compras/oc.html', context)
+        
+        context= {
+            'comparativos_para_select2': comparativos_para_select2,
+            'productos_comp_to_function': productos_comp_to_function,
+            'error_messages': error_messages,
+            'req':req,
+            'form':form,
+            'form_product':form_product,
+            'productos_para_select2':productos_para_select2,
+            'oc':oc,
+            'folio':folio_preview,
+            'productos':productos,
+            'tag':tag,
+            'productos_comp':productos_comp,
+            'subtotal':subtotal,
+            'iva':iva,
+            'total':total,
+            }
+        
+        return render(request, 'compras/oc.html', context)
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def mostrar_comparativo(request, pk):
     comparativo = Comparativo.objects.get(id=pk)
@@ -766,6 +787,7 @@ def clear_task_id(request):
 
 
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def matriz_oc_productos(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -809,6 +831,7 @@ def matriz_oc_productos(request):
 
     return render(request, 'compras/matriz_oc_productos.html',context)
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def productos_oc(request, pk):
     compra = Compra.objects.get(id=pk)
@@ -822,6 +845,7 @@ def productos_oc(request, pk):
 
     return render(request,'compras/oc_producto.html',context)
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def upload_facturas(request, pk):
     pago = Pago.objects.get(id = pk)
@@ -872,6 +896,7 @@ def upload_xml(request, pk):
 
     return render(request, 'compras/upload_xml.html', context)
 
+@tipo_usuario_requerido('oc_superintendencia')
 @perfil_seleccionado_required
 @login_required(login_url='user-login')
 def autorizacion_oc1(request):
@@ -881,7 +906,7 @@ def autorizacion_oc1(request):
     if usuario.tipo.oc_superintendencia == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     else:
-        compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos)
+        compras = Compra.objects.none()
     #compras = Compra.objects.filter(complete=True, autorizado1= None).order_by('-folio')
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
@@ -895,6 +920,8 @@ def autorizacion_oc1(request):
 
     return render(request, 'compras/autorizacion_oc1.html',context)
 
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def cancelar_oc1(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -942,6 +969,8 @@ def cancelar_oc1(request, pk):
      }
     return render(request,'compras/cancelar_oc1.html', context)
 
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def cancelar_oc2(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -987,6 +1016,9 @@ def cancelar_oc2(request, pk):
      }
     return render(request,'compras/cancelar_oc2.html', context)
 
+
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def back_oc(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
@@ -1058,10 +1090,12 @@ def back_oc(request, pk):
 
 
 
-
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def autorizar_oc1(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
+   
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
     form = Compra_ComentarioForm()
@@ -1100,7 +1134,7 @@ def autorizar_oc1(request, pk):
             static_path = settings.STATIC_ROOT
             img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
             img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-       
+        
             image_base64 = get_image_base64(img_path)
             logo_v_base64 = get_image_base64(img_path2)
             # Crear el mensaje HTML
@@ -1127,14 +1161,14 @@ def autorizar_oc1(request, pk):
                     from_email = settings.DEFAULT_FROM_EMAIL,
                     to= ['ulises_huesc@hotmail.com',compra.req.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
-                    )
+                )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
                 email.send()
                 messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
             except (BadHeaderError, SMTPException) as e:
                 error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
                 messages.success(request, error_message)    
-            
+                
             return redirect('autorizacion-oc1')
 
     context={
@@ -1147,18 +1181,21 @@ def autorizar_oc1(request, pk):
         'porcentaje':porcentaje,
         'costo_total':costo_total,
         }
+    
 
     return render(request, 'compras/autorizar_oc1.html',context)
 
+@tipo_usuario_requerido('oc_gerencia')
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def autorizacion_oc2(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
-    #if usuario.tipo.oc_gerencia == True:
-    #    compras = Compra.objects.filter(complete = True, autorizado1 = True, autorizado2= None).order_by('-folio')
-    #else:
-    #    compras = Compra.objects.filter(flete=True,costo_fletes='1')
-    compras = Compra.objects.filter(complete = True, autorizado1 = True, autorizado2= None, req__orden__distrito = usuario.distritos).order_by('-folio')
+    if usuario.tipo.oc_gerencia == True:
+        compras = Compra.objects.filter(complete = True, autorizado1 = True, autorizado2= None, req__orden__distrito = usuario.distritos).order_by('-folio')
+    else:
+        compras = Compra.objects.none()
+    
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
     
@@ -1169,7 +1206,8 @@ def autorizacion_oc2(request):
 
     return render(request, 'compras/autorizacion_oc2.html',context)
 
-
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def autorizar_oc2(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1342,6 +1380,8 @@ def handle_uploaded_file(file, model_instance, field_name):
     setattr(model_instance, field_name, file)
     model_instance.save()
 
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def comparativos(request):
     #creada_por 
     pk_perfil = request.session.get('selected_profile_id') 
@@ -1472,6 +1512,8 @@ def crear_comparativo(request):
 
     return render(request, 'compras/crear_comparativo.html', context)
 
+
+
 #Ajax Select2
 def carga_proveedor(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -1510,8 +1552,7 @@ def carga_productos(request):
         
     return JsonResponse(data, safe=False)
 
-
-
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def editar_comparativo(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
@@ -1560,6 +1601,9 @@ def editar_comparativo(request, pk):
 
     return render(request, 'compras/actualizar_comparativo.html', context)
 
+
+@perfil_seleccionado_required
+@login_required(login_url='user-login')
 def articulos_comparativo(request, pk):
     articulos = Item_Comparativo.objects.filter(comparativo__id = pk , completo = True)
 
@@ -1578,6 +1622,7 @@ def articulo_comparativo_delete(request, pk):
 
     return redirect('crear_comparativo')
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def historico_articulos_compras(request):
     registros = ArticuloComprado.history.all()
@@ -1598,6 +1643,7 @@ def historico_articulos_compras(request):
     return render(request,'compras/historico_articulos_comprados.html',context)
 
 
+@perfil_seleccionado_required
 @login_required(login_url='user-login')
 def historico_compras(request):
     registros = Compra.history.all()
