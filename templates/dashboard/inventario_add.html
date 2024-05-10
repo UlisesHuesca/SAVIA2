@@ -11,6 +11,34 @@
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
 <div class="container">
     <div class="row mt-5">
         <div class="col-md-8 offset-md-2 col-sm-12">
@@ -19,7 +47,7 @@
                 <div class="card-header">
                     Agregar Producto a Inventario
                 </div>
-                <form method="POST" >
+                <form method="POST" id="formulario">
                 <div class="card-body" style="color:white">
                     
                         {% csrf_token %}
@@ -91,6 +119,25 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 //var datosProductos = {{productos_para_select2|safe}}
+document.getElementById('formulario').addEventListener('submit', function(event) {
+        event.preventDefault();
+        var submit = document.getElementById('crear')
+        //var orden = document.getElementById('order');
+        //var orden_id = orden.getAttribute('orden');
+        //var datos = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id));
+        //Limpio el local storage
+        //localStorage.removeItem('id_solicitud'+orden_id);
+
+        //Deshabilito el botón para prevenir dobles clicks
+        setTimeout(function(){
+            document.getElementById('crear').disabled = true;
+        }, 50);
+       
+        this.submit();
+
+    });
+
+
 
 $(document).ready(function() {
     //var orden = document.getElementById('order');

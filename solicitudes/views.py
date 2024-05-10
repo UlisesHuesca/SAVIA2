@@ -1191,7 +1191,7 @@ def inventario_add(request):
             item.distrito = perfil.distritos
             item.save()
             messages.success(request, f'El artículo {item.producto.codigo}:{item.producto.nombre} se ha agregado exitosamente')
-            return HttpResponse(status=204)
+            return redirect('solicitud-inventario')
     #else:
         #form = InventarioForm()
 
