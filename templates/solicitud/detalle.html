@@ -92,7 +92,7 @@
                                                     Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i>Falta Autorización Sup. Adm.
                                                 {% elif compra.complete == False %}
                                                 <button class="accordion-button collapsed  btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                                    Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i>Orden de Compra en Proceso
+                                                    Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i>Orden de Compra en Proceso {{compra.creada_por.staff.staff.first_name}} {{compra.creada_por.staff.staff.last_name}}
                                                 {% endif %}
                                                 </button>
                                             </h2>

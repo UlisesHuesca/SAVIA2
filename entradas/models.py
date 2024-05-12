@@ -13,7 +13,7 @@ class Entrada(models.Model):
     entrada_date = models.DateTimeField(null=True, blank=True)
     #entrada_hora = models.TimeField(null=True, blank=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
-    completo = models.BooleanField()
+    completo = models.BooleanField()    
 
     def __str__(self):
         return f'{self.id} - {self.oc} - {self.completo}'
