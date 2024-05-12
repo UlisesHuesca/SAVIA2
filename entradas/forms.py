@@ -33,4 +33,7 @@ class NC_ArticuloForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
 
-
+class Cierre_NCForm(forms.ModelForm):
+    class Meta:
+        model = No_Conformidad
+        fields = ['cierre','image']

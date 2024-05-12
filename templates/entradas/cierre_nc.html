@@ -1,0 +1,112 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+<html>
+<head>
+{% block title %} Cierre NC {% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="col-6 offset-3" role="document">
+    <form  id='miFormulario' method = "POST" enctype="multipart/form-data">
+    <div class="card">
+        <div class="card-header">
+            <h5 class="modal-title">Cierre NC</h5>
+        </div>
+        <div class="class-body">
+                {% csrf_token %}
+                <div class="alert alert-danger d-none" role="alert" id="alert">
+                   Debes agregar un documento soporte
+                </div>
+                <div class="alert alert-primary" role="alert">
+                    <h6><strong>Folio NC: {{nc.id}}</strong></h6>
+                </div>
+                <div class="alert alert-primary" role="alert">
+                    <h6><strong>Folio NC: {{nc.comentario}}</strong></h6>
+                </div>
+               
+                <div class="alert alert-primary" role="alert">
+                    <h6><strong>Producto: {{articulos_nc.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</strong></h6>
+                </div>
+                <div class="alert alert-primary" role="alert">
+                    <h6><strong>Cantidad: {{articulos_nc.cantidad}}</strong></h6>
+                </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cierre:</strong></label>
+                    <div class="col-12">
+                        {{ form.cierre|add_class:"form-control"}}
+                    </div>
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Imagen:</strong></label>
+                    <div class="col-12">
+                        {{form.image|add_class:"form-control"}}
+                    </div>
+        </div>
+        <div class="card-footer">
+                <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>
+                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+var form = document.getElementById('miFormulario');
+
+form.addEventListener('submit', function(event) {
+  event.preventDefault();  // Detiene el envío del formulario  
+  var cierre = document.getElementById('id_cierre').value;
+  var imagen = document.getElementById('id_image').files.length;  // Verifica si hay un archivo seleccionado
+  var alert = document.getElementById('alert')
+    console.log(cierre)
+  // Verifica si el cierre es '1' o '2' y si no hay imagen seleccionada
+  if ((cierre === '1' || cierre === '2') && imagen === 0) {
+    alert.classList.remove('d-none')
+  } else{
+    alert.classList.add('d-none')
+    form.submit()
+  }
+});
+
+</script>
+{% endblock %}
+</body>
+</html>
