@@ -12,8 +12,8 @@ from compras.filters import CompraFilter
 from compras.views import attach_oc_pdf
 from dashboard.models import Inventario, Order, ArticulosparaSurtir
 from requisiciones.models import Salidas, ArticulosRequisitados, Requis
-from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, NC_Articulo
-from .forms import EntradaArticuloForm, Reporte_CalidadForm, NoConformidadForm, NC_ArticuloForm
+from .models import Entrada, EntradaArticulo, Reporte_Calidad, No_Conformidad, NC_Articulo, Tipo_Nc
+from .forms import EntradaArticuloForm, Reporte_CalidadForm, NoConformidadForm, NC_ArticuloForm, Cierre_NCForm
 from tesoreria.models import Pago
 from user.models import Profile
 from requisiciones.views import get_image_base64
@@ -335,6 +335,7 @@ def update_entrada(request):
                 producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #Todo lo que está pendiente en una entrada más la entrada misma
                 producto_inv.cantidad_apartada = producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
                 producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad                       #Al producto disponible para surtir se le suma lo que entra
+                #Es probable que esta cantidad ya le esté restando en otro lado
                 producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
                 producto_inv.save()
                 producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para solicitud normal'
@@ -424,11 +425,13 @@ def reporte_calidad(request, pk):
     for item in articulos_reportes:
         sum_articulos_reportes = item.cantidad + sum_articulos_reportes
 
-    restantes_liberacion = articulo_entrada.cantidad - sum_articulos_reportes
 
+    restantes_liberacion = articulo_entrada.cantidad - sum_articulos_reportes
+    print(restantes_liberacion)
 
     if request.method =='POST':
         form = Reporte_CalidadForm(request.POST, request.FILES, instance = reporte_actual)
+        print(decimal.Decimal(request.POST['cantidad']) )
         if decimal.Decimal(request.POST['cantidad']) <=  restantes_liberacion:
             if not request.POST['autorizado'] == None:
                 if form.is_valid():
@@ -441,19 +444,56 @@ def reporte_calidad(request, pk):
                     if item.autorizado == True:
                         if articulos_restantes == 0:
                             articulo_entrada.liberado = True
-                        producto_surtir.cantidad = producto_surtir.cantidad + item.cantidad
-                        producto_surtir.surtir = True
-                        producto_surtir.save()
+                        #Lo estoy comentando porque según yo la cantidad ya está afectada en la cantidad en entró el sumarle sería afectarlo doble 
+                        #producto_surtir.cantidad = producto_surtir.cantidad + item.cantidad
+                        #producto_surtir.surtir = True
+                        #producto_surtir.save()
                     if item.autorizado == False:
+                       
+                        #Esta condiconal solo afectara la cantidad de articulos en la entrada si ya son los ultimos articulos dentro de la liberacion
+                        #Esto es porque en caso de no ser así genera un error en las cantidades 
+                        if restantes_liberacion == item.cantidad:
+                            print(restantes_liberacion, item.cantidad)
+                            articulo_entrada.cantidad = articulo_entrada.cantidad - item.cantidad
+                        #Si hay un rechazo, se tienen que evaluar varias cuestiones
+                        #1. Se tiene que afectar la cantidad de articulos entrada
+                        articulo_entrada.cantidad_por_surtir = articulo_entrada.cantidad_por_surtir - item.cantidad
+                        #2 El producto por surtir se tiene que decrementar porque se afectó en la vista update_entrada
+                        producto_surtir.cantidad = producto_surtir.cantidad - item.cantidad
+                        articulo_entrada.save()
+                        producto_surtir.save()
+                        #3 Si la cantidad del articulo y la entrada prácticamente se tendría que cancelar
+                        if producto_surtir.cantidad == 0:
+                            entrada = Entrada.objects.get(id = articulo_entrada.entrada.id)
+                            entrada.cancelada = True
+                            entrada.save()
+                        #Si el item no es autorizado por calidad, se crea una NC
+                        
+                        tipo_nc = Tipo_Nc.objects.get(id = 2)
+                        no_conformidad, created = No_Conformidad.objects.get_or_create(
+                            oc = articulo_entrada.entrada.oc, 
+                            almacenista=perfil, 
+                            comentario = item.comentarios,
+                            tipo_nc= tipo_nc,
+                            completo = True, 
+                            nc_date = date.today(),
+                            nc_hora = datetime.now().time())
+                        no_conformidad.save()
+                        articulos_nc = NC_Articulo.objects.create(
+                            nc = no_conformidad,
+                            cantidad = item.cantidad,
+                            articulo_comprado = articulo_entrada.articulo_comprado)
+                        print('articulos_nc')
                         if articulos_restantes == 0:
                             articulo_entrada.liberado = True
+                        articulos_nc.save()
                     articulo_entrada.save()
                     item.completo = True
                     item.save()
                     messages.success(request, 'Has generado exitosamente tu reporte')
                     return HttpResponse(status=204)
             else:
-                messages.error(request, 'Debes elegir un modo de liberación')
+                messages.error(request, 'Debes elegir un Status de liberación')
         else:
             messages.error(request, 'La cantidad liberada no puede ser mayor que cantidad de entradas restante')
 
@@ -468,6 +508,68 @@ def reporte_calidad(request, pk):
 
     return render(request,'entradas/calidad_entrada.html',context)
 
+
+def matriz_nc(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
+    ncs= No_Conformidad.objects.filter(completo = True, oc__req__orden__distrito = perfil.distritos)
+    
+
+    context = {
+        #'form': form,
+        'ncs': ncs,
+        #'restantes_liberacion': restantes_liberacion,
+        }
+
+    return render(request,'entradas/matriz_nc.html',context)
+
+def productos_nc(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
+    articulos_nc = NC_Articulo.objects.filter(nc = pk)
+
+    context = {
+        'articulos_nc': articulos_nc,
+    }
+
+    return render(request, 'entradas/productos_nc.html', context)
+
+def cierre_nc(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
+    nc = No_Conformidad.objects.get(id = pk)
+    articulos_nc = NC_Articulo.objects.filter(nc = pk).first()
+    form = Cierre_NCForm(instance = nc)
+
+    if request.method == "POST":
+        #and 'BtnCrear' in request.POST:
+        form = Cierre_NCForm(request.POST, request.FILES, instance = nc)
+
+        if form.is_valid():
+            nc = form.save(commit=False)
+            nc.fecha_cierre = date.today()
+            nc.save()
+            oc = Compra.objects.get(id = nc.oc.id)
+            producto = ArticuloComprado.objects.get(id = articulos_nc.articulo_comprado.id)
+            if nc.cierre.id == 3:
+                #Se debería de reactivas la OC, en la variable entrada_completa = False
+                oc.entrada_completa = False
+                producto.entrada_completa = False
+                producto.cantidad_pendiente = producto.cantidad_pendiente - articulos_nc.cantidad
+                oc.save()
+                producto.save()
+
+            return redirect('matriz-nc')
+
+           
+
+    context = {
+        'form': form,
+        'nc': nc,
+        'articulos_nc': articulos_nc,
+    }
+
+    return render(request, 'entradas/cierre_nc.html', context)
 
 def matriz_reportes_calidad(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -557,7 +659,7 @@ def no_conformidad(request, pk):
                 articulo_requisitado = ArticulosRequisitados.objects.get(req=compra.req, producto=articulo.articulo_comprado.producto.producto)
                 if articulo_comprado.cantidad_pendiente == None:
                     articulo_comprado.cantidad_pendiente = 0
-                #Todo esto debería de pasar solo si la NC ya no se va a recibir es decir si el tipo de la conformidad = Material no disponibles
+                #Todo esto debería de pasar solo si la NC ya no se va a recibir es decir si el tipo de la conformidad = Material no disponible
                 if no_conf.tipo_nc.id == 1:
                     if articulo_comprado.cantidad == articulo.cantidad + cantidad_entradas: 
                        articulo_comprado.entrada_completa = True
@@ -624,6 +726,7 @@ def no_conformidad(request, pk):
     return render(request, 'entradas/no_conformidad.html', context)
 
 def update_no_conformidad(request):
+    #Solo se evaluan las cantidades pero no se afectan
     data = json.loads(request.body)
     cantidad = decimal.Decimal(data["cantidad_ingresada"])
     action = data["action"]

@@ -14,6 +14,7 @@ class Entrada(models.Model):
     #entrada_hora = models.TimeField(null=True, blank=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     completo = models.BooleanField()
+    cancelada = models.BooleanField(default=False)
 
     def __str__(self):
         return f'{self.id} - {self.oc} - {self.completo}'
@@ -50,6 +51,13 @@ class Tipo_Nc(models.Model):
 
     def __str__(self):
         return f'{self.nombre}'
+    
+class Cierre_Nc(models.Model):
+    nombre = models.CharField(max_length=25, null=True)
+
+    def __str__(self):
+        return f'{self.nombre}'
+
 
 class No_Conformidad(models.Model):
     almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True)
@@ -60,6 +68,9 @@ class No_Conformidad(models.Model):
     nc_hora = models.TimeField(null=True, blank=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     completo = models.BooleanField(default=False)
+    cierre =  models.ForeignKey(Cierre_Nc, on_delete = models.CASCADE, null=True)
+    fecha_cierre = models.DateField(null=True, blank=True)
+    image = models.ImageField(null=True, blank=True, upload_to='calidad')
 
     def __str__(self):
         return f'{self.id}'
