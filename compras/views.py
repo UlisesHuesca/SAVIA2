@@ -497,7 +497,7 @@ def oc_modal(request, pk):
             {
                 'id': producto.id,
                 'precio': str(producto.precio_unitario),
-                'precio_ref': str(producto.producto.producto.articulos.producto.producto.precioref),
+                'precio_max': str(producto.producto.producto.articulos.producto.producto.preciomax),
                 'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
             } for producto in productos_comp
         ] 
@@ -645,8 +645,11 @@ def matriz_oc(request):
         compras = Compra.objects.filter(complete = True).order_by('-folio')
     else:
         compras = Compra.objects.filter(complete=True, req__orden__distrito = usuario.distritos).order_by('-folio')
+    
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
+    print(compras)
+
     compras_data = list(compras.values())
     # Obtienes las fechas de inicio y finalización del filtro
     start_date = myfilter.form.cleaned_data.get('start_date')
@@ -2489,7 +2492,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
     columns = ['Compra', 'Requisición', 'Solicitud', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
-               'Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización','Tipo Item', 'Días de entrega', 'Moneda',
+               'Status Proveedor','Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización','Tipo Item', 'Días de entrega', 'Moneda',
                'Tipo de cambio', 'Entregada', "Total en pesos"]
 
     columna_max = len(columns)+2
@@ -2505,8 +2508,8 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(5, columna_max - 1, "Requisiciones Aprobadas", head_style)
     worksheet.write(6, columna_max - 1, "Requisiciones Atendidas", head_style)
     worksheet.write(7, columna_max - 1, "KPI Colocadas/Aprobadas", head_style)
-    worksheet.write(8, columna_max - 1, "OC Entregadas", head_style)
-    worksheet.write(9, columna_max - 1, "OC Autorizadas", head_style)
+    worksheet.write(8, columna_max - 1, "OC Entregadas/Pagadas/Productos", head_style)
+    worksheet.write(9, columna_max - 1, "OC Pagadas/Productos", head_style)
     worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
     
     indicador = num_requis_atendidas/num_approved_requis
@@ -2519,9 +2522,9 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(5, columna_max, num_approved_requis, body_style)
     worksheet.write(6, columna_max, num_requis_atendidas, body_style)
     worksheet.write(7, columna_max, indicador, percent_style)  # Ajuste del índice de fila y columna para xlsxwriter
-    worksheet.write_formula(8, columna_max, '=COUNTIF(V:V, "Entregada")', body_style)
+    worksheet.write_formula(8, columna_max, '=COUNTIFS(P:P, "Pagada", W:W, "Entregada", S:S, "PRODUCTOS")', body_style)
     # Escribir otra fórmula COUNTIF, también con el estilo corporal
-    worksheet.write_formula(9, columna_max, '=COUNTIF(Q:Q, "Autorizado")', body_style)
+    worksheet.write_formula(9, columna_max, '=COUNTIFS(P:P, "Pagada", S:S, "PRODUCTOS")', body_style)
     worksheet.write_formula(10, columna_max, formula, percent_style)
 
     for i, column in enumerate(columns):
@@ -2578,12 +2581,13 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             created_at,
             approved_at,
             compra_list.proveedor.nombre.razon_social,
+            compra_list.proveedor.estatus.nombre,
             compra_list.cond_de_pago.nombre,
             compra_list.costo_oc,
             compra_list.monto_pagado,
             'Pagada' if compra_list.pagada else 'No Pagada',
             primera_fecha_pago,
-            'Autorizado' if compra_list.autorizado2 else 'No Autorizado' if compra_list.autorizado2 == False or compra_list.autorizado1 == False else 'Pendiente Autorización',
+            'Autorizado' if compra_list.autorizado2 else 'Cancelado' if compra_list.autorizado2 == False or compra_list.autorizado1 == False else 'Pendiente Autorización',
             tipo_producto,
             compra_list.dias_de_entrega,
             compra_list.moneda.nombre,
@@ -2607,7 +2611,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 22, f'=IF(ISBLANK(U{row_num+1}), M{row_num+1}, M{row_num+1}*U{row_num+1})', money_style)
+        worksheet.write_formula(row_num, 23, f'=IF(ISBLANK(U{row_num+1}), N{row_num+1}, N{row_num+1}*V{row_num+1})', money_style)
     
    
     workbook.close()

@@ -682,7 +682,7 @@ def no_conformidad(request, pk):
                     </head>
                     <body>
                         <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                        <p>Estimado {no_conf.oc.creada_por.staff.staff.staff.first_name} {no_conf.oc.creada_por.staff.staff.staff.last_name},</p>
+                        <p>Estimado {no_conf.oc.creada_por.staff.staff.first_name} {no_conf.oc.creada_por.staff.staff.last_name},</p>
                         <p>Estás recibiendo este correo porque no se levantado una NC de tu OC: {no_conf.oc.folio}| Req: {no_conf.oc.req.folio}</p>
                         <p>indicando que es una NC de tipo "{no_conf.tipo_nc.nombre}" por el siguiente motivo {no_conf.comentario}</p>
                         <p>El siguiente paso del sistema: Dar seguimiento a NC</p>
