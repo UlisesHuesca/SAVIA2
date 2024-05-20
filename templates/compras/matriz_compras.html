@@ -217,7 +217,7 @@
                     <th class="d-none d-lg-table-cell">Días de Entrega</th>
                     <th scope="col">Detalle</th>
                     <th>Documentos</th>
-                    {% if usuario.tipo.nombre == "Admin" %}
+                    {% if usuario.tipo.nombre == "Admin" or usuario.tipo.comprador == True %}
                     <th>Devolver</th>
                     {% endif %}
                 </tr>
@@ -263,7 +263,7 @@
                     </td>
                     <td>
                         {% if compra.pagada == False %}
-                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}">R<i class="fa-solid fa-backward"></i></a>
+                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}"><i class="fa-solid fa-backward"></i></a>
                         {% endif %}                   
                     </td>
                 </tr>
