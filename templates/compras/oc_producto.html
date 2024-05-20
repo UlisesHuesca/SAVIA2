@@ -36,7 +36,7 @@
 </div>
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title" id="compra" value={{compra.id}}>Compra: {{compra.get_folio}}</h5>
+            <h5 class="modal-title" id="compra" value={{compra.id}}>Compra: {{compra.folio}}</h5>
             <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
         </div>
 
@@ -61,14 +61,19 @@
                             <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
                             <td>{{producto.producto.producto.articulos.producto.producto.nombre}}</td>
                             <td>{{producto.cantidad}}</td>
-                            <td>${{producto.precio_unitario}}</td>
-                            <td>${{producto.subtotal_parcial}}</td>
+                            <td>${{producto.precio_unitario|floatformat:2}}</td>
+                            <td>${{producto.subtotal_parcial|floatformat:2}}</td>
                             <td>${{producto.iva_parcial|floatformat:2}}</td>
                             <td>${{producto.total|floatformat:2}}</td>
                         </tr>
                    {% endfor %}
                    </tbody>
                 </table>
+                <h6>Activo: {% if compra.req.orden.activo %} {{compra.req.orden.activo}} {% else %} No hay activo definido {% endif %} </h6>
+                <h6>Comentario Compra: {% if compra.comentarios %} {{compra.comentarios}} {%else%} No hay comentario {% endif %}</h6>
+                <h6>Comentario Superintendente:   {%if compra.req.comentario_super%} {{compra.req.comentario_super}} {% else %} No hay comentario {% endif %}</h6>
+                <h6>Comentario Almacén: {%if compra.req.comentario_compras %} {{compra.req.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
+                <h6>Comentario Usuario: {%if compra.req.orden.comentario %} {{compra.req.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
         </div>
 
         <div class="modal-footer">

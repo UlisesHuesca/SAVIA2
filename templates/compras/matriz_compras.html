@@ -207,15 +207,17 @@
                     <th class="d-none d-lg-table-cell">A.F.</th>
                     <th scope="col">Req. Autorizada</th>
                     <th scope="col">Proveedor</th>
+                    <th class="d-none d-lg-table-cell">Status Prov</th>
                     <th scope="col">Costo</th>
                     <th scope="col">Moneda</th>
                     <th class="d-none d-lg-table-cell">T.C.</th>
                     <th class="d-none d-lg-table-cell">Status Pago</th>
                     <th class="d-none d-lg-table-cell">Status Autorización</th>
+                    <th class="d-none d-lg-table-cell">Status Entrega</th>
                     <th class="d-none d-lg-table-cell">Días de Entrega</th>
                     <th scope="col">Detalle</th>
                     <th>Documentos</th>
-                    {% if usuario.tipo.nombre == "Admin" %}
+                    {% if usuario.tipo.nombre == "Admin" or usuario.tipo.comprador == True %}
                     <th>Devolver</th>
                     {% endif %}
                 </tr>
@@ -234,6 +236,7 @@
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.activo}}</td>
                     <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
                     <td>{{compra.proveedor}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.proveedor.estatus}}</td>
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>{{compra.moneda.nombre}}</td>
                     <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
@@ -243,6 +246,7 @@
                     <td class="d-none d-lg-table-cell">No Pagada</td>
                     {% endif %}
                     <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% elif compra.autorizado1 or compra.autorizado2 %}<span class="badge bg-danger">Cancelado</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
+                    <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
                     <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
                     <td>
                         <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
@@ -259,7 +263,7 @@
                     </td>
                     <td>
                         {% if compra.pagada == False %}
-                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}">R<i class="fa-solid fa-backward"></i></a>
+                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}"><i class="fa-solid fa-backward"></i></a>
                         {% endif %}                   
                     </td>
                 </tr>

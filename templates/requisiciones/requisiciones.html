@@ -204,6 +204,7 @@
                     <th class="d-none d-lg-table-cell">Operación</th>
                     <th class="d-none d-lg-table-cell">Creada</th>
                     <th>Status</th>
+                    <td class="d-none d-lg-table-cell">Comentario Rechazo</td>
                     <th scope="col">Autorizado</th>
                     <th scope="col">Acción</th>
                 </tr>
@@ -219,6 +220,7 @@
                     <td class="d-none d-lg-table-cell">{{req.orden.operacion}}</td>
                     <td class="d-none d-lg-table-cell">{{req.created_at}}</td>
                     <td>{% if req.colocada %}<span class="badge bg-primary">Colocada</span> {% elif req.autorizar %}<span class="badge bg-primary">Autorizada</span> {% elif req.autorizar == False %} <span class="badge bg-danger">Cancelada</span>{% else %} <span class="badge bg-warning">No Autorizado Aún</span> {% endif %}</td>
+                    <td class="d-none d-lg-table-cell">{% if req.comentario_rechazo %}{{req.comentario_rechazo}}{% endif %}</td>
                     <td>{% if req.autorizar %}{{req.approved_at}} {{req.approved_at_time}}{% endif %} </td>      
                     <td>
                         <ul class="nav nav-pills">
