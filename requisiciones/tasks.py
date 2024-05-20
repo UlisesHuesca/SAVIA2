@@ -48,8 +48,15 @@ def convert_entradas_to_xls_task(entradas):
     date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
     date_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(date_style)
+    number_style = NamedStyle(name='number_style', number_format='#,##0.00')
+    number_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(number_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
 
-    columns = ['Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Area','Código','Articulo','Cantidad','Moneda','Tipo de Cambio','Precio']
+
+    columns = ['Vale','Folio Solicitud','Folio Compra','Folio Req','Fecha','Solicitante','Proveedor','Proyecto','Subproyecto','Area','Código','Articulo','Cantidad','Moneda','Tipo de Cambio','Precio']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -74,9 +81,14 @@ def convert_entradas_to_xls_task(entradas):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or entrada.entrada.oc.tipo_de_cambio
 
         row = [
+            entrada.entrada.folio,
             entrada.entrada.oc.req.orden.folio,
+            entrada.entrada.oc.folio,
+            #entrada.articulo_comprado.oc.folio,
+            entrada.entrada.oc.req.folio,
             entrada.created_at.date(),
             f"{entrada.entrada.oc.req.orden.staff.staff.staff.first_name} {entrada.entrada.oc.req.orden.staff.staff.staff.last_name}",
+            entrada.entrada.oc.proveedor.nombre.razon_social,
             entrada.entrada.oc.req.orden.proyecto.nombre,
             entrada.entrada.oc.req.orden.subproyecto.nombre,
             entrada.entrada.oc.req.orden.operacion.nombre if entrada.entrada.oc.req.orden.operacion else "Sin operación",
@@ -101,6 +113,10 @@ def convert_entradas_to_xls_task(entradas):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 4:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num == 12:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
+            if col_num == 14 or col_num == 15:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style =  money_style
 
     file_name='Matriz_Entradas_' + str(date.today()) + '.xlsx'
     file_storage_location = os.path.join(settings.MEDIA_ROOT,'reportes',file_name)
@@ -191,6 +207,11 @@ def convert_salidas_to_xls_task(salidas):
         else:
             subproyecto = " "
 
+        if salida.vale_salida.comentario:
+            comentario = f"{salida.vale_salida.comentario}"
+        else:
+            comentario = " "
+
         row = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
@@ -201,7 +222,7 @@ def convert_salidas_to_xls_task(salidas):
             salida.vale_salida.solicitud.operacion if salida.vale_salida.solicitud.operacion else "Sin operación",
             salida.producto.articulos.producto.producto.codigo,
             salida.producto.articulos.producto.producto.nombre,
-            salida.comentario if salida.comentario else " ",
+            comentario,
             #f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}",
             salida.cantidad,
             precio_condicional,
@@ -217,9 +238,9 @@ def convert_salidas_to_xls_task(salidas):
             if col_num == 2:
                 value = (row[col_num]).date()
                 (ws.cell(row = row_num, column = col_num+1, value=value)).style = date_style
-            if col_num == 9:
+            if col_num == 10:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
-            if col_num == 10: #11:
+            if col_num == 11:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
         ws.cell(row=row_num, column=len(row) + 1, value=f'=K{row_num} * L{row_num}').style = money_style
     

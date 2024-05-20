@@ -11,10 +11,13 @@ class RequisFilter(django_filters.FilterSet):
     solicitante = CharFilter(method ='my_custom_filter', label="Search")
     start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at',lookup_expr='lte')
+    start_approved = DateFilter(field_name = 'approved_at', lookup_expr='gte')
+    end_approved = DateFilter(field_name='approved_at',lookup_expr='lte')
+
 
     class Meta:
         model = Requis
-        fields = ['requisicion','solicitud','solicitante','start_date','end_date']
+        fields = ['requisicion','solicitud','solicitante','start_date','end_date','start_approved','end_approved']
 
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(orden__staff__staff__staff__first_name__icontains = value) | Q(orden__staff__staff__staff__last_name__icontains=value))

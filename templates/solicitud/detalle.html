@@ -134,11 +134,13 @@
                                     {% endif %}
                                 {% endfor %}
                                 {% for vale in solicitud.vale_salida.all %}
-                                <h2 class="accordion-header" id="headingSol">
-                                    <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                        Salida: &nbsp<strong>{{vale.folio}}</strong>&nbsp <i class="fa-solid fa-circle-check"></i> Realizado:{{vale.created_at}}
-                                    </button>
-                                </h2>
+                                    {% if vale.complete %}                       
+                                    <h2 class="accordion-header" id="headingSol">
+                                        <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                            Salida: &nbsp<strong>{{vale.folio}}</strong>&nbsp <i class="fa-solid fa-circle-check"></i> Realizado:{{vale.created_at}}
+                                        </button>
+                                    </h2>
+                                    {% endif %}
                                 {% endfor %}
                             {% endif %}
                         </div>

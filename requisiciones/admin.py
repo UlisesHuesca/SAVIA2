@@ -8,7 +8,7 @@ class RequisAdmin(admin.ModelAdmin):
     raw_id_fields = ('orden','created_by','requi_autorizada_por', 'rejected_by',)
 
 class ValeSalidasAdmin(admin.ModelAdmin):
-    list_display = ('id','folio','solicitud','complete','created_at')
+    list_display = ('id','folio','solicitud','complete','created_at','comentario')
     search_fields = ['folio']
     raw_id_fields = ('solicitud','almacenista','material_recibido_por')
 
@@ -24,12 +24,12 @@ class SalidasAdmin(admin.ModelAdmin):
 
 class DevolucionAdmin(admin.ModelAdmin):
     list_display = ('id','solicitud','almacenista')
-    raw_id_fields = ('solicitud','almacenista','salida')
+    raw_id_fields = ('solicitud','almacenista','salida',)
 
 class Devolucion_ArticulosAdmin(admin.ModelAdmin):
     list_display = ('vale_devolucion','producto','cantidad','precio','comentario')
     search_fields = ['producto__articulos__producto__producto__nombre']
-
+    raw_id_fields = ('producto',)
 
 class Tipo_Admin(admin.ModelAdmin):
     list_display = ('id','nombre')

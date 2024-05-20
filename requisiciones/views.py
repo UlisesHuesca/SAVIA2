@@ -1072,7 +1072,7 @@ def requisicion_cancelar(request, pk):
                     ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
                     )
                 email.send()
-                messages.error(request,f'Has cancelado la requisición {requis.folio}')
+                messages.success(request,f'Has cancelado la requisición {requis.folio}')
             except (BadHeaderError, SMTPException) as e:
                 error_message = f'Has cancelado la requisición {requis.folio} con éxito, pero el correo de notificación no ha sido enviado debido a un error: {e}'
                 messages.success(request, error_message)
@@ -1924,7 +1924,7 @@ def render_entrada_pdf(request, pk):
     c.save()
     c.showPage()
     buf.seek(0)
-    return FileResponse(buf, as_attachment=True, filename='vale_salida_'+str(vale.folio) +'.pdf')
+    return FileResponse(buf, as_attachment=True, filename='vale_entrada_'+str(vale.folio) +'.pdf')
 
 def convert_excel_matriz_requis(requis):
       #print('si entra a la función')

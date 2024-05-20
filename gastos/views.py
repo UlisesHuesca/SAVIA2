@@ -977,7 +977,9 @@ def render_pdf_gasto(request, pk):
         c.drawString(100,caja_proveedor-80, gasto.staff.staff.banco.nombre)
     else:
         c.drawString(100,caja_proveedor-80, "Sin registro")
-    c.drawString(100,caja_proveedor-100, gasto.approved_at.strftime("%d/%m/%Y"))
+    
+    if gasto.approved_at:
+        c.drawString(100,caja_proveedor-100, gasto.approved_at.strftime("%d/%m/%Y"))
     # Segunda Columna del encabezado
     if gasto.colaborador:
         c.drawString(350,caja_proveedor-60,gasto.colaborador.staff.staff.first_name+' '+ gasto.colaborador.staff.staff.last_name)

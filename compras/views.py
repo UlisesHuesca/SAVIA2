@@ -794,7 +794,7 @@ def matriz_oc_productos(request):
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
     compras = Compra.objects.filter(complete=True)
-    if usuario.tipo.nombre == "PROVEEDORES":
+    if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
         articulos = ArticuloComprado.objects.filter(oc__complete = True).order_by('-oc__created_at')
     else:
         articulos = ArticuloComprado.objects.filter(oc__complete = True, oc__req__orden__distrito = usuario.distritos).order_by('-oc__created_at')
@@ -2659,7 +2659,8 @@ def convert_excel_solicitud_matriz_productos(productos):
     money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
-
+    number_style = NamedStyle(name='number_style', number_format='#,##0.00')
+    number_style.font = Font(name ='Calibri', size = 10)
 
     columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
 
@@ -2750,9 +2751,11 @@ def convert_excel_solicitud_matriz_productos(productos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 15:
+            if col_num == 16:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [7, 10, 11, 12, 16, 17]:
+            if col_num in [3]:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
+            if col_num in [8, 10, 11, 12, 13]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
 
     file_name='Matriz_compras_por_producto' + str(date.today()) + '.xlsx'

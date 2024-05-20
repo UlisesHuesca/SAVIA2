@@ -306,9 +306,9 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 15:
+            if col_num in 15:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [7, 10, 11, 12, 16, 17]:
+            if col_num in [8, 10, 11, 12, 13]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
 
     file_name='Matriz_compras_por_producto' + str(date.today()) + '.xlsx'
