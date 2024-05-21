@@ -1,6 +1,8 @@
 {% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
+{% load widget_tweaks %}
 {% load static %}
+{% load tt_extras %}
 <html>
 <head>
     
@@ -67,11 +69,96 @@
                 </li>
             </ul>
             </div>
-            <div class="card-footer text-muted">
-                
+            <div class="card-footer text-muted">  
             </div>
         </div>
     </div>  
+    <div class="col-10">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Filtros</h5>
+            </div>
+            <div class="card-body">
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder= Nombre"}}
+                                <label style="color: #121212;" for="id_nombre">Nombre</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                                <label style="color: #121212;" for="id_id">Proveedor</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proveedor2|add_class:"form-control"|append_attr:"placeholder= Proveedor2"}}
+                                <label style="color: #121212;" for="id_id">Proveedor2</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-12">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proveedor3|add_class:"form-control"|append_attr:"placeholder= Proveedor3"}}
+                                <label style="color: #121212;" for="id_id">Proveedor3</label>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.creada_por|add_class:"form-control"|append_attr:"placeholder= Creado por"}}
+                                <label style="color: #121212;" for="id_id">Creado por</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <!--onclick="regenerar()"-->
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+            </div>
+        </div>
+    </div>
 </div>
 
 <div class = "row mt-2">
@@ -94,7 +181,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for item in comparativos %}
+                {% for item in comparativos_list %}
                 <tr>
                     <th scope="row">{{item.id}}</th>
                     <th scope="row">{{item.nombre}}</th>
@@ -153,6 +240,33 @@
                 {% endfor %}
             </tbody>
         </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if comparativos_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in comparativos_list.paginator.page_range %}
+                    {% if comparativos_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > comparativos_list.number|add:'-2' and item < comparativos_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if comparativos_list.paginator.num_pages > comparativos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{comparativos_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{comparativos_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if comparativos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url comparativos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 
 <!--Este es el modal-->
@@ -185,7 +299,7 @@ dataSpyList.forEach(function (dataSpyEl) {
 
 var myModal = document.getElementById('dialog')
 
-document.getElementById('start_upload').addEventListener('click',show_file_input)
+/*document.getElementById('start_upload').addEventListener('click',show_file_input)
 document.getElementById('cancel').addEventListener('click',cancel_show)
 
 function show_file_input() {
@@ -205,7 +319,7 @@ function cancel_show(){
 
 myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
-})
+})*/
 
 </script>
 {% endblock %}

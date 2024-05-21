@@ -43,12 +43,12 @@
                     <td scope="col">{{item.producto.producto.nombre}}</td>
                     <td scope="col">{{item.producto.producto.unidad}}</td>
                     <td scope="col"><p class='quantity' id='prod_quantity'>{{item.cantidad}}</p></td>
-                    <td scope="col">{{item.proveedor.nombre}}</td>
-                    <td scope="col">{{item.precio}}</td>
-                    <td scope="col">{{item.proveedor2.nombre}}</td>
-                    <td scope="col">{{item.precio2}}</td>
-                    <td scope="col">{{item.proveedor3.nombre}}</td>
-                    <td scope="col">{{item.precio3}}</td>
+                    <td scope="col">{{item.comparativo.proveedor.razon_social}}</td>
+                    <td scope="col">{{item.precio|floatformat:2}}</td>
+                    <td scope="col">{{item.comparativo.proveedor2.razon_social}}</td>
+                    <td scope="col">{{item.precio2|floatformat:2}}</td>
+                    <td scope="col">{{item.comparativo.proveedor3.razon_social}}</td>
+                    <td scope="col">{{item.precio3|floatformat:2}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

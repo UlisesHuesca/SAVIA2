@@ -93,7 +93,7 @@ class Profile(models.Model):
     st_activo = models.BooleanField(default = False)
 
     def __str__(self):
-        return f'{self.staff.staff.username} - {self.tipo}'
+        return f'{self.staff.staff.username}| {self.tipo}| {self.distritos}'
 
     
 

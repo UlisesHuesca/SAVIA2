@@ -1,6 +1,6 @@
 import django_filters
 from requisiciones.models import ArticulosRequisitados
-from .models import Compra, ArticuloComprado
+from .models import Compra, ArticuloComprado, Comparativo
 from django_filters import CharFilter, DateFilter, ChoiceFilter, BooleanFilter
 from django.db.models import Q
 from datetime import timedelta, datetime
@@ -132,3 +132,19 @@ class HistoricalCompraFilter(django_filters.FilterSet):
         
     def nombre(self, queryset, name, value):
         return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))
+
+class ComparativoFilter(django_filters.FilterSet):
+    nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
+    proveedor = CharFilter(field_name="proveedor__razon_social", lookup_expr='icontains')
+    proveedor2 = CharFilter(field_name="proveedor__razon_social", lookup_expr='icontains')
+    proveedor3 = CharFilter(field_name="proveedor__razon_social", lookup_expr='icontains')
+    creada_por = CharFilter(method='creador', lookup_expr='icontains')
+    start_date = DateFilter(field_name='created_at', lookup_expr='gte')
+    end_date = DateFilter(field_name='created_at', lookup_expr='lte')
+
+    class Meta:
+        model = Comparativo
+        fields = ['nombre','proveedor','proveedor2','proveedor3','creada_por','start_date','end_date']
+
+    def creador(self, queryset, name, value):
+        return queryset.filter(Q(creada_por__staff__staff__first_name__icontains = value) | Q(creada_por__staff__staff__last_name__icontains = value))

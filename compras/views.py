@@ -17,7 +17,7 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
-from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter
+from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter, ComparativoFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
 from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm
 from requisiciones.forms import Articulo_Cancelado_Form
@@ -497,7 +497,7 @@ def oc_modal(request, pk):
             {
                 'id': producto.id,
                 'precio': str(producto.precio_unitario),
-                'precio_max': str(producto.producto.producto.articulos.producto.producto.preciomax),
+                'precio_ref': str(producto.producto.producto.articulos.producto.producto.precioref),
                 'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
             } for producto in productos_comp
         ] 
@@ -1393,6 +1393,14 @@ def comparativos(request):
     form = UploadFileForm()
     error_messages = {}
 
+    myfilter = ComparativoFilter(request.GET, queryset=comparativos)
+    comparativos = myfilter.qs
+
+     #Set up pagination
+    p = Paginator(comparativos, 50)
+    page = request.GET.get('page')
+    comparativos_list = p.get_page(page)
+
     if request.method == "POST":
         mi_id = request.POST.get('mi_id')
         form = UploadFileForm(request.POST or None, request.FILES or None)
@@ -1421,9 +1429,11 @@ def comparativos(request):
 
     
     context= {
+        'myfilter':myfilter,
         'error_messages': error_messages,
         'comparativos':comparativos,
         'form':form,
+        'comparativos_list':comparativos_list,
     }
     return render(request,'compras/comparativos.html', context)
 
