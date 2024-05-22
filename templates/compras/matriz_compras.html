@@ -245,7 +245,7 @@
                     {% else %}
                     <td class="d-none d-lg-table-cell">No Pagada</td>
                     {% endif %}
-                    <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% elif compra.autorizado1 or compra.autorizado2 %}<span class="badge bg-danger">Cancelado</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
+                    <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 == False or compra.autorizado2 == False %}<span class="badge bg-danger">Cancelado</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
                     <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
                     <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
                     <td>

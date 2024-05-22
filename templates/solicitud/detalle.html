@@ -78,13 +78,13 @@
                                                 {% if compra.autorizado2 %}
                                                 <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                                     Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> &nbsp Autorizada: {{ compra.autorizado_at_2|date:"d/m/Y"}}
-                                                {% elif compra.autorizado1 %}    
-                                                <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                                    Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> &nbsp Autorizada: {{ compra.autorizado_at|date:"d/m/Y"}}&nbsp|Falta Autorización Gerencia
                                                 {% elif compra.autorizado2 == False %}
                                                 <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                                     Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> &nbsp Cancelada: {{ compra.autorizado_at_2|date:"d/m/Y"}}| Cancelada Gerencia
-                                                {% elif compra.autorizado2 == False %}
+                                                {% elif compra.autorizado1 %}    
+                                                <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                                    Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> &nbsp Autorizada: {{ compra.autorizado_at|date:"d/m/Y"}}&nbsp|Falta Autorización Gerencia
+                                                {% elif compra.autorizado1 == False %}
                                                 <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                                     Compra:&nbsp<strong> {{ compra.folio }}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> &nbsp Cancelada: {{ compra.autorizado_at_2|date:"d/m/Y"}}| Cancelada Sup. Adm.
                                                 {% elif compra.complete  and compra.autorizado1 == None %}
