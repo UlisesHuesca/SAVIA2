@@ -60,7 +60,18 @@
                                             </div>
                                         </div>  
                                     </div>
-                                </div>  
+                                </div> 
+                                <div class="row">
+                                    <div class="col-12">
+                                        <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                                {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                                <label style="color: #121212;" for="id_area">Comentario*</label>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div> 
                             
                                 <input class="btn btn-outline-info btn-block my-2" name="agregar" type="submit" value="Agregar Solicitud">
                         </form>

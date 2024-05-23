@@ -99,7 +99,7 @@ class OrderForm(forms.ModelForm):
 class Order_Resurtimiento_Form(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['proyecto','subproyecto','superintendente']
+        fields = ['proyecto','subproyecto','superintendente','comentario']
 
 class Inv_UpdateForm(forms.ModelForm):
     class Meta:

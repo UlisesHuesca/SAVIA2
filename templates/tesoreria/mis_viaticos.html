@@ -135,7 +135,8 @@
                     <th scope="col">Colaborador</th>
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha Autorizado</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Comprobación</th>
+                    <th>Pago<span class="badge bg-success"> New!!</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -160,6 +161,17 @@
                         </a>
                         {% endif %}
                     </td>
+                    <td>
+                        {% for pago in viatico.pagosv.all %}
+                            {% if pago.comprobante_pago %}
+                            <ul class="nav nav-pills">
+                                <li class="nav-item mx-1">
+                                    <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago"><i class="fa-solid fa-file-invoice-dollar"></i></a>
+                                </li>
+                            </ul>
+                            {% endif %}
+                        {% endfor %}
+                        </td>
                 </tr>
                 {% endfor %}
             </tbody>
