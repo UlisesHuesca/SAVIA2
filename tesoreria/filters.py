@@ -44,7 +44,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
         return queryset.filter(Q(oc__folio__icontains = value) | Q(gasto__folio__icontains = value)| Q(viatico__folio__icontains = value))
 
     def my_proyecto(self, queryset, name, value):
-        return queryset.filter(Q(oc__req__orden__proyecto__nombre__icontains = value) | Q(gasto__articulo_gasto__proyecto__nombre__icontains = value) | Q(viatico__proyecto__nombre__icontains = value))
+        return queryset.filter(Q(oc__req__orden__proyecto__nombre__icontains = value) | Q(gasto__articulos__proyecto__nombre__icontains = value) | Q(viatico__proyecto__nombre__icontains = value))
     
     def filter_by_tipo(self, queryset, name, value):  # new method
         if value.lower() == 'compra':

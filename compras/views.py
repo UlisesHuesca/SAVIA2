@@ -905,8 +905,10 @@ def upload_xml(request, pk):
 def autorizacion_oc1(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
-   
-    if usuario.tipo.oc_superintendencia == True:
+    
+    if usuario.tipo.nombre == "Subdirector":
+        compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__superintendente = usuario).order_by('-folio')
+    elif usuario.tipo.oc_superintendencia == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     else:
         compras = Compra.objects.none()
@@ -1133,6 +1135,11 @@ def autorizar_oc1(request, pk):
             compra.oc_autorizada_por = usuario
             compra.autorizado_date1 = datetime.now()
             #compra.autorizado_hora1 = datetime.now().time()
+            if usuario.tipo.nombre == "Subdirector":
+                compra = form.save(commit = False)
+                compra.autorizado2 = True
+                compra.oc_autorizada_por2 = usuario
+                compra.autorizado_at_2 = datetime.now()
             compra.save()
             static_path = settings.STATIC_ROOT
             img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
@@ -1141,21 +1148,102 @@ def autorizar_oc1(request, pk):
             image_base64 = get_image_base64(img_path)
             logo_v_base64 = get_image_base64(img_path2)
             # Crear el mensaje HTML
-            html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body>
-                        <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                        <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                        <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name},</p>
-                        <p>El siguiente paso del sistema: Autorización de OC por Gerencia de Distrito</p>
-                        <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                        <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                    </body>
-                </html>
-            """
+            if usuario.tipo.nombre == "Subdirector":
+                html_message = f"""
+                    <html>
+                        <head>
+                            <meta charset="UTF-8">
+                        </head>
+                        <body>
+                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                            <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name},</p>
+                            <p>El siguiente paso del sistema: Pago por parte de tesorería</p>
+                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                        </body>
+                    </html>
+                """
+                if compra.cond_de_pago.nombre == "CREDITO":
+                    archivo_oc = attach_oc_pdf(request, compra.id)
+                    html_message2 = f"""
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
+                                <p>Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.<p>
+                                <p>&nbsp;</p>
+                                <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
+                                <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                            </body>
+                        </html>
+                    """
+                    try:
+                        email = EmailMessage(
+                        f'Compra Autorizada {compra.folio}|SAVIA',
+                        body=html_message2,
+                        from_email =settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+                        email.send()
+                    except (BadHeaderError, SMTPException) as e:
+                        error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
+                else:
+                    html_message = f"""
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name},</p>
+                                <p>El siguiente paso del sistema: Pago por parte de tesorería</p>
+                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                            </body>
+                        </html>
+                    """
+                    try:
+                        email = EmailMessage(
+                            f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                            body=html_message,
+                            #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                            from_email = settings.DEFAULT_FROM_EMAIL,
+                            to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                            headers={'Content-Type': 'text/html'}
+                            )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.send()
+                        messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
+                    except (BadHeaderError, SMTPException) as e:
+                        error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                        messages.success(request, error_message)    
+                return redirect('autorizacion-oc1')
+            else:
+                html_message = f"""
+                    <html>
+                        <head>
+                            <meta charset="UTF-8">
+                        </head>
+                        <body>
+                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                            <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name},</p>
+                            <p>El siguiente paso del sistema: Autorización de OC por Gerencia de Distrito</p>
+                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                        </body>
+                    </html>
+                """
             try:
                 email = EmailMessage(
                     f'OC Autorizada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',

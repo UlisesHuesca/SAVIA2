@@ -661,10 +661,16 @@ $(document).ready(function() {
 $(document).ready(function() {
     var orden = document.getElementById('order');
     var orden_id = orden.getAttribute('orden');
+    var usuarioDistrito = '{{ usuario_distrito }}';
+    console.log(usuarioDistrito)
+    var placeholderText = 'Superintendente';
+    if (usuarioDistrito === 'MATRIZ') {
+        placeholderText = 'Subdirector';
+    }
     $('#id_superintendente').select2({
         allowClear: true,
         width: '100%',
-        placeholder: 'Superintendente',
+        placeholder: placeholderText,
         data: datosSuperintendentes,
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección

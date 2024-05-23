@@ -66,7 +66,9 @@ def contadores_processor(request):
         if usuario.tipo.compras == True:
             requis= requis.filter(autorizar=True, colocada=False, orden__distrito = usuario.distritos)
             conteo_requis = requis.count()
-        if usuario.tipo.oc_superintendencia == True:
+        if usuario.tipo.nombre == "subdirector":
+            oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__superintendente = usuario)
+        elif usuario.tipo.oc_superintendencia == True:
             oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__distrito = usuario.distritos)
             devoluciones = Devolucion.objects.filter(complete = True, autorizada = None)
             conteo_oc1 = oc.count()
@@ -92,7 +94,10 @@ def contadores_processor(request):
         if usuario.tipo.supervisor == True:
             solicitudes_pendientes = Order.objects.filter(autorizar = None, complete = True, supervisor=usuario)
             conteo_solicitudes = solicitudes_pendientes.count()
-        if usuario.tipo.superintendente == True:
+        if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ":
+            requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__supervisor = usuario)
+            conteo_requis_pendientes = requisiciones_pendientes.count()
+        elif usuario.tipo.superintendente == True:
             requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__superintendente = usuario)
             gastos = Solicitud_Gasto.objects.filter(complete=True, autorizar=None, superintendente = usuario, distrito = usuario.distritos)
             ids_gastos_validados = [gasto.id for gasto in gastos if gasto.get_validado]

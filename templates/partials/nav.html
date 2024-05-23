@@ -304,13 +304,17 @@
                                 {% endif %}
                                 </a>
                                 </div>
-                            {% if usuario.tipo.oc_superintendencia == False %}
+                            {% if usuario.tipo.oc_superintendencia == False or  usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ"%}
                                 <div class="d-none">
                             {% else %}
                                 <div>
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'autorizacion-oc1' %}">
+                                {% if usuario.tipo.nombre == "Subdirector" %}
+                                OC Subdirector
+                                {% else %}
                                 OC Superintendencia
+                                {% endif %}
                                 {% if conteo_oc1 > 0 %}
                                 <span class="badge bg-danger">({{conteo_oc1}})</span>
                                 {% endif %}    

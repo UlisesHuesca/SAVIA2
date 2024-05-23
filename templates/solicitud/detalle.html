@@ -41,7 +41,11 @@
                                     </ul>
                                 {% endfor %}
                                 <p>Supervisor: {{solicitud.supervisor.staff.staff.first_name}} {{solicitud.supervisor.staff.staff.last_name}}</p>
+                                {% if solicitud.superintendente.tipo.nombre == "Subdirector" %}
+                                <p>Subdirector: {{solicitud.superintendente.staff.staff.first_name}} {{solicitud.superintendente.staff.staff.last_name}}</p>
+                                {% else %}
                                 <p>Superintendente: {{solicitud.superintendente.staff.staff.first_name}} {{solicitud.superintendente.staff.staff.last_name}}</p>
+                                {% endif %}
                                 </div>
                             </div>
                         </div>

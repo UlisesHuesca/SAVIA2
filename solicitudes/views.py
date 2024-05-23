@@ -257,11 +257,17 @@ def checkout(request):
     else:
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True)
 
-    if usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
+    print(usuario.distritos)
+    if usuario.distritos.nombre == "MATRIZ":
+        print("Quev")
+        superintendentes = usuarios.filter(tipo__nombre ="Subdirector")
+    elif usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
         superintendentes = usuarios.filter(staff=usuario.staff)
         order.superintendente = usuario
+        print("Ques")
     else:
         superintendentes = usuarios.filter(distritos=usuario.distritos, tipo__autorizacion = True, tipo__requisiciones = True, st_activo = True).exclude(tipo__nombre="Admin")
+        print("Quee")
 
     proyectos_para_select2 = [
         {
@@ -487,6 +493,7 @@ def checkout(request):
         'form':form,
         'form_comentario': form_comentario,
         'productos':productos,
+        'usuario_distrito': usuario.distritos.nombre,
         'order':order,
         #'activos':activos,
         #'sectores': sectores,

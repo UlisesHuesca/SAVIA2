@@ -163,15 +163,19 @@ def compras_pagos(request, pk):
             if pago.cuenta.moneda.nombre == "PESOS":
                 monto_pago_usd = pago.monto/pago.tipo_de_cambio
                 suma_pago_usd = suma_pago_usd + monto_pago_usd
+                remanente = compra.costo_plus_adicionales - suma_pago_usd
             else:
                 suma_pago_usd = suma_pago + pago.monto
+                remanente = compra.costo_plus_adicionales - suma_pago
            
 
 
     if compra.moneda.nombre == 'PESOS':
         cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+       
     if compra.moneda.nombre == 'DOLARES':
         cuentas = Cuenta.objects.all()
+
 
     cuentas_para_select2 = [
         {'id': cuenta.id,
@@ -184,8 +188,7 @@ def compras_pagos(request, pk):
     form = PagoForm(instance=pago)
 
     
-    remanente = compra.costo_plus_adicionales - suma_pago
-
+   
     
     if request.method == 'POST' and "envio" in request.POST:
         form = PagoForm(request.POST, request.FILES or None, instance = pago)

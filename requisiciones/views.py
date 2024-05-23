@@ -786,10 +786,11 @@ def requisicion_autorizacion(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
 
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-
+    
     #ordenes = Order.objects.filter(complete=True, autorizar=True, staff__distrito=perfil.distrito)
-
-    if perfil.tipo.superintendente == True and perfil.tipo.nombre != "Admin":
+    if perfil.distritos.nombre == "MATRIZ" and perfil.tipo.supervisor:   
+        requis = Requis.objects.filter(autorizar=None, orden__supervisor = perfil, complete =True)
+    elif perfil.tipo.superintendente == True and perfil.tipo.nombre != "Admin":
         requis = Requis.objects.filter(autorizar=None, orden__superintendente=perfil, complete =True)
     elif perfil.tipo.nombre == "Admin":
         requis = Requis.objects.filter(autorizar=None, complete = True)
@@ -861,6 +862,8 @@ def obtener_consecutivo(distrito, requis):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def requisicion_detalle(request, pk):
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
     #Vista de creación de requisición
     productos = ArticulosparaSurtir.objects.filter(articulos__orden__id = pk, requisitar= True)
     orden = Order.objects.get(id = pk)
@@ -889,6 +892,7 @@ def requisicion_detalle(request, pk):
         form = RequisForm(request.POST, instance = requi)
         if form.is_valid():
             requi = form.save(commit=False)
+            requi.created_by = usuario
             requi.complete = True
             orden.requisitado = True
             conteo_pendientes_requisitar = productos.filter(requisitar = True).count()
