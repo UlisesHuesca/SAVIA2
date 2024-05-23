@@ -157,6 +157,7 @@ def compras_pagos(request, pk):
     pagos_alt = Pago.objects.filter(oc=compra.id, hecho=True)
     suma_pago = 0
     suma_pago_usd = 0
+    
     for pago in pagos:
         suma_pago = suma_pago + pago.monto
         if pago.oc.moneda.nombre == "DOLARES":
@@ -167,7 +168,8 @@ def compras_pagos(request, pk):
             else:
                 suma_pago_usd = suma_pago + pago.monto
                 remanente = compra.costo_plus_adicionales - suma_pago
-           
+        else:  
+            remanente = compra.costo_plus_adicionales - suma_pago
 
 
     if compra.moneda.nombre == 'PESOS':
