@@ -197,17 +197,25 @@ def articulos_entrada(request, pk):
                     cantidad_requisitar__gt=0
                     )
                 inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
+                print(inv_de_producto.cantidad)
                 for producto in productos_pendientes_surtir:    #Recorremos todas las solicitudes pendientes por surtir una por una
-                    if producto_surtir.cantidad > 0:
-                        inv_de_producto.cantidad = inv_de_producto.cantidad - producto.cantidad
-                        if producto.cantidad_requisitar <= producto_surtir.cantidad:
+                    if producto_surtir.cantidad > 0:             #Esto practicamente es un while gracias al for mientras la cantidad del resurtimiento sea mayor que 0
+                        if producto.cantidad_requisitar <= producto_surtir.cantidad: #Si la cantidad del producto que queremos surtir es menor que o igual a la cantidad de resurtimiento
                             producto_surtir.cantidad = producto_surtir.cantidad - producto.cantidad_requisitar
                             producto.cantidad = producto.cantidad + producto.cantidad_requisitar
+                            inv_de_producto.cantidad = inv_de_producto.cantidad - producto.cantidad
+                            inv_de_producto.cantidad_entradas = inv_de_producto.cantidad_entradas - producto.cantidad
                             producto.cantidad_requisitar = 0
                             producto.requisitar = False
+                            producto.surtir = True
+                            producto_surtir.save()
+                            producto.save()
+                            inv_de_producto.save()
                         else:
                             producto.cantidad_requisitar = producto.cantidad_requisitar - producto_surtir.cantidad
                             producto.cantidad = producto.cantidad + producto_surtir.cantidad
+                            inv_de_producto.cantidad = inv_de_producto.cantidad - producto_surtir.cantidad
+                            inv_de_producto.cantidad_entradas = inv_de_producto.cantidad_entradas - producto_surtir.cantidad
                             producto_surtir.cantidad = 0
                             producto.surtir = True
                             producto.save()
@@ -218,6 +226,7 @@ def articulos_entrada(request, pk):
                             if productos_orden == 0:
                                 solicitud.requisitar = False
                                 solicitud.save()
+                        
             if entrada.oc.req.orden.tipo.tipo == 'normal':
                 if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
                     producto_surtir.surtir = False

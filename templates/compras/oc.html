@@ -1262,7 +1262,8 @@ function precio_ref() {
             console.log('precio_unitario',precio_unitario)
             var precio_ref = Number(datosProductos_comp[data].precio_ref) || 0;
             console.log('precio_referencia', precio_ref)
-            var porcentaje = Number(datosProductos_comp[data].porcentaje);
+           
+            var porcentaje = Number(datosProductos_comp[data].porcentaje) || 0;
             precio_ref_max = precio_ref * (1 + (porcentaje));
             console.log('precio_ref_limite',precio_ref_max)
             console.log(precio_ref_max >= precio_unitario)
