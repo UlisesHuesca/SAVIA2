@@ -37,7 +37,7 @@ from user.decorators import perfil_seleccionado_required
 from compras.models import Compra
 from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos, Tipo_Devolucion
 from .tasks import convert_entradas_to_xls_task, convert_salidas_to_xls_task
-from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter
+from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter
 from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
 #from compras.views import clear_task_id, verificar_estado
 from openpyxl import Workbook
@@ -91,6 +91,38 @@ def requisiciones_status(request):
         }
 
     return render(request, 'requisiciones/requisiciones.html',context)
+
+
+@login_required(login_url='user-login')
+def requisiciones_productos(request):
+    pk = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk)
+    
+    if perfil.tipo.nombre == "PROVEEDORES" or perfil.tipo.nombre == "VIS_ADQ":
+        articulos_requisitados = ArticulosRequisitados.objects.filter(req__complete = True).order_by('-req__folio')
+    else:
+        articulos_requisitados = ArticulosRequisitados.objects.filter(req__orden__distrito = perfil.distritos, req__complete = True).order_by('-req__folio')
+   
+    #requis = Requis.objects.filter(autorizar=True, colocada=False)
+
+    myfilter = RequisProductosFilter(request.GET, queryset= articulos_requisitados)
+    articulos_requisitados = myfilter.qs
+
+     #Set up pagination
+    p = Paginator(articulos_requisitados, 50)
+    page = request.GET.get('page')
+    articulos_requisitados_list = p.get_page(page)
+
+    #if request.method == 'POST' and 'btnExcel' in request.POST:
+        #return convert_excel_matriz_requis(articulos_requisitados)
+
+    context= {
+        'myfilter': myfilter,
+        'articulos_requisitados': articulos_requisitados,
+        'articulos_requisitados_list': articulos_requisitados_list,
+        }
+
+    return render(request, 'requisiciones/requisiciones_productos.html',context)
 
 
 # Create your views here.

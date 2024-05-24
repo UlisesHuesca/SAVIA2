@@ -386,7 +386,10 @@
                     {% endif %}
                         <a class="dropdown-item" href="{% url 'solicitud-matriz' %}">Matriz Solicitudes</a>
                         <a class="dropdown-item" href="{% url 'requisiciones-status' %}">
-                            Matriz de Requisiciones
+                            Matriz Requisiciones
+                        </a>
+                        <a class="dropdown-item" href="{% url 'requisiciones-productos' %}">
+                            Matriz Productos Requisiciones
                         </a>
                         {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.nombre == "Comprador" or usuario.tipo.nombre == "Tesoreria" %}
                             <div>

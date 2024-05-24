@@ -1,6 +1,6 @@
 import django_filters
 from dashboard.models import ArticulosparaSurtir
-from requisiciones.models import Salidas, Devolucion, Requis
+from requisiciones.models import Salidas, Devolucion, Requis, ArticulosRequisitados
 from entradas.models import EntradaArticulo
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
@@ -21,6 +21,24 @@ class RequisFilter(django_filters.FilterSet):
 
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(orden__staff__staff__staff__first_name__icontains = value) | Q(orden__staff__staff__staff__last_name__icontains=value))
+    
+class RequisProductosFilter(django_filters.FilterSet):
+    requisicion = CharFilter(field_name='req__folio', lookup_expr='icontains')
+    producto = CharFilter(field_name='producto__articulos__producto__producto__nombre', lookup_expr='icontains')
+    solicitud = CharFilter(field_name='req__orden__folio', lookup_expr='icontains')
+    solicitante = CharFilter(method ='my_custom_filter', label="Search")
+    start_date = DateFilter(field_name = 'req__created_at', lookup_expr='gte')
+    end_date = DateFilter(field_name='req__created_at',lookup_expr='lte')
+    start_approved = DateFilter(field_name = 'req__approved_at', lookup_expr='gte')
+    end_approved = DateFilter(field_name='req__approved_at',lookup_expr='lte')
+
+
+    class Meta:
+        model = ArticulosRequisitados
+        fields = ['requisicion','producto','solicitud','solicitante','start_date','end_date','start_approved','end_approved']
+
+    def my_custom_filter(self, queryset, name, value):
+        return queryset.filter(Q(req__orden__staff__staff__staff__first_name__icontains = value) | Q(req__orden__staff__staff__staff__last_name__icontains=value))
 
 class ArticulosparaSurtirFilter(django_filters.FilterSet):
     solicitud = CharFilter(field_name='articulos__orden__folio', lookup_expr='icontains')
