@@ -78,10 +78,9 @@
                     </a>
                     {% endif %}
                 </td>
-                <!-- Lo estoy desapareciendo por su falta de link con las  facturas
-                <td>|% if factura.archivo_xml %| ||factura.fecha_subida|date:"d-m-Y H:i" || |% endif %|</td>
-                <td>|% if factura.archivo_xml %| ||factura.emisor.resultados|| |% endif %|</td>
-                <td class="factura-total">|% if factura.archivo_xml %| ||factura.emisor.total|| |% endif %|</td>-->
+                <td>{% if factura.archivo_xml %} {{factura.fecha_subida|date:"d-m-Y H:i" }} {% endif %}</td>
+                <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
+                <td class="factura-total">{% if factura.archivo_xml %} {{factura.emisor.total}} {% endif %}</td>
             </tr>
             {% endfor %}
             </tbody>
