@@ -164,19 +164,16 @@ def compras_pagos(request, pk):
             if pago.cuenta.moneda.nombre == "PESOS":
                 monto_pago_usd = pago.monto/pago.tipo_de_cambio
                 suma_pago_usd = suma_pago_usd + monto_pago_usd
-                remanente = compra.costo_plus_adicionales - suma_pago_usd
             else:
                 suma_pago_usd = suma_pago + pago.monto
-                remanente = compra.costo_plus_adicionales - suma_pago
-        else:  
-            remanente = compra.costo_plus_adicionales - suma_pago
 
 
     if compra.moneda.nombre == 'PESOS':
         cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
-       
+        remanente = compra.costo_plus_adicionales - suma_pago
     if compra.moneda.nombre == 'DOLARES':
         cuentas = Cuenta.objects.all()
+        remanente = compra.costo_plus_adicionales - suma_pago_usd
 
 
     cuentas_para_select2 = [
