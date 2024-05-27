@@ -23,15 +23,16 @@ from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
 from user.models import Profile
+from .utils import extraer_texto_de_pdf, encontrar_variables
 import pytz  # Si estás utilizando pytz para manejar zonas horarias
-import fitz  # PyMuPDF
+
 import re
 
 from datetime import date, datetime
 import decimal
 import os
 import io
-import re
+
 #Excel stuff
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -75,33 +76,160 @@ def compras_autorizadas(request):
     return render(request, 'tesoreria/compras_autorizadas.html',context)
 
 
-def encontrar_variables(texto):
-    # Diccionario para almacenar los valores extraídos
-    variables = {}
+def transferencia_cuentas(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    
+    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+      
+    cuentas_para_select2 = [
+        {'id': cuenta.id,
+         'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
+         'moneda': str(cuenta.moneda),
+        } for cuenta in cuentas]
 
-    # Definir los patrones de regex para cada variable
-    patrones = {
-        'fecha': r'Fecha de creación:\s?([^\n\r]+)',
-        'importe_operacion': r'Importe de la operación:\s?([\d,.]+)',
-        'cuenta_retiro': r'Cuenta de retiro:\s?(\d+)',
-        'divisa_cuenta': r'Divisa de la cuenta:\s?([^\n\r]+)'
+    form_abono = PagoForm(prefix='abono')
+    form_cargo = PagoForm(prefix='cargo')
+
+    if request.method == 'POST' and "envio" in request.POST:
+        form = PagoForm(request.POST, request.FILES or None, instance = pago)
+        if form.is_valid():
+            pago = form.save(commit = False)
+            pago.pagado_date = date.today()
+            pago.pagado_hora = datetime.now().time()
+            pago.hecho = True
+            #Traigo la cuenta que se capturo en el form
+            cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)
+            #La utilizo para sacar la información de todos los pagos relacionados con esa cuenta y sumarlos
+
+            # Actualizo el saldo de la cuenta
+            monto_actual = pago.monto #request.POST['monto_0']
+            if compra.moneda.nombre == "PESOS":
+                sub.gastado = sub.gastado + monto_actual
+            #    cuenta.saldo = cuenta_pagos['monto__sum'] + monto_actual
+            if compra.moneda.nombre == "DOLARES":
+                if pago.cuenta.moneda.nombre == "PESOS": #Si la cuenta es en pesos
+                    sub.gastado = sub.gastado + monto_actual * pago.tipo_de_cambio
+                    monto_actual = monto_actual/pago.tipo_de_cambio
+                #        cuenta.saldo = cuenta_pagos['monto__sum'] + monto_actual * decimal.Decimal(request.POST['tipo_de_cambio'])
+                if pago.cuenta.moneda.nombre == "DOLARES":
+                    tipo_de_cambio = decimal.Decimal(dof())
+                    sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
+                    #cuenta.saldo = cuenta_pagos['monto__sum'] + monto_actual
+            #actualizar la cuenta de la que se paga
+            monto_total= monto_actual + suma_pago
+            compra.monto_pagado = monto_total
+            costo_oc = compra.costo_plus_adicionales
+            if monto_actual <= 0:
+                messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
+            elif round(monto_total,2) <= round(costo_oc,2):
+                if round(monto_total,2) == round(costo_oc,2):
+                    compra.pagada= True
+                    if compra.cond_de_pago.nombre == "CONTADO":
+                        pagos = Pago.objects.filter(oc=compra, hecho=True)
+                        archivo_oc = attach_oc_pdf(request, compra.id)
+                        static_path = settings.STATIC_ROOT
+                        img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+                        img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+                        image_base64 = get_image_base64(img_path)
+                        logo_v_base64 = get_image_base64(img_path2)
+                        html_message = f"""
+                            <html>
+                                <head>
+                                    <meta charset="UTF-8">
+                                </head>
+                                <body>
+                                    <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                    <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido pagada por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name},</p>
+                                    <p>El siguiente paso del sistema: Recepción por parte de Almacén</p>
+                                    <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                                    <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                                </body>
+                            </html>
+                            """
+                        try:
+                            email = EmailMessage(
+                            f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                            body=html_message,
+                            from_email = settings.DEFAULT_FROM_EMAIL,
+                            to= ['ulises_huesc@hotmail.com', compra.req.orden.staff.staff.staff.email],
+                            headers={'Content-Type': 'text/html'}
+                            )
+                            email.content_subtype = "html " # Importante para que se interprete como HTML
+                            email.send()
+                        except (BadHeaderError, SMTPException) as e:
+                            error_message = f'Correo de notificación 1: No enviado'
+                        html_message2 = f"""
+                            <html>
+                                <head>
+                                    <meta charset="UTF-8">
+                                </head>
+                                <body>
+                                    <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
+                                    <p>Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.<p>
+                                    <p>&nbsp;</p>
+                                    <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
+                                    <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                    <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                    <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                                    <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                                </body>
+                            </html>
+                            """
+                        try:
+                            email = EmailMessage(
+                            f'Compra Autorizada {compra.folio}|SAVIA',
+                            body=html_message2,
+                            from_email =settings.DEFAULT_FROM_EMAIL,
+                            to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                            headers={'Content-Type': 'text/html'}
+                            )
+                            email.content_subtype = "html " # Importante para que se interprete como HTML
+                            email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                            email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
+                            if pagos.count() > 0:
+                                for pago in pagos:
+                                    email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                            email.send()
+                            for producto in productos:
+                                if producto.producto.producto.articulos.producto.producto.especialista == True:
+                                    archivo_oc = attach_oc_pdf(request, compra.id)
+                                    email = EmailMessage(
+                                    f'Compra Autorizada {compra.folio}',
+                                    f'Estimado Especialista,\n Estás recibiendo este correo porque ha sido pagada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.codigo} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA X',
+                                    settings.DEFAULT_FROM_EMAIL,
+                                    ['ulises_huesc@hotmail.com'],
+                                    )
+                                    email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
+                                    email.send()
+                            messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                        except (BadHeaderError, SMTPException) as e:
+                            error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
+                            messages.warning(request, error_message) 
+                            
+                pago.save()
+                compra.save()
+                form.save()
+                sub.save()
+                cuenta.save()
+                
+                return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
+            elif monto_total > compra.costo_oc:
+                messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {compra.costo_oc}')
+            else:
+                form = PagoForm()
+                messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
+        else:
+            messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
+
+    context= {
+        'form_cargo':form_cargo,
+        'form_abono':form_abono,
+        'cuentas_para_select2': cuentas_para_select2,
     }
 
-    # Buscar cada patrón y extraer el valor
-    for clave, patron in patrones.items():
-        coincidencia = re.search(patron, texto)
-        if coincidencia:
-            variables[clave] = coincidencia.group(1).replace('MXP','').replace(',', '') if 'importe_operacion' in clave else coincidencia.group(1)
-
-    return variables
-
-
-def extraer_texto_de_pdf(pdf_file):
-    pdf_file = fitz.open(stream= pdf_file, filetype='pdf')
-    texto = ""
-    for pagina in pdf_file:
-        texto += pagina.get_text()
-    return texto
+    return render(request, 'tesoreria/transferencia_cuentas.html',context)
 
 from django.http import JsonResponse
 
@@ -507,6 +635,47 @@ def matriz_pagos(request):
         }
 
     return render(request, 'tesoreria/matriz_pagos.html',context)
+
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def control_bancos(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    pagos = Pago.objects.filter(
+        Q(oc__req__orden__distrito = usuario.distritos) & Q(oc__autorizado2=True) | 
+        Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2 = True) |
+        Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True), 
+        hecho=True
+    ).order_by('-pagado_date')
+    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+    pagos = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(pagos, 50)
+    page = request.GET.get('page')
+    pagos_list = p.get_page(page)
+
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_matriz_pagos(pagos)
+
+    context= {
+        'pagos_list':pagos_list,
+        'pagos':pagos,
+        'myfilter':myfilter,
+        }
+
+    return render(request, 'tesoreria/control_bancos.html',context)
+
+
+
+
+
+
+
+
+
+
 
 
 def eliminar_caracteres_invalidos(archivo_xml):

@@ -1,0 +1,455 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load djmoney %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Autorización OC{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="col-lg-6 offset-lg-3 col-sm-12" >
+    <div class="card">
+        <div class="card-header">
+            <h5 class="modal-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Compra: {{compra.folio}} | Pago: {{pago.id}}</h5>
+        </div>
+
+        <div class="card-body">
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col">Importe Compra</th>
+                        <th id="importe" value={{compra.costo_plus_adicionales}} moneda={{compra.moneda.nombre}} scope="col">${{compra.costo_oc|floatformat:2}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">Impuestos</th>
+                            <th scope="col">${{compra.costo_iva|floatformat:2}}</th>
+                        </tr>
+                        {% if compra.impuestos %}
+                        <tr>
+                            <th scope="col">Impuestos Adicionales</th>
+                            <th scope="col">${{compra.impuestos}}</th>
+                        </tr>
+                        {% endif %}
+                        {% if compra.costo_fletes > 0 %}
+                        <tr>
+                            <th scope="col">Flete</th>
+                            <th scope="col">${{compra.costo_fletes}}</th>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th scope="col">Pagado:</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:2}}</th>
+                        </tr>
+                        {% if suma_pago_usd > 0 %}
+                        <tr>
+                            <th scope="col">Pagado USD:</th>
+                            <th id="total" value={{suma_pago_usd}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{suma_pago_usd|floatformat:2}}</th>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <th>Remanente:</th>
+                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class ="table-responsive">
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col-3">#</th>
+                            <th scope="col-2">Pagado</th>
+                            <th scope="col-2">Moneda</th>
+                            <th scope="col-2">T.C.</th>
+                            <th scope="col-3">Cuenta</th>
+                            <th scope="col-3">Fecha</th>
+                            <th scope="col-2">Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in pagos_alt %}
+                        <form method="post" action="{% url 'edit-pago' p.id %}">
+                        {% csrf_token %}
+                        <tr>
+                            <th scope="row">{{p.id}}</th>
+                            <td>{{p.monto|floatformat:2}}</td>
+                            <td>{{p.cuenta.moneda}}</td>
+                            {% if p.tipo_de_cambio %}
+                            <td>{{p.tipo_de_cambio}}</td>
+                            {% else %}
+                            <td></td>
+                            {% endif %}
+                            <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
+                            <td>{{p.pagado_date}}</td>
+                            <td>
+                                <a href="{{p.comprobante_pago.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <button name="btn_eliminar" type="submit" class="btn btn-danger">
+                                    <i class="fa-solid fa-trash-can"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <button class="btn btn-outline-info" type="submit" name="btn_actualizar"  id="btnActualizar">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        </form>
+                   {% endfor %}
+                   </tbody>
+                </table>
+                </div>
+        </div>
+        <div>
+        <form id="myForm" method="post" enctype="multipart/form-data">
+            <div class="col">
+                {% csrf_token %}
+                <div class="row my-2">
+                    <div class="card-footer text-end">
+                        <button onclick="pagarTodo()"  class="btn btn-outline-info">Pagar todo</button>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-lg-12 col-sm-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1"> 
+                                        {{form_cargo.cuenta}}
+                                    </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field form_cargo.pagado_real type="date" class="form-control" %}
+                                <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                            <input type="text" class="form-control d-none" id="monto_dolares" placeholder="Dolares...">      
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{form_cargo.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
+                                    <label style="color: #121212;" for="id_area">Monto*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-lg-6 col-md-12 d-none" id="text_tc">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1">TC</span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_cargo.tipo_de_cambio|add_class:'form-control'|append_attr:"placeholder= Tipo de Cambio"}}
+                                <label style="color: #121212;" for="id_area">TC</label>
+                            </div>           
+                        </div>
+                    </div>
+                    <div id="lbl_tipo_cambio" class="col-lg-3 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>TC: {{compra.tipo_de_cambio}}</h6>   
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div id="lbl_calculo" class="col-lg-3 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Cálculo previo: </h6>   
+                        </div>
+                    </div>
+                </div>
+                    <div class="row my-2">
+                        <div class="col-12">
+                            {{form_cargo.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
+                        </div>
+                    </div>
+                    
+                </div>
+            </div>
+            <div class="card-footer text-end">
+                <h6>Registrar Traspaso: {{compra.folio}}</h6>
+                <button id="myBtn" name = "envio" type="submit" class="btn btn-success">Registrar</button>
+                <a type="button" class="btn btn-secondary" href="{% url 'control-bancos' %}">Cerrar</a>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+function pagarTodo() {
+    // Opción A: Obtener el valor de 'remanente' desde el elemento oculto
+    var remanente = document.getElementById('remanente');
+    var valor_remanente = remanente.getAttribute('remanente')
+    console.log(valor_remanente)
+    valor= Number(valor_remanente).toFixed(4)
+    // Actualizar el campo 'monto' del formulario con el valor de 'remanente'
+    document.getElementById('id_monto').value = valor // Asegúrate de que el selector apunte correctamente al campo 'monto'
+}
+
+
+var compra = document.getElementById("importe");
+var compra_moneda = compra.getAttribute("moneda");
+var monto_moneda = document.getElementById("id_monto");
+//var tipo_cambio = document.getElementById("id_tipo_de_cambio");
+//var lbl_tipo = document.getElementById("lbl_tipo");
+//if (tipo_cambio) {
+//    tipo_cambio.setAttribute("class","form-control d-none");
+
+//}
+document.getElementById('myForm').addEventListener('submit', function() {
+    // Espera 150 milisegundos antes de deshabilitar el botón de envío
+    setTimeout(function() {
+        document.getElementById('myBtn').disabled = true;
+    }, 50);
+});
+
+/* *******************NO BORRAR EL CODIGO**********************
+este era para evitar el envío doble cuando era un modal
+htmx.defineExtension('disable-on-submit', {
+  onEvent: function(name, evt) {
+    if (name === 'htmx:configRequest') {
+      var target = evt.detail.elt;
+      if (target.tagName === 'FORM') {
+        var button = target.querySelector('input[type="submit"]');
+        if (button) {
+          button.disabled = true;
+        }
+      }
+    }
+  },
+});*/
+document.getElementById('id_monto').addEventListener('change',(event)=>{
+    var tipo = document.getElementById("id_tipo_de_cambio").value;
+    //var monto = document.getElementById('').value;
+    var monto = document.getElementById('id_monto')
+    console.log(tipo)
+    calculo_previo = document.getElementById('lbl_calculo')
+    var alertDiv = document.querySelector('#lbl_calculo .alert');
+    var mybtn = document.getElementById('myBtn')
+
+    if (compra_moneda == "PESOS"){
+        if (monto <= 0 || tipo_cambio <= 0){
+            mybtn.classList.add('d-none')
+        } else {
+            mybtn.classList.remove('d-none')
+        }
+    }
+    if (compra_moneda == "DOLARES"){
+    if (monto <= 0 || tipo <= 0){
+            mybtn.classList.add('d-none')
+        } else {
+            total_dolares = monto.value/tipo
+            console.log(total_dolares)
+            alertDiv.innerHTML = '<h6>Cálculo previo: </h6>$ ' + parseFloat(total_dolares).toFixed(2) + ' USD';
+            //monto_real.value = parseFloat(total_dolares).toFixed(4)
+            mybtn.classList.remove('d-none')
+        }
+    }
+    });
+
+
+if (compra_moneda == "DOLARES"){
+document.getElementById('id_tipo_de_cambio').addEventListener('change',(event)=>{
+    var tipo = document.getElementById("id_tipo_de_cambio").value;
+    var alertDiv = document.querySelector('#lbl_calculo .alert');
+    var monto = document.getElementById('id_monto')
+    console.log(tipo)
+    calculo_previo = document.getElementById('lbl_calculo')
+    var mybtn = document.getElementById('myBtn')
+    if (compra_moneda == "PESOS"){
+        if (monto <= 0 || tipo_cambio <= 0){
+            mybtn.classList.add('d-none')
+        } else {
+            mybtn.classList.remove('d-none')
+        }
+    }
+    if (compra_moneda == "DOLARES"){
+        if (monto <= 0 || tipo <= 0){
+            mybtn.classList.add('d-none')
+            } else {
+            total_dolares = monto.value / tipo
+            alertDiv.innerHTML = '<h6>Cálculo previo: </h6>$ ' + parseFloat(total_dolares).toFixed(2) + ' USD';
+            //monto_real.value = parseFloat(total_dolares).toFixed(4)
+            mybtn.classList.remove('d-none')
+            }
+        }
+
+})
+}
+
+document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
+  var file = event.target.files[0];
+  var formData = new FormData();
+  formData.append('comprobante_pago', file);
+  
+  // Añadir CSRF token a la solicitud AJAX
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch('/tesoreria/prellenar_formulario/', { // Asegúrate de que esta es la URL correcta para tu vista
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
+    },
+  })
+  .then(response => response.json()) // Asegúrate de que el backend devuelva un JSON
+  .then(data => {
+    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
+    document.querySelector('[name="monto"]').value = data.monto;
+    //document.querySelector('[name="cuenta"]').value = data.cuenta;
+    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
+    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
+    var $selectElement = $('[name="cuenta"]');
+    $selectElement.val(cuentaId).trigger('change');
+  })
+  .catch(error => console.error('Error:', error));
+});
+
+
+
+var datosCuenta = {{cuentas_para_select2|safe }};
+
+
+$(document).ready(function() {
+  
+    $('#id_cuenta').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona una cuenta',
+        data: datosCuenta,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_cuenta').on('select2:select', function(e) {
+        var data = e.params.data;
+        var moneda = data.moneda;
+        var tipo_cambio = document.getElementById('text_tc')
+        console.log(moneda)
+        if (compra_moneda == "DOLARES"){
+            if (moneda == "PESOS"){
+            lbl_calculo.classList.remove('d-none'); 
+            lbl_tipo_cambio.classList.remove('d-none');
+            tipo_cambio.classList.remove('d-none');
+            } else if (moneda =="DOLARES") {
+            monto.value = ""
+            tipo_cambio.value=""
+            calculo_previo.innerHTML = ""
+            lbl_calculo.classList.add('d-none');
+            lbl_tipo_cambio.classList.add('d-none');
+            tipo_cambio.classList.add('d-none');
+            //monto_dolares.classList.add('d-none')
+            monto.classList.remove('d-none');
+            }
+        }
+    });
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+//This is the function that remove any product from render product table and remove the specific element from the array
+/*function deleteRow(element) {
+     producto="{{p.id|unlocalize}}"
+    let btn_delete = document.getElementById('delete');
+    let monto = btn_delete.getAttribute('monto');
+    let tipo_de_cambio = btn_delete.getAttribute('tc');
+    let moneda = btn_delete.getAttribute('moneda');
+    let id = btn_delete.getAttribute('producto');
+    
+   
+    //console.log(id)
+    //console.log(precio)
+    var action = "remove";
+    ActualizarArticulos(id, monto, moneda, tipo_de_cambio);
+
+}
+
+function ActualizarArticulos(id, monto, moneda, tipo_de_cambio){
+    console.log('User is logged in, sending data...' )
+
+    var url = '/compras/update_oc/'
+
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'id':id, 'monto':monto, 'moneda':moneda, 'tipo_de_cambio':tipo_de_cambio})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        location.reload()
+    })
+}
+*/
+
+</script>
+{% endblock %}
+</body>
+</html>

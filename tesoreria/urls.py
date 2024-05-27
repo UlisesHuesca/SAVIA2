@@ -8,6 +8,8 @@ urlpatterns = [
     path('tesoreria/compras_autorizadas', views.compras_autorizadas, name='compras-autorizadas'),
     path('tesoreria/compras_autorizadas/pagos/<int:pk>/', views.compras_pagos, name='compras-pagos'),
     path('tesoreria/matriz_pagos/', views.matriz_pagos, name='matriz-pagos'),
+    path('tesoreria/control_bancos', views.control_bancos, name='control-bancos'),
+    path('tesoreria/transferencia_cuentas/', views.transferencia_cuentas, name='transferencia-cuentas'),
     path('tesoreria/matriz_facturas/<int:pk>', views.matriz_facturas, name='matriz-facturas'),
     path('tesoreria/matriz_facturas_nomodal/<int:pk>', views.matriz_facturas_nomodal, name='matriz-facturas-nomodal'),
     path('tesoreria/factura_compra_edicion/<int:pk>',views.factura_compra_edicion,name='factura-compra-edicion' ),
@@ -22,4 +24,5 @@ urlpatterns = [
     # La URL para el formulario de pagos masivos
     path('tesoreria/masivos/', views.mass_payment_view, name='vista_pagos_masivos'),
     path('tesoreria/layout_pagos/', views.layout_pagos, name='layout_pagos'),
+   
     ]

@@ -266,9 +266,12 @@
                                     <span class="badge bg-danger">({{conteo_asignar_montos}})</span>
                                 {% endif %}
                             </a>
-                            <a class="dropdown-item" href="{% url 'cobranza-pagos' %}">
-                                Cobranza
+                            <a class="dropdown-item" href="{% url 'control-bancos' %}">
+                                Control de bancos
                             </a>
+                            <!--<a class="dropdown-item" href="{% url 'cobranza-pagos' %}">
+                                Cobranza
+                            </a>-->
                         <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.autorizacion == False %}
