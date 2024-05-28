@@ -186,14 +186,14 @@ def viaticos_pendientes_autorizar2(request):
     perfil = Profile.objects.get(id = pk_perfil)
 
     if perfil.distritos.nombre == "MATRIZ":
-        if perfil.staff.staff.tipo.subdirector and perfil.staff.staff.tipo.dg:
+        if perfil.tipo.subdirector and perfil.tipo.dg:
             viaticos = Solicitud_Viatico.objects.filter(
-                Q(superintendente = perfil) | Q(colaborador__staff__staff__tipo__subdirector = True), 
+                Q(superintendente = perfil) | Q(colaborador__tipo__subdirector = True), 
                 complete=True, autorizar = True, 
                 montos_asignados=True, autorizar2 = None, 
                 distrito = perfil.distritos
                 ).order_by('-folio')
-        elif perfil.staff.staff.tipo.subdirector:
+        elif perfil.tipo.subdirector:
             viaticos = Solicitud_Viatico.objects.filter(
                 complete=True, 
                 autorizar = True, 
@@ -202,7 +202,7 @@ def viaticos_pendientes_autorizar2(request):
                 distrito = perfil.distritos, 
                 superintendente = perfil
             ).exclude(
-                Q(colaborador__nombre=perfil.nombre) | Q(colaborador__staff__nombre=perfil.nombre)
+                Q(colaborador=perfil) | Q(staff=perfil)
             ).order_by('-folio')
         else:
             viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos, superintendente = perfil).order_by('-folio')

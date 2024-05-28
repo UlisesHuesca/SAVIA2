@@ -8,4 +8,3 @@ errors.log.save
 *.log
 .env
 *.sql
-*.sql.gz
