@@ -173,10 +173,12 @@
                     <td class="d-none d-lg-table-cell">{{req.orden.operacion}}</td>
                     <td>{{req.approved_at}} {{req.approved_at_time}} </td>
                     <td>
+                      
                         <ul class="nav nav-pills">
                             <li class="nav-item m-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-restantes' req.id %}">Productos</a>
                             </li>
+                            {% if perfil.tipo.comprador %}
                             <li id="crear_oc_{{req.id}}" class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-success" onclick="crear_oc('{{req.id}}')" href="{% url 'oc' req.id %}">Crear OC</a>
                             </li>
@@ -197,6 +199,7 @@
                                     <i class="fa-solid fa-eraser"></i>
                                 </a>
                             </li>
+                            {% endif %}
                         </ul>
                     </td>
                 </tr>

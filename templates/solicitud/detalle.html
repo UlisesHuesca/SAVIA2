@@ -121,6 +121,7 @@
                                                     </h2>
                                                 {% endfor %}
                                                 {% for entrada in compra.vale_entrada.all %}
+                                                    {% if entrada.completo %}
                                                     <h2 class="accordion-header" id="headingSol"></h2>
                                                         <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                                             Entrada: &nbsp<strong>{{entrada.folio}}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> 
@@ -130,7 +131,12 @@
                                                         <div class="accordion-body" style="color:black">
                                                             Cantidad: {{ entrada.cantidad }} Fecha: {{ entrada.fecha }}
                                                         </div>
-                                                    </div>   
+                                                    </div>
+                                                    {% elif entrada.completo == False %}
+                                                    <button class="accordion-button collapsed  btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                                        Entrada:&nbsp<strong>{% if entrada.folio %} {{ entrada.folio }} {% endif %}</strong>&nbsp<i class="fa-solid fa-circle-check"></i>Entrada en Proceso: {{entrada.almacenista.staff.staff.first_name}} {{entrada.almacenista.staff.staff.last_name}}
+                                                    </button>
+                                                    {% endif %}
                                                 {% endfor %}
                                             {% endif %}
                                               

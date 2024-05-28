@@ -64,6 +64,8 @@ class Tipo_perfil(models.Model):
     comprador = models.BooleanField(null=True, default=False)
     oc_superintendencia = models.BooleanField(null=True, default=False)
     oc_gerencia = models.BooleanField(null=True, default=False)
+    subdirector = models.BooleanField(default = False)
+    dg = models.BooleanField(null=True, default=False)
     def __str__(self):
         return f'{self.nombre}'
 

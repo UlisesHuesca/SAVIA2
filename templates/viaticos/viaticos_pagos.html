@@ -159,9 +159,11 @@
                             <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
                             <td>{{p.pagado_date}}</td>
                             <td>
+                                {% if p.comprobante_pago %}
                                 <a href="{{p.comprobante_pago.url}}" download class="btn btn-outline-info">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
                                 </a>
+                                {% endif %}
                             </td>
                         </tr>
                    {% endfor %}

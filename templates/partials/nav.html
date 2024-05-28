@@ -274,10 +274,10 @@
                             </a>-->
                         <div class="dropdown-divider"></div>
                     </div>
-                    {% if usuario.tipo.autorizacion == False %}
-                    <div class="d-none">
-                    {% else %}
+                    {% if usuario.tipo.autorizacion == True %}
                     <div>
+                    {% else %}
+                    <div class="d-none">
                     {% endif %}
                         <h6 class="dropdown-header">Autorización</h6>
                         <div class="dropdown-divider"></div>
@@ -296,10 +296,10 @@
                                 {% if usuario.tipo.nombre == 'Admin' %}
                                 <a class="dropdown-item" href="{% url 'matriz-salida-activos' %}">Revisión Activos</a>
                                 {% endif %}
-                            {% if usuario.tipo.superintendente == False %}
-                                <div class="d-none">
-                            {% else %}
+                            {% if usuario.tipo.superintendente == True %}
                                 <div>
+                            {% else %}
+                                <div class="d-none"></div>
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'requisicion-autorizacion' %}">Requisiciones
                                 {% if conteo_requis_pendientes > 0 %}
@@ -307,13 +307,13 @@
                                 {% endif %}
                                 </a>
                                 </div>
-                            {% if usuario.tipo.oc_superintendencia == False or  usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ"%}
+                            {% if usuario.tipo.oc_superintendencia == False %}
                                 <div class="d-none">
                             {% else %}
                                 <div>
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'autorizacion-oc1' %}">
-                                {% if usuario.tipo.nombre == "Subdirector" %}
+                                {% if usuario.tipo.subdirector %}
                                 OC Subdirector
                                 {% else %}
                                 OC Superintendencia
@@ -341,7 +341,7 @@
                                 </a>
                                 </div>
 
-                            {% if usuario.tipo.oc_gerencia == False %}
+                            {% if usuario.tipo.oc_gerencia == False%}
                                 <div class="d-none">
                             {% else %}
                                 <div>
@@ -353,6 +353,12 @@
 
                                 {% endif %}
                                 </a>
+                            </div>
+                            {% if usuario.tipo.oc_gerencia or  usuario.tipo.subdirector %}
+                            <div>
+                            {% else %}
+                            <div class="d-none">
+                            {% endif %}
                                 <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar2' %}">Autorización Gasto
                                  {% if conteo_gastos_gerencia > 0 %}
                                 <span class="badge bg-danger">({{conteo_gastos_gerencia}})</span>
@@ -425,7 +431,6 @@
                                 <a class="dropdown-item" href="{% url 'matriz-reportes-calidad' %}">Matriz Reportes Calidad</a>
                                 </div>
                     <div class="dropdown-divider"></div>
-                    </div>
                     {% if usuario.tipo.historicos == False %}
                     <div class="d-none">
                     {% else %}

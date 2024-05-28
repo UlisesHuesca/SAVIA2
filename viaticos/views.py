@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.db.models import Max
+from django.db.models import Max, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import EmailMessage
@@ -93,7 +93,10 @@ def solicitud_viatico(request):
                 viatico.staff =  usuario
                 viatico.distrito = usuario.distritos
                 viatico.folio = nuevo_folio
-                viatico.gerente = colaborador.get(tipo__gerente = True, distritos = usuario.distritos, st_activo = True)
+                if usuario.distritos.nombre == "MATRIZ":
+                    viatico.gerente = viatico.superintendente
+                else:
+                    viatico.gerente = colaborador.get(tipo__gerente = True, distritos = usuario.distritos, st_activo = True)
                 if not viatico.colaborador:
                     viatico.colaborador = usuario
                 viatico.save()
@@ -151,7 +154,10 @@ def viaticos_pendientes_autorizar(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
 
-    viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = None, distrito = perfil.distritos).order_by('-folio')
+    if perfil.distritos.nombre == "MATRIZ":
+        viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = None, distrito = perfil.distritos, superintendente = perfil).order_by('-folio')
+    else:
+        viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = None, distrito = perfil.distritos).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
@@ -179,8 +185,29 @@ def viaticos_pendientes_autorizar2(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
 
-
-    viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos).order_by('-folio')
+    if perfil.distritos.nombre == "MATRIZ":
+        if perfil.staff.staff.tipo.subdirector and perfil.staff.staff.tipo.dg:
+            viaticos = Solicitud_Viatico.objects.filter(
+                Q(superintendente = perfil) | Q(colaborador__staff__staff__tipo__subdirector = True), 
+                complete=True, autorizar = True, 
+                montos_asignados=True, autorizar2 = None, 
+                distrito = perfil.distritos
+                ).order_by('-folio')
+        elif perfil.staff.staff.tipo.subdirector:
+            viaticos = Solicitud_Viatico.objects.filter(
+                complete=True, 
+                autorizar = True, 
+                montos_asignados=True, 
+                autorizar2 = None, 
+                distrito = perfil.distritos, 
+                superintendente = perfil
+            ).exclude(
+                Q(colaborador__nombre=perfil.nombre) | Q(colaborador__staff__nombre=perfil.nombre)
+            ).order_by('-folio')
+        else:
+            viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos, superintendente = perfil).order_by('-folio')
+    else:
+        viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs

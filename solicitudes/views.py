@@ -257,17 +257,17 @@ def checkout(request):
     else:
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True)
 
-    print(usuario.distritos)
+    #print(usuario.distritos)
     if usuario.distritos.nombre == "MATRIZ":
-        print("Quev")
-        superintendentes = usuarios.filter(tipo__nombre ="Subdirector")
+        #print("Quev")
+        superintendentes = usuarios.filter(tipo__subdirector = True)
     elif usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
         superintendentes = usuarios.filter(staff=usuario.staff)
         order.superintendente = usuario
-        print("Ques")
+        #print("Ques")
     else:
         superintendentes = usuarios.filter(distritos=usuario.distritos, tipo__autorizacion = True, tipo__requisiciones = True, st_activo = True).exclude(tipo__nombre="Admin")
-        print("Quee")
+        #print("Quee")
 
     proyectos_para_select2 = [
         {
@@ -1314,7 +1314,7 @@ def solicitud_autorizacion(request):
     #perfil = Profile.objects.get(id=usuario)
 
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    ordenes = Order.objects.filter(complete=True, autorizar=None, distrito =perfil.distritos).order_by('-folio')
+    ordenes = Order.objects.filter(complete=True, autorizar=None, distrito =perfil.distritos, supervisor = perfil).order_by('-folio')
     #ordenes = ordenes.filter(supervisor=perfil)
     myfilter=SolicitudesFilter(request.GET, queryset=ordenes)
     ordenes = myfilter.qs

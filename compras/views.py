@@ -100,6 +100,7 @@ def requisiciones_autorizadas(request):
     requis_list = p.get_page(page)
 
     context= {
+        'perfil':perfil,
         'myfilter': myfilter,
         'requis':requis,
         'tags':tag,

@@ -12,22 +12,28 @@
 <hr>
 <hr>
 <hr>
+<h6>&nbsp;</h6>
 <div class="row my-4">
         <div class="col-md-12">
-        <div class="card card-body">
-            <hr>
-            <div class = "row mt-2 bg-white">
-                <form method=POST>
-                    {% csrf_token %}
-                <ul class="nav nav-pills"> 
-                    <!--<li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                    </li>
-                    <li class="nav-item mx-2">
-                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                    </li>--> 
-                </ul>
-                </form>
+        <div class="card">
+            <div class="card-header">
+                <h3>Autorización de Viáticos</h3>
+            </div>
+            <div class="card-body">
+                <div class = "row mt-2 bg-white">
+                    <form method=POST>
+                        {% csrf_token %}
+                    
+                    <ul class="nav nav-pills"> 
+                        <!--<li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                        </li>--> 
+                    </ul>
+                    </form>
+                </div>
             </div>
         </div>
     </div>
