@@ -56,7 +56,10 @@ def crear_gasto(request):
     pk = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk)
     if usuario.distritos.nombre == "MATRIZ":
-        superintendentes = colaborador.filter(tipo__nombre = "Subdirector", distritos = usuario.distritos, st_activo =True)
+        if usuario.tipo.subdirector:
+            superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
+        else:    
+            superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True) 
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin" and not usuario.tipo.nombre == "GERENCIA":
         superintendentes = colaborador.filter(staff =  usuario.staff)  
     else:
@@ -385,7 +388,7 @@ def gastos_pendientes_autorizar2(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)    
-
+    
     solicitudes = Solicitud_Gasto.objects.filter(complete=True, autorizar = True, autorizar2 = None, distrito = perfil.distritos).order_by('-folio')
 
     myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
@@ -449,6 +452,8 @@ def autorizar_gasto(request, pk):
         gasto.approved_at = datetime.now()
         #gasto.approved_at_time = datetime.now().time()
         gasto.sol_autorizada_por = perfil
+        if perfil.tipo.subdirector == True:
+            gasto.autorizar2 = True
         gasto.save()
         messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {gasto.folio}')
         return redirect ('gastos-pendientes-autorizar')
