@@ -228,27 +228,31 @@ def factura_nueva_gasto(request, pk):
     usuario = Profile.objects.get(id = pk_profile)
     gasto = Solicitud_Gasto.objects.get(id = pk)
     #facturas = Facturas.objects.filter(pago = pago, hecho=True)
-    factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
+    facturas, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
     
 
-    form = FacturaForm(instance=factura)
+    form = FacturaForm()
 
     if request.method == 'POST':
         if 'btn_registrar' in request.POST:
-            form = FacturaForm(request.POST or None, request.FILES or None, instance = factura)
+            form = FacturaForm(request.POST, request.FILES)
             if form.is_valid():
-                factura = form.save(commit=False)
-                factura.hecho=True
-                factura.fecha_subida =datetime.now()
-                #factura.hora_subido = datetime.now().time()
-                factura.subido_por =  usuario
-                archivo_xml = request.FILES.get('factura_xml')
-                if archivo_xml:
-                    # Procesar el archivo XML para eliminar caracteres inválidos
-                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                    # Guardar el archivo procesado de nuevo en el objeto factura
-                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                factura.save()
+                archivos_pdf = request.FILES.getlist('archivo_pdf')
+                archivos_xml = request.FILES.getlist('archivo_xml')
+                
+                for archivo_pdf, archivo_xml in zip(archivos_pdf, archivos_xml):
+                    factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
+                    factura.archivo_pdf = archivo_pdf
+                    factura.hecho = True
+                    factura.fecha_subida = datetime.now()
+                    factura.subido_por = usuario
+                    archivo_xml = request.FILES.get('factura_xml')
+                    if archivo_xml:
+                        # Procesar el archivo XML para eliminar caracteres inválidos
+                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                        # Guardar el archivo procesado de nuevo en el objeto factura
+                    factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                    factura.save()
                 messages.success(request,'Las factura se registró de manera exitosa')
             else:
                 messages.error(request,'No se pudo subir tu documento')
