@@ -8,7 +8,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
-from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, FacturaForm
+from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, FacturaForm, UploadFileForm
 from .filters import Solicitud_Gasto_Filter
 from user.models import Profile
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
@@ -228,21 +228,20 @@ def factura_nueva_gasto(request, pk):
     usuario = Profile.objects.get(id = pk_profile)
     gasto = Solicitud_Gasto.objects.get(id = pk)
     #facturas = Facturas.objects.filter(pago = pago, hecho=True)
-    facturas, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
+    #facturas, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
     
 
-    form = FacturaForm()
+    form = UploadFileForm()
 
     if request.method == 'POST':
         if 'btn_registrar' in request.POST:
-            form = FacturaForm(request.POST, request.FILES)
+            form = UploadFileForm(request.POST, request.FILES)
+            archivos_pdf = request.FILES.getlist('archivo_pdf')
+            archivos_xml = request.FILES.getlist('archivo_xml')
             if form.is_valid():
-                archivos_pdf = request.FILES.getlist('archivo_pdf')
-                archivos_xml = request.FILES.getlist('archivo_xml')
-                
-                for archivo_pdf, archivo_xml in zip(archivos_pdf, archivos_xml):
+                for pdf, xml in zip(archivos_pdf, archivos_xml):
                     factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
-                    factura.archivo_pdf = archivo_pdf
+                    factura.archivo_pdf = pdf
                     factura.hecho = True
                     factura.fecha_subida = datetime.now()
                     factura.subido_por = usuario
@@ -260,6 +259,7 @@ def factura_nueva_gasto(request, pk):
 
     context={
         'form': form, 
+        'gasto': gasto,
     }
 
     return render(request, 'gasto/registrar_nueva_factura_gasto.html', context)
