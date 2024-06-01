@@ -684,9 +684,11 @@ def eliminar_caracteres_invalidos(archivo_xml):
     
     # Leer el contenido del archivo XML
     xml_content = archivo_xml.read().decode('utf-8')
-    
+        
     # Eliminar los caracteres inválidos específicos ("o;?") de los primeros tres espacios
-    xml_content = xml_content[:3].replace("o;?", "") + xml_content[3:]
+    if xml_content.startswith("o;?"):
+        xml_content = xml_content[3:]
+    #xml_content = xml_content[:3].replace("o;?", "") + xml_content[3:]
     
     # Reemplazar los caracteres inválidos con una cadena vacía
     xml_content = regex.sub('', xml_content)

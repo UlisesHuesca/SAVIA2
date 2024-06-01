@@ -326,7 +326,7 @@ def checkout(request):
         cartItems = order.get_cart_quantity
 
     if request.method =='POST':
-        form = OrderForm(request.POST, instance=order)
+        form = OrderForm(request.POST, request.FILES, instance=order)
         if form.is_valid():
             order = form.save(commit=False)
             order.created_at = datetime.now()

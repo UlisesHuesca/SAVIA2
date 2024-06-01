@@ -13,6 +13,7 @@ from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form
 from tesoreria.forms import Facturas_Viaticos_Form
+from tesoreria.views import eliminar_caracteres_invalidos
 from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required
 
@@ -47,7 +48,10 @@ def solicitud_viatico(request):
     puntos = Puntos_Intermedios.objects.filter(solicitud = viatico)
     error_messages = {}
     
-    if usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
+
+    if usuario.distritos.nombre == "MATRIZ":
+        superintendentes = colaborador.filter(tipo__subdirector = True)
+    elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
        superintendentes = colaborador.filter(staff =  usuario.staff )  
     else:
         superintendentes = colaborador.filter(tipo__superintendente = True, distritos = usuario.distritos, staff__staff__is_active = True).exclude(tipo__nombre="Admin")
@@ -600,6 +604,7 @@ def facturas_viaticos(request, pk):
                 #factura.hora_subido = datetime.now().time()
                 factura.hecho = True
                 factura.subido_por = usuario
+
                 factura.save()
                 messages.success(request,'Haz registrado tu factura')
                 return redirect('facturas-viaticos', pk= concepto.id) #No content to render nothing and send a "signal" to javascript in order to close window
@@ -635,6 +640,12 @@ def factura_nueva_viatico(request, pk):
                 factura.fecha_subido =datetime.now()
                 #factura.hora_subido = datetime.now().time()
                 factura.subido_por =  usuario
+                archivo_xml = request.FILES.get('factura_xml')
+                if archivo_xml:
+                    # Procesar el archivo XML para eliminar caracteres inválidos
+                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                    # Guardar el archivo procesado de nuevo en el objeto factura
+                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
                 factura.save()
                 messages.success(request,'La factura se registró de manera exitosa')
             else:

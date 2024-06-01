@@ -907,7 +907,7 @@ def autorizacion_oc1(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
     
-    if usuario.tipo.nombre == "Subdirector":
+    if usuario.tipo.subdirector == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__superintendente = usuario).order_by('-folio')
     elif usuario.tipo.oc_superintendencia == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
@@ -2029,7 +2029,7 @@ def generar_pdf(compra):
         subtotal = subtotal - compra.impuestos
         c.setFillColor(black)
         c.setFont('Helvetica-Bold',9)
-        c.drawRightString(montos_align,170,'Impuestos Adicionales:')
+        #c.drawRightString(montos_align,170,'Impuestos Adicionales:')
         c.setFont('Helvetica',10)
         costo_impuestos = format(float(compra.impuestos), ',.2f')
         c.drawRightString(montos_align + 90, 180, '$' + str(costo_impuestos))

@@ -213,6 +213,11 @@
                                 <span class="badge bg-danger">({{conteo_requis}})</span>
                                 {% endif %}
                             </a>
+                            {% if usuario.tipo.comprador %}
+                            <div>
+                            {% else %}
+                            <div class="d-none"> 
+                            {% endif %}
                             <a class="dropdown-item" href="{% url 'comparativos' %}">
                                 Comparativos
                             </a>
@@ -226,6 +231,7 @@
                                 Agregar Proveedor Comparativo
                             </a>
                             <a class="dropdown-item" href="{% url 'matriz-nc' %}">Matriz NC's</a>
+                            </div>
                         <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.proveedores == False %}
@@ -322,6 +328,12 @@
                                 <span class="badge bg-danger">({{conteo_oc1}})</span>
                                 {% endif %}    
                                 </a>
+                            </div>
+                            {% if usuario.tipo.subdirector == True %}
+                                <div class="d-none">
+                            {% else %}
+                                <div>
+                            {% endif %}
                                 <a class="dropdown-item" href="{% url 'matriz-autorizar-devolucion' %}">Autorización Devolución Almacén
                                     {% if conteo_devoluciones > 0 %}
                                     <span class="badge bg-danger">({{conteo_devoluciones}})</span>
@@ -334,14 +346,14 @@
                                 <div>
                             {% endif %}
 
-                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar' %}">Revisión Gasto
+                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar' %}">{% if usuario.tipo.subdirector %}Gasto Subdirector {% else %} Revisión Gasto {% endif %}
                                 {% if conteo_gastos_pendientes > 0 %}
                                 <span class="badge bg-danger">({{conteo_gastos_pendientes}})</span>
                                 {% endif %}
                                 </a>
                                 </div>
 
-                            {% if usuario.tipo.oc_gerencia == False%}
+                            {% if usuario.tipo.oc_gerencia == False %}
                                 <div class="d-none">
                             {% else %}
                                 <div>
@@ -354,7 +366,7 @@
                                 {% endif %}
                                 </a>
                             </div>
-                            {% if usuario.tipo.oc_gerencia or  usuario.tipo.subdirector %}
+                            {% if usuario.tipo.oc_gerencia %}
                             <div>
                             {% else %}
                             <div class="d-none">
@@ -362,12 +374,6 @@
                                 <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar2' %}">Autorización Gasto
                                  {% if conteo_gastos_gerencia > 0 %}
                                 <span class="badge bg-danger">({{conteo_gastos_gerencia}})</span>
-
-                                {% endif %}
-                                </a>
-                                <a class="dropdown-item" href="{% url 'viaticos-pendientes-autorizar2' %}">Autorización Viáticos
-                                  {% if conteo_viaticos_gerencia > 0 %}
-                                <span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span>
                                 {% endif %}
                                 </a>
                             </div>
@@ -384,6 +390,18 @@
                                 {% endif %}
                                 </a>
                                 </div>
+                            {% if usuario.tipo.oc_gerencia or usuario.tipo.subdirector %}
+                            <div>
+                            {% else %}
+                            <div class="d-none">
+                            {% endif %}
+                                <a class="dropdown-item" href="{% url 'viaticos-pendientes-autorizar2' %}">Autorización Viáticos
+                                  {% if conteo_viaticos_gerencia > 0 %}
+                                <span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span>
+                                {% endif %}
+                                </a>
+                            </div>
+                            
                         <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.reportes == False %}

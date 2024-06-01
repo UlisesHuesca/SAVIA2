@@ -161,12 +161,12 @@ def crear_gasto(request):
                 factura.solicitud_gasto = gasto  # Asume que ya tienes una instancia de Solicitud_Gasto en 'gasto'
                 factura.fecha_subida = datetime.now()
                 factura.hecho = True
-                archivo_xml = request.FILES.get('factura_xml')
+                archivo_xml = request.FILES.get('archivo_xml')
                 if archivo_xml:
                     # Procesar el archivo XML para eliminar caracteres inválidos
                     archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                     # Guardar el archivo procesado de nuevo en el objeto factura
-                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                    factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
                 factura.save()
                 messages.success(request, 'Factura agregada correctamente.')
                 return redirect('crear-gasto')

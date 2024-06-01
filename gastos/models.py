@@ -176,12 +176,15 @@ class Factura(models.Model):
             #data = file.read()
         try:
             tree = ET.parse(self.archivo_xml.path)
+            root = tree.getroot()
         except ET.ParseError as e:
             print(f"Error al parsear el archivo XML: {e}")
             return {'error': f"Error al parsear el archivo XML: {e}"}
+        except Exception as e:
+            return {'error': f"Error al acceder al archivo XML: {e}"}
         # Manejo adicional del error
         #tree = ET.parse(self.archivo_xml.path)
-        root = tree.getroot()
+        #root = tree.getroot()
         # Buscar la versión en el documento XML
         version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
 

@@ -59,7 +59,9 @@
                                     {% elif requi.autorizar == False %}
                                     <button class="accordion-button collapsed btn-danger" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                         Requisición:&nbsp<strong>{{ requi.folio }}</strong>&nbsp  <i class="fa-solid fa-circle-check"></i>&nbsp Cancelada
-                                    
+                                    {% elif requi.complete == False %}
+                                    <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
+                                        Requisición:&nbsp<strong></strong>&nbsp  <i class="fa-solid fa-circle-check"></i>&nbsp En proceso
                                     {% else %}
                                     <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                         Requisición:&nbsp<strong>{{ requi.folio }}</strong>&nbsp  <i class="fa-solid fa-circle-check"></i>&nbsp No Autorizada Aún
