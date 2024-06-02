@@ -45,9 +45,9 @@
             <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
                 {% csrf_token %}
                 <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
-                <input type="file" name="archivo_pdf" class="form-control" multiple>
+                {{form.factura_pdf|add_class:'form-control'}}         
                 <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
-                <input type="file" name="archivo_xml" class="form-control" multiple>
+                 {{form.factura_xml|add_class:'form-control'}}
                  <label>Comentario</label>
                  {{form.comentario}}
                 <div class="row">

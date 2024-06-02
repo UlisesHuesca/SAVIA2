@@ -120,13 +120,7 @@ class Conceptos_EntradasForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
 
-class MultiFileInput(forms.ClearableFileInput):
-    allow_multiple_selected = True
 
-class FacturaForm(forms.ModelForm):
-    archivo_pdf = forms.FileField(widget=MultiFileInput(attrs={'multiple': True}), required=False)
-    archivo_xml = forms.FileField(widget=MultiFileInput(attrs={'multiple': True}), required=False)
-
-    class Meta:
-        model = Factura
-        fields = ['archivo_pdf', 'archivo_xml','monto']
+class UploadFileForm(forms.Form):
+    archivo_pdf = forms.FileField() 
+    archivo_xml = forms.FileField() 
