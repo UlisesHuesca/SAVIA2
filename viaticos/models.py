@@ -137,6 +137,7 @@ class Viaticos_Factura(models.Model):
         impuestos = root.find('cfdi:Impuestos', ns)
         conceptos = root.find('cfdi:Conceptos', ns)
         resultados = []
+        clasificaciones = set()
         for concepto in conceptos.findall('cfdi:Concepto', ns):
             descripcion = concepto.get('Descripcion')
             cantidad = concepto.get('Cantidad')
@@ -145,7 +146,24 @@ class Viaticos_Factura(models.Model):
             # Aquí agrupamos los valores en una tupla antes de añadirlos a la lista
             resultados.append((descripcion, cantidad, precio, clave_prod_serv))
         # Obtener los datos requeridos
-      
+         # Clasificar según clave_prod_serv
+        if clave_prod_serv in ["90111800","90111501"]:
+            clasificaciones.add("Hospedaje")
+        elif clave_prod_serv in ["15101514", "15101515"]:
+            clasificaciones.add("Gasolina")
+        elif clave_prod_serv in ["90101501", "50192500"]:
+            clasificaciones.add("Alimentos")
+        elif clave_prod_serv == "95111602":
+            clasificaciones.add("Peaje")
+        else:
+            clasificaciones.add("Otros")
+
+
+        if len(clasificaciones) == 1:
+            clasificacion_general = clasificaciones.pop()
+        else:
+            clasificacion_general = "Mixto"
+
         rfc = emisor.get('Rfc')
         nombre = emisor.get('Nombre')
         regimen_fiscal = emisor.get('RegimenFiscal')
@@ -154,7 +172,7 @@ class Viaticos_Factura(models.Model):
         impuestos = root.get('TotalImpuestosTrasladados')
 
 
-        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}
+        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados, 'clasificacion_general': clasificacion_general}
 
 
 

@@ -11,7 +11,7 @@ from solicitudes.models import Proyecto, Subproyecto, Operacion
 from dashboard.models import Inventario, Product
 from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
-from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form
+from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm
 from tesoreria.forms import Facturas_Viaticos_Form
 from tesoreria.views import eliminar_caracteres_invalidos
 from .filters import Solicitud_Viatico_Filter
@@ -625,28 +625,35 @@ def factura_nueva_viatico(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     viatico = Solicitud_Viatico.objects.get(id = pk)
+    
     #facturas = Facturas.objects.filter(pago = pago, hecho=True)
-    factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico=viatico, hecho=False)
+    #factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico=viatico, hecho=False)
     
 
-    form = Viaticos_Factura_Form(instance=factura)
+    #form = Viaticos_Factura_Form(instance=factura)
+    form = UploadFileForm()
 
     if request.method == 'POST':
         if 'btn_registrar' in request.POST:
-            form = Viaticos_Factura_Form(request.POST or None, request.FILES or None, instance = factura)
+            form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
-                factura = form.save(commit=False)
-                factura.hecho=True
-                factura.fecha_subido =datetime.now()
-                #factura.hora_subido = datetime.now().time()
-                factura.subido_por =  usuario
-                archivo_xml = request.FILES.get('factura_xml')
-                if archivo_xml:
-                    # Procesar el archivo XML para eliminar caracteres inválidos
-                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                    # Guardar el archivo procesado de nuevo en el objeto factura
-                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                factura.save()
+                archivos_pdf = request.FILES.getlist('factura_pdf')
+                archivos_xml = request.FILES.getlist('factura_xml')
+           
+                for archivo_pdf, archivo_xml in zip(archivos_pdf, archivos_xml):
+                    factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico=viatico, hecho=False)
+                    factura.factura_pdf = archivo_pdf
+                    factura.hecho = True
+                    factura.fecha_subida = datetime.now()
+                    factura.subido_por = usuario
+                    #archivo_xml = request.FILES.get('archivo_xml')
+                    #print(archivo_xml)
+                    if archivo_xml:
+                        # Procesar el archivo XML para eliminar caracteres inválidos
+                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                        # Guardar el archivo procesado de nuevo en el objeto factura
+                        factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                    factura.save()
                 messages.success(request,'La factura se registró de manera exitosa')
             else:
                 messages.error(request,'No se pudo subir tu documento')
@@ -654,6 +661,7 @@ def factura_nueva_viatico(request, pk):
 
     context={
         'form': form, 
+        'viatico':viatico,
     }
 
     return render(request, 'viaticos/registrar_nueva_factura_viatico.html', context)
@@ -661,7 +669,7 @@ def factura_nueva_viatico(request, pk):
 @login_required(login_url='user-login')
 def matriz_facturas_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id = pk)
-    concepto_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
+    conceptos_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico =viatico, hecho=True)
     form = Facturas_Viaticos_Form(instance=viatico)
     next_url = request.GET.get('next', 'matriz-pagos')
@@ -682,7 +690,7 @@ def matriz_facturas_viaticos(request, pk):
         'next_url':next_url,
         'facturas':facturas,
         'form':form,
-        'concepto_viatico': concepto_viatico,
+        'conceptos_viatico': conceptos_viatico,
         'viatico': viatico,
         }
 
@@ -700,7 +708,7 @@ def factura_viatico_edicion(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
     factura = Viaticos_Factura.objects.get(id = pk)
 
-    form = Viaticos_Factura_Form(instance= factura)
+    form = UploadFileForm()
 
     if request.method == 'POST':
         if 'btn_edicion' in request.POST:

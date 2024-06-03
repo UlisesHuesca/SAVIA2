@@ -44,10 +44,10 @@
         <div class="modal-body">
             <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
                 {% csrf_token %}
-                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
-                {{form.factura_pdf|add_class:'form-control'}}         
-                <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
-                {{form.factura_xml|add_class:'form-control'}}
+                <label for="factura_pdf" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
+                <input type="file" name="factura_pdf" class="form-control" multiple>
+                <label for="factura_xml" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
+                <input type="file" name="factura_xml" class="form-control" multiple>
                 <div class="row">
                     <div class="col-auto my-2">
                         <button type="submit" name="btn_registrar" class="btn btn-light" style="background-color:#980f0f" data-bs-dismiss="modal"><i class="fa-solid fa-cloud-arrow-up"></i></button>

@@ -118,24 +118,11 @@
                 <tr>
             </thead>
             <tbody>
+            <tr>
                 {% for factura in facturas  %}
-                <tr>
-                    <td>
+                    <td data-clasificacion="{{ factura.emisor.clasificacion_general }}">
                         {% if factura.factura_xml %}
-                            {% for descripcion, cantidad, precio, clave_prod_serv in factura.emisor.resultados %}
-                                {% if clave_prod_serv == "90111800" %}
-                                    <strong>Hospedaje</strong>
-                                {% elif clave_prod_serv == "15101514" %}
-                                    <strong>Gasolina</strong>
-                                {% elif clave_prod_serv == "90101501" or clave_prod_serv == "50192500" %}
-                                    <strong>Alimentos</strong>
-                                {% elif clave_prod_serv == "95111602" %}
-                                    <strong>Peaje</strong>
-                                {% else %}
-                                    <strong>Otros</strong>
-                                {% endif %}
-                               <br>
-                            {% endfor %}
+                        <strong>{{ factura.emisor.clasificacion_general }}</strong>
                         {% endif %}
                     </td>
                     <td>{% if factura.factura_xml %} {{factura.emisor.resultados}} {% endif %}</td>
@@ -177,8 +164,26 @@
                 <tr>
                     <td></td>
                     <td></td>
+                    <th>Total Hospedaje</th>
+                    <td scope="col" id="hospedaje"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
                     <th>Total Gasolina</th>
                     <td scope="col" id="gasolina"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <th>Total Peajes</th>
+                    <td scope="col" id="peaje"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <th>Total Otros</th>
+                    <td scope="col" id="otros"></td>
                 </tr>
                 <tr>
                     <td></td>
@@ -251,6 +256,37 @@ function total(elementos,id){
 //total(elementos,'subtotal');
 total(elementos_t,'total')
 total(xml, 'total2');
+
+function calcularTotalesPorClasificacion(elementos, clasificacion) {
+    var total = 0;
+
+    for (var i = 0; i < elementos.length; i++) {
+            var elementoClasificacion = elementos[i].getAttribute('data-clasificacion');
+            console.log(`Elemento Clasificación: ${elementoClasificacion}`);  // Depuración
+            if (elementoClasificacion === clasificacion) {
+                var totalElemento = Number(elementos[i].closest('tr').querySelector('.total-xml').getAttribute('total'));
+                console.log(`Total Elemento: ${totalElemento}`);  // Depuración
+                total += totalElemento;
+            }
+        }
+
+        return total;
+    }
+
+function mostrarTotalPorClasificacion(clasificacion, id) {
+    var elementos = document.querySelectorAll('td[data-clasificacion]');
+    var total = calcularTotalesPorClasificacion(elementos, clasificacion);
+    //console.log(`Elementos Encontrados para ${clasificacion}: ${elementos.length}`);  // Depuración
+    var lblTotal = document.getElementById(id);
+    lblTotal.innerText = `$${total.toFixed(2)}`;
+}
+
+// Calcular y mostrar los totales por clasificación
+mostrarTotalPorClasificacion('Gasolina', 'gasolina');
+mostrarTotalPorClasificacion('Peaje', 'peaje');
+mostrarTotalPorClasificacion('Hospedaje', 'hospedaje');
+mostrarTotalPorClasificacion('Otros', 'otros');
+
 
 
 myModal.addEventListener('hidden.bs.modal', function (event) {
