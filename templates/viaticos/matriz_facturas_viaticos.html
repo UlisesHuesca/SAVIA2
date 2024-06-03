@@ -127,7 +127,7 @@
                                     <strong>Hospedaje</strong>
                                 {% elif clave_prod_serv == "15101514" %}
                                     <strong>Gasolina</strong>
-                                {% elif clave_prod_serv == "90101501" %}
+                                {% elif clave_prod_serv == "90101501" or clave_prod_serv == "50192500" %}
                                     <strong>Alimentos</strong>
                                 {% elif clave_prod_serv == "95111602" %}
                                     <strong>Peaje</strong>
@@ -174,6 +174,12 @@
                     </td> 
                 </tr>
                 {% endfor %}
+                <tr>
+                    <td></td>
+                    <td></td>
+                    <th>Total Gasolina</th>
+                    <td scope="col" id="gasolina"></td>
+                </tr>
                 <tr>
                     <td></td>
                     <td></td>

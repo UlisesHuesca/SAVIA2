@@ -1918,7 +1918,7 @@ def generar_pdf(compra):
 
     c.drawString(inicio_central + 90,caja_proveedor-35, str(compra.req.folio))
     c.drawString(inicio_central + 90,caja_proveedor-55, 'Transferencia Electrónica')
-    c.drawString(inicio_central + 90,caja_proveedor-95, 'tesoreria@grupovordcab.com') #Esta parte hay que configurarla para que cambie de acuerdo al distrito
+    c.drawString(inicio_central + 90,caja_proveedor-95, compra.creada_por.staff.staff.email) #Esta parte hay que configurarla para que cambie de acuerdo al distrito
     if compra.proveedor.nombre.razon_social == 'COLABORADOR':
         c.drawString(inicio_central + 90,caja_proveedor-115, compra.deposito_comprador.banco.nombre)
         c.drawString(inicio_central + 90,caja_proveedor-135, compra.deposito_comprador.cuenta_bancaria)
