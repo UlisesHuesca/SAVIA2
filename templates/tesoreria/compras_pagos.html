@@ -88,6 +88,12 @@
                             <th scope="col">Clabe:</th>
                             <th scope="col">{{compra.proveedor.clabe}}</th>
                         </tr>
+                        {% if compra.monto_anticipo %}
+                        <tr>
+                            <th scope="col">Anticipo en OC</th>
+                            <th scope="col">{{compra.monto_anticipo}}</th>
+                        </tr>
+                        {% endif %}
                         {% if compra.referencia %}
                         <tr>
                             <th scope="col">Referencia</th>

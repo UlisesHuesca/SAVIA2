@@ -48,12 +48,30 @@
         <div class="card-body">
                 <table class='table table-striped'>
                     <thead>
+                        {% if pago.gasto.colaborador %}
                         <tr>
                         <th scope="col">Solicitante:</th>
-                        <th scope="col">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</th>
+                        <th scope="col">{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.colaborador.staff.staff.staff.last_name}}</th>
                         </tr>
                     </thead>
                     <tbody>
+                        <tr>
+                            <th scope="col">Banco:</th>
+                            <th scope="col">{{pago.gasto.colaborador.staff.banco}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Cuenta:</th>
+                            <th scope="col">{{pago.gasto.colaborador.staff.cuenta_bancaria}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Clabe:</th>
+                            <th scope="col">{{pago.gasto.colaborador.staff.clabe}}</th>
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <th scope="col">Solicitante:</th>
+                            <th scope="col">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</th>
+                        </tr>
                         <tr>
                             <th scope="col">Banco:</th>
                             <th scope="col">{{pago.gasto.staff.staff.banco}}</th>
@@ -66,6 +84,7 @@
                             <th scope="col">Clabe:</th>
                             <th scope="col">{{pago.gasto.staff.staff.clabe}}</th>
                         </tr>
+                        {% endif %}
                     </tbody>
                 </table>
                 <hr>
