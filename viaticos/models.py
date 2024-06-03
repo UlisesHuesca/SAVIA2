@@ -141,8 +141,9 @@ class Viaticos_Factura(models.Model):
             descripcion = concepto.get('Descripcion')
             cantidad = concepto.get('Cantidad')
             precio = concepto.get('ValorUnitario') 
+            clave_prod_serv = concepto.get('ClaveProdServ')
             # Aquí agrupamos los valores en una tupla antes de añadirlos a la lista
-            resultados.append((descripcion, cantidad, precio))
+            resultados.append((descripcion, cantidad, precio, clave_prod_serv))
         # Obtener los datos requeridos
       
         rfc = emisor.get('Rfc')

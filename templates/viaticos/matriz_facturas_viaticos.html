@@ -108,6 +108,7 @@
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
+                    <th>Clasificación</th>
                     <th scope="col">Concepto [XML]</th>
                     <th scope="col">Proveedor [XML]</th>
                     <th scope="col">Monto [XML]</th>
@@ -119,6 +120,24 @@
             <tbody>
                 {% for factura in facturas  %}
                 <tr>
+                    <td>
+                        {% if factura.factura_xml %}
+                            {% for descripcion, cantidad, precio, clave_prod_serv in factura.emisor.resultados %}
+                                {% if clave_prod_serv == "90111800" %}
+                                    <strong>Hospedaje</strong>
+                                {% elif clave_prod_serv == "15101514" %}
+                                    <strong>Gasolina</strong>
+                                {% elif clave_prod_serv == "90101501" %}
+                                    <strong>Alimentos</strong>
+                                {% elif clave_prod_serv == "95111602" %}
+                                    <strong>Peaje</strong>
+                                {% else %}
+                                    <strong>Otros</strong>
+                                {% endif %}
+                               <br>
+                            {% endfor %}
+                        {% endif %}
+                    </td>
                     <td>{% if factura.factura_xml %} {{factura.emisor.resultados}} {% endif %}</td>
                     <td>{% if factura.factura_xml %} {{factura.emisor.nombre}} {% endif %}</td>
                     {% if factura.factura_xml %}
@@ -156,6 +175,7 @@
                 </tr>
                 {% endfor %}
                 <tr>
+                    <td></td>
                     <td></td>
                     <th>Total</th>
                     <td scope="col" id="total2"></td>
