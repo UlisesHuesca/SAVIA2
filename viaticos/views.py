@@ -669,7 +669,8 @@ def factura_nueva_viatico(request, pk):
 @login_required(login_url='user-login')
 def matriz_facturas_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id = pk)
-    conceptos_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
+    concepto_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
+    print(concepto_viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico =viatico, hecho=True)
     form = Facturas_Viaticos_Form(instance=viatico)
     next_url = request.GET.get('next', 'matriz-pagos')
@@ -690,7 +691,7 @@ def matriz_facturas_viaticos(request, pk):
         'next_url':next_url,
         'facturas':facturas,
         'form':form,
-        'conceptos_viatico': conceptos_viatico,
+        'conceptos_viatico': concepto_viatico,
         'viatico': viatico,
         }
 
