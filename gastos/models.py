@@ -190,9 +190,17 @@ class Factura(models.Model):
         version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
 
         if 'http://www.sat.gob.mx/cfd/3' in version:
-            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
+            ns = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/3',
+                'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+                  }
         elif 'http://www.sat.gob.mx/cfd/4' in version:
-            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4'}
+            ns = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/4',
+                'xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+                }
         else:
             # Manejo de error si no se encuentra ninguna versión conocida
             return {'error': "Versión del documento XML no reconocida"}
@@ -203,8 +211,10 @@ class Factura(models.Model):
         receptor = root.find('cfdi:Receptor', ns)
         impuestos = root.find('cfdi:Impuestos', ns)
         conceptos = root.find('cfdi:Conceptos', ns)
-        uuid_element = root.find('.//cfdi:Complemento/cfdi:TimbreFiscalDigital', ns)
+        uuid_element = root.find('.//tfd:TimbreFiscalDigital', ns)
+        
         uuid = uuid_element.get('UUID') if uuid_element is not None else None
+        print(uuid)
         resultados = []
         for concepto in conceptos.findall('cfdi:Concepto', ns):
             descripcion = concepto.get('Descripcion')
