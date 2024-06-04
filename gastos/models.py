@@ -168,6 +168,7 @@ class Factura(models.Model):
     fecha_subida= models.DateTimeField(null=True, blank=True)
     hecho = models.BooleanField(default=False)
     monto = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True)
+    es_repetida = models.BooleanField(default=False)
     # Puedes agregar más campos si es necesario, como fecha, descripción, etc.
 
     @property   
@@ -202,6 +203,8 @@ class Factura(models.Model):
         receptor = root.find('cfdi:Receptor', ns)
         impuestos = root.find('cfdi:Impuestos', ns)
         conceptos = root.find('cfdi:Conceptos', ns)
+        uuid_element = root.find('.//cfdi:Complemento/cfdi:TimbreFiscalDigital', ns)
+        uuid = uuid_element.get('UUID') if uuid_element is not None else None
         resultados = []
         for concepto in conceptos.findall('cfdi:Concepto', ns):
             descripcion = concepto.get('Descripcion')
@@ -217,9 +220,12 @@ class Factura(models.Model):
         total = root.get('Total')
         subtotal = root.get('Subtotal')
         impuestos = root.get('TotalImpuestosTrasladados')
+        # Extraer año de la fecha del comprobante
+        fecha = root.get('Fecha')
+        año = fecha[:4] if fecha else None
 
 
-        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}
+        return {'rfc': rfc,'nombre': nombre,'regimen_fiscal': regimen_fiscal,'total': total,'resultados': resultados,'uuid': uuid,'año': año}
 
 
 class Entrada_Gasto_Ajuste(models.Model):

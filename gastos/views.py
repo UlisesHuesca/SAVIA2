@@ -226,6 +226,29 @@ def eliminar_factura_gasto(request, pk):
 
     return redirect('matriz-facturas-gasto', pk= gasto.id)
 
+def extraer_uuid_y_año(archivo_xml):
+    try:
+        tree = ET.parse(archivo_xml)
+        root = tree.getroot()
+        ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}  # Ajustar el namespace según sea necesario
+        uuid_element = root.find('.//cfdi:Complemento/cfdi:TimbreFiscalDigital', ns)
+        uuid = uuid_element.get('UUID') if uuid_element is not None else None
+        fecha = root.get('Fecha')
+        año = fecha[:4] if fecha else None
+        return uuid, año
+    except ET.ParseError as e:
+        print(f"Error al parsear el archivo XML: {e}")
+        return None, None
+    
+def verificar_uuid_unico(uuid, año):
+    facturas = Factura.objects.all()
+    for factura in facturas:
+        uuid_existente, año_existente = extraer_uuid_y_año(factura.archivo_xml)
+        if uuid == uuid_existente and año == año_existente:
+            return False
+    return True
+
+
 def factura_nueva_gasto(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -255,10 +278,25 @@ def factura_nueva_gasto(request, pk):
                     if archivo_xml:
                         # Procesar el archivo XML para eliminar caracteres inválidos
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                        # Extraer UUID y año del archivo XML
+                        #uuid, año = extraer_uuid_y_año(archivo_procesado)
+                        
+                        #if uuid and año:
+                            # Verificar si el UUID ya existe en las facturas del mismo año
+                        #    if verificar_uuid_unico(uuid, año):
+                        #        factura.es_repetida = False
+                        #    else:
+                        #        factura.es_repetida = True
+                            # Guardar el archivo procesado y la información adicional en el objeto factura
+                        #    factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                            #factura.save()
+                        #else:
+                        #    messages.error(request, 'Error al extraer UUID y año del archivo XML.')
+                        #    continue
                         # Guardar el archivo procesado de nuevo en el objeto factura
                         factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
                     factura.save()
-                messages.success(request,'Las factura se registró de manera exitosa')
+                messages.success(request,'Las facturas se registraron de manera exitosa')
             else:
                 messages.error(request,'No se pudo subir tu documento')
 
