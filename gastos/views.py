@@ -7,6 +7,7 @@ from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.conf import settings
 
+import logging
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm
 from .filters import Solicitud_Gasto_Filter
@@ -45,6 +46,8 @@ import io
 import datetime as dt
 import pytz
 from user.decorators import perfil_seleccionado_required
+
+logger = logging.getLogger(__name__)
 
 # Create your views here.
 @perfil_seleccionado_required
@@ -665,6 +668,7 @@ def matriz_facturas_gasto(request, pk):
     facturas = Factura.objects.filter(solicitud_gasto = gasto, hecho=True)
     pagos = Pago.objects.filter(gasto = gasto)
     form =  Facturas_Gastos_Form(instance=gasto)
+    #next_url = request.GET.get('next','matriz-pagos')
     #factura_form = FacturaForm()
     
     if request.method == 'POST':
@@ -673,9 +677,13 @@ def matriz_facturas_gasto(request, pk):
             if form.is_valid():
                 form.save()
                 messages.success(request,'Haz cambiado el status de facturas completas')
-                return redirect('matriz-pagos')
+                referer = request.META.get('HTTP_REFERER', 'matriz-pagos')
+                logger.debug(f'Redirigiendo a: {referer}')
+                return redirect(referer)
+                #return redirect('matriz-pagos')
             else:
                 messages.error(request,'No está validando')
+        #return redirect(request.META.get('HTTP_REFERER', 'matriz-pagos'))
         #if "btn_factura" in request.POST:
         #    factura_form = FacturaForm(request.POST, request.FILES)
         #    if factura_form.is_valid():
@@ -694,6 +702,7 @@ def matriz_facturas_gasto(request, pk):
         'gasto':gasto,
         'facturas':facturas,
         'usuario':usuario,
+        #'next_url':next_url,
         }
 
     return render(request, 'gasto/matriz_factura_gasto.html', context)
