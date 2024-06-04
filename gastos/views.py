@@ -670,30 +670,19 @@ def matriz_facturas_gasto(request, pk):
     form =  Facturas_Gastos_Form(instance=gasto)
     #next_url = request.GET.get('next','matriz-pagos')
     #factura_form = FacturaForm()
-    
+    next_url = request.GET.get('next', 'matriz-pagos') 
+    #print(next_url)
+
     if request.method == 'POST':
         form = Facturas_Gastos_Form(request.POST, instance=gasto)
         if "btn_factura_completa" in request.POST:
             if form.is_valid():
                 form.save()
-                messages.success(request,'Haz cambiado el status de facturas completas')
-                referer = request.META.get('HTTP_REFERER', 'matriz-pagos')
-                logger.debug(f'Redirigiendo a: {referer}')
-                return redirect(referer)
-                #return redirect('matriz-pagos')
+                #messages.success(request,'Haz cambiado el status de facturas completas')
+                return redirect(next_url) 
             else:
                 messages.error(request,'No está validando')
-        #return redirect(request.META.get('HTTP_REFERER', 'matriz-pagos'))
-        #if "btn_factura" in request.POST:
-        #    factura_form = FacturaForm(request.POST, request.FILES)
-        #    if factura_form.is_valid():
-        #        factura = factura_form.save(commit=False)
-        #        factura.solicitud_gasto = gasto  # Asume que ya tienes una instancia de Solicitud_Gasto en 'gasto'
-        #        factura.fecha_subida = datetime.now()
-        #        factura.save()
-        #        next_url = request.GET.get('next', 'matriz-pagos')
-        #        messages.success(request, 'Factura agregada correctamente.')
-        #        return redirect(next_url)
+    
 
     context={
         'form':form,

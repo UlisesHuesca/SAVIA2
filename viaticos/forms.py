@@ -12,7 +12,7 @@ class Puntos_Intermedios_Form(forms.ModelForm):
 class Solicitud_ViaticoForm(forms.ModelForm):
     class Meta:
         model = Solicitud_Viatico
-        fields = ['proyecto','subproyecto','superintendente','fecha_partida','fecha_retorno','colaborador','lugar_partida','lugar_comision','hospedaje','transporte','comentario_general','comentario_jefe_inmediato']
+        fields = ['proyecto','subproyecto','superintendente','motivo','fecha_partida','fecha_retorno','colaborador','lugar_partida','lugar_comision','hospedaje','transporte','comentario_general','comentario_jefe_inmediato']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
