@@ -1014,8 +1014,8 @@ $(document).ready(function(){
             processResults: function (data) {
                 return {
                     results: $.map(data, function(item){
-                        var moneda = item.moneda || 'PESOS';
-                        var text = item.nombre__razon_social + '|' +
+                        var moneda = item.moneda__nombre || 'PESOS';
+                        var text = item.nombre__razon_social + ' | ' + moneda
                         return {
                             id: item.id,
                             text: item.nombre__razon_social, 
@@ -1024,7 +1024,7 @@ $(document).ready(function(){
                             domicilio: item.domicilio,
                             financiamiento: item.financiamiento,
                             dias_credito: item.dias_credito,
-                            moneda: item.moneda
+                            moneda: item.moneda__nombre
                         };
                     })
 
