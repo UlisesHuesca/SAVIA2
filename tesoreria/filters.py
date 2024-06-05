@@ -31,14 +31,14 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     proyecto = CharFilter(method ='my_proyecto', label="Search")
     tipo = ChoiceFilter(choices=TIPO_CHOICES, method='filter_by_tipo', label='Tipo') # Changed filter
     facturas_completas = BooleanFilter(method='filter_by_facturas_completas', label='Facturas Completas') # New filter
-    #folio = CharFilter(field_name='folio', lookup_expr='icontains')
+    tesorero = CharFilter(method='tesorero_nombre', lookup_expr='icontains')
     #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
     start_date = DateFilter(field_name ='pagado_date', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_date', lookup_expr='lte')
 
     class Meta:
         model = Pago
-        fields = ['oc','pagado_date']
+        fields = ['oc','pagado_date','tesorero']
 
     def my_filter(self, queryset, name, value):
         return queryset.filter(Q(oc__folio__icontains = value) | Q(gasto__folio__icontains = value)| Q(viatico__folio__icontains = value))
@@ -57,3 +57,6 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     
     def filter_by_facturas_completas(self, queryset, name, value):  # New method
         return queryset.filter(Q(oc__facturas_completas=value) | Q(gasto__facturas_completas=value) | Q(viatico__facturas_completas=value))
+    
+    def tesorero_nombre(self, queryset, name, value):
+        return queryset.filter(Q(tesorero__staff__staff__first_name__icontains = value) | Q(tesorero__staff__staff__last_name__icontains = value))

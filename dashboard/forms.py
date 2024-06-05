@@ -44,7 +44,7 @@ class PrecioRef_Form(forms.ModelForm):
 class ProveedoresForm(forms.ModelForm):
     class Meta:
         model = Proveedor
-        fields = ['razon_social','rfc','nombre_comercial','familia']
+        fields = ['razon_social','rfc','nombre_comercial','familia','extranjero']
 
 class DireccionComparativoForm(forms.ModelForm):
    
@@ -55,7 +55,7 @@ class DireccionComparativoForm(forms.ModelForm):
 class ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','clabe','cuenta','financiamiento','dias_credito','estatus']
+        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

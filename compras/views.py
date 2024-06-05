@@ -1134,9 +1134,9 @@ def autorizar_oc1(request, pk):
             compra = form.save(commit = False)
             compra.autorizado1 = True
             compra.oc_autorizada_por = usuario
-            compra.autorizado_date1 = datetime.now()
+            compra.autorizado_at = datetime.now()
             #compra.autorizado_hora1 = datetime.now().time()
-            if usuario.tipo.nombre == "Subdirector":
+            if usuario.tipo.subdirector == True:
                 compra = form.save(commit = False)
                 compra.autorizado2 = True
                 compra.oc_autorizada_por2 = usuario
@@ -1626,7 +1626,7 @@ def carga_proveedor(request):
          Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO"),
          distrito = usuario.distritos, 
          nombre__razon_social__icontains = term
-    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito')
+    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito','moneda')
     data = list(proveedores)
     #print(proveedores)
     return JsonResponse(data, safe=False)
@@ -2071,9 +2071,9 @@ def generar_pdf(compra):
    
 
     if compra.moneda.nombre == "PESOS":
-        c.drawString(80,140, num2words(compra.costo_oc, lang='es', to='currency', currency='MXN'))
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN'))
     if compra.moneda.nombre == "DOLARES":
-        c.drawString(80,140, num2words(compra.costo_oc, lang='es', to='currency',currency='USD'))
+        c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
 
     c.setFillColor(black)
     width, height = letter

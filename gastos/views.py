@@ -300,24 +300,24 @@ def factura_nueva_gasto(request, pk):
                         # Procesar el archivo XML para eliminar caracteres inválidos
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                         # Extraer UUID y año del archivo XML
-                        uuid, ano = extraer_uuid_y_año(archivo_procesado)
+                        #uuid, ano = extraer_uuid_y_año(archivo_procesado)
                         #print(uuid, año)
-                        if uuid and ano:
+                        #if uuid and ano:
                             # Verificar si el UUID ya existe en las facturas del mismo año
-                            if verificar_uuid_unico(uuid, ano):
-                                factura.es_repetida = False
-                                print('Entra al bucle de repetido = False')
-                            else:
-                                factura.es_repetida = True
-                                print('Entra al bucle de repetido = True')
+                            #if verificar_uuid_unico(uuid, ano):
+                            #    factura.es_repetida = False
+                            #    print('Entra al bucle de repetido = False')
+                            #else:
+                                #factura.es_repetida = True
+                                #print('Entra al bucle de repetido = True')
                             # Guardar el archivo procesado y la información adicional en el objeto factura
-                            factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                            #factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
                             #factura.save()
-                        else:
-                            messages.error(request, 'Error al extraer UUID y año del archivo XML.')
-                            continue
+                        #else:
+                            #messages.error(request, 'Error al extraer UUID y año del archivo XML.')
+                            #continue
                         # Guardar el archivo procesado de nuevo en el objeto factura
-                        #factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                        factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
                     factura.save()
                 messages.success(request,'Las facturas se registraron de manera exitosa')
             else:

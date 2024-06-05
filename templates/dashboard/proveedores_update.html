@@ -39,27 +39,50 @@
 <div class="container">
     <div class="row mt-5">
         <div class="col-md-6 offset-md-3">
-            <div class="border bg-white p-3">
-                <h3>Agregar Artículo</h3>
-                <hr>
+            <div class="card">
+                <div class="card-header">
+                <h3>Editar Proveedor</h3>
+                </div>
+                <div class="card-body">
                 <form method="POST">
                     {% csrf_token %}
-                    <label for="form.nombre" class="col-auto col-form-label my-1"><strong>Razon Social:</strong></label>
                     <div class="col-12">
-                        {{ form.razon_social|add_class:"form-control"}}
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón Social"}}
+                            <label for="id_lugar_partida">Razón Social*</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="form.descripcion" class="col-auto col-form-label my-1"><strong>RFC:</strong></label>
                     <div class="col-12">
-                        {{ form.rfc|add_class:"form-control"}}
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC"}}
+                            <label for="id_lugar_partida">RFC*</label>
+                            </div>
+                        </div>
                     </div>
-                    <label for="form.descripcion" class="col-auto col-form-label my-1"><strong>Nombre Comercial:</strong></label>
                     <div class="col-12">
-                        {{ form.nombre_comercial|add_class:"form-control"}}
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.nombre_comercial|add_class:"form-control"|append_attr:"placeholder=Nombre Comercial"}}
+                            <label for="id_lugar_partida">Nombre Comercial*</label>
+                            </div>
+                        </div>
                     </div>
-                    <hr>
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                        <label for="form.logistica" class="form-check-label"><strong>Extranjero</strong></label>
+                            {{form.extranjero|add_class:"form-check-input"}}
+                        </div>
+                    </div>
                     <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
                     <input class="btn btn-outline-info" type='submit' value="Actualizar">
                 </form>
+                </div>
             </div>
         </div>
 

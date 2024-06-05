@@ -23,6 +23,7 @@ class Proveedor(models.Model):
     rfc = models.CharField(max_length=13, null=True, unique=True)
     creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     completo = models.BooleanField(default=False)
+    extranjero = models.BooleanField(default=False)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
@@ -41,6 +42,12 @@ class Proveedor_Batch(models.Model):
 
 class Estado(models.Model):
     nombre = models.CharField(max_length=30, null=True)
+
+    def __str__(self):
+        return f'{self.nombre}'
+
+class Moneda(models.Model):
+    nombre = models.CharField(max_length=20)
 
     def __str__(self):
         return f'{self.nombre}'
@@ -73,6 +80,10 @@ class Proveedor_direcciones(models.Model):
     actualizado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Des_proveedores' )
     modificado_fecha = models.DateField(null=True)
     enviado_fecha = models.DateField(null=True)
+    servicio = models.BooleanField(default=False)
+    producto = models.BooleanField(default=False)
+    arrendamiento = models.BooleanField(default=False)
+    moneda = models.ForeignKey(Moneda, on_delete = models.CASCADE, null=True)
 
     def __str__(self):
         return f'{self.nombre}'
@@ -99,11 +110,7 @@ class Formas_pago(models.Model):
     codigo = models.PositiveSmallIntegerField(null=True)
     nombre = models.CharField(max_length=30)
 
-class Moneda(models.Model):
-    nombre = models.CharField(max_length=20)
 
-    def __str__(self):
-        return f'{self.nombre}'
     
 class Comparativo(models.Model):
     nombre = models.CharField(max_length=100, null=True)
