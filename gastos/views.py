@@ -282,44 +282,36 @@ def factura_nueva_gasto(request, pk):
 
     if request.method == 'POST':
         if 'btn_registrar' in request.POST:
-            form = UploadFileForm(request.POST, request.FILES)
+            form = UploadFileForm(request.POST, request.FILES or None)
             if form.is_valid():
                 archivos_pdf = request.FILES.getlist('archivo_pdf')
                 archivos_xml = request.FILES.getlist('archivo_xml')
-                #print(archivos_pdf)
-                #print(archivos_xml)
-                for archivo_pdf, archivo_xml in zip(archivos_pdf, archivos_xml):
+                if not archivos_pdf and not archivos_xml:
+                    messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
+                    return HttpResponse(status=204)
+                
+                # Iterar sobre el número máximo de archivos en cualquiera de las listas
+                max_len = max(len(archivos_pdf), len(archivos_xml))
+
+                for i in range(max_len):
+                    archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
+                    archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
+
                     factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
-                    factura.archivo_pdf = archivo_pdf
+
+                    if archivo_pdf:
+                        factura.archivo_pdf = archivo_pdf
                     factura.hecho = True
                     factura.fecha_subida = datetime.now()
                     factura.subido_por = usuario
-                    #archivo_xml = request.FILES.get('archivo_xml')
-                    #print(archivo_xml)
+
                     if archivo_xml:
-                        # Procesar el archivo XML para eliminar caracteres inválidos
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        # Extraer UUID y año del archivo XML
-                        #uuid, ano = extraer_uuid_y_año(archivo_procesado)
-                        #print(uuid, año)
-                        #if uuid and ano:
-                            # Verificar si el UUID ya existe en las facturas del mismo año
-                            #if verificar_uuid_unico(uuid, ano):
-                            #    factura.es_repetida = False
-                            #    print('Entra al bucle de repetido = False')
-                            #else:
-                                #factura.es_repetida = True
-                                #print('Entra al bucle de repetido = True')
-                            # Guardar el archivo procesado y la información adicional en el objeto factura
-                            #factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                            #factura.save()
-                        #else:
-                            #messages.error(request, 'Error al extraer UUID y año del archivo XML.')
-                            #continue
-                        # Guardar el archivo procesado de nuevo en el objeto factura
                         factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+
                     factura.save()
-                messages.success(request,'Las facturas se registraron de manera exitosa')
+
+                messages.success(request, 'Las facturas se registraron de manera exitosa')
             else:
                 messages.error(request,'No se pudo subir tu documento')
 
