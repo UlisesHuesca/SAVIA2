@@ -1628,7 +1628,7 @@ def carga_proveedor(request):
          nombre__razon_social__icontains = term
     ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito','moneda')
     data = list(proveedores)
-    #print(proveedores)
+    print(proveedores)
     return JsonResponse(data, safe=False)
 
 def carga_proveedor_comparativo(request):

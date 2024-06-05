@@ -1015,10 +1015,10 @@ $(document).ready(function(){
                 return {
                     results: $.map(data, function(item){
                         var moneda = item.moneda || 'PESOS';
-                        var text = item.nombre__razon_social + '|' + item.moneda
+                        var text = item.nombre__razon_social + ' | ' + moneda
                         return {
                             id: item.id,
-                            text: item.nombre__razon_social, 
+                            text: text, 
                             distrito: item.distrito__nombre,
                             status: item.estatus__nombre,
                             domicilio: item.domicilio,
