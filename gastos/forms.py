@@ -128,5 +128,5 @@ class FacturaForm(forms.ModelForm):
         fields =['archivo_pdf','archivo_xml','monto']
 
 class UploadFileForm(forms.Form):
-    archivo_pdf = forms.FileField() 
-    archivo_xml = forms.FileField() 
+    archivo_pdf = forms.FileField(required=False) 
+    archivo_xml = forms.FileField(required=False) 
