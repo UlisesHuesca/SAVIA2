@@ -106,28 +106,12 @@
             <div class="card-body">  
                 <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                   
-                        <div id="subir_xml" class="row">
-                            <div class="input-group mb-3" style="height:60px" >
-                                    {{factura_form.archivo_pdf|add_class:"form-control"}}
-                                <label class="input-group-text" for="id_archivo_pdf" style="color:#980f0f"><i class="fa-solid fa-cloud-arrow-up"></i>PDF</label>
-                                
-                            </div>
-                        </div>
-                        <div id="subir_xml" class="row">
-                            <div class="input-group mb-3" style="height:60px" >
-                                {{factura_form.archivo_xml|add_class:"form-control"}}
-                                <label class="input-group-text" for="id_archivo_xml"><i class="fa-solid fa-cloud-arrow-up"></i>XML</label>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="input-group mb-3">
-                                <label class="input-group-text" ><i class="fa-solid fa-dollar-sign"></i></label>
-                                {{factura_form.monto|add_class:"form-control"}}
-                            </div>
-                        </div>
+                        <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
+                        <input type="file" name="archivo_pdf" class="form-control" multiple>
+                        <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
+                        <input type="file" name="archivo_xml" class="form-control" multiple>   
                         <div class="container-fluid text-end">
-                            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Factura</button>
+                            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Facturas</button>
                         </div>
                 </form>
                 <div class ="table-responsive-sm">
