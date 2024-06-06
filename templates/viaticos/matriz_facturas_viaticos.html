@@ -120,7 +120,7 @@
             <tbody>
             <tr>
                 {% for factura in facturas  %}
-                    <td data-clasificacion="{{ factura.emisor.clasificacion_general }}">
+                    <td data-clasificacion="{% if factura.factura_xml %}{{ factura.emisor.clasificacion_general }}{% endif %}">
                         {% if factura.factura_xml %}
                         <strong>{{ factura.emisor.clasificacion_general }}</strong>
                         {% endif %}

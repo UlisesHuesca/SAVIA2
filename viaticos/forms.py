@@ -64,5 +64,5 @@ class Viaticos_Factura_Form(forms.ModelForm):
         fields = ['factura_pdf','factura_xml','comentario']
 
 class UploadFileForm(forms.Form):
-    factura_pdf = forms.FileField() 
-    factura_xml = forms.FileField() 
+    factura_pdf = forms.FileField(required=False)
+    factura_xml = forms.FileField(required=False)

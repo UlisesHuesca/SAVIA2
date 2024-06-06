@@ -635,7 +635,7 @@ def factura_nueva_viatico(request, pk):
 
     if request.method == 'POST':
         if 'btn_registrar' in request.POST:
-            form = UploadFileForm(request.POST, request.FILES)
+            form = UploadFileForm(request.POST, request.FILES or None)
             if form.is_valid():
                 archivos_pdf = request.FILES.getlist('factura_pdf')
                 archivos_xml = request.FILES.getlist('factura_xml')
@@ -659,7 +659,7 @@ def factura_nueva_viatico(request, pk):
 
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                        factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
 
                     factura.save()
 
