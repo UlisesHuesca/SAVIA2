@@ -119,7 +119,7 @@ def crear_gasto(request):
     facturas = Factura.objects.filter(solicitud_gasto = gasto)
     form_product = Articulo_GastoForm()
     form = Solicitud_GastoForm()
-    factura_form = FacturaForm()
+    factura_form = UploadFileForm()
 
     productos_para_select2 = [
         {
@@ -158,24 +158,47 @@ def crear_gasto(request):
                 messages.success(request, 'Haz agregado un artículo correctamente')
                 return redirect('crear-gasto')
         if "btn_factura" in request.POST:
-            factura_form = FacturaForm(request.POST, request.FILES)
+            factura_form = UploadFileForm(request.POST, request.FILES or None)
             if factura_form.is_valid():
-                factura = factura_form.save(commit=False)
-                factura.solicitud_gasto = gasto  # Asume que ya tienes una instancia de Solicitud_Gasto en 'gasto'
-                factura.fecha_subida = datetime.now()
-                factura.hecho = True
-                archivo_xml = request.FILES.get('archivo_xml')
-                if archivo_xml:
-                    # Procesar el archivo XML para eliminar caracteres inválidos
-                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                    # Guardar el archivo procesado de nuevo en el objeto factura
-                    factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                factura.save()
-                messages.success(request, 'Factura agregada correctamente.')
+                archivos_pdf = request.FILES.getlist('archivo_pdf')
+                archivos_xml = request.FILES.getlist('archivo_xml')
+                if not archivos_pdf and not archivos_xml:
+                    messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
+                    return HttpResponse(status=204)
+
+                # Iterar sobre el número máximo de archivos en cualquiera de las listas
+                max_len = max(len(archivos_pdf), len(archivos_xml))
+
+                for i in range(max_len):
+                    archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
+                    archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
+
+                    factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
+                    
+                    if archivo_pdf:
+                        factura.archivo_pdf = archivo_pdf
+                    factura.hecho = True
+                    factura.fecha_subida = datetime.now()
+                    factura.subido_por = usuario
+
+                    if archivo_xml:
+                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+                        factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                    factura.save()
+                    messages.success(request, 'Las facturas se registraron de manera exitosa')
                 return redirect('crear-gasto')
         else:
             messages.error(request,'No se pudo subir tu documento, verificar cantidad o precio')
-            
+        
+                
+               
+
+              
+
+
+               
+          
+   
 
     #total = sum([factura.emisor['total'] for factura in facturas if factura.emisor and 'total' in factura.emisor and factura.emisor['total']])
 
