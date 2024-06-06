@@ -639,22 +639,31 @@ def factura_nueva_viatico(request, pk):
             if form.is_valid():
                 archivos_pdf = request.FILES.getlist('factura_pdf')
                 archivos_xml = request.FILES.getlist('factura_xml')
-           
-                for archivo_pdf, archivo_xml in zip(archivos_pdf, archivos_xml):
+                if not archivos_pdf and not archivos_xml:
+                    messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
+                    return HttpResponse(status=204)
+                
+                max_len = max(len(archivos_pdf), len(archivos_xml))
+                
+                
+                for i in range(max_len):
+                    archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
+                    archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
+
                     factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico=viatico, hecho=False)
-                    factura.factura_pdf = archivo_pdf
+                    if archivo_pdf:
+                        factura.factura_pdf = archivo_pdf
                     factura.hecho = True
                     factura.fecha_subida = datetime.now()
                     factura.subido_por = usuario
-                    #archivo_xml = request.FILES.get('archivo_xml')
-                    #print(archivo_xml)
+
                     if archivo_xml:
-                        # Procesar el archivo XML para eliminar caracteres inválidos
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        # Guardar el archivo procesado de nuevo en el objeto factura
-                        factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                        factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+
                     factura.save()
-                messages.success(request,'La factura se registró de manera exitosa')
+
+                messages.success(request, 'Las facturas se registraron de manera exitosa')             
             else:
                 messages.error(request,'No se pudo subir tu documento')
 

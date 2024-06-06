@@ -23,7 +23,7 @@ class CustomUser(models.Model):
     image = models.ImageField(blank=True, upload_to='profile_images',null=True)
     phone = models.CharField(max_length=20, null=True)
     address = models.CharField(max_length=200, null=True, blank=True)
-    nivel = models.PositiveSmallIntegerField(default=4)
+    nivel =  models.DecimalField(max_digits=10, decimal_places=2, null=True)
     empresa = models.ForeignKey(Empresa, on_delete= models.CASCADE, null=True)
     puesto = models.CharField(max_length=40, null=True, blank=True)
 

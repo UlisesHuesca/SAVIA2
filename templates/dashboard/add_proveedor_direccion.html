@@ -13,7 +13,7 @@
 <h6>&nbsp;</h6>
 
     <div class="col">
-        <div class="card col-md-6 offset-md-3">
+        <div class="card col-md-8 offset-md-2">
             <div class="card card-header">
                 <h3>{% if direccion %} Editar Dirección {% else %} Agregar Dirección {% endif %}</h3>
             </div>
@@ -123,7 +123,7 @@
                     </div>
                   
                    
-                    <div class="row">
+                <div class="row">
                     <div class="col-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
@@ -142,6 +142,8 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="row">
                     <div class="col-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
@@ -151,6 +153,35 @@
                             </div>
                         </div>
                     </div>
+               
+                
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda"}}
+                            <label for="id_lugar_partida">Moneda*</label>
+                            </div>
+                        </div>
+                    </div>  
+                </div>
+                <div class="row ms-3 my-2">
+                                <div class="form-check form-switch col-sm">
+                                <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>
+                                    {{form.producto|add_class:"form-check-input"}}
+                                </div>
+                </div>
+                <div class="row ms-3 my-2">
+                                <div class="form-check form-switch col-sm">
+                                <label for="form.logistica" class="form-check-label"><strong>Servicio</strong></label>
+                                    {{form.servicio|add_class:"form-check-input"}}
+                                </div>
+                </div>
+                <div class="row ms-3 my-2">
+                                <div class="form-check form-switch col-sm">
+                                <label for="form.logistica" class="form-check-label"><strong>Arrendamiento</strong></label>
+                                    {{form.arrendamiento|add_class:"form-check-input"}}
+                                </div>
                 </div>
                     
                     <hr>
