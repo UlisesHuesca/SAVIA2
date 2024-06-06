@@ -213,7 +213,7 @@ def solicitudes_autorizadas_pendientes(request):
     usuario = Profile.objects.get(id = pk_perfil)
     
     if usuario.tipo.almacenista == True:
-        productos= ArticulosparaSurtir.objects.filter(salida=False, surtir=False, articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal").order_by('-articulos__orden__approved_at')
+        productos= ArticulosparaSurtir.objects.filter(salida=False, surtir=False, articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal", articulos__orden__distrito = usuario.distritos).order_by('-articulos__orden__approved_at')
 
     myfilter = ArticulosparaSurtirFilter(request.GET, queryset=productos)
     productos = myfilter.qs

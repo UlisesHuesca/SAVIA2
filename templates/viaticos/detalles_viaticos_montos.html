@@ -21,13 +21,17 @@
                     <tr>
                     <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viatico para:</th>
                     {% if viatico.colaborador %}
-                    <th scope="col">{{viatico.coalaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}</th>
+                    <th scope="col">{{viatico.colaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}</th>
                     {% else%}
                     <th scope="col">{{viatico.staff.staff.staff.first_name}} {{viatico.staff.staff.staff.last_name}}</th>
                     {% endif %}
                     </tr>
                 </thead>
                 <tbody>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-comment"></i> Motivo:</th>
+                        <th scope="col">{% if viatico.motivo %}{{viatico.motivo}}{% else %}NR{% endif %}</th>
+                    </tr>
                 <tr>
                     <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
                     <th scope="col">{{viatico.proyecto.nombre}}</th>

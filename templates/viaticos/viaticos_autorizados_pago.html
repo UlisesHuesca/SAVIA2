@@ -5,18 +5,21 @@
 {% load tt_extras %}
 <html>
 <head>
-{% block title %}Matriz de compras autorizadas{% endblock %}
+{% block title %}Matriz de Viáticos autorizadas{% endblock %}
 </head>
 <body>
 {% block content %}
 <hr>
 <hr>
 <hr>
+<h6>&nbsp;</h6>
 <div class = "row mt-2 bg-white" id="response-div">
         <div class="col-12">
-            <div class="card card-body">
-                <h5>Filtro de Compras Autorizadas</h5>
-                <hr>
+        <div class="card">
+            <div class="card-header">
+                <h5>Filtro de Viáticos Autorizados</h5>
+            </div>
+            <div class="card-body">
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row g-12">
@@ -97,6 +100,7 @@
                 </form>
             </div>
         </div>
+        </div>
     </div>
     <!-- Aquí terminan el encabezado de los filtros -->
 
@@ -144,6 +148,7 @@
                     <th scope="col">Pagado</th>
                     <th scope="col">Acción</th>
                     <th scope="col">Comprobación</th>
+                    <th>Detalle</th>
                     <th>Registro</th>
                 </tr>
             </thead>
@@ -180,6 +185,7 @@
                             </li>
                         </ul>
                     </td>
+                    <td><a id="myBtn" type="button" class="btn btn-outline-info btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a>
                     <td>
                         <ul class="nav nav-pills">
                             <li>

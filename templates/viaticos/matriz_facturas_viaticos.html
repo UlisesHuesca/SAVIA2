@@ -176,6 +176,12 @@
                 <tr>
                     <td></td>
                     <td></td>
+                    <th>Total Alimentos</th>
+                    <td scope="col" id="alimentos"></td>
+                </tr>
+                <tr>
+                    <td></td>
+                    <td></td>
                     <th>Total Peajes</th>
                     <td scope="col" id="peaje"></td>
                 </tr>
@@ -282,6 +288,7 @@ function mostrarTotalPorClasificacion(clasificacion, id) {
 }
 
 // Calcular y mostrar los totales por clasificación
+mostrarTotalPorClasificacion('Alimentos', 'alimentos');
 mostrarTotalPorClasificacion('Gasolina', 'gasolina');
 mostrarTotalPorClasificacion('Peaje', 'peaje');
 mostrarTotalPorClasificacion('Hospedaje', 'hospedaje');
