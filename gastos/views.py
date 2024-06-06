@@ -1062,24 +1062,25 @@ def render_pdf_gasto(request, pk):
     c.drawString(100,caja_proveedor-20, gasto.staff.staff.staff.first_name+' '+ gasto.staff.staff.staff.last_name)
     c.drawString(100,caja_proveedor-40, gasto.staff.distritos.nombre)
     c.drawString(100,caja_proveedor-60, gasto.tipo.tipo)
-    if gasto.staff.staff.banco:
-        c.drawString(100,caja_proveedor-80, gasto.staff.staff.banco.nombre)
-    else:
-        c.drawString(100,caja_proveedor-80, "Sin registro")
+    
     
     if gasto.approved_at:
         c.drawString(100,caja_proveedor-100, gasto.approved_at.strftime("%d/%m/%Y"))
     # Segunda Columna del encabezado
     if gasto.colaborador:
         c.drawString(350,caja_proveedor-60,gasto.colaborador.staff.staff.first_name+' '+ gasto.colaborador.staff.staff.last_name)
-        if gasto.staff.staff.cuenta_bancaria:
+        if gasto.colaborador.staff.cuenta_bancaria:
             c.drawString(350,caja_proveedor-20,str(gasto.colaborador.staff.cuenta_bancaria))
         else:
             c.drawString(350,caja_proveedor-20, "Sin registro")
-        if gasto.staff.staff.clabe:
+        if gasto.colaborador.staff.clabe:
             c.drawString(350,caja_proveedor-40,str(gasto.colaborador.staff.clabe))
         else:
             c.drawString(350,caja_proveedor-40, "Sin registro")
+        if gasto.staff.staff.banco:
+            c.drawString(100,caja_proveedor-80, gasto.colaborador.staff.banco.nombre)
+        else:
+            c.drawString(100,caja_proveedor-80, "Sin registro")
     else:
         c.drawString(350,caja_proveedor-60,gasto.staff.staff.staff.first_name+' '+ gasto.staff.staff.staff.last_name)
         if gasto.staff.staff.cuenta_bancaria:
@@ -1090,6 +1091,10 @@ def render_pdf_gasto(request, pk):
             c.drawString(350,caja_proveedor-40,str(gasto.staff.staff.clabe))
         else:
             c.drawString(350,caja_proveedor-40, "Sin registro")
+        if gasto.staff.staff.banco:
+            c.drawString(100,caja_proveedor-80, gasto.staff.staff.banco.nombre)
+        else:
+            c.drawString(100,caja_proveedor-80, "Sin registro")
 
     #Create blank list
     data =[]

@@ -707,18 +707,22 @@ def matriz_oc(request):
         'myfilter':myfilter,
         #'cumplimiento': cumplimiento,
         }
-    #task_id = request.session.get('task_id')
+    
+    task_id = request.session.get('task_id')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date)
-        #if not task_id:
-            #task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
-            #task_id = task.id
-            #request.session['task_id'] = task_id
-            #context['task_id'] = task_id yes
-            #cantidad = compras.count()
-            #context['cantidad'] = cantidad
-            #messages.success(request, f'Tu reporte se está generando {task_id}')
+        if compras.count() > 2400:
+            if not task_id:
+                task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
+                task_id = task.id
+                request.session['task_id'] = task_id
+                context['task_id'] = task_id
+                cantidad = compras.count()
+                context['cantidad'] = cantidad
+                messages.success(request, f'Tu reporte se está generando {task_id}')
+        else:
+            return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date)
+        
         
 
     
@@ -820,22 +824,25 @@ def matriz_oc_productos(request):
         'myfilter':myfilter,
         }
     
-    #task_id_producto = request.session.get('task_id_producto')
+    task_id_producto = request.session.get('task_id_producto')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
         if usuario.tipo.nombre == "PROVEEDORES":
-            return convert_excel_solicitud_matriz_productos_prov(articulos)
+            if articulos.count() > 3600:
+                if not task_id_producto:
+                    task = convert_excel_solicitud_matriz_productos_task.delay(articulos_data)
+                    task_id_producto = task.id
+                    request.session['task_id_producto'] = task_id_producto
+                    context['task_id_producto'] = task_id_producto
+                    cantidad = articulos.count()
+                    context['cantidad'] = cantidad
+                    messages.success(request, f'Tu reporte se está generando {task_id_producto}')
+            
+            else:
+                return convert_excel_solicitud_matriz_productos_prov(articulos)
         else:
             return convert_excel_solicitud_matriz_productos(articulos)
-        #if not task_id_producto:
-            #task = convert_excel_solicitud_matriz_productos_task.delay(articulos_data)
-            #task_id_producto = task.id
-            #request.session['task_id_producto'] = task_id_producto
-            #context['task_id_producto'] = task_id_producto
-            #cantidad = articulos.count()
-            #context['cantidad'] = cantidad
-            #messages.success(request, f'Tu reporte se está generando {task_id_producto}')
-
+        
     return render(request, 'compras/matriz_oc_productos.html',context)
 
 @perfil_seleccionado_required
@@ -2882,74 +2889,46 @@ def convert_excel_solicitud_matriz_productos(productos):
 
 
 def convert_excel_solicitud_matriz_productos_prov(productos):
-    print(productos.count())
-    #response= HttpResponse(content_type = "application/ms-excel")
-    #response['Content-Disposition'] = 'attachment; filename = Solicitudes_por_producto_' + str(dt.date.today())+'.xlsx'
-    wb = Workbook()
-    ws = wb.create_sheet(title='Compras_Producto')
-    #Comenzar en la fila 1
-    row_num = 1
+    #print(productos.count())
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Compras_Producto")
 
-    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
-    head_style = NamedStyle(name = "head_style")
-    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
-    head_style.fill = PatternFill("solid", fgColor = '00003366')
-    wb.add_named_style(head_style)
-    #Create body style and adding to workbook
-    body_style = NamedStyle(name = "body_style")
-    body_style.font = Font(name ='Calibri', size = 10)
-    wb.add_named_style(body_style)
-    #Create messages style and adding to workbook
-    messages_style = NamedStyle(name = "mensajes_style")
-    messages_style.font = Font(name="Arial Narrow", size = 11)
-    wb.add_named_style(messages_style)
-    #Create date style and adding to workbook
-    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
-    date_style.font = Font(name ='Calibri', size = 10)
-    wb.add_named_style(date_style)
-    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
-    money_style.font = Font(name ='Calibri', size = 10)
-    wb.add_named_style(money_style)
-    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
-    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
-    wb.add_named_style(money_resumen_style)
-    number_style = NamedStyle(name='number_style', number_format='#,##0.00')
-    number_style.font = Font(name ='Calibri', size = 10)
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    number_style = workbook.add_format({'num_format': '#,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name': 'Arial Narrow', 'font_size': 11})
 
-    columns = ['OC','Distrito','Código','Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Dirección','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
 
-    for col_num in range(len(columns)):
-        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
-        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
-        if col_num == 4 or col_num == 7:
-            ws.column_dimensions[get_column_letter(col_num + 1)].width = 25
+    
+
+    # Escribir encabezados
+    for col_num, column in enumerate(columns):
+        worksheet.write(0, col_num, column, head_style)
+        worksheet.set_column(col_num, col_num, 16)
+        if col_num in [4, 7]:
+            worksheet.set_column(col_num, col_num, 25)
         if col_num == 11:
-            ws.column_dimensions[get_column_letter(col_num + 1)].width = 30
+            worksheet.set_column(col_num, col_num, 30)
 
+    columna_max = len(columns) + 2
 
+    worksheet.write(0, columna_max, '{Reporte Creado Automáticamente por SAVIA 2.0. UH}', messages_style)
+    worksheet.write(1, columna_max, '{Software desarrollado por Grupo Vordcab S.A. de C.V.}', messages_style)
+    worksheet.set_column(columna_max, columna_max, 20)
 
-    columna_max = len(columns)+2
-
-    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}')).style = messages_style
-    (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Grupo Vordcab S.A. de C.V.}')).style = messages_style
-    ws.column_dimensions[get_column_letter(columna_max)].width = 20
-    
-    
-    rows = []
+    row_num = 1
     for articulo in productos:
-        #producto_id = producto.get(id)
-        #articulo = ArticuloComprado.objects.get(id=producto_id)
-        # Extract the needed attributes
         compra_id = articulo.oc.id
         moneda_nombre = articulo.oc.moneda.nombre
-        #nombre_completo = articulo.oc.req.orden.staff.staff.staff.first_name + " " + articulo.oc.req.orden.staff.staff.staff.last_name
         proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
-        operacion_nombre = articulo.oc.req.orden.operacion.nombre if articulo.oc.req.orden.operacion else "Desconocido"
         fecha_creacion = articulo.created_at.replace(tzinfo=None)
         pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
-
-        # Calculate total, subtotal, and IVA using attributes from producto
         subtotal_parcial = articulo.subtotal_parcial
         iva_parcial = articulo.iva_parcial
         total = articulo.total
@@ -2959,15 +2938,12 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
             status = 'Autorizado Superintendente' if articulo.oc.autorizado1 else 'Cancelada'
         else:
             status = 'Sin autorizaciones aún'
-        # Handling the currency conversion logic
         pagos = Pago.objects.filter(oc_id=compra_id)
         tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
-
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
 
-        # Constructing the row
         row = [
             articulo.oc.folio,
             articulo.oc.req.orden.distrito.nombre,
@@ -2975,7 +2951,7 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
             articulo.producto.producto.articulos.producto.producto.nombre,
             articulo.cantidad,
             articulo.producto.producto.articulos.producto.producto.unidad.nombre,
-            'SERVICIO' if articulo.producto.producto.articulos.producto.producto.servicio else  'PRODUCTO',
+            'SERVICIO' if articulo.producto.producto.articulos.producto.producto.servicio else 'PRODUCTO',
             articulo.producto.producto.articulos.producto.producto.familia.nombre,
             articulo.producto.producto.articulos.producto.producto.subfamilia.nombre if articulo.producto.producto.articulos.producto.producto.subfamilia else 'Desconocido',
             articulo.precio_unitario,
@@ -2988,44 +2964,33 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
             articulo.oc.proveedor.estatus.nombre,
             articulo.oc.proveedor.domicilio,
             fecha_creacion,
-            #nombre_completo,
             proyecto_nombre,
             subproyecto_nombre,
-            #operacion_nombre,
             articulo.oc.req.orden.distrito.nombre,
             articulo.oc.req.folio,
             articulo.oc.req.orden.folio,
             status,
             pagado_text,
         ]
-        rows.append(row)
 
-    #Ahora, iteramos sobre las filas recopiladas para construir el archivo Excel:
-    for row in rows:
+        for col_num, cell_value in enumerate(row):
+            cell_format = body_style
+            if col_num in [16]:  # Fecha
+                cell_format = date_style
+            elif col_num in [8, 10, 11, 12, 13]:  # Dinero
+                cell_format = money_style
+            elif col_num in [3]:  # Números
+                cell_format = number_style
+            worksheet.write(row_num, col_num, cell_value, cell_format)
         row_num += 1
-        for col_num in range(len(row)):
-            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 5:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 16:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [3]:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
-            if col_num in [8, 10, 11, 12, 13]:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
 
-    file_name='Matriz_compras_por_producto' + str(date.today()) + '.xlsx'
-   
-    sheet = wb['Sheet']
-    wb.remove(sheet)
-    output = io.BytesIO()
-    wb.save(output)  # Guardar el libro de trabajo en el objeto BytesIO
-    
-    # Configurar la respuesta para descargar el archivo
-    response = HttpResponse(output.getvalue(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
-    response['Content-Disposition'] = 'attachment; filename=%s' % file_name
-    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
-    # Cerrar el objeto BytesIO
+    workbook.close()
+
+    output.seek(0)
+    response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    file_name = 'Matriz_compras_por_producto_' + str(date.today()) + '.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)
     output.close()
 
     return response

@@ -216,8 +216,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
 
-
-    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
+    columns = ['OC','Distrito','Código','Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Dirección','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -274,7 +273,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             articulo.producto.producto.articulos.producto.producto.codigo,
             articulo.producto.producto.articulos.producto.producto.nombre,
             articulo.cantidad,
-            articulo.producto.producto.articulos.producto.producto.unidad,
+            articulo.producto.producto.articulos.producto.producto.unidad.nombre,
             'SERVICIO' if articulo.producto.producto.articulos.producto.producto.servicio else  'PRODUCTO',
             articulo.producto.producto.articulos.producto.producto.familia.nombre,
             articulo.producto.producto.articulos.producto.producto.subfamilia.nombre if articulo.producto.producto.articulos.producto.producto.subfamilia else 'Desconocido',
@@ -286,6 +285,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             total,
             articulo.oc.proveedor.nombre.razon_social,
             articulo.oc.proveedor.estatus.nombre,
+            articulo.oc.proveedor.domicilio,
             fecha_creacion,
             #nombre_completo,
             proyecto_nombre,
