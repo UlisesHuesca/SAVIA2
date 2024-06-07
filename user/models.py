@@ -63,9 +63,10 @@ class Tipo_perfil(models.Model):
     almacenista = models.BooleanField(null=True, default=False)
     comprador = models.BooleanField(null=True, default=False)
     oc_superintendencia = models.BooleanField(null=True, default=False)
-    oc_gerencia = models.BooleanField(null=True, default=False)
+    oc_gerencia = models.BooleanField(default=False)
     subdirector = models.BooleanField(default = False)
-    dg = models.BooleanField(null=True, default=False)
+    dg = models.BooleanField(default=False)
+    rh = models.BooleanField(default = False)
     def __str__(self):
         return f'{self.nombre}'
 

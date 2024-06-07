@@ -120,9 +120,9 @@ class Facturas(models.Model):
         total = root.get('Total')
         subtotal = root.get('Subtotal')
         impuestos = root.get('TotalImpuestosTrasladados')
+        fecha = root.get('Fecha')
 
-
-        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}
+        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados, 'fecha':fecha}
 
 class Comprobante_saldo_favor(models.Model):
     oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True)

@@ -417,9 +417,9 @@ def compras_pagos(request, pk):
                             email.content_subtype = "html " # Importante para que se interprete como HTML
                             email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
                             email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
-                            if pagos.count() > 0:
-                                for pago in pagos:
-                                    email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                            #if pagos.count() > 0:
+                                #for pago in pagos:
+                                    #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
                             email.send()
                             for producto in productos:
                                 if producto.producto.producto.articulos.producto.producto.especialista == True:
@@ -628,8 +628,55 @@ def matriz_pagos(request):
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
 
-    if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_pagos(pagos)
+    if request.method == 'POST': 
+        if 'btnReporte' in request.POST:
+            return convert_excel_matriz_pagos(pagos)
+        elif 'btnDescargarFacturas' in request.POST:
+            fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
+            fecha_fin = parse_date(request.POST.get('fecha_fin'))
+            
+            if usuario.distritos.nombre == "MATRIZ":
+                facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin])
+                facturas_compras = Facturas.objects.filter(oc__autorizado_at_2__range=[fecha_inicio, fecha_fin])
+                facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__approved_at2__range=[fecha_inicio, fecha_fin])
+            else:
+                facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin], solicitud_gasto__distrito = usuario.distritos)
+                facturas_compras = Facturas.objects.filter(oc__autorizado_at_2__range=[fecha_inicio, fecha_fin], oc__req__orden__distrito = usuario.distritos)
+                facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__approved_at2__range=[fecha_inicio, fecha_fin], solicitud_viatico__distrito = usuario.distritos)
+
+
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                for factura in facturas_gastos:
+                    folder_name = f'GASTO_{factura.solicitud_gasto.folio}_{factura.solicitud_gasto.distrito.nombre}'
+                    if factura.archivo_pdf:   
+                        file_name = os.path.basename(factura.archivo_pdf.path)
+                        zip_file.write(factura.archivo_pdf.path, os.path.join(folder_name, file_name))
+                    if factura.archivo_xml:
+                        file_name = os.path.basename(factura.archivo_xml.path)
+                        zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
+                for factura in facturas_compras:
+                    folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
+                    if factura.factura_pdf:
+                        #folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
+                        file_name = os.path.basename(factura.factura_pdf.path)
+                        zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
+                    if factura.factura_xml:
+                        file_name = os.path.basename(factura.factura_xml.path)
+                        zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
+                for factura in facturas_viaticos:
+                    folder_name = f'VIATICO_{factura.solicitud_viatico.folio}_{factura.solicitud_viatico.distrito.nombre}'
+                    if factura.factura_pdf:
+                        file_name = os.path.basename(factura.factura_pdf.path)
+                        zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
+                    if factura.factura_xml:
+                        file_name = os.path.basename(factura.factura_xml.path)
+                        zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
+
+            zip_buffer.seek(0)
+            response = HttpResponse(zip_buffer, content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=facturas.zip'
+            return response
 
     context= {
         'pagos_list':pagos_list,
@@ -659,31 +706,8 @@ def control_bancos(request):
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
 
-    if request.method == 'POST':
-        if 'btnReporte' in request.POST:
-            return convert_excel_matriz_pagos(pagos)
-        if 'btnDescargarFacturas' in request.POST:
-            fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
-            fecha_fin = parse_date(request.POST.get('fecha_fin'))
-            
-            facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin])
-            facturas_compras = Facturas.objects.filter(oc__autorizado_at_2__range=[fecha_inicio, fecha_fin])
-            facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__approved_at2__range=[fecha_inicio, fecha_fin])
-
-            zip_buffer = BytesIO()
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                for factura in facturas_gastos:
-                    zip_file.write(factura.archivo.path, os.path.basename(factura.archivo.path))
-                for factura in facturas_compras:
-                    zip_file.write(factura.archivo.path, os.path.basename(factura.archivo.path))
-                for factura in facturas_viaticos:
-                    zip_file.write(factura.archivo.path, os.path.basename(factura.archivo.path))
-
-            zip_buffer.seek(0)
-            response = HttpResponse(zip_buffer, content_type='application/zip')
-            response['Content-Disposition'] = 'attachment; filename=facturas.zip'
-            return response
-
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_matriz_pagos(pagos)
 
     context= {
         'pagos_list':pagos_list,

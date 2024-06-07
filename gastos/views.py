@@ -710,7 +710,7 @@ def pago_gasto(request, pk):
                     ['ulises_huesc@hotmail.com',gasto.staff.staff.staff.email],
                     )
                 email.attach(f'Gasto_folio_{gasto.id}.pdf',archivo_gasto,'application/pdf')
-                email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
+                email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
                 
                 #if pagos.count() > 0:
                     #for item in pagos:

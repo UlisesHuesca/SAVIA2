@@ -235,7 +235,7 @@ class Factura(models.Model):
         año = fecha[:4] if fecha else None
 
 
-        return {'rfc': rfc,'nombre': nombre,'regimen_fiscal': regimen_fiscal,'total': total,'resultados': resultados,'uuid': uuid,'año': año}
+        return {'rfc': rfc,'nombre': nombre,'regimen_fiscal': regimen_fiscal,'total': total,'resultados': resultados,'uuid': uuid,'año': año, 'fecha':fecha}
 
 
 class Entrada_Gasto_Ajuste(models.Model):

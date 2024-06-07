@@ -1,14 +1,17 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db.models import Max, Q
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
-from django.core.mail import EmailMessage
+from django.core.mail import EmailMessage, BadHeaderError
+from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse, FileResponse
+from django.conf import settings
 
 from user.models import Profile
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from dashboard.models import Inventario, Product
+from requisiciones.views import get_image_base64
 from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm
@@ -20,6 +23,7 @@ from user.decorators import perfil_seleccionado_required
 from decimal import Decimal, ROUND_HALF_UP
 import io
 import json
+import os
 
 from datetime import date, datetime
 
@@ -551,17 +555,85 @@ def viaticos_pagos(request, pk):
                     viatico.save()
                 pago.save()
                 pagos = Pago.objects.filter(viatico=viatico, hecho=True)
-                email = EmailMessage(
-                    f'Viatico Autorizado {viatico.id}',
-                    f'Estimado(a) {viatico.staff.staff}:\n\nEstás recibiendo este correo porque ha sido pagado el viatico con folio: {viatico.id}.\n\n\nGrupo Vordcab S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                    'savia@vordcab.com',
-                    ['ulises_huesc@hotmail.com'],[viatico.staff.staff.staff.email],
-                    )
-                if pagos.count() > 0:
-                    for pago in pagos:
-                        email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
-                email.send()
-                messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                static_path = settings.STATIC_ROOT
+                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+        
+                image_base64 = get_image_base64(img_path)
+                logo_v_base64 = get_image_base64(img_path2)
+                # Crear el mensaje HTML
+                html_message = f"""
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body>
+                        <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                        <p>Estimado {viatico.staff.staff.staff.first_name} {viatico.staff.staff.staff.last_name},</p>
+                        <p>Estás recibiendo este correo porque el viático solicitado: {viatico.folio} ha sido pagado,</p>
+                        <p>por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
+                        <p>Buen viaje!</p>
+                        <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                        <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                    </body>
+                </html>
+                """
+                archivo_viatico = attach_viatico_pdf(request, viatico.id)
+                try:
+                    email = EmailMessage(
+                        f'Viatico Autorizado {viatico.folio}',
+                        body=html_message,
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to = ['ulises_huesc@hotmail.com',viatico.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                    #if pagos.count() > 0:
+                    #for pago in pagos:
+                        #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                    
+                    email.content_subtype = "html " # Importante para que se interprete como HTML
+                    email.attach(f'folio:{viatico.folio}.pdf',archivo_viatico,'application/pdf')
+                    email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
+                    email.send()
+                    messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                except (BadHeaderError, SMTPException) as e:
+                    error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                    messages.success(request, error_message)
+                #Este código es para enviar correo informativo a cada uno de los RH's del distrito del usuario
+                personal_rh = colaborador.filter(distritos = viatico.staff.distritos, tipo__rh =True)
+                for persona in personal_rh:
+                    html_message = f"""
+                    <html>
+                        <head>
+                            <meta charset="UTF-8">
+                        </head>
+                        <body>
+                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                            <p>Estimado {persona.staff.staff.first_name} {persona.staff.staff.last_name},</p>
+                            <p>Para notificarte que el viático: {viatico.folio} ha sido pagado y se considere para los efectos y fines que para el departamento de RH sean aplicables</p>
+                            <p>Tesorero que paga:{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
+                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                        </body>
+                    </html>
+                    """
+                    try:
+                        email = EmailMessage(
+                            f'Viatico Autorizado {viatico.folio} |Correo informativo para RH',
+                            body=html_message,
+                            from_email = settings.DEFAULT_FROM_EMAIL,
+                            to = ['ulises_huesc@hotmail.com',persona.staff.staff.email],
+                            headers={'Content-Type': 'text/html'}
+                            )
+                        #if pagos.count() > 0:
+                        #for pago in pagos:
+                            #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.attach(f'folio:{viatico.folio}.pdf',archivo_viatico,'application/pdf')
+                        email.send()    
+                    except (BadHeaderError, SMTPException) as e:
+                        error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                        messages.success(request, error_message)
                 return redirect('viaticos-autorizados-pago')
         else:
             form = Pago_Viatico_Form()
@@ -740,7 +812,20 @@ def factura_viatico_edicion(request, pk):
 
     return render(request, 'viaticos/factura_viatico_edicion.html', context)
 
+
+
 def render_pdf_viatico(request, pk):
+    viatico = get_object_or_404(Solicitud_Viatico, id=pk)
+    buf = generar_pdf_viatico(viatico.id)
+    return FileResponse(buf, as_attachment=True, filename='V_' + str(viatico.folio) + '.pdf')
+
+def attach_viatico_pdf(request, pk):
+    viatico = get_object_or_404(Solicitud_Viatico, id=pk)
+    buf = generar_pdf_viatico(viatico.id)
+
+    return buf.getvalue()
+
+def generar_pdf_viatico(pk):
     #Configuration of the PDF object
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
@@ -1046,4 +1131,4 @@ def render_pdf_viatico(request, pk):
     c.save()
     buf.seek(0)
 
-    return FileResponse(buf, as_attachment=True, filename='Comprobación_viatico_' + str(viatico.folio) +'.pdf')
+    return buf

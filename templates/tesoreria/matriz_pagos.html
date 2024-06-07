@@ -93,37 +93,74 @@
                         <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
-                <hr>
-                </form>
-                <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
-                            <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel'>
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>
-                        <li>
-                            <div class="form-group">
-                                <label for="fecha_inicio">Fecha de inicio:</label>
-                                <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" required>
-                            </div>
-                            <div class="form-group">
-                                <label for="fecha_fin">Fecha de fin:</label>
-                                <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" required>
-                            </div>
-                            <button type="submit" name="btnDescargarFacturas" class="btn btn-primary">Descargar Facturas</button>
-                        </li>
-                    </ul>
                 </form>
             </div>
         </div>
+</div>
+
+<div class = "row my-4">
+<div class = "col-2">
+    <div class="card">
+        <form method=POST>
+        {% csrf_token %}
+        <div class="card-header">
+            <h6>Reportes</h6>
+        </div>
+        <div class="card-body">
+            <ul class="nav nav-pills">
+                    <li class="nav-item mx-2">
+                        <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                            <i class="fa-solid fa-file-excel fa-2xl"></i>
+                        </button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger">
+                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                        </button>
+                    </li>
+                </ul>
+        </form>
+        </div>
     </div>
+</div>
+<div class = "col-6">
+    <div class = "card">
+    <form method=POST>
+        {% csrf_token %}
+        <div class="card-header">
+            <h6>Facturas | Descarga</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" required>
+                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" required>
+                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-12 m-3">
+                <button type="submit" name="btnDescargarFacturas" class="btn btn-primary "><i class="fa-solid fa-circle-chevron-down"></i></button>
+            </div>
+            </div>
+        </div>        
+    </form>
+    </div>
+</div>
+</div>
+        
+    
     <!-- Aquí terminan el encabezado de los filtros -->
 
 <!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
