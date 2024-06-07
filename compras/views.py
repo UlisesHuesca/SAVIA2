@@ -1782,9 +1782,6 @@ def attach_oc_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
     buf = generar_pdf(compra)
 
-    # Si en algún lugar más de tu código necesitas hacer más cosas antes de retornar buf.getvalue(),
-    # entonces aquí es el lugar para hacerlo. Por ahora, sólo retornaremos el valor.
-
     return buf.getvalue()
 
 

@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.core.paginator import Paginator
 from django.db.models import Sum, Q, Prefetch, Max
@@ -702,18 +702,19 @@ def pago_gasto(request, pk):
                     gasto.save()
                 pago.save()
                 pagos = Pago.objects.filter(gasto=gasto, hecho=True)
-                #archivo_oc = attach_oc_pdf(request, gasto.id)
+                archivo_gasto = attach_gasto_pdf(request, gasto.id)
                 email = EmailMessage(
                     f'Gasto Autorizado {gasto.id}',
                     f'Estimado(a) {gasto.staff.staff.staff.first_name} {gasto.staff.staff.staff.last_name}:\n\nEstás recibiendo este correo porque ha sido pagado el gasto con folio: {gasto.folio}.\n\n\nGrupo Vordcab S.A de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                    'savia@vordtec.com',
+                    'savia@grupovordcab.com',
                     ['ulises_huesc@hotmail.com',gasto.staff.staff.staff.email],
                     )
-                #email.attach(f'OC_folio_{gasto.id}.pdf',archivo_oc,'application/pdf')
+                email.attach(f'Gasto_folio_{gasto.id}.pdf',archivo_gasto,'application/pdf')
                 email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
-                if pagos.count() > 0:
-                    for item in pagos:
-                        email.attach(f'Gasto{gasto.folio}_P{item.id}.pdf',item.comprobante_pago.read(),'application/pdf')
+                
+                #if pagos.count() > 0:
+                    #for item in pagos:
+                    #    email.attach(f'Gasto{gasto.folio}_P{item.id}.pdf',item.comprobante_pago.read(),'application/pdf')
                 email.send()
 
                 messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
@@ -977,7 +978,19 @@ def delete_articulo_entrada(request, pk):
 
     return redirect('gasto-entrada',pk= gasto)
 
-def render_pdf_gasto(request, pk):
+
+def descargar_pdf_gasto(request, pk):
+    gasto = get_object_or_404(Solicitud_Gasto, id=pk)
+    buf = render_pdf_gasto(gasto.id)
+    return FileResponse(buf, as_attachment=True, filename='gasto_' + str(gasto.folio) + '.pdf')
+
+def attach_gasto_pdf(request, pk):
+    gasto = get_object_or_404(Solicitud_Gasto, id=pk)
+    buf = render_pdf_gasto(gasto.id)
+
+    return buf.getvalue()
+
+def render_pdf_gasto(pk):
     #Configuration of the PDF object
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
@@ -1347,7 +1360,7 @@ def render_pdf_gasto(request, pk):
     c.save()
     buf.seek(0)
 
-    return FileResponse(buf, as_attachment=True, filename='Comprobación_Gasto_' + str(gasto.folio) +'.pdf')
+    return buf
 
 
 def convert_excel_matriz_gastos_autorizados(gastos):

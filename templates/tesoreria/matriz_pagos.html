@@ -21,10 +21,6 @@
             <h5>Filtro de Pagos</h5>
             </div>
             <div class="card-body">
-                
-               
-               
-               
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row">
@@ -111,6 +107,17 @@
                             <button type="button" class="btn btn-outline-danger">
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
+                        </li>
+                        <li>
+                            <div class="form-group">
+                                <label for="fecha_inicio">Fecha de inicio:</label>
+                                <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control" required>
+                            </div>
+                            <div class="form-group">
+                                <label for="fecha_fin">Fecha de fin:</label>
+                                <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" required>
+                            </div>
+                            <button type="submit" name="btnDescargarFacturas" class="btn btn-primary">Descargar Facturas</button>
                         </li>
                     </ul>
                 </form>
@@ -230,7 +237,7 @@
                             {% endif %}
                             {% if pago.gasto %}
                             <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-gasto' pago.gasto.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de gasto">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'descargar-pdf-gasto' pago.gasto.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de gasto">
                                     <i class="fa-solid fa-file-pdf"></i></a>
                             </li>
                             {% endif %}
@@ -313,10 +320,10 @@ dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
 });
-var modal = document.getElementById('dialog')
+/*var modal = document.getElementById('dialog')
 modal.on('hidden.bs.modal', function () {
     location.reload();
-});
+});*/
 
 
 </script>

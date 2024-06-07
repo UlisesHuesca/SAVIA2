@@ -24,5 +24,5 @@ urlpatterns = [
     path('gasto/matriz_gasto_entrada/', views.matriz_gasto_entrada, name ='matriz-gasto-entrada'),
     path('gasto/entrada/<int:pk>', views.gasto_entrada, name='gasto-entrada'),
     path('gasto/delete_articulo_entrada/<int:pk>', views.delete_articulo_entrada, name='delete-articulo-entrada'),
-    path('gasto/render_gasto/<int:pk>', views.render_pdf_gasto, name='render-pdf-gasto'),
+    path('gasto/render_gasto/<int:pk>', views.descargar_pdf_gasto, name='descargar-pdf-gasto'),
     ]

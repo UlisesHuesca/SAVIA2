@@ -9,14 +9,15 @@ from django.db.models.functions import Concat
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from django.utils.dateparse import parse_date
 from compras.models import ArticuloComprado, Compra
 from compras.forms import CompraForm
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf #convert_excel_matriz_compras
 from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor
-from gastos.models import Solicitud_Gasto, Articulo_Gasto
-from viaticos.models import Solicitud_Viatico
+from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
+from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form
 from .filters import PagoFilter, Matriz_Pago_Filter
@@ -25,6 +26,7 @@ from gastos.filters import Solicitud_Gasto_Filter
 from user.models import Profile
 from .utils import extraer_texto_de_pdf, encontrar_variables
 import pytz  # Si estás utilizando pytz para manejar zonas horarias
+from io import BytesIO
 
 import re
 
@@ -32,6 +34,7 @@ from datetime import date, datetime
 import decimal
 import os
 import io
+import zipfile
 
 #Excel stuff
 from openpyxl import Workbook
@@ -656,8 +659,31 @@ def control_bancos(request):
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
 
-    if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_pagos(pagos)
+    if request.method == 'POST':
+        if 'btnReporte' in request.POST:
+            return convert_excel_matriz_pagos(pagos)
+        if 'btnDescargarFacturas' in request.POST:
+            fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
+            fecha_fin = parse_date(request.POST.get('fecha_fin'))
+            
+            facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin])
+            facturas_compras = Facturas.objects.filter(oc__autorizado_at_2__range=[fecha_inicio, fecha_fin])
+            facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__approved_at2__range=[fecha_inicio, fecha_fin])
+
+            zip_buffer = BytesIO()
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                for factura in facturas_gastos:
+                    zip_file.write(factura.archivo.path, os.path.basename(factura.archivo.path))
+                for factura in facturas_compras:
+                    zip_file.write(factura.archivo.path, os.path.basename(factura.archivo.path))
+                for factura in facturas_viaticos:
+                    zip_file.write(factura.archivo.path, os.path.basename(factura.archivo.path))
+
+            zip_buffer.seek(0)
+            response = HttpResponse(zip_buffer, content_type='application/zip')
+            response['Content-Disposition'] = 'attachment; filename=facturas.zip'
+            return response
+
 
     context= {
         'pagos_list':pagos_list,
@@ -666,16 +692,6 @@ def control_bancos(request):
         }
 
     return render(request, 'tesoreria/control_bancos.html',context)
-
-
-
-
-
-
-
-
-
-
 
 
 def eliminar_caracteres_invalidos(archivo_xml):
