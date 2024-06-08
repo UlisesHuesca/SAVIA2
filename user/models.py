@@ -94,8 +94,12 @@ class Profile(models.Model):
     almacen = models.ManyToManyField(Almacen, related_name='almacenes')
     tipo = models.ForeignKey(Tipo_perfil, on_delete = models.CASCADE, null=True)
     st_activo = models.BooleanField(default = False)
+    sustituto = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='sustitutos')
+
 
     def __str__(self):
+        if self.sustituto:
+            return f'{self.sustituto.staff.username} en representación de {self.staff.staff.username} | {self.tipo} | {self.distritos.nombre}'
         return f'{self.staff.staff.username}| {self.tipo}| {self.distritos}'
 
     
