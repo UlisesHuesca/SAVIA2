@@ -84,7 +84,7 @@
                 {% for gasto in articulos_gasto %}
                 <tr>
                     <td scope="col">{{gasto.id}}</th>
-                    <td scope="col">{{gasto.gasto.id}}</td>
+                    <td scope="col">{{gasto.gasto.folio}}</td>
                     <td scope="col">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
                     <td scope="col">{{gasto.producto.nombre}}</td>
                     <td scope="col">{{gasto.comentario}}</td>

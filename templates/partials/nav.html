@@ -15,7 +15,7 @@
                     <a class="nav-link text-white" aria-current="page" href="{% url 'dashboard-index' %}">Dashboard</a>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link text-white d-none d-md-table-cell" aria-current="page" href="{% url 'user-profile' %}">{{user.first_name}} {{user.last_name}} | Perfil: {{usuario.distritos.nombre}} - {{usuario.tipo.nombre}}</a>
+                    <a class="nav-link text-white d-none d-md-table-cell" aria-current="page" href="{% url 'user-profile' %}">{% if usuario.sustituto %}{{usuario.sustituto.staff.first_name}} {{usuario.sustituto.staff.last_name}} |RPA: {{usuario.staff.staff.first_name}} {{usuario.staff.staff.last_name }} {% else %} {{user.first_name}} {{user.last_name}} {% endif %}| Perfil: {{usuario.distritos.nombre}} - {{usuario.tipo.nombre}}</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-white d-md-none d-sm-table-cell" aria-current="page" href="{% url 'user-profile' %}">{{user.first_name}}</a>
