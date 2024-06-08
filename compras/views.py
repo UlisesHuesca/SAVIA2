@@ -916,9 +916,15 @@ def upload_xml(request, pk):
 def autorizacion_oc1(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
+    print(usuario)
     
+    if usuario.sustituto:
+        usuario = Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()
+
+
     if usuario.tipo.subdirector == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__superintendente = usuario).order_by('-folio')
+        print(compras)
     elif usuario.tipo.oc_superintendencia == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     else:
