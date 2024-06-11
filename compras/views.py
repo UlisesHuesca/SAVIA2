@@ -934,10 +934,15 @@ def autorizacion_oc1(request):
     compras = myfilter.qs
     form = Compra_ComentarioForm()
 
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
+
     context= {
         'form':form,
         'compras':compras,
         'myfilter':myfilter,
+        'compras_list':compras_list,
         }
 
     return render(request, 'compras/autorizacion_oc1.html',context)
@@ -2048,7 +2053,12 @@ def generar_pdf(compra):
         c.drawRightString(montos_align + 90, 180, '$' + str(costo_impuestos))
         c.drawRightString(montos_align, 180, 'Impuestos:')
         #importe_neto = importe_neto + compra.impuestos
-    if compra.retencion:
+    if compra.impuestos and compra.retencion:
+        subtotal = subtotal + compra.retencion
+        costo_retencion = format(float(compra.retencion), ',.2f')
+        c.drawRightString(montos_align + 90, 170, '$' + str(costo_retencion))
+        c.drawRightString(montos_align, 170, 'Retención:')
+    elif compra.retencion:
         subtotal = subtotal + compra.retencion
         costo_retencion = format(float(compra.retencion), ',.2f')
         c.drawRightString(montos_align + 90, 180, '$' + str(costo_retencion))
@@ -2072,9 +2082,14 @@ def generar_pdf(compra):
         c.drawRightString(montos_align,180,'Costo fletes:')
         c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
         c.drawRightString(montos_align + 90,160,'$ ' + str(total))
-    else:
+    if compra.impuestos and compra.retencion and compra.costo_fletes:
+        c.drawRightString(montos_align,150,'Total:')
+        c.drawRightString(montos_align + 90,150,'$ ' + str(total))
+    elif compra.impuestos and compra.retencion:
+        c.drawRightString(montos_align,160,'Total:')
+        c.drawRightString(montos_align + 90,160,'$ ' + str(total))
+    elif compra.impuestos or compra.retencion or compra.costo_fletes:
         c.drawRightString(montos_align,170,'Total:')
-        
         c.drawRightString(montos_align + 90,170,'$ ' + str(total))
     
     

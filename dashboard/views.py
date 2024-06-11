@@ -450,7 +450,7 @@ def proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
-    proveedores_dir = Proveedor_direcciones.objects.filter(Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO'))
+    proveedores_dir = Proveedor_direcciones.objects.filter(Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO')|Q(estatus__nombre="RECHAZADO")|Q(estatus__nombre='SUSPENDIDO'))
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
     proveedores = Proveedor.objects.filter(id__in=proveedores_ids, completo=True)
 

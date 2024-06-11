@@ -20,7 +20,7 @@ class Handle404Middleware:
 
     def __call__(self, request):
         response = self.get_response(request)
-        if response.status_code == 404:
+        if response.status_code == 404 and not request.path.startswith('/RH/'):
             user = request.user if request.user.is_authenticated else 'Anonymous'
             logger.warning(f'404 Not Found: {request.path} by {user}')
             context = {'request_path': request.path}
