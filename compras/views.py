@@ -1004,6 +1004,8 @@ def cancelar_oc2(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc = pk)
+    form = Compra_ComentarioForm(instance = compra)
+
     costo_fletes = 0
     if compra.costo_fletes == None:
         costo_fletes = 0
@@ -1024,15 +1026,19 @@ def cancelar_oc2(request, pk):
 
 
     if request.method == 'POST':
-        compra.oc_autorizada_por2 = usuario
-        compra.autorizado2 = False
-        compra.autorizado_date2 = date.today()
-        compra.autorizado_hora2 = datetime.now().time()
-        compra.save()
-        messages.error(request,f'Has cancelado la compra con FOLIO: {compra.get_folio}')
-        return redirect('autorizacion-oc2')
-
+        form = Compra_ComentarioForm(request.POST, instance=compra)
+        if form.is_valid():
+            compra = form.save(commit = False)
+            compra.oc_autorizada_por2 = usuario
+            compra.autorizado2 = False
+            compra.autorizado_date2 = date.today()
+            compra.autorizado_hora2 = datetime.now().time()
+            compra.save()
+            messages.success(request,f'Has cancelado la compra con FOLIO: {compra.folio}')
+            return HttpResponse(status=204)
+    
     context = {
+        'form':form,
         'compra':compra,
         'productos': productos,
         'costo_oc':costo_oc,

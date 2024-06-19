@@ -183,6 +183,7 @@
                     <th class="d-none d-md-table-cell">Pagado</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
                     <th scope="col">Acción</th>
+                    <th>Cancelar</th>
                     <th>Layout</th>
                 </tr>
             </thead>
@@ -224,6 +225,9 @@
                             </li>
                             
                         </ul>
+                    </td>
+                    <td>
+                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
                     <td><input type="checkbox" name="compra_id" value="{{ compra.id|unlocalize }}"></td>
                 </tr>
@@ -281,7 +285,7 @@ dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
 });
-;(function(){
+(function(){
     const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
     htmx.on('htmx:beforeSwap',(e)=>{

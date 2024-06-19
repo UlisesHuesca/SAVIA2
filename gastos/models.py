@@ -24,6 +24,7 @@ class Solicitud_Gasto(models.Model):
     #subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True)
     operacion = models.ForeignKey(Operacion, on_delete = models.CASCADE, null=True, blank=True)
     superintendente = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='superintendente')
+    autorizado_por2 = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='gerente')
     complete = models.BooleanField(null=True)
     tipo = models.ForeignKey(Tipo_Gasto, on_delete=models.CASCADE, null=True)
     pagada = models.BooleanField(default=False)

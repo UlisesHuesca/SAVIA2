@@ -134,6 +134,7 @@
                     <th scope="col">Acción</th>
                     <th scope="col">Comprobación</th>
                     <th>PDF</th>
+                    <th>Cancelar</th>
                 </tr>
             </thead>
             <tbody>
@@ -168,7 +169,11 @@
                             
                         </ul>
                     </td>
+                    <td>
+                        <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog"  hx-swap="innerHTML" hx-target="#document" hx-get="{% url 'cancelar-gasto2' gasto.id %}"><i class="fa-solid fa-xmark"></i></a>
+                    </td>
                 </tr>
+
                 {% endfor %}
             </tbody>
         </table>

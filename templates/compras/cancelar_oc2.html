@@ -1,6 +1,7 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
+{% load widget_tweaks %}
 <html>
 <head>
 {% block title %}Cancelación OC{% endblock %}
@@ -81,18 +82,41 @@
                    {% endfor %}
                    </tbody>
                 </table>
-        </div>
-
-        <div class="modal-footer">
-            <form action="{% url 'cancelar-oc2' compra.id %}" method=POST>
+            <form  id="cancelar-form"  action="{% url 'cancelar-oc2' compra.id %}" method=POST>
                 {% csrf_token %}
-                <h6>¿Cancelar la OC: {{compra.folio}}?</h6>
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.comentarios|add_class:"form-control"|append_attr:"placeholder=Comentario"}}
+                        <label for="id_lugar_partida">Comentario</label>
+                        </div>
+                    </div>
                 <button class="btn btn-danger" type="submit">Cancelar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </form>
         </div>
     </div>
-
+    <script>
+        $(document).ready(function() {
+            $('#cancelar-form').on('submit', function(event) {
+                event.preventDefault();  // Evitar el envío del formulario tradicional
+    
+                var url = $(this).attr('action');
+                var formData = $(this).serialize();
+    
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function(result, status, xhr) {
+                        if (xhr.status === 204) {
+                            $('#dialog').modal('hide');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
 {% endblock %}
 
 </body>

@@ -169,12 +169,12 @@
                                 <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'back-oc' compra.id %}">R<i class="fa-solid fa-backward"></i></a>
                             </li>
                             <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
+                                <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                             </li>
                             {% if compra.proveedor.estatus.nombre == 'NUEVO' %}
                                 {% if compra.comparativo_model %}
                                 <li class="nav-item m-1">
-                                    <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'mostrar-comparativo' compra.comparativo_model.id %}">
+                                    <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document"  hx-get="{% url 'mostrar-comparativo' compra.comparativo_model.id %}">
                                         <i class="fa-solid fa-eye"></i>
                                     </a>
                                 </li>
@@ -208,7 +208,23 @@ var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"
 dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
+});
+
+(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    });
+})();
+
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
 })
+
 
 </script>
 {% endblock %}

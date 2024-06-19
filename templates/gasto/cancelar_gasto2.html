@@ -2,16 +2,17 @@
 {% load crispy_forms_tags %}
 {% load humanize %}
 {% load static %}
+{% load widget_tweaks %}
 <html>
 <head>
 {% block title %}Productos{% endblock %}
 </head>
 <body>
 {% block content %}
-<div class="modal-dialog-lg" role="document">
+
     <div class="modal-content">
         <div class="modal-header">
-            <h5 class="modal-title">Cancelar Solicitud: {{gasto.id}}</h5>
+            <h5 class="modal-title">Cancelar Solicitud: {{gasto.folio}}</h5>
             <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
@@ -28,25 +29,51 @@
                 {% for producto in productos %}
                 <div class='cart-row'>
                     <div style="flex:1"><img class='row-image' src="{{producto.producto.producto.imageURL}}"></div>
-                    <div style="flex:2">{{producto.producto.producto.codigo}}</div>
-                    <div style="flex:4">{{producto.producto.producto.nombre}}</div>
+                    <div style="flex:2">{{producto.producto.codigo}}</div>
+                    <div style="flex:4">{{producto.producto.nombre}}</div>
                     <div style="flex:2"><p class='quantity'>{{producto.cantidad|floatformat:2}}</p></div>
                     <div style="flex:2">${{producto.total_parcial}}</div>
                     <div style="flex:6">{{producto.comentario}}</div>
                 </div>
                 {% endfor %}
             </div>
-        </div>
-
-        <div class="modal-footer">
-            <form action="{% url 'cancelar-gasto' gasto.id %}" method=POST>
+       
+            <form id="cancelar-form" action="{% url 'cancelar-gasto2' gasto.id %}" method=POST>
                 {% csrf_token %}
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.comentario|add_class:"form-control"|append_attr:"placeholder=Comentario"}}
+                        <label for="id_lugar_partida">Comentario</label>
+                        </div>
+                    </div>
                 <button id="approve-btn" name='btn_cancelar' class="btn btn-danger" type="submit">Cancelar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </form>
         </div>
     </div>
-</div>
+    <script>
+        $(document).ready(function() {
+            $('#cancelar-form').on('submit', function(event) {
+                event.preventDefault();  // Evitar el envío del formulario tradicional
+    
+                var url = $(this).attr('action');
+                var formData = $(this).serialize();
+    
+                $.ajax({
+                    url: url,
+                    type: 'POST',
+                    data: formData,
+                    success: function(result, status, xhr) {
+                        if (xhr.status === 204) {
+                            $('#dialog').modal('hide');
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+
 
 {% endblock %}
 </body>

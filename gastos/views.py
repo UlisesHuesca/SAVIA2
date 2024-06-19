@@ -9,7 +9,7 @@ from django.conf import settings
 
 import logging
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
-from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm
+from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
 from .filters import Solicitud_Gasto_Filter
 from user.models import Profile
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
@@ -610,16 +610,22 @@ def cancelar_gasto2(request, pk):
     perfil = Profile.objects.get(id = pk_perfil)    
     gasto = Solicitud_Gasto.objects.get(id = pk)
     productos = Articulo_Gasto.objects.filter(gasto = gasto)
+    form = Autorizacion_Gasto_Form(instance = gasto)
 
-    if request.method =='POST' and 'btn_cancelar' in request.POST:
-        gasto.autorizar2 = False
-        gasto.approbado_fecha2 = datetime.now()
-        #gasto.approved_at_time2 = datetime.now().time()
-        gasto.save()
-        messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud {gasto.id}')
-        return redirect ('gastos-pendientes-autorizar2')
+    if request.method =='POST':
+        form = Autorizacion_Gasto_Form(request.POST, instance = gasto)
+        if form.is_valid():
+            gasto = form.save(commit = False)
+            gasto.autorizar2 = False
+            gasto.autorizado_por2 = perfil
+            gasto.approbado_fecha2 = datetime.now()
+            #gasto.approved_at_time2 = datetime.now().time()
+            gasto.save()
+            messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud {gasto.folio}')
+            return HttpResponse(status=204)
 
     context = {
+        'form':form,
         'gasto': gasto,
         'productos': productos,
     }
