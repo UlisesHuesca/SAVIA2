@@ -40,9 +40,11 @@
 <div class="container">
     <div class="row mt-5">
         <div class="col-md-6 offset-md-3">
-            <div class="border bg-white p-3">
+            <div class="card">
+                <div class="card-header">
                 <h3>Agregar Proyecto</h3>
-                <hr>
+                </div>
+                <div class="card-body">
                 <form method="POST">
                     {% csrf_token %}
                     <div class="col-lg-12 col-md-12">
@@ -67,42 +69,6 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.factura|add_class:"form-control"|append_attr:"placeholder= Factura"}}
-                                <label style="color: #121212;" for="id_nombre">Factura</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-12 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.folio_cotizacion|add_class:"form-control"|append_attr:"placeholder= Folio Cotización"}}
-                                <label style="color: #121212;" for="id_nombre">Folio Cotización</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-12 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.cliente|add_class:"form-control"|append_attr:"placeholder= Cliente"}}
-                                <label style="color: #121212;" for="id_nombre">Cliente</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-12 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.oc_cliente|add_class:"form-control"|append_attr:"placeholder= OC Cliente"}}
-                                <label style="color: #121212;" for="id_nombre">OC Cliente</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-lg-12 col-md-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.status_de_entrega|add_class:"form-control"|append_attr:"placeholder=Status Entrega"}}
                                 <label style="color: #121212;" for="id_nombre">Status Entrega</label>
                             </div>
@@ -111,6 +77,7 @@
                     <a class="btn btn-outline-secondary" href="{% url 'configuracion-proyectos' %}">Cancelar</a>
                     <input class="btn btn-outline-info" type='submit' value="Actualizar">
                 </form>
+                </div>
             </div>
         </div>
 

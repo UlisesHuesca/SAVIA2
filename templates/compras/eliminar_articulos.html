@@ -71,7 +71,7 @@
                     <td scope="col">{{producto.producto.articulos.producto.producto.codigo}}</td>
                     <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
                     <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
-                    <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
+                    <td scope="col"><p class='quantity' id='prod_quantity' cantidad ='{{producto.cantidad}}' cantidad_comprada = '{{producto.cantidad_comprada}}'></p></td>
                     <td scope="col">{{form.comentario_cancelacion|add_class:"form-control"}}</td>
                     <td scope="col"><div class="form-check form-switch col-sm">{{form.cancelado|add_class:"form-check-input"}}</div></td>
                     <td>
@@ -98,6 +98,23 @@
         </div>
     </div>
 </div>
+<script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const quantities = document.querySelectorAll(".quantity");
+        quantities.forEach(quantity => {
+            const cantidad = parseInt(quantity.getAttribute("cantidad"));
+            const cantidadComprada = parseInt(quantity.getAttribute("cantidad_comprada"));
+            
+            if (!isNaN(cantidad) && !isNaN(cantidadComprada)) {
+                const restante = cantidad - cantidadComprada;
+                quantity.innerText = restante;
+            } else {
+                quantity.innerText = 'N/A';
+            }
+        });
+    });
+    </script>
+    
 
 
 

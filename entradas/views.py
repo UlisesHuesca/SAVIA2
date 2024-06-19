@@ -669,11 +669,10 @@ def no_conformidad(request, pk):
                 if articulo_comprado.cantidad_pendiente == None:
                     articulo_comprado.cantidad_pendiente = 0
                 #Todo esto debería de pasar solo si la NC ya no se va a recibir es decir si el tipo de la conformidad = Material no disponible
-                if no_conf.tipo_nc.id == 1:
-                    if articulo_comprado.cantidad == articulo.cantidad + cantidad_entradas: 
-                       articulo_comprado.entrada_completa = True
-                    articulo_comprado.seleccionado = False
-                    articulo_requisitado.sel_comp = False
+                if articulo_comprado.cantidad == articulo.cantidad + cantidad_entradas: 
+                    articulo_comprado.entrada_completa = True
+                articulo_comprado.seleccionado = False
+                articulo_requisitado.sel_comp = False
                 articulo_comprado.save()
                 articulo_requisitado.save()
                 static_path = settings.STATIC_ROOT
@@ -775,10 +774,12 @@ def update_no_conformidad(request):
             nc_item.save()
     elif action == "remove":
         producto_comprado.seleccionado = False
-        messages.success(request,'Has eliminado el artículo con éxito')
+        
         #Se borra el elemento de las entradas
         #Guardado de bases de datos
         nc_item.delete()
+        producto_comprado.save()
+        messages.success(request,'Has eliminado el artículo con éxito')
     return JsonResponse('Item was '+action, safe=False)
 
 

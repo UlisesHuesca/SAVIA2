@@ -10,8 +10,9 @@ class Conceptos_Entradas_Admin(admin.ModelAdmin):
     list_display =('id', 'concepto_material', 'entrada',)
 
 class Articulo_Gasto_Admin(admin.ModelAdmin):
-    list_display =('id','gasto','staff','proyecto', 'subproyecto','producto','comentario', 'gasto', 'created_at', 'validacion')
+    list_display =('id','gasto','staff','proyecto', 'subproyecto','producto','comentario','created_at', 'validacion')
     raw_id_fields = ('gasto','staff','producto','proyecto','subproyecto')
+    search_fields = ('gasto__folio',)
 
 class Entrada_Gasto_Ajuste_Admin(admin.ModelAdmin):
     list_display =('id','gasto','almacenista','completo')

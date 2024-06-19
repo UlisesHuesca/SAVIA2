@@ -15,6 +15,11 @@ class CompraFilter(django_filters.FilterSet):
         ('CREDITO', 'Credito'),
         ('CONTADO', 'Contado'),
     ]
+
+    MONEDA_CHOICES = [
+        ('DOLARES','DOLARES'),
+        ('PESOS','PESOS'),
+    ]
     proveedor = CharFilter(field_name='proveedor__nombre__razon_social', lookup_expr='icontains')
     creada_por = CharFilter(field_name='creada_por', lookup_expr='icontains')
     req = CharFilter(field_name='req__folio', lookup_expr='icontains')
@@ -27,10 +32,11 @@ class CompraFilter(django_filters.FilterSet):
     folio = CharFilter(field_name='folio', lookup_expr='icontains')
     atrasado = django_filters.BooleanFilter(method='filtro_atrasado')
     pago = ChoiceFilter(choices=PAGO_CHOICES, method='filter_by_pago', label='Pago') # Changed filter
+    moneda = ChoiceFilter(choices = MONEDA_CHOICES, method='filter_by_moneda', label ='Moneda')
 
     class Meta:
         model = Compra
-        fields = ['folio','proveedor','creada_por','req','solicitud','proyecto','subproyecto','start_date','end_date', 'costo_oc','atrasado','pago']
+        fields = ['folio','proveedor','creada_por','req','solicitud','proyecto','subproyecto','start_date','end_date', 'costo_oc','atrasado','pago', 'moneda']
 
     def filter_by_pago(self, queryset, name, value):
         # Asegúrate de que 'value' coincida con las opciones 'CREDITO' o 'CONTADO'
@@ -38,6 +44,14 @@ class CompraFilter(django_filters.FilterSet):
             return queryset.filter(cond_de_pago__nombre='CREDITO')
         elif value == 'CONTADO':
             return queryset.filter(cond_de_pago__nombre='CONTADO')
+        return queryset
+
+    def filter_by_moneda(self, queryset, name, value):
+        # Asegúrate de que 'value' coincida con las opciones 'CREDITO' o 'CONTADO'
+        if value == 'DOLARES':
+            return queryset.filter(moneda__nombre='DOLARES')
+        elif value == 'PESOS':
+            return queryset.filter(moneda__nombre='PESOS')
         return queryset
     
     def filtro_atrasado(self, queryset, name, value):

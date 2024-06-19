@@ -56,7 +56,7 @@ def solicitud_viatico(request):
     if usuario.distritos.nombre == "MATRIZ":
         superintendentes = colaborador.filter(tipo__subdirector = True)
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
-       superintendentes = colaborador.filter(staff =  usuario.staff )  
+       superintendentes = colaborador.filter(tipo__superintendente = True, st_activo = True, distritos = usuario.distritos)  
     else:
         superintendentes = colaborador.filter(tipo__superintendente = True, distritos = usuario.distritos, staff__staff__is_active = True).exclude(tipo__nombre="Admin")
 

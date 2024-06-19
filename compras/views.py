@@ -145,6 +145,7 @@ def eliminar_articulos(request, pk):
     #perfil = Profile.objects.get(staff__id=request.user.id)
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     requis = Requis.objects.get(id = pk)
+    
 
     form = Articulo_Cancelado_Form()
 
@@ -156,8 +157,8 @@ def eliminar_articulos(request, pk):
             articulo = form.save()
             productos = ArticulosRequisitados.objects.filter(req = producto.req)
             productos_cancelados = productos.filter(cancelado = True).count()
-            productos_requisitados = productos.count() - productos_cancelados
-            productos_comprados = productos.filter(art_surtido = True).count()
+            productos_requisitados = productos.count() 
+            productos_comprados = productos.filter(art_surtido = True).count() + productos_cancelados
             if productos_requisitados == productos_comprados:
                 requis.colocada = True
                 requis.save()
@@ -826,20 +827,20 @@ def matriz_oc_productos(request):
     
     task_id_producto = request.session.get('task_id_producto')
 
+    
+
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        if usuario.tipo.nombre == "PROVEEDORES":
-            if articulos.count() > 3600:
-                if not task_id_producto:
-                    task = convert_excel_solicitud_matriz_productos_task.delay(articulos_data)
-                    task_id_producto = task.id
-                    request.session['task_id_producto'] = task_id_producto
-                    context['task_id_producto'] = task_id_producto
-                    cantidad = articulos.count()
-                    context['cantidad'] = cantidad
-                    messages.success(request, f'Tu reporte se está generando {task_id_producto}')
-            
-            else:
-                return convert_excel_solicitud_matriz_productos_prov(articulos)
+        if articulos.count() > 3000:
+            if not task_id_producto:
+                task = convert_excel_solicitud_matriz_productos_task.delay(articulos_data)
+                task_id_producto = task.id
+                request.session['task_id_producto'] = task_id_producto
+                context['task_id_producto'] = task_id_producto
+                cantidad = articulos.count()
+                context['cantidad'] = cantidad
+                messages.success(request, f'Tu reporte se está generando {task_id_producto}')
+        elif usuario.tipo.nombre == "PROVEEDORES":
+            return convert_excel_solicitud_matriz_productos_prov(articulos)
         else:
             return convert_excel_solicitud_matriz_productos(articulos)
         
@@ -2731,14 +2732,14 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
                 cell_format = date_style
         
             # Aplica el formato de dinero para las columnas con valores monetarios
-            elif col_num in [12, 13]:  # Asume que estas son tus columnas de dinero
+            elif col_num in [13, 14]:  # Asume que estas son tus columnas de dinero
                 cell_format = money_style
 
             # Finalmente, escribe la celda con el valor y el formato correspondiente
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 23, f'=IF(ISBLANK(U{row_num+1}), N{row_num+1}, N{row_num+1}*V{row_num+1})', money_style)
+        worksheet.write_formula(row_num, 23, f'=IF(ISBLANK(V{row_num+1}), N{row_num+1}, N{row_num+1}*V{row_num+1})', money_style)
     
    
     workbook.close()

@@ -58,8 +58,13 @@ class ProveedoresDireccionesForm(forms.ModelForm):
         fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda']
 
     def __init__(self, *args, **kwargs):
+        
+        profile = kwargs.pop('profile', None)
         super().__init__(*args, **kwargs)
-        self.fields['distrito'].queryset = Distrito.objects.exclude(id__in=[7, 8])
+        if profile and profile.tipo.nombre == "Subdirector_Alt":
+            self.fields['distrito'].queryset = Distrito.objects.all()
+        else:
+            self.fields['distrito'].queryset = Distrito.objects.exclude(id__in=[7, 8])
 
 class ProveedoresExistDireccionesForm(forms.ModelForm):
    
@@ -120,12 +125,12 @@ class AddProduct_Form(forms.ModelForm):
 class Proyectos_Form(forms.ModelForm):
     class Meta:
         model = Proyecto
-        fields = ['descripcion','nombre','cliente','activo','factura','fecha_factura','folio_cotizacion','oc_cliente','status_de_entrega',]
+        fields = ['descripcion','nombre','status_de_entrega',] #Se retiran campos 'cliente','factura','fecha_factura','folio_cotizacion','oc_cliente','activo',
 
 class Proyectos_Add_Form(forms.ModelForm):
     class Meta:
         model = Proyecto
-        fields = ['descripcion','nombre','cliente','factura','fecha_factura','folio_cotizacion','oc_cliente','status_de_entrega',]
+        fields = ['descripcion','nombre','status_de_entrega',] #'cliente','factura','fecha_factura','folio_cotizacion','oc_cliente',
 
 class Subproyectos_Add_Form(forms.ModelForm):
     class Meta:

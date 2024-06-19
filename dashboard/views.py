@@ -124,6 +124,9 @@ def select_profile(request):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def proyectos(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+
     sql_salidas = """SELECT 
     solicitudes_proyecto.id AS id,
     solicitudes_proyecto.nombre AS nombre,
@@ -241,7 +244,7 @@ def proyectos(request):
        """
    
      # Prefetching related data
-    proyectos = Proyecto.objects.all()
+    proyectos = Proyecto.objects.filter(distrito = usuario.distritos)
     proyecto_compras_total = proyectos.raw(sql_compras)
     proyecto_pagos_total = proyectos.raw(sql_compras_pagos)
     proyecto_gastos_total = proyectos.raw(sql_gastos_pagados)
@@ -329,9 +332,14 @@ def proyectos_edit(request, pk):
 
 @login_required(login_url='user-login')
 def proveedor_direcciones(request, pk):
-    proveedor = Proveedor.objects.get(id=pk)
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
 
-    direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True)
+    proveedor = Proveedor.objects.get(id=pk)
+    if usuario.tipo.nombre == "Subdirector_Alt":
+        direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True)
+    else:
+        direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True).exclude(distrito__id__in=[7, 8])
 
     context = {
         'proveedor':proveedor,
@@ -450,7 +458,7 @@ def proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
-    proveedores_dir = Proveedor_direcciones.objects.filter(Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO')|Q(estatus__nombre="RECHAZADO")|Q(estatus__nombre='SUSPENDIDO'))
+    proveedores_dir = Proveedor_direcciones.objects.all()
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
     proveedores = Proveedor.objects.filter(id__in=proveedores_ids, completo=True)
 
@@ -774,7 +782,7 @@ def edit_proveedor_direccion(request, pk):
     proveedor = Proveedor.objects.get(id = direccion.nombre.id)
 
     if request.method =='POST':
-        form = ProveedoresDireccionesForm(request.POST, instance = direccion)
+        form = ProveedoresDireccionesForm(request.POST, instance = direccion, profile = usuario)
         if form.is_valid():
             direccion = form.save(commit=False)
             direccion.actualizado_por = usuario
@@ -784,7 +792,7 @@ def edit_proveedor_direccion(request, pk):
             messages.success(request,'Has actualizado correctamente la direccion del proveedor')
             return redirect('proveedor-direcciones', pk= proveedor.id)
     else:
-        form = ProveedoresDireccionesForm(instance = direccion)
+        form = ProveedoresDireccionesForm(instance = direccion, profile = usuario)
 
 
     context = {
