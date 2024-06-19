@@ -45,7 +45,7 @@
 
 <div class="container">
 <div class = "card">
-    <div class="card-header">
+    <div class="card-header" ver = "{{next_url}}">
         <h5>Facturas de Gasto: {{gasto.folio}}</h5>
     </div>
     <div class="card-body">
@@ -176,7 +176,7 @@
         <!--<h6>Nueva factura</h6>-->
         <ul class="nav">
             <li class="nav-item">
-                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}" >Registrar</a>
+                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
             </li>
             <li class="nav-item ms-4">
                 <button type="submit" name="btn_factura_completa" class="btn btn-secondary">Cerrar</button>
@@ -205,6 +205,10 @@
     })
 })()
 var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+      location.reload();
+    })
 
 var elementos = document.getElementsByClassName('subtotal-linea');
 var xml = document.getElementsByClassName('total-xml');

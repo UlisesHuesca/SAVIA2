@@ -88,7 +88,7 @@ class Solicitud_Gasto(models.Model):
         return total
 
     def __str__(self):
-        return f'{self.id}'
+        return f'{self.folio}'
     
 class Porcentaje_iva(models.Model):
     porcentaje = models.DecimalField(max_digits=2, decimal_places=0, null=True)

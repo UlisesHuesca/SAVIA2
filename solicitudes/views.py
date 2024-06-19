@@ -1458,7 +1458,7 @@ def load_subproyectos(request):
     proyecto_id = request.GET.get('proyecto_id')
     
     
-    subproyectos =Subproyecto.objects.filter(proyecto__id = proyecto_id).values('id','nombre')
+    subproyectos =Subproyecto.objects.filter(proyecto__id = proyecto_id, status__nombre = "Activo" ).values('id','nombre')
     data = list(subproyectos)
     return JsonResponse(data, safe=False)
     #return render(request, 'solicitud/subproyecto_dropdown_list_options.html',{'subproyectos': subproyectos})

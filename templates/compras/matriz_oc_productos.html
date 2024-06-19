@@ -6,7 +6,7 @@
 {% load l10n %}
 <html>
 <head>
-{% block title %}Requisiciones autorizadas{% endblock %}
+{% block title %}Productos Compras{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -98,9 +98,13 @@
             <form method=POST onsubmit="mostrarIndicadorCarga();">
                 {% csrf_token %}
                 <ul class="nav nav-pills">
-                    <!-- Botón para iniciar la acción (por ejemplo, para iniciar la tarea de Celery) -->
+                    <li class="nav-item m-1">
+                        <button type="submit" id="reporte_compras" class="btn btn-outline-success d-none" value='Reporte Excel' >
+                            <i class="fa-solid fa-file-excel fa-2xl"></i>
+                        </button>
+                    </li>
                     <li class="nav-item mx-2">
-                        <button type="submit" id="reporte_compras" name="btnExcel" class="btn btn-outline-success d-none" value='Reporte Excel'>
+                        <button type="submit" id="btnExcel" name="btnExcel" class="btn btn-outline-success d-none" value='Reporte Excel'>
                             <i class="fa-solid fa-file-excel fa-2xl"></i>
                         </button>
                     </li>
@@ -287,14 +291,14 @@ function guardar_variable(){
 }
 
 function aparecer_excel(){
-    var btn = document.getElementById("reporte_compras")
+    var btn = document.getElementById("btnExcel")
     btn.classList.remove('d-none')
 }
 
 document.addEventListener('DOMContentLoaded', function() {
     var mostrarBotonExcel = localStorage.getItem('mostrarBotonExcel');
     if (mostrarBotonExcel === 'true') {
-        var btn = document.getElementById("reporte_compras");
+        var btn = document.getElementById("btnExcel");
         btn.classList.remove('d-none');
 
         // Opcional: resetear el valor en el almacenamiento local si solo quieres mostrar el botón una vez

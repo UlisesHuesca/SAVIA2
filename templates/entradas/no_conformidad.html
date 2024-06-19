@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load l10n %}
 <html>
 <head>
 {% block title %}NC|Rechazo de Artículos{% endblock %}
@@ -59,7 +60,7 @@
                         </tr>
                     </tbody>
                 </table>
-                <form method="POST">
+                <form  id = "form_articulo" method="POST">
                     {% csrf_token %}
                     <div class="row">
                         <div class="col-12">
@@ -113,7 +114,7 @@
                         <td scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
                         <td scope="col">{{producto.cantidad}}</td>
                         <th scope="col">{{producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad}}</th>
-                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id}}" nc_id="{{producto.nc.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                        <td scope="col"><button type="button" class="btn btn-danger" id="delete" value="remove" cantidad="{{producto.cantidad}}" producto="{{producto.articulo_comprado.id|unlocalize}}" nc_id="{{producto.nc.id}}" onclick="deleteRow(this)" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                     </tr>
                     {% endfor %}
                     </tbody>
@@ -204,6 +205,8 @@ CrearBtn.addEventListener('click',function(){
 
 })
 
+
+
 document.getElementById("form_crear").addEventListener("submit", function(event){
     event.preventDefault(); //Detiene el envío del formulario
     var btnCrear = document.getElementById('BtnCrear')
@@ -253,7 +256,7 @@ updateBtn.addEventListener('click',function(){
         cantidad_ingresada = cantidad_form.value;
         action = "add"
 
-
+        preventDoubleClick(updateBtn) 
 
         if (!product_id) {
             Swal.fire({

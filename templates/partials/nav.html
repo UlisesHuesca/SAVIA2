@@ -78,14 +78,14 @@
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'dashboard-staff' %}">Usuarios</a>
                                 </div>
-                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.nombre == "Superintendente" or usuario.tipo.nombre == "ACTIVOS_SISTEMAS" or usuario.tipo.nombre == "SISTEMAS" or usuario.tipo.nombre == "VIS_ADQ" %}
+                            {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.superintendente == True or usuario.tipo.nombre == "ACTIVOS_SISTEMAS" or usuario.tipo.nombre == "SISTEMAS" or usuario.tipo.nombre == "VIS_ADQ" %}
                                 <div>
                             {% else %}
                                 <div class="d-none">
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'dashboard-product' %}">Productos/Servicios</a>
                                 </div>
-                            {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Gerente" %}
+                            {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Gerente"  or usuario.tipo.subdirector == True %}
                                 <div>
                             {% else %}
                                 <div class="d-none">

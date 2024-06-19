@@ -748,9 +748,9 @@ def matriz_facturas_gasto(request, pk):
     facturas = Factura.objects.filter(solicitud_gasto = gasto, hecho=True)
     pagos = Pago.objects.filter(gasto = gasto)
     form =  Facturas_Gastos_Form(instance=gasto)
-    #next_url = request.GET.get('next','matriz-pagos')
+    next_url = request.GET.get('next','matriz-pagos')
     #factura_form = FacturaForm()
-    next_url = request.GET.get('next', 'matriz-pagos') 
+    #next_url = request.GET.get('next', 'mis-gastos') 
     #print(next_url)
 
     if request.method == 'POST':
@@ -765,6 +765,7 @@ def matriz_facturas_gasto(request, pk):
     
 
     context={
+        'next_url':next_url,
         'form':form,
         'pagos':pagos,
         'articulos_gasto':articulos_gasto,
