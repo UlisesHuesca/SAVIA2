@@ -150,6 +150,7 @@
                     <th scope="col">Comprobación</th>
                     <th>Detalle</th>
                     <th>Registro</th>
+                    <th>Cancelación</th>
                 </tr>
             </thead>
             <tbody>
@@ -193,6 +194,9 @@
                             </li>
                             
                         </ul>
+                    </td>
+                    <td>
+                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-viaticos2' viatico.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

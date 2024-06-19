@@ -14,7 +14,7 @@ from dashboard.models import Inventario, Product
 from requisiciones.views import get_image_base64
 from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
-from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm
+from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form
 from tesoreria.forms import Facturas_Viaticos_Form
 from tesoreria.views import eliminar_caracteres_invalidos
 from .filters import Solicitud_Viatico_Filter
@@ -301,6 +301,7 @@ def autorizar_viaticos2(request, pk):
         viatico.autorizar2 = True
         viatico.approved_at2 = date.today()
         viatico.approved_at_time2 = datetime.now().time()
+        viatico.gerente = perfil
         viatico.save()
         messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {viatico.id}')
         return redirect ('viaticos-pendientes-autorizar2')
@@ -342,17 +343,22 @@ def cancelar_viaticos2(request, pk):
     perfil = colaborador.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id = pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico, completo = True)
+    form = Cancelacion_viatico_Form(instance= viatico)
 
-
-    if request.method =='POST' and 'btn_cancelar' in request.POST:
-        viatico.autorizar2 = False
-        viatico.approbado_fecha2 = date.today()
-        viatico.approved_at_time2 = datetime.now().time()
-        viatico.save()
-        messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud de viático {viatico.folio}')
-        return redirect ('viaticos-pendientes-autorizar2')
+    if request.method =='POST':
+        form =  Cancelacion_viatico_Form(request.POST, instance = viatico)
+        if form.is_valid():
+            viatico = form.save(commit = False)
+            viatico.autorizar2 = False
+            viatico.approbado_fecha2 = date.today()
+            viatico.approved_at_time2 = datetime.now().time()
+            viatico.gerente = perfil
+            viatico.save()
+            messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud de viático {viatico.folio}')
+            return HttpResponse(status=204)
 
     context = {
+        'form': form,
         'viatico': viatico,
         'conceptos': conceptos,
     }

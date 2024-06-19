@@ -66,3 +66,9 @@ class Viaticos_Factura_Form(forms.ModelForm):
 class UploadFileForm(forms.Form):
     factura_pdf = forms.FileField(required=False)
     factura_xml = forms.FileField(required=False)
+
+
+class Cancelacion_viatico_Form(forms.ModelForm):
+    class Meta:
+        model = Solicitud_Viatico
+        fields = ['comentarios_cancelacion']

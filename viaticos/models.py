@@ -39,6 +39,7 @@ class Solicitud_Viatico(models.Model):
     facturas_completas = models.BooleanField(default=False)
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
     motivo = models.TextField(null =True, blank=False)
+    comentarios_cancelacion = models.TextField(null =True, blank=False)
 
     unique_together = ["folio", "distrito"]
 

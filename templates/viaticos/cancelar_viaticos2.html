@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {& load humanize %}
+{% load widget_tweaks %}
 <html>
 <head>
 {% block title %}Autorización viaticos{% endblock %}
@@ -20,7 +21,7 @@
                 <thead>
                     <tr>
                     <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viatico para:</th>
-                    <th scope="col">{{viatico.colaborador.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}</th>
+                    <th scope="col">{{viatico.colaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -99,18 +100,43 @@
             </tr>
         </tbody>
         </table>
-        </div> 
-                
-
-        <div class="modal-footer">
-            <form action="{% url 'cancelar-viaticos2' viatico.id %}" method=POST>
+       
+            <form id="cancelar-form" action="{% url 'cancelar-viaticos2' viatico.id %}" method=POST>
                 {% csrf_token %}
+                <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.comentarios_cancelacion|add_class:"form-control"|append_attr:"placeholder=Comentario"}}
+                        <label for="id_lugar_partida">Comentario</label>
+                        </div>
+                    </div>
                 <button id="btn_cancelar" name="btn_cancelar" class="btn btn-danger" type="submit">Cancelar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
             </form>
         </div>
     </div>
 </div>
+<script>
+    $(document).ready(function() {
+        $('#cancelar-form').on('submit', function(event) {
+            event.preventDefault();  // Evitar el envío del formulario tradicional
+
+            var url = $(this).attr('action');
+            var formData = $(this).serialize();
+
+            $.ajax({
+                url: url,
+                type: 'POST',
+                data: formData,
+                success: function(result, status, xhr) {
+                    if (xhr.status === 204) {
+                        $('#dialog').modal('hide');
+                    }
+                }
+            });
+        });
+    });
+</script>
 
 {% endblock %}
 </body>
