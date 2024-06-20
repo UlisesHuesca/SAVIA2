@@ -171,7 +171,7 @@ def convert_salidas_to_xls_task(salidas):
     number_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(number_style)
 
-    columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Comentario','Cantidad','Precio','Total']
+    columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Material Recibido','Proyecto','Subproyecto','Área','Código','Articulo','Comentario','Cantidad','Precio','Total']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -212,11 +212,22 @@ def convert_salidas_to_xls_task(salidas):
         else:
             comentario = " "
 
+        if salida.vale_salida.solicitud.staff:
+            solicitado_por = f"{salida.vale_salida.solicitud.staff.staff.staff.first_name} {salida.vale_salida.solicitud.staff.staff.staff.last_name}"
+        else:
+            solicitado_por = " "
+
+        if salida.vale_salida.material_recibido_por:
+            material_recibido = f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}"
+        else:
+            material_recibido = " "
+
         row = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
             salida.created_at,
-            f"{salida.producto.articulos.orden.staff.staff.staff.first_name} {salida.producto.articulos.orden.staff.staff.staff.last_name}",
+            solicitado_por,
+            material_recibido,
             proyecto,
             subproyecto,
             salida.vale_salida.solicitud.operacion if salida.vale_salida.solicitud.operacion else "Sin operación",
