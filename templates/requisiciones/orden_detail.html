@@ -27,9 +27,9 @@
                 {% for producto in productos %}
                 <div class='cart-row'>
                     <div style="flex:1"><img class='row-image' src="{{producto.producto.producto.imageURL}}"></div>
-                    <div style="flex:1">{{producto.producto.producto.codigo}}</div>
-                    <div style="flex:2">{{producto.producto.producto.nombre}}</div>
-                    <div style="flex:1"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></div>
+                    <div style="flex:1">{{producto.articulos.producto.producto.codigo}}</div>
+                    <div style="flex:2">{{producto.articulos.producto.producto.nombre}}</div>
+                    <div style="flex:1"><p class='quantity' id='prod_quantity'>{{producto.cantidad_requisitar}}</p></div>
                 </div>
                 {% endfor %}
             </div>

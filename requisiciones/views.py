@@ -801,7 +801,7 @@ def solicitud_autorizada_orden(request):
 
 def detalle_orden(request, pk):
     orden = Order.objects.get(id=pk)
-    productos = ArticulosOrdenados.objects.filter(orden=pk)
+    productos = ArticulosparaSurtir.objects.filter(articulos__orden__id = pk, requisitar= True)
 
     context = {
         'productos': productos,
