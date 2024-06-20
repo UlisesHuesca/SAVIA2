@@ -30,7 +30,6 @@ import datetime as dt
 
 
 # Create your views here.
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def index(request):
     pk = request.session.get('selected_profile_id')
@@ -120,8 +119,6 @@ def select_profile(request):
     return render(request, 'dashboard/select_profile.html', context)
 
 
-
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def proyectos(request):
     pk_profile = request.session.get('selected_profile_id')

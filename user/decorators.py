@@ -1,4 +1,5 @@
 from django.shortcuts import redirect
+from django.contrib.auth.decorators import login_required
 import logging
 import os
 from django.shortcuts import render, redirect
@@ -11,8 +12,12 @@ logger = get_custom_logger(__name__)
 
 
 def perfil_seleccionado_required(view_func):
+    @wraps(view_func)
     def _wrapped_view(request, *args, **kwargs):
         # Verificar si el usuario ha seleccionado un perfil
+        if not request.user.is_authenticated:
+            return redirect('user-login')
+        
         selected_profile_id = request.session.get('selected_profile_id')
         if not selected_profile_id:
             return redirect('select-profile')  # Redirige al usuario a la selección de perfil si no lo ha seleccionado

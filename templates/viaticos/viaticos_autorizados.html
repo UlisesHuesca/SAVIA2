@@ -12,11 +12,14 @@
 <hr>
 <hr>
 <hr>
+<h6>&nbsp;</h6>
 <div class="row my-4">
-        <div class="col-md-12">
-        <div class="card card-body">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
             <h5>Filtro de Viáticos</h5>
-            <hr>
+            </div>
+            <div class="card-body">
             <form method="GET">
                 {% csrf_token %}
                 <div class="row g-12">
@@ -97,6 +100,7 @@
                 </ul>
                 </form>
             </div>
+            </div>
         </div>
     </div>
 </div>
@@ -141,6 +145,7 @@
                     <th scope="col">Subproyecto</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Detalles</th>
+                    <th>Cancelar</th>
                 </tr>
             </thead>
             <tbody>
@@ -157,6 +162,9 @@
                         <a id="myBtn" type="button" class="btn btn-outline-info btn-lg" href="{% url 'asignar-montos' orden.id %}">
                             <i class="fa-solid fa-person-walking-luggage"></i>
                         </a>
+                    </td>
+                    <td>
+                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-viaticos' orden.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

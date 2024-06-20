@@ -79,7 +79,6 @@ logger = get_custom_logger(__name__)
 # Create your views here.
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def requisiciones_autorizadas(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
@@ -110,7 +109,6 @@ def requisiciones_autorizadas(request):
     return render(request, 'compras/requisiciones_autorizadas.html',context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def productos_pendientes(request):
     perfil = Profile.objects.get(staff__id=request.user.id)
     if perfil.tipo.compras == True:
@@ -184,7 +182,6 @@ def eliminar_articulos(request, pk):
     return render(request,'compras/eliminar_articulos.html', context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def articulos_restantes(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     #productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"))
@@ -227,7 +224,6 @@ def dof():
         return f"Error al obtener datos: {e}"
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def oc(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk)
     req = Requis.objects.get(id = pk)
@@ -248,7 +244,6 @@ def oc(request, pk):
     return render(request, 'compras/oc.html',context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def compras_devueltas(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -271,7 +266,6 @@ def compras_devueltas(request):
     return render(request, 'compras/compras_devueltas.html',context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def compra_edicion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -404,7 +398,6 @@ def compra_edicion(request, pk):
 
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def update_oc(request):
     data= json.loads(request.body)
     action = data["action"]
@@ -453,7 +446,6 @@ def update_oc(request):
 
 #@cache_page(60 * 60)  # Cache la vista durante 1 hora
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def oc_modal(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -625,7 +617,6 @@ def oc_modal(request, pk):
         return render(request, 'compras/oc.html', context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def mostrar_comparativo(request, pk):
     comparativo = Comparativo.objects.get(id=pk)
     productos = Item_Comparativo.objects.filter(comparativo = comparativo)
@@ -637,7 +628,7 @@ def mostrar_comparativo(request, pk):
 
     return render(request, 'compras/mostrar_comparativo.html',context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -797,7 +788,6 @@ def clear_task_id(request):
 
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def matriz_oc_productos(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
@@ -847,7 +837,6 @@ def matriz_oc_productos(request):
     return render(request, 'compras/matriz_oc_productos.html',context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def productos_oc(request, pk):
     compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=compra)
@@ -861,7 +850,6 @@ def productos_oc(request, pk):
     return render(request,'compras/oc_producto.html',context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def upload_facturas(request, pk):
     pago = Pago.objects.get(id = pk)
     facturas = Facturas.objects.filter(pago = pago, hecho=True)
@@ -911,9 +899,8 @@ def upload_xml(request, pk):
 
     return render(request, 'compras/upload_xml.html', context)
 
-@tipo_usuario_requerido('oc_superintendencia')
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
+@tipo_usuario_requerido('oc_superintendencia')
 def autorizacion_oc1(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -949,7 +936,6 @@ def autorizacion_oc1(request):
     return render(request, 'compras/autorizacion_oc1.html',context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def cancelar_oc1(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -998,7 +984,6 @@ def cancelar_oc1(request, pk):
     return render(request,'compras/cancelar_oc1.html', context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def cancelar_oc2(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1052,7 +1037,6 @@ def cancelar_oc2(request, pk):
 
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def back_oc(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
@@ -1125,7 +1109,6 @@ def back_oc(request, pk):
 
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def autorizar_oc1(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1305,9 +1288,8 @@ def autorizar_oc1(request, pk):
 
     return render(request, 'compras/autorizar_oc1.html',context)
 
-@tipo_usuario_requerido('oc_gerencia')
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
+@tipo_usuario_requerido('oc_gerencia')
 def autorizacion_oc2(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1327,7 +1309,6 @@ def autorizacion_oc2(request):
     return render(request, 'compras/autorizacion_oc2.html',context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def autorizar_oc2(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1501,7 +1482,6 @@ def handle_uploaded_file(file, model_instance, field_name):
     model_instance.save()
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def comparativos(request):
     #creada_por 
     pk_perfil = request.session.get('selected_profile_id') 
@@ -1557,7 +1537,6 @@ def comparativos(request):
 
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def crear_comparativo(request):
     start_time = time.time()  # Tiempo de inicio
     pk_perfil = request.session.get('selected_profile_id')
@@ -1683,7 +1662,6 @@ def carga_productos(request):
     return JsonResponse(data, safe=False)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def editar_comparativo(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
     comparativo =Comparativo.objects.get(id = pk)
@@ -1733,7 +1711,6 @@ def editar_comparativo(request, pk):
 
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def articulos_comparativo(request, pk):
     articulos = Item_Comparativo.objects.filter(comparativo__id = pk , completo = True)
 
@@ -1753,7 +1730,6 @@ def articulo_comparativo_delete(request, pk):
     return redirect('crear_comparativo')
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def historico_articulos_compras(request):
     registros = ArticuloComprado.history.all()
 
@@ -1774,7 +1750,6 @@ def historico_articulos_compras(request):
 
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def historico_compras(request):
     registros = Compra.history.all()
     myfilter = HistoricalCompraFilter(request.GET, queryset=registros)

@@ -50,8 +50,8 @@ from user.decorators import perfil_seleccionado_required
 logger = logging.getLogger(__name__)
 
 # Create your views here.
+
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def crear_gasto(request):
     colaborador = Profile.objects.all()
     articulos_gasto = Articulo_Gasto.objects.all()
@@ -370,8 +370,8 @@ def editar_gasto(request, pk):
 
     return render(request, 'gasto/editar_gasto.html', context)
 
+
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def solicitudes_gasto(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -568,7 +568,7 @@ def cancelar_gasto(request, pk):
         gasto.autorizar = False
         gasto.approved_at = datetime.now()
         #gasto.approved_at_time = datetime.now().time()
-        gasto.sol_autorizada_por = Profile.objects.get(staff__id=request.user.id)
+        gasto.sol_autorizada_por = perfil
         gasto.save()
         messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud {gasto.id}')
         return redirect ('gastos-pendientes-autorizar')
@@ -636,7 +636,7 @@ def cancelar_gasto2(request, pk):
 
 
 # Create your views here.
-@login_required(login_url='user-login')
+#@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def pago_gastos_autorizados(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -782,6 +782,7 @@ def matriz_facturas_gasto(request, pk):
         }
 
     return render(request, 'gasto/matriz_factura_gasto.html', context)
+
 
 def facturas_gasto(request, pk):
     articulo = Articulo_Gasto.objects.get(id = pk)
@@ -979,6 +980,8 @@ def gasto_entrada(request, pk):
 
     return render(request, 'gasto/crear_entrada.html', context)
 
+
+@login_required(login_url='user-login')
 def delete_articulo_entrada(request, pk):
    
     articulo = Conceptos_Entradas.objects.get(id=pk)
@@ -988,7 +991,7 @@ def delete_articulo_entrada(request, pk):
 
     return redirect('gasto-entrada',pk= gasto)
 
-
+@login_required(login_url='user-login')
 def descargar_pdf_gasto(request, pk):
     gasto = get_object_or_404(Solicitud_Gasto, id=pk)
     buf = render_pdf_gasto(gasto.id)

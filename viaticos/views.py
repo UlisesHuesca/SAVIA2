@@ -96,8 +96,8 @@ def solicitud_viatico(request):
             if form.is_valid():
                 viatico = form.save(commit=False)
                 viatico.complete = True
-                viatico.created_at = date.today()
-                viatico.created_at_time = datetime.now().time()
+                viatico.created_at =  datetime.now()
+                #viatico.created_at_time = datetime.now().time()
                 viatico.staff =  usuario
                 viatico.distrito = usuario.distritos
                 viatico.folio = nuevo_folio
@@ -267,7 +267,6 @@ def detalles_viaticos2(request, pk):
 
     return render(request, 'viaticos/detalles_viaticos_montos.html', context)
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def autorizar_viaticos(request, pk):
     colaborador = Profile.objects.all()
@@ -277,8 +276,8 @@ def autorizar_viaticos(request, pk):
 
     if request.method =='POST' and 'btn_autorizar' in request.POST:
         viatico.autorizar = True
-        viatico.approved_at = date.today()
-        viatico.approved_at_time = datetime.now().time()
+        viatico.approved_at = datetime.now()
+        #viatico.approved_at_time = datetime.now().time()
         viatico.save()
         messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {viatico.folio}')
         return redirect ('viaticos-pendientes-autorizar')
@@ -299,8 +298,8 @@ def autorizar_viaticos2(request, pk):
 
     if request.method =='POST' and 'btn_autorizar' in request.POST:
         viatico.autorizar2 = True
-        viatico.approved_at2 = date.today()
-        viatico.approved_at_time2 = datetime.now().time()
+        viatico.approved_at2 = datetime.now()
+        #viatico.approved_at_time2 = datetime.now().time()
         viatico.gerente = perfil
         viatico.save()
         messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {viatico.id}')
@@ -320,17 +319,23 @@ def cancelar_viaticos(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id = pk)
+    form = Cancelacion_viatico_Form(instance= viatico)
 
 
-    if request.method =='POST' and 'btn_cancelar' in request.POST:
-        viatico.autorizar = False
-        viatico.approved_at = date.today()
-        viatico.approved_at_time = datetime.now().time()
-        viatico.save()
-        messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud {viatico.folio}')
-        return redirect ('viaticos-pendientes-autorizar')
+    if request.method =='POST':
+        form =  Cancelacion_viatico_Form(request.POST, instance = viatico)
+        if form.is_valid():
+            viatico = form.save(commit = False)
+            viatico.autorizar = False
+            viatico.approved_at = datetime.now()
+            #viatico.approved_at_time = datetime.now().time()
+            viatico.superintendente = perfil
+            viatico.save()
+            messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud {viatico.folio}')
+            return HttpResponse(status=204)
 
     context = {
+        'form':form,
         'viatico': viatico,
     }
 
@@ -350,8 +355,8 @@ def cancelar_viaticos2(request, pk):
         if form.is_valid():
             viatico = form.save(commit = False)
             viatico.autorizar2 = False
-            viatico.approbado_fecha2 = date.today()
-            viatico.approved_at_time2 = datetime.now().time()
+            viatico.approbado_fecha2 = datetime.now()
+            #viatico.approved_at_time2 = datetime.now().time()
             viatico.gerente = perfil
             viatico.save()
             messages.info(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud de viático {viatico.folio}')
@@ -398,7 +403,6 @@ def solicitudes_viaticos(request):
     return render(request, 'viaticos/solicitudes_viaticos.html', context)
 
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def viaticos_autorizados(request):
 
@@ -492,7 +496,6 @@ def delete_viatico(request, pk):
 
     return redirect('asignar-montos', pk=concepto.viatico.id)
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def viaticos_autorizados_pago(request):
 

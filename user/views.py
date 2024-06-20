@@ -12,7 +12,6 @@ import os
 
 # Create your views here.
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def register(request):
     if request.method == 'POST':
         form = UserForm(request.POST)
@@ -26,7 +25,6 @@ def register(request):
         }
     return render(request, 'user/register.html',ctx)
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def profile(request):
     pk = request.session.get('selected_profile_id')
@@ -38,7 +36,6 @@ def profile(request):
 
     return render(request, 'user/profile.html', context)
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def edit_profile(request):
     pk = request.session.get('selected_profile_id')

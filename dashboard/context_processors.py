@@ -66,13 +66,23 @@ def contadores_processor(request):
         if usuario.tipo.compras == True:
             requis= requis.filter(autorizar=True, colocada=False, orden__distrito = usuario.distritos)
             conteo_requis = requis.count()
-        if usuario.tipo.nombre == "subdirector":
+
+        if usuario.tipo.subdirector == True:
             oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__superintendente = usuario)
+            conteo_oc1 = oc.count()
+            gastos = Solicitud_Gasto.objects.filter(complete=True, autorizar=None, superintendente = usuario, distrito = usuario.distritos)
+            conteo_gastos_pendientes = gastos.count()
+            viaticos_pendientes = Solicitud_Viatico.objects.filter(complete =True, autorizar = None, superintendente = usuario, distrito = usuario.distritos)
+            conteo_viaticos = viaticos_pendientes.count()
+            viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True, distrito = usuario.distritos, superintendente = usuario)
+            conteo_viaticos_gerencia = viaticos_gerencia.count()
         elif usuario.tipo.oc_superintendencia == True:
             oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__distrito = usuario.distritos)
             devoluciones = Devolucion.objects.filter(complete = True, autorizada = None)
             conteo_oc1 = oc.count()
             conteo_devoluciones = devoluciones.count()
+
+        
         if usuario.tipo.oc_gerencia == True:
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None, req__orden__distrito = usuario.distritos)
             gastos_gerencia = Solicitud_Gasto.objects.filter(complete=True, autorizar=True, autorizar2=None, distrito = usuario.distritos)
@@ -125,7 +135,7 @@ def contadores_processor(request):
     'conteo_viaticos': conteo_viaticos,
     'conteo_viaticos_gerencia':conteo_viaticos_gerencia,
     'conteo_requis_pendientes':conteo_requis_pendientes,
-     'conteo_entradas':conteo_entradas,
+    'conteo_entradas':conteo_entradas,
     'conteo_gastos_gerencia':conteo_gastos_gerencia,
     'conteo_solicitudes': conteo_solicitudes,
     'conteodeordenes':conteo,

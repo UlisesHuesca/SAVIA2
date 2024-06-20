@@ -891,7 +891,7 @@ def obtener_consecutivo(distrito, requis):
     # Devolver el siguiente número
     return ultimo_numero_folio + 1
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def requisicion_detalle(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
@@ -972,7 +972,6 @@ def get_image_base64(image_path):
         return base64.b64encode(image_file.read()).decode()
 
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def requisicion_autorizar(request, pk):
     

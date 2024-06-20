@@ -4,7 +4,7 @@ from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Punto
 # Register your models here.
 
 class Solicitud_ViaticoAdmin(admin.ModelAdmin):
-    list_display = ('id','folio','staff','lugar_comision','lugar_partida','autorizar','autorizar2')
+    list_display = ('id','folio','staff','lugar_comision','lugar_partida','autorizar','autorizar2','pagada')
     search_fields = ('id','folio')
     raw_id_fields =('staff','colaborador','proyecto','subproyecto','superintendente','gerente')
 

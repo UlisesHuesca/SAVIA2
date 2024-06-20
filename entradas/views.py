@@ -31,7 +31,6 @@ import datetime as dt
 
 # Create your views here.
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def pendientes_entrada(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
@@ -118,7 +117,6 @@ def devolucion_a_proveedor(request):
     return render(request, 'entradas/devolucion_a_proveedor.html', context)
 
 @perfil_seleccionado_required
-@login_required(login_url='user-login')
 def articulos_entrada(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)

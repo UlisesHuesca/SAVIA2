@@ -49,7 +49,6 @@ from user.decorators import perfil_seleccionado_required
 
 
 # Create your views here.
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def compras_autorizadas(request):
     pk_profile = request.session.get('selected_profile_id')
@@ -275,8 +274,6 @@ def prellenar_formulario(request):
 
 
 
-
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def compras_pagos(request, pk):
     pk_profile = request.session.get('selected_profile_id')
@@ -465,7 +462,6 @@ def compras_pagos(request, pk):
 
     return render(request, 'tesoreria/compras_pagos.html',context)
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def edit_pago(request, pk):
     pk_profile = request.session.get('selected_profile_id')
@@ -537,7 +533,7 @@ def edit_pago(request, pk):
     }
     return render(request, 'tesoreria/compras_pagos.html', context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def edit_comprobante_pago(request, pk):
     pago = Pago.objects.get(id = pk)
@@ -557,7 +553,7 @@ def edit_comprobante_pago(request, pk):
     
     return render(request, 'tesoreria/edit_comprobante_pago.html',context)
 
-@login_required(login_url='user-login')
+
 @perfil_seleccionado_required
 def saldo_a_favor(request, pk):
     pk_profile = request.session.get('selected_profile_id')
@@ -609,7 +605,6 @@ def saldo_a_favor(request, pk):
     return render(request, 'tesoreria/saldo_a_favor.html',context)
 
 # Create your views here.
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def matriz_pagos(request):
     pk_profile = request.session.get('selected_profile_id')
@@ -687,7 +682,6 @@ def matriz_pagos(request):
     return render(request, 'tesoreria/matriz_pagos.html',context)
 
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def control_bancos(request):
     pk_profile = request.session.get('selected_profile_id')
@@ -741,7 +735,6 @@ def eliminar_caracteres_invalidos(archivo_xml):
 
 
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def matriz_facturas(request, pk):
     pk_profile = request.session.get('selected_profile_id')
