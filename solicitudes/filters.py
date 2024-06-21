@@ -35,6 +35,7 @@ class SolicitudesFilter(django_filters.FilterSet):
     activo = CharFilter(field_name='activo__eco_unidad', lookup_expr='icontains')
     start_date = DateFilter(field_name ='created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at', lookup_expr='lte')
+    producto = CharFilter(method='producto_filter', label="Producto")
 
     class Meta:
         model = Order
@@ -42,6 +43,9 @@ class SolicitudesFilter(django_filters.FilterSet):
 
     def my_filter(self, queryset, name, value):
         return queryset.filter(Q(staff__staff__staff__first_name__icontains = value) | Q(staff__staff__staff__last_name__icontains = value))
+
+    def producto_filter(self, queryset, name, value):
+        return queryset.filter(productos__producto__producto__nombre__icontains=value)
 
 
 

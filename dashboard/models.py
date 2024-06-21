@@ -330,13 +330,13 @@ class Order(models.Model):
 
     @property
     def get_cart_total(self):
-        productos = self.articulosordenados_set.all()
+        productos = self.productos.all()
         total = sum([producto.get_total for producto in productos])
         return total
 
     @property
     def get_cart_quantity(self):
-        productos = self.articulosordenados_set.all()
+        productos = self.productos.all()
         total = sum([producto.cantidad for producto in productos])
         return total
 
@@ -347,7 +347,7 @@ class Order(models.Model):
 
 class ArticulosOrdenados(models.Model):
     producto = models.ForeignKey(Inventario, on_delete = models.CASCADE, null=True)
-    orden = models.ForeignKey(Order, on_delete = models.CASCADE, null=True)
+    orden = models.ForeignKey(Order, on_delete = models.CASCADE, null=True, related_name= "productos")
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
     comentario = models.TextField(max_length=100, null=True, blank=True)
