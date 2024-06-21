@@ -9,7 +9,7 @@ def encontrar_variables(texto):
     # Definir los patrones de regex para cada variable
     patrones = {
         'fecha': r'Fecha de creación:\s*(\d{2}/\d{2}/\d{4})',
-        'importe_operacion': r'Importe de la operación:\s?([\d,.]+)',
+        'importe_operacion': r'Importe|Importe de la operación:\s?([\d,.]+)',
         'cuenta_retiro': r'Cuenta de retiro:\s?(\d+)',
         'divisa_cuenta': r'Divisa de la cuenta:\s?([^\n\r]+)',
         'titular_cuenta': r'Titular de la cuenta:\s*([^\n\r]+)\s*Titular de la cuenta:\s*([^\n\r]+)',
