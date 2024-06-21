@@ -322,7 +322,7 @@ def checkout(request):
         productos = None
         cartItems = 0
     else:
-        productos = order.articulosordenados_set.all()
+        productos = order.productos.all()
         cartItems = order.get_cart_quantity
 
     if request.method =='POST':
@@ -605,7 +605,7 @@ def checkout_resurtimiento(request):
 
 
     
-    productos = order.articulosordenados_set.all()
+    productos = order.productos.all()
     cartItems = order.get_cart_quantity
 
     form = OrderForm(instance = order)
@@ -676,7 +676,7 @@ def checkout_editar(request, pk):
 
     #usuario = Profile.objects.get(id=request.user.id)
 
-    productos = order.articulosordenados_set.all()
+    productos = order.productos.all()
     cartItems = order.get_cart_quantity
     form = OrderForm(instance=order, distrito = usuario.distritos)
 
