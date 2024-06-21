@@ -62,11 +62,11 @@ def crear_gasto(request):
         if usuario.tipo.subdirector:
             superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
         else:    
-            superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True) 
+            superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin" and not usuario.tipo.nombre == "GERENCIA":
         superintendentes = colaborador.filter(staff =  usuario.staff)  
     else:
-        superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
+        superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
     
     proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()

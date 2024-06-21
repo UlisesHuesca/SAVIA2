@@ -260,7 +260,7 @@ def checkout(request):
     #print(usuario.distritos)
     if usuario.distritos.nombre == "MATRIZ":
         #print("Quev")
-        superintendentes = usuarios.filter(tipo__subdirector = True)
+        superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True)
     elif usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
         superintendentes = usuarios.filter(staff=usuario.staff)
         order.superintendente = usuario
