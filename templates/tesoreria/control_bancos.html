@@ -144,6 +144,7 @@
             <thead class="text-black sticky-header" style="background-color: #F5F5F5;">
                 <tr>
                     <th class="d-none d-lg-table-cell">Fecha</th>
+                    <th>Empresa</th>
                     <th scope="col">Empresa/Proveedor</th>
                     <th>Cuenta</th>
                     <th scope="col">Concepto/Servicio</th>
@@ -159,13 +160,14 @@
                 {% for pago in pagos_list %}
                 <tr>
                     <td class="d-none d-lg-table-cell">{{pago.detalles_comprobante.fecha}}</td>
-                    <td>{{pago.detalles_comprobante.titular_cuenta}}</td>
+                    <td>{{pago.detalles_comprobante.titular_cuenta_1}}</td>
+                    <td>{{pago.detalles_comprobante.titular_cuenta_2}}</td>
                     <td>{{pago.detalles_comprobante.cuenta_retiro}}</td>
                     <td>{{pago.detalles_comprobante.motivo_pago}}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.proyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.proyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.subproyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.distrito.nombre}}{% elif pago.gasto %}{{pago.gasto.distrito.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
-                    <td>{{pago.detalles_comprobante.importe_operacion}}</td>
+                    <td>${{pago.detalles_comprobante.importe_operacion|floatformat:2}}</td>
                     <td></td>
                 </tr>
                 {% endfor %}
@@ -216,10 +218,11 @@ dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
 });
-var modal = document.getElementById('dialog')
-modal.on('hidden.bs.modal', function () {
-    location.reload();
-});
+//var modal = document.getElementById('dialog')
+
+//modal.on('hidden.bs.modal', function () {
+ //   location.reload();
+//});
 
 
 </script>

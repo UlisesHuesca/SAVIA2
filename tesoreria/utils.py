@@ -9,26 +9,56 @@ def encontrar_variables(texto):
     # Definir los patrones de regex para cada variable
     patrones = {
         'fecha': r'Fecha de creación:\s*(\d{2}/\d{2}/\d{4})',
-        'importe_operacion': r'Importe|Importe de la operación:\s?([\d,.]+)',
+        'importe_operacion': r'(?:Importe|Importe de la operación):\s?([\d,.]+)',
         'cuenta_retiro': r'Cuenta de retiro:\s?(\d+)',
         'divisa_cuenta': r'Divisa de la cuenta:\s?([^\n\r]+)',
-        'titular_cuenta': r'Titular de la cuenta:\s*([^\n\r]+)\s*Titular de la cuenta:\s*([^\n\r]+)',
-        'motivo_pago': r'Motivo de pago:\s*([^\n\r]+)'
+        'titular_cuenta_1': r'Titular de la cuenta:\s*([^\n\r]+)',
+        'titular_cuenta_2': r'Titular de la cuenta:\s*([^\n\r]+)\s*Titular de la cuenta:\s*([^\n\r]+)',
+        'motivo_pago': r'(?:Motivo de pago|Concepto de Pago):\s*([^\n\r]+)'
     }
 
     # Buscar cada patrón y extraer el valor
     for clave, patron in patrones.items():
-        coincidencia = re.search(patron, texto)
+        coincidencia = re.search(patron, texto, re.DOTALL)
         if coincidencia:
-            if clave == 'importe_operacion':
-                variables[clave] = coincidencia.group(1).replace('MXP','').replace(',', '') if 'importe_operacion' in clave else coincidencia.group(1)
-            elif clave == 'titular_cuenta':
-                variables[clave] = coincidencia.group(2)  # Captura solo el titular de la cuenta del lado derecho
-            else:
-                variables[clave] = coincidencia.group(1)
+            try:
+                if clave in ['importe_operacion', 'motivo_pago']:
+                    valor = coincidencia.group(1)
+                    if valor:
+                        if clave == 'importe_operacion':
+                            valor = valor.replace('MXP', '').replace(',', '')
+                        variables[clave] = valor
+                    else:
+                        variables[clave] = 'No disponible'
+                elif clave == 'titular_cuenta_2':
+                    valor1 = coincidencia.group(1)
+                    valor2 = coincidencia.group(2)
+                    if valor1 and valor2:
+                        variables['titular_cuenta_1'] = valor1.strip()
+                        variables['titular_cuenta_2'] = valor2.strip()
+                    else:
+                        variables['titular_cuenta_1'] = 'No disponible'
+                        variables['titular_cuenta_2'] = 'No disponible'
+                elif clave == 'titular_cuenta_1':
+                    valor = coincidencia.group(1)
+                    if valor:
+                        variables[clave] = valor.strip()
+                    else:
+                        variables[clave] = 'No disponible'
+                else:
+                    valor = coincidencia.group(1)
+                    if valor:
+                        variables[clave] = valor.strip()
+                    else:
+                        variables[clave] = 'No disponible'
+            except IndexError:
+                variables[clave] = 'No disponible'
         else:
             variables[clave] = 'No disponible'
 
+
+    # Imprimir para depuración
+    print(f"Variables extraídas: {variables}")
 
     return variables
 
