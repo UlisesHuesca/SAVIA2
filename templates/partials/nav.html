@@ -106,14 +106,12 @@
                     <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'mis-gastos' %}">Mis Gastos</a>
                         <a class="dropdown-item" href="{% url 'mis-viaticos' %}">Mis Viáticos</a>
-                        {% if usuario.tipo.almacenista == False %}
-                        <a class="dropdown-item" href="{% url 'pendientes_entrada' %}">
+                        <a class="dropdown-item" href="{% url 'entrada-servicios' %}">
                             Servicios pendientes
                             {% if conteo_entradas > 0 %}
                             <span class="badge bg-danger">({{conteo_entradas}})</span>
                              {% endif %}
                         </a>
-                        {% endif %}
                     <div class="dropdown-divider"></div>
                     {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Superintendente" %}
                     <div>

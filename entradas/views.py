@@ -95,6 +95,42 @@ def pendientes_entrada(request):
 
     return render(request, 'entradas/pendientes_entrada.html', context)
 
+
+@perfil_seleccionado_required
+def entrada_servicios(request):
+    pk = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk)
+    
+
+    if usuario.tipo.nombre == "Admin":
+         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True).order_by('-folio')
+    else:
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+
+
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
+
+    
+    # Ahora, usamos este queryset de compras para filtrar ArticuloComprado.
+    articulos_comprados = ArticuloComprado.objects.filter(oc__in=compras, entrada_completa = False).order_by('-oc__folio')
+
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_matriz_compras_pendientes(articulos_comprados)
+
+    #Set up pagination
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
+
+    context = {
+        'compras':compras,
+        'myfilter':myfilter,
+        'compras_list':compras_list,
+        }
+
+    return render(request, 'entradas/pendientes_entrada.html', context)
+
 @login_required(login_url='user-login')
 def pendientes_calidad(request):
     articulos_entrada = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto__producto__especialista = True, liberado = False)
