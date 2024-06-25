@@ -64,6 +64,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.cuenta|add_class:"form-control"|append_attr:"placeholder= Cuenta"}}
+                                <label style="color: #121212;" for="id_cuenta">Cuenta</label>
+                            </div>
+                        </div>
+                    </div>
                     
                     <div id="serie" class="col-lg-2 col-sm-12">
                         <div class="input-group mb-3">
@@ -99,9 +108,26 @@
                             </button>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info"  href="{% url 'transferencia-cuentas' %}">
+                            <a type="button" class="btn btn-lg btn-outline-info"  href="{% url 'transferencia-cuentas' %}" data-toggle="tooltip" data-placement="top" title="Transferencia">
                               <i class="fa-solid fa-money-bill-transfer"></i>
                             </a>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'saldo-inicial' %}" data-toggle="tooltip" data-placement="top" title="Saldo Inicial">
+                                <i class="fa-solid fa-sack-dollar"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'cargo-abono' %}" data-toggle="tooltip" data-placement="top" title="Cargo/Abono">
+                                <i class="fa-solid fa-money-bill-trend-up"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item mx-2">
+                            {% if latest_balance %}
+                            <div class="alert alert-info" role="alert">
+                                <strong><span id="saldo-inicial">Último Saldo:</strong> $</span>{{ latest_balance.monto_inicial }}</span>
+                            </div>
+                            {% endif %}
                         </li>
                     </ul>
                 </form>
@@ -151,24 +177,37 @@
                     <th>Contrato</th>
                     <th>Sector</th>
                     <th>Distrito</th>
-                    <th class="d-none d-lg-table-cell">Cargos</th>
-                    <th>Abonos</th>
+                    <th>Monto</th>
                     <th>Saldo</th>
                 </tr>
             </thead>
             <tbody>
                 {% for pago in pagos_list %}
                 <tr>
-                    <td class="d-none d-lg-table-cell">{{pago.detalles_comprobante.fecha}}</td>
+                    <td class="d-none d-lg-table-cell">{% if pago.detalles_comprobante and pago.detalles_comprobante.fecha != "No disponible" %}{{pago.detalles_comprobante.fecha}}{% else %} {{ pago.pagado_real }} {% endif %}</td>
                     <td>{{pago.detalles_comprobante.titular_cuenta_1}}</td>
-                    <td>{{pago.detalles_comprobante.titular_cuenta_2}}</td>
-                    <td>{{pago.detalles_comprobante.cuenta_retiro}}</td>
-                    <td>{{pago.detalles_comprobante.motivo_pago}}</td>
+                    <td>
+                        {% if pago.detalles_comprobante and pago.detalles_comprobante.titular_cuenta_2 != "No disponible" %}{{pago.detalles_comprobante.titular_cuenta_2}}
+                        {% elif pago.oc %} {{pago.oc.proveedor.nombre.razon_social}} 
+                        {% elif pago.gasto %}  {% if pago.gasto.colaborador %} {{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}} {% else %} {{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}{% endif %}
+                        {% elif pago.viatico %} {% if pago.viatico.colaborador %} {{pago.viatico.colaborador.staff.staff.first_name}} {{pago.viatico.colaborador.staff.staff.last_name}}{% else %}{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}} {% endif %}
+                        {% else %} {{pago.tesorero.staff.staff.first_name}} {{pago.tesorero.staff.staff.last_name}}
+                        {% endif %}</td>
+                    <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.cuenta_retiro != "No disponible"  %}{{pago.detalles_comprobante.cuenta_retiro}}{% else %}{{pago.cuenta}}{% endif %}</td>
+                    <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.cuenta_retiro != "No disponible"  %}{{pago.detalles_comprobante.motivo_pago}} 
+                        {% elif pago.oc %} OC{{pago.oc.folio}}
+                        {% elif pago.gasto %} G{{pago.gasto.folio}}
+                        {% elif pago.viatico %} V{{pago.viatico.folio}}
+                        {% else %} {{pago.tipo}}
+                        {% endif %}
+                    </td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.proyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.proyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.subproyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.distrito.nombre}}{% elif pago.gasto %}{{pago.gasto.distrito.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
-                    <td>${{pago.detalles_comprobante.importe_operacion|floatformat:2}}</td>
-                    <td></td>
+                    <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.importe_operacion != "No disponible"  %} ${{pago.detalles_comprobante.importe_operacion|floatformat:2}}
+                        {% else %} ${{pago.monto}} {% endif %}
+                    </td>
+                    <td class="saldo">{{pago.saldo}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -223,7 +262,6 @@ dataSpyList.forEach(function (dataSpyEl) {
 //modal.on('hidden.bs.modal', function () {
  //   location.reload();
 //});
-
 
 </script>
 {% endblock %}

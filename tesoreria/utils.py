@@ -58,7 +58,7 @@ def encontrar_variables(texto):
 
 
     # Imprimir para depuración
-    print(f"Variables extraídas: {variables}")
+    #print(f"Variables extraídas: {variables}")
 
     return variables
 
