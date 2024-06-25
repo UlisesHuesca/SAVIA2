@@ -6,7 +6,7 @@
 {% load l10n %}
 <html>
 <head>
-{% block title %}Transferencia entre cuentas{% endblock %}
+{% block title %}Saldo inicial{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -42,107 +42,64 @@
 <div class="col-lg-6 offset-lg-3 col-sm-12" >
     <div class="card">
         <div class="card-header">
-            <h5 class="modal-title">Transacción</h5>
+            <h5 class="modal-title">Saldo inicial de cuenta</h5>
         </div>
 
         <div class="card-body">           
         <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="col">
                 {% csrf_token %}
-                {% if error_messages %}
-                <div class="alert alert-danger" role="alert">
-                    <ul>
-                        {% for error in error_messages %}
-                        <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                   
+                <div class="row my-2">
                     <div class="row">
                         <div class="col-lg-12 col-sm-12">
                             <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
-                                        <label style="color: #121212;" for="id_area">Tipo*</label>
+                                        {{form.cuenta}}
                                     </div>
                             </div>
                         </div>
                     </div>
-                    <div class="alert alert-primary" role="alert">
-                        CARGO
-                    </div>
-                    <div id="formulario_unico">
-                        <div class="row">
-                            <div class="col-lg-12 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                            {{form.cuenta}}
-                                        </div>
-                                </div>
-                            </div>
-                        </div>
-                        <div class="row">
-                            <div class="col-lg-12 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {% render_field form.pagado_real type="date" class="form-control" %}
-                                        <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
+                    <div class="row">
+                        <div class="col-lg-12 col-sm-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1"> 
+                                        {{form.monto_inicial|add_class:"form-control"|append_attr:"placeholder= Monto Inicial"}}
+                                        <label style="color: #121212;" for="id_area">Monto Inicial*</label>
                                     </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-lg-12 col-sm-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {% render_field form.fecha_inicial type="date" class="form-control" %}
+                                    <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
                                 </div>
                             </div>
                         </div>
+                    </div>
 
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>  
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
-                                        <label style="color: #121212;" for="id_area">Monto*</label>
+                    <div class="row">
+                        <div class="col-lg-12 col-sm-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1"> 
+                                        {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
+                                        <label style="color: #121212;" for="id_area">Comentario*</label>
                                     </div>
-                                </div>
                             </div>
                         </div>
-                        <div class="row">
-                            <div class="col-lg-12 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                            {{form.comentario|add_class:"form-control"|append_attr:"placeholder= Comentario"}}
-                                            <label style="color: #121212;" for="id_area">Comentario*</label>
-                                        </div>
-                                </div>
-                            </div>
-                        </div>
-              
-                        <!--<div class="row">
-                            <div class="col-12">
-                                {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
-                            </div>
-                        </div>-->
-                
                     </div>
-                        <div class="alert alert-primary" role="alert">
-                        ABONO
-                        </div>
-                        <div class="row">
-                            <div class="col-lg-12 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                            {{form_transferencia.cuenta}}
-                                        </div>
-                                </div>
-                            </div>
-                        </div>
-                   
+                </div>
+                    
+                </div>
             </div>
             <div class="card-footer text-end">
-                <h6>Registrar Transacción|Movimiento de cuenta</h6>
+                <h6>Registrar Movimiento de cuenta</h6>
                 <button id="myBtn" name = "envio" type="submit" class="btn btn-success">Registrar</button>
                 <a type="button" class="btn btn-secondary" href="{% url 'control-bancos' %}">Cerrar</a>
             </div>
@@ -157,13 +114,14 @@
 <script>
 
 
+
+
 document.getElementById('myForm').addEventListener('submit', function() {
     // Espera 150 milisegundos antes de deshabilitar el botón de envío
     setTimeout(function() {
         document.getElementById('myBtn').disabled = true;
     }, 50);
 });
-
 
 /* *******************NO BORRAR EL CODIGO**********************
 este era para evitar el envío doble cuando era un modal
@@ -209,7 +167,6 @@ document.getElementById('id_monto').addEventListener('change',(event)=>{
     }
     });
 
-
 document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
   var file = event.target.files[0];
   var formData = new FormData();
@@ -240,6 +197,7 @@ document.getElementById('id_comprobante_pago').addEventListener('change', functi
 
 
 
+
 var datosCuenta = {{cuentas_para_select2|safe }};
 
 
@@ -253,17 +211,28 @@ $(document).ready(function() {
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección
     });
-});
-
-$(document).ready(function() {
-  
-  $('#id_abono-cuenta').select2({
-      allowClear: true,
-      width: '100%',
-      placeholder: 'Selecciona una cuenta',
-      templateResult: formatRepo, // Función para renderizar los resultados
-      templateSelection: formatRepoSelection // Función para renderizar la selección
-  });
+    $('#id_cuenta').on('select2:select', function(e) {
+        var data = e.params.data;
+        var moneda = data.moneda;
+        var tipo_cambio = document.getElementById('text_tc')
+        console.log(moneda)
+        if (compra_moneda == "DOLARES"){
+            if (moneda == "PESOS"){
+            lbl_calculo.classList.remove('d-none'); 
+            lbl_tipo_cambio.classList.remove('d-none');
+            tipo_cambio.classList.remove('d-none');
+            } else if (moneda =="DOLARES") {
+            monto.value = ""
+            tipo_cambio.value=""
+            calculo_previo.innerHTML = ""
+            lbl_calculo.classList.add('d-none');
+            lbl_tipo_cambio.classList.add('d-none');
+            tipo_cambio.classList.add('d-none');
+            //monto_dolares.classList.add('d-none')
+            monto.classList.remove('d-none');
+            }
+        }
+    });
 });
 
 function formatRepo (repo) {

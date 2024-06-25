@@ -15,11 +15,11 @@ from compras.forms import CompraForm
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf #convert_excel_matriz_compras
 from dashboard.models import Subproyecto
-from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor
+from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -37,6 +37,9 @@ import io
 import zipfile
 
 #Excel stuff
+import xlsxwriter
+from xlsxwriter.utility import xl_col_to_name
+
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
@@ -77,14 +80,22 @@ def compras_autorizadas(request):
 
     return render(request, 'tesoreria/compras_autorizadas.html',context)
 
-
+@perfil_seleccionado_required
 def transferencia_cuentas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, oc__req__orden__distrito = usuario.distritos, hecho=False)
+    tipos_pago = Tipo_Pago.objects.all()
+    cargo = tipos_pago.get(id = 1)
+    abono = tipos_pago.get(id = 2)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = cargo)
+    transaccion2, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = abono)
     form = Cargo_Abono_Form(instance=transaccion)
+    form_transferencia = Transferencia_Form(prefix='abono')
 
+    error_messages = []
 
+    form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id = 3)
+    print(Tipo_Pago.objects.filter(id=3))
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
       
     cuentas_para_select2 = [
@@ -93,26 +104,128 @@ def transferencia_cuentas(request):
          'moneda': str(cuenta.moneda),
         } for cuenta in cuentas]
 
-    if request.method == 'POST' and "envio" in request.POST:
-        form = PagoForm(request.POST, request.FILES or None, instance = transaccion)
-        if form.is_valid():
-            pago = form.save(commit = False)
-            pago.pagado_date = date.today()
-            pago.pagado_hora = datetime.now().time()
-            pago.hecho = True
-            #Se elimina el concepto del movimiento directo a la cuenta, todos son movimientos separados que suman y restan cuando deba sacarse el cálculo
-            #cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)               
-            pago.save()   
-            #cuenta.save()
-        else:
-            messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
+    if request.method == 'POST':
+        if "envio" in request.POST:
+            form = Cargo_Abono_Form(request.POST, instance = transaccion)
+            form_transferencia = Transferencia_Form(request.POST, instance = transaccion2, prefix='abono')
+            
+            if form.is_valid() and form_transferencia.is_valid():
+                cargo = form.save(commit=False)
+                cargo.pagado_date = date.today()
+                cargo.tipo = Tipo_Pago.objects.get(id = 1)
+                cargo.pagado_hora = datetime.now().time() 
+                cargo.hecho = True
+                
+                abono = form_transferencia.save(commit=False)
+                abono.monto = cargo.monto
+                #abono.tipo = Tipo_Pago.objects.get(id = 2)
+                abono.comentario = f"{cargo.comentario} (Relacionado con cuenta {cargo.cuenta})"
+                abono.pagado_real = cargo.pagado_real
+                abono.pagado_date = date.today()
+                abono.pagado_hora = datetime.now().time()
+                abono.hecho = True
+                abono.save()
+
+                cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
+                cargo.save()
+                messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente la transferencia')
+                return redirect('control-bancos')
+            else:
+                for field, errors in form.errors.items():
+                    error_messages.append(f"{field}: {errors.as_text()}")
+                for field, errors in form_transferencia.errors.items():
+                    error_messages.append(f"{field}: {errors.as_text()}")
 
     context= {
         'form':form,
+        'form_transferencia': form_transferencia,
         'cuentas_para_select2': cuentas_para_select2,
+        'error_messages': error_messages,
     }
 
     return render(request, 'tesoreria/transferencia_cuentas.html',context)
+
+@perfil_seleccionado_required
+def cargo_abono(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    enproceso = Tipo_Pago.objects.get(id = 3)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = enproceso)
+    form = Cargo_Abono_Form(instance=transaccion)
+    #form_transferencia = Transferencia_Form(instance = tran)
+
+
+    form.fields['tipo'].queryset = Tipo_Pago.objects.exclude(id=3)
+    #print(Tipo_Pago.objects.filter(id=3))
+    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+      
+    cuentas_para_select2 = [
+        {'id': cuenta.id,
+         'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
+         'moneda': str(cuenta.moneda),
+        } for cuenta in cuentas]
+
+    if request.method == 'POST':
+        if "envio" in request.POST:
+            form = Cargo_Abono_Form(request.POST, instance = transaccion)
+            if form.is_valid():
+                pago = form.save(commit = False)
+                pago.pagado_date = date.today()
+                pago.pagado_hora = datetime.now().time()
+                pago.hecho = True
+                #Se elimina el concepto del movimiento directo a la cuenta, todos son movimientos separados que suman y restan cuando deba sacarse el cálculo
+                #cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)               
+                pago.save()   
+                return redirect('control-bancos')
+            else:
+                messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
+
+    context= {
+        'form':form,
+        #'form_transferencia': form_transferencia,
+        'cuentas_para_select2': cuentas_para_select2,
+    }
+
+    return render(request, 'tesoreria/cargo_abono.html',context)
+
+
+@perfil_seleccionado_required
+def saldo_inicial(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    saldo, created = Saldo_Cuenta.objects.get_or_create(hecho=False)
+    form = Saldo_Inicial_Form(instance = saldo)
+
+    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+      
+    cuentas_para_select2 = [
+        {'id': cuenta.id,
+         'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
+         'moneda': str(cuenta.moneda),
+        } for cuenta in cuentas]
+    
+    if request.method == 'POST' and "envio" in request.POST:
+        form = Saldo_Inicial_Form(request.POST, instance = saldo)
+        if form.is_valid():
+            saldo = form.save(commit = False)
+            saldo.updated = date.today()
+            #saldo.pagado_hora = datetime.now().time()
+            saldo.hecho = True
+            saldo.updated_by = usuario
+            #Se elimina el concepto del movimiento directo a la cuenta, todos son movimientos separados que suman y restan cuando deba sacarse el cálculo
+            #cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)               
+            saldo.save()   
+            messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente el saldo inicial de la cuenta')
+            return redirect('control-bancos')
+        else:
+            messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
+
+    context = {
+        'cuentas_para_select2':cuentas_para_select2,
+        'form':form,
+    }
+
+    return render(request, 'tesoreria/saldo_inicial.html',context)
 
 from django.http import JsonResponse
 
@@ -137,7 +250,7 @@ def prellenar_formulario(request):
         cuenta_objeto = Cuenta.objects.get(cuenta=numero_cuenta_extraido)
 #        Combinas el número de cuenta y el texto de la divisa para prellenar el formulario
         #cuenta_formulario = f"{numero_cuenta_extraido} {texto_divisa}"
-        print(cuenta_objeto)
+        #print(cuenta_objeto)
         # Limpia y prepara los datos como sea necesario
         datos_para_formulario = {
             'monto': datos_extraidos.get('importe_operacion', '').replace('MXP', '').replace(',', '').strip(),
@@ -570,24 +683,70 @@ def control_bancos(request):
     pagos = Pago.objects.filter(
         Q(oc__req__orden__distrito = usuario.distritos) & Q(oc__autorizado2=True) | 
         Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2 = True) |
-        Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True), 
+        Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True)|
+        Q(tesorero__distritos = usuario.distritos), 
         hecho=True
     ).order_by('-pagado_real')
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
 
+    # Obtener la cuenta seleccionada en el filtro
+    cuenta_term = request.GET.get('cuenta')
+    latest_balance = None
+    saldo_inicial = 0
+    fecha_inicial = None
+
+    if cuenta_term:
+        try:
+            cuenta = Cuenta.objects.filter(cuenta__icontains=cuenta_term).first()
+            if cuenta:
+                latest_balance_record = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial').first()
+                if latest_balance_record:
+                    latest_balance = latest_balance_record.monto_inicial
+                    saldo_inicial = latest_balance
+                    fecha_inicial = latest_balance_record.fecha_inicial
+                    
+        except Cuenta.DoesNotExist:
+            cuenta = None
+
+    if fecha_inicial:
+        #print(f"Fecha Inicial: {fecha_inicial}")
+        pagos = pagos.filter(pagado_real__gte = fecha_inicial)
+        print(f"Pagos Filtrados: {pagos}")
+    
+
+    # Supongamos que quieres verificar la presencia del ID 123 en los pagos
+   
+
+    # Calcular saldo dinámico en orden inverso
+    saldo_acumulado = saldo_inicial
+    pagos_lista = list(pagos)  # Convertir a lista para poder iterar en orden inverso
+    for pago in reversed(pagos_lista):
+        
+        if pago.tipo and pago.tipo.nombre == "ABONO":  # Ajusta esta condición según el campo 'tipo'
+            saldo_acumulado += pago.monto
+        else:
+            saldo_acumulado -= pago.monto
+        pago.saldo = saldo_acumulado
+
+    
+    #print(cuenta, cuenta_term)
     #Set up pagination
     p = Paginator(pagos, 50)
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_pagos(pagos)
+        return convert_excel_control_bancos(pagos_lista)
+    
+    id_especifico = 110650
+    existe_pago = pagos.filter(id=id_especifico)
 
     context= {
         'pagos_list':pagos_list,
         'pagos':pagos,
         'myfilter':myfilter,
+        'latest_balance': saldo_inicial,
         }
 
     return render(request, 'tesoreria/control_bancos.html',context)
@@ -1118,3 +1277,115 @@ def layout_pagos(request):
 
     return render(request, 'tesoreria/layout_pagos.html', context)
 
+def convert_excel_control_bancos(pagos):
+      #print('si entra a la función')
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Matriz_Compras")
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    # Ajustar el ancho de las columnas
+    worksheet.set_column('A:A', 20)  # Fecha
+    #worksheet.set_column('B:B', 20)  # Empresa
+    worksheet.set_column('B:B', 35)  # Empresa/Proveedor
+    worksheet.set_column('C:C', 25)  # Cuenta
+    worksheet.set_column('D:D', 20)  # Concepto/Servicio
+    worksheet.set_column('E:E', 25)  # Contrato
+    worksheet.set_column('F:F', 25)  # Sector
+    worksheet.set_column('G:G', 20)  # Distrito
+    worksheet.set_column('H:H', 15)  # Monto
+    worksheet.set_column('I:I', 15)  # Saldo
+
+    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Contrato','Sector','Distrito','Monto','Saldo']
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+    
+    for col_num, header in enumerate(columns):
+        worksheet.write(0, col_num, header, head_style)
+
+    row_num = 1
+    for pago in pagos:
+         # Lógica de selección de datos basada en el template
+        fecha = pago.detalles_comprobante.fecha if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'fecha') and pago.detalles_comprobante.fecha != "No disponible" else pago.pagado_real
+        empresa = pago.detalles_comprobante.titular_cuenta_1 if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'titular_cuenta_1') else ''
+        if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'titular_cuenta_2') and pago.detalles_comprobante.titular_cuenta_2 != "No disponible":
+            proveedor = pago.detalles_comprobante.titular_cuenta_2
+        elif hasattr(pago, 'oc') and pago.oc:
+            proveedor = pago.oc.proveedor.nombre.razon_social
+        elif hasattr(pago, 'gasto') and pago.gasto:
+            if pago.gasto.colaborador:
+                proveedor = f"{pago.gasto.colaborador.staff.staff.first_name} {pago.gasto.colaborador.staff.staff.last_name}"
+            else:
+                proveedor = f"{pago.gasto.staff.staff.staff.first_name} {pago.gasto.staff.staff.staff.last_name}"
+        elif hasattr(pago, 'viatico') and pago.viatico:
+            if pago.viatico.colaborador:
+                proveedor = f"{pago.viatico.colaborador.staff.staff.first_name} {pago.viatico.colaborador.staff.staff.last_name}"
+            else:
+                proveedor = f"{pago.viatico.staff.staff.first_name} {pago.viatico.staff.staff.last_name}"
+        else:
+            proveedor = f"{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}"
+
+        cuenta = pago.detalles_comprobante.cuenta_retiro if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'cuenta_retiro') and pago.detalles_comprobante.cuenta_retiro != "No disponible" else str(pago.cuenta)
+        if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'cuenta_retiro') and pago.detalles_comprobante.cuenta_retiro != "No disponible":
+            concepto_servicio = pago.detalles_comprobante.motivo_pago
+        elif hasattr(pago, 'oc') and pago.oc:
+            concepto_servicio = f"OC{pago.oc.folio}"
+        elif hasattr(pago, 'gasto') and pago.gasto:
+            concepto_servicio = f"G{pago.gasto.folio}"
+        elif hasattr(pago, 'viatico') and pago.viatico:
+            concepto_servicio = f"V{pago.viatico.folio}"
+        else:
+            concepto_servicio = str(pago.tipo)
+
+        contrato = pago.oc.req.orden.proyecto.nombre if hasattr(pago, 'oc') and pago.oc else (pago.viatico.proyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else '')
+        sector = pago.oc.req.orden.subproyecto.nombre if hasattr(pago, 'oc') and pago.oc else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else '')
+        distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else ''))
+        monto = pago.detalles_comprobante.importe_operacion if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'importe_operacion') and pago.detalles_comprobante.importe_operacion != "No disponible" else pago.monto
+        saldo = pago.saldo
+
+        # Escribir los datos en el archivo Excel
+        worksheet.write(row_num, 0, fecha.strftime('%d de %B de %Y') if fecha else '', date_style)
+        #worksheet.write(row_num, 1, empresa)
+        worksheet.write(row_num, 1, proveedor)
+        worksheet.write(row_num, 2, cuenta)
+        worksheet.write(row_num, 3, concepto_servicio)
+        worksheet.write(row_num, 4, contrato)
+        worksheet.write(row_num, 5, sector)
+        worksheet.write(row_num, 6, distrito)
+        worksheet.write(row_num, 7, monto, money_style)
+        worksheet.write(row_num, 8, saldo, money_style)
+        
+        row_num += 1
+
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Control_Bancos_{dt.date.today()}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response

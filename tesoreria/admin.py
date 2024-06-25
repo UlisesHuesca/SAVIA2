@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago
+from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, Saldo_Cuenta
 
 class CuentaAdmin(admin.ModelAdmin):
     raw_id_fields = ('encargado',)
@@ -27,3 +27,5 @@ admin.site.register(Pago, PagoAdmin)
 admin.site.register(Comprobante_saldo_favor)
 
 admin.site.register(Tipo_Pago)
+
+admin.site.register(Saldo_Cuenta)

@@ -49,29 +49,16 @@
         <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="col">
                 {% csrf_token %}
-                {% if error_messages %}
-                <div class="alert alert-danger" role="alert">
-                    <ul>
-                        {% for error in error_messages %}
-                        <li>{{ error }}</li>
-                        {% endfor %}
-                    </ul>
-                </div>
-                {% endif %}
-                   
                     <div class="row">
                         <div class="col-lg-12 col-sm-12">
                             <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
+                                        {{form.tipo|add_class:"form-control"|append_attr:"placeholder= Monto"}}
                                         <label style="color: #121212;" for="id_area">Tipo*</label>
                                     </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="alert alert-primary" role="alert">
-                        CARGO
                     </div>
                     <div id="formulario_unico">
                         <div class="row">
@@ -126,20 +113,6 @@
                         </div>-->
                 
                     </div>
-                        <div class="alert alert-primary" role="alert">
-                        ABONO
-                        </div>
-                        <div class="row">
-                            <div class="col-lg-12 col-sm-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                            {{form_transferencia.cuenta}}
-                                        </div>
-                                </div>
-                            </div>
-                        </div>
-                   
             </div>
             <div class="card-footer text-end">
                 <h6>Registrar Transacción|Movimiento de cuenta</h6>
@@ -157,12 +130,47 @@
 <script>
 
 
+
+
 document.getElementById('myForm').addEventListener('submit', function() {
     // Espera 150 milisegundos antes de deshabilitar el botón de envío
     setTimeout(function() {
         document.getElementById('myBtn').disabled = true;
     }, 50);
+    // Remover campos no visibles del DOM
+    var tipo = document.getElementById('id_tipo').value;
+    if (tipo === '1' || tipo === '2') {
+        removeFormFields('formulario_transferencia');
+    }
 });
+
+document.getElementById('id_tipo').addEventListener('change', function(event) {
+    var tipo = event.target.value;
+    console.log(tipo)
+    var formTransferencia = document.getElementById('formulario_transferencia');
+    var btn = document.getElementById('myBtn');
+    
+    if (tipo === '1' ||  tipo === '2') {
+        
+        formTransferencia.classList.add('d-none');
+        btn.name = 'envio';
+    } else if (tipo === '3') {
+        formTransferencia.classList.remove('d-none');
+        btn.name = 'envio_transferencia';
+    }
+});
+
+
+
+document.getElementById('myForm').addEventListener('submit', function(event) {
+    setTimeout(function() {
+        document.getElementById('myBtn').disabled = true;
+    }, 50);
+
+   
+});
+
+
 
 
 /* *******************NO BORRAR EL CODIGO**********************
@@ -253,6 +261,12 @@ $(document).ready(function() {
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección
     });
+    $('#id_cuenta').on('select2:select', function(e) {
+        var data = e.params.data;
+        var moneda = data.moneda;
+        var tipo_cambio = document.getElementById('text_tc')
+        console.log(moneda)
+    });
 });
 
 $(document).ready(function() {
@@ -261,8 +275,15 @@ $(document).ready(function() {
       allowClear: true,
       width: '100%',
       placeholder: 'Selecciona una cuenta',
+      data: datosCuenta,
       templateResult: formatRepo, // Función para renderizar los resultados
       templateSelection: formatRepoSelection // Función para renderizar la selección
+  });
+  $('#id_abono-cuenta').on('select2:select', function(e) {
+      var data = e.params.data;
+      var moneda = data.moneda;
+      var tipo_cambio = document.getElementById('text_tc')
+      console.log(moneda)
   });
 });
 

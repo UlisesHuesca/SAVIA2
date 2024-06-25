@@ -3,7 +3,7 @@ from .models import Pago, Facturas, Cuenta
 from compras.models import Compra
 from gastos.models import Solicitud_Gasto
 from viaticos.models import Solicitud_Viatico
-from tesoreria.models import Comprobante_saldo_favor
+from tesoreria.models import Comprobante_saldo_favor, Saldo_Cuenta
 
 class PagoForm(forms.ModelForm):
     class Meta:
@@ -66,7 +66,7 @@ class TxtForm(forms.ModelForm):
 class Cargo_Abono_Form(forms.ModelForm):
     class Meta:
         model = Pago
-        fields = ['monto','comprobante_pago','tipo_de_cambio','cuenta','pagado_real','tipo', 'comentario']
+        fields = ['monto','cuenta','pagado_real','tipo', 'comentario']
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -79,4 +79,15 @@ class Cargo_Abono_Form(forms.ModelForm):
                 self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida   #def __init__(self,*args, **kwargs):
-   
+
+class Saldo_Inicial_Form(forms.ModelForm):
+    class Meta:
+        model = Saldo_Cuenta
+        fields = ['cuenta','monto_inicial','comentario','fecha_inicial']
+    
+
+class Transferencia_Form(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['cuenta']
+    

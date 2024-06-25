@@ -12,12 +12,11 @@ class PagoFilter(django_filters.FilterSet):
     solicitada_por = CharFilter(field_name='oc__req__orden__staff__staff', lookup_expr='icontains')
     start_date = DateFilter(field_name = 'pagado_date', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_date',lookup_expr='lte')
-    cuenta = CharFilter(field_name='cuenta', lookup_expr='icontains')
     id = CharFilter(field_name='id', lookup_expr='icontains')
 
     class Meta:
         model = Compra
-        fields = ['oc','proveedor','proyecto','subproyecto','monto_pagado','solicitada_por','start_date','end_date','cuenta','id',]
+        fields = ['oc','proveedor','proyecto','subproyecto','monto_pagado','solicitada_por','start_date','end_date','id']
 
 class Matriz_Pago_Filter(django_filters.FilterSet):
 
@@ -33,12 +32,14 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     facturas_completas = BooleanFilter(method='filter_by_facturas_completas', label='Facturas Completas') # New filter
     tesorero = CharFilter(method='tesorero_nombre', lookup_expr='icontains')
     #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
+    cuenta = CharFilter(field_name = 'cuenta__cuenta', lookup_expr='icontains')
     start_date = DateFilter(field_name ='pagado_date', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_date', lookup_expr='lte')
 
+
     class Meta:
         model = Pago
-        fields = ['oc','pagado_date','tesorero']
+        fields = ['oc','pagado_date','tesorero','cuenta']
 
     def my_filter(self, queryset, name, value):
         return queryset.filter(Q(oc__folio__icontains = value) | Q(gasto__folio__icontains = value)| Q(viatico__folio__icontains = value))

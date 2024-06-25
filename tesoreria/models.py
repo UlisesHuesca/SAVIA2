@@ -136,3 +136,16 @@ class Comprobante_saldo_favor(models.Model):
 
     def __str__(self):
         return f'id:{self.id} oc:{self.oc}'
+    
+class Saldo_Cuenta(models.Model):
+    cuenta = models.ForeignKey (Cuenta, on_delete = models.CASCADE, null=True)
+    updated = models.DateField(null=True, blank=True)
+    fecha_inicial = models.DateField(null=True)
+    updated_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    monto_inicial = models.DecimalField(max_digits=14,decimal_places=4, null=True, default=0)
+    comentario = models.CharField(max_length=100, null=True, blank=True)
+    hecho = models.BooleanField(default=False)
+    history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+
+    def __str__(self):
+        return f'id:{self.cuenta}'
