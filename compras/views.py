@@ -2994,3 +2994,242 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
     output.close()
 
     return response
+
+def generar_politica_antisoborno(request):
+    #Configuration of the PDF object
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    #doc = SimpleDocTemplate(buf, pagesize=letter)
+    #Here ends conf.
+    #compra = Compra.objects.get(id=pk)
+
+    #Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    #Elaborar caja
+    #c.line(caja_iso,500,caja_iso,720)
+
+    c.drawString(430,caja_iso,'Preparado por:')
+    c.drawString(405,caja_iso-10,'Auditoría de Proveedores')
+
+    #Primera Tabla
+    caja_proveedor = caja_iso - 85
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(140,750,260,20, fill=True, stroke=False) #Barra azul superior Título
+    c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios
+    c.rect(20,caja_proveedor - 100,565,5, fill=True, stroke=False) #Linea posterior horizontal
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(270,755,'Carta de Contactos y Datos Bancarios')
+    c.setLineWidth(.3) #Grosor
+    #c.line(20,caja_proveedor-8,20,520) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    #c.line(585,caja_proveedor-8,585,520) #Linea 2 contorno
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    c.drawString(200,caja_proveedor,'DATOS BANCARIOS MONEDA NACIONAL')
+    inicio_central = 300
+    #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
+    c.setFillColor(black)
+    c.setFont('Helvetica-Bold',9)
+    #Primera columna
+    c.drawString(30,caja_proveedor-20,'Nombre:')
+    c.drawString(30,caja_proveedor-40,'Banco:')
+    c.drawString(30,caja_proveedor-60,'Clabe:')
+    c.drawString(30,caja_proveedor-80,'Convenio:')
+    #Segunda Columna
+    c.drawString(300,caja_proveedor-40,'Cuenta:')
+    c.drawString(300,caja_proveedor-60,'Referencia:')
+   
+
+
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+   
+    #Primera columna
+    c.drawString(100,caja_proveedor-20, proveedor.nombre.razon_social)
+    c.drawString(100,caja_proveedor-40, proveedor.banco.nombre)
+    c.drawString(100,caja_proveedor-60, proveedor.clabe)
+    c.drawString(100,caja_proveedor-80, proveedor.contratocie)
+    #Segunda columna
+    c.drawString(370,caja_proveedor-40, proveedor.cuenta)
+    c.drawString(370,caja_proveedor-60, 'NR')
+
+    
+    #Segunda tabla
+    segunda_tabla = caja_proveedor - 150
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(20,  segunda_tabla - 8,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
+    c.rect(20, segunda_tabla - 80,565,5, fill=True, stroke=False) #Linea posterior horizontal
+   
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    c.drawString(220, segunda_tabla,'DATOS BANCARIOS DÓLARES')
+    c.setFillColor(black)
+    c.setFont('Helvetica-Bold',9)
+    #Primera columna
+    c.drawString(30,segunda_tabla-20,'Nombre:')
+    c.drawString(30,segunda_tabla-40,'Banco:')
+    c.drawString(30,segunda_tabla-60,'Clabe Spid:')
+    #Segunda Columna
+    c.drawString(300,segunda_tabla-40,'Cuenta:')
+    c.drawString(300,segunda_tabla-60,'Codigo Swift:')
+   
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+   
+    #Primera columna
+    c.drawString(100,segunda_tabla-20, proveedor.nombre.razon_social)
+    c.drawString(100,segunda_tabla-40, proveedor.banco.nombre)
+    c.drawString(100,segunda_tabla-60, proveedor.spid)
+    #Segunda columna
+    c.drawString(370,segunda_tabla-40, proveedor.cuenta)
+    if proveedor.swift:
+        c.drawString(370,segunda_tabla-60, proveedor.swift)
+    else:
+        c.drawString(370,segunda_tabla-60, 'NA')
+
+    #Tercera tabla
+    tercera_tabla = segunda_tabla - 140
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(20,   tercera_tabla - 8,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
+    c.rect(20,  tercera_tabla - 35,565,5, fill=True, stroke=False) #Linea posterior horizontal
+   
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    c.drawString(230,  tercera_tabla,'CONDICIONES DE COMPRA')
+    c.setFillColor(black)
+    c.setFont('Helvetica-Bold',9)
+    #Única Fila
+    c.drawString(30,tercera_tabla-20,'Crédito:')
+    c.drawString(150,tercera_tabla-20,'Contado:')
+    c.drawString(300,tercera_tabla-20,'Días de Crédito:')
+   
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+   
+    #Primera columna
+    if proveedor.financiamiento:
+        c.setFont('Helvetica-Bold', 12)
+        c.drawString(70,tercera_tabla-20, "X")
+    else:
+        c.setFont('Helvetica-Bold', 12)
+        c.drawString(200,tercera_tabla-20, "X")
+    c.drawString(380,tercera_tabla-20, str(proveedor.dias_credito))
+   
+
+    #Cuarta tabla
+    cuarta_tabla = tercera_tabla - 80
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(20, cuarta_tabla - 8,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
+    c.rect(20, cuarta_tabla - 120,565,5, fill=True, stroke=False) #Linea posterior horizontal
+   
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    c.drawString(220, cuarta_tabla,'DATOS DE PROVEEDOR Y CONTACTO')
+    c.setFillColor(black)
+    c.setFont('Helvetica-Bold',9)
+    #Primera columna
+    c.drawString(30,cuarta_tabla-20,'Razón Social:')
+    c.drawString(30,cuarta_tabla-40,'Dirección:')
+    c.drawString(30,cuarta_tabla-60,'Estado:')
+    c.drawString(30,cuarta_tabla-80,'RFC:')
+    c.drawString(30,cuarta_tabla-100,'Contacto:')
+    #Segunda Columna
+    c.drawString(300,cuarta_tabla-60,'Teléfono:')
+    c.drawString(300,cuarta_tabla-80,'Email:')
+    
+   
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+   
+    #Primera columna
+    c.drawString(100,cuarta_tabla-20, proveedor.nombre.razon_social)
+    c.drawString(100,cuarta_tabla-40, proveedor.domicilio)
+    if proveedor.estado:
+        c.drawString(100,cuarta_tabla-60, str(proveedor.estado.nombre))
+    else:
+        c.drawString(100,cuarta_tabla-60, 'No registro')
+    c.drawString(100,cuarta_tabla-80, proveedor.nombre.rfc)
+    c.drawString(100,cuarta_tabla-100, proveedor.contacto)
+    #Segunda columna
+    c.drawString(370,cuarta_tabla-60, proveedor.telefono)
+    c.drawString(370,cuarta_tabla-80, proveedor.email)
+   
+
+
+    texto = """El objeto del presente escrito es poner en conocimiento, de los proveedores que realizan trabajos para nuestra empresa, 
+                los requerimientos mínimos que le sean de aplicación, que debe de cumplir en lo referente a la seguridad y salud en el 
+                trabajo, calidad y protección del medio ambiente. La aceptación de una orden de compra implica la responsabilidad por 
+                parte del proveedor del conocimiento y aceptación de lo descrito.<br/>Nuestra empresa tiene implantado un SEOV 
+                (Sistema de Excelencia Operativa Vordcab), bajo las normas ISO 9001:2015, ISO 14001:2015 e ISO 45001:2018, 
+                por lo que se requiere que nuestros proveedores colaboren en el cumplimiento de los siguientes requisitos: <br/>
+                """
+    
+    texto2 = """En todo momento el proveedor está obligado a cumplir con la legislación aplicable al servicio que está prestando.<br/>
+El proveedor se compromete a garantizar el cumplimiento de lo solicitado en el pedido u orden de compra del material o del trabajo 
+externo.<br/>
+El proveedor debería poder garantizar la correcta gestión y control de: los residuos, emisiones atmosféricas, ruidos, 
+efluentes residuales, productos peligrosos, afectación del suelo y mantenimiento de instalaciones, respecto al servicio prestado.<br/>
+El proveedor deberá aplicar las medidas preventivas necesarias, para evitar situaciones de peligro o emergencia como derrame, fuga, 
+incendio, etc., durante la realización del trabajo encomendado. Y si es preciso formar e informar a su personal sobre manipulación, 
+almacenaje, uso y riesgos de productos o preparados peligrosos.<br/>
+El proveedor deberá facilitar la documentación ambiental y de seguridad que se le solicite o requiera.<br/>
+Si el proveedor tiene algún servicio que presta a nuestra empresa subcontratado, por ejemplo, transporte, deberá transmitir este 
+documento a su subcontratista.<br/> """
+    texto3 = """El proveedor deberá trabajar adoptando buenas prácticas ambientales y cumplir con los procedimientos internos que se 
+    le hayan comunicado respecto a HSE y la Prevención de Riesgos Laborales.<br/>
+Las empresas que realicen trabajos para nuestra empresa deberán cumplirse los requisitos de seguridad establecidos, uso de EPP, 
+protecciones colectivas, formación, seguridad equipos,
+medidas preventivas<br/>
+Si durante el trabajo se deben retirar residuos peligrosos (aceites, aguas con productos peligrosos, pinturas, disolventes, sus envases)
+o /y no peligrosos (escombros, embalajes), se recogerán en recipientes adecuados según la cantidad a retirar. Los recipientes llenos
+serán retirados por la empresa que preste el servicio o entregados a nuestra empresa, según convenga, para su correcto almacenamiento 
+y gestión posterior.<br/>
+Si no sabe qué hacer con algún residuo o efluente residual o cualquier otra cosa, que se ha originado mientras prestaba el servicio,
+ avise a la persona que le haya atendido o al Responsable de seguridad. No tomará decisiones.<br/>
+Si detecta cualquier situación de riesgo/emergencia (ambiental, personal, de seguridad), lo comunicará de inmediato a cualquier persona
+de la empresa o a la que le haya atendido o al Responsable de seguridad. Nunca actué. Deberá seguir las normas de emergencia que se le
+ han facilitado a la entrada.<br/>
+Si mientras trabaja se produce una situación de emergencia (derrame o fuga de producto peligrosos), y le han facilitado la formación y 
+medios necesarios para actuar, proceda según la instrucción que se le ha facilitado, en caso contrario avise de inmediato a cualquier 
+persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<br/>"""
+    titulo1 = "REQUISITOS OBLIGATORIOS PARA PROVEEDORES DE GRUPO VORDCAB"
+    titulo2 = """REQUISITOS GENERALES PARA TODOS LOS PROVEEDORES"""
+    titulo3 = """REQUISITOS SI USTED PRESTA EL SERVICIO O PARTE DE SERVICIO DENTRO <br/> 
+                DE LAS INSTALACIONES DE GRUPO VORDCAB"""
+    
+    """titulo1 = Paragraph(titulo1, styleT)
+    parrafo = Paragraph(texto, styleN)
+    titulo2 = Paragraph(titulo2, styleT)
+    parrafo2 = Paragraph(texto2, styleN)
+    titulo3 = Paragraph(titulo3, styleT)
+    parrafo3 = Paragraph(texto3, styleN)
+
+    ancho, alto = letter  # Asegúrate de tener estas dimensiones definidas
+    #frame = Frame(120, 720, ancho - 100, alto - 100, id='frameTextoConstante')  # Ajusta las dimensiones según sea necesario
+    elementos = [titulo1, Spacer(1,25), parrafo, Spacer(1,25),titulo2,Spacer(1,25), parrafo2, Spacer(1,25),titulo3,Spacer(1,25), parrafo3]
+    frame = Frame(30, 0, width-50, height-100, id='frameTextoConstante')
+    frame.addFromList(elementos, c)"""
+
+    c.save()
+    buf.seek(0)
+    return FileResponse(buf, as_attachment=True, filename='Carta_Proveedor' + str(proveedor.id) +'.pdf')

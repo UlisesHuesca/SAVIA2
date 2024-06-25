@@ -909,8 +909,8 @@ def gasto_entrada(request, pk):
                         precio = item_producto.precio_unitario,
                         surtir=True,
                         comentario="esta solicitud es proveniente de un gasto",
-                        created_at=date.today(),
-                        created_at_time=datetime.now().time(),
+                        created_at=datetime.now(),
+                        #created_at_time=datetime.now().time(),
                     )
                     #Calculo el precio  y agrega al inventario
 
