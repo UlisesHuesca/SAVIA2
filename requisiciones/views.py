@@ -2177,3 +2177,223 @@ def generate_excel_report(salidas):
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
     return response
+
+
+
+def render_requisicion_pdf_view(request, pk):
+    #Configuration of the PDF object
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    #Here ends conf.
+    requisicion = Requis.objects.get(id=pk)
+    productos = ArticulosRequisitados.objects.filter(req=pk)
+    #salidas = Salidas.objects.filter(producto__articulos__orden__id=pk)
+
+
+   #Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    #Elaborar caja
+    #c.line(caja_iso,500,caja_iso,720)
+
+
+
+    #Encabezado
+    c.drawString(420,caja_iso,'Preparado por:')
+    c.drawString(420,caja_iso-10,'SUP. ADMON')
+    c.drawString(520,caja_iso,'Aprobación')
+    c.drawString(520,caja_iso-10,'SUB ADM')
+    c.drawString(150,caja_iso-20,'Número de documento')
+    c.drawString(160,caja_iso-30,'SEOV-ADQ-N4-01.01')
+    c.drawString(245,caja_iso-20,'Clasificación del documento')
+    c.drawString(275,caja_iso-30,'Controlado')
+    c.drawString(355,caja_iso-20,'Nivel del documento')
+    c.drawString(380,caja_iso-30, 'N5')
+    c.drawString(440,caja_iso-20,'Revisión No.')
+    c.drawString(452,caja_iso-30,'000')
+    c.drawString(510,caja_iso-20,'Fecha de Emisión')
+    c.drawString(525,caja_iso-30,'22-Nov.-17')
+
+    caja_proveedor = caja_iso - 65
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
+    c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
+    c.rect(20,575,565,2, fill=True, stroke=False) #Linea posterior horizontal
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(280,755,'Requisición')
+    c.setLineWidth(.3) #Grosor
+    c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    #c.drawString(120,caja_proveedor,'Infor')
+    c.drawString(300,caja_proveedor, 'Detalles')
+    inicio_central = 300
+    #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+    c.drawString(30,caja_proveedor-20,'Solicitó:')
+    c.drawString(30,caja_proveedor-40,'Distrito:')
+    c.drawString(30,caja_proveedor-60,'Proyecto')
+    c.drawString(30,caja_proveedor-80,'Subproyecto:')
+    c.drawString(30,caja_proveedor-100,'Fecha de Aprobación:')
+    
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(500,caja_proveedor-20,'FOLIO:')
+    c.setFillColor(rojo)
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(540,caja_proveedor-20, str(requisicion.folio))
+
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+    almacenista = Profile.objects.filter(tipo__almacenista = True).first()
+    if requisicion.orden.staff:
+        c.drawString(130,caja_proveedor-20, requisicion.orden.staff.staff.staff.first_name+' '+ requisicion.orden.staff.staff.staff.last_name)
+    else:    
+        c.drawString(130,caja_proveedor-20, almacenista.staff.staff.last_name+' '+ almacenista.staff.staff.last_name)
+    c.drawString(130,caja_proveedor-40, requisicion.orden.staff.distritos.nombre)
+    c.drawString(130,caja_proveedor-60, requisicion.orden.proyecto.nombre)
+    c.drawString(130,caja_proveedor-80, requisicion.orden.subproyecto.nombre)
+    if requisicion.approved_at:
+        c.drawString(130,caja_proveedor-100, requisicion.approved_at.strftime("%d/%m/%Y"))
+    else:
+        c.setFillColor(rojo)
+        c.drawString(130,caja_proveedor-100, "No Aprobado aún")
+    #Create blank list
+    data =[]
+
+    encabezado = [['''Código''', '''Nombre''', '''Cantidad''','''Comentario''']]
+
+
+    high = 540
+    for producto in productos:
+        data.append([producto.producto.articulos.producto.producto.codigo, producto.producto.articulos.producto.producto.nombre,producto.cantidad, producto.producto.articulos.comentario])
+        high = high - 18
+
+
+    c.setFillColor(prussian_blue)
+    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.setFillColor(white)
+    #Primer renglón
+    c.drawCentredString(70,48,'Clasificación:')
+    c.drawCentredString(140,48,'Nivel:')
+    c.drawCentredString(240,48,'Preparado por:')
+    c.drawCentredString(350,48,'Aprobado:')
+    c.drawCentredString(450,48,'Fecha emisión:')
+    c.drawCentredString(550,48,'Rev:')
+    #Segundo renglón
+    c.drawCentredString(70,34,'Controlado')
+    c.drawCentredString(140,34,'N5')
+    c.drawCentredString(240,34,'SEOV-ALM-N4-01-01')
+    c.drawCentredString(350,34,'SUB ADM')
+    c.drawCentredString(450,34,'24/Oct/2018')
+    c.drawCentredString(550,34,'001')
+
+    c.setFillColor(black)
+    width, height = letter
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+
+    if requisicion.comentario_compras is not None:
+        comentario = requisicion.comentario_compras
+    else:
+        comentario = "No hay comentarios"
+
+    c.setFillColor(prussian_blue)
+    c.rect(20,230,565,25, fill=True, stroke=False)
+    c.setFillColor(white)
+    c.drawCentredString(320,235,'Observaciones')
+    options_conditions_paragraph = Paragraph(comentario, styleN)
+    # Crear un marco (frame) en la posición específica
+    frame = Frame(20, -110, width-40, high-50, id='normal')
+    # Agregar el párrafo al marco
+    frame.addFromList([options_conditions_paragraph], c)
+    c.setFillColor(prussian_blue)
+    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.setFillColor(white)
+
+    c.setFillColor(black)
+    if requisicion.orden:
+        c.drawCentredString(180,high-240, requisicion.orden.staff.staff.staff.first_name +' '+ requisicion.orden.staff.staff.staff.last_name)
+    else:    
+         c.drawCentredString(180,high-240, almacenista.staff.staff.last_name+' '+ almacenista.staff.staff.last_name)
+    #c.drawCentredString(180,high-240, requisicion.created_by.staff.staff.first_name +' '+ requisicion.created_by.staff.staff.last_name)
+    c.line(140,high-241,220,high-241)
+    c.drawCentredString(180,high-250, 'Solicitado')
+    if requisicion.autorizar == False:
+        c.setFillColor(rojo)
+        c.drawCentredString(410, high-240, '{Esta requisicion ha sido Cancelada}')
+        c.setFont('Helvetica-Bold',14)
+        c.drawString(370,670, 'CANCELADA')
+    elif requisicion.autorizar:
+        c.setFillColor(prussian_blue)
+        c.drawCentredString(410,high-240, requisicion.orden.superintendente.staff.staff.first_name+' '+ requisicion.orden.superintendente.staff.staff.last_name)
+        c.setFont('Helvetica-Bold',14)
+        c.drawString(370,670, 'APROBADA')
+    else:
+        c.setFillColor(rojo)
+        c.drawCentredString(410,high-240, requisicion.orden.superintendente.staff.staff.first_name+' '+ requisicion.orden.superintendente.staff.staff.last_name)
+        c.setFont('Helvetica-Bold',14)
+        c.drawString(370,670, 'NO AUTORIZADA AÚN')
+    c.setFillColor(black)
+    c.setFont('Helvetica',12)
+    c.line(360,high-241,460,high-241)
+    c.drawCentredString(410,high-250,'Superintendente')
+
+    #table = Table(data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
+    table_style = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
+        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        #ENCABEZADO
+        ('TEXTCOLOR',(0,0),(-1,0), white),
+        ('FONTSIZE',(0,0),(-1,0), 8),
+        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        #CUERPO
+        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    #table.setStyle(table_style)
+    rows_per_page = 15
+    data_len = len(data) 
+    for page_start in range(0, data_len, rows_per_page):
+        page_end = min(page_start + rows_per_page, data_len)
+        #page_data = data[page_start:page_end + 1]  # +1 para incluir el encabezado en cada página
+        page_data = encabezado + data[page_start:page_end] 
+        table = Table(page_data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm])
+        table.setStyle(table_style)
+         # Calcular el alto de la tabla para la página actual
+        table_height = data_len * 18 #espacio_por_fila
+        # Calcular la posición 'y' inicial para la tabla basada en el alto de la tabla
+        table_y_position = height - table_height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
+        #table_y_position = height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
+        
+
+        table.wrapOn(c, width, height)  # Preparar la tabla
+        table.drawOn(c, 20, table_y_position)  # Dibujar la tabla en la posición calculada
+
+        if page_end < data_len:  # Si hay más páginas, preparar una nueva página
+            c.showPage()
+    
+   
+    
+    #pdf size
+    #table.wrapOn(c, width, height)
+    #table.drawOn(c, 20, high)
+
+    #c.showPage()
+    c.save()
+    buf.seek(0)
+
+    return FileResponse(buf, as_attachment=True, filename='Requisición_' + str(requisicion.folio) +'.pdf')
