@@ -249,13 +249,13 @@ def convert_salidas_to_xls_task(salidas):
             if col_num == 2:
                 value = (row[col_num]).date()
                 (ws.cell(row = row_num, column = col_num+1, value=value)).style = date_style
-            if col_num == 10:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
             if col_num == 11:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
+            if col_num == 12:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
-        ws.cell(row=row_num, column=len(row) + 1, value=f'=K{row_num} * L{row_num}').style = money_style
+        ws.cell(row=row_num, column=len(row) + 1, value=f'=M{row_num} * L{row_num}').style = money_style
     
-    (ws.cell(column = columna_max , row = 3, value=f'=SUM(M2:M{row_num})')).style = money_resumen_style
+    (ws.cell(column = columna_max , row = 3, value=f'=SUM(N2:N{row_num})')).style = money_resumen_style
 
     sheet = wb['Sheet']
     wb.remove(sheet)

@@ -789,7 +789,7 @@ def mis_gastos(request):
 def mis_viaticos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    viaticos = Solicitud_Viatico.objects.filter(complete=True, staff = usuario).order_by('-folio')
+    viaticos = Solicitud_Viatico.objects.filter(Q(staff = usuario) |Q(colaborador = usuario), complete=True).order_by('-folio')
     myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
 
