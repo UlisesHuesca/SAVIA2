@@ -43,6 +43,9 @@ urlpatterns = [
     path('compras/historico_compras', views.historico_compras, name='historico-compras'),
     path('compras/mostrar_comparativo/<int:pk>', views.mostrar_comparativo, name='mostrar-comparativo'),
     path('editar_comparativo/<int:pk>/', views.editar_comparativo, name='editar-comparativo'),
+    path('compras/politica_antisoborno_pdf', views.descargar_antisoborno_pdf, name='politica-antisoborno'),
+    path('compras/aviso_privacidad_pdf', views.descargar_aviso_privacidad_pdf, name='aviso-privacidad'),
+    path('compras/codigo_etica_pdf', views.descargar_codigo_etica_pdf, name='codigo-etica'),
     ]
 
 if settings.DEBUG:

@@ -47,7 +47,7 @@ def solicitud_viatico(request):
     usuario = colaborador.get(id = pk_perfil)
     proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
-    viatico, created = Solicitud_Viatico.objects.get_or_create(complete= False)
+    viatico, created = Solicitud_Viatico.objects.get_or_create(complete= False, staff = usuario)
     colaboradores = colaborador.filter(distritos = usuario.distritos)
     puntos = Puntos_Intermedios.objects.filter(solicitud = viatico)
     error_messages = {}
