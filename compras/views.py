@@ -1177,7 +1177,6 @@ def autorizar_oc1(request, pk):
                     </html>
                 """
                 if compra.cond_de_pago.nombre == "CREDITO":
-                    archivo_oc = attach_oc_pdf(request, compra.id)
                     html_message2 = f"""
                         <html>
                             <head>
@@ -1204,7 +1203,6 @@ def autorizar_oc1(request, pk):
                         headers={'Content-Type': 'text/html'}
                         )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
-                        email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
                         email.send()
                     except (BadHeaderError, SMTPException) as e:
                         error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
@@ -1357,6 +1355,9 @@ def autorizar_oc2(request, pk):
             # Crear el mensaje HTML
             if compra.cond_de_pago.nombre == "CREDITO":
                 archivo_oc = attach_oc_pdf(request, compra.id)
+                pdf_antisoborno = attach_antisoborno_pdf(request)
+                pdf_privacidad = attach_aviso_privacidad_pdf(request)
+                pdf_etica = attach_codigo_etica_pdf(request)
                 html_message2 = f"""
                     <html>
                         <head>
@@ -1384,6 +1385,9 @@ def autorizar_oc2(request, pk):
                     )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
                     email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+                    email.attach(f'Política_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
+                    email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
+                    email.attach(f'Código_de_ética.pdf', pdf_etica, 'application/pdf')
                     email.send()
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  

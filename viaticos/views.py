@@ -38,7 +38,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
-# Create your views here.
+
 # Create your views here.
 @login_required(login_url='user-login')
 def solicitud_viatico(request):
