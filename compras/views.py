@@ -1385,9 +1385,9 @@ def autorizar_oc2(request, pk):
                     )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
                     email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-                    email.attach(f'Política_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
+                    email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                     email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
-                    email.attach(f'Código_de_ética.pdf', pdf_etica, 'application/pdf')
+                    email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
                     email.send()
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  

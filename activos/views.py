@@ -38,7 +38,7 @@ from bs4 import BeautifulSoup
 def activos(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
-    activos = Activo.objects.filter(completo=True, responsable__distritos = usuario.distritos)
+    activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
     myfilter = ActivoFilter(request.GET, queryset=activos)
     activos = myfilter.qs 
 
@@ -232,7 +232,8 @@ def edit_activo(request, pk):
     perfil = empleados.get(id = pk_perfil)
     #producto = Salidas.objects.get(id=pk)
     activo = Activo.objects.get(id=pk)
-    responsable = empleados.get(id=activo.responsable.id )
+    if activo.responsable:
+        responsable = empleados.get(id=activo.responsable.id )
     responsables = empleados.filter(distritos = perfil.distritos, st_activo = True)
     marcas = Marca.objects.all() 
     if activo.marca:
@@ -250,10 +251,13 @@ def edit_activo(request, pk):
         } for responsable in responsables
     ]
 
-    responsable_predeterminado = {
-        'id': activo.responsable.id,
-        'text': f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}"
-    }
+    if activo.responsable:
+        responsable_predeterminado = {
+            'id': activo.responsable.id,
+            'text': f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}"
+        }
+    else:
+        responsable_predeterminado = None
     
     if marca_p != None:
         marca_predeterminada = {
@@ -586,8 +590,13 @@ def render_pdf_responsiva_activos(request, pk):
     c.drawString(280,caja_proveedor-20,'Nombre:')
     c.drawString(280,caja_proveedor-40,'Distrito:')
     c.drawString(280,caja_proveedor-60,'Firma:')
-    c.drawString(350,caja_proveedor-20, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
-    c.drawString(350,caja_proveedor-40, activo.responsable.distritos.nombre)
+    if activo.responsable:
+        c.drawString(350,caja_proveedor-20, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
+        c.drawString(350,caja_proveedor-40, activo.responsable.distritos.nombre)
+    else:
+        c.drawString(350,caja_proveedor-20, " " )
+        c.drawString(350,caja_proveedor-40, " ")
+    
 
     #Create blank list
     data =[]

@@ -1,6 +1,6 @@
 from django.db import models
 from compras.models import Compra, Moneda, Banco
-from user.models import Profile, Distrito, Banco
+from user.models import Profile, Distrito, Banco, Empresa
 from gastos.models import Solicitud_Gasto
 from viaticos.models import Solicitud_Viatico
 #from djmoney.models.fields import MoneyField
@@ -23,6 +23,7 @@ class Cuenta(models.Model):
     moneda = models.ForeignKey(Moneda, on_delete=models.CASCADE, null=True, blank=True)
     status = models.BooleanField(default=True)
     descripcion = models.CharField(max_length=250, null=True, blank=True)
+    empresa = models.ForeignKey(Empresa, on_delete= models.CASCADE, null=True)
 
 
     def __str__(self):

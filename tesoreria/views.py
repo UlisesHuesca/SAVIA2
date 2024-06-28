@@ -410,9 +410,9 @@ def compras_pagos(request, pk):
                             )
                             email.content_subtype = "html " # Importante para que se interprete como HTML
                             email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
-                            email.attach(f'Política_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
+                            email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                             email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
-                            email.attach(f'Código_de_ética.pdf', pdf_etica, 'application/pdf')
+                            email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
                             email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
                             #if pagos.count() > 0:
                                 #for pago in pagos:
@@ -753,21 +753,14 @@ def matriz_pagos(request):
 def control_bancos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    pagos = Pago.objects.filter(
-        Q(oc__req__orden__distrito = usuario.distritos) & Q(oc__autorizado2=True) | 
-        Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2 = True) |
-        Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True)|
-        Q(tesorero__distritos = usuario.distritos), 
-        hecho=True
-    ).order_by('-pagado_real')
-    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
-    pagos = myfilter.qs
-
     # Obtener la cuenta seleccionada en el filtro
     cuenta_term = request.GET.get('cuenta')
     latest_balance = None
     saldo_inicial = 0
+    pagos_list = []
     fecha_inicial = None
+    pagos = Pago.objects.none()
+
 
     if cuenta_term:
         try:
@@ -778,42 +771,60 @@ def control_bancos(request):
                     latest_balance = latest_balance_record.monto_inicial
                     saldo_inicial = latest_balance
                     fecha_inicial = latest_balance_record.fecha_inicial
-                    
+                
+                pagos = Pago.objects.filter(
+                    Q(oc__req__orden__distrito = usuario.distritos) & Q(oc__autorizado2=True) | 
+                    Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2 = True) |
+                    Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True)|
+                    Q(tesorero__distritos = usuario.distritos), 
+                    hecho=True, cuenta__encargado = usuario 
+                ).order_by('-pagado_real')
+                
+                if fecha_inicial:
+                    #print(f"Fecha Inicial: {fecha_inicial}")
+                    pagos = pagos.filter(pagado_real__gte = fecha_inicial)
+                    #print(f"Pagos Filtrados: {pagos}")
+                
+                myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+                pagos = myfilter.qs
+                # Calcular saldo dinámico en orden inverso
+                saldo_acumulado = saldo_inicial
+                pagos_lista = list(pagos)  # Convertir a lista para poder iterar en orden inverso
+                for pago in reversed(pagos_lista):
+        
+                    if pago.tipo and pago.tipo.nombre == "ABONO":  # Ajusta esta condición según el campo 'tipo'
+                        saldo_acumulado += pago.monto
+                    else:
+                        saldo_acumulado -= pago.monto
+                    pago.saldo = saldo_acumulado
+
+                #print(cuenta, cuenta_term)
+                #Set up pagination
+                p = Paginator(pagos, 25)
+                page = request.GET.get('page')
+                pagos_list = p.get_page(page)
+
+                if request.method == 'POST' and 'btnReporte' in request.POST:
+                    return convert_excel_control_bancos(pagos, cuenta, saldo_inicial)
+            else:
+                cuenta = None
+                pagos_list = []
         except Cuenta.DoesNotExist:
             cuenta = None
+            pagos_list = []
+    else:
+        myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+        pagos_list = []
 
-    if fecha_inicial:
-        #print(f"Fecha Inicial: {fecha_inicial}")
-        pagos = pagos.filter(pagado_real__gte = fecha_inicial)
-        print(f"Pagos Filtrados: {pagos}")
-    
+
 
     # Supongamos que quieres verificar la presencia del ID 123 en los pagos
    
 
-    # Calcular saldo dinámico en orden inverso
-    saldo_acumulado = saldo_inicial
-    pagos_lista = list(pagos)  # Convertir a lista para poder iterar en orden inverso
-    for pago in reversed(pagos_lista):
-        
-        if pago.tipo and pago.tipo.nombre == "ABONO":  # Ajusta esta condición según el campo 'tipo'
-            saldo_acumulado += pago.monto
-        else:
-            saldo_acumulado -= pago.monto
-        pago.saldo = saldo_acumulado
-
     
-    #print(cuenta, cuenta_term)
-    #Set up pagination
-    p = Paginator(pagos, 50)
-    page = request.GET.get('page')
-    pagos_list = p.get_page(page)
-
-    if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_control_bancos(pagos_lista)
     
-    id_especifico = 110650
-    existe_pago = pagos.filter(id=id_especifico)
+    #id_especifico = 110650
+    #existe_pago = pagos.filter(id=id_especifico)
 
     context= {
         'pagos_list':pagos_list,
@@ -1350,25 +1361,32 @@ def layout_pagos(request):
 
     return render(request, 'tesoreria/layout_pagos.html', context)
 
-def convert_excel_control_bancos(pagos):
-      #print('si entra a la función')
+def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
+    static_path = settings.STATIC_ROOT
+    img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
     # Crea un objeto BytesIO para guardar el archivo Excel
     output = BytesIO()
 
     # Crea un libro de trabajo y añade una hoja
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
     worksheet = workbook.add_worksheet("Matriz_Compras")
-
+     # Ajustar la altura de las filas 1 y 2
+   
      
     date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
     # Define los estilos
-    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '#16324F', 'font_name': 'Arial', 'font_size': 11})
     body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
     money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
     date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
-
+    header_format = workbook.add_format({'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
+    cell_format = workbook.add_format({'align': 'center', 'valign': 'vcenter', 'border': 1})
+    d_cell_format = workbook.add_format({'num_format': 'dd/mm/yyyy','align': 'center', 'valign': 'vcenter', 'border': 1})
+    title_format = workbook.add_format({'font_name': 'Calibri', 'font_size': 18, 'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
+    vordcab_format = workbook.add_format({'font_color': 'FFFFFF', 'bg_color': '#16324F','font_name': 'Calibri', 'font_size': 18, 'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
+    h_money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10, 'bold': True, 'align': 'center', 'valign': 'vcenter', 'border': 1})
     # Ajustar el ancho de las columnas
     worksheet.set_column('A:A', 20)  # Fecha
     #worksheet.set_column('B:B', 20)  # Empresa
@@ -1378,28 +1396,75 @@ def convert_excel_control_bancos(pagos):
     worksheet.set_column('E:E', 25)  # Contrato
     worksheet.set_column('F:F', 25)  # Sector
     worksheet.set_column('G:G', 20)  # Distrito
-    worksheet.set_column('H:H', 15)  # Monto
-    worksheet.set_column('I:I', 15)  # Saldo
+    worksheet.set_column('H:H', 20)  # Monto
+    worksheet.set_column('I:I', 20)  # Saldo
+    worksheet.set_column('J:J', 20)  # Saldo
 
-    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Contrato','Sector','Distrito','Monto','Saldo']
+
+    worksheet.set_row(0, 40)  # Fila 1 (índice 0) con altura 40
+    worksheet.set_row(1, 30)  # Fila 2 (índice 1) con altura 30
+
+    # Insertar el logo en la hoja de trabajo
+    worksheet.insert_image('A1', img_path2, {'x_scale': 1, 'y_scale': 1})
+
+    # Agregar y fusionar celdas para el encabezado
+    worksheet.write('I1', 'Preparado Por:', header_format)
+    worksheet.write('I2', 'SUBD FIN', cell_format)
+    worksheet.write('J1', 'Aprobación', header_format)
+    worksheet.write('J2', 'DG', cell_format)
+
+    worksheet.merge_range('C1:H2', 'CONTROL DE BANCOS', title_format)
+    worksheet.merge_range('A3:B3', 'Número de documento', header_format)
+    worksheet.merge_range('A4:B4', 'SEOV-TES-N4-01.03', cell_format)
+    
+    worksheet.merge_range('C3:D3', 'Clasificación del documento', header_format)
+    worksheet.merge_range('C4:D4', 'Controlado', cell_format)
+    worksheet.write('E3', 'Nivel del documento', header_format)
+    worksheet.write('E4', 'N5', cell_format)
+    
+    worksheet.merge_range('F3:G3', 'Revisión No.', header_format)
+    worksheet.merge_range('F4:G4', '000', cell_format)
+    worksheet.write('H3', 'Fecha de emisión', header_format)
+    worksheet.write('H4', '12/09/2022', d_cell_format)
+    worksheet.merge_range('I3:J3', 'Fecha Revisión', header_format)
+    worksheet.merge_range('I4:J4', '', cell_format)
+    worksheet.write('H3', 'Fecha de emisión', header_format)
+    
+    worksheet.merge_range('A5:J8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
+    worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
+    worksheet.merge_range('A10:B10', 'CUENTA BANCARIA: '+ str(cuenta.cuenta), header_format)
+    worksheet.merge_range('A11:B11', 'DISTRITO: ' + str(cuenta.encargado.distritos), header_format)
+    worksheet.merge_range('A12:B12', 'RESPONSABLE DE CUENTA: ' + str(cuenta.encargado.staff.staff.first_name)+ ' '+ str(cuenta.encargado.staff.staff.last_name), header_format)
+
+    worksheet.write('H9', 'PERIODO:', header_format)
+    #worksheet.write('I9', 'MES', cell_format)
+    #worksheet.write('J9', 'AÑO', cell_format)
+   
+    
+    worksheet.write('I10', 'SALDO INICIAL' , header_format)
+    worksheet.write('J10', saldo_inicial, h_money_style)
+    worksheet.write('I11', 'SALDO FINAL', header_format)
+    
+    worksheet.write('J12', '', header_format)
+    
+
+    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo']
 
     columna_max = len(columns)+2
 
-    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
-    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    #worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
+    #worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
     
     for col_num, header in enumerate(columns):
-        worksheet.write(0, col_num, header, head_style)
+        worksheet.write(12, col_num, header, head_style)
 
-    row_num = 1
+    row_num = 13
     for pago in pagos:
          # Lógica de selección de datos basada en el template
-        fecha = pago.detalles_comprobante.fecha if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'fecha') and pago.detalles_comprobante.fecha != "No disponible" else pago.pagado_real
-        empresa = pago.detalles_comprobante.titular_cuenta_1 if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'titular_cuenta_1') else ''
-        if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'titular_cuenta_2') and pago.detalles_comprobante.titular_cuenta_2 != "No disponible":
-            proveedor = pago.detalles_comprobante.titular_cuenta_2
-        elif hasattr(pago, 'oc') and pago.oc:
+        fecha = pago.pagado_real
+        empresa = pago.cuenta.empresa.nombre
+        if hasattr(pago, 'oc') and pago.oc:
             proveedor = pago.oc.proveedor.nombre.razon_social
         elif hasattr(pago, 'gasto') and pago.gasto:
             if pago.gasto.colaborador:
@@ -1414,7 +1479,7 @@ def convert_excel_control_bancos(pagos):
         else:
             proveedor = f"{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}"
 
-        cuenta = pago.detalles_comprobante.cuenta_retiro if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'cuenta_retiro') and pago.detalles_comprobante.cuenta_retiro != "No disponible" else str(pago.cuenta)
+        cuenta = pago.cuenta.cuenta
         if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'cuenta_retiro') and pago.detalles_comprobante.cuenta_retiro != "No disponible":
             concepto_servicio = pago.detalles_comprobante.motivo_pago
         elif hasattr(pago, 'oc') and pago.oc:
@@ -1425,28 +1490,71 @@ def convert_excel_control_bancos(pagos):
             concepto_servicio = f"V{pago.viatico.folio}"
         else:
             concepto_servicio = str(pago.tipo)
+        if pago.comentario != None:
+            concepto_servicio = str(concepto_servicio) + ' '+ str(pago.comentario)
 
-        contrato = pago.oc.req.orden.proyecto.nombre if hasattr(pago, 'oc') and pago.oc else (pago.viatico.proyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else '')
-        sector = pago.oc.req.orden.subproyecto.nombre if hasattr(pago, 'oc') and pago.oc else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else '')
+        # Determinar contrato y sector
+        if hasattr(pago, 'oc') and pago.oc:
+            contrato = pago.oc.req.orden.proyecto.nombre
+            sector = pago.oc.req.orden.subproyecto.nombre
+        elif hasattr(pago, 'viatico') and pago.viatico:
+            contrato = pago.viatico.proyecto.nombre
+            sector = pago.viatico.subproyecto.nombre
+        elif hasattr(pago, 'gasto') and pago.gasto:
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
+            proyectos = set()
+            subproyectos = set()
+            for articulo in articulos_gasto:
+                if articulo.proyecto:
+                    proyectos.add(str(articulo.proyecto.nombre))
+                if articulo.subproyecto:
+                    subproyectos.add(str(articulo.subproyecto.nombre))
+            contrato = ', '.join(proyectos)
+            sector = ', '.join(subproyectos)
+        else:
+            contrato = ''
+            sector = ''
+        
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else ''))
-        monto = pago.detalles_comprobante.importe_operacion if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'importe_operacion') and pago.detalles_comprobante.importe_operacion != "No disponible" else pago.monto
+        cargo = ''
+        if pago.tipo == None or pago.tipo.nombre == "CARGO":
+            cargo = pago.monto
+        abono = pago.monto if pago.tipo and pago.tipo.nombre == "ABONO"  else ''
         saldo = pago.saldo
+        
+   
 
         # Escribir los datos en el archivo Excel
-        worksheet.write(row_num, 0, fecha.strftime('%d de %B de %Y') if fecha else '', date_style)
-        #worksheet.write(row_num, 1, empresa)
+        worksheet.write(row_num, 0, fecha.strftime('%d/%m/%Y') if fecha else '', date_style)
+        worksheet.write(row_num, 1, empresa)
         worksheet.write(row_num, 1, proveedor)
         worksheet.write(row_num, 2, cuenta)
         worksheet.write(row_num, 3, concepto_servicio)
         worksheet.write(row_num, 4, contrato)
         worksheet.write(row_num, 5, sector)
         worksheet.write(row_num, 6, distrito)
-        worksheet.write(row_num, 7, monto, money_style)
-        worksheet.write(row_num, 8, saldo, money_style)
-        
+        worksheet.write(row_num, 7, cargo, money_style)
+        worksheet.write(row_num, 8, abono, money_style)
+        worksheet.write(row_num, 9, saldo, money_style)
+        last_filled_row = row_num
         row_num += 1
 
+    last_filled_cell = f'A{last_filled_row+1}'
+    worksheet.write_formula('J11', '=J14', h_money_style)
+    worksheet.write_formula('I9', f'={last_filled_cell}', h_money_style)
+    worksheet.write_formula('J9', '=A14', h_money_style)
+     # Agregar el marco general desde A1 hasta J12
+    border_format = workbook.add_format({
+        'top': 1,
+        'bottom': 1,
+        'left': 1,
+        'right': 1
+    })
     
+
+    # Aplicar el borde derecho
+    #for row in range(12):
+        #worksheet.write(row, 9, '', border_format)
    
     workbook.close()
 

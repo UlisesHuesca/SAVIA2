@@ -125,7 +125,7 @@
                         <li class="nav-item mx-2">
                             {% if latest_balance %}
                             <div class="alert alert-info" role="alert">
-                                <strong><span id="saldo-inicial">Último Saldo:</strong> $</span>{{ latest_balance.monto_inicial }}</span>
+                                <strong><span id="saldo-inicial">Último Saldo:</strong> $</span>{{ latest_balance|floatformat:2}}</span>
                             </div>
                             {% endif %}
                         </li>
@@ -174,18 +174,19 @@
                     <th scope="col">Empresa/Proveedor</th>
                     <th>Cuenta</th>
                     <th scope="col">Concepto/Servicio</th>
-                    <th>Contrato</th>
-                    <th>Sector</th>
+                    <th>Proyecto</th>
+                    <th>Subproyecto</th>
                     <th>Distrito</th>
-                    <th>Monto</th>
+                    <th>Cargo</th>
+                    <th>Abono</th>
                     <th>Saldo</th>
                 </tr>
             </thead>
             <tbody>
                 {% for pago in pagos_list %}
                 <tr>
-                    <td class="d-none d-lg-table-cell">{% if pago.detalles_comprobante and pago.detalles_comprobante.fecha != "No disponible" %}{{pago.detalles_comprobante.fecha}}{% else %} {{ pago.pagado_real }} {% endif %}</td>
-                    <td>{{pago.detalles_comprobante.titular_cuenta_1}}</td>
+                    <td class="d-none d-lg-table-cell">{{ pago.pagado_real }}</td>
+                    <td>{{pago.cuenta.empresa.nombre}}</td>
                     <td>
                         {% if pago.detalles_comprobante and pago.detalles_comprobante.titular_cuenta_2 != "No disponible" %}{{pago.detalles_comprobante.titular_cuenta_2}}
                         {% elif pago.oc %} {{pago.oc.proveedor.nombre.razon_social}} 
@@ -193,21 +194,22 @@
                         {% elif pago.viatico %} {% if pago.viatico.colaborador %} {{pago.viatico.colaborador.staff.staff.first_name}} {{pago.viatico.colaborador.staff.staff.last_name}}{% else %}{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}} {% endif %}
                         {% else %} {{pago.tesorero.staff.staff.first_name}} {{pago.tesorero.staff.staff.last_name}}
                         {% endif %}</td>
-                    <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.cuenta_retiro != "No disponible"  %}{{pago.detalles_comprobante.cuenta_retiro}}{% else %}{{pago.cuenta}}{% endif %}</td>
+                    <td>{{pago.cuenta.cuenta}}</td>
                     <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.cuenta_retiro != "No disponible"  %}{{pago.detalles_comprobante.motivo_pago}} 
                         {% elif pago.oc %} OC{{pago.oc.folio}}
                         {% elif pago.gasto %} G{{pago.gasto.folio}}
                         {% elif pago.viatico %} V{{pago.viatico.folio}}
                         {% else %} {{pago.tipo}}
                         {% endif %}
+                        {% if pago.comentario %} {{pago.comentario}} {% endif %}
                     </td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.proyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.proyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.subproyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.distrito.nombre}}{% elif pago.gasto %}{{pago.gasto.distrito.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
-                    <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.importe_operacion != "No disponible"  %} ${{pago.detalles_comprobante.importe_operacion|floatformat:2}}
-                        {% else %} ${{pago.monto}} {% endif %}
-                    </td>
-                    <td class="saldo">{{pago.saldo}}</td>
+                    
+                    <td>{% if pago.tipo.nombre == null or pago.tipo.nombre == "CARGO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
+                    <td>{% if pago.tipo.nombre == "ABONO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
+                    <td class="saldo">{{pago.saldo|floatformat:2}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

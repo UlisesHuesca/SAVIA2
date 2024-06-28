@@ -250,7 +250,7 @@ function aparecer_serie() {
 };
 
 var datosResponsable= {{ responsables_para_select2|safe }};
-var responsablePredeterminado = {{ responsable_predeterminado|safe }};
+var responsablePredeterminado = {{ responsable_predeterminado|default:"null" |safe }};
 
 $(document).ready(function() {
     var ResponsableSelect = $('#id_responsable');
@@ -263,7 +263,9 @@ $(document).ready(function() {
         templateResult: formatRepo,
         templateSelection: formatRepoSelection
     });
-    ResponsableSelect.val(responsablePredeterminado.id).trigger('change');
+    if (responsablePredeterminado != null){
+        ResponsableSelect.val(responsablePredeterminado.id).trigger('change');
+    }
 });
 
 var datosMarca= {{ marcas_para_select2|safe }};

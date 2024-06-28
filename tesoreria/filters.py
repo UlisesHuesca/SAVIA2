@@ -33,8 +33,8 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     tesorero = CharFilter(method='tesorero_nombre', lookup_expr='icontains')
     #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
     cuenta = CharFilter(field_name = 'cuenta__cuenta', lookup_expr='icontains')
-    start_date = DateFilter(field_name ='pagado_date', lookup_expr='gte')
-    end_date = DateFilter(field_name='pagado_date', lookup_expr='lte')
+    start_date = DateFilter(field_name ='pagado_real', lookup_expr='gte')
+    end_date = DateFilter(field_name='pagado_real', lookup_expr='lte')
 
 
     class Meta:
