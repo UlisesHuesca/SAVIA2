@@ -5,6 +5,31 @@ from django.db.models import F, Sum, Q
 import mysql.connector
 from collections import defaultdict
 import os
+from datetime import datetime
+
+def update_pagado_real():
+    pagos = Pago.objects.all()
+
+    for pago in pagos:
+        if pago.comprobante_pago and not pago.pagado_real:
+            detalles = pago.detalles_comprobante
+            fecha = detalles.get('fecha', None)
+            if fecha:
+                try:
+                    # Convierte la fecha al formato de Django
+                    pagado_real_date = datetime.strptime(fecha, '%d/%m/%Y').date()
+                    pago.pagado_real = pagado_real_date
+                    pago.save()
+                    print(f"Actualizado pago {pago.id} con fecha {pagado_real_date}")
+                except ValueError as e:
+                    print(f"Error al convertir la fecha para el pago {pago.id}: {e}")
+            else:
+                print(f"No se encontró fecha en el comprobante de pago {pago.id}")
+        else:
+            if not pago.comprobante_pago:
+                print(f"Pago {pago.id} no tiene comprobante de pago")
+            else:
+                print(f"Pago {pago.id} ya tiene una fecha en pagado_real")
 
 
 def verificar_compras_colocadas():
