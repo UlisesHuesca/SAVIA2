@@ -78,6 +78,16 @@
                                     </div>  
                                 </div>
                             </div>
+                            <div class="row d-none" id="proveedor_parrafo">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.proveedor}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>
                             
                             <div class="row">
                                 <div class="col-12">
@@ -623,6 +633,7 @@ var datosProductos = {{productos_para_select2|safe}}
 var datosSuperintendentes = {{superintendentes_para_select2|safe}}
 var datosColaboradores = {{colaboradores_para_select2|safe}}
 var datosTipo = {{tipos_para_select2|safe}}
+var datosProveedores = {{proveedores_para_select2|safe}}
 
 $(document).ready(function() {
     var gasto = document.getElementById('Gasto');
@@ -769,6 +780,21 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
+    //var gasto = document.getElementById('Gasto');
+    //var gasto_id = gasto.getAttribute('gasto');
+    $('#id_proveedor').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Proveedor',
+        data: datosProveedores,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+});
+
+
+
+$(document).ready(function() {
     var gasto = document.getElementById('Gasto');
     var gasto_id = gasto.getAttribute('gasto');
     $('#id_tipo').select2({
@@ -783,7 +809,17 @@ $(document).ready(function() {
         var data = e.params.data;
         var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
         cambio_en_formulario(data,'tipo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+        // Mostrar o esconder el div basado en el valor seleccionado}
+        console.log(data.text)
+        if (data.text === "4:IMPUESTOS") {
+                $('#proveedor_parrafo').removeClass('d-none');
+        } else {
+            $('#proveedor_parrafo').addClass('d-none');
+        }
+    
     });
+
+
     var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
     var tipoSelect = $('#id_tipo');
     //Si hay datos se rellena el campo con los datos del local storage
@@ -795,9 +831,14 @@ $(document).ready(function() {
 
                 datos.tipo = '';
                 datos.tipo_text ='';
-                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
-
-            })
+                localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
+            });
+             // Verificar el valor inicial para mostrar/ocultar el div
+            if (datos.tipo_text === "IMPUESTOS") {
+                $('#proveedor_parrafo').removeClass('d-none');
+            } else {
+                $('#proveedor_parrafo').addClass('d-none');
+            }
         }
     }
 });

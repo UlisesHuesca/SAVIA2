@@ -48,7 +48,26 @@
         <div class="card-body">
                 <table class='table table-striped'>
                     <thead>
-                        {% if pago.gasto.colaborador %}
+                        {% if pago.gasto.proveedor %}
+                        <tr>
+                        <th scope="col">Solicitante:</th>
+                        <th scope="col">{{pago.gasto.proveedor.nombre.razon_social}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">Banco:</th>
+                            <th scope="col">{{pago.gasto.proveedor.banco}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Cuenta:</th>
+                            <th scope="col">{{pago.gasto.proveedor.cuenta}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Clabe:</th>
+                            <th scope="col">{{pago.gasto.proveedor.clabe}}</th>
+                        </tr>
+                         {% elif pago.gasto.colaborador %}
                         <tr>
                         <th scope="col">Solicitante:</th>
                         <th scope="col">{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.colaborador.staff.staff.staff.last_name}}</th>

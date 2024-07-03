@@ -2,6 +2,7 @@ from django.db import models
 from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector
 from dashboard.models import Inventario, Activo, Product
 from user.models import Profile, Distrito
+from compras.models import Proveedor_direcciones
 from django.core.validators import FileExtensionValidator
 from decimal import Decimal
 import decimal
@@ -41,6 +42,7 @@ class Solicitud_Gasto(models.Model):
     comentariotesorero = models.TextField(null=True, blank=True)
     sector = models.ForeignKey(Sector, on_delete=models.CASCADE,null=True )
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
+    proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, blank = True)
 
     class Meta:
         unique_together = ('folio', 'distrito',)

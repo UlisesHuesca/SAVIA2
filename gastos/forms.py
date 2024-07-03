@@ -3,17 +3,19 @@ from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conce
 from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
 from user.models import Profile
 from dashboard.models import Inventario, Order, Product
+from compras.models import Proveedor_direcciones
 from tesoreria.models import Pago, Cuenta
 
 class Solicitud_GastoForm(forms.ModelForm):
     class Meta:
         model = Solicitud_Gasto
-        fields = ['superintendente','colaborador','tipo']
+        fields = ['superintendente','colaborador','tipo','proveedor']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['colaborador'].queryset = Profile.objects.none()
         self.fields['superintendente'].queryset = Profile.objects.none()
+        self.fields['proveedor'].queryset = Proveedor_direcciones.objects.none()
 
         if 'superintendente' in self.data:
             try:
@@ -27,6 +29,13 @@ class Solicitud_GastoForm(forms.ModelForm):
                 seleccion_actual = int(self.data.get('colaborador'))
                 # Lógica para determinar el nuevo queryset basado en la selección actual
                 self.fields['colaborador'].queryset = Profile.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida
+        if 'proveedor' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('proveedor'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['proveedor'].queryset = Proveedor_direcciones.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
 

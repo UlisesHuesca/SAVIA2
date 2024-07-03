@@ -15,6 +15,7 @@ from user.models import Profile
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta
+from compras.models import Proveedor_direcciones
 from tesoreria.forms import Facturas_Gastos_Form 
 from compras.views import attach_oc_pdf
 from requisiciones.views import get_image_base64
@@ -70,6 +71,7 @@ def crear_gasto(request):
     
     proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
+    proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
     tipos = Tipo_Gasto.objects.filter()
     colaboradores = colaborador.filter(distritos = usuario.distritos, )
     error_messages = {}
@@ -97,6 +99,14 @@ def crear_gasto(request):
         } for super in superintendentes
     ]
 
+    #print(proveedores)
+    proveedores_para_select2 = [
+        {
+            'id':proveedor.id,
+            'text': str(proveedor.nombre.razon_social)
+        } for proveedor in proveedores
+    ] 
+    
     gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False, staff=usuario)
 
     max_folio = Solicitud_Gasto.objects.filter(distrito = usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
@@ -211,6 +221,7 @@ def crear_gasto(request):
         'superintendentes_para_select2':superintendentes_para_select2,
         'proyectos_para_select2':proyectos_para_select2,
         'productos_para_select2':productos_para_select2,
+        'proveedores_para_select2':proveedores_para_select2,
         'facturas':facturas,
         'productos':productos,
         #'colaborador':colaborador,
