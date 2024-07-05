@@ -342,7 +342,7 @@ def compras_pagos(request, pk):
             costo_oc = compra.costo_plus_adicionales
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
-            elif round(monto_total,2) <= round(costo_oc,2):
+            elif round(monto_total,2) >= round(costo_oc,2):
                 compra.pagada= True
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
