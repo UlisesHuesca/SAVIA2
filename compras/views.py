@@ -556,6 +556,34 @@ def oc_modal(request, pk):
         
                 image_base64 = get_image_base64(img_path)
                 logo_v_base64 = get_image_base64(img_path2)
+                # Construir el HTML para la lista de artículos
+                articulos_html = """
+                <table border="1" style="border-collapse: collapse; width: 100%;">
+                    <thead>
+                        <tr>
+                            <th>Artículo</th>
+                            <th>Cantidad</th>
+                            <th>Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                """
+
+                for articulo in articulos:
+                    articulos_html += f"""
+                        <tr>
+                            <td>{articulo.producto.producto.articulos.producto.producto.nombre}</td>
+                            <td>{articulo.cantidad}</td>
+                            <td>{articulo.producto.producto.articulos.comentario}
+                        </tr>
+                    """
+
+                articulos_html += """
+                    </tbody>
+                </table>
+                """
+
+
                 # Crear el mensaje HTML
                 html_message = f"""
                 <html>
@@ -568,6 +596,7 @@ def oc_modal(request, pk):
                         <p>Estás recibiendo este correo porque tu solicitud: {oc.req.orden.folio}| Req: {oc.req.folio} se ha convertido en la OC: {oc.folio},</p>
                         <p>creada por {oc.creada_por.staff.staff.first_name} {oc.creada_por.staff.staff.last_name}.</p>
                         <p>El siguiente paso del sistema: Autorización de OC por Superintedencia Administrativa</p>
+                         {articulos_html}
                         <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
                         <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
                     </body>

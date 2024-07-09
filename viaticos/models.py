@@ -154,7 +154,7 @@ class Viaticos_Factura(models.Model):
             clasificaciones.add("Gasolina")
         elif clave_prod_serv in ["90101501", "50192500","90101503","90101500"]:
             clasificaciones.add("Alimentos")
-        elif clave_prod_serv == "95111602":
+        elif clave_prod_serv in ["95111602","95111603"]:
             clasificaciones.add("Peaje")
         else:
             clasificaciones.add("Otros")

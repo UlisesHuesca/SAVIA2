@@ -14,7 +14,8 @@ def encontrar_variables(texto):
         'divisa_cuenta': r'Divisa de la cuenta:\s?([^\n\r]+)',
         'titular_cuenta_1': r'Titular de la cuenta:\s*([^\n\r]+)',
         'titular_cuenta_2': r'Titular de la cuenta:\s*([^\n\r]+)\s*Titular de la cuenta:\s*([^\n\r]+)',
-        'motivo_pago': r'(?:Motivo de pago|Concepto de pago):\s*([^\n\r]+)'
+        'motivo_pago': r'(?:Motivo de pago|Concepto de pago):\s*([^\n\r]+)',
+        'folio_unico': r'Folio único:\s*(\d+)'
     }
 
     # Buscar cada patrón y extraer el valor

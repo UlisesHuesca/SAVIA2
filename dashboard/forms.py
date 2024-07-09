@@ -76,7 +76,7 @@ class ProveedoresExistDireccionesForm(forms.ModelForm):
 class Add_ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','clabe','cuenta','financiamiento','dias_credito','estatus']
+        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

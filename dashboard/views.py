@@ -629,6 +629,9 @@ def add_proveedores2(request, pk=None):
         else:
             for field, errors in form.errors.items():
                 error_messages[field] = errors.as_text()
+            for form in formset.forms:
+                for field, errors in form.errors.items():
+                    error_messages[field] = errors.as_text()
             
     else:
         form = ProveedoresForm(instance=proveedor)

@@ -203,6 +203,25 @@
                         </div>
                     </div>
                     </div>
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                        <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>
+                            {{f.producto|add_class:"form-check-input"}}
+                        </div>
+                    </div>
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                        <label for="form.logistica" class="form-check-label"><strong>Servicio</strong></label>
+                            {{f.servicio|add_class:"form-check-input"}}
+                        </div>
+                    </div>
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                        <label for="form.logistica" class="form-check-label"><strong>Arrendamiento</strong></label>
+                            {{f.arrendamiento|add_class:"form-check-input"}}
+                        </div>
+                    </div>
+            
                     {% endfor %}
                     <hr>
                     <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>

@@ -284,7 +284,7 @@ class Order(models.Model):
     subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True)
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
     operacion = models.ForeignKey(Operacion, on_delete = models.CASCADE, null=True)
-    sector = models.ForeignKey(Sector, on_delete = models.CASCADE, null=True)
+    sector = models.ForeignKey(Sector, on_delete = models.CASCADE, null=True, blank = True)
     superintendente = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='intendente')
     supervisor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='supervisor')
     activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True, blank = True)

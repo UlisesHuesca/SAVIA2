@@ -342,8 +342,9 @@ def compras_pagos(request, pk):
             costo_oc = compra.costo_plus_adicionales
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
-            elif round(monto_total,2) >= round(costo_oc,2):
-                compra.pagada= True
+            elif round(monto_total,2) <= round(costo_oc,2):
+                if round(monto_total,2) == round(costo_oc,2):
+                    compra.pagada= True
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
@@ -418,6 +419,7 @@ def compras_pagos(request, pk):
                                 #for pago in pagos:
                                     #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
                             email.send()
+                            messages.success(request,f'Has registrado exitosamente el pago')
                             for producto in productos:
                                 if producto.producto.producto.articulos.producto.producto.especialista == True:
                                     archivo_oc = attach_oc_pdf(request, compra.id)
@@ -1459,9 +1461,25 @@ def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
     for col_num, header in enumerate(columns):
         worksheet.write(12, col_num, header, head_style)
 
+    folios_unicos = set()  # Mantener un conjunto de folios únicos
+
     row_num = 13
     for pago in pagos:
-         # Lógica de selección de datos basada en el template
+        # Obtener el folio único del comprobante si existe
+        #detalles_comprobante = pago.detalles_comprobante
+        #if isinstance(detalles_comprobante, dict):
+        #    folio_unico = detalles_comprobante.get('folio_unico')
+        #else:
+        #    folio_unico = getattr(detalles_comprobante, 'folio_unico', None)
+        
+        # Verificar si el folio único está repetido
+        #if folio_unico and folio_unico in folios_unicos:
+        #    continue  # Omitir este pago si el folio único ya fue registrado
+
+        # Agregar el folio único al conjunto si existe
+        #if folio_unico:
+        #    folios_unicos.add(folio_unico)
+
         fecha = pago.pagado_real
         empresa = pago.cuenta.empresa.nombre
         if hasattr(pago, 'oc') and pago.oc:
