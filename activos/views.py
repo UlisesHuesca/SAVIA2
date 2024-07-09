@@ -58,7 +58,7 @@ def add_activo(request):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
     #activos = Activo.objects.filter(completo=True)
-    productos = Inventario.objects.filter(producto__activo=True)
+    productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos)
     personal = Profile.objects.all()
     marcas = Marca.objects.all() 
     #print(productos)
@@ -429,31 +429,6 @@ def convert_activos_to_xls(activos):
     worksheet.write(1, columna_max - 1, 'Software desarrollado por Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
     
-    # Escribir encabezados debajo de los mensajes
-    #worksheet.write(2, columna_max - 1, "Fecha Inicial", head_style)
-    #worksheet.write(3, columna_max - 1, "Fecha Final", head_style)
-    #worksheet.write(4, columna_max - 1, "Total de OC's", head_style)
-    #worksheet.write(5, columna_max - 1, "Requisiciones Aprobadas", head_style)
-    #worksheet.write(6, columna_max - 1, "Requisiciones Atendidas", head_style)
-    #worksheet.write(7, columna_max - 1, "KPI Colocadas/Aprobadas", head_style)
-    #worksheet.write(8, columna_max - 1, "OC Entregadas", head_style)
-    #worksheet.write(9, columna_max - 1, "OC Autorizadas", head_style)
-    #worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
-    
-    #indicador = num_requis_atendidas/num_approved_requis
-    #letra_columna = xl_col_to_name(columna_max)
-    #formula = f"={letra_columna}9/{letra_columna}10"
-    # Escribir datos y fórmulas
-    #worksheet.write(2, columna_max, start_date, date_style)  # Ejemplo de escritura de fecha
-    #worksheet.write(3, columna_max, end_date, date_style)
-    #worksheet.write_formula(4, columna_max, '=COUNTA(A:A)-1', body_style)  # Ejemplo de fórmula
-    #worksheet.write(5, columna_max, num_approved_requis, body_style)
-    #worksheet.write(6, columna_max, num_requis_atendidas, body_style)
-    #worksheet.write(7, columna_max, indicador, percent_style)  # Ajuste del índice de fila y columna para xlsxwriter
-    #worksheet.write_formula(8, columna_max, '=COUNTIF(S:S, "Entregada")', body_style)
-    # Escribir otra fórmula COUNTIF, también con el estilo corporal
-    #worksheet.write_formula(9, columna_max, '=COUNTIF(O:O, "Autorizado")', body_style)
-    #worksheet.write_formula(10, columna_max, formula, percent_style)
 
     for i, column in enumerate(columns):
         worksheet.write(0, i, column, head_style)
@@ -547,9 +522,9 @@ def render_pdf_responsiva_activos(request, pk):
     c.drawString(520,caja_iso,'Aprobación')
     c.drawString(520,caja_iso-10,'SUB ADM')
     c.drawString(150,caja_iso-20,'Número de documento')
-    #c.drawString(160,caja_iso-30,'F-ADQ-N4-01.02')
+    c.drawString(160,caja_iso-30,'SEOV-AFI-N4-03.08')
     c.drawString(245,caja_iso-20,'Clasificación del documento')
-    #c.drawString(275,caja_iso-30,'Controlado')
+    c.drawString(275,caja_iso-30,'Controlado')
     c.drawString(355,caja_iso-20,'Nivel del documento')
     c.drawString(380,caja_iso-30, 'N5')
     c.drawString(440,caja_iso-20,'Revisión No.')
@@ -562,40 +537,41 @@ def render_pdf_responsiva_activos(request, pk):
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
-    c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
-    c.rect(20,575,565,2, fill=True, stroke=False) #Linea posterior horizontal
+    #c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
+    #c.rect(20,575,565,2, fill=True, stroke=False) #Linea posterior horizontal
     c.setFillColor(white)
-    c.setLineWidth(.2)
+    #c.setLineWidth(.2)
     c.setFont('Helvetica-Bold',14)
     c.drawCentredString(280,755,'Responsiva Activos')
-    c.setLineWidth(.3) #Grosor
-    c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
-    c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
+    #c.setLineWidth(.3) #Grosor
+    #c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    #c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
     c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
 
 
-    c.setFillColor(white)
-    c.setFont('Helvetica-Bold',11)
+    #c.setFillColor(white)
+    #c.setFont('Helvetica-Bold',11)
     #c.drawString(120,caja_proveedor,'Infor')
-    c.drawString(300,caja_proveedor, 'Detalles')
+    #c.drawString(300,caja_proveedor, 'Detalles')
     inicio_central = 300
     #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
     c.setFillColor(black)
     c.setFont('Helvetica',9)
-    c.drawString(30,caja_proveedor-20,'Nombre:')
-    c.drawString(30,caja_proveedor-40,'Distrito:')
-    c.drawString(30,caja_proveedor-60,'Firma:')
-    c.drawString(30,caja_proveedor-100,'Fecha:')
+    c.drawCentredString(200,160,'Responsable')
+    #c.drawString(30,caja_proveedor-40,'Distrito:')
+    #c.drawString(30,caja_proveedor-60,'Firma:')
+    #c.drawString(30,caja_proveedor-100,'Fecha:')
     # Segunda columna del encabezado
-    c.drawString(280,caja_proveedor-20,'Nombre:')
-    c.drawString(280,caja_proveedor-40,'Distrito:')
-    c.drawString(280,caja_proveedor-60,'Firma:')
+    c.drawCentredString(400,160,'Encargado de Activos')
+    #c.drawString(280,caja_proveedor-40,'Distrito:')
+    #c.drawString(280,caja_proveedor-60,'Firma:')
     if activo.responsable:
-        c.drawString(350,caja_proveedor-20, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
-        c.drawString(350,caja_proveedor-40, activo.responsable.distritos.nombre)
+        c.drawCentredString(200,170, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
+        activo_resp = Profile.objects.get(Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS"), distritos = activo.responsable.distritos, tipo__activos = True, st_activo = True)
+        c.drawCentredString(400,170, activo_resp.staff.staff.first_name + ' '+ activo_resp.staff.staff.last_name)
     else:
-        c.drawString(350,caja_proveedor-20, " " )
-        c.drawString(350,caja_proveedor-40, " ")
+        c.drawCentredString(200,170, " " )
+        c.drawCentredString(400,170, " ")
     
 
     #Create blank list
@@ -603,20 +579,29 @@ def render_pdf_responsiva_activos(request, pk):
 
     data.append(['''Eco''', '''Descripción''', '''Tipo Activo''', '''Serie''','''Marca''', '''Modelo'''])
 
-
-    high = 540
+    high = 700
     cont = 0
+
+    styles = getSampleStyleSheet()
+    custom_paragraph_style = ParagraphStyle(
+        'CustomStyle',
+        parent=styles['BodyText'],
+        fontSize=6,  # Tamaño de fuente ajustado
+        leading=6,
+        alignment=TA_JUSTIFY,
+    )
+
     for activo in activos:
         data.append([
-            activo.eco_unidad, 
-            activo.descripcion,
+            Paragraph(activo.eco_unidad, custom_paragraph_style), 
+            Paragraph(activo.descripcion, custom_paragraph_style),
             activo.tipo_activo, 
             activo.serie,
             activo.marca.nombre if activo.marca else "NR", 
             activo.modelo,
             ])
         cont = cont + 1
-        if cont < 21:
+        if cont < 26:
             high = high - 18
 
 
@@ -676,7 +661,7 @@ def render_pdf_responsiva_activos(request, pk):
     # Dibuja el párrafo en la posición calculada
     parrafo_responsiva.drawOn(c, 20, posicion_inicio_parrafo)
 
-    table = Table(data, colWidths=[2 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
+    table = Table(data, colWidths=[2.5 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
@@ -703,8 +688,9 @@ def render_pdf_responsiva_activos(request, pk):
         ])
     table.setStyle(table_style)
 
-    rows_per_page = 20
-    total_rows = len(data) - 1  # Excluye el encabezado
+    rows_per_page = 25
+    rows_per_additional_page = 33
+    total_rows = len(data) - 1
     remaining_rows = total_rows - rows_per_page
 
     if remaining_rows <= 0:
@@ -714,47 +700,54 @@ def render_pdf_responsiva_activos(request, pk):
     else:
         # Dibujar las primeras 15 filas en la primera página
         first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
-        first_page_table = Table(first_page_data, colWidths=[2 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
+        first_page_table = Table(first_page_data, colWidths=[2.5 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
         first_page_table.setStyle(table_style)
         first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
         first_page_table.drawOn(c, 20, high)  # Posición en la primera página
 
-        # Agregar una nueva página y dibujar las filas restantes en la segunda página
-        c.showPage()
+        # Procesar las filas restantes
         remaining_data = data[rows_per_page + 1:]
-        remaining_table = Table(remaining_data, colWidths=[2 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
-        remaining_table.setStyle(table_style2)
-        remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        remaining_table_height = len(remaining_data) * 18
-        remaining_table_y = c._pagesize[1] - 70 - remaining_table_height - 10  # Espacio para el encabezado
-        remaining_table.drawOn(c, 20, remaining_table_y)  # Posición en la segunda página
+        while remaining_data:
+            c.showPage()
+            c.setFont('Helvetica', 8)
+            c.drawString(420, caja_iso, 'Preparado por:')
+            c.drawString(420, caja_iso - 10, 'SUP. ADMON')
+            c.drawString(520, caja_iso, 'Aprobación')
+            c.drawString(520, caja_iso - 10, 'SUB ADM')
+            c.drawString(150, caja_iso - 20, 'Número de documento')
+            c.drawString(160, caja_iso - 30, 'SEOV-AFI-N4-03.08')
+            c.drawString(245, caja_iso - 20, 'Clasificación del documento')
+            c.drawString(275, caja_iso - 30, 'Controlado')
+            c.drawString(355, caja_iso - 20, 'Nivel del documento')
+            c.drawString(380, caja_iso - 30, 'N5')
+            c.drawString(440, caja_iso - 20, 'Revisión No.')
+            c.drawString(452, caja_iso - 30, '000')
+            c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
+            c.drawString(525, caja_iso - 30, '1-Sep.-18')
 
-        # Agregar el encabezado en la segunda página
-        c.setFont('Helvetica', 8)
-        c.drawString(420, caja_iso, 'Preparado por:')
-        c.drawString(420, caja_iso - 10, 'SUP. ADMON')
-        c.drawString(520, caja_iso, 'Aprobación')
-        c.drawString(520, caja_iso - 10, 'SUB ADM')
-        c.drawString(150, caja_iso - 20, 'Número de documento')
-        c.drawString(160, caja_iso - 30, 'F-ADQ-N4-01.02')
-        c.drawString(245, caja_iso - 20, 'Clasificación del documento')
-        c.drawString(275, caja_iso - 30, 'Controlado')
-        c.drawString(355, caja_iso - 20, 'Nivel del documento')
-        c.drawString(380, caja_iso - 30, 'N5')
-        c.drawString(440, caja_iso - 20, 'Revisión No.')
-        c.drawString(452, caja_iso - 30, '000')
-        c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
-        c.drawString(525, caja_iso - 30, '1-Sep.-18')
+           
+            c.setFont('Helvetica', 12)
+            c.setFillColor(prussian_blue)
+            c.rect(150, 750, 250, 20, fill=True, stroke=False)
+            c.setFillColor(colors.white)
+            c.setFont('Helvetica-Bold', 14)
+            c.drawCentredString(280, 755, 'Responsiva Activos')
+            c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)
+            parrafo_responsiva.drawOn(c, 20, 50)
 
-        caja_proveedor = caja_iso - 65
-        c.setFont('Helvetica', 12)
-        c.setFillColor(prussian_blue)
-        c.rect(150, 750, 250, 20, fill=True, stroke=False)  # Barra azul superior Orden de Compra
-        c.setFillColor(colors.white)
-        c.setFont('Helvetica-Bold', 14)
-        c.drawCentredString(280, 755, 'Responsiva Activos')
-        c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)  # Imagen vortec
-        parrafo_responsiva.drawOn(c, 20, posicion_inicio_parrafo)
+            page_data = remaining_data[:rows_per_additional_page]
+            
+            remaining_data = remaining_data[rows_per_additional_page:]
+
+             # Calcular la posición Y dinámica
+            num_rows = len(page_data)
+            table_height = num_rows * 18  # Suponiendo que cada fila tiene 18 unidades de altura
+            remaining_table_y = height - table_height - 100  # Ajustar según tus márgenes y contenido
+
+            remaining_table = Table(page_data, colWidths=[2.5 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2 * cm], splitByRow=True)
+            remaining_table.setStyle(table_style2)
+            remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+            remaining_table.drawOn(c, 20, remaining_table_y)  # Ajustar la posición según sea necesario
 
     c.showPage()
     c.save()
