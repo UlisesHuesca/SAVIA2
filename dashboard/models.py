@@ -223,7 +223,7 @@ class Activo(models.Model):
     modified_by = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='modified_by')
     modified_at = models.DateField(null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
-
+    fecha_asignacion = models.DateField(null=True)
 
     @property   
     def emisor(self):

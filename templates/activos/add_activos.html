@@ -103,18 +103,14 @@
                             </datalist>
                             </div>
                         </div>-->
-                        <div class="col-sm-12 col-lg-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>    
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                <input type="text" list="marca" id="txt_marca" valor="{{personal.id}}" placeholder="Marca..." class="form-control">
-                                <label  style="color: #121212;" for="txt_marca">Marca*</label>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.responsable}}
+                                    </div>
                                 </div>
-                                <datalist id="marca" name='marca'>
-                                {% for item in marcas %}
-                                    <option valor="{{item.id}}"  value="{{item.nombre}}"></option>
-                                {% endfor %}
-                                </datalist>
                             </div>
                         </div>
                         <div class="col-12 d-none">
@@ -180,6 +176,16 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field form.fecha_asignacion type="date" class="form-control" %}
+                                <label style="color: #121212;" for="id_subproyecto">Fecha Asignación:</label>
+                            </div>
+                        </div>
+                    </div>
+
                     <div id="subir_pdf" class="row">
                         <div class="input-group mb-3" style="height:60px" >
                                 {{form.factura_pdf|add_class:"form-control"}}
@@ -318,7 +324,7 @@ if (tipo_activo.value == 1){
         other_select.value = 0
         status_txt.setAttribute("class","row my-2 d-none")
     }
-});*/
+});
 
 document.getElementById("txt_marca").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_marca");
@@ -352,8 +358,43 @@ document.getElementById("txt_marca").addEventListener("change", (event)=>{
         other_select.value = 0
         status_txt.setAttribute("class","row my-2 d-none")
     }
-});
+});*/
 {% endif %}
+
+var datosResponsable= {{ responsables_para_select2|safe }};
+console.log(datosResponsable)
+
+$(document).ready(function() {
+    
+    $('#id_responsable').select2({
+        allowClear: true,
+        width: '100%',
+        data: datosResponsable,
+        placeholder: 'Responsable',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
 </script>
 {% endblock %}
 

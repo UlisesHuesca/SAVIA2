@@ -62,7 +62,13 @@ def add_activo(request):
     personal = Profile.objects.all()
     marcas = Marca.objects.all() 
     #print(productos)
-
+    responsables = personal.filter(distritos = perfil.distritos, st_activo = True)
+    responsables_para_select2 = [
+        {
+            'id': responsable.id, 
+            'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name)
+        } for responsable in responsables
+    ]
 
     for producto in productos:
         producto.activo_disponible = True
@@ -79,7 +85,7 @@ def add_activo(request):
     activo, created = Activo.objects.get_or_create(creado_por=perfil, completo=False)
     productos_activos = productos.filter(activo_disponible =True)
     #print(productos_activos)
-    form = Activo_Form()
+    form = Activo_Form(instance = activo)
 
     form.fields['activo'].queryset = productos_activos
 
@@ -101,7 +107,7 @@ def add_activo(request):
             #messages.success(request,'No está validando')
     
     context = {
-        'personal':personal,
+        'responsables_para_select2':responsables_para_select2,
         'marcas': marcas,
         'form':form,
         'productos_activos':productos_activos,
@@ -123,10 +129,17 @@ def add_activo2(request, pk):
     #print(producto)
 
 
-    productos = inventarios.filter(producto = producto_salida.producto.articulos.producto.producto)
+    productos = inventarios.filter(producto = producto_salida.producto.articulos.producto.producto, distrito = perfil.distritos)
     producto.activo_disponible = True
     activos_completos = Activo.objects.filter(activo=producto, completo = True)
     #ecos = activos_completos.values_list('eco_unidad', flat=True)
+    responsables = personal.filter(distritos = perfil.distritos, st_activo = True)
+    responsables_para_select2 = [
+        {
+            'id': responsable.id, 
+            'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name)
+        } for responsable in responsables
+    ]
        
     #eco_choices = [(eco, eco) for eco in ecos]
     activo_cont = activos_completos.count()
@@ -195,6 +208,7 @@ def add_activo2(request, pk):
             'marcas': marcas,
             'form': form,
             'activos_completos_json': activos_completos_json,
+            'responsables_para_select2': responsables_para_select2,
         }
 
     else:
@@ -221,6 +235,7 @@ def add_activo2(request, pk):
             'personal':personal,
             'marcas':marcas,
             'form':form,
+            'responsables_para_select2': responsables_para_select2,
         }
 
     return render(request,'activos/add_activos.html', context)
@@ -522,7 +537,7 @@ def render_pdf_responsiva_activos(request, pk):
     c.drawString(520,caja_iso,'Aprobación')
     c.drawString(520,caja_iso-10,'SUB ADM')
     c.drawString(150,caja_iso-20,'Número de documento')
-    c.drawString(160,caja_iso-30,'SEOV-AFI-N4-03.08')
+    c.drawString(160,caja_iso-30,'SEOV-AFI-N4-01.08')
     c.drawString(245,caja_iso-20,'Clasificación del documento')
     c.drawString(275,caja_iso-30,'Controlado')
     c.drawString(355,caja_iso-20,'Nivel del documento')
@@ -530,7 +545,7 @@ def render_pdf_responsiva_activos(request, pk):
     c.drawString(440,caja_iso-20,'Revisión No.')
     c.drawString(452,caja_iso-30,'000')
     c.drawString(510,caja_iso-20,'Fecha de Emisión')
-    c.drawString(525,caja_iso-30,'01/2024')
+    c.drawString(525,caja_iso-30,'10/07/2024')
 
     caja_proveedor = caja_iso - 65
     c.setFont('Helvetica',12)
@@ -542,7 +557,7 @@ def render_pdf_responsiva_activos(request, pk):
     c.setFillColor(white)
     #c.setLineWidth(.2)
     c.setFont('Helvetica-Bold',14)
-    c.drawCentredString(280,755,'Responsiva Activos')
+    c.drawCentredString(280,755,'Responsiva General')
     #c.setLineWidth(.3) #Grosor
     #c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
     #c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
@@ -577,7 +592,7 @@ def render_pdf_responsiva_activos(request, pk):
     #Create blank list
     data =[]
 
-    data.append(['''Eco''', '''Descripción''', '''Tipo Activo''', '''Serie''','''Marca''', '''Modelo'''])
+    data.append(['''Eco''', '''Descripción''', '''Tipo Activo''', '''Serie''','''Marca''', '''Modelo''', '''Fecha'''])
 
     high = 700
     cont = 0
@@ -618,9 +633,9 @@ def render_pdf_responsiva_activos(request, pk):
     #Segundo renglón
     c.drawCentredString(70,34,'Controlado')
     c.drawCentredString(140,34,'N5')
-    c.drawCentredString(240,34,'SEOV-ALM-N4-01-01')
+    c.drawCentredString(240,34,'SEOV-AFI-N4-01.08')
     c.drawCentredString(350,34,'SUB ADM')
-    c.drawCentredString(450,34,'24/Oct/2018')
+    c.drawCentredString(450,34,'10/07/2024')
     c.drawCentredString(550,34,'001')
 
     c.setFillColor(black)
@@ -661,7 +676,7 @@ def render_pdf_responsiva_activos(request, pk):
     # Dibuja el párrafo en la posición calculada
     parrafo_responsiva.drawOn(c, 20, posicion_inicio_parrafo)
 
-    table = Table(data, colWidths=[2.5 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
+    table = Table(data, colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
@@ -700,7 +715,7 @@ def render_pdf_responsiva_activos(request, pk):
     else:
         # Dibujar las primeras 15 filas en la primera página
         first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
-        first_page_table = Table(first_page_data, colWidths=[2.5 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2* cm,])
+        first_page_table = Table(first_page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm])
         first_page_table.setStyle(table_style)
         first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
         first_page_table.drawOn(c, 20, high)  # Posición en la primera página
@@ -715,7 +730,7 @@ def render_pdf_responsiva_activos(request, pk):
             c.drawString(520, caja_iso, 'Aprobación')
             c.drawString(520, caja_iso - 10, 'SUB ADM')
             c.drawString(150, caja_iso - 20, 'Número de documento')
-            c.drawString(160, caja_iso - 30, 'SEOV-AFI-N4-03.08')
+            c.drawString(160, caja_iso - 30, 'SEOV-AFI-N4-01.08')
             c.drawString(245, caja_iso - 20, 'Clasificación del documento')
             c.drawString(275, caja_iso - 30, 'Controlado')
             c.drawString(355, caja_iso - 20, 'Nivel del documento')
@@ -723,7 +738,7 @@ def render_pdf_responsiva_activos(request, pk):
             c.drawString(440, caja_iso - 20, 'Revisión No.')
             c.drawString(452, caja_iso - 30, '000')
             c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
-            c.drawString(525, caja_iso - 30, '1-Sep.-18')
+            c.drawString(525, caja_iso - 30, '10/07/2024')
 
            
             c.setFont('Helvetica', 12)
@@ -731,7 +746,7 @@ def render_pdf_responsiva_activos(request, pk):
             c.rect(150, 750, 250, 20, fill=True, stroke=False)
             c.setFillColor(colors.white)
             c.setFont('Helvetica-Bold', 14)
-            c.drawCentredString(280, 755, 'Responsiva Activos')
+            c.drawCentredString(280, 755, 'Responsiva General')
             c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)
             parrafo_responsiva.drawOn(c, 20, 50)
 
@@ -744,7 +759,7 @@ def render_pdf_responsiva_activos(request, pk):
             table_height = num_rows * 18  # Suponiendo que cada fila tiene 18 unidades de altura
             remaining_table_y = height - table_height - 100  # Ajustar según tus márgenes y contenido
 
-            remaining_table = Table(page_data, colWidths=[2.5 * cm, 7 * cm, 3 * cm, 4 * cm, 2 * cm, 2 * cm], splitByRow=True)
+            remaining_table = Table(page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm], splitByRow=True)
             remaining_table.setStyle(table_style2)
             remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
             remaining_table.drawOn(c, 20, remaining_table_y)  # Ajustar la posición según sea necesario
