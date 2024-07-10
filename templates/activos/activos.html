@@ -76,11 +76,15 @@
                                     </i>
                                 </a>
                             </li>
-                            <li class="nav-item">
+                            <li class="nav-item mx-2">
                                 <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success">
                                     <i class="fa-solid fa-file-excel fa-2xl"></i>
                                 </button>
                             </li>
+                            <li class="nav-item mx-2">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'render_pdf_responsiva_activos_gerente' %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva Gerente"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                            </li>
+                            
                             <!--<li class="nav-item mx-2">
                                 <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                     <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="#"></a>

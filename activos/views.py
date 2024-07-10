@@ -38,7 +38,10 @@ from bs4 import BeautifulSoup
 def activos(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
-    activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
+    if usuario.tipo.nombre == "ADMIN_ACTIVOS":
+        activos = Activo.objects.filter(completo=True)
+    else:    
+        activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
     myfilter = ActivoFilter(request.GET, queryset=activos)
     activos = myfilter.qs 
 
@@ -572,21 +575,26 @@ def render_pdf_responsiva_activos(request, pk):
     #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
     c.setFillColor(black)
     c.setFont('Helvetica',9)
-    c.drawCentredString(200,160,'Responsable')
+    c.drawCentredString(200,170,'Responsable')
     #c.drawString(30,caja_proveedor-40,'Distrito:')
     #c.drawString(30,caja_proveedor-60,'Firma:')
     #c.drawString(30,caja_proveedor-100,'Fecha:')
     # Segunda columna del encabezado
-    c.drawCentredString(400,160,'Encargado de Activos')
+    c.drawCentredString(400,170,'Encargado de Activos')
+    c.drawCentredString(300,140,'Distrito - Fecha de impresión')
     #c.drawString(280,caja_proveedor-40,'Distrito:')
     #c.drawString(280,caja_proveedor-60,'Firma:')
     if activo.responsable:
-        c.drawCentredString(200,170, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
+        c.drawCentredString(200,180, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
         activo_resp = Profile.objects.get(Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS"), distritos = activo.responsable.distritos, tipo__activos = True, st_activo = True)
-        c.drawCentredString(400,170, activo_resp.staff.staff.first_name + ' '+ activo_resp.staff.staff.last_name)
+        c.drawCentredString(400,180, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
+        # Obtener la fecha actual
+        fecha_actual = datetime.now().strftime('%d/%m/%Y')
+        texto_central = f"{activo_resp.distritos.nombre} - {fecha_actual}"
+        c.drawCentredString(300,150, texto_central)
     else:
-        c.drawCentredString(200,170, " " )
-        c.drawCentredString(400,170, " ")
+        c.drawCentredString(200,180, " " )
+        c.drawCentredString(400,180, " ")
     
 
     #Create blank list
@@ -769,3 +777,268 @@ def render_pdf_responsiva_activos(request, pk):
     buf.seek(0)
 
     return FileResponse(buf, as_attachment=True, filename='Responsiva_' + str(activo.responsable) +'.pdf')
+
+
+def render_pdf_responsiva_activos_gerente(request):
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    #Here ends conf.
+    todos_activos = Activo.objects.all()
+    pk_perfil = request.session.get('selected_profile_id') 
+    usuario = Profile.objects.get(id = pk_perfil)
+    activos = todos_activos.filter(responsable__distritos= usuario.distritos, estatus__nombre = "ALTA")
+
+   #Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    ##Elaborar caja
+    c.line(caja_iso,500,caja_iso,720)
+
+     #Encabezado
+    c.drawString(420,caja_iso,'Preparado por:')
+    c.drawString(420,caja_iso-10,'SUP. ADMON')
+    c.drawString(520,caja_iso,'Aprobación')
+    c.drawString(520,caja_iso-10,'SUB ADM')
+    c.drawString(150,caja_iso-20,'Número de documento')
+    c.drawString(160,caja_iso-30,'SEOV-AFI-N4-01.06')
+    c.drawString(245,caja_iso-20,'Clasificación del documento')
+    c.drawString(275,caja_iso-30,'Controlado')
+    c.drawString(355,caja_iso-20,'Nivel del documento')
+    c.drawString(380,caja_iso-30, 'N5')
+    c.drawString(440,caja_iso-20,'Revisión No.')
+    c.drawString(452,caja_iso-30,'000')
+    c.drawString(510,caja_iso-20,'Fecha de Emisión')
+    c.drawString(525,caja_iso-30,'10/07/2024')
+
+    caja_proveedor = caja_iso - 65
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
+    #c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
+    #c.rect(20,575,565,2, fill=True, stroke=False) #Linea posterior horizontal
+    c.setFillColor(white)
+    #c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(280,755,'Responsiva de Gerente')
+    #c.setLineWidth(.3) #Grosor
+    #c.line(20,caja_proveedor-8,20,575) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    #c.line(585,caja_proveedor-8,585,575) #Linea 2 contorno
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+
+    #c.setFillColor(white)
+    #c.setFont('Helvetica-Bold',11)
+    #c.drawString(120,caja_proveedor,'Infor')
+    #c.drawString(300,caja_proveedor, 'Detalles')
+    inicio_central = 300
+    #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+    c.drawCentredString(200,160,'Gerente')
+    #c.drawString(30,caja_proveedor-40,'Distrito:')
+    #c.drawString(30,caja_proveedor-60,'Firma:')
+    # Segunda columna del encabezado
+    c.drawCentredString(400,160,'Encargado de Activos')
+    c.drawCentredString(300,140,'Distrito - Fecha de impresión:')
+    #c.drawString(280,caja_proveedor-40,'Distrito:')
+    #c.drawString(280,caja_proveedor-60,'Firma:')
+    if usuario.distritos.nombre == "MATRIZ":
+        gerente = Profile.objects.get(id = 16) #1070/Heriberto
+    else:
+        gerente = Profile.objects.filter(tipo__nombre = "GERENCIA", distritos = usuario.distritos, st_activo = True).first()
+    c.drawCentredString(200,170, gerente.staff.staff.first_name +' '+ gerente.staff.staff.last_name )
+    activo_resp = Profile.objects.get(Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS"), distritos = usuario.distritos, tipo__activos = True, st_activo = True)
+    c.drawCentredString(400,170, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
+    # Obtener la fecha actual
+    fecha_actual = datetime.now().strftime('%d/%m/%Y')
+    texto_central = f"{activo_resp.distritos.nombre} - {fecha_actual}"
+    c.drawCentredString(300,150, texto_central)
+   
+    
+
+    #Create blank list
+    data =[]
+
+    data.append(['''Eco''', '''Descripción''', '''Tipo Activo''', '''Serie''','''Marca''', '''Modelo''', '''Fecha'''])
+
+    high = 700
+    cont = 0
+
+    styles = getSampleStyleSheet()
+    custom_paragraph_style = ParagraphStyle(
+        'CustomStyle',
+        parent=styles['BodyText'],
+        fontSize=6,  # Tamaño de fuente ajustado
+        leading=6,
+        alignment=TA_JUSTIFY,
+    )
+
+    for activo in activos:
+        data.append([
+            Paragraph(activo.eco_unidad, custom_paragraph_style), 
+            Paragraph(activo.descripcion, custom_paragraph_style),
+            activo.tipo_activo, 
+            activo.serie,
+            activo.marca.nombre if activo.marca else "NR", 
+            activo.modelo,
+            ])
+        cont = cont + 1
+        if cont < 26:
+            high = high - 18
+
+
+    c.setFillColor(prussian_blue)
+    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.setFillColor(white)
+    #Primer renglón
+    c.drawCentredString(70,48,'Clasificación:')
+    c.drawCentredString(140,48,'Nivel:')
+    c.drawCentredString(240,48,'Preparado por:')
+    c.drawCentredString(350,48,'Aprobado:')
+    c.drawCentredString(450,48,'Fecha emisión:')
+    c.drawCentredString(550,48,'Rev:')
+    #Segundo renglón
+    c.drawCentredString(70,34,'Controlado')
+    c.drawCentredString(140,34,'N5')
+    c.drawCentredString(240,34,'SEOV-AFI-N4-01.06')
+    c.drawCentredString(350,34,'SUB ADM')
+    c.drawCentredString(450,34,'10/07/2024')
+    c.drawCentredString(550,34,'001')
+
+    c.setFillColor(black)
+    width, height = letter
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+
+    
+    texto_responsiva = """
+    RESPONSIVA: A partir de la emisión de la presente, queda asignado a mi cargo y bajo mi responsabilidad el equipo arriba descrito, 
+    comprometiéndome a darle buen uso, solicitar oportunamente su mantenimiento preventivo y en los casos necesarios el mantenimiento 
+    correctivo para el continuo uso del equipo, vigilar la operación correcta de quienes lo operen, y dar aviso inmediato de cualquier 
+    anomalía al departamento correspondiente.
+    """
+
+    c.setFillColor(prussian_blue)
+    c.rect(20,30,565,30, fill=True, stroke=False)
+    c.setFillColor(white)
+    # Personalizar el estilo de los párrafos
+    custom_style = ParagraphStyle(
+    'CustomStyle',
+        parent=styles['BodyText'],
+        fontSize=10,  # Reducir el tamaño de la fuente a 6
+        leading=10,   # Aumentar el espacio entre líneas para asegurar que el texto no se superponga
+        alignment=TA_JUSTIFY,  # Alineación del texto
+        # Puedes añadir más ajustes si es necesario
+    )
+
+    parrafo_responsiva = Paragraph(texto_responsiva, custom_style)
+    ancho_disponible = width - 40  # Asumiendo un margen de 20 por cada lado
+
+    # Calcula el espacio que el párrafo necesita (ancho, alto)
+    w, h = parrafo_responsiva.wrap(ancho_disponible, height)
+
+    # La posición inicial del párrafo en Y, ajusta según necesites
+    posicion_inicio_parrafo = 100  # Ajusta este valor según el espacio necesario para los elementos anteriores
+
+    # Dibuja el párrafo en la posición calculada
+    parrafo_responsiva.drawOn(c, 20, posicion_inicio_parrafo)
+
+    table = Table(data, colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm])
+    table_style = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
+        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        #ENCABEZADO
+        ('TEXTCOLOR',(0,0),(-1,0), white),
+        ('FONTSIZE',(0,0),(-1,0), 8),
+        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        #CUERPO
+        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    table_style2 = TableStyle([ #estilos de la tabla
+        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
+        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
+        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
+        #ENCABEZADO
+        ('TEXTCOLOR',(0,0),(-1,0), colors.black),
+        ('FONTSIZE',(0,0),(-1,0), 6),
+        #('BACKGROUND',(0,0),(-1,0), prussian_blue),
+        #CUERPO
+        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
+        ('FONTSIZE',(0,1),(-1,-1), 6),
+        ])
+    table.setStyle(table_style)
+
+    rows_per_page = 25
+    rows_per_additional_page = 33
+    total_rows = len(data) - 1
+    remaining_rows = total_rows - rows_per_page
+
+    if remaining_rows <= 0:
+        # Si no hay suficientes filas para una segunda página, dibujar la tabla completa en la primera página
+        table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        table.drawOn(c, 20, high)  # Posición en la primera página
+    else:
+        # Dibujar las primeras 15 filas en la primera página
+        first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
+        first_page_table = Table(first_page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm])
+        first_page_table.setStyle(table_style)
+        first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        first_page_table.drawOn(c, 20, high)  # Posición en la primera página
+
+        # Procesar las filas restantes
+        remaining_data = data[rows_per_page + 1:]
+        while remaining_data:
+            c.showPage()
+            c.setFont('Helvetica', 8)
+            c.drawString(420, caja_iso, 'Preparado por:')
+            c.drawString(420, caja_iso - 10, 'SUP. ADMON')
+            c.drawString(520, caja_iso, 'Aprobación')
+            c.drawString(520, caja_iso - 10, 'SUB ADM')
+            c.drawString(150, caja_iso - 20, 'Número de documento')
+            c.drawString(160, caja_iso - 30, 'SEOV-AFI-N4-01.06')
+            c.drawString(245, caja_iso - 20, 'Clasificación del documento')
+            c.drawString(275, caja_iso - 30, 'Controlado')
+            c.drawString(355, caja_iso - 20, 'Nivel del documento')
+            c.drawString(380, caja_iso - 30, 'N5')
+            c.drawString(440, caja_iso - 20, 'Revisión No.')
+            c.drawString(452, caja_iso - 30, '000')
+            c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
+            c.drawString(525, caja_iso - 30, '10/07/2024')
+
+           
+            c.setFont('Helvetica', 12)
+            c.setFillColor(prussian_blue)
+            c.rect(150, 750, 250, 20, fill=True, stroke=False)
+            c.setFillColor(colors.white)
+            c.setFont('Helvetica-Bold', 14)
+            c.drawCentredString(280, 755, 'Responsiva de Gerente')
+            c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)
+            parrafo_responsiva.drawOn(c, 20, 50)
+
+            page_data = remaining_data[:rows_per_additional_page]
+            
+            remaining_data = remaining_data[rows_per_additional_page:]
+
+             # Calcular la posición Y dinámica
+            num_rows = len(page_data)
+            table_height = num_rows * 18  # Suponiendo que cada fila tiene 18 unidades de altura
+            remaining_table_y = height - table_height - 100  # Ajustar según tus márgenes y contenido
+
+            remaining_table = Table(page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm], splitByRow=True)
+            remaining_table.setStyle(table_style2)
+            remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+            remaining_table.drawOn(c, 20, remaining_table_y)  # Ajustar la posición según sea necesario
+
+    c.showPage()
+    c.save()
+    buf.seek(0)
+
+    return FileResponse(buf, as_attachment=True, filename='Responsiva_Gerencia' +  +'.pdf')
