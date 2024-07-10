@@ -99,13 +99,13 @@ class Facturas(models.Model):
         else:
             # Manejo de error si no se encuentra ninguna versión conocida
             raise ValueError("Versión del documento XML no reconocida")
-        #comprobante = root.findall('cfdi:Comprobante')
+       
         
         emisor = root.find('cfdi:Emisor', ns)
-        
         receptor = root.find('cfdi:Receptor', ns)
         impuestos = root.find('cfdi:Impuestos', ns)
         conceptos = root.find('cfdi:Conceptos', ns)
+
         resultados = []
         for concepto in conceptos.findall('cfdi:Concepto', ns):
             descripcion = concepto.get('Descripcion')
@@ -123,7 +123,15 @@ class Facturas(models.Model):
         impuestos = root.get('TotalImpuestosTrasladados')
         fecha = root.get('Fecha')
 
-        return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados, 'fecha':fecha}
+        return {
+            'rfc': rfc, 
+            'nombre': nombre, 
+            'regimen_fiscal': regimen_fiscal,
+            'total':total,
+            'subtotal': subtotal,
+            'impuestos': impuestos,
+            'resultados':resultados, 
+            'fecha':fecha}
 
 class Comprobante_saldo_favor(models.Model):
     oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True)

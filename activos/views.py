@@ -614,6 +614,7 @@ def render_pdf_responsiva_activos(request, pk):
             activo.serie,
             activo.marca.nombre if activo.marca else "NR", 
             activo.modelo,
+            activo.fecha_asignacion if activo.fecha_asignacion else "NR"
             ])
         cont = cont + 1
         if cont < 26:
@@ -715,7 +716,7 @@ def render_pdf_responsiva_activos(request, pk):
     else:
         # Dibujar las primeras 15 filas en la primera página
         first_page_data = data[:rows_per_page + 1]  # Incluye el encabezado
-        first_page_table = Table(first_page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm])
+        first_page_table = Table(first_page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2 * cm])
         first_page_table.setStyle(table_style)
         first_page_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
         first_page_table.drawOn(c, 20, high)  # Posición en la primera página
@@ -759,7 +760,7 @@ def render_pdf_responsiva_activos(request, pk):
             table_height = num_rows * 18  # Suponiendo que cada fila tiene 18 unidades de altura
             remaining_table_y = height - table_height - 100  # Ajustar según tus márgenes y contenido
 
-            remaining_table = Table(page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2* cm, 2*cm], splitByRow=True)
+            remaining_table = Table(page_data,  colWidths=[2.5 * cm, 6 * cm, 3 * cm, 3 * cm, 2 * cm, 2 * cm, 2 * cm])
             remaining_table.setStyle(table_style2)
             remaining_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
             remaining_table.drawOn(c, 20, remaining_table_y)  # Ajustar la posición según sea necesario
