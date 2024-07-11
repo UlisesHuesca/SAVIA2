@@ -93,6 +93,7 @@
                             <th scope="col-3">Comentario</th>
                             <th scope="col-2">PDF</th>
                             <th scope="col-2">XML</th>
+                            <th>PDF-Render</th>
                             <th scope="col-2">Edición</th>
                             <th scope="col-2">Eliminar</th>
                         </tr>
@@ -116,6 +117,11 @@
                             {% if p.factura_xml %}
                             <td>
                                 <a href="{{p.factura_xml.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                            <td>
+                                <a href="{% url 'generar_cfdi' p.id %}" download class="btn btn-outline-info">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
                                 </a>
                             </td>

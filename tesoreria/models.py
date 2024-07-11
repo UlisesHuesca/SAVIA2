@@ -89,49 +89,115 @@ class Facturas(models.Model):
         # Manejo adicional del error
         #tree = ET.parse(self.archivo_xml.path)
         root = tree.getroot()
-        # Buscar la versión en el documento XML
         version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
 
+        ns = {}
         if 'http://www.sat.gob.mx/cfd/3' in version:
             ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
         elif 'http://www.sat.gob.mx/cfd/4' in version:
-            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4'}
+            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4', 'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital', 'if': 'https://www.interfactura.com/Schemas/Documentos'}
         else:
-            # Manejo de error si no se encuentra ninguna versión conocida
             raise ValueError("Versión del documento XML no reconocida")
-       
-        
+
         emisor = root.find('cfdi:Emisor', ns)
         receptor = root.find('cfdi:Receptor', ns)
-        impuestos = root.find('cfdi:Impuestos', ns)
         conceptos = root.find('cfdi:Conceptos', ns)
+        impuestos = root.find('cfdi:Impuestos', ns)
+        complemento = root.find('cfdi:Complemento', ns)
+        addenda = root.find('cfdi:Addenda', ns)
+        factura_interfactura = addenda.find('if:FacturaInterfactura', ns) if addenda is not None else None
+        encabezado = factura_interfactura.find('if:Encabezado', ns) if factura_interfactura is not None else None
 
         resultados = []
         for concepto in conceptos.findall('cfdi:Concepto', ns):
             descripcion = concepto.get('Descripcion')
             cantidad = concepto.get('Cantidad')
-            precio = concepto.get('ValorUnitario') 
-            # Aquí agrupamos los valores en una tupla antes de añadirlos a la lista
-            resultados.append((descripcion, cantidad, precio))
-        # Obtener los datos requeridos
-      
-        rfc = emisor.get('Rfc')
-        nombre = emisor.get('Nombre')
-        regimen_fiscal = emisor.get('RegimenFiscal')
+            precio = concepto.get('ValorUnitario')
+            importe = concepto.get('Importe')
+            unidad = concepto.get('Unidad')
+            clave =  concepto.get('ClaveProdServ')
+            impuesto = concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns)
+            impuesto_valor = impuesto.get('Importe') if impuesto is not None else 'N/A'
+            tipo_factor = impuesto.get('TipoFactor') if impuesto is not None else 'N/A'
+            tasa_cuota = impuesto.get('TasaOCuota') if impuesto is not None else 'N/A'
+            resultados.append({
+                'descripcion': descripcion,
+                'cantidad': cantidad,
+                'precio': precio,
+                'clave': clave,
+                'importe': importe,
+                'unidad': unidad,
+                'impuesto': impuesto_valor,
+                'tipo_factor': tipo_factor,
+                'tasa_cuota': tasa_cuota,
+            })
+
+        rfc_emisor = emisor.get('Rfc')
+        nombre_emisor = emisor.get('Nombre')
+        regimen_fiscal_emisor = emisor.get('RegimenFiscal')
+       
+        
+        rfc_receptor = receptor.get('Rfc')
+        nombre_receptor = receptor.get('Nombre')
+        regimen_fiscal_receptor = receptor.get('RegimenFiscalReceptor')
+        domicilio_fiscal_receptor = receptor.get('DomicilioFiscalReceptor')
+        uso_cfdi = receptor.get('UsoCFDI')
+        
         total = root.get('Total')
-        subtotal = root.get('Subtotal')
-        impuestos = root.get('TotalImpuestosTrasladados')
+        subtotal = root.get('SubTotal')
+        moneda = root.get('Moneda')
+        impuestos_total = impuestos.get('TotalImpuestosTrasladados') if impuestos is not None else None
+        # Extraer la cadena original
+        cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible')
+
+        # Datos adicionales del complemento
+        uuid, sello_cfd, sello_sat, fecha_timbrado = '', '', '', ''
+        if complemento is not None:
+            timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
+            if timbre_fiscal is not None:
+                uuid = timbre_fiscal.get('UUID')
+                sello_cfd = timbre_fiscal.get('SelloCFD')
+                sello_sat = timbre_fiscal.get('SelloSAT')
+                fecha_timbrado = timbre_fiscal.get('FechaTimbrado')
+                no_certificadoSAT = timbre_fiscal.get('NoCertificadoSAT')
+
         fecha = root.get('Fecha')
+        lugar_expedicion = root.get('LugarExpedicion')
+        folio = root.get('Folio')
+        no_certificado = root.get('NoCertificado')
+        
+
+        # Campos adicionales opcionales con valores predeterminados
+        forma_pago = root.get('FormaPago', 'Por definir')
+        metodo_pago = root.get('MetodoPago', 'Por definir')
 
         return {
-            'rfc': rfc, 
-            'nombre': nombre, 
-            'regimen_fiscal': regimen_fiscal,
-            'total':total,
+            'no_certificadoSAT':no_certificadoSAT,
+            'cadena_original': cadena_original,
+            'uso_cfdi': uso_cfdi,
+            'rfc_emisor': rfc_emisor,
+            'nombre_emisor': nombre_emisor,
+            'regimen_fiscal_emisor': regimen_fiscal_emisor,
+            'rfc_receptor': rfc_receptor,
+            'nombre_receptor': nombre_receptor,
+            'regimen_fiscal_receptor':regimen_fiscal_receptor,
+            'codigo_postal':domicilio_fiscal_receptor,
+            'total': total,
             'subtotal': subtotal,
-            'impuestos': impuestos,
-            'resultados':resultados, 
-            'fecha':fecha}
+            'impuestos': impuestos_total,
+            'fecha': fecha,
+            'moneda': moneda,
+            'lugar_expedicion': lugar_expedicion,
+            'folio': folio,
+            'no_certificado': no_certificado,
+            'uuid': uuid,
+            'sello_cfd': sello_cfd,
+            'sello_sat': sello_sat,
+            'fecha_timbrado': fecha_timbrado,
+            'resultados': resultados,
+            'forma_pago': forma_pago,
+            'metodo_pago': metodo_pago
+        }
 
 class Comprobante_saldo_favor(models.Model):
     oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True)

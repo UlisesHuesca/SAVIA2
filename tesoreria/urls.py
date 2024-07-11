@@ -26,5 +26,6 @@ urlpatterns = [
     # La URL para el formulario de pagos masivos
     path('tesoreria/masivos/', views.mass_payment_view, name='vista_pagos_masivos'),
     path('tesoreria/layout_pagos/', views.layout_pagos, name='layout_pagos'),
+    path('factura_cfdi/<int:pk>/', views.generar_cfdi, name='generar_cfdi'),
    
     ]

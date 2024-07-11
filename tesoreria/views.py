@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.http import HttpResponse
+from django.http import HttpResponse, FileResponse
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
@@ -27,6 +27,7 @@ from user.models import Profile
 from .utils import extraer_texto_de_pdf, encontrar_variables
 import pytz  # Si estás utilizando pytz para manejar zonas horarias
 from io import BytesIO
+from num2words import num2words
 
 import re
 
@@ -45,7 +46,18 @@ from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
 
+#PDF generator
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.colors import Color, black, blue, red, white
+from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import letter
+from reportlab.rl_config import defaultPageSize
 
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
+from bs4 import BeautifulSoup
 
 from user.decorators import perfil_seleccionado_required
 
@@ -683,7 +695,7 @@ def matriz_pagos(request):
         Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2=True) |
         Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True), 
         hecho=True
-    ).order_by('-pagado_date')
+    ).order_by('-pagado_real')
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
 
@@ -1587,4 +1599,198 @@ def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
       # Establecer una cookie para indicar que la descarga ha iniciado
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
+    return response
+
+
+def generar_cfdi(request, pk):
+    factura = Facturas.objects.get(id=pk)
+    data = factura.emisor
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    if not data:
+        return HttpResponse("Error al parsear el archivo XML", status=400)
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Configuración de fuentes y estilos
+    c.setFont("Helvetica", 10)
+
+    # Título
+    c.setFont("Helvetica-Bold", 20)
+    c.drawString(30, height - 40, "FACTURA")
+
+    # Datos del Emisor
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(30, height - 80, "Datos del Emisor:")
+    
+    c.setFont("Helvetica", 8)
+    alineado_x = 30
+    alineado_y = height - 100
+    alineado_y2 = alineado_y
+    line_height = 12
+
+    c.drawString(alineado_x, alineado_y, f"RFC: {data['rfc_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Nombre: {data['nombre_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Régimen Fiscal: {data['regimen_fiscal_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Lugar de Expedición: {data['lugar_expedicion']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Fecha y hora de expedición: {data['fecha']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Moneda: {data['moneda']}")
+    #alineado_y -= line_height
+    #c.drawString(alineado_x, alineado_y, f"Folio Fiscal: {data['uuid']}")
+
+    # Datos del Receptor
+    alineado_y -= 2 * line_height
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(alineado_x + 350, height - 80, "Datos del Receptor:")
+    
+    c.setFont("Helvetica", 8)
+    alineado_y -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"RFC: {data['rfc_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Nombre: {data['nombre_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Régimen Fiscal: {data['regimen_fiscal_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Régimen Fiscal: {data['codigo_postal']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Uso del CFDI: {data['uso_cfdi']}")
+
+    # Conceptos (Tabla)
+    alineado_y -= line_height
+
+    # Preparamos los datos de la tabla
+    table_data = [["CANT", "CLAVE", "CONCEPTO", "U DE M", "P.U.", "IMPORTE", "IMPUESTO", "TIPO TASA"]]
+    for item in data['resultados']:
+        descripcion = item['descripcion']
+        cantidad = float(item['cantidad'])
+        unidad = item['unidad']
+        valor_unitario = float(item['precio'])
+        importe = float(item['importe'])
+        impuesto = float(item['impuesto'])
+        tasa = float(item['tasa_cuota'])
+        clave = item['clave']
+        
+        table_data.append([
+            f"{cantidad:.2f}",
+            clave,
+            descripcion,
+            unidad,
+            f"{valor_unitario:.2f}",
+            f"{importe:.2f}",
+            f"{impuesto:.2f}",
+            f"{tasa:.2f}",
+        ])
+
+    # Crear la tabla
+    table = Table(table_data, colWidths=[1.0 * cm, 1.5 * cm, 8.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm])
+    table.setStyle(TableStyle([
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, 0), 6),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 7),
+    ]))
+
+    # Guardar la tabla en el PDF
+    table.wrapOn(c, width, height)
+    table.drawOn(c, alineado_x, alineado_y - len(table_data) * line_height)
+
+    # Ajustar el alineado_y para seguir escribiendo debajo de la tabla
+    alineado_y -= len(table_data) * line_height + 2 * line_height
+
+    # Totales
+    c.setFont("Helvetica-Bold", 12)
+   
+    c.setFont("Helvetica", 10)
+    alineado_y -= line_height
+
+     # Importe con letra
+    alineado_y -= 2 * line_height
+    c.drawString(alineado_x, alineado_y, "Importe con Letra:")
+    total_letras = num2words(float(data['total']), lang='es', to='currency', currency='MXN')
+    c.drawString(alineado_x, alineado_y - 10, total_letras)
+    #c.drawRightString(alineado_x, alineado_y , f"{data['importe_con_letra']}")
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.setFillColor(prussian_blue)
+    c.rect(alineado_x + 450 ,alineado_y - 28,50,40, fill=True, stroke=False) #Barra azul superior | Subtotal
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y , f"Subtotal:")
+    c.setFillColor(black)
+    c.drawString(alineado_x + 510, alineado_y, f"{data['subtotal']}")
+    alineado_y -= line_height
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos:")
+    c.setFillColor(black)
+    c.drawString(alineado_x + 510, alineado_y, f"{data['impuestos']}")
+    alineado_y -= line_height
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y, f"Total:")
+    c.setFillColor(black)
+    c.drawString(alineado_x + 510, alineado_y, f"{data['total']}")
+    # Otros detalles
+    
+
+    otros_detalles = [
+        ["Folio Fiscal", "Fecha y Hora de Certificación", "No. Certificado Digital", "Método de Pago"],
+        [data['uuid'], data['fecha_timbrado'], data['no_certificado'], data['metodo_pago']]
+    ]
+    detalles_table = Table(otros_detalles, colWidths=[5 * cm, 5 * cm, 4.5 * cm, 4.5 * cm])
+    detalles_table.setStyle(TableStyle([
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 6),
+    ]))
+
+    # Guardar la tabla de detalles en el PDF
+    detalles_table.wrapOn(c, width, height)
+    detalles_table.drawOn(c, alineado_x, 180)
+    alineado_y -= 4 * line_height
+     # Utilizar Paragraph para las líneas largas
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+    styleN.fontSize = 6
+    c.setFont("Helvetica", 6)
+    c.line(30,177,580,177)
+    c.drawString(alineado_x, 170, f"ESTE DOCUMENTO ES UNA REPRESENTACIÓN IMPRESA DE UN CFDI v4.0")
+    
+    sello_cfd_paragraph = Paragraph(f"Sello Digital del CFDI: {data['sello_cfd']}", styleN)
+    sello_cfd_paragraph.wrapOn(c, width - 2 * alineado_x, line_height * 4)
+    sello_cfd_paragraph.drawOn(c, alineado_x, 130)
+    alineado_y -= line_height * 5
+    
+    sello_sat_paragraph = Paragraph(f"Sello del SAT: {data['sello_sat']}", styleN)
+    sello_sat_paragraph.wrapOn(c, width - 2 * alineado_x, line_height * 4)
+    sello_sat_paragraph.drawOn(c, alineado_x, 90)
+    alineado_y -= line_height * 3
+    c.drawString(alineado_x, 40, f"No. serie CSD SAT {data['no_certificadoSAT']}")
+
+    sello_cfd_paragraph = Paragraph(f"Cadena Original del complemento de certificación digital del SAT: {data['cadena_original']}", styleN)
+    sello_cfd_paragraph.wrapOn(c, width - 2 * alineado_x, line_height * 4)
+    sello_cfd_paragraph.drawOn(c, alineado_x, 50)
+    alineado_y -= line_height * 5
+    
+
+
+    c.showPage()
+    c.save()
+
+    buffer.seek(0)
+    # Crear la respuesta HTTP con el PDF
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{data['uuid']}.pdf"'
+
     return response
