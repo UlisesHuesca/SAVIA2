@@ -1608,6 +1608,17 @@ def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
 def generar_cfdi(request, pk):
     factura = Facturas.objects.get(id=pk)
     data = factura.emisor
+    # Verificar y asignar un valor predeterminado para impuestos si es None
+    if data['impuestos'] is None:
+        data['impuestos'] = 0.0
+
+    # Verificar y asignar un valor predeterminado para total si es None
+    if data['total'] is None:
+        data['total'] = 0.0
+
+    # Verificar y asignar un valor predeterminado para subtotal si es None
+    if data['subtotal'] is None:
+        data['subtotal'] = 0.0
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
     if not data:
         return HttpResponse("Error al parsear el archivo XML", status=400)
@@ -1697,8 +1708,19 @@ def generar_cfdi(request, pk):
         unidad = item['unidad']
         valor_unitario = float(item['precio'])
         importe = float(item['importe'])
-        impuesto = float(item['impuesto'])
-        tasa = float(item['tasa_cuota'])
+        # Verificar y convertir solo si el valor no es 'N/A'
+         # Inicializar las variables impuesto y tasa
+        impuesto = item['impuesto']
+        tasa = item['tasa_cuota']
+        if impuesto != 'N/A':
+            impuesto = float(impuesto)
+        else:
+            impuesto = 0.0  # o cualquier valor predeterminado que consideres adecuado
+        
+        if tasa != 'N/A':
+            tasa = float(tasa)
+        else:
+            tasa = 0.0  # o cualquier valor predeterminado que consideres adecuado
         clave = item['clave']
          # Crear un párrafo para la descripción
         descripcion_paragraph = Paragraph(descripcion, custom_style)

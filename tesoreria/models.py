@@ -94,17 +94,30 @@ class Facturas(models.Model):
         ns = {}
         if 'http://www.sat.gob.mx/cfd/3' in version:
             ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
+        elif 'http://www.sat.gob.mx/EstadoDeCuentaCombustible12' in version:
+            ns = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/4', 
+                'ecc12': 'http://www.sat.gob.mx/EstadoDeCuentaCombustible12', 
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+                }
+            prefix = 'ecc12'  
         elif 'http://www.sat.gob.mx/cfd/4' in version:
-            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4', 'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital', 'if': 'https://www.interfactura.com/Schemas/Documentos'}
+            ns = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/4', 
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital', 
+                'if': 'https://www.interfactura.com/Schemas/Documentos',
+            }
+            prefix = 'cfdi'
         else:
             raise ValueError("Versión del documento XML no reconocida")
 
-        emisor = root.find('cfdi:Emisor', ns)
-        receptor = root.find('cfdi:Receptor', ns)
-        conceptos = root.find('cfdi:Conceptos', ns)
-        impuestos = root.find('cfdi:Impuestos', ns)
-        complemento = root.find('cfdi:Complemento', ns)
-        addenda = root.find('cfdi:Addenda', ns)
+        #print(prefix)
+        emisor = root.find(f'cfdi:Emisor', ns)
+        receptor = root.find(f'cfdi:Receptor', ns)
+        conceptos = root.find(f'{prefix}:Conceptos', ns)
+        impuestos = root.find(f'{prefix}:Impuestos', ns)
+        complemento = root.find(f'cfdi:Complemento', ns)
+        addenda = root.find(f'{prefix}:Addenda', ns)
          # Extraer la cadena original
         cadena_original = None
         if addenda is not None:
@@ -114,34 +127,74 @@ class Facturas(models.Model):
                 if encabezado is not None:
                     cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible')
         
+        impuestos_total = 0.0
         resultados = []
-        for concepto in conceptos.findall('cfdi:Concepto', ns):
-            descripcion = concepto.get('Descripcion')
-            cantidad = concepto.get('Cantidad')
-            precio = concepto.get('ValorUnitario')
-            importe = concepto.get('Importe')
-            unidad = concepto.get('Unidad')
-            clave =  concepto.get('ClaveProdServ')
-            impuesto = concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns)
-            impuesto_valor = impuesto.get('Importe') if impuesto is not None else 'N/A'
-            tipo_factor = impuesto.get('TipoFactor') if impuesto is not None else 'N/A'
-            tasa_cuota = impuesto.get('TasaOCuota') if impuesto is not None else 'N/A'
-            resultados.append({
-                'descripcion': descripcion,
-                'cantidad': cantidad,
-                'precio': precio,
-                'clave': clave,
-                'importe': importe,
-                'unidad': unidad,
-                'impuesto': impuesto_valor,
-                'tipo_factor': tipo_factor,
-                'tasa_cuota': tasa_cuota,
-            })
+        if prefix == 'cfdi':
+            conceptos = root.find(f'{prefix}:Conceptos', ns)
+            for concepto in conceptos.findall(f'{prefix}:Concepto', ns):
+                descripcion = concepto.get('Descripcion')
+                cantidad = concepto.get('Cantidad')
+                precio = concepto.get('ValorUnitario')
+                importe = concepto.get('Importe')
+                unidad = concepto.get('Unidad')
+                clave = concepto.get('ClaveProdServ')
+                impuesto = concepto.find(f'{prefix}:Impuestos/{prefix}:Traslados/{prefix}:Traslado', ns)
+                impuesto_valor = impuesto.get('Importe') if impuesto is not None else 'N/A'
+                tipo_factor = impuesto.get('TipoFactor') if impuesto is not None else 'N/A'
+                tasa_cuota = impuesto.get('TasaOCuota') if impuesto is not None else 'N/A'
+                resultados.append({
+                    'descripcion': descripcion,
+                    'cantidad': cantidad,
+                    'precio': precio,
+                    'clave': clave,
+                    'importe': importe,
+                    'unidad': unidad,
+                    'impuesto': impuesto_valor,
+                    'tipo_factor': tipo_factor,
+                    'tasa_cuota': tasa_cuota,
+                })
+            total = root.get('Total')
+            subtotal = root.get('SubTotal')
+            impuestos_total = impuestos.get('TotalImpuestosTrasladados') if impuestos is not None else None
+                
+        elif prefix == 'ecc12':
+            estado_cuenta = complemento.find('ecc12:EstadoDeCuentaCombustible', ns)
+            conceptos = estado_cuenta.find('ecc12:Conceptos', ns)
+            for concepto in conceptos.findall(f'{prefix}:ConceptoEstadoDeCuentaCombustible', ns):
+                descripcion = concepto.get('NombreCombustible')
+                cantidad = concepto.get('Cantidad')
+                precio = concepto.get('ValorUnitario')
+                importe = concepto.get('Importe')
+                unidad = concepto.get('TipoCombustible')
+                clave = concepto.get('Identificador')
+                impuesto = concepto.find(f'{prefix}:Traslados/{prefix}:Traslado', ns)
+                impuesto_valor = impuesto.get('Importe') if impuesto is not None else 'N/A'
+                tipo_factor = impuesto.get('Impuesto') if impuesto is not None else 'N/A'
+                tasa_cuota = impuesto.get('TasaOCuota') if impuesto is not None else 'N/A'
+                resultados.append({
+                    'descripcion': descripcion,
+                    'cantidad': cantidad,
+                    'precio': precio,
+                    'clave': clave,
+                    'importe': importe,
+                    'unidad': unidad,
+                    'impuesto': impuesto_valor,
+                    'tipo_factor': tipo_factor,
+                    'tasa_cuota': tasa_cuota,
+                })
+                if impuesto_valor != 'N/A':
+                    impuestos_total += float(impuesto_valor)
+           
+            total = estado_cuenta.get('Total')
+            subtotal = estado_cuenta.get('SubTotal')
+           
+            
 
         rfc_emisor = emisor.get('Rfc')
         nombre_emisor = emisor.get('Nombre')
         regimen_fiscal_emisor = emisor.get('RegimenFiscal')
-       
+        moneda = root.get('Moneda')
+        
         
         rfc_receptor = receptor.get('Rfc')
         nombre_receptor = receptor.get('Nombre')
@@ -149,11 +202,8 @@ class Facturas(models.Model):
         domicilio_fiscal_receptor = receptor.get('DomicilioFiscalReceptor')
         uso_cfdi = receptor.get('UsoCFDI')
         
+       
         
-        total = root.get('Total')
-        subtotal = root.get('SubTotal')
-        moneda = root.get('Moneda')
-        impuestos_total = impuestos.get('TotalImpuestosTrasladados') if impuestos is not None else None
         # Extraer la cadena original
         #cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible') or None
 
@@ -161,6 +211,7 @@ class Facturas(models.Model):
         uuid, sello_cfd, sello_sat, fecha_timbrado = '', '', '', ''
         if complemento is not None:
             timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
+            #print(timbre_fiscal)
             if timbre_fiscal is not None:
                 uuid = timbre_fiscal.get('UUID')
                 sello_cfd = timbre_fiscal.get('SelloCFD')
