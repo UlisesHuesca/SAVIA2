@@ -136,7 +136,7 @@ class Facturas(models.Model):
                 cantidad = concepto.get('Cantidad')
                 precio = concepto.get('ValorUnitario')
                 importe = concepto.get('Importe')
-                unidad = concepto.get('Unidad')
+                unidad = concepto.get('Unidad') or concepto.get('ClaveUnidad')
                 clave = concepto.get('ClaveProdServ')
                 impuesto = concepto.find(f'{prefix}:Impuestos/{prefix}:Traslados/{prefix}:Traslado', ns)
                 impuesto_valor = impuesto.get('Importe') if impuesto is not None else 'N/A'
