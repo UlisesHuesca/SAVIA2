@@ -105,9 +105,15 @@ class Facturas(models.Model):
         impuestos = root.find('cfdi:Impuestos', ns)
         complemento = root.find('cfdi:Complemento', ns)
         addenda = root.find('cfdi:Addenda', ns)
-        factura_interfactura = addenda.find('if:FacturaInterfactura', ns) if addenda is not None else None
-        encabezado = factura_interfactura.find('if:Encabezado', ns) if factura_interfactura is not None else None
-
+         # Extraer la cadena original
+        cadena_original = None
+        if addenda is not None:
+            factura_interfactura = addenda.find('if:FacturaInterfactura', ns)
+            if factura_interfactura is not None:
+                encabezado = factura_interfactura.find('if:Encabezado', ns)
+                if encabezado is not None:
+                    cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible')
+        
         resultados = []
         for concepto in conceptos.findall('cfdi:Concepto', ns):
             descripcion = concepto.get('Descripcion')
@@ -143,12 +149,13 @@ class Facturas(models.Model):
         domicilio_fiscal_receptor = receptor.get('DomicilioFiscalReceptor')
         uso_cfdi = receptor.get('UsoCFDI')
         
+        
         total = root.get('Total')
         subtotal = root.get('SubTotal')
         moneda = root.get('Moneda')
         impuestos_total = impuestos.get('TotalImpuestosTrasladados') if impuestos is not None else None
         # Extraer la cadena original
-        cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible')
+        #cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible') or None
 
         # Datos adicionales del complemento
         uuid, sello_cfd, sello_sat, fecha_timbrado = '', '', '', ''
