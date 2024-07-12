@@ -30,6 +30,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     proyecto = CharFilter(method ='my_proyecto', label="Search")
     tipo = ChoiceFilter(choices=TIPO_CHOICES, method='filter_by_tipo', label='Tipo') # Changed filter
     facturas_completas = BooleanFilter(method='filter_by_facturas_completas', label='Facturas Completas') # New filter
+    tiene_facturas = django_filters.BooleanFilter(method='filter_by_tiene_facturas', label='Tiene Facturas')
     tesorero = CharFilter(method='tesorero_nombre', lookup_expr='icontains')
     #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
     cuenta = CharFilter(field_name = 'cuenta__cuenta', lookup_expr='icontains')
@@ -58,6 +59,20 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     
     def filter_by_facturas_completas(self, queryset, name, value):  # New method
         return queryset.filter(Q(oc__facturas_completas=value) | Q(gasto__facturas_completas=value) | Q(viatico__facturas_completas=value))
+    
+    def filter_by_tiene_facturas(self, queryset, name, value):
+        if value:
+            return queryset.filter(
+                Q(oc__facturas__isnull=False) |
+                Q(gasto__facturas__isnull=False) |
+                Q(viatico__facturas__isnull=False)
+            ).distinct()
+        else:
+            return queryset.filter(
+                Q(oc__facturas__isnull=True) &
+                Q(gasto__facturas__isnull=True) &
+                Q(viatico__facturas__isnull=True)
+            ).distinct()
     
     def tesorero_nombre(self, queryset, name, value):
         return queryset.filter(Q(tesorero__staff__staff__first_name__icontains = value) | Q(tesorero__staff__staff__last_name__icontains = value))

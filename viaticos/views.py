@@ -771,7 +771,7 @@ def matriz_facturas_viaticos(request, pk):
     print(concepto_viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico =viatico, hecho=True)
     form = Facturas_Viaticos_Form(instance=viatico)
-    next_url = request.GET.get('next', 'matriz-pagos')
+    next_url = request.GET.get('next', 'mis-viaticos')
 
     if request.method == 'POST':
         form = Facturas_Viaticos_Form(request.POST, instance=viatico)
@@ -779,7 +779,7 @@ def matriz_facturas_viaticos(request, pk):
             if form.is_valid():
                 form.save()
                 messages.success(request,'Haz cambiado el status de facturas completas')
-                return redirect('matriz-pagos')
+                return redirect(next_url)
             else:
                 messages.error(request,'No está validando')
         

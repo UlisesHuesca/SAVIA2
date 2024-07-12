@@ -66,7 +66,7 @@ class Pago(models.Model):
      #   return f'{self.id} - {self.oc} - {self.cuenta}'
 
 class Facturas(models.Model):
-    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, related_name='Compra')
+    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, related_name='facturas')
     subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='uploaded_by')
     fecha_subido = models.DateField(null=True, blank=True)
     hora_subido = models.TimeField(null=True, blank=True)

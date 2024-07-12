@@ -10,10 +10,11 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils.dateparse import parse_date
+from user.models import Distrito
 from compras.models import ArticuloComprado, Compra
 from compras.forms import CompraForm
 from compras.filters import CompraFilter
-from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf #convert_excel_matriz_compras
+from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, generar_pdf #convert_excel_matriz_compras
 from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
@@ -701,7 +702,8 @@ def matriz_pagos(request):
     ).order_by('-pagado_real')
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
-
+    distritos = Distrito.objects.exclude(id__in=[7, 8])
+    tesoreros = Profile.objects.filter(tipo__nombre = "Tesoreria", st_activo = True).exclude(distritos__id__in=[7, 8])
     #Set up pagination
     p = Paginator(pagos, 50)
     page = request.GET.get('page')
@@ -713,11 +715,32 @@ def matriz_pagos(request):
         elif 'btnDescargarFacturas' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
+            distrito_id = request.POST.get('distrito')
+            tesorero_id = request.POST.get('tesorero')
+            tipo_documento = request.POST.get('tipo_documento')
+
+            facturas_gastos = Factura.objects.none()
+            facturas_compras = Facturas.objects.none()
+            facturas_viaticos = Viaticos_Factura.objects.none()
             
             if usuario.distritos.nombre == "MATRIZ":
-                facturas_gastos = Factura.objects.filter(Q(solicitud_gasto__pagosg__pagado_real__range=[fecha_inicio, fecha_fin])|Q(solicitud_gasto__pagosg__pagado_date__range=[fecha_inicio, fecha_fin]))
-                facturas_compras = Facturas.objects.filter(Q(oc__pagos__pagado_real__range=[fecha_inicio, fecha_fin])|Q(oc__pagos__pagado_date__range=[fecha_inicio, fecha_fin]))
-                facturas_viaticos = Viaticos_Factura.objects.filter(Q(solicitud_viatico__pagosv__pagado_real__range=[fecha_inicio, fecha_fin])|Q(solicitud_viatico__pagosv__pagado_date__range=[fecha_inicio, fecha_fin]))
+                if tipo_documento in ["", "gastos"]:
+                    facturas_gastos = Factura.objects.filter(Q(solicitud_gasto__pagosg__pagado_real__range=[fecha_inicio, fecha_fin])|Q(solicitud_gasto__pagosg__pagado_date__range=[fecha_inicio, fecha_fin]))
+                if tipo_documento in ["", "compras"]:    
+                    facturas_compras = Facturas.objects.filter(Q(oc__pagos__pagado_real__range=[fecha_inicio, fecha_fin])|Q(oc__pagos__pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
+                if tipo_documento in ["", "viaticos"]:
+                    facturas_viaticos = Viaticos_Factura.objects.filter(Q(solicitud_viatico__pagosv__pagado_real__range=[fecha_inicio, fecha_fin])|Q(solicitud_viatico__pagosv__pagado_date__range=[fecha_inicio, fecha_fin]))
+
+                if distrito_id:
+                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__distrito_id=distrito_id)
+                    facturas_compras = facturas_compras.filter(oc__req__orden__distrito_id=distrito_id)
+                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__distrito_id=distrito_id)
+
+                if tesorero_id:
+                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__tesorero_id=tesorero_id)
+                    facturas_compras = facturas_compras.filter(oc__req__orden__tesorero_id=tesorero_id)
+                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__tesorero_id=tesorero_id)
+
             else:
                 facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin], solicitud_gasto__distrito = usuario.distritos)
                 facturas_compras = Facturas.objects.filter(oc__autorizado_at_2__range=[fecha_inicio, fecha_fin], oc__req__orden__distrito = usuario.distritos)
@@ -725,6 +748,8 @@ def matriz_pagos(request):
 
 
             zip_buffer = BytesIO()
+            processed_ocs = set()  # Mantén un conjunto de OCs procesadas
+            processed_pagos = set()  # Mantén un conjunto de pagos procesados
             with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
                 for factura in facturas_gastos:
                     folder_name = f'GASTO_{factura.solicitud_gasto.folio}_{factura.solicitud_gasto.distrito.nombre}'
@@ -743,6 +768,22 @@ def matriz_pagos(request):
                     if factura.factura_xml:
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
+                    
+                    # Incluir la ficha de pago
+                    pagos = Pago.objects.filter(oc=factura.oc)
+                    for pago in pagos:
+                        if pago.comprobante_pago and pago.id not in processed_pagos:
+                            pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
+                            processed_pagos.add(pago.id)
+                    
+                    # Generar e incluir la OC en el ZIP solo si no ha sido procesada
+                    if factura.oc.id not in processed_ocs:
+                        buf = generar_pdf(factura.oc)
+                        oc_file_name = f'OC_{factura.oc.folio}.pdf'
+                        zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
+                        processed_ocs.add(factura.oc.id)
+
                 for factura in facturas_viaticos:
                     folder_name = f'VIATICO_{factura.solicitud_viatico.folio}_{factura.solicitud_viatico.distrito.nombre}'
                     if factura.factura_pdf:
@@ -761,6 +802,9 @@ def matriz_pagos(request):
         'pagos_list':pagos_list,
         'pagos':pagos,
         'myfilter':myfilter,
+        'tesoreros':tesoreros,
+        'distritos':distritos,
+        'usuario':usuario,
         }
 
     return render(request, 'tesoreria/matriz_pagos.html',context)

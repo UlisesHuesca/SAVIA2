@@ -98,7 +98,7 @@ class Concepto_Viatico(models.Model):
         return total
 
 class Viaticos_Factura(models.Model):
-    solicitud_viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True)
+    solicitud_viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True, related_name='facturas')
     subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     fecha_subido = models.DateTimeField(null=True)
     #hora_subido = models.TimeField(null=True)

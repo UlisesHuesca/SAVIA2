@@ -53,6 +53,15 @@
                     </div>
                     <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ myfilter.form.tiene_facturas|add_class:"form-control"|append_attr:"placeholder= Tiene Facturas"}}
+                                <label style="color: #121212;" for="id_id">Tiene Facturas</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.facturas_completas|add_class:"form-control"|append_attr:"placeholder= Facturas Completas"}}
@@ -123,7 +132,7 @@
         </div>
     </div>
 </div>
-<div class = "col-6">
+<div class = "col-lg-8">
     <div class = "card">
     <form method=POST>
         {% csrf_token %}
@@ -148,6 +157,50 @@
                         <input type="date" id="fecha_fin" name="fecha_fin" class="form-control" required>
                         <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
                     </div>
+                </div>
+            </div>
+            {% if usuario.distritos.nombre == "MATRIZ" %}
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <select id="distrito" name="distrito" class="form-select">
+                            <option value="">Todos</option>
+                            {% for distrito in distritos %}
+                                <option value="{{ distrito.id }}">{{ distrito.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <label style="color: #121212;" for="id_id">Distrito</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <select id="tesorero" name="tesorero" class="form-select">
+                            <option value="">Todos</option>
+                            {% for tesorero in tesoreros %}
+                                <option value="{{ tesorero.id }}">{{ tesorero.staff.staff.first_name }} {{tesorero.staff.staff.last_name}}</option>
+                            {% endfor %}
+                        </select>
+                        <label style="color: #121212;" for="id_id">Tesorero</label>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">       
+                    <select id="tipo_documento" name="tipo_documento" class="form-select">
+                        <option value="">Todos</option>
+                        <option value="gastos">Gastos</option>
+                        <option value="compras">Compras</option>
+                        <option value="viaticos">Viáticos</option>
+                    </select>
+                    <label for="tipo_documento">Tipo de Documento:</label>
+                </div>
                 </div>
             </div>
             <div class="col-lg-3 col-sm-12 m-3">
@@ -203,7 +256,9 @@
                     <th class="d-none d-lg-table-cell">Subproyecto</th>
                     <th scope="col">Autorizado</th>
                     <th scope="col">Proveedor/Colaborador</th>
+                   
                     <th scope="col">Facturas Completas</th>
+                    <th>Facturas</th>
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Acción</th>
@@ -214,18 +269,36 @@
                 <tr>
                     <th class="d-none d-lg-table-cell">{{pago.id}}</th>
                     {% if pago.oc %}
-                    <td>{{pago.oc.folio}}</td>
-                    <td class="d-none d-lg-table-cell">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}</td>
-                    <td>{{pago.oc.req.orden.proyecto.nombre}}</td>
-                    <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
-                    <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
-                    <td>{{pago.oc.proveedor}}</td>
-                    
-                    {% if pago.oc.facturas_completas == True %}
-                        <td>Completas</td>
-                    {% else %}
-                        <td>Incompletas</td>
-                    {% endif %}
+                        <td>{{pago.oc.folio}}</td>
+                        <td class="d-none d-lg-table-cell">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}</td>
+                        <td>{{pago.oc.req.orden.proyecto.nombre}}</td>
+                        <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
+                        <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
+                        <td>{{pago.oc.proveedor}}</td>
+                        
+                        {% if pago.oc.facturas_completas == True %}
+                            <td>Completas</td>
+                        {% else %}
+                            <td>Incompletas</td>
+                        {% endif %}
+                        
+                        {% if pago.oc.facturas.exists %}
+                            {% if pago.oc.facturas.all.count > 1 %}
+                                <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
+                            {% elif pago.oc.facturas.all.count == 1 %}
+                                {% for factura in pago.oc.facturas.all %}
+                                    {% if factura.hecho %}
+                                    <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
+                                    {% else %}
+                                        <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                                    {% endif %}
+                                {% endfor %}
+                            {% else %}
+                                <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                            {% endif %}
+                        {% else%}
+                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                        {% endif %}
                     {% endif %}
                    
                     {% if pago.gasto %}
@@ -235,32 +308,43 @@
                         <td  class="d-none d-lg-table-cell">{{pago.gasto.subproyecto.nombre}}</td>
                         <td>{{pago.gasto.superintendente.staff.staff.first_name}} {{pago.gasto.superintendente.staff.staff.last_name}}</td>
                         {% if pago.gasto.colaborador %}
-                        <td>{{pago.gasto.colaborador.staff.first_name}} {{pago.gasto.colaborador.staff.last_name}}</td>
+                            <td>{{pago.gasto.colaborador.staff.first_name}} {{pago.gasto.colaborador.staff.last_name}}</td>
                         {% else %}
-                        <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
+                            <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
                         {% endif %}
                         {% if pago.gasto.facturas_completas == True %}
-                        <td>Completas</td>
+                            <td>Completas</td>
                         {% else %}
-                        <td>Incompletas</td>
+                            <td>Incompletas</td>
+                        {% endif %}
+                        {% if pago.gasto.facturas.exists %}
+                            <td><a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
+                        {% else %}
+                            <td><a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
                         {% endif %}
                     {% endif %}
+
                     {% if pago.viatico %}
-                    <td>V{{pago.viatico.folio}}</td>
-                    <td class="d-none d-lg-table-cell">{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
-                    <td>{{pago.viatico.proyecto.nombre}}</td>
-                    <td  class="d-none d-lg-table-cell">{{pago.viatico.subproyecto.nombre}}</td>
-                    <td>{{pago.viatico.superintendente.staff.staff.first_name}} {{pago.viatico.superintendente.staff.staff.last_name}}</td>
-                    {% if pago.viatico.colaborador %}
-                    <td>{{pago.viatico.colaborador.staff.first_name}} {{pago.viatico.colaborador.staff.last_name}}</td>
-                    {% else %}
-                    <td>{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
-                    {% endif %}
-                    {% if pago.viatico.facturas_completas == True %}
-                    <td>Completas</td>
-                    {% else %}
-                    <td>Incompletas</td>
-                    {% endif %}
+                        <td>V{{pago.viatico.folio}}</td>
+                        <td class="d-none d-lg-table-cell">{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
+                        <td>{{pago.viatico.proyecto.nombre}}</td>
+                        <td  class="d-none d-lg-table-cell">{{pago.viatico.subproyecto.nombre}}</td>
+                        <td>{{pago.viatico.superintendente.staff.staff.first_name}} {{pago.viatico.superintendente.staff.staff.last_name}}</td>
+                        {% if pago.viatico.colaborador %}
+                            <td>{{pago.viatico.colaborador.staff.first_name}} {{pago.viatico.colaborador.staff.last_name}}</td>
+                        {% else %}
+                            <td>{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
+                        {% endif %}
+                        {% if pago.viatico.facturas_completas == True %}
+                            <td>Completas</td>
+                        {% else %}
+                            <td>Incompletas</td>
+                        {% endif %}
+                        {% if pago.viatico.facturas.exists %}
+                            <td><a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a></td>
+                        {% else %}
+                            <td><a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a></td>
+                        {% endif %}
                     {% endif %}
                     <td>{{pago.monto|floatformat:2}}</td>
                     <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
@@ -290,7 +374,7 @@
                                 <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago"><i class="fa-solid fa-file-invoice-dollar"></i></a>
                             </li>
                             {% endif %}
-                            <li class="nav-item mx-1">
+                            <!--<li class="nav-item mx-1">
                                 {% if pago.oc %}
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
                                 <i class="fa-solid fa-file-pdf"></i></a>
@@ -305,7 +389,7 @@
                                     <i class="fa-solid fa-file-pdf"></i>
                                 </a>
                                 {% endif %}
-                            </li>
+                            </li>-->
                         </ul>
                     </td>
                 </tr>

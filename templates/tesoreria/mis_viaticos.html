@@ -161,9 +161,11 @@
                     <td><a id="myBtn" type="button" class="btn btn-outline-info btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a></td>
                     <td>
                         {% if viatico.autorizar2 %}
-                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}">
-                        <i class="fa-solid fa-file-pdf"></i>      
-                        </a>
+                            {% if viatico.facturas.exists %}
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
+                            {% else %}
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td>

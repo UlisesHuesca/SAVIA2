@@ -110,6 +110,7 @@
                 <tr>
                     <th scope="col">Gasto</th>
                     <th class="d-none d-lg-table-cell">Solicitado</th>
+                    <th>Comentario</th>
                     <th scope="col">Autorizado</th>
                     <th class="d-none d-lg-table-cell">Colaborador</th>
                     <th scope="col">Importe</th>
@@ -125,6 +126,7 @@
                 <tr>
                     <th>{{gasto.folio}}</th>
                     <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
+                    <td>{{gasto.comentario}}</td>
                     {% if gasto.get_validado %}
                     <td>{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}
                         {% if gasto.autorizar %} 
@@ -160,9 +162,11 @@
                     </td>
                     <td>
                         {% if gasto.autorizar2 == True %}
-                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}">
-                        <i class="fa-solid fa-file-pdf"></i>
-                        </a>
+                            {% if gasto.facturas.exists %}
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
+                            {% else %}
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td>
