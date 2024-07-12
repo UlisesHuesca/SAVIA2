@@ -28,6 +28,9 @@ from .utils import extraer_texto_de_pdf, encontrar_variables
 import pytz  # Si estás utilizando pytz para manejar zonas horarias
 from io import BytesIO
 from num2words import num2words
+import qrcode
+import tempfile
+from PIL import Image
 
 import re
 
@@ -1612,15 +1615,26 @@ def generar_cfdi(request, pk):
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
-
-    # Configuración de fuentes y estilos
-    c.setFont("Helvetica", 10)
+    
+    # Generar código QR
+    qr_data = f"https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id={data['uuid']}&re={data['rfc_emisor']}&rr={data['rfc_receptor']}&tt={data['total']}&fe={data['sello_cfd'][-8:]}"
+    qr_img = qrcode.make(qr_data)
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+        qr_img.save(temp_file)
+        temp_file.seek(0)
+        qr_x = 500
+        qr_y = height - 700
+        qr_size = 2.75 * cm
+        c.drawImage(temp_file.name, qr_x, qr_y, qr_size, qr_size)
 
     # Título
-    c.setFont("Helvetica-Bold", 20)
-    c.drawString(30, height - 40, "FACTURA")
+    c.setFillColor(prussian_blue)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(30, height - 40, "FACTURA GENERADA POR SAVIA 2.0")
 
     # Datos del Emisor
+    c.setFillColor(black)
     c.setFont("Helvetica-Bold", 12)
     c.drawString(30, height - 80, "Datos del Emisor:")
     
@@ -1641,8 +1655,8 @@ def generar_cfdi(request, pk):
     c.drawString(alineado_x, alineado_y, f"Fecha y hora de expedición: {data['fecha']}")
     alineado_y -= line_height
     c.drawString(alineado_x, alineado_y, f"Moneda: {data['moneda']}")
-    #alineado_y -= line_height
-    #c.drawString(alineado_x, alineado_y, f"Folio Fiscal: {data['uuid']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Forma de Pago: {data['forma_pago']}")
 
     # Datos del Receptor
     alineado_y -= 2 * line_height
@@ -1663,6 +1677,17 @@ def generar_cfdi(request, pk):
 
     # Conceptos (Tabla)
     alineado_y -= line_height
+    # Configuración del estilo para los párrafos
+    styles = getSampleStyleSheet()
+    styleN = styles['Normal']
+    styleN.wordWrap = 'CJK'  # Ajusta automáticamente el texto
+    # Crear un estilo personalizado
+    custom_style = ParagraphStyle(
+        'CustomStyle',
+        parent=styleN,
+        fontSize=6,  # Ajusta el tamaño del texto aquí
+        leading=7,   # Ajusta el interlineado aquí si es necesario
+    )
 
     # Preparamos los datos de la tabla
     table_data = [["CANT", "CLAVE", "CONCEPTO", "U DE M", "P.U.", "IMPORTE", "IMPUESTO", "TIPO TASA"]]
@@ -1675,15 +1700,17 @@ def generar_cfdi(request, pk):
         impuesto = float(item['impuesto'])
         tasa = float(item['tasa_cuota'])
         clave = item['clave']
-        
+         # Crear un párrafo para la descripción
+        descripcion_paragraph = Paragraph(descripcion, custom_style)
+        unidad_paragraph = Paragraph(unidad, custom_style)
         table_data.append([
             f"{cantidad:.2f}",
             clave,
-            descripcion,
-            unidad,
-            f"{valor_unitario:.2f}",
-            f"{importe:.2f}",
-            f"{impuesto:.2f}",
+            descripcion_paragraph,
+            unidad_paragraph,
+            f"{valor_unitario:,.2f}",
+            f"{importe:,.2f}",
+            f"{impuesto:,.2f}",
             f"{tasa:.2f}",
         ])
 
@@ -1725,17 +1752,17 @@ def generar_cfdi(request, pk):
     c.setFillColor(white)
     c.drawRightString(alineado_x + 500, alineado_y , f"Subtotal:")
     c.setFillColor(black)
-    c.drawString(alineado_x + 510, alineado_y, f"{data['subtotal']}")
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['subtotal']):,.2f}")
     alineado_y -= line_height
     c.setFillColor(white)
     c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos:")
     c.setFillColor(black)
-    c.drawString(alineado_x + 510, alineado_y, f"{data['impuestos']}")
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['impuestos']):,.2f}")
     alineado_y -= line_height
     c.setFillColor(white)
     c.drawRightString(alineado_x + 500, alineado_y, f"Total:")
     c.setFillColor(black)
-    c.drawString(alineado_x + 510, alineado_y, f"{data['total']}")
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['total']):,.2f}")
     # Otros detalles
     
 
@@ -1767,23 +1794,26 @@ def generar_cfdi(request, pk):
     c.line(30,177,580,177)
     c.drawString(alineado_x, 170, f"ESTE DOCUMENTO ES UNA REPRESENTACIÓN IMPRESA DE UN CFDI v4.0")
     
+    # Reducir el ancho de los párrafos
+    reduced_width = width * 0.7  # Ajusta este valor según sea necesario
+
     sello_cfd_paragraph = Paragraph(f"Sello Digital del CFDI: {data['sello_cfd']}", styleN)
-    sello_cfd_paragraph.wrapOn(c, width - 2 * alineado_x, line_height * 4)
+    sello_cfd_paragraph.wrapOn(c,  reduced_width, line_height * 4)
     sello_cfd_paragraph.drawOn(c, alineado_x, 130)
     alineado_y -= line_height * 5
     
     sello_sat_paragraph = Paragraph(f"Sello del SAT: {data['sello_sat']}", styleN)
-    sello_sat_paragraph.wrapOn(c, width - 2 * alineado_x, line_height * 4)
+    sello_sat_paragraph.wrapOn(c,  reduced_width, line_height * 4)
     sello_sat_paragraph.drawOn(c, alineado_x, 90)
     alineado_y -= line_height * 3
     c.drawString(alineado_x, 40, f"No. serie CSD SAT {data['no_certificadoSAT']}")
 
     sello_cfd_paragraph = Paragraph(f"Cadena Original del complemento de certificación digital del SAT: {data['cadena_original']}", styleN)
-    sello_cfd_paragraph.wrapOn(c, width - 2 * alineado_x, line_height * 4)
+    sello_cfd_paragraph.wrapOn(c,  reduced_width, line_height * 4)
     sello_cfd_paragraph.drawOn(c, alineado_x, 50)
     alineado_y -= line_height * 5
     
-
+   
 
     c.showPage()
     c.save()
@@ -1795,3 +1825,20 @@ def generar_cfdi(request, pk):
     response['Content-Disposition'] = f'attachment; filename="{folio_fiscal}.pdf"'
 
     return response
+
+def generar_qr(data):
+    # URL del acceso al servicio
+    url = "https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx"
+    
+    # Construcción de la cadena de datos para el QR
+    qr_data = f"{url}?id={data['uuid']}&re={data['rfc_emisor']}&rr={data['rfc_receptor']}&tt={float(data['total']):.6f}&fe={data['sello_cfd'][-8:]}"
+    
+    # Generar el código QR
+    qr = qrcode.make(qr_data)
+    
+    # Guardar el QR como imagen temporal
+    qr_img = io.BytesIO()
+    qr.save(qr_img, format='PNG')
+    qr_img.seek(0)
+    
+    return qr_img
