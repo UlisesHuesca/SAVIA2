@@ -148,7 +148,7 @@ class Facturas(models.Model):
         moneda = root.get('Moneda')
         impuestos_total = impuestos.get('TotalImpuestosTrasladados') if impuestos is not None else None
         # Extraer la cadena original
-        cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible')
+        cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible') or None
 
         # Datos adicionales del complemento
         uuid, sello_cfd, sello_sat, fecha_timbrado = '', '', '', ''
