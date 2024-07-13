@@ -128,6 +128,8 @@ class Facturas(models.Model):
                     cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible')
         
         impuestos_total = 0.0
+        iva_retenido = 0.0
+        isr_retenido = 0.0
         resultados = []
         if prefix == 'cfdi':
             conceptos = root.find(f'{prefix}:Conceptos', ns)
@@ -156,6 +158,16 @@ class Facturas(models.Model):
             total = root.get('Total')
             subtotal = root.get('SubTotal')
             impuestos_total = impuestos.get('TotalImpuestosTrasladados') if impuestos is not None else None
+            # Procesar retenciones
+            retenciones = impuestos.find(f'{prefix}:Retenciones', ns) if impuestos is not None else None
+            if retenciones is not None:
+                for retencion in retenciones.findall(f'{prefix}:Retencion', ns):
+                    impuesto_tipo = retencion.get('Impuesto')
+                    retencion_valor = retencion.get('Importe', '0')
+                    if impuesto_tipo == '002':
+                        iva_retenido = float(retencion_valor)
+                    elif impuesto_tipo == '001':
+                        isr_retenido = float(retencion_valor)
                 
         elif prefix == 'ecc12':
             estado_cuenta = complemento.find('ecc12:EstadoDeCuentaCombustible', ns)
@@ -243,6 +255,8 @@ class Facturas(models.Model):
             'total': total,
             'subtotal': subtotal,
             'impuestos': impuestos_total,
+            'iva_retenido': iva_retenido,
+            'isr_retenido': isr_retenido,
             'fecha': fecha,
             'moneda': moneda,
             'lugar_expedicion': lugar_expedicion,

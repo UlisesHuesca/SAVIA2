@@ -1814,17 +1814,29 @@ def generar_cfdi(request, pk):
     #c.drawRightString(alineado_x, alineado_y , f"{data['importe_con_letra']}")
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.setFillColor(prussian_blue)
-    c.rect(alineado_x + 450 ,alineado_y - 28,50,40, fill=True, stroke=False) #Barra azul superior | Subtotal
+    c.rect(alineado_x + 390 ,alineado_y - 50,110,62, fill=True, stroke=False) #Barra azul superior | Subtotal
     c.setFillColor(white)
     c.drawRightString(alineado_x + 500, alineado_y , f"Subtotal:")
     c.setFillColor(black)
     c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['subtotal']):,.2f}")
     alineado_y -= line_height
     c.setFillColor(white)
-    c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos:")
+    c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos trasladados:")
     c.setFillColor(black)
     c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['impuestos']):,.2f}")
     alineado_y -= line_height
+    if data['iva_retenido'] > 0:
+        c.setFillColor(white)
+        c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos retenidos:")
+        c.setFillColor(black)
+        c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['iva_retenido']):,.2f}")
+        alineado_y -= line_height
+    if data['isr_retenido'] > 0:
+        c.setFillColor(white)
+        c.drawRightString(alineado_x + 500, alineado_y, f"ISR:")
+        c.setFillColor(black)
+        c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['isr_retenido']):,.2f}")
+        alineado_y -= line_height
     c.setFillColor(white)
     c.drawRightString(alineado_x + 500, alineado_y, f"Total:")
     c.setFillColor(black)
