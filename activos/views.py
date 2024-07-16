@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from dashboard.models import Inventario, Profile, Marca
+from dashboard.models import Inventario, Profile, Marca 
 from django.core import serializers
 from django.db.models import Value, F, Q
 from django.db.models.functions import Concat

@@ -1114,7 +1114,7 @@ def render_pdf_gasto(pk):
             c.drawString(350,caja_proveedor-40,str(gasto.colaborador.staff.clabe))
         else:
             c.drawString(350,caja_proveedor-40, "Sin registro")
-        if gasto.staff.staff.banco:
+        if gasto.colaborador.staff.banco:
             c.drawString(100,caja_proveedor-80, gasto.colaborador.staff.banco.nombre)
         else:
             c.drawString(100,caja_proveedor-80, "Sin registro")
