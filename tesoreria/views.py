@@ -968,13 +968,13 @@ def matriz_facturas_nomodal(request, pk):
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
     form = Facturas_Completas_Form(instance=compra)
+    next_url = request.GET.get('next','matriz-compras')
 
     if request.method == 'POST':
         form = Facturas_Completas_Form(request.POST, instance=compra)
         if "btn_factura_completa" in request.POST:
             if form.is_valid():
                 form.save()
-                next_url = request.GET.get('next', 'matriz-pagos')
                 messages.success(request,'Haz cambiado el status de facturas completas')
                 return redirect(next_url)
             else:
