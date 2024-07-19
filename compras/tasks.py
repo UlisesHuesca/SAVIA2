@@ -15,6 +15,9 @@ from openpyxl.utils import get_column_letter
 import datetime as dt
 from datetime import date
 
+#pyexcelerate 
+from pyexcelerate import Workbook
+
 @shared_task
 def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobadas, start_date, end_date):
     #response= HttpResponse(content_type = "application/ms-excel")
@@ -306,7 +309,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num in 15:
+            if col_num in [15]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num in [8, 10, 11, 12, 13]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
@@ -317,6 +320,88 @@ def convert_excel_solicitud_matriz_productos_task(productos):
     wb.remove(sheet)
      # Guardar el archivo en el sistema de archivos del servidor.
     wb.save(file_storage_location)
+    # Guarda el archivo usando el sistema de almacenamiento predeterminado de Django.
+    fs = FileSystemStorage()
+    with open(file_storage_location, 'rb') as excel_file:
+        filename = fs.save('reportes/' + file_name, excel_file)
+        file_url_productos = fs.url(filename)
+
+    return {'file_url_productos': file_url_productos}  # Devolver la URL para descargar.
+
+
+
+@shared_task
+def convert_excel_solicitud_matriz_productos_task2(productos):
+    file_name = 'Matriz_compras_por_producto' + str(date.today()) + '.xlsx'
+    file_storage_location = os.path.join(settings.MEDIA_ROOT, 'reportes', file_name)
+
+    # Preparar los datos para pyexcelerate
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
+    data = [columns]
+
+    for producto in productos:
+        producto_id = producto.get('id')
+        articulo = ArticuloComprado.objects.get(id=producto_id)
+
+        compra_id = articulo.oc.id
+        moneda_nombre = articulo.oc.moneda.nombre
+        proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
+        subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
+        operacion_nombre = articulo.oc.req.orden.operacion.nombre if articulo.oc.req.orden.operacion else "Desconocido"
+        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+        pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
+
+        subtotal_parcial = articulo.subtotal_parcial
+        iva_parcial = articulo.iva_parcial
+        total = articulo.total
+        if articulo.oc.autorizado2 is not None:
+            status = 'Autorizado Gerente' if articulo.oc.autorizado2 else 'Cancelada'
+        elif articulo.oc.autorizado1 is not None:
+            status = 'Autorizado Superintendente' if articulo.oc.autorizado1 else 'Cancelada'
+        else:
+            status = 'Sin autorizaciones aún'
+
+        pagos = Pago.objects.filter(oc_id=compra_id)
+        tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+        tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
+
+        if moneda_nombre == "DOLARES" and tipo_de_cambio:
+            total = total * tipo_de_cambio
+
+        row = [
+            articulo.oc.folio,
+            articulo.producto.producto.articulos.producto.producto.codigo,
+            articulo.producto.producto.articulos.producto.producto.nombre,
+            articulo.cantidad,
+            articulo.producto.producto.articulos.producto.producto.unidad.nombre,
+            'SERVICIO' if articulo.producto.producto.articulos.producto.producto.servicio else 'PRODUCTO',
+            articulo.producto.producto.articulos.producto.producto.familia.nombre,
+            articulo.producto.producto.articulos.producto.producto.subfamilia.nombre if articulo.producto.producto.articulos.producto.producto.subfamilia else 'Desconocido',
+            articulo.precio_unitario,
+            moneda_nombre,
+            tipo_de_cambio,
+            subtotal_parcial,
+            iva_parcial,
+            total,
+            articulo.oc.proveedor.nombre.razon_social,
+            articulo.oc.proveedor.estatus.nombre,
+            articulo.oc.proveedor.domicilio,
+            fecha_creacion.strftime('%d/%m/%Y'),
+            proyecto_nombre,
+            subproyecto_nombre,
+            articulo.oc.req.orden.distrito.nombre,
+            articulo.oc.req.folio,
+            articulo.oc.req.orden.folio,
+            status,
+            pagado_text,
+        ]
+        data.append(row)
+
+    # Crear el archivo Excel usando pyexcelerate
+    wb = Workbook()
+    wb.new_sheet("Compras_Producto", data=data)
+    wb.save(file_storage_location)
+
     # Guarda el archivo usando el sistema de almacenamiento predeterminado de Django.
     fs = FileSystemStorage()
     with open(file_storage_location, 'rb') as excel_file:

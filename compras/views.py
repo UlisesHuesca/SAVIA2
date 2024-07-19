@@ -11,7 +11,7 @@ from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.conf import settings
-from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task
+from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
 from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
@@ -851,7 +851,7 @@ def matriz_oc_productos(request):
     if request.method == 'POST' and 'btnExcel' in request.POST:
         if articulos.count() > 3000:
             if not task_id_producto:
-                task = convert_excel_solicitud_matriz_productos_task.delay(articulos_data)
+                task = convert_excel_solicitud_matriz_productos_task2.delay(articulos_data)
                 task_id_producto = task.id
                 request.session['task_id_producto'] = task_id_producto
                 context['task_id_producto'] = task_id_producto
