@@ -14,6 +14,8 @@ from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
 from datetime import date
+from pyexcelerate import Workbook, Color, Style, Font, Fill, Alignment, Format
+import time
 
 @shared_task
 def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobadas, start_date, end_date):
@@ -324,3 +326,124 @@ def convert_excel_solicitud_matriz_productos_task(productos):
         file_url_productos = fs.url(filename)
 
     return {'file_url_productos': file_url_productos}  # Devolver la URL para descargar.
+
+
+@shared_task
+def convert_excel_solicitud_matriz_productos_task2(productos):
+    start_time = time.time()  # Marca el tiempo de inicio
+    print('Aquí comienza')
+
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
+    data = [columns]
+
+    for producto in productos:
+        producto_id = producto.get('id')
+        articulo = ArticuloComprado.objects.get(id=producto_id)
+
+        compra_id = articulo.oc.id
+        moneda_nombre = articulo.oc.moneda.nombre
+        proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
+        subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
+        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+        pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
+        subtotal_parcial = articulo.subtotal_parcial
+        iva_parcial = articulo.iva_parcial
+        total = articulo.total
+        if articulo.oc.autorizado2 is not None:
+            status = 'Autorizado Gerente' if articulo.oc.autorizado2 else 'Cancelada'
+        elif articulo.oc.autorizado1 is not None:
+            status = 'Autorizado Superintendente' if articulo.oc.autorizado1 else 'Cancelada'
+        else:
+            status = 'Sin autorizaciones aún'
+        pagos = Pago.objects.filter(oc_id=compra_id)
+        tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+        tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
+        if moneda_nombre == "DOLARES" and tipo_de_cambio:
+            total = total * tipo_de_cambio
+
+        row = [
+            articulo.oc.folio,
+            articulo.oc.req.orden.distrito.nombre,
+            articulo.producto.producto.articulos.producto.producto.codigo,
+            articulo.producto.producto.articulos.producto.producto.nombre,
+            articulo.cantidad,
+            articulo.producto.producto.articulos.producto.producto.unidad.nombre,
+            'SERVICIO' if articulo.producto.producto.articulos.producto.producto.servicio else 'PRODUCTO',
+            articulo.producto.producto.articulos.producto.producto.familia.nombre,
+            articulo.producto.producto.articulos.producto.producto.subfamilia.nombre if articulo.producto.producto.articulos.producto.producto.subfamilia else 'Desconocido',
+            articulo.precio_unitario,
+            moneda_nombre,
+            tipo_de_cambio,
+            subtotal_parcial,
+            iva_parcial,
+            total,
+            articulo.oc.proveedor.nombre.razon_social,
+            articulo.oc.proveedor.estatus.nombre,
+            articulo.oc.proveedor.domicilio,
+            fecha_creacion.strftime('%d/%m/%Y'),
+            proyecto_nombre,
+            subproyecto_nombre,
+            articulo.oc.req.orden.distrito.nombre,
+            articulo.oc.req.folio,
+            articulo.oc.req.orden.folio,
+            status,
+            pagado_text,
+        ]
+        data.append(row)
+
+    # Crear el archivo Excel usando pyexcelerate
+    wb = Workbook()
+    ws = wb.new_sheet("Compras_Producto", data=data)
+
+    # Aplicar estilos a los encabezados
+    header_style = Style(
+        font=Font(bold=True, color=Color(255, 255, 255)),
+        fill=Fill(background=Color(51, 51, 102)),
+        alignment=Alignment(horizontal='center', vertical='center')
+    )
+
+    # Aplicar estilos a las celdas de datos
+    date_style = Style(
+        format=Format('mm/dd/yy'),
+        alignment=Alignment(horizontal='right')
+    )
+    money_style = Style(
+        format=Format('$##,##0.00'),
+        alignment=Alignment(horizontal='right')
+    )
+    body_style = Style(
+        alignment=Alignment(horizontal='left')
+    )
+
+    for col_num in range(1, len(columns) + 1):
+        if col_num == 18:  # Fecha
+            ws.set_col_style(col_num, date_style)
+        elif col_num in [10, 12, 13, 14, 15]:  # Dinero
+            ws.set_col_style(col_num, money_style)
+        else:
+            ws.set_col_style(col_num, body_style)
+
+    for col_num in range(1, len(columns) + 1):
+        ws[1][col_num].style = header_style
+
+    output = io.BytesIO()
+    wb.save(output)  # Guardar el libro de trabajo en el objeto BytesIO
+
+    file_name = 'Matriz_compras_por_producto_' + str(date.today()) + '.xlsx'
+    file_storage_location = os.path.join(settings.MEDIA_ROOT, 'reportes', file_name)
+
+    # Guardar el archivo en el sistema de archivos del servidor
+    with open(file_storage_location, 'wb') as f:
+        f.write(output.getvalue())
+
+    # Guardar el archivo usando el sistema de almacenamiento predeterminado de Django
+    fs = FileSystemStorage()
+    with open(file_storage_location, 'rb') as excel_file:
+        filename = fs.save('reportes/' + file_name, excel_file)
+        file_url_productos = fs.url(filename)
+
+    end_time = time.time()  # Marca el tiempo de finalización
+    total_time = end_time - start_time  # Calcula el tiempo total
+    print(f"Tiempo total para generar el archivo: {total_time} segundos")
+
+    return {'file_url_productos': file_url_productos}  # Devolver la URL para descargar
