@@ -309,7 +309,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num in 15:
+            if col_num in [15]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num in [8, 10, 11, 12, 13]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
@@ -327,6 +327,7 @@ def convert_excel_solicitud_matriz_productos_task(productos):
         file_url_productos = fs.url(filename)
 
     return {'file_url_productos': file_url_productos}  # Devolver la URL para descargar.
+
 
 
 @shared_task

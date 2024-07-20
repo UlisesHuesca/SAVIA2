@@ -65,7 +65,7 @@ from openpyxl.utils import get_column_letter
 import datetime as dt
 from user.logger_config import get_custom_logger
 
-from pyexcelerate import Workbook, Color, Style, Font, Fill, Alignment, Format
+from pyexcelerate import Workbook, Color as PXColor, Style, Font, Fill, Alignment, Format
 
 
 logger = get_custom_logger(__name__)
@@ -848,25 +848,25 @@ def matriz_oc_productos(request):
         'myfilter':myfilter,
         }
     
-    task_id_producto = request.session.get('task_id_producto')
+    #task_id_producto = request.session.get('task_id_producto')
 
     
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        if articulos.count() > 3800:
-            if not task_id_producto:
-                task = convert_excel_solicitud_matriz_productos_task2.delay(articulos_data)
-                task_id_producto = task.id
-                request.session['task_id_producto'] = task_id_producto
-                context['task_id_producto'] = task_id_producto
-                cantidad = articulos.count()
-                context['cantidad'] = cantidad
-                messages.success(request, f'Tu reporte se está generando {task_id_producto}')
-        if usuario.tipo.nombre == "PROVEEDORES":
-            print(articulos.count())
-            return convert_excel_solicitud_matriz_productos_prov2(articulos)
-        else:
-            return convert_excel_solicitud_matriz_productos(articulos)
+        #if articulos.count() > 3500:
+        #    if not task_id_producto:
+        #        task = convert_excel_solicitud_matriz_productos_task2.delay(articulos_data)
+        #        task_id_producto = task.id
+        #        request.session['task_id_producto'] = task_id_producto
+        #        context['task_id_producto'] = task_id_producto
+        #        cantidad = articulos.count()
+        #        context['cantidad'] = cantidad
+        #        messages.success(request, f'Tu reporte se está generando {task_id_producto}')
+        #elif usuario.tipo.nombre == "PROVEEDORES":
+            #print(articulos.count())
+        return convert_excel_solicitud_matriz_productos_prov2(articulos)
+        #else:
+        #    return convert_excel_solicitud_matriz_productos(articulos)
         
     return render(request, 'compras/matriz_oc_productos.html',context)
 
@@ -3119,8 +3119,8 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
 
      # Aplicar estilos a los encabezados
     header_style = Style(
-        font=Font(bold=True, color=Color(255, 255, 255)),
-        fill=Fill(background=Color(51, 51, 102)),
+        font=Font(bold=True, color=PXColor(255, 255, 255)),
+        fill=Fill(background=PXColor(51, 51, 102)),
         alignment=Alignment(horizontal='center', vertical='center')
     )
 
@@ -3164,9 +3164,9 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
 
     # Cerrar el objeto BytesIO
     output.close()
-    end_time = time.time()  # Marca el tiempo de finalización
-    total_time = end_time - start_time  # Calcula el tiempo total
-    print(f"Tiempo total para generar el archivo: {total_time} segundos")
+    #end_time = time.time()  # Marca el tiempo de finalización
+    #total_time = end_time - start_time  # Calcula el tiempo total
+    #print(f"Tiempo total para generar el archivo: {total_time} segundos")
 
     return response
 

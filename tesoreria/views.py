@@ -63,6 +63,8 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
 from bs4 import BeautifulSoup
 
+
+
 from user.decorators import perfil_seleccionado_required
 
 

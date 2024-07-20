@@ -23,10 +23,14 @@ class Proveedor_direccionesAdmin(admin.ModelAdmin):
    
 
 class Comparativo_Admin(admin.ModelAdmin):
-     raw_id_fields = ('proveedor','proveedor2','proveedor3',)
+    search_fields = ('nombre',)
+    raw_id_fields = ('proveedor','proveedor2','proveedor3',)
 
 class Item_Comparativo_Admin(admin.ModelAdmin):
-     raw_id_fields = ('producto',)
+    raw_id_fields = ('producto',)
+
+
+
 
 # Register your models here.
 admin.site.register(Compra, CompraAdmin)

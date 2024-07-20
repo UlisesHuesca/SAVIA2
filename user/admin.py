@@ -34,7 +34,7 @@ admin.site.register(Banco)
 admin.site.register(Almacen)
 
 # Desregistra el modelo User original y registra el nuevo con la personalización
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+#admin.site.unregister(User)
+#admin.site.register(User, UserAdmin)
 
 
