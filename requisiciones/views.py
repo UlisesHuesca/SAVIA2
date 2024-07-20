@@ -46,6 +46,8 @@ from openpyxl.utils import get_column_letter
 import datetime as dt
 from datetime import date, datetime
 from pathlib import Path
+
+from pyexcelerate import Workbook, Color as PXColor, Style, Font, Fill, Alignment, Format
 #PDF generator
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -1350,19 +1352,22 @@ def reporte_entradas(request):
     page = request.GET.get('page')
     entradas_list = p.get_page(page)
 
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        convert_entradas_to_xls2(entradas)
+
     context = {
         'entradas_list':entradas_list,
         'entradas':entradas,
         'myfilter':myfilter,
         }
-    task_id_entradas =   request.session.get('task_id_entradas')
+    #task_id_entradas =   request.session.get('task_id_entradas')
 
-    if request.method == "POST" and 'btnExcel' in request.POST:
-        if not task_id_entradas:
-            task =  convert_entradas_to_xls_task.delay(entradas_data)
-            task_id = task.id
-            request.session['task_id_entradas'] = task_id
-            context['task_id_entradas'] = task_id 
+    #if request.method == "POST" and 'btnExcel' in request.POST:
+        #if not task_id_entradas:
+            #task =  convert_entradas_to_xls_task.delay(entradas_data)
+            #task_id = task.id
+            #request.session['task_id_entradas'] = task_id
+            #context['task_id_entradas'] = task_id 
 
     return render(request,'requisiciones/reporte_entradas.html', context)
 
@@ -1379,8 +1384,8 @@ def reporte_salidas(request):
     page = request.GET.get('page')
     salidas_list = p.get_page(page)
 
-    #if request.method == "POST" and 'btnExcel' in request.POST:
-    #    return generate_excel_report(salidas_filtradas)
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        return generate_excel_report2(salidas_filtradas)
 
     context = {
         'salidas':salidas,
@@ -1388,14 +1393,14 @@ def reporte_salidas(request):
         'myfilter':myfilter,
         }
 
-    task_id_salidas = request.session.get('task_id_salidas')
+    #task_id_salidas = request.session.get('task_id_salidas')
     
-    if request.method == "POST" and 'btnExcel' in request.POST:
-        if not task_id_salidas:
-            task =  convert_salidas_to_xls_task.delay(salidas_data)
-            task_id = task.id
-            request.session['task_id_salidas'] = task_id
-            context['task_id_salidas'] = task_id 
+    #if request.method == "POST" and 'btnExcel' in request.POST:
+    #    if not task_id_salidas:
+    #        task =  convert_salidas_to_xls_task.delay(salidas_data)
+    #        task_id = task.id
+    #        request.session['task_id_salidas'] = task_id
+    #        context['task_id_salidas'] = task_id 
 
     return render(request,'requisiciones/reporte_salidas.html', context)
 
@@ -2095,7 +2100,103 @@ def convert_excel_matriz_requis(requis):
     output.close()
     return response
 
+def convert_entradas_to_xls2(entradas):
 
+    output = io.BytesIO()
+
+    columns = ['Vale', 'Folio Solicitud', 'Folio Compra', 'Folio Req', 'Fecha', 'Solicitante', 'Proveedor', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Cantidad', 'Moneda', 'Tipo de Cambio', 'Precio']
+    data = [columns]
+
+    for item in entradas:
+        #pk = item['id']
+        entrada = EntradaArticulo.objects.get(id = item.id)
+        pagos = Pago.objects.filter(oc=entrada.entrada.oc)
+        tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+        tipo_de_cambio = tipo_de_cambio_promedio_pagos or entrada.entrada.oc.tipo_de_cambio
+
+        row = [
+            entrada.entrada.folio,
+            entrada.entrada.oc.req.orden.folio,
+            entrada.entrada.oc.folio,
+            entrada.entrada.oc.req.folio,
+            entrada.created_at.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
+            f"{entrada.entrada.oc.req.orden.staff.staff.staff.first_name} {entrada.entrada.oc.req.orden.staff.staff.staff.last_name}",
+            entrada.entrada.oc.proveedor.nombre.razon_social,
+            entrada.entrada.oc.req.orden.proyecto.nombre,
+            entrada.entrada.oc.req.orden.subproyecto.nombre,
+            entrada.entrada.oc.req.orden.operacion.nombre if entrada.entrada.oc.req.orden.operacion else "Sin operación",
+            entrada.articulo_comprado.producto.producto.articulos.producto.producto.codigo,
+            entrada.articulo_comprado.producto.producto.articulos.producto.producto.nombre,
+            entrada.cantidad,
+            entrada.entrada.oc.moneda.nombre,
+            tipo_de_cambio,
+            entrada.articulo_comprado.precio_unitario,
+        ]
+        if row[9] == "DOLARES":
+            if row[10] is None or row[10] < 15:
+                row[10] = 17  # O cualquier valor predeterminado que desees
+        elif row[10] is None:
+            row[10] = ""
+
+        data.append(row)
+
+    wb = Workbook()
+    ws = wb.new_sheet("Entradas", data=data)
+
+    # Aplicar estilos a los encabezados
+    header_style = Style(
+        font=Font(bold=True, color=PXColor(255, 255, 255)),
+        fill=Fill(background=PXColor(51, 51, 102)),
+        alignment=Alignment(horizontal='center', vertical='center')
+    )
+
+    # Aplicar estilos a las celdas de datos
+    date_style = Style(
+        format=Format('yyyy-mm-dd'),
+        alignment=Alignment(horizontal='left')
+    )
+    number_style = Style(
+        format=Format('#,##0.00'),
+        alignment=Alignment(horizontal='right')
+    )
+    money_style = Style(
+        format=Format('$#,##0.00'),
+        alignment=Alignment(horizontal='right')
+    )
+    body_style = Style(
+        alignment=Alignment(horizontal='left')
+    )
+
+    
+    
+    for col_num in range(1, len(columns) + 1):
+        if col_num == 5:  # Fecha
+            ws.set_col_style(col_num, date_style)
+        elif col_num in [13, 15]:  # Dinero
+            ws.set_col_style(col_num, money_style)
+        else:
+            ws.set_col_style(col_num, body_style)
+
+
+    for col_num in range(1, len(columns) + 1):
+        ws[1][col_num].style = header_style
+
+
+    wb.save(output)  # Guardar el libro de trabajo en el objeto BytesIO
+
+    # Configurar la respuesta para descargar el archivo
+    output.seek(0)
+    response = HttpResponse(
+        output.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    file_name = 'Matriz_Entradas_' + str(date.today()) + '.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)
+
+    # Cerrar el objeto BytesIO
+    output.close()
+    return response
 
 def generate_excel_report(salidas):
     #print(salidas)
@@ -2179,6 +2280,96 @@ def generate_excel_report(salidas):
     return response
 
 
+def generate_excel_report2(salidas):
+    output = io.BytesIO()
+
+    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Cantidad', 'Precio', 'Total']
+    data = [columns]
+
+    for salida in salidas:
+        if salida.precio > 0:
+            precio_condicional = salida.precio
+        elif salida.producto.precio > 0:
+            precio_condicional = salida.producto.precio
+        else:
+            precio_condicional = salida.producto.articulos.producto.price
+
+        if salida.vale_salida.material_recibido_por:
+            recibido = f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}"
+        else:
+            recibido = "NR"
+
+        rows = [
+            salida.vale_salida.folio,
+            salida.vale_salida.solicitud.folio,
+            salida.created_at.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
+            f"{salida.producto.articulos.orden.staff.staff.staff.first_name} {salida.producto.articulos.orden.staff.staff.staff.last_name}",
+            salida.producto.articulos.orden.proyecto.nombre if salida.producto.articulos.orden.proyecto else " ",
+            salida.producto.articulos.orden.subproyecto.nombre if salida.producto.articulos.orden.subproyecto else " ",
+            salida.producto.articulos.orden.operacion.nombre if salida.producto.articulos.orden.operacion else "Sin operación",
+            salida.producto.articulos.producto.producto.codigo,
+            salida.producto.articulos.producto.producto.nombre,
+            recibido,
+            salida.cantidad,
+            precio_condicional,
+            None  # Placeholder for the total formula
+        ]
+        data.append(rows)
+
+    # Crear el archivo Excel usando pyexcelerate
+    wb = Workbook()
+    ws = wb.new_sheet("Matriz_Salidas", data=data)
+
+    # Aplicar estilos a los encabezados
+    header_style = Style(
+        font=Font(bold=True, color=PXColor(255, 255, 255)),
+        fill=Fill(background=PXColor(51, 51, 102)),
+        alignment=Alignment(horizontal='center', vertical='center')
+    )
+
+    # Aplicar estilos a las celdas de datos
+    date_style = Style(
+        format=Format('yyyy-mm-dd'),
+        alignment=Alignment(horizontal='left')
+    )
+    money_style = Style(
+        format=Format('$#,##0.00'),
+        alignment=Alignment(horizontal='right')
+    )
+    body_style = Style(
+        alignment=Alignment(horizontal='left')
+    )
+
+    for row_num in range(2, len(data) + 1):
+        ws[row_num][13].value = f'=K{row_num}*L{row_num}'
+
+    for col_num in range(1, len(columns) + 1):
+        if col_num == 3:  # Fecha
+            ws.set_col_style(col_num, date_style)
+        elif col_num in [12, 13]:  # Dinero
+            ws.set_col_style(col_num, money_style)
+        else:
+            ws.set_col_style(col_num, body_style)
+
+
+    for col_num in range(1, len(columns) + 1):
+        ws[1][col_num].style = header_style
+
+    wb.save(output)  # Guardar el libro de trabajo en el objeto BytesIO
+
+    # Configurar la respuesta para descargar el archivo
+    output.seek(0)
+    response = HttpResponse(
+        output.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+    file_name = 'Matriz_Salidas_' + str(date.today()) + '.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)
+
+    # Cerrar el objeto BytesIO
+    output.close()
+    return response
 
 def render_requisicion_pdf_view(request, pk):
     #Configuration of the PDF object

@@ -125,7 +125,7 @@
                 <h5>Reporte de Salidas</h5>
             </div>
             <div class="card-body">
-                <form method=POST>
+                <form method=POST onsubmit="mostrarIndicadorCarga();">
                     {% csrf_token %}
                     <ul class="nav nav-pills">
                        <li class="nav-item mx-2 pl-5">
@@ -286,7 +286,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script>
 
-/*function getCookie(name) {
+function getCookie(name) {
     let cookieValue = null;
     if (document.cookie && document.cookie !== '') {
         const cookies = document.cookie.split(';');
@@ -323,7 +323,8 @@ function verificarDescargaIniciada(){
 
         }
     }, 1000); // Revisar cada segundo
-}*/
+}
+
 document.addEventListener('DOMContentLoaded', function() {
     var task_id = '{{task_id_salidas}}'
     var cantidad = '{{cantidad| unlocalize}}'
@@ -354,7 +355,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
 });
-
+/*
 function intentos(cantidad){
 var intentos = 0;
     var maxIntentos
@@ -448,7 +449,7 @@ function limpiarBack(){
     .catch(error => {
         console.error('Error al borrar task_id:', error);
     });
-}
+}*/
 
 function regenerar(){
     var buscar = document.getElementById('btnBuscar');
