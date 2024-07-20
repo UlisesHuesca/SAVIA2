@@ -16,6 +16,7 @@ import datetime as dt
 from datetime import date
 from pyexcelerate import Workbook, Color, Style, Font, Fill, Alignment, Format
 import time
+import io
 
 @shared_task
 def convert_excel_matriz_compras_task(compras, requis_atendidas, requis_aprobadas, start_date, end_date):
@@ -330,8 +331,8 @@ def convert_excel_solicitud_matriz_productos_task(productos):
 
 @shared_task
 def convert_excel_solicitud_matriz_productos_task2(productos):
-    start_time = time.time()  # Marca el tiempo de inicio
-    print('Aquí comienza')
+    #start_time = time.time()  # Marca el tiempo de inicio
+    #print('Aquí comienza')
 
     columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
     data = [columns]
@@ -443,7 +444,7 @@ def convert_excel_solicitud_matriz_productos_task2(productos):
         file_url_productos = fs.url(filename)
 
     end_time = time.time()  # Marca el tiempo de finalización
-    total_time = end_time - start_time  # Calcula el tiempo total
-    print(f"Tiempo total para generar el archivo: {total_time} segundos")
+    #total_time = end_time - start_time  # Calcula el tiempo total
+    #print(f"Tiempo total para generar el archivo: {total_time} segundos")
 
     return {'file_url_productos': file_url_productos}  # Devolver la URL para descargar
