@@ -1353,7 +1353,8 @@ def reporte_entradas(request):
     entradas_list = p.get_page(page)
 
     if request.method == "POST" and 'btnExcel' in request.POST:
-        convert_entradas_to_xls2(entradas)
+        #print(entradas)
+        return convert_entradas_to_xls2(entradas)
 
     context = {
         'entradas_list':entradas_list,
