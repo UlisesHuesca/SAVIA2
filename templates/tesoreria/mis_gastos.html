@@ -126,7 +126,16 @@
                 <tr>
                     <th>{{gasto.folio}}</th>
                     <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
-                    <td>{{gasto.comentario}}</td>
+                    <td>{% if gasto.comentario %}
+                        {{gasto.comentario}}
+                        {% else %}
+                            {% for articulo in gasto.articulos.all %}
+                                {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            No hay comentarios disponibles
+                            {% endfor %}
+                        {% endif %}
+                    </td>
                     {% if gasto.get_validado %}
                     <td>{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}
                         {% if gasto.autorizar %} 
