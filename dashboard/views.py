@@ -571,6 +571,7 @@ def add_proveedor_direccion(request, pk):
         if form.is_valid():
             item = form.save(commit=False)
             item.disitrito = usuario.distritos
+            item.created_at = datetime.now()
             item.completo = True
             item.save()
             messages.success(request,f'Has agregado correctamente la direccion del proveedor {item.nombre.razon_social}')

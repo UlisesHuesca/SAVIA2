@@ -464,7 +464,7 @@ def oc_modal(request, pk):
     form = CompraForm(instance=oc)
     form_product = ArticuloCompradoForm()
     if (req.colocada != False):
-        logger.warning(f"Intento acceso no autorizado a compra cuya requisición {req.id} por usuario  {colaborador.staff.staff.first_name} {colaborador.staff.staff.last_name}")
+        logger.warning(f"Intento acceso no autorizado a compra cuya requisición {req.folio} por usuario  {colaborador.staff.staff.staff.first_name} {colaborador.staff.staff.staff.last_name}")
         return render(request,'partials/acceso_denegado.html') 
     else:
         tag = dof()
@@ -733,20 +733,21 @@ def matriz_oc(request):
         #'cumplimiento': cumplimiento,
         }
     
-    task_id = request.session.get('task_id')
+    
+    #task_id = request.session.get('task_id')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        if compras.count() > 2400:
-            if not task_id:
-                task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
-                task_id = task.id
-                request.session['task_id'] = task_id
-                context['task_id'] = task_id
-                cantidad = compras.count()
-                context['cantidad'] = cantidad
-                messages.success(request, f'Tu reporte se está generando {task_id}')
-        else:
-            return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date)
+        #if compras.count() > 2400:
+        #    if not task_id:
+        #        task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
+        #        task_id = task.id
+        #        request.session['task_id'] = task_id
+        #        context['task_id'] = task_id
+        #        cantidad = compras.count()
+        #        context['cantidad'] = cantidad
+        #        messages.success(request, f'Tu reporte se está generando {task_id}')
+        #else:
+        return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date)
         
         
 

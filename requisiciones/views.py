@@ -2286,7 +2286,7 @@ def generate_excel_report(salidas):
 def generate_excel_report2(salidas):
     output = io.BytesIO()
 
-    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Cantidad', 'Precio', 'Total']
+    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Total']
     data = [columns]
 
     for salida in salidas:
@@ -2302,17 +2302,24 @@ def generate_excel_report2(salidas):
         else:
             recibido = "NR"
 
+        if salida.vale_salida.comentario:
+            comentario = f"{salida.vale_salida.comentario}"
+        else:
+            comentario = " "
+
+
         rows = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
             salida.created_at.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
-            f"{salida.producto.articulos.orden.staff.staff.staff.first_name} {salida.producto.articulos.orden.staff.staff.staff.last_name}",
-            salida.producto.articulos.orden.proyecto.nombre if salida.producto.articulos.orden.proyecto else " ",
-            salida.producto.articulos.orden.subproyecto.nombre if salida.producto.articulos.orden.subproyecto else " ",
+            f"{salida.vale_salida.solicitud.staff.staff.staff.first_name} {salida.vale_salida.solicitud.staff.staff.staff.last_name}",
+            salida.vale_salida.solicitud.proyecto.nombre if salida.vale_salida.solicitud.proyecto else " ",
+            salida.vale_salida.solicitud.subproyecto.nombre if salida.vale_salida.solicitud.subproyecto else " ",
             salida.producto.articulos.orden.operacion.nombre if salida.producto.articulos.orden.operacion else "Sin operación",
             salida.producto.articulos.producto.producto.codigo,
             salida.producto.articulos.producto.producto.nombre,
             recibido,
+            comentario,
             salida.cantidad,
             precio_condicional,
             None  # Placeholder for the total formula
@@ -2344,12 +2351,12 @@ def generate_excel_report2(salidas):
     )
 
     for row_num in range(2, len(data) + 1):
-        ws[row_num][13].value = f'=K{row_num}*L{row_num}'
+        ws[row_num][14].value = f'=M{row_num}*L{row_num}'
 
     for col_num in range(1, len(columns) + 1):
         if col_num == 3:  # Fecha
             ws.set_col_style(col_num, date_style)
-        elif col_num in [12, 13]:  # Dinero
+        elif col_num in [13, 14]:  # Dinero
             ws.set_col_style(col_num, money_style)
         else:
             ws.set_col_style(col_num, body_style)

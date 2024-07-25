@@ -1023,7 +1023,9 @@ def generar_pdf_viatico(pk):
         c.drawString(380, caja_proveedor-140, "Requerido")
     else:
         c.drawString(380, caja_proveedor-140, "No Requerido")
-    c.drawString(430,caja_proveedor-200, viatico.approved_at.strftime("%d/%m/%Y"))
+    if viatico.approved_at:
+        c.drawString(430,caja_proveedor-200, viatico.approved_at.strftime("%d/%m/%Y"))
+    
 
 
     #Create blank list

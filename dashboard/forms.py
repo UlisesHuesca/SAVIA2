@@ -55,7 +55,7 @@ class DireccionComparativoForm(forms.ModelForm):
 class ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda']
+        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda','modificado_fecha']
 
     def __init__(self, *args, **kwargs):
         

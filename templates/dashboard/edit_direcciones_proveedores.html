@@ -150,7 +150,7 @@
                                 </div>
                     </div>
                     <div class="row">
-                        <div class="col-6">
+                        <div class="col-lg-6 col-sm-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
@@ -158,7 +158,16 @@
                                 <label for="id_lugar_partida">Moneda*</label>
                                 </div>
                             </div>
-                        </div>  
+                        </div> 
+                        <div class="col-lg-6 col-sm-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {% render_field form.modificado_fecha type="date" class="form-control" %}
+                                    <label style="color: #121212;" for="id_subproyecto">Fecha Modificación Status:</label>
+                                </div>
+                            </div>
+                        </div> 
                     </div>
                     <div class="row ms-3 my-2">
                                     <div class="form-check form-switch col-sm">

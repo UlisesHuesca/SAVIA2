@@ -75,7 +75,7 @@ class Proveedor_direcciones(models.Model):
     estatus = models.ForeignKey(Estatus_proveedor, on_delete=models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     completo = models.BooleanField(default=False)
-    #created_at = models.DateTimeField(null=True)
+    created_at = models.DateTimeField(null=True)
     modified = models.DateField(auto_now=True)
     actualizado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Des_proveedores' )
     modificado_fecha = models.DateField(null=True)
