@@ -403,7 +403,8 @@ def update_entrada(request):
 
     elif action == "remove":
         if producto_inv.producto.servicio == False:
-            monto_total = monto_inventario - (entrada_item.cantidad * producto_comprado.precio_unitario)
+            monto_total = monto_inventario
+            print('monto_total:',monto_total)
         else:
             monto_total = 0
         if monto_total == 0:
@@ -413,6 +414,7 @@ def update_entrada(request):
                 producto_inv.price = 0
             else:
                 producto_inv.price = monto_total/cantidad_inventario or 0
+                
         #cantidad_total = cantidad_inventario - entrada_item.cantidad
         if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
             producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
