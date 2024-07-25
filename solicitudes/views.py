@@ -772,6 +772,7 @@ def solicitud_matriz(request):
         }
 
     return render(request, 'solicitud/solicitudes_creadas.html',context)
+
 @perfil_seleccionado_required
 @login_required(login_url='user-login')
 def matriz_plantillas(request):

@@ -811,73 +811,68 @@ def matriz_pagos(request):
 
     return render(request, 'tesoreria/matriz_pagos.html',context)
 
+@perfil_seleccionado_required
+def control_cuentas(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    
+    cuentas = Cuenta.objects.filter(encargado = usuario)
+    
+    context= {
+        'cuentas': cuentas,
+        }
+
+    return render(request, 'tesoreria/control_cuentas.html',context)
+
 
 @perfil_seleccionado_required
-def control_bancos(request):
+def control_bancos(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     # Obtener la cuenta seleccionada en el filtro
-    cuenta_term = request.GET.get('cuenta')
+    #cuenta_term = request.GET.get('cuenta')
     latest_balance = None
     saldo_inicial = 0
-    pagos_list = []
     fecha_inicial = None
-    pagos = Pago.objects.none()
+    cuenta = Cuenta.objects.get(id=pk)
+    pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('-pagado_real')
 
-
-    if cuenta_term:
-        try:
-            cuenta = Cuenta.objects.filter(cuenta__icontains=cuenta_term).first()
-            if cuenta:
-                latest_balance_record = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial').first()
-                if latest_balance_record:
-                    latest_balance = latest_balance_record.monto_inicial
-                    saldo_inicial = latest_balance
-                    fecha_inicial = latest_balance_record.fecha_inicial
-                
-                pagos = Pago.objects.filter(
-                    Q(oc__req__orden__distrito = usuario.distritos) & Q(oc__autorizado2=True) | 
-                    Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2 = True) |
-                    Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True)|
-                    Q(tesorero__distritos = usuario.distritos), 
-                    hecho=True, cuenta__encargado = usuario 
-                ).order_by('-pagado_real')
-                
-                if fecha_inicial:
-                    #print(f"Fecha Inicial: {fecha_inicial}")
-                    pagos = pagos.filter(pagado_real__gte = fecha_inicial)
-                    #print(f"Pagos Filtrados: {pagos}")
-                
-                myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
-                pagos = myfilter.qs
-                # Calcular saldo dinámico en orden inverso
-                saldo_acumulado = saldo_inicial
-                pagos_lista = list(pagos)  # Convertir a lista para poder iterar en orden inverso
-                for pago in reversed(pagos_lista):
         
-                    if pago.tipo and pago.tipo.nombre == "ABONO":  # Ajusta esta condición según el campo 'tipo'
-                        saldo_acumulado += pago.monto
-                    else:
-                        saldo_acumulado -= pago.monto
-                    pago.saldo = saldo_acumulado
+    latest_balance_record = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial').first()
+    if latest_balance_record:
+        saldo_inicial = latest_balance_record.monto_inicial
+        fecha_inicial = latest_balance_record.fecha_inicial
 
-                #print(cuenta, cuenta_term)
-                #Set up pagination
-                p = Paginator(pagos, 25)
-                page = request.GET.get('page')
-                pagos_list = p.get_page(page)
-
-                if request.method == 'POST' and 'btnReporte' in request.POST:
-                    return convert_excel_control_bancos(pagos, cuenta, saldo_inicial)
+    # Calcular saldo acumulado desde la fecha del saldo inicial
+    saldo_acumulado = saldo_inicial
+    for pago in pagos:
+        if pago.pagado_real.date() >= fecha_inicial or pago.pagado_date >= fecha_inicial:
+            if pago.tipo and pago.tipo.nombre == "ABONO":  # Ajusta esta condición según el campo 'tipo'
+                saldo_acumulado += pago.monto
             else:
-                cuenta = None
-                pagos_list = []
-        except Cuenta.DoesNotExist:
-            cuenta = None
-            pagos_list = []
-    else:
-        myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
-        pagos_list = []
+                saldo_acumulado -= pago.monto
+            pago.saldo = saldo_acumulado
+                
+    fecha_filtro = request.GET.get('fecha_filtro')
+    if fecha_filtro:
+        fecha_filtro = dt.datetime.strptime(fecha_filtro, '%Y-%m-%d').date()
+        pagos = [pago for pago in pagos if pago.pagado_real >= fecha_filtro]
+
+    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+    pagos = myfilter.qs
+    
+    p = Paginator(pagos, 25)
+    page = request.GET.get('page')
+    pagos_list = p.get_page(page)
+
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        #pagos = pagos.order_by('pagado_real')
+        return convert_excel_control_bancos(pagos, cuenta, saldo_inicial, primer_saldo)
+           
+        
+    #else:
+    #    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+    #    pagos_list = []
 
 
 
@@ -1066,7 +1061,7 @@ def factura_eliminar(request, pk):
 def mis_gastos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    gastos = Solicitud_Gasto.objects.filter(complete=True, staff = usuario).order_by('-folio')
+    gastos = Solicitud_Gasto.objects.filter(Q(staff = usuario) |Q(colaborador = usuario), complete=True).order_by('-folio')
     myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
     gastos = myfilter.qs
 
@@ -1424,7 +1419,9 @@ def layout_pagos(request):
 
     return render(request, 'tesoreria/layout_pagos.html', context)
 
-def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
+def convert_excel_control_bancos(pagos, cuenta, saldo_inicial, saldo_acumulado):
+    # Reordenar los pagos en orden ascendente por 'pagado_real'
+    pagos = pagos.order_by('pagado_real')
     static_path = settings.STATIC_ROOT
     img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
     # Crea un objeto BytesIO para guardar el archivo Excel
@@ -1526,20 +1523,6 @@ def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
 
     row_num = 13
     for pago in pagos:
-        # Obtener el folio único del comprobante si existe
-        #detalles_comprobante = pago.detalles_comprobante
-        #if isinstance(detalles_comprobante, dict):
-        #    folio_unico = detalles_comprobante.get('folio_unico')
-        #else:
-        #    folio_unico = getattr(detalles_comprobante, 'folio_unico', None)
-        
-        # Verificar si el folio único está repetido
-        #if folio_unico and folio_unico in folios_unicos:
-        #    continue  # Omitir este pago si el folio único ya fue registrado
-
-        # Agregar el folio único al conjunto si existe
-        #if folio_unico:
-        #    folios_unicos.add(folio_unico)
 
         fecha = pago.pagado_real
         empresa = pago.cuenta.empresa.nombre
@@ -1599,7 +1582,7 @@ def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
         if pago.tipo == None or pago.tipo.nombre == "CARGO":
             cargo = pago.monto
         abono = pago.monto if pago.tipo and pago.tipo.nombre == "ABONO"  else ''
-        saldo = pago.saldo
+        #saldo = pago.saldo
         
    
 
@@ -1614,7 +1597,14 @@ def convert_excel_control_bancos(pagos, cuenta, saldo_inicial):
         worksheet.write(row_num, 6, distrito)
         worksheet.write(row_num, 7, cargo, money_style)
         worksheet.write(row_num, 8, abono, money_style)
-        worksheet.write(row_num, 9, saldo, money_style)
+        if row_num == 13:
+            worksheet.write(row_num, 9, saldo_acumulado, money_style)
+        else:
+            if row_num > 13:
+                # Restar la celda (row_num - 1, 10) - (row_num, 8)
+                formula = f'=IF(H{row_num + 1}>0,  J{row_num} - H{row_num + 1}, J{row_num} + I{row_num + 1} )'
+                worksheet.write_formula(row_num, 9, formula, money_style)
+
         last_filled_row = row_num
         row_num += 1
 

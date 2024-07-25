@@ -122,30 +122,60 @@ class Viaticos_Factura(models.Model):
         root = tree.getroot()
         # Buscar la versión en el documento XML
         version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
+        cristal = False
 
-        if 'http://www.sat.gob.mx/cfd/3' in version:
+        if 'http://www.businessobjects.com/products/xml/CR2008Schema.xsd' in version:
+            ns = {'cr': 'urn:crystal-reports:schemas:report-detail'}
+            cristal = True
+        elif 'http://www.sat.gob.mx/cfd/3' in version:
             ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
         elif 'http://www.sat.gob.mx/cfd/4' in version:
             ns = {'cfdi': 'http://www.sat.gob.mx/cfd/4'}
+       
         else:
             # Manejo de error si no se encuentra ninguna versión conocida
             raise ValueError("Versión del documento XML no reconocida")
         #comprobante = root.findall('cfdi:Comprobante')
         
-        emisor = root.find('cfdi:Emisor', ns)
         
-        receptor = root.find('cfdi:Receptor', ns)
-        impuestos = root.find('cfdi:Impuestos', ns)
-        conceptos = root.find('cfdi:Conceptos', ns)
+        
+       
         resultados = []
         clasificaciones = set()
-        for concepto in conceptos.findall('cfdi:Concepto', ns):
-            descripcion = concepto.get('Descripcion')
-            cantidad = concepto.get('Cantidad')
-            precio = concepto.get('ValorUnitario') 
-            clave_prod_serv = concepto.get('ClaveProdServ')
-            # Aquí agrupamos los valores en una tupla antes de añadirlos a la lista
-            resultados.append((descripcion, cantidad, precio, clave_prod_serv))
+
+        if cristal:
+             # Extracting data using the correct namespace for Crystal Reports
+            rfc = root.find('.//cr:Field[@FieldName="{dt_factura_internet.e_rfc}"]/cr:Value', ns).text
+            nombre = root.find('.//cr:Field[@FieldName="{@Emisor1}"]/cr:Value', ns).text
+            regimen_fiscal = root.find('.//cr:Field[@FieldName="{dt_factura_internet.e_regimen_fiscal}"]/cr:Value', ns).text
+            total = root.find('.//cr:Field[@FieldName="{dt_factura_internet.total}"]/cr:Value', ns).text
+            #subtotal = root.find('.//cr:Field[@FieldName="{dt_factura_internet.subtotal_iepsd}"]/cr:Value', ns).text
+            impuestos = root.find('.//cr:Field[@FieldName="{dt_factura_internet.iva}"]/cr:Value', ns).text
+            conceptos = root.findall('.//cr:Details/cr:Section', ns)
+            for concepto in conceptos:
+                descripcion = concepto.find('.//cr:Field[@FieldName="{@Descripcion1}"]/cr:Value', ns).text
+                cantidad = concepto.find('.//cr:Field[@FieldName="{dt_factura_internet.cantidad}"]/cr:Value', ns).text
+                precio = concepto.find('.//cr:Field[@FieldName="{dt_factura_internet.valor_unitario}"]/cr:Value', ns).text
+                clave_prod_serv = concepto.find('.//cr:Field[@FieldName="{@Descripcion1}"]/cr:Value', ns).text
+                resultados.append((descripcion, cantidad, precio, clave_prod_serv))
+        else:
+            emisor = root.find('cfdi:Emisor', ns)
+            rfc = emisor.get('Rfc')
+            nombre = emisor.get('Nombre')
+            regimen_fiscal = emisor.get('RegimenFiscal')
+            total = root.get('Total')
+            subtotal = root.get('Subtotal')
+            impuestos = root.get('TotalImpuestosTrasladados')
+            receptor = root.find('cfdi:Receptor', ns)
+            impuestos = root.find('cfdi:Impuestos', ns)
+            conceptos = root.find('cfdi:Conceptos', ns)
+            for concepto in conceptos.findall('cfdi:Concepto', ns):
+                descripcion = concepto.get('Descripcion')
+                cantidad = concepto.get('Cantidad')
+                precio = concepto.get('ValorUnitario') 
+                clave_prod_serv = concepto.get('ClaveProdServ')
+                # Aquí agrupamos los valores en una tupla antes de añadirlos a la lista
+                resultados.append((descripcion, cantidad, precio, clave_prod_serv))
         # Obtener los datos requeridos
          # Clasificar según clave_prod_serv
         if clave_prod_serv in ["90111800","90111501"]:
@@ -164,13 +194,6 @@ class Viaticos_Factura(models.Model):
             clasificacion_general = clasificaciones.pop()
         else:
             clasificacion_general = "Mixto"
-
-        rfc = emisor.get('Rfc')
-        nombre = emisor.get('Nombre')
-        regimen_fiscal = emisor.get('RegimenFiscal')
-        total = root.get('Total')
-        subtotal = root.get('Subtotal')
-        impuestos = root.get('TotalImpuestosTrasladados')
 
 
         return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados, 'clasificacion_general': clasificacion_general}
