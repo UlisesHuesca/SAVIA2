@@ -42,7 +42,7 @@
         </div>
 
         <div class="modal-footer">
-            <form action="{% url 'solicitud-autorizada' orden.id %}" method=POST>
+            <form action="{% url 'solicitud-autorizada' orden.id %}" method=POST onsubmit="disableButton()">
                 {% csrf_token %}
                 <button id="approve-btn" class="btn btn-success" type="submit">Autorizar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
@@ -50,7 +50,11 @@
         </div>
     </div>
 </div>
-
+<script>
+    function disableButton() {
+        document.getElementById('approve-btn').disabled = true;
+    }
+</script>
 {% endblock %}
 </body>
 </html>
