@@ -828,35 +828,11 @@ def control_cuentas(request):
 @perfil_seleccionado_required
 def control_bancos(request, pk):
     pk_profile = request.session.get('selected_profile_id')
-    usuario = Profile.objects.get(id = pk_profile)
+    #usuario = Profile.objects.get(id = pk_profile)
     # Obtener la cuenta seleccionada en el filtro
-    #cuenta_term = request.GET.get('cuenta')
-    latest_balance = None
-    saldo_inicial = 0
-    fecha_inicial = None
+    
     cuenta = Cuenta.objects.get(id=pk)
-    pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('-pagado_real')
-
-        
-    latest_balance_record = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial').first()
-    if latest_balance_record:
-        saldo_inicial = latest_balance_record.monto_inicial
-        fecha_inicial = latest_balance_record.fecha_inicial
-
-    # Calcular saldo acumulado desde la fecha del saldo inicial
-    saldo_acumulado = saldo_inicial
-    for pago in pagos:
-        if pago.pagado_real.date() >= fecha_inicial or pago.pagado_date >= fecha_inicial:
-            if pago.tipo and pago.tipo.nombre == "ABONO":  # Ajusta esta condición según el campo 'tipo'
-                saldo_acumulado += pago.monto
-            else:
-                saldo_acumulado -= pago.monto
-            pago.saldo = saldo_acumulado
-                
-    fecha_filtro = request.GET.get('fecha_filtro')
-    if fecha_filtro:
-        fecha_filtro = dt.datetime.strptime(fecha_filtro, '%Y-%m-%d').date()
-        pagos = [pago for pago in pagos if pago.pagado_real >= fecha_filtro]
+    pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('-indice')
 
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
@@ -867,22 +843,8 @@ def control_bancos(request, pk):
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
         #pagos = pagos.order_by('pagado_real')
-        return convert_excel_control_bancos(pagos, cuenta, saldo_inicial, primer_saldo)
+        return convert_excel_control_bancos(pagos)
            
-        
-    #else:
-    #    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
-    #    pagos_list = []
-
-
-
-    # Supongamos que quieres verificar la presencia del ID 123 en los pagos
-   
-
-    
-    
-    #id_especifico = 110650
-    #existe_pago = pagos.filter(id=id_especifico)
 
     context= {
         'pagos_list':pagos_list,
@@ -1419,7 +1381,7 @@ def layout_pagos(request):
 
     return render(request, 'tesoreria/layout_pagos.html', context)
 
-def convert_excel_control_bancos(pagos, cuenta, saldo_inicial, saldo_acumulado):
+def convert_excel_control_bancos(pagos):
     # Reordenar los pagos en orden ascendente por 'pagado_real'
     pagos = pagos.order_by('pagado_real')
     static_path = settings.STATIC_ROOT
