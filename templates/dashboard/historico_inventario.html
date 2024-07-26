@@ -36,24 +36,61 @@
         {% csrf_token %}
         <form method="GET">
         <div class="row g-12">
-            <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>ID:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_id|add_class:'form-control'}}
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.history_id|add_class:"form-control"|append_attr:"placeholder= -ID"}}
+                        <label style="color: #121212;" for="id_id">ID</label>
+                    </div>
+                </div>
             </div>
-            <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Usuario:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.history_user|add_class:'form-control'}}
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.history_user|add_class:"form-control"|append_attr:"placeholder= Usuario"}}
+                        <label style="color: #121212;" for="id_id">Usuario</label>
+                    </div>
+                </div>
             </div>
-            <label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Producto:</strong></label>
-            <div class="col-auto my-2">
-                {{myfilter.form.producto|add_class:'form-control'}}
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                        <label style="color: #121212;" for="id_id">Producto</label>
+                    </div>
+                </div>
             </div>
-            <div class="col-auto my-2">
-                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                        <label style="color: #121212;" for="id_id">Código</label>
+                    </div>
+                </div>
             </div>
-            <div class="col-auto my-2">
-                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                    </div>
+                </div>
             </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                    </div>
+                </div>
+            </div>
+          
             <div class="col-2">
                 <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
