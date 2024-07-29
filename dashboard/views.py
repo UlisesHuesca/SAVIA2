@@ -457,7 +457,7 @@ def proveedores(request):
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
     proveedores_dir = Proveedor_direcciones.objects.all()
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
-    proveedores = Proveedor.objects.filter(id__in=proveedores_ids, completo=True)
+    proveedores = Proveedor.objects.filter(id__in=proveedores_ids, completo=True).exclude(familia__nombre="IMPUESTOS")
 
     total_prov = proveedores.count()
 
