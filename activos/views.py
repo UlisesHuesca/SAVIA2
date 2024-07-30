@@ -39,7 +39,7 @@ def activos(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
     if usuario.tipo.nombre == "ADMIN_ACTIVOS":
-        activos = Activo.objects.filter(completo=True)
+        activos = Activo.objects.filter(completo=True).exclude(responsable__distritos__id__in=[7, 8])
     else:    
         activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
     myfilter = ActivoFilter(request.GET, queryset=activos)
@@ -51,6 +51,7 @@ def activos(request):
     context = {
         'activos':activos,
         'myfilter': myfilter,
+        'usuario': usuario,
     }
 
     return render(request,'activos/activos.html',context)
@@ -65,7 +66,11 @@ def add_activo(request):
     personal = Profile.objects.all()
     marcas = Marca.objects.all() 
     #print(productos)
-    responsables = personal.filter(distritos = perfil.distritos, st_activo = True)
+    if perfil.tipo.nombre == "ADMIN_ACTIVOS":
+        responsables = personal.filter(st_activo = True)
+    else:
+        responsables = personal.filter(distritos = perfil.distritos, st_activo = True)
+
     responsables_para_select2 = [
         {
             'id': responsable.id, 
@@ -136,7 +141,10 @@ def add_activo2(request, pk):
     producto.activo_disponible = True
     activos_completos = Activo.objects.filter(activo=producto, completo = True)
     #ecos = activos_completos.values_list('eco_unidad', flat=True)
-    responsables = personal.filter(distritos = perfil.distritos, st_activo = True)
+    if perfil.tipo.nombre == "ADMIN_ACTIVOS":
+        responsables = personal.filter(st_activo = True)
+    else:
+        responsables = personal.filter(distritos = perfil.distritos, st_activo = True)
     responsables_para_select2 = [
         {
             'id': responsable.id, 
@@ -252,7 +260,10 @@ def edit_activo(request, pk):
     activo = Activo.objects.get(id=pk)
     if activo.responsable:
         responsable = empleados.get(id=activo.responsable.id )
-    responsables = empleados.filter(distritos = perfil.distritos, st_activo = True)
+    if perfil.tipo.nombre == "ADMIN_ACTIVOS":
+        responsables = empleados.filter(st_activo = True)
+    else:
+        responsables = empleados.filter(distritos = perfil.distritos, st_activo = True)
     marcas = Marca.objects.all() 
     if activo.marca:
         marca_p = marcas.get(id = activo.marca.id)

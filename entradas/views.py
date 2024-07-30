@@ -133,7 +133,10 @@ def entrada_servicios(request):
 
 @login_required(login_url='user-login')
 def pendientes_calidad(request):
-    articulos_entrada = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto__producto__especialista = True, liberado = False)
+    pk = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk)
+    
+    articulos_entrada = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto__producto__especialista = True, liberado = False, articulo_comprado__oc__req__orden__distrito = usuario.distritos)
     print(articulos_entrada)
     context = {
         'articulos_entrada':articulos_entrada,
