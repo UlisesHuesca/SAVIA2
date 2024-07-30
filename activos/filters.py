@@ -18,6 +18,7 @@ class ActivoFilter(django_filters.FilterSet):
     tipo_activo = CharFilter(field_name='tipo_activo__nombre', lookup_expr='icontains')
     subfamilia = CharFilter(field_name='subfamilia__nombre', lookup_expr='icontains')
     estatus = ModelChoiceFilter(queryset=Estatus_Activo.objects.all())
+    distrito = CharFilter(field_name='responsable__distritos__nombre', lookup_expr='icontains')
     #activo = BooleanFilter()
 
     class Meta:

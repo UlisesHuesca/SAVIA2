@@ -1,5 +1,11 @@
 from rest_framework import serializers
 from dashboard.models import Inventario, Familia, Unidad, Product
+from compras.models import Compra
+
+class CompraSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Compra
+        fields = ['folio',]
 
 class FamiliaSerializer(serializers.ModelSerializer):
     class Meta:
