@@ -708,7 +708,7 @@ def solicitud_pendiente(request):
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     if perfil.tipo.nombre == "Admin":
         ordenes = Order.objects.filter(complete=True).order_by('-created_at','-folio')
-    elif perfil.tipo.gerente == True or perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control" or perfil.tipo.almacenista:
+    elif perfil.tipo.gerente == True or perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control" or perfil.tipo.almacenista == True:
         ordenes = Order.objects.filter(complete=True, distrito=perfil.distritos).order_by('-created_at','-folio')
     elif perfil.tipo.supervisor == True:
         ordenes = Order.objects.filter(complete=True, distrito=perfil.distritos, supervisor=perfil).order_by('-created_at','-folio')

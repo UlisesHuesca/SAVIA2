@@ -5,7 +5,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 
 urlpatterns = [
-    path('api/', views.getData, name='api'),
-    path('api/compras/', views.CompraAPI.as_view()),
+    path('inventario', views.getData, name='api'),
+    path('compras', views.CompraAPI, name ='compras'),
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     ]
