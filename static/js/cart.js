@@ -4,17 +4,18 @@ for(var i=0; i< updateBtns.length; i++){
     updateBtns[i].addEventListener('click',function(){
         var productId = this.dataset.product
         var action = this.dataset.action
-        console.log('productId:',productId,'action:',action)
+        var type = this.dataset.type
+        console.log('productId:',productId,'action:',action,'type:',type)
         console.log('USER:',user)
 
-        updateUserOrder(productId, action)
+        updateUserOrder(productId, action, type)
 
 
     })
 
 }
 
-function updateUserOrder(productId, action){
+function updateUserOrder(productId, action, type){
     console.log('User is logged in, sending data...1era función......' )
 
 
@@ -27,7 +28,7 @@ function updateUserOrder(productId, action){
             'Content-Type':'application/json',
             'X-CSRFToken': csrftoken,
         },
-        body:JSON.stringify({'productId':productId, 'action':action})
+        body:JSON.stringify({'productId':productId, 'action':action, 'type':type,})
     })
     .then((response)=>{
         return response.json()
@@ -40,7 +41,7 @@ function updateUserOrder(productId, action){
 }
 
 
-var BotonActualizar = document.getElementsByClassName('actualizar-carro')
+/*var BotonActualizar = document.getElementsByClassName('actualizar-carro')
 
 for(var i=0; i< BotonActualizar.length; i++){
     BotonActualizar[i].addEventListener('click',function(){
@@ -54,7 +55,7 @@ for(var i=0; i< BotonActualizar.length; i++){
 
     })
 
-}
+}*/
 
 function update_User_Order_Res(productId, action){
     console.log('User is logged in, sending data...2da función......' )

@@ -53,14 +53,16 @@ def updateItem(request):
     data= json.loads(request.body)
     productId = data['productId']
     action = data['action']
+    tipoId = data['type']
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
     #usuario = Profile.objects.get(staff__id=request.user.id)
     producto = Inventario.objects.get(id=productId)
-    tipo = Tipo_Orden.objects.get(tipo ='normal')
+
+    tipo = Tipo_Orden.objects.get(id = tipoId)
     order, created = Order.objects.get_or_create(staff=usuario, complete=False, tipo = tipo, distrito = usuario.distritos)
 
-    orderItem, created = ArticulosOrdenados.objects.get_or_create(orden = order, producto= producto)
+    orderItem, created = ArticulosOrdenados.objects.get_or_create(orden = order, producto = producto)
 
     if action == 'add':
         orderItem.cantidad = (orderItem.cantidad + 1)
