@@ -4,7 +4,7 @@ from django.contrib.auth.models import User
 # Register your classes here
 
 class ProfileAdmin(admin.ModelAdmin):
-    list_display = ('id','staff', 'distritos', 'tipo')
+    list_display = ('id','staff', 'distritos', 'tipo','st_activo')
     search_fields = ('staff__staff__username',)
 
    

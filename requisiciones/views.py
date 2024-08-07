@@ -2106,7 +2106,7 @@ def convert_entradas_to_xls2(entradas):
 
     output = io.BytesIO()
 
-    columns = ['Vale', 'Folio Solicitud', 'Folio Compra', 'Folio Req', 'Fecha', 'Solicitante', 'Proveedor', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Cantidad', 'Moneda', 'Tipo de Cambio', 'Precio', 'Total']
+    columns = ['Vale', 'Folio Solicitud', 'Folio Compra', 'Folio Req', 'Fecha', 'Solicitante', 'Proveedor', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Cantidad', 'Familia','Moneda', 'Tipo de Cambio', 'Precio', 'Total']
     data = [columns]
 
     for item in entradas:
@@ -2130,6 +2130,7 @@ def convert_entradas_to_xls2(entradas):
             entrada.articulo_comprado.producto.producto.articulos.producto.producto.codigo,
             entrada.articulo_comprado.producto.producto.articulos.producto.producto.nombre,
             entrada.cantidad,
+            entrada.articulo_comprado.producto.producto.articulos.producto.producto.familia,
             entrada.entrada.oc.moneda.nombre,
             tipo_de_cambio,
             entrada.articulo_comprado.precio_unitario,
@@ -2171,12 +2172,12 @@ def convert_entradas_to_xls2(entradas):
 
     
     for row_num in range(2, len(data) + 1):
-        ws[row_num][17].value = f'=IF(O{row_num} = 0, P{row_num}*M{row_num}, P{row_num}*O{row_num}*M{row_num})'
+        ws[row_num][18].value = f'=IF(P{row_num} = 0, Q{row_num}*M{row_num}, Q{row_num}*P{row_num}*M{row_num})'
 
     for col_num in range(1, len(columns) + 1):
         if col_num == 5:  # Fecha
             ws.set_col_style(col_num, date_style)
-        elif col_num in [13, 15, 16, 17]:  # Dinero
+        elif col_num in [13, 15, 16, 17, 18]:  # Dinero
             ws.set_col_style(col_num, money_style)
         else:
             ws.set_col_style(col_num, body_style)

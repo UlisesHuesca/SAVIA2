@@ -72,10 +72,11 @@ class HistoricalInventarioFilter(django_filters.FilterSet):
     codigo = CharFilter(field_name='producto__codigo', lookup_expr='icontains')
     start_date = DateFilter(field_name='history_date', lookup_expr='gte')
     end_date = DateFilter(field_name='history_date', lookup_expr='lte')
+    distrito = CharFilter(field_name='distrito__nombre', lookup_expr='icontains')
 
     class Meta:
         model = Inventario.history.model
-        fields = ['history_id','history_user','producto','start_date','end_date', 'codigo']
+        fields = ['history_id','history_user','producto','start_date','end_date', 'codigo','distrito']
 
     def nombre(self, queryset, name, value):
         return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))

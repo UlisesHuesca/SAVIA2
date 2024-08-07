@@ -29,7 +29,8 @@ class Comparativo_Admin(admin.ModelAdmin):
 class Item_Comparativo_Admin(admin.ModelAdmin):
     raw_id_fields = ('producto',)
 
-
+class Moneda_Admin(admin.ModelAdmin):
+    list_display = ('id','nombre')
 
 
 # Register your models here.
@@ -49,7 +50,7 @@ admin.site.register(Uso_cfdi)
 
 admin.site.register(Cond_pago)
 
-admin.site.register(Moneda)
+admin.site.register(Moneda, Moneda_Admin)
 
 admin.site.register(Estado)
 

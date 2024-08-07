@@ -22,26 +22,27 @@ def actualizar_saldos(sender, instance, created, **kwargs):
         saldo_inicial = latest_balance_record.monto_inicial
     print(saldo_inicial)
     # Obtener todos los pagos posteriores al nuevo pago y actualizar los saldos
-    pagos_posteriores = Pago.objects.filter(
-        cuenta=instance.cuenta,
-        hecho= True,
-        pagado_real__gte = latest_balance_record.fecha_inicial
-    ).order_by('pagado_real')
-    saldo_acumulado = latest_balance_record.monto_inicial
-    index = 0
-    for pago in pagos_posteriores:
-        if pago.tipo and pago.tipo.nombre == "ABONO":
-            saldo_acumulado += pago.monto
-        else:
-            saldo_acumulado -= pago.monto
-        print('pagado_real:',pago.pagado_real,'pago_monto:',pago.monto,'saldo_acumulado:',saldo_acumulado)
-        pago.saldo = saldo_acumulado
-        index += 1
-        pago.indice = index
-         # Evitar recursión infinita
-        pago._avoid_signal = True
-        pago.save()
-        del pago._avoid_signal
+    if latest_balance_record != None:
+        pagos_posteriores = Pago.objects.filter(
+            cuenta=instance.cuenta,
+            hecho= True,
+            pagado_real__gte = latest_balance_record.fecha_inicial
+        ).order_by('pagado_real')
+        saldo_acumulado = latest_balance_record.monto_inicial
+        index = 0
+        for pago in pagos_posteriores:
+            if pago.tipo and pago.tipo.nombre == "ABONO":
+                saldo_acumulado += pago.monto
+            else:
+                saldo_acumulado -= pago.monto
+            print('pagado_real:',pago.pagado_real,'pago_monto:',pago.monto,'saldo_acumulado:',saldo_acumulado)
+            pago.saldo = saldo_acumulado
+            index += 1
+            pago.indice = index
+            # Evitar recursión infinita
+            pago._avoid_signal = True
+            pago.save()
+            del pago._avoid_signal
 
     # Volver a conectar la señal
     post_save.connect(actualizar_saldos, sender=Pago)

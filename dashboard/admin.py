@@ -45,6 +45,9 @@ class OrderAdmin(admin.ModelAdmin):
 class SubfamiliaAdmin(admin.ModelAdmin):
     list_display = ('id','nombre','familia')
 
+class MarcaAdmin(admin.ModelAdmin):
+    search_fields = ['nombre']
+
 # Register your models here.
 admin.site.register(Familia)
 
@@ -56,7 +59,7 @@ admin.site.register(Product, ProductAdmin)
 
 admin.site.register(Order, OrderAdmin)
 
-admin.site.register(Marca)
+admin.site.register(Marca, MarcaAdmin)
 
 admin.site.register(Inventario, InventarioAdmin)
 

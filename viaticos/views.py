@@ -58,7 +58,7 @@ def solicitud_viatico(request):
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
        superintendentes = colaborador.filter(tipo__superintendente = True, st_activo = True, distritos = usuario.distritos)  
     else:
-        superintendentes = colaborador.filter(tipo__superintendente = True, distritos = usuario.distritos, staff__staff__is_active = True).exclude(tipo__nombre="Admin")
+        superintendentes = colaborador.filter(tipo__superintendente = True, distritos = usuario.distritos, st_activo = True).exclude(tipo__nombre="Admin")
 
     max_folio = Solicitud_Viatico.objects.all().aggregate(Max('folio'))['folio__max']
     folio_probable = max_folio + 1

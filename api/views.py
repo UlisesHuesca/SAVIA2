@@ -21,6 +21,7 @@ def getData(request):
 
 
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def CompraAPI(request):
     compras = Compra.objects.filter(complete = True)

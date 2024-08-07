@@ -40,7 +40,7 @@ def contadores_processor(request):
     conteo_devoluciones = 0
     conteo_ordenes = 0
     
-    conteo_usuario = Profile.objects.all().count()
+    conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
     solicitudes_generadas = Order.objects.filter(complete = True).count()
 
