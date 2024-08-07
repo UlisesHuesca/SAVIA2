@@ -64,8 +64,9 @@
                             <i class="fa-regular fa-comment"></i>
                         </a>
                     </td>
+                    <!--El código que hace funcionar al botón de delete está en el js >> cart.js -->
                     <td>
-                        <button id="delete_row_{{producto.id|unlocalize}}" type="button" class="btn add-btn update-cart" style="color:ghostwhite; background-color:#980F0F ;" value="Delete" data-product={{producto.producto.id|unlocalize}} data-action="remove" aria-label="Close">
+                        <button id="delete_row_{{producto.id|unlocalize}}" type="button" class="btn add-btn update-cart" style="color:ghostwhite; background-color:#980F0F ;" value="Delete" data-type="{{orden.tipo.id}}" data-product={{producto.producto.id|unlocalize}} data-action="remove" aria-label="Close">
                             <i class="fa-solid fa-trash-can"></i>
                         </button>
                         <button type="button" id="save_comment_{{producto.id|unlocalize}}" onclick="aceptar_edicion('{{producto.id|unlocalize}}')"    class="btn btn-outline-primary d-none">

@@ -94,15 +94,6 @@
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
 
-    ;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
-
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-    })()
-
     function cambio_en_formulario(data,key) {
     //console.log(data)
 
