@@ -48,7 +48,7 @@
                 <h3 target="">Vale de Salida {{nuevo_folio}} | Solicitud {{vale_salida.solicitud.folio}}</h3>
             </div>
             <div class="card-body" id="Solicitud-info">
-                    <form id="myForm" method="POST" id='OrderForm' data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
+                <form id="myForm" method="POST" data-subproyecto-url="{% url 'ajax_load_subproyectos' %}">
                         {% csrf_token %}
                         <div class="row my-5">
                            
@@ -80,7 +80,7 @@
                                 </div>
                                 
                         </div>
-                    </form>
+                </form>
             </div>
             <hr>
         </div>
@@ -93,6 +93,7 @@
            
             <div class='card-body'>
                 <form id="myForm2" method="POST">
+                {% csrf_token %}
                 <div class="row">
                     <div class="col-lg-8 col-sm-12">
                         <div id="input_subproyecto" class="input-group mb-3">
@@ -135,11 +136,12 @@
                             <i class="fa-solid fa-circle-plus"></i>
                         </button>
                     </div>
+                </form>
                 </div>
                 <hr>
                 <div class ="table-responsive-sm">
                     <table class="table table-ligth table-striped mx-1">
-                    {% csrf_token %}
+                    
                     <thead>
                         <tr>
                         <th  salidas="{{salidas}}">Código</th>
@@ -169,7 +171,6 @@
                         </tr>
                         {% endfor %}
                     </tbody>
-                </form>
                 </table>
             </div>
             </div>

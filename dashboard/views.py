@@ -58,8 +58,6 @@ def index(request):
     #x2 = [inventario.producto.nombre[:15] + '...' if len(inventario.producto.nombre) > 10 else inventario.producto.nombre for inventario,_ in inventarios_top_50]
     #y2 = [costo_salidas for _, costo_salidas in inventarios_top_50]
 
-
-
    # Crear el gráfico de barras
     #fig = make_subplots()
     #fig.add_trace(go.Bar(x=x, y=y, marker=dict(color='#3E92CC')),1,1)

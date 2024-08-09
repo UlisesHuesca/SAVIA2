@@ -2,14 +2,17 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Histórico Salidas{% endblock %}
 </head>
 <body>
-<hr>
-<hr>
+
 {% block content %}
+<hr>
+<hr>
+<h6>&nbsp;</h6>
 <!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
 <div class="row my-4">
     <div class="col-md-4">
@@ -24,6 +27,85 @@
         {% endfor %}
     </div>
 </div>
+<div class="card my-2 mx-1">
+    <div class="card card-body">
+        <h5>Filtro Inventario</h5>
+        <hr>
+        {% csrf_token %}
+        <form method="GET">
+        <div class="row g-12">
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.history_id|add_class:"form-control"|append_attr:"placeholder= -ID"}}
+                        <label style="color: #121212;" for="id_id">ID</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.history_user|add_class:"form-control"|append_attr:"placeholder= Usuario"}}
+                        <label style="color: #121212;" for="id_id">Usuario</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                        <label style="color: #121212;" for="id_id">Producto</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                        <label style="color: #121212;" for="id_id">Código</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                        <label style="color: #121212;" for="id_id">Distrito</label>
+                    </div>
+                </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                    </div>
+                </div>
+            </div>
+            <div id="serie" class="col-lg-2 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                    <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                    </div>
+                </div>
+            </div>
+          
+            <div class="col-2">
+                <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+        </div>
+        <hr>
+        </form>
+    </div>
+</div>
 
 <!-- Aquí empieza la generación de la tabla -->
 <div class = "row mt-2">
@@ -35,20 +117,20 @@
                     <th scope="col">Fecha</th>
                     <th scope="col">Razón del cambio</th>
                     <th scope="col">Tipo de cambio</th>
-                    <th scope="col">Almacenista</th>
+                    <th scope="col">Solicitud</th>
                     <th scope="col">Producto</th>
                     <th scope="col">Cantidad Actual</th>
                     <th scope="col">Cantidad Anterior</th>
                 </tr>
             </thead>
             <tbody>
-                {% for registro in registros %}
+                {% for registro in registros_list %}
                 <tr>
                     <th scope="row">{{registro.history_user.first_name}} {{registro.history_user.last_name}}</th>
                     <td>{{registro.history_date}}</td>
                     <td>{{registro.history_change_reason}}</td>
                     <td>{{registro.history_type}}</td>
-                    <td>{{registro.almacenista}}</td>
+                    <td>{{registro.vale_salida.solicitud.folio}}</td>
                     <td>{{registro.producto.articulos.producto.producto}}</td>
                     <td>{{registro.cantidad}}</td>
                     <td>{{registro.prev_record.cantidad}}</td>
@@ -58,7 +140,34 @@
         </table>
     </div>
 </div>
+<nav aria-label="Page navigation example">
+    <ul class="pagination justify-content-center">
+    {% if registros_list.has_previous %}
+        <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+        <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+    {% endif %}
+    <!--<li class="page-item disabled"><a href="#" class="page-link">Page {{items_list.number}} of {{ items_list.paginator.num_pages}}</a></li>-->
 
+    {% for item in registros_list.paginator.page_range %}
+        {% if registros_list.number == item %}
+            <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+        {% elif item > registros_list.number|add:'-2' and item < registros_list.number|add:'2' %}
+            <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+        {% endif %}
+    {% endfor %}
+
+    {% if registros_list.paginator.num_pages > registros_list.number|add:'2' %}
+    <li><a class="page-link" style="color:#3E92CC" href="?page={{registros_list.number|add:'2'}}">&hellip;</a></li>
+    <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+    <li><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.paginator.num_pages 'page' request.GET.urlencode %}">{{registros_list.paginator.num_pages}}</a></li>
+    {% endif %}
+
+    {% if registros_list.has_next %}
+        <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+        <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url registros_list.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+    {% endif %}
+    </ul>
+</nav>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" id="document" role="document">

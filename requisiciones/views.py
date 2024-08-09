@@ -9,6 +9,7 @@ from django.db.models import Value, Sum, Case, When, F, Value, Q, Avg, Max
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.conf import settings
+from django.utils import timezone
 
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -37,14 +38,14 @@ from user.decorators import perfil_seleccionado_required
 from compras.models import Compra
 from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos, Tipo_Devolucion
 from .tasks import convert_entradas_to_xls_task, convert_salidas_to_xls_task
-from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter
+from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter, HistoricalSalidasFilter
 from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
 #from compras.views import clear_task_id, verificar_estado
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 from pathlib import Path
 
 from pyexcelerate import Workbook, Color as PXColor, Style, Font, Fill, Alignment, Format
@@ -424,9 +425,6 @@ def salida_material(request, pk):
     # Calcular el nuevo folio como el consecutivo del máximo actual
     nuevo_folio = (max_folio or 0) + 1
 
-
-
-
     formVale = ValeSalidasForm()
     form = SalidasForm()
     users = Profile.objects.filter(distritos = usuario.distritos, st_activo = True )
@@ -448,7 +446,7 @@ def salida_material(request, pk):
             for producto in productos:
                 producto.seleccionado = False
                 print(producto,"cantidad:", producto.cantidad)
-                if producto.cantidad == 0:
+                if producto.cantidad <= 0:
                     producto.salida=True
                     producto.surtir=False
                     cantidad_salidas = cantidad_salidas + 1
@@ -628,7 +626,7 @@ def update_salida(request):
         #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
         producto.seleccionado = True
-        entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal')
+        entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal').order_by('id')
 
         try:
             EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False)
@@ -650,7 +648,7 @@ def update_salida(request):
                         salida.entrada = entrada.id
                         entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
                         salida.complete = True
-                        if entrada.cantidad_por_surtir == 0:
+                        if entrada.cantidad_por_surtir <= 0:
                             entrada.agotado = True
                         producto.save()
                         entrada.save()
@@ -682,9 +680,9 @@ def update_salida(request):
                     #producto.cantidad_requisitar = producto.cantidad_requisitar + salida.cantidad
                     salida.entrada = entrada.id
                     salida.complete = True
-                    if producto.cantidad_requisitar == 0:
+                    if producto.cantidad_requisitar <= 0:
                         producto.requisitar = False
-                    if entrada.cantidad_por_surtir == 0:
+                    if entrada.cantidad_por_surtir <= 0:
                         entrada.agotado = True
                     print(salida)
                     entrada.save()
@@ -693,24 +691,28 @@ def update_salida(request):
                     salida.precio = entrada.articulo_comprado.precio_unitario
                     salida.save()
         else:    #si no hay resurtimiento
-            salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
-            salida.cantidad = cantidad
-            salida.entrada = 0
-            salida.complete = True
-            producto.cantidad = producto.cantidad - salida.cantidad 
-            if producto.cantidad_requisitar <= 0:
-                producto.requisitar = False
-            salida.precio = inv_del_producto.price
-            inv_del_producto._change_reason = f'Esta es la salida de inventario de un artículo'
-            #print(salida,producto.cantidad)
-            #salida.save() #Se supone que sucede al final
-        #inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada - salida.cantidad
-        #producto.seleccionado = False #Este seleccionado determina no solo la presencia del artículo en el seleccionable sino también si se va a marcar para surtir o no
+             # Verificar si ya existe un registro similar creado en el último segundo
+            now = timezone.now()
+            similar_entries = Salidas.objects.filter(
+                producto=producto,
+                vale_salida=vale_salida,
+                cantidad=cantidad,
+                complete=False,
+                created_at__gte=now - timedelta(seconds=1)
+            )
+            if not similar_entries.exists():
+                salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
+                salida.cantidad = cantidad
+                salida.entrada = 0
+                salida.complete = True
+                producto.cantidad = producto.cantidad - salida.cantidad 
+                if producto.cantidad_requisitar <= 0:
+                    producto.requisitar = False
+                salida.precio = inv_del_producto.price
+                inv_del_producto._change_reason = f'Esta es la salida de inventario de un artículo'   
+                salida.save()
         producto.save()
         inv_del_producto.save()
-        salida.save()
-
-       
         
     if action == "remove":
         item = Salidas.objects.get(vale_salida = vale_salida, id = id_salida)
@@ -1478,8 +1480,17 @@ def historico_articulos_para_surtir(request):
 def historico_salidas(request):
     registros = Salidas.history.all()
 
+    myfilter = HistoricalSalidasFilter(request.GET, queryset=registros)
+    registros = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+
     context = {
-        'registros':registros,
+        'myfilter':myfilter,
+        'registros_list':registros_list,
         }
 
     return render(request,'requisiciones/historico_salidas.html',context)

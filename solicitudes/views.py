@@ -114,6 +114,7 @@ def product_selection_resurtimiento(request):
     productos_list = p.get_page(page)
 
     context= {
+        'orden': order,
         'myfilter': myfilter,
         'productos_list':productos_list,
         'productosordenadosres':cartItems,
@@ -215,6 +216,7 @@ def product_selection(request):
 
 
     context= {
+        'orden':order,
         'myfilter': myfilter,
         'productos_list':productos_list,
         'productos':productos,
@@ -496,7 +498,7 @@ def checkout(request):
         'form_comentario': form_comentario,
         'productos':productos,
         'usuario_distrito': usuario.distritos.nombre,
-        'order':order,
+        'orden':order,
         #'activos':activos,
         #'sectores': sectores,
         'productosordenados':cartItems,
@@ -1430,7 +1432,7 @@ def cancelada_sol(request, pk):
     if request.method =='POST':
         order.autorizar = False
         order.save()
-        messages.error(request, f'La orden {order} ha sido cancelada')
+        messages.success(request, f'La orden {order} ha sido cancelada')
         return redirect('solicitud-pendientes-autorizacion')
 
 

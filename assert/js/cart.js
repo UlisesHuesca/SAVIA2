@@ -41,7 +41,7 @@ function updateUserOrder(productId, action, type){
 }
 
 
-/*var BotonActualizar = document.getElementsByClassName('actualizar-carro')
+var BotonActualizar = document.getElementsByClassName('actualizar-carro')
 
 for(var i=0; i< BotonActualizar.length; i++){
     BotonActualizar[i].addEventListener('click',function(){
@@ -55,7 +55,7 @@ for(var i=0; i< BotonActualizar.length; i++){
 
     })
 
-}*/
+}
 
 function update_User_Order_Res(productId, action){
     console.log('User is logged in, sending data...2da función......' )

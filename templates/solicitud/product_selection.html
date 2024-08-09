@@ -82,7 +82,7 @@
                     <h8>Disponible: {{producto.cantidad}}</h8>
 
                     <hr>
-                    <button data-product={{producto.id|unlocalize}} data-action="add" class="btn btn-outline-secondary add-btn update-cart">Agregar a Solicitud</button>
+                    <button data-product={{producto.id|unlocalize}} data-action="add" data-type="{{orden.tipo.id}}"  class="btn btn-outline-secondary add-btn update-cart">Agregar a Solicitud</button>
                     <!--<a class='btn btn-outline-info' href="#">Ver</a>-->
                 </div>
             </div>
