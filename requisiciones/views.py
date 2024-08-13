@@ -2320,12 +2320,13 @@ def generate_excel_report2(salidas):
         else:
             comentario = " "
 
+        solicitante = f"{salida.vale_salida.solicitud.staff.staff.staff.first_name} {salida.vale_salida.solicitud.staff.staff.staff.last_name}"
 
         rows = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
             salida.created_at.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
-            f"{salida.vale_salida.solicitud.staff.staff.staff.first_name} {salida.vale_salida.solicitud.staff.staff.staff.last_name}",
+            solicitante,
             salida.vale_salida.solicitud.proyecto.nombre if salida.vale_salida.solicitud.proyecto else " ",
             salida.vale_salida.solicitud.subproyecto.nombre if salida.vale_salida.solicitud.subproyecto else " ",
             salida.producto.articulos.orden.operacion.nombre if salida.producto.articulos.orden.operacion else "Sin operación",

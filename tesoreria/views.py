@@ -247,42 +247,55 @@ def saldo_inicial(request):
 
 from django.http import JsonResponse
 
+from django.http import JsonResponse
+from datetime import datetime
+from .models import Cuenta  # Asegúrate de que la importación de tu modelo sea correcta
+
 def prellenar_formulario(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
-        pdf_content = request.FILES['comprobante_pago'].read()
+        pdf_content = request.FILES.get('comprobante_pago')
+        
+        if not pdf_content:
+            return JsonResponse({'error': 'No file uploaded'}, status=400)
+        
+        pdf_content = pdf_content.read()
         texto_extraido = extraer_texto_de_pdf(pdf_content)
         datos_extraidos = encontrar_variables(texto_extraido)
+        
         fecha_str = datos_extraidos.get('fecha', '').strip()
-        try:
-            fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y')
-            fecha_formato_correcto = fecha_obj.strftime('%Y-%m-%d')  # Convertir a formato 'YYYY-MM-DD'
-        except ValueError:
-            # Manejar el error si la fecha no está en el formato esperado
-            fecha_formato_correcto = None
-
+        fecha_formato_correcto = None  # Valor por defecto en caso de que no se pueda procesar la fecha
+        
+        if fecha_str:
+            try:
+                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y')
+                fecha_formato_correcto = fecha_obj.strftime('%Y-%m-%d')
+            except ValueError:
+                # Opcional: Agregar alguna forma de logging o notificación de que la fecha no es válida
+                pass
+        
         numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip()
+        cuenta_objeto = None
+        
+        if numero_cuenta_extraido:
+            try:
+                cuenta_objeto = Cuenta.objects.get(cuenta=numero_cuenta_extraido)
+            except Cuenta.DoesNotExist:
+                # Manejar el caso donde la cuenta no existe
+                return JsonResponse({'error': 'Account not found'}, status=404)
+        
         divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
-
-        # Determinas el texto de la divisa basado en la divisa extraída
-        texto_divisa = "PESOS" if divisa_cuenta_extraida == "MXP" else "DOLARES"  # O la divisa que corresponda
-        cuenta_objeto = Cuenta.objects.get(cuenta=numero_cuenta_extraido)
-#        Combinas el número de cuenta y el texto de la divisa para prellenar el formulario
-        #cuenta_formulario = f"{numero_cuenta_extraido} {texto_divisa}"
-        #print(cuenta_objeto)
-        # Limpia y prepara los datos como sea necesario
+        
         datos_para_formulario = {
-            'monto': datos_extraidos.get('importe_operacion', '').replace('MXP', '').replace(',', '').strip(),
-            'pagado_real': fecha_formato_correcto, # Usa el valor de fecha convertido
-            'cuenta': cuenta_objeto.id,
-            # Asegúrate de que 'divisa_cuenta' sea un campo en tu formulario si lo estás incluyendo aquí
-            'divisa_cuenta': datos_extraidos.get('divisa_cuenta', ''),
+            'monto': datos_extraidos.get('importe_operacion', '').replace('MXP', '').replace(',', '').strip() or None,
+            'pagado_real': fecha_formato_correcto,  # Valor procesado o None
+            'cuenta': cuenta_objeto.id if cuenta_objeto else None,
+            'divisa_cuenta': divisa_cuenta_extraida or None,
         }
         
-        # Devuelve los datos en formato JSON
         return JsonResponse(datos_para_formulario)
     
-    # Si algo falla o no es un POST AJAX, puedes decidir cómo manejarlo
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
 
 
 
@@ -1307,6 +1320,7 @@ def convert_excel_matriz_pagos(pagos):
     
     sheet = wb['Sheet']
     wb.remove(sheet)
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     wb.save(response)
 
     return(response)

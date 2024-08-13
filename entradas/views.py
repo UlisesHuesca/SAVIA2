@@ -23,6 +23,7 @@ import os
 from datetime import date, datetime
 from user.decorators import perfil_seleccionado_required
 from io import BytesIO
+from decimal import Decimal, ROUND_DOWN
 
 # Import Excel Stuff
 import xlsxwriter
@@ -237,32 +238,31 @@ def articulos_entrada(request, pk):
                 print(inv_de_producto.cantidad)
                 for producto in productos_pendientes_surtir:    #Recorremos todas las solicitudes pendientes por surtir una por una
                     if producto_surtir.cantidad > 0:             #Esto practicamente es un while gracias al for mientras la cantidad del resurtimiento sea mayor que 0
-                        if producto.cantidad_requisitar <= producto_surtir.cantidad: #Si la cantidad del producto que queremos surtir es menor que o igual a la cantidad de resurtimiento
-                            producto_surtir.cantidad = producto_surtir.cantidad - producto.cantidad_requisitar
-                            producto.cantidad = producto.cantidad + producto.cantidad_requisitar
-                            inv_de_producto.cantidad = inv_de_producto.cantidad - producto.cantidad
-                            inv_de_producto.cantidad_entradas = inv_de_producto.cantidad_entradas - producto.cantidad
-                            producto.cantidad_requisitar = 0
+                        cantidad_requisitar = Decimal(producto.cantidad_requisitar).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+                        cantidad_surtir = Decimal(producto_surtir.cantidad).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+                        
+                        # Determinamos la cantidad a surtir con min
+                        cantidad_a_surtir = min(cantidad_requisitar, cantidad_surtir) #Se elige el mínimo entre la cantidad_requistar y la cantidad a surtir
+                        # Realizamos las actualizaciones
+                        producto_surtir.cantidad -= cantidad_a_surtir
+                        producto.cantidad += cantidad_a_surtir
+                        producto.cantidad_requisitar -= cantidad_a_surtir 
+                        inv_de_producto.cantidad -= cantidad_a_surtir
+                        inv_de_producto.cantidad_entradas -= cantidad_a_surtir
+                        
+                        # Actualizamos el estado del producto si ya no requiere más surtido
+                        if producto.cantidad_requisitar == 0:
                             producto.requisitar = False
                             producto.surtir = True
-                            producto_surtir.save()
-                            producto.save()
-                            inv_de_producto.save()
-                        else:
-                            producto.cantidad_requisitar = producto.cantidad_requisitar - producto_surtir.cantidad
-                            producto.cantidad = producto.cantidad + producto_surtir.cantidad
-                            inv_de_producto.cantidad = inv_de_producto.cantidad - producto_surtir.cantidad
-                            inv_de_producto.cantidad_entradas = inv_de_producto.cantidad_entradas - producto_surtir.cantidad
-                            producto_surtir.cantidad = 0
-                            producto.surtir = True
-                            producto.save()
-                            producto_surtir.save()
-                            inv_de_producto.save()
-                            solicitud = Order.objects.get(id = producto_surtir.articulos.orden.id)
-                            productos_orden = ArticulosparaSurtir.objects.filter(articulos__orden = solicitud, requisitar=False).count()
-                            if productos_orden == 0:
-                                solicitud.requisitar = False
-                                solicitud.save()
+                        
+                        producto_surtir.save()
+                        producto.save()
+                        inv_de_producto.save()
+                        solicitud = Order.objects.get(id = producto_surtir.articulos.orden.id)
+                        productos_orden = ArticulosparaSurtir.objects.filter(articulos__orden = solicitud, requisitar=False).count()
+                        if productos_orden == 0:
+                            solicitud.requisitar = False
+                            solicitud.save()
                         
             if entrada.oc.req.orden.tipo.tipo == 'normal':
                 if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
@@ -365,14 +365,13 @@ def update_entrada(request):
                 producto_inv.price = precio_unit_promedio
             #Esta parte determina el comportamiento de todos las solicitudes que se tienen que activar cuando la entrada es de resurtimiento
             if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
-                if producto_surtir:
-                    producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad
-                    producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad
+                if producto_surtir: #producto_surtir es la solicitud de la que proviene el resurtimiento
+                    producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #la cantidad de entrada es igual a la sumatoria de la cantidad pendiente_surtir + cantidad de la entrada 
+                    producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad 
                     producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad
                     producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad 
                     if producto_surtir.cantidad_requisitar == 0:
                         producto_surtir.requisitar = False
-                    
                     producto_surtir.precio = producto_comprado.precio_unitario
                     producto_surtir.save()
                     producto_inv.save()
