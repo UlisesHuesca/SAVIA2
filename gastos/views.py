@@ -601,9 +601,9 @@ def autorizar_gasto2(request, pk):
     if request.method =='POST' and 'btn_autorizar' in request.POST:
         gasto.autorizar2 = True
         gasto.approbado_fecha2 = datetime.now()
-        #gasto.approved_at_time2 = datetime.now().time()
+        gasto.autorizado_por2 = perfil
         gasto.save()
-        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado el gasto {gasto.id}')
+        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado el gasto {gasto.folio}')
         return redirect ('gastos-pendientes-autorizar2')
 
 
