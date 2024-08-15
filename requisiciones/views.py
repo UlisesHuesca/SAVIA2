@@ -2332,9 +2332,13 @@ def generate_excel_report2(salidas):
 
         if salida.entrada:
             id = salida.entrada
-            entrada_articulo = EntradaArticulo.objects.get(id = id)
-            moneda = str(entrada_articulo.entrada.oc.moneda.nombre)
-            tc = entrada_articulo.entrada.oc.tipo_de_cambio
+            try:
+                entrada_articulo = EntradaArticulo.objects.get(id = id)
+                moneda = str(entrada_articulo.entrada.oc.moneda.nombre)
+                tc = entrada_articulo.entrada.oc.tipo_de_cambio
+            except EntradaArticulo.DoesNotExist:
+                moneda = "PESOS"
+                tc = 0       
         else:
             moneda = "PESOS"
             tc = 0
