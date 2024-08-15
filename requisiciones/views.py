@@ -2230,7 +2230,7 @@ def generate_excel_report(salidas):
 
     # Escribe los encabezados
     columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Material recibido por',
-               'Cantidad','Precio','Total']
+               'Cantidad','Precio','Moneda','TC','Total']
     
     for i, column in enumerate(columns):
         worksheet.write(0, i, column, head_style)
@@ -2247,6 +2247,14 @@ def generate_excel_report(salidas):
         else:
             precio_condicional = salida.producto.articulos.producto.price
 
+        if salida.entrada:
+            entrada = Entrada.objects.get(id = entrada)
+            moneda = str(entrada.oc.moneda.nombre)
+            tc = entrada.oc.tipo_de_cambio
+        else:
+            moneda = "PESOS"
+            tc = " "
+
         rows = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
@@ -2259,7 +2267,9 @@ def generate_excel_report(salidas):
             salida.producto.articulos.producto.producto.nombre,
             f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}",
             salida.cantidad,
-            precio_condicional
+            precio_condicional,
+            moneda,
+            tc
         ]
 
          # Escribe la fila en el archivo
@@ -2278,7 +2288,7 @@ def generate_excel_report(salidas):
             # Finalmente, escribe la celda con el valor y el formato correspondiente
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
-        worksheet.write_formula(row_num, 12, f'=K{row_num + 1}*L{row_num + 1}', money_style)
+        worksheet.write_formula(row_num, 14, f'=K{row_num + 1}*L{row_num + 1}', money_style)
     
     workbook.close()
 
@@ -2299,7 +2309,7 @@ def generate_excel_report(salidas):
 def generate_excel_report2(salidas):
     output = io.BytesIO()
 
-    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Total']
+    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Moneda','TC','Total']
     data = [columns]
 
     for salida in salidas:
@@ -2320,6 +2330,15 @@ def generate_excel_report2(salidas):
         else:
             comentario = " "
 
+        if salida.entrada:
+            id = salida.entrada
+            entrada_articulo = EntradaArticulo.objects.get(id = id)
+            moneda = str(entrada_articulo.entrada.oc.moneda.nombre)
+            tc = entrada_articulo.entrada.oc.tipo_de_cambio
+        else:
+            moneda = "PESOS"
+            tc = 0
+
         solicitante = f"{salida.vale_salida.solicitud.staff.staff.staff.first_name} {salida.vale_salida.solicitud.staff.staff.staff.last_name}"
 
         rows = [
@@ -2336,6 +2355,8 @@ def generate_excel_report2(salidas):
             comentario,
             salida.cantidad,
             precio_condicional,
+            moneda,
+            tc,
             None  # Placeholder for the total formula
         ]
         data.append(rows)
@@ -2364,13 +2385,15 @@ def generate_excel_report2(salidas):
         alignment=Alignment(horizontal='left')
     )
 
+   
     for row_num in range(2, len(data) + 1):
-        ws[row_num][14].value = f'=M{row_num}*L{row_num}'
+        formula = f'=IF(O{row_num} = 0, M{row_num}*L{row_num}, M{row_num}*L{row_num}*O{row_num})'
+        ws[row_num][16].value = formula
 
     for col_num in range(1, len(columns) + 1):
         if col_num == 3:  # Fecha
             ws.set_col_style(col_num, date_style)
-        elif col_num in [13, 14]:  # Dinero
+        elif col_num in [13, 15, 16]:  # Dinero
             ws.set_col_style(col_num, money_style)
         else:
             ws.set_col_style(col_num, body_style)

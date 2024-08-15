@@ -7,11 +7,19 @@
         <div class="card-header">
             <h3>Resumen de solicitud</h3>
         </div>
+    {% if orden.tipo.id == 2 %}
+    <div class="col-3 my-2">
+        <a class="btn btn-outline-info" href="{% url 'product_selection_resurtimiento' %}">
+            <i class="fa-solid fa-arrow-left">&nbsp;Agregar productos</i>
+        </a>
+    </div>
+    {% else %}
     <div class="col-3 my-2">
         <a class="btn btn-outline-info" href="{% url 'solicitud-product-selection' %}">
             <i class="fa-solid fa-arrow-left">&nbsp;Agregar productos</i>
         </a>
     </div>
+    {% endif %}
     
            
     <div class ="table-responsive-sm">
