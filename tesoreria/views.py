@@ -67,7 +67,40 @@ from bs4 import BeautifulSoup
 
 from user.decorators import perfil_seleccionado_required
 
+@perfil_seleccionado_required
+def compras_por_pagar(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    if usuario.tipo.tesoreria == True:
+        compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, req__orden__distrito = usuario.distritos).order_by('-folio')
+   
+    
+    #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
+    
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
+    
+    #if request.method == 'POST' and 'btnReporte' in request.POST:
+        #return convert_excel_matriz_cuentas_por_pagar(compras)
+    if request.method == 'POST':
+        compra_ids = request.POST.getlist('compra_ids')
+        print(compra_ids)
+        if compra_ids:
+            Compra.objects.filter(id__in=compra_ids).update(para_pago=True)
+            # Después de la actualización, redirige para restablecer el conteo y sumatoria
+            print('there')
+            return redirect('compras_por_pagar')
 
+    context= {
+        'compras':compras,
+        'myfilter':myfilter,
+        'compras_list':compras_list,
+        }
+
+    return render(request, 'tesoreria/compras_por_pagar.html',context)
 
 # Create your views here.
 @perfil_seleccionado_required
@@ -75,7 +108,7 @@ def compras_autorizadas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     if usuario.tipo.tesoreria == True:
-        compras = Compra.objects.filter(autorizado2=True, pagada=False, req__orden__distrito = usuario.distritos).order_by('-folio')
+        compras = Compra.objects.filter(para_pago=True,pagada=False,autorizado2=True, req__orden__distrito = usuario.distritos).order_by('-folio')
    
     
     #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
