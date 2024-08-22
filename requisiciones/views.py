@@ -415,7 +415,7 @@ def salida_material(request, pk):
     orden = Order.objects.get(id = pk)
     print(orden)
     productos = ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
-    productos_no_seleccionados = productos.filter(seleccionado = False)
+    productos_no_seleccionados = productos.filter(seleccionado_salida = False)
     vale_salidas = ValeSalidas.objects.filter(solicitud__distrito = usuario.distritos)
     vale_salida, created = vale_salidas.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
     salidas = Salidas.objects.filter(vale_salida = vale_salida)
@@ -444,7 +444,7 @@ def salida_material(request, pk):
             cantidad_salidas = 0
             cantidad_productos = productos.count()
             for producto in productos:
-                producto.seleccionado = False
+                producto.seleccionado_salida = False
                 print(producto,"cantidad:", producto.cantidad)
                 if producto.cantidad <= 0:
                     producto.salida=True
@@ -625,7 +625,7 @@ def update_salida(request):
     if action == "add":
         #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
-        producto.seleccionado = True
+        producto.seleccionado_salida = True
         entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal').order_by('id')
 
         try:
@@ -727,7 +727,7 @@ def update_salida(request):
         if vale_salida.solicitud.tipo.tipo == "normal":
             inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
         #inv_del_producto.cantidad = inv_del_producto.cantidad + item.cantidad
-        producto.seleccionado = False
+        producto.seleccionado_salida = False
         producto.salida= False
         producto.cantidad = producto.cantidad + item.cantidad
         inv_del_producto._change_reason = f'Esta es una cancelación de un artìculo en una salida {item.id}'

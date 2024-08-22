@@ -398,6 +398,7 @@ class ArticulosparaSurtir(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     #created_at_time = models.TimeField(auto_now_add=True)
     modified_at = models.DateField(auto_now=True)
+    seleccionado_salida = models.BooleanField(default=False)
 
     @property
     def cantidad_salidas(self):
