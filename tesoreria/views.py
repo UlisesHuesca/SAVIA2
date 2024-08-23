@@ -92,7 +92,7 @@ def compras_por_pagar(request):
             Compra.objects.filter(id__in=compra_ids).update(para_pago=True)
             # Después de la actualización, redirige para restablecer el conteo y sumatoria
             print('there')
-            return redirect('compras_por_pagar')
+            return redirect('compras-por-pagar')
 
     context= {
         'compras':compras,

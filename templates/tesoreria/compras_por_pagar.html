@@ -118,14 +118,14 @@
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
                         </li>-->
-                        <li class="nav-item mx-2">
+                        <!--<li class="nav-item mx-2">
                             <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                 <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-autorizadas' %}">Compras</a>
                                 <a type="button" class="btn btn-outline-info" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
                                 <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viaticos</a>
                                 
                             </div>
-                        </li>
+                        </li>-->
                     </ul>
                 </form>
             </div>
@@ -163,13 +163,19 @@
 
 <div class="card bg-white my-2">
     <form id="mass_payment_form" method="post" action="{% url 'compras-por-pagar' %}">
-        <div col-lg-2>
-            <div class="alert alert-primary" role="alert">Total OC seleccionadas: <span id="oc_count">0</span></div>
-        </div>
-        <div col-lg-2>
-            <div class="alert alert-primary" role="alert">Suma total: <span id="oc_sum">0.00</span></div>
-        </div>
-    <input type="submit" value="Enviar a pago" id="enviar_a_pago_button" class="btn btn-primary">
+        <ul class="nav nav-pills">
+            <li class="nav-item mx-2">
+                <div col-lg-2>
+                    <div class="alert alert-primary" role="alert">Total OC seleccionadas: <span id="oc_count">0</span></div>
+                </div>
+            </li>
+            <li class="nav-item mx-2">
+                <div col-lg-2>
+                    <div class="alert alert-primary" role="alert">Suma total: <span id="oc_sum">0.00</span></div>
+                </div>
+            </li>
+                <input type="submit" value="Enviar a pago" id="enviar_a_pago_button" class="btn btn-primary">
+        </ul>
    
     {% csrf_token %}
     <div class="col-md-12">
