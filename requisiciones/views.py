@@ -38,7 +38,7 @@ from user.decorators import perfil_seleccionado_required
 from compras.models import Compra
 from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos, Tipo_Devolucion
 from .tasks import convert_entradas_to_xls_task, convert_salidas_to_xls_task
-from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter, HistoricalSalidasFilter
+from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter, HistoricalSalidasFilter, Historical_articulos_surtir_filter
 from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
 #from compras.views import clear_task_id, verificar_estado
 from openpyxl import Workbook
@@ -1470,8 +1470,17 @@ def clear_task_id_entradas(request):
 def historico_articulos_para_surtir(request):
     registros = ArticulosparaSurtir.history.all()
 
+    myfilter = Historical_articulos_surtir_filter(request.GET, queryset=registros)
+    registros = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+
     context = {
-        'registros':registros,
+        'myfilter': myfilter,
+        'registros_list':registros_list,
         }
 
     return render(request,'requisiciones/historicos_articulos_para_surtir.html',context)
