@@ -573,8 +573,10 @@ def checkout_resurtimiento(request):
     usuario = Profile.objects.get(id = pk)
     #usuario = Profile.objects.get(staff=request.user)
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
-    #superintendentes = Profile.objects.filter(tipo__superintendente = True, staff__is_active = True).exclude(tipo__nombre="Admin")
-    superintendentes = Profile.objects.filter(distritos=usuario.distritos, tipo__autorizacion = True, tipo__requisiciones = True, st_activo = True).exclude(tipo__nombre="Admin")
+    if usuario.distritos.nombre == "MATRIZ":
+        superintendentes = Profile.objects.filter(distritos=usuario.distritos, tipo__subdirector = True, st_activo = True).exclude(tipo__nombre="Admin")
+    else:    
+        superintendentes = Profile.objects.filter(distritos=usuario.distritos, tipo__autorizacion = True, tipo__requisiciones = True, st_activo = True).exclude(tipo__nombre="Admin")
     proyectos = Proyecto.objects.filter(activo=True, distrito=usuario.distritos )
     #subproyectos = Subproyecto.objects.all()
     ordenes = Order.objects.filter(distrito = usuario.distritos)

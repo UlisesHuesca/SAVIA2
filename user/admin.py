@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id','staff', 'distritos', 'tipo','st_activo')
-    search_fields = ('staff__staff__username',)
+    search_fields = ('staff__staff__username','tipo__nombre')
     raw_id_fields = ('staff',)
    
 class CustomUserAdmin(admin.ModelAdmin):
