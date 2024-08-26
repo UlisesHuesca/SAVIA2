@@ -106,6 +106,7 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">Folio</th>
+                    <th>Comentario</th>
                     <th scope="col">Solicitado por</th>
                     <th scope="col">Solicitado para:</th>
                     <th scope="col">Autorización N1</th>
@@ -120,8 +121,18 @@
                 {% for orden in ordenes_list %}
                 <tr>
                     <th scope="row">{{orden.folio}}</th>
+                    <td>{% if orden.comentario %}
+                        {{orden.comentario}}
+                        {% else %}
+                            {% for articulo in orden.articulos.all %}
+                                {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            No hay comentarios disponibles
+                            {% endfor %}
+                        {% endif %}
+                    </td>
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
-                    <td>{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}</td>
+                    <td>{% if orden.colaborador %}{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}{% elif orden.proveedor %} {{orden.proveedor}}{% endif %}</td>
                     {% if orden.get_validado %}
                     <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}{% if orden.autorizar %} <span class="badge bg-primary">Autorizado</span> {% elif orden.autorizar == False %} <span class="badge bg-danger">Cancelado</span>{% else %} <span class="badge bg-warning">No Autorizado Aún</span> {% endif %}</td>
                     {% else %}

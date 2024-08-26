@@ -110,8 +110,10 @@
                     <th>Solicitado para:</th>
                     <th scope="col">Autorización N1</th>
                     <th scope="col">Creado</th>
+                    <th>Comentarios</th>
                     <th scope="col">Total</th>
                     <th scope="col">Acción</th>
+                   
                 </tr>
             </thead>
             <tbody>
@@ -119,10 +121,20 @@
                 <tr>
                     <th scope="row">{{orden.folio}}</th>
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
-                    <td>{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}</td>
+                    <td>{% if orden.colaborador %}{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}{% elif orden.proveedor %} {{orden.proveedor}} {% endif %}</td>
                     <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}</td>
                    
                     <td>{{orden.created_at}}</td>
+                    <td>{% if orden.comentario %}
+                        {{orden.comentario}}
+                        {% else %}
+                            {% for articulo in orden.articulos.all %}
+                                {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            No hay comentarios disponibles
+                            {% endfor %}
+                        {% endif %}
+                    </td>
                     <td>${{orden.get_total_solicitud}}
                     <td><a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-gastos' orden.id %}">Conceptos</a>
                     <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-gasto' orden.id %}" ><i class="fa-solid fa-circle-check"></i></a>

@@ -233,7 +233,7 @@ def articulos_entrada(request, pk):
                     salida = False, 
                     articulos__orden__tipo__tipo = 'normal',
                     cantidad_requisitar__gt=0,
-                    articulos__producto__orden__distrito = usuario.distritos
+                    articulos__producto__distrito = usuario.distritos
                     )
                 inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
                 print(inv_de_producto.cantidad)
