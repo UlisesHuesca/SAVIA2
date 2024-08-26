@@ -5,6 +5,7 @@ from dashboard.models import Inventario, Product
 from django.core.validators import FileExtensionValidator
 import decimal
 import xml.etree.ElementTree as ET
+import os
 
 # Create your models here.
 
@@ -111,6 +112,8 @@ class Viaticos_Factura(models.Model):
     #    return f'Factura de viatico:{self.solicitud_viatico.folio}'
     @property   
     def emisor(self):
+        if os.path.getsize(self.factura_xml.path) == 0:
+            raise ValueError("El archivo XML está vacío y no puede ser procesado.")
         #with open(self.factura_xml.path,'r') as file:
             #data = file.read()
         try:
