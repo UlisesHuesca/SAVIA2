@@ -12,7 +12,7 @@ import os
 
 #Este modelo se refiere a si es Gasto o Reembolso
 class Tipo_Gasto(models.Model):
-    tipo = models.CharField(max_length=15, null=True)
+    tipo = models.CharField(max_length=30, null=True)
 
     def __str__(self):
         return f'{self.id}:{self.tipo}'

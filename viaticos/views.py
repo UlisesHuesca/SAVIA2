@@ -267,6 +267,18 @@ def detalles_viaticos2(request, pk):
 
     return render(request, 'viaticos/detalles_viaticos_montos.html', context)
 
+@login_required(login_url='user-login')
+def detalles_viaticos3(request, pk):
+    viatico = Solicitud_Viatico.objects.get(id=pk)
+    conceptos = Concepto_Viatico.objects.filter(viatico = viatico, completo = True)
+
+    context= {
+        'viatico': viatico,
+        'conceptos':conceptos,
+        }
+
+    return render(request, 'viaticos/detalles_viaticos_montos2.html', context)
+
 @perfil_seleccionado_required
 def autorizar_viaticos(request, pk):
     colaborador = Profile.objects.all()
