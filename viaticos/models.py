@@ -112,10 +112,7 @@ class Viaticos_Factura(models.Model):
     #    return f'Factura de viatico:{self.solicitud_viatico.folio}'
     @property   
     def emisor(self):
-        if os.path.getsize(self.factura_xml.path) == 0:
-            raise ValueError("El archivo XML está vacío y no puede ser procesado.")
-        #with open(self.factura_xml.path,'r') as file:
-            #data = file.read()
+        
         try:
             tree = ET.parse(self.factura_xml.path)
         except ET.ParseError as e:
