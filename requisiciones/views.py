@@ -644,6 +644,7 @@ def update_salida(request):
                     salida.precio = entrada.articulo_comprado.precio_unitario
                     if entrada.cantidad_por_surtir >= cantidad:
                         salida.cantidad = cantidad
+                        cantidad = 0 #la cantidad se vuelve 0 porque si la condición se cumple indica que la cantidad por surtir es capaz de abastecer toda la cantidad
                         producto.cantidad = producto.cantidad - salida.cantidad
                         salida.entrada = entrada.id
                         entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
@@ -653,7 +654,7 @@ def update_salida(request):
                         producto.save()
                         entrada.save()
                         salida.save()
-                    elif entrada.cantidad_por_surtir < cantidad:
+                    elif entrada.cantidad_por_surtir < cantidad and cantidad > 0: #Le meto la condicional para que no se repita el proceso si la cantidad es igual o menor que 0 
                         salida.cantidad = entrada.cantidad_por_surtir #No puedo surtir mas que la cantidad que tengo disponible en la entrada
                         cantidad = cantidad - salida.cantidad #La nueva cantidad a surtir es la cantidad menos lo que ya salió
                         producto.cantidad = producto.cantidad - salida.cantidad
