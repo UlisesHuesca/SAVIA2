@@ -441,7 +441,8 @@ def compras_pagos(request, pk):
                         headers={'Content-Type': 'text/html'}
                         )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
-                        email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                        if compra.entrada_completa == False:
+                            email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
                         email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                         email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                         email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
@@ -521,7 +522,8 @@ def compras_pagos(request, pk):
                         headers={'Content-Type': 'text/html'}
                         )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
-                        email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                        if compra.entrada_completa == False:
+                            email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
                         email.attach(f'Política_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                         email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                         email.attach(f'Código_de_ética.pdf', pdf_etica, 'application/pdf')
