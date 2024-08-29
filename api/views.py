@@ -2,7 +2,7 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import generics
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from dashboard.models import Inventario 
 from compras.models import Compra, Proveedor_direcciones
@@ -44,7 +44,7 @@ def CompraAPI(request):
 
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def proveedores_api(request):
     proveedores = Proveedor_direcciones.objects.filter(completo = True)
