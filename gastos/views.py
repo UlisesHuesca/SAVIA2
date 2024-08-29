@@ -37,6 +37,9 @@ from bs4 import BeautifulSoup
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
+import xlsxwriter
+from io import BytesIO
+
 
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from datetime import date, datetime
@@ -676,7 +679,7 @@ def pago_gastos_autorizados(request):
 
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_gastos(gastos)
+        return convert_excel_gasto_matriz(gastos)
 
         
 
