@@ -2198,7 +2198,7 @@ def convert_entradas_to_xls2(entradas):
     for col_num in range(1, len(columns) + 1):
         if col_num == 5:  # Fecha
             ws.set_col_style(col_num, date_style)
-        elif col_num in [13, 15, 16, 17, 18]:  # Dinero
+        elif col_num in [15, 16, 17, 18]:  # Dinero
             ws.set_col_style(col_num, money_style)
         else:
             ws.set_col_style(col_num, body_style)

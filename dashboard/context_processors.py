@@ -78,7 +78,7 @@ def contadores_processor(request):
             conteo_viaticos_gerencia = viaticos_gerencia.count()
         elif usuario.tipo.oc_superintendencia == True:
             oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__distrito = usuario.distritos)
-            devoluciones = Devolucion.objects.filter(complete = True, autorizada = None)
+            devoluciones = Devolucion.objects.filter(complete = True, autorizada = None, solicitud__distrito = usuario.distritos)
             conteo_oc1 = oc.count()
             conteo_devoluciones = devoluciones.count()
 

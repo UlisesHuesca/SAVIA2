@@ -329,10 +329,10 @@
                                 {% endif %}    
                                 </a>
                             </div>
-                            {% if usuario.tipo.subdirector == True %}
-                                <div class="d-none">
-                            {% else %}
+                            {% if usuario.tipo.superintendente or usuario.tipo.subdirector %}
                                 <div>
+                            {% else %}
+                                <div class="d-none">
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'matriz-autorizar-devolucion' %}">Autorización Devolución Almacén
                                     {% if conteo_devoluciones > 0 %}
