@@ -28,14 +28,14 @@ class RequisicionSerializer(serializers.ModelSerializer):
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
-        fields = ['razon_social']
+        fields = ['razon_social','rfc',]
 
 class ProveedorDireccionesSerializer(serializers.ModelSerializer):
     nombre = ProveedorSerializer(read_only=True)
     
     class Meta:
         model = Proveedor_direcciones
-        fields = ['nombre']
+        fields = ['nombre','distrito','domicilio','telefono','banco','clabe','cuenta',]
 
 class CompraSerializer(serializers.ModelSerializer):
     proveedor = ProveedorDireccionesSerializer(read_only=True)
