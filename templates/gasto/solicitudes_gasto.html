@@ -35,6 +35,15 @@
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.solicitado|add_class:"form-control"|append_attr:"placeholder=Solicitado para"}}
+                            <label for="id_staff">Solicitado para</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
                             {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio"}}
                             <label for="id_id">Folio</label>
                         </div>
@@ -67,14 +76,14 @@
             <div class = "row mt-2 bg-white">
                 <form method=POST>
                     {% csrf_token %}
-                <!--<ul class="nav nav-pills">
-                    <li class="nav-item mx-2">
+                <ul class="nav nav-pills">
+                    <!--<li class="nav-item mx-2">
                         <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
-                    </li>
+                    </li>-->
                     <li class="nav-item mx-2">
                         <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
                     </li>
-                    <li class="nav-item mx-2">
+                    <!--<li class="nav-item mx-2">
                         <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
                     </li>
                     <li class="nav-item mx-2">

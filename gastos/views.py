@@ -1,7 +1,8 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.core.paginator import Paginator
-from django.db.models import Sum, Q, Prefetch, Max
+from django.db.models.functions import Concat
+from django.db.models import Sum, Q, Prefetch, Max, Value
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import EmailMessage
@@ -407,9 +408,9 @@ def solicitudes_gasto(request):
     page = request.GET.get('page')
     ordenes_list = p.get_page(page)
 
-    #if request.method =='POST' and 'btnExcel' in request.POST:
+    if request.method =='POST' and 'btnExcel' in request.POST:
 
-        #return convert_excel_solicitud_matriz(solicitudes)
+        return convert_excel_gasto_matriz(solicitudes)
 
     context= {
         'ordenes_list':ordenes_list,
@@ -675,7 +676,7 @@ def pago_gastos_autorizados(request):
 
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_gastos_autorizados(gastos)
+        return convert_excel_matriz_gastos(gastos)
 
         
 
@@ -1387,11 +1388,11 @@ def render_pdf_gasto(pk):
     return buf
 
 
-def convert_excel_matriz_gastos_autorizados(gastos):
+def convert_excel_gasto_matriz(gastos):
     response= HttpResponse(content_type = "application/ms-excel")
-    response['Content-Disposition'] = 'attachment; filename = Pendientes_de_pago_' + str(dt.date.today())+'.xlsx'
+    response['Content-Disposition'] = 'attachment; filename = Gastos_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.create_sheet(title='Gastos Autorizados')
+    ws = wb.create_sheet(title='Gastos')
     #Comenzar en la fila 1
     row_num = 1
 
@@ -1422,8 +1423,8 @@ def convert_excel_matriz_gastos_autorizados(gastos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para'
-               'Importe','Total en Pesos','Fecha Creación']
+    columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para',
+               'Importe','Fecha Creación','Status','Autorizado por','Facturas','Pagada']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1468,14 +1469,50 @@ def convert_excel_matriz_gastos_autorizados(gastos):
            created_at_naive = gasto.created_at.astimezone(pytz.utc).replace(tzinfo=None)
         else:
             created_at_naive = ''
+
+        if gasto.facturas.exists():
+            facturas = "Con Facturas"
+        else:
+            facturas = "Sin Facturas"
+        
+        if gasto.autorizar2:
+            status = "Autorizado"
+            
+            if gasto.distrito.nombre == "MATRIZ":
+                autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            else:
+                autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
+        elif gasto.autorizar2 == False:
+            status = "Cancelado"
+            if gasto.distrito.nombre == "MATRIZ":
+                autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            else:
+                autorizado_por =   str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
+        elif gasto.autorizar:
+            autorizado_por =str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            status = "Autorizado | Falta una autorización"
+            if gasto.facturas:
+                facturas = gasto.facturas.exists()
+            else:
+                facturas = False
+        elif gasto.autorizar == False:
+            status = "Cancelado"
+            autorizado_por = str(gasto.superintendente.staff.staff.last_name)
+        else:
+            autorizado_por = "Faltan autorizaciones"
+            status = "Faltan autorizaciones"
+
         row = [
             gasto.folio,
             autorizado_at_2_naive,
             gasto.distrito.nombre,
             gasto.staff.staff.staff.first_name + ' ' + gasto.staff.staff.staff.last_name,
-            gasto.colaborador.staff.staff.last_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
+            gasto.colaborador.staff.staff.first_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
             gasto.get_total_solicitud,
             created_at_naive,
+            status,
+            autorizado_por,
+            facturas,
             #f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             #created_at_naive,
         ]
@@ -1494,3 +1531,104 @@ def convert_excel_matriz_gastos_autorizados(gastos):
     wb.save(response)
 
     return(response)
+
+def convert_excel_matriz_gastos(articulos_comprados):
+    #print('si entra a la función')
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Producto_pendientes")
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    columns = ['Compra', 'Requisición','Solicitud','Sector', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
+               'Usuario Solicitante']
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+    
+   
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    worksheet.set_column('L:L', 12,  money_style)
+    worksheet.set_column('M:M', 12, money_style) 
+    # Asumiendo que ya tienes tus datos de compras
+    row_num = 0
+    for articulo in articulos_comprados:
+        row_num += 1
+        # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
+        pagos = Pago.objects.filter(oc=articulo.oc)
+        
+        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+
+        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
+        if articulo.oc.req.orden.sector:
+            sector = f"{articulo.oc.req.orden.sector.nombre}"
+        else:
+            sector = ' '
+        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
+        #tipo_de_cambio = '' if tipo == 0 else tipo
+        #created_at = compra_list.created_at.replace(tzinfo=None)
+        #approved_at = compra_list.req.approved_at
+
+        row = [
+            articulo.oc.folio,
+            articulo.oc.req.folio,
+            articulo.oc.req.orden.folio,
+            sector,
+            articulo.producto.producto.articulos.producto.producto.codigo,
+            articulo.producto.producto.articulos.producto.producto.nombre,
+            articulo.cantidad_pendiente if articulo.cantidad_pendiente != None else articulo.cantidad,
+            articulo.producto.producto.articulos.producto.producto.unidad.nombre,
+            articulo.oc.proveedor.nombre.razon_social,
+            f"{articulo.oc.req.orden.staff.staff.staff.first_name} {articulo.oc.req.orden.staff.staff.staff.last_name}",
+        ]
+        
+        for col_num, cell_value in enumerate(row):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Aplica el formato de fecha para las columnas con fechas
+            if col_num in [7, 8]:  # Asume que estas son tus columnas de fechas
+                cell_format = date_style
+        
+            # Aplica el formato de dinero para las columnas con valores monetarios
+            elif col_num in [11, 12]:  # Asume que estas son tus columnas de dinero
+                cell_format = money_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+      
+        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Producto_pendientes_entrada_{dt.date.today()}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response

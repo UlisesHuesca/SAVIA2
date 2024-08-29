@@ -86,6 +86,7 @@ class Solicitud_Gasto(models.Model):
     @property
     def get_total_solicitud(self):
         productos = self.articulos.all()
+        print(productos)
         productos = productos.filter(completo=True)
         total = sum([producto.total_parcial for producto in productos])
         return total

@@ -53,7 +53,7 @@ class Pago(models.Model):
     tipo_de_cambio = models.DecimalField(max_digits=14,decimal_places=4, null=True, blank=True)
     comprobante_pago = models.FileField(null=True, upload_to='comprobante',validators=[FileExtensionValidator(['pdf'])])
     saldo = models.DecimalField(max_digits=14,decimal_places=4, null=True, default=0)
-    indice = indice = models.IntegerField(null=True, blank=True)  # Nuevo campo para el índice
+    indice = models.IntegerField(null=True, blank=True)  # Nuevo campo para el índice
 
     @property
     def get_facturas(self):
