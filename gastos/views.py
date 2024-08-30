@@ -1427,7 +1427,7 @@ def convert_excel_gasto_matriz(gastos):
     wb.add_named_style(percent_style)
 
     columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para',
-               'Importe','Fecha Creación','Status','Autorizado por','Facturas','Pagada']
+               'Importe','Fecha Creación','Status','Autorizado por','Facturas','Status de Pago']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1473,6 +1473,11 @@ def convert_excel_gasto_matriz(gastos):
         else:
             created_at_naive = ''
 
+        if gasto.pagada:
+            pagada = "Tiene Pago"
+        else: 
+            pagada ="No tiene pago"
+
         if gasto.facturas.exists():
             facturas = "Con Facturas"
         else:
@@ -1494,10 +1499,6 @@ def convert_excel_gasto_matriz(gastos):
         elif gasto.autorizar:
             autorizado_por =str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
             status = "Autorizado | Falta una autorización"
-            if gasto.facturas:
-                facturas = gasto.facturas.exists()
-            else:
-                facturas = False
         elif gasto.autorizar == False:
             status = "Cancelado"
             autorizado_por = str(gasto.superintendente.staff.staff.last_name)
@@ -1516,6 +1517,7 @@ def convert_excel_gasto_matriz(gastos):
             status,
             autorizado_por,
             facturas,
+            pagada,
             #f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             #created_at_naive,
         ]
