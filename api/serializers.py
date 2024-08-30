@@ -1,9 +1,9 @@
 from rest_framework import serializers
 from dashboard.models import Inventario, Familia, Unidad, Product
-from compras.models import Compra, Proveedor, Proveedor_direcciones
+from compras.models import Compra, Proveedor, Proveedor_direcciones, Estado, Estatus_proveedor
 from requisiciones.models import Requis
 from dashboard.models import Order
-from user.models import Distrito
+from user.models import Distrito, Banco
 
 
 class DistritoSerializer(serializers.ModelSerializer):
@@ -25,17 +25,36 @@ class RequisicionSerializer(serializers.ModelSerializer):
         model = Requis
         fields = ['orden']
 
+class EstatusSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Estatus_proveedor
+        fields = ['nombre']
+
+class EstadoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Estado
+        fields = ['nombre']
+
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
-        fields = ['razon_social','rfc',]
+        fields = ['razon_social','rfc','nombre_comercial']
+
+class BancoSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Banco
+        fields = ['nombre']
 
 class ProveedorDireccionesSerializer(serializers.ModelSerializer):
     nombre = ProveedorSerializer(read_only=True)
-    
+    distrito = DistritoSerializer(read_only=True)
+    estado = EstadoSerializer(read_only=True)
+    estatus = EstatusSerializer(read_only = True)
+    banco = BancoSerializer(read_only= True)
+
     class Meta:
         model = Proveedor_direcciones
-        fields = ['nombre','distrito','domicilio','telefono','banco','clabe','cuenta',]
+        fields = ['distrito','nombre','domicilio','telefono','estado','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
 class CompraSerializer(serializers.ModelSerializer):
     proveedor = ProveedorDireccionesSerializer(read_only=True)
