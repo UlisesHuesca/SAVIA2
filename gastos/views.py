@@ -662,6 +662,21 @@ def pago_gastos_autorizados(request):
         myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
         gastos = myfilter.qs
 
+        for gasto in gastos:
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+
+            proyectos = set()
+            subproyectos = set()
+
+            for articulo in articulos_gasto:
+                if articulo.proyecto:
+                    proyectos.add(str(articulo.proyecto.nombre))
+                if articulo.subproyecto:
+                    subproyectos.add(str(articulo.subproyecto.nombre))
+
+            gasto.proyectos = ', '.join(proyectos)
+            gasto.subproyectos = ', '.join(subproyectos)
+
         p = Paginator(gastos, 50)
         page = request.GET.get('page')
         gastos_list = p.get_page(page)
@@ -1426,7 +1441,7 @@ def convert_excel_gasto_matriz(gastos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para',
+    columns = ['Folio','Fecha Autorización','Distrito','Proyectos','Subproyectos','Comentarios','Colaborador','Solicitado para',
                'Importe','Fecha Creación','Status','Autorizado por','Facturas','Status de Pago']
 
     for col_num in range(len(columns)):
@@ -1506,10 +1521,29 @@ def convert_excel_gasto_matriz(gastos):
             autorizado_por = "Faltan autorizaciones"
             status = "Faltan autorizaciones"
 
+        proyectos = set()
+        subproyectos = set()
+        comentarios = set()
+        articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+        for articulo in articulos_gasto:
+            if articulo.proyecto:
+                proyectos.add(str(articulo.proyecto.nombre))
+            if articulo.subproyecto:
+                subproyectos.add(str(articulo.subproyecto.nombre))
+            if articulo.comentario:
+                comentarios.add(str(articulo.comentario))
+
+        proyectos_str = ', '.join(proyectos)
+        subproyectos_str = ', '.join(subproyectos)
+        comentarios_str = ', '.join(comentarios)
+
         row = [
             gasto.folio,
             autorizado_at_2_naive,
             gasto.distrito.nombre,
+            proyectos_str,
+            subproyectos_str,
+            comentarios_str,
             gasto.staff.staff.staff.first_name + ' ' + gasto.staff.staff.staff.last_name,
             gasto.colaborador.staff.staff.first_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
             gasto.get_total_solicitud,

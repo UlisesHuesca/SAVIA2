@@ -1931,7 +1931,7 @@ def convert_excel_gasto(gastos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para',
+    columns = ['Folio','Fecha Autorización','Distrito','Proyectos','Subproyectos','Colaborador','Solicitado para',
                'Importe','Fecha Creación','Status','Autorizado por','Facturas','Status Pago']
 
     for col_num in range(len(columns)):
@@ -2019,10 +2019,24 @@ def convert_excel_gasto(gastos):
             autorizado_por = "Faltan autorizaciones"
             status = "Faltan autorizaciones"
 
+        proyectos = set()
+        subproyectos = set()
+        articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+        for articulo in articulos_gasto:
+            if articulo.proyecto:
+                proyectos.add(str(articulo.proyecto.nombre))
+            if articulo.subproyecto:
+                subproyectos.add(str(articulo.subproyecto.nombre))
+
+        proyectos_str = ', '.join(proyectos)
+        subproyectos_str = ', '.join(subproyectos)
+
         row = [
             gasto.folio,
             autorizado_at_2_naive,
             gasto.distrito.nombre,
+            proyectos_str,
+            subproyectos_str,
             gasto.staff.staff.staff.first_name + ' ' + gasto.staff.staff.staff.last_name,
             gasto.colaborador.staff.staff.first_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
             gasto.get_total_solicitud,

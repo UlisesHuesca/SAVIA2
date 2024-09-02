@@ -128,6 +128,8 @@
                     <th scope="col">Gasto</th>
                     <th scope="col">Solicitado por</th>
                     <th scope="col">Solicitado para</th>
+                    <th>Proyecto</th>
+                    <th>Subproyecto</th>
                     <th scope="col">Autorizado</th>
                     <th scope="col">Importe Gasto</th>
                     <th scope="col">Pagado</th>
@@ -143,6 +145,8 @@
                     <th scope="row">{{gasto.folio}}</th>
                     <td>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
                     <td>{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
+                    <td>{{gasto.proyectos}}</td>
+                    <td>{{gasto.subproyectos}}</td>
                     <td>{{gasto.approbado_fecha2}} </td>
                     <td>${{gasto.get_total_solicitud|floatformat:2}}</td>
                     <td>${{gasto.monto_pagado|floatformat:2}}</td>
