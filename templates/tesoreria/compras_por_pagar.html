@@ -198,6 +198,7 @@
                     <th scope="col">Detalles</th>
                     <th>Cancelar</th>
                     <th>Para Pago</th>
+                    <th>Parcialidad</th>
                 </tr>
             </thead>
             <tbody>
@@ -230,7 +231,14 @@
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
                     <td>
-                        <input class="oc_checkbox" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}" monto="{{ compra.costo_plus_adicionales|unlocalize }}">
+                        
+                        <input class="oc_checkbox form-check-input" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
+                        
+                    </td>
+                    <td>
+                        <input type="hidden" class="costo_plus_adicionales" value="{{ compra.costo_plus_adicionales|unlocalize }}">
+                        <input type="hidden" class="pagado" value="{{ compra.pagado|unlocalize }}">
+                        <input class="form-control diferencia" type="textbox" name="parcial_{{ compra.id|unlocalize }}" value="">
                     </td>
                 </tr>
                
@@ -308,7 +316,7 @@ document.addEventListener('DOMContentLoaded', function() {
         const layoutPagosButton = document.getElementById('enviar_a_pago_button');
 
         checkboxes.forEach(checkbox => {
-            console.log('Estoy marcando los checkboxes')
+            //console.log('Estoy marcando los checkboxes')
             checkbox.addEventListener('change', updateCountAndSum);
         });
 
@@ -331,7 +339,29 @@ document.addEventListener('DOMContentLoaded', function() {
             // Puedes agregar cualquier lógica adicional aquí antes de enviar el formulario
             document.getElementById('mass_payment_form').submit();
         });
+
+        var costoElements = document.querySelectorAll('.costo_plus_adicionales');
+        var pagadoElements = document.querySelectorAll('.pagado');
+        var diferenciaElements = document.querySelectorAll('.diferencia');
+        //console.log(diferenciaElements)
+
+        costoElements.forEach((costoElement, index) => {
+        var pagadoElement = pagadoElements[index];
+        var checkbox = checkboxes[index];
+
+        if (pagadoElement && checkbox) {
+            var costoPlusAdcionales = parseFloat(costoElement.value) || 0;
+            var pagado = parseFloat(pagadoElement.value) || 0;
+            var diferencia = costoPlusAdcionales - pagado;
+
+            diferenciaElements[index].value = diferencia
+            
+        } else {
+            console.error('Elemento pagado o checkbox no encontrado en el índice: ', index);
+        }
+        });
     });
+</script>
 
 
 </script>

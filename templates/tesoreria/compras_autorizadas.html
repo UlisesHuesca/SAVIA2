@@ -178,6 +178,7 @@
                     <th  class="d-none d-md-table-cell">Autorizado</th>
                     <th scope="col">Proveedor</th>
                     <th scope="col">Importe OC</th>
+                    <th>Parcialidad</th>
                     <th> Flete</th>
                     <th class="d-none d-md-table-cell">Moneda</th>
                     <th class="d-none d-md-table-cell">Pagado</th>
@@ -197,7 +198,8 @@
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
                     <td class="d-none d-md-table-cell">{{compra.autorizado_at_2}}</td>
                     <td>{{compra.proveedor}}</td>
-                    <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
+                    <td class="d-none d-md-table-cell">${{compra.costo_plus_adicionales|floatformat:2}}</td>
+                    <td>{{compra.parcial}}</td>
                     <td>${{compra.costo_fletes}}</td>
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
