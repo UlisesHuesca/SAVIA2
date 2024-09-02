@@ -1082,7 +1082,9 @@ def convert_excel_matriz_proyectos(proyectos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['ID','Proyectos','Descripción','Cliente','Status de Entrega','Monto','Gastado Salidas','Suma de Compras',
+
+    #Se quita la columna gastado salidas por el momento. 'Suma de Compras','Cliente',
+    columns = ['ID','Proyectos','Descripción','Status de Entrega','Monto',
               'Pagado Compras','Pagado Gastos','Creado']
 
     for col_num in range(len(columns)):
@@ -1103,13 +1105,12 @@ def convert_excel_matriz_proyectos(proyectos):
             p.id,
             p.nombre,
             p.descripcion,
-            p.cliente.nombre if p.cliente else '', 
-            p.status_de_entrega, 
+            p.status_de_entrega if p.status_de_entrega is not None else "ND", 
             p.get_projects_total if p.get_projects_total is not None else 0, 
-            p.suma_salidas if p.suma_salidas is not None else 0,
-            p.suma_comprat if p.suma_comprat is not None else 0, 
-            p.suma_pagos if p.suma_pagos is not None else 0, 
-            p.suma_gastos if p.suma_gastos is not None else 0, 
+            #p.suma_salidas if p.suma_salidas is not None else 0,
+            p.get_total_comprado if p.get_total_comprado is not None else 0, 
+            p.get_total_gastado if p.get_total_gastado is not None else 0, 
+            #p.suma_gastos if p.suma_gastos is not None else 0, 
             p.created_at
         ) 
         for p in proyectos
@@ -1119,9 +1120,9 @@ def convert_excel_matriz_proyectos(proyectos):
         row_num += 1
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 10:
+            if col_num == 7:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [5,6,7,8,9]:
+            if col_num in [5,6]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
     
     sheet = wb['Sheet']
