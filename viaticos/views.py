@@ -1276,7 +1276,10 @@ def convert_excel_viatico(viaticos):
                 else:
                     autorizado_por = "NR"
             else:
-                autorizado_por = str(viatico.gerente.staff.staff.first_name) + ' ' + str(viatico.gerente.staff.staff.last_name)
+                if viatico.gerente:
+                    autorizado_por = str(viatico.gerente.staff.staff.first_name) + ' ' + str(viatico.gerente.staff.staff.last_name)
+                else:
+                    autorizado_por = "NR"
         elif viatico.autorizar2 == False:
             status = "Cancelado"
             if viatico.distrito.nombre == "MATRIZ":

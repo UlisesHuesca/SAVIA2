@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -81,6 +82,7 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     #'django.contrib.staticfiles.middleware.StaticFilesMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -261,7 +263,9 @@ MEDIA_ROOT = '/home/savia/images'
 MEDIA_URL = '/images/'
 
 
-
+CORS_ALLOWED_ORIGINS = [
+    'https://uliseshuesca.pythonanywhere.com/',
+]
 
 #STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 #Esta etiqueta es para redigir cuando te logeas desde settings
