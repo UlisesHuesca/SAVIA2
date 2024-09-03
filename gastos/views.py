@@ -1562,9 +1562,9 @@ def convert_excel_gasto_matriz(gastos):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num ==1 or col_num == 6:
+            if col_num ==1 or col_num == 9:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 5:
+            if col_num == 8:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
