@@ -426,7 +426,8 @@ def staff(request):
 
 @login_required(login_url='user-login')
 def product(request):
-    usuario = Profile.objects.get(staff__staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
     items = Product.objects.filter(completado = True).order_by('codigo')
 
     myfilter=ProductFilter(request.GET, queryset=items)

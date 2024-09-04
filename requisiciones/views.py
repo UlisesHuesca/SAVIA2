@@ -717,7 +717,8 @@ def update_salida(request):
         
     if action == "remove":
         item = Salidas.objects.get(vale_salida = vale_salida, id = id_salida)
-        if item.entrada != 0:
+        id_entrada = item.entrada
+        if item.entrada != None:
             entrada = EntradaArticulo.objects.get(id=item.entrada)
             inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas + item.cantidad
             entrada.cantidad_por_surtir = entrada.cantidad_por_surtir + item.cantidad
