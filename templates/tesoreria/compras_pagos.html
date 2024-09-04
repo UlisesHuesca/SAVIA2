@@ -111,18 +111,24 @@
                     <thead>
                         <tr>
                         <th scope="col">Importe Compra</th>
-                        <th id="importe" value={{compra.costo_plus_adicionales}} moneda={{compra.moneda.nombre}} scope="col">${{compra.costo_oc|floatformat:2}}</th>
+                        <th id="importe" value={{compra.costo_plus_adicionales}} moneda={{compra.moneda.nombre}} scope="col"> ${{compra.costo_oc|floatformat:4}}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <th scope="col">Impuestos</th>
-                            <th scope="col">${{compra.costo_iva|floatformat:2}}</th>
+                            <th scope="col"> ${{compra.costo_iva|floatformat:4}}</th>
                         </tr>
                         {% if compra.impuestos %}
                         <tr>
                             <th scope="col">Impuestos Adicionales</th>
-                            <th scope="col">${{compra.impuestos}}</th>
+                            <th scope="col"> ${{compra.impuestos|floatformat:4}}</th>
+                        </tr>
+                        {% endif %}
+                        {% if compra.retencion %}
+                        <tr>
+                            <th scope="col">Retención</th>
+                            <th scope="col">-${{compra.retencion|floatformat:4}}</th>
                         </tr>
                         {% endif %}
                         {% if compra.costo_fletes > 0 %}
@@ -133,17 +139,21 @@
                         {% endif %}
                         <tr>
                             <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:3}}</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{monto|floatformat:4}}</th>
                         </tr>
                         {% if suma_pago_usd > 0 %}
                         <tr>
                             <th scope="col">Pagado USD:</th>
-                            <th id="total" value={{suma_pago_usd}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{suma_pago_usd|floatformat:3}}</th>
+                            <th id="total" value={{suma_pago_usd}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{suma_pago_usd|floatformat:4}}</th>
                         </tr>
                         {% endif %}
                         <tr>
                             <th>Remanente:</th>
-                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:3}}</th>
+                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:4}}</th>
+                        </tr>
+                        <tr>
+                            <th>Parcialidad</th>
+                            <th  style="color:#3e92cc">${{compra.parcial|floatformat:4}}</th>
                         </tr>
                     </tbody>
                 </table>

@@ -232,13 +232,13 @@
                     </td>
                     <td>
                         
-                        <input class="oc_checkbox form-check-input" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
+                        <input class="oc_checkbox form-check-input" data-id="{{ compra.id }}" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
                         
                     </td>
                     <td>
                         <input type="hidden" class="costo_plus_adicionales" value="{{ compra.costo_plus_adicionales|unlocalize }}">
-                        <input type="hidden" class="pagado" value="{{ compra.pagado|unlocalize }}">
-                        <input class="form-control diferencia" type="textbox" name="parcial_{{ compra.id|unlocalize }}" value="">
+                        <input type="hidden" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
+                        <input class="form-control diferencia" type="textbox" data-id="{{ compra.id }}" name="parcial_{{ compra.id|unlocalize }}" value="">
                     </td>
                 </tr>
                
@@ -314,6 +314,10 @@ document.addEventListener('DOMContentLoaded', function() {
         const ocCountElement = document.getElementById('oc_count');
         const ocSumElement = document.getElementById('oc_sum');
         const layoutPagosButton = document.getElementById('enviar_a_pago_button');
+        var diferenciaElements = document.querySelectorAll('.diferencia');
+        
+        // Cargar el estado de los checkboxes desde localStorage
+        loadStateFromLocalStorage();
 
         checkboxes.forEach(checkbox => {
             //console.log('Estoy marcando los checkboxes')
@@ -324,46 +328,100 @@ document.addEventListener('DOMContentLoaded', function() {
             let count = 0;
             let sum = 0;
 
-            checkboxes.forEach(checkbox => {
+            checkboxes.forEach((checkbox, index) => {
+                const id = checkbox.getAttribute('data-id');
+                console.log(id)
                 if (checkbox.checked) {
                     count++;
-                    sum += parseFloat(checkbox.getAttribute('monto'));
+                    const diferenciaElement = document.querySelector();
+                    if (diferenciaElement) {  // Verifica si el elemento existe
+                    let monto = parseFloat(diferenciaElement.value) || 0;
+                    sum += monto;
+                    console.log(monto, sum)
+                    }
                 }
+                
             });
 
             ocCountElement.textContent = count;
             ocSumElement.textContent = sum.toFixed(2);
+            // Guardar el estado actual en localStorage
+            saveStateToLocalStorage();
         }
 
         layoutPagosButton.addEventListener('click', function(event) {
+            // Limpiar el localStorage cuando se presiona el botón
+            localStorage.removeItem('oc_selected_state');
+            localStorage.removeItem('oc_sum_count');
             // Puedes agregar cualquier lógica adicional aquí antes de enviar el formulario
             document.getElementById('mass_payment_form').submit();
         });
 
         var costoElements = document.querySelectorAll('.costo_plus_adicionales');
         var pagadoElements = document.querySelectorAll('.pagado');
-        var diferenciaElements = document.querySelectorAll('.diferencia');
+        
         //console.log(diferenciaElements)
 
         costoElements.forEach((costoElement, index) => {
         var pagadoElement = pagadoElements[index];
+        //console.log(pagadoElements[index])
         var checkbox = checkboxes[index];
 
         if (pagadoElement && checkbox) {
             var costoPlusAdcionales = parseFloat(costoElement.value) || 0;
             var pagado = parseFloat(pagadoElement.value) || 0;
             var diferencia = costoPlusAdcionales - pagado;
-
+            //console.log(diferencia,"pagado:", pagado)
             diferenciaElements[index].value = diferencia
             
         } else {
             console.error('Elemento pagado o checkbox no encontrado en el índice: ', index);
         }
         });
+
+        function saveStateToLocalStorage() {
+            // Cargar el estado anterior desde localStorage
+            const previousState = JSON.parse(localStorage.getItem('oc_selected_state')) || {};
+
+            // Crear un nuevo objeto de estado que combine el anterior con el actual
+            const selectedState = { ...previousState };
+
+            checkboxes.forEach(checkbox => {
+            const id = checkbox.getAttribute('data-id');
+            selectedState[id] = checkbox.checked;  // Asignar el estado del checkbox al objeto usando el ID como clave
+        });
+
+        const sumCountState = {
+            count: ocCountElement.textContent,
+            sum: ocSumElement.textContent
+        };
+
+        localStorage.setItem('oc_selected_state', JSON.stringify(selectedState));
+        localStorage.setItem('oc_sum_count', JSON.stringify(sumCountState));
+    }
+
+    function loadStateFromLocalStorage() {
+        const selectedState = JSON.parse(localStorage.getItem('oc_selected_state'));
+        const sumCountState = JSON.parse(localStorage.getItem('oc_sum_count'));
+
+        if (selectedState) {
+            checkboxes.forEach((checkbox, index) => {
+                const id = checkbox.getAttribute('data-id');
+                if (selectedState.hasOwnProperty(id)) {
+                    checkbox.checked = selectedState[id];
+                }
+            });
+        }
+
+        if (sumCountState) {
+            ocCountElement.textContent = sumCountState.count;
+            ocSumElement.textContent = sumCountState.sum;
+        }
+        updateCountAndSum();
+    }
+
+
     });
-</script>
-
-
 </script>
 {% endblock %}
 </body>

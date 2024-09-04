@@ -394,7 +394,7 @@ def compras_pagos(request, pk):
             cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)
             #La utilizo para sacar la información de todos los pagos relacionados con esa cuenta y sumarlos
 
-            # Actualizo el saldo de la cuenta
+            # Actualizo el saldo de la cuenta, no es necesario actualizar el saldo de la cuenta
             monto_actual = pago.monto
             if compra.moneda.nombre == "PESOS":
                 sub.gastado = sub.gastado + monto_actual
@@ -411,11 +411,20 @@ def compras_pagos(request, pk):
             monto_pagado= monto_actual + suma_pago
             compra.monto_pagado = monto_pagado
             costo_oc = compra.costo_plus_adicionales
+            print('monto_pagado:',monto_pagado,type(monto_pagado))
+            print('costo_oc:',costo_oc,type(costo_oc))
+            print('monto_actual:',monto_actual, type(monto_actual))
+            print('suma pago:',suma_pago, type(suma_pago))
+
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
+               
             elif round(monto_pagado,2) <= round(costo_oc,2): #si el monto_total pagado <= al costo de la oc 
-                if round(monto_pagado,2) == round(costo_oc,2):
+                if round(monto_pagado,2) == round(costo_oc,2): #si el monto_pagado es igual al costo_oc entonces la compra está pagada
                     compra.pagada= True
+                if round(compra.parcial,2) == round(monto_pagado,2): #Si el monto de lo pagado es igual al monto de la compra parcial, la compra parcial en la ota cvista debe ser mayor al costo de lo pagado
+                    compra.parcial = 0
+                    compra.para_pago = False
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
@@ -452,6 +461,7 @@ def compras_pagos(request, pk):
                     headers={'Content-Type': 'text/html'}
                     )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
+                    print('Aquí enviaría el correo')
                 #    email.send()
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'Correo de notificación 1: No enviado'
@@ -502,7 +512,7 @@ def compras_pagos(request, pk):
                             )
                             email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
                     #        email.send()
-                    messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                   
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
                     messages.warning(request, error_message)
@@ -573,21 +583,21 @@ def compras_pagos(request, pk):
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
                     messages.warning(request, error_message)
-                            
+           
             pago.save()
             compra.save()
             form.save()
             sub.save()
             cuenta.save()
-                
+            messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
             return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
             #elif monto_pagado > compra.costo_oc:
             #    messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_pagado} > {compra.costo_oc}')
         else:
             form = PagoForm()
             messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
-    else:
-        messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
+    #else:
+    #    messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
 
     context= {
         'compra':compra,
