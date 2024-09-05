@@ -74,8 +74,12 @@ from user.decorators import perfil_seleccionado_required
 def compras_autorizadas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    if usuario.tipo.tesoreria == True:
-        compras = Compra.objects.filter(autorizado2=True, pagada=False, req__orden__distrito = usuario.distritos).order_by('-folio')
+    if usuario.tipo.tesoreria:
+        if usuario.tipo.rh:
+            compras = Compra.objects.none()
+        else: 
+            compras = Compra.objects.filter(autorizado2=True, pagada=False, req__orden__distrito = usuario.distritos).order_by('-folio')
+    
    
     
     #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')

@@ -527,12 +527,13 @@ def viaticos_autorizados_pago(request):
     perfil = colaborador.get(id = pk_perfil)
 
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    #if perfil.tipo.superintendente == True:
-    #    solicitudes = Solicitud_viatico.objects.filter(complete=True, staff__distrito=perfil.distrito).order_by('-folio')
-    #elif perfil.tipo.supervisor == True:
-    #    solicitudes = Solicitud_viatico.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
-    #else:
-    viaticos = Solicitud_Viatico.objects.filter(complete=True, distrito = perfil.distritos, autorizar = True, autorizar2 = True, pagada=False).order_by('-folio')
+    if perfil.tipo.tesoreria:
+        if perfil.tipo.rh:
+            viaticos = Solicitud_Viatico.objects.none()
+        else:
+            viaticos = Solicitud_Viatico.objects.filter(complete=True, distrito = perfil.distritos, autorizar = True, autorizar2 = True, pagada=False).order_by('-folio')
+    
+       
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs

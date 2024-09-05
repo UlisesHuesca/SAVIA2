@@ -43,6 +43,7 @@ class Solicitud_Gasto(models.Model):
     sector = models.ForeignKey(Sector, on_delete=models.CASCADE,null=True )
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
     proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, blank = True)
+    verificacion_facturas = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='rh')
 
     class Meta:
         unique_together = ('folio', 'distrito',)

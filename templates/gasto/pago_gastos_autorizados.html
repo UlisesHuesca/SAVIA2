@@ -134,6 +134,7 @@
                     <th scope="col">Importe Gasto</th>
                     <th scope="col">Pagado</th>
                     <th scope="col">Acción</th>
+                    <th>Status de Facturas</th>
                     <th scope="col">Comprobación</th>
                     <th>PDF</th>
                     <th>Cancelar</th>
@@ -158,6 +159,14 @@
                             </li>
                         </ul>
                         {% endif %}
+                    </td>
+                    <td>
+                        {% if gasto.facturas_completas %}
+                        <span class="badge bg-primary">Validadas</span>
+                        {% else %}
+                        <span class="badge bg-warning">No Validadas Aún</span> 
+                        {% endif %}
+                    </td>
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">

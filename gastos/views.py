@@ -658,7 +658,10 @@ def pago_gastos_autorizados(request):
     usuario = Profile.objects.get(id = pk_perfil)
 
     if usuario.tipo.tesoreria == True:
-        gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
+        if usuario.tipo.rh == True:
+            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYO DE MANTENIMIENTO")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
+        else:
+            gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
         myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
         gastos = myfilter.qs
 
@@ -793,7 +796,9 @@ def matriz_facturas_gasto(request, pk):
         form = Facturas_Gastos_Form(request.POST, instance=gasto)
         if "btn_factura_completa" in request.POST:
             if form.is_valid():
-                form.save()
+                gasto = form.save(commit=False)
+                gasto.verificacion_facturas = usuario
+                gasto.save()
                 #messages.success(request,'Haz cambiado el status de facturas completas')
                 return redirect(next_url) 
             else:
