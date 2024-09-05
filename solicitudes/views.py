@@ -338,61 +338,65 @@ def checkout(request):
             lineas_productos = []
             order.folio = folio_number
             productos_html = '<ul>'
-            if usuario.tipo.supervisor == True:
+            if usuario.tipo.supervisor == True: #Si el usuario es supervisor
                
                 for producto in productos:
-
                     productos_html += f'<li>{producto.producto.producto.nombre}: {producto.cantidad}.</li>'
                     # We fetch inventory product corresponding to product (that's why we use product.id)
                     # We create a new product line in a new database to control the ArticlestoDeliver (ArticulosparaSurtir)
                     prod_inventario = Inventario.objects.get(id = producto.producto.id)
                     ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
-                    #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
-                    if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":  #si la cantidad solicitada es menor que la cantidad en inventario
-                        prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
-                        prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
-                        prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
-                        ordensurtir.cantidad = producto.cantidad
-                        ordensurtir.precio = prod_inventario.price
-                        ordensurtir.surtir = True
-                        ordensurtir.requisitar = False
-                        ordensurtir.save()
-                        prod_inventario.save()
-                    elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False: #si la cantidad solicitada es mayor que la cantidad en inventario
-                        ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
-                        ordensurtir.precio = prod_inventario.price
-                        ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
-                        #if prod_inventario.cantidad_apartada == None: #Esto es solo para evitar Nulls
-                        #    prod_inventario.cantidad_apartada = 0
-                        prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
-                        prod_inventario.cantidad = 0
-                        if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
+                   
+                    if not ordensurtir.procesado:
+                        #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
+                        if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":  #si la cantidad solicitada es menor que la cantidad en inventario
+                            prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
+                            prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
+                            ordensurtir.cantidad = producto.cantidad
+                            ordensurtir.precio = prod_inventario.price
+                            ordensurtir.procesado = True
                             ordensurtir.surtir = True
-                        ordensurtir.requisitar = True
-                        order.requisitar = True
-                        prod_inventario.save()
-                        ordensurtir.save()
-                    elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or producto.producto.producto.servicio == True:
-                        ordensurtir.requisitar = True
-                        ordensurtir.cantidad_requisitar = producto.cantidad
-                        #order.requisitar = True
-                        print(producto.producto.producto.servicio)
-                        if producto.producto.producto.servicio == True:
-                            requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-                            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad, almacenista = usuario)
-                            #requis = Requis.objects.filter(orden__distrito = usuario.distritos, complete = True)
-                            #last_requi = requis.order_by('-folio').first()
-                            max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-                            requi.folio = max_folio + 1
-                            numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
-                            if productos.count() == numero_servicios: 
-                                order.requisitar=False
-                                order.requisitado = True
                             ordensurtir.requisitar = False
-                            requi.save()
-                            requitem.save()
-                        ordensurtir.save()
-                        order.save()
+                            prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id}|{order.folio} | S{ordensurtir.cantidad} cond:1'
+                            ordensurtir.save()
+                            prod_inventario.save()
+                        elif prod_inventario.cantidad < producto.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False: #si la cantidad solicitada es mayor que la cantidad en inventario
+                            ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
+                            ordensurtir.precio = prod_inventario.price
+                            ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
+                            #if prod_inventario.cantidad_apartada == None: #Esto es solo para evitar Nulls
+                            #    prod_inventario.cantidad_apartada = 0
+                            prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
+                            prod_inventario.cantidad = 0
+                            if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
+                                ordensurtir.surtir = True
+                            ordensurtir.requisitar = True
+                            order.requisitar = True
+                            ordensurtir.procesado = True
+                            prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id}|{order.folio} | S{ordensurtir.cantidad} R{ordensurtir.cantidad_requisitar} cond:2'
+                            prod_inventario.save()
+                            ordensurtir.save()
+                        elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or producto.producto.producto.servicio == True:
+                            ordensurtir.requisitar = True
+                            ordensurtir.cantidad_requisitar = producto.cantidad
+                            #order.requisitar = True
+                            print(producto.producto.producto.servicio)
+                            if producto.producto.producto.servicio == True:
+                                requi, created = Requis.objects.get_or_create(complete = True, orden = order)
+                                requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad, almacenista = usuario)
+                                #requis = Requis.objects.filter(orden__distrito = usuario.distritos, complete = True)
+                                #last_requi = requis.order_by('-folio').first()
+                                max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+                                requi.folio = max_folio + 1
+                                numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
+                                if productos.count() == numero_servicios: 
+                                    order.requisitar=False
+                                    order.requisitado = True
+                                ordensurtir.requisitar = False
+                                requi.save()
+                                requitem.save()
+                            ordensurtir.save()
+                            order.save()
                 order.autorizar = True
                 order.approved_at = date.today()
                 order.approved_at_time = datetime.now().time()
