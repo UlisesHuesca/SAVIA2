@@ -307,3 +307,4 @@ CELERY_RESULT_BACKEND = 'rpc://'
 #USE_X_FORWARDED_HOST = True
 #SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB, ajusta el valor según lo que necesites

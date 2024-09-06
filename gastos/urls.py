@@ -26,4 +26,5 @@ urlpatterns = [
     path('reporte_entradas_por_gasto/', views.entradas_por_gasto, name='reporte-entradas-gasto'),
     path('gasto/delete_articulo_entrada/<int:pk>', views.delete_articulo_entrada, name='delete-articulo-entrada'),
     path('gasto/render_gasto/<int:pk>', views.descargar_pdf_gasto, name='descargar-pdf-gasto'),
+    path('factura_cfdi_gasto/<int:pk>/', views.generar_cfdi_gasto, name='generar_cfdi_gasto'),
     ]
