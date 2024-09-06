@@ -548,7 +548,7 @@ def compras_pagos(request, pk):
                 
                 return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
             elif round(monto_total,2) > round(costo_oc,2):
-                messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {compra.costo_oc}')
+                messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {costo_oc}')
             else:
                 form = PagoForm()
                 messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
