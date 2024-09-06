@@ -2126,16 +2126,16 @@ def generar_pdf(compra):
     elif compra.impuestos and compra.retencion:
         c.drawRightString(montos_align,160,'Total:')
         c.drawRightString(montos_align + 90,160,'$ ' + str(total))
-    elif compra.impuestos or compra.retencion or compra.costo_fletes:
+    elif compra.impuestos or compra.retencion:
         c.drawRightString(montos_align,170,'Total:')
         c.drawRightString(montos_align + 90,170,'$ ' + str(total))
 
     if compra.costo_fletes:
         importe_neto = importe_neto + compra.costo_fletes
-        c.drawRightString(montos_align,160,'Total:')
+        c.drawRightString(montos_align,170,'Total:')
         c.drawRightString(montos_align,180,'Costo fletes:')
         c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
-        c.drawRightString(montos_align + 90,160,'$ ' + str(total))
+        c.drawRightString(montos_align + 90,170,'$ ' + str(total))
     
     
     c.setFillColor(prussian_blue)
