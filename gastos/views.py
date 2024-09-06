@@ -11,7 +11,7 @@ from django.conf import settings
 import logging
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
-from .filters import Solicitud_Gasto_Filter
+from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
@@ -72,7 +72,7 @@ def crear_gasto(request):
         superintendentes = colaborador.filter(staff =  usuario.staff)  
     else:
         superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
-    
+
     proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
@@ -1679,3 +1679,37 @@ def convert_excel_matriz_gastos(articulos_comprados):
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
     return response
+
+def entradas_por_gasto(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    entradas = Conceptos_Entradas.objects.filter(completo=True).order_by('-id')
+    myfilter = Conceptos_EntradasFilter(request.GET, queryset=entradas)
+    entradas = myfilter.qs
+   
+    entradas_data = list(entradas.values())
+
+    #Set up pagination
+    p = Paginator(entradas, 50)
+    page = request.GET.get('page')
+    entradas_list = p.get_page(page)
+
+    #if request.method == "POST" and 'btnExcel' in request.POST:
+        #print(entradas)
+    #    return convert_entradas_to_xls2(entradas)
+
+    context = {
+        'entradas_list':entradas_list,
+        'entradas':entradas,
+        'myfilter':myfilter,
+        }
+    #task_id_entradas =   request.session.get('task_id_entradas')
+
+    #if request.method == "POST" and 'btnExcel' in request.POST:
+        #if not task_id_entradas:
+            #task =  convert_entradas_to_xls_task.delay(entradas_data)
+            #task_id = task.id
+            #request.session['task_id_entradas'] = task_id
+            #context['task_id_entradas'] = task_id 
+
+    return render(request,'gasto/reporte_entradas_gasto.html', context)

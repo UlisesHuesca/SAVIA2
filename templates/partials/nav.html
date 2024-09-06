@@ -435,6 +435,7 @@
                             <div class="d-none">
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'reporte-entradas' %}">Matriz Entradas</a>
+                            <a class="dropdown-item" href="{% url 'reporte-entradas-gasto' %}">Matriz Entradas por Gasto</a>
                             <a class="dropdown-item" href="{% url 'reporte-salidas' %}">Matriz Salidas</a>
                             </div>
                         {% if usuario.tipo.compras == True or usuario.tipo.nombre == "Gerente" %}

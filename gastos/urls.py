@@ -23,6 +23,7 @@ urlpatterns = [
     path('gasto/facturas_gasto/<int:pk>', views.facturas_gasto, name='facturas-gasto'),
     path('gasto/matriz_gasto_entrada/', views.matriz_gasto_entrada, name ='matriz-gasto-entrada'),
     path('gasto/entrada/<int:pk>', views.gasto_entrada, name='gasto-entrada'),
+    path('reporte_entradas_por_gasto/', views.entradas_por_gasto, name='reporte-entradas-gasto'),
     path('gasto/delete_articulo_entrada/<int:pk>', views.delete_articulo_entrada, name='delete-articulo-entrada'),
     path('gasto/render_gasto/<int:pk>', views.descargar_pdf_gasto, name='descargar-pdf-gasto'),
     ]

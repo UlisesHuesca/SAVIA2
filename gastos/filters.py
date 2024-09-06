@@ -1,5 +1,5 @@
 import django_filters
-from .models import Solicitud_Gasto
+from .models import Solicitud_Gasto, Conceptos_Entradas
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
 
@@ -33,3 +33,19 @@ class Solicitud_Gasto_Filter(django_filters.FilterSet):
             return queryset.filter(folio=value)
         else:
             return queryset.filter(folio__icontains=value)
+
+class Conceptos_EntradasFilter(django_filters.FilterSet):
+    producto = CharFilter(field_name='concepto_material__producto__nombre', lookup_expr='icontains')
+    almacenista = CharFilter(method='almacenistaa', lookup_expr='icontains')
+    folio = CharFilter(field_name='entrada__gasto__gasto__folio', lookup_expr='icontains')
+    solicitado = CharFilter(method='solicitadoo', lookup_expr='icontains')
+
+    class Meta:
+        model = Conceptos_Entradas
+        fields = ['concepto_material','entrada',]
+
+    def almacenistaa(self, queryset, name, value):
+        return queryset.filter(Q(entrada__almacenista__staff__staff__first_name__icontains = value) | Q(entrada__almacenista__staff__staff__last_name__icontains = value))
+    
+    def solicitadoo(self, queryset, name, value):
+        return queryset.filter(Q(entrada__gasto__staff__staff__staff__first_name__icontains = value) | Q(entrada__gasto__staff__staff__staff__last_name__icontains = value))
