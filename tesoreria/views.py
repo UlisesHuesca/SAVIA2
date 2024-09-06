@@ -378,8 +378,7 @@ def compras_pagos(request, pk):
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
             elif round(monto_total,2) <= round(costo_oc,2):
-                if round(monto_total,2) == round(costo_oc,2):
-                    compra.pagada= True
+               
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
@@ -390,6 +389,7 @@ def compras_pagos(request, pk):
                 image_base64 = get_image_base64(img_path)
                 logo_v_base64 = get_image_base64(img_path2)
                 if round(monto_total,2) == round(costo_oc,2):
+                    compra.pagada= True
                     #if compra.cond_de_pago.nombre == "CONTADO":
                     pagos = Pago.objects.filter(oc=compra, hecho=True)
                     html_message = f"""
@@ -547,7 +547,7 @@ def compras_pagos(request, pk):
                 cuenta.save()
                 
                 return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
-            elif monto_total > compra.costo_oc:
+            elif round(monto_total,2) > round(costo_oc,2):
                 messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {compra.costo_oc}')
             else:
                 form = PagoForm()
