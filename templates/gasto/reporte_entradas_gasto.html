@@ -136,6 +136,7 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th>ID</th>
+                    <th>Vale</th>
                     <th class="d-none d-lg-table-cell">Folio de Gasto</th>
                     <th scope="col-sm">Producto</th>
                     <th scope="col-sm">Concepto Material</th>
@@ -151,6 +152,7 @@
                 {% for entrada in entradas_list %}
                 <tr>
                     <th>{{entrada.id}}</th>
+                    <th>{{entrada.entrada.gasto.gasto.folio}}</th>
                     <td class="d-none d-lg-table-cell">{{entrada.entrada.gasto.gasto.folio}}</td>
                     <th scope="row">{{entrada.entrada.gasto.producto.nombre}}</th>
                     <th scope="row">{{entrada.concepto_material.producto.nombre}}</th>
@@ -159,7 +161,7 @@
                     <th>{{entrada.entrada.almacenista.staff.staff.first_name}} {{entrada.entrada.almacenista.staff.staff.last_name}}</th>
                     <td>{{entrada.entrada.gasto.proyecto.nombre}}</td>
                     <td>{{entrada.entrada.gasto.subproyecto.nombre}}</td>
-                    <td>{{ entrada.entrada.gasto.total_parcial|floatformat:2}}</td>
+                    <td>{{entrada.get_subtotal|floatformat:2}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
