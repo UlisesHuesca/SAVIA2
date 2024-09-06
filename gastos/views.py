@@ -1686,7 +1686,7 @@ def convert_excel_matriz_gastos(articulos_comprados):
 def entradas_por_gasto(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    entradas = Conceptos_Entradas.objects.filter(completo=True).order_by('-id')
+    entradas = Conceptos_Entradas.objects.filter(entrada__completo=True, concepto_material__producto__servicio=False, entrada__gasto__gasto__distrito = usuario.distritos).order_by('-id')
     myfilter = Conceptos_EntradasFilter(request.GET, queryset=entradas)
     entradas = myfilter.qs
    
