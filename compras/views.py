@@ -2467,7 +2467,10 @@ def generar_pdf_proveedor(request, pk):
     c.drawString(100,caja_proveedor-20, proveedor.nombre.razon_social)
     c.drawString(100,caja_proveedor-40, proveedor.banco.nombre)
     c.drawString(100,caja_proveedor-60, proveedor.clabe)
-    c.drawString(100,caja_proveedor-80, proveedor.contratocie)
+    if proveedor.contratocie is None:
+        c.drawString(100,caja_proveedor-80, '')
+    else:
+        c.drawString(100,caja_proveedor-80, proveedor.contratocie)
     #Segunda columna
     c.drawString(370,caja_proveedor-40, proveedor.cuenta)
     c.drawString(370,caja_proveedor-60, 'NR')
@@ -2501,7 +2504,10 @@ def generar_pdf_proveedor(request, pk):
     #Primera columna
     c.drawString(100,segunda_tabla-20, proveedor.nombre.razon_social)
     c.drawString(100,segunda_tabla-40, proveedor.banco.nombre)
-    c.drawString(100,segunda_tabla-60, proveedor.spid)
+    if proveedor.spid is None:
+        c.drawString(100,segunda_tabla-60, '')
+    else:
+        c.drawString(100,segunda_tabla-60, proveedor.spid)
     #Segunda columna
     c.drawString(370,segunda_tabla-40, proveedor.cuenta)
     if proveedor.swift:
