@@ -21,7 +21,7 @@ import json
 import decimal
 import os
 from datetime import date, datetime
-from user.decorators import perfil_seleccionado_required
+from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from io import BytesIO
 from decimal import Decimal, ROUND_DOWN
 
@@ -157,6 +157,7 @@ def devolucion_a_proveedor(request):
     return render(request, 'entradas/devolucion_a_proveedor.html', context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('almacenista')
 def articulos_entrada(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
