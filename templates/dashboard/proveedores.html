@@ -77,8 +77,9 @@
                         <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
-                <hr>
                 </form>
+                {% if usuario.tipo.nombre == "PROVEEDORES" %}
+                <hr>
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
                             {% if usuario.tipo.nombre == "Admin" %}
@@ -96,6 +97,7 @@
                         </li>
 
                     </ul>
+                {% endif %}
             </div>
         </div>
         <div class="card col-1 me-2">
@@ -139,7 +141,9 @@
                     <th scope="col">Razón Social</th>
                     <th scope="col">Nombre Comercial</th>
                     <th scope="col">RFC</th>
+                    {% if usuario.tipo.nombre == "PROVEEDORES" %}
                     <th scope="col">Edición</th>
+                    {% endif %}
                     <th scope="col">Direcciones</th>
                 </tr>
             </thead>
@@ -154,9 +158,11 @@
                     <td>{{proveedor.nombre_comercial}}</td>
                     {% endif %}
                     <td>{{proveedor.rfc}}</td>
+                    {% if usuario.tipo.nombre == "PROVEEDORES" %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
+                    {% endif %}
                     <td>
                         <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'proveedor-direcciones' proveedor.id %}"><i class="fa-solid fa-location-dot"></i></a>
                     </td>
