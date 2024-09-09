@@ -169,6 +169,26 @@
                             </div>
                         </div> 
                     </div>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.referencia|add_class:"form-control"|append_attr:"placeholder=Referencia"}}
+                                <label for="id_lugar_partida">Referencia</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
+                                <label for="id_lugar_partida">Convenio</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row ms-3 my-2">
                                     <div class="form-check form-switch col-sm">
                                     <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>

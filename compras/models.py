@@ -84,6 +84,8 @@ class Proveedor_direcciones(models.Model):
     producto = models.BooleanField(default=False)
     arrendamiento = models.BooleanField(default=False)
     moneda = models.ForeignKey(Moneda, on_delete = models.CASCADE, null=True)
+    referencia = models.CharField(max_length=20, null=True, blank = True)
+    convenio = models.CharField(max_length=20, null=True, blank = True)
 
     def __str__(self):
         return f'{self.nombre}'

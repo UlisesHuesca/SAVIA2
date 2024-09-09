@@ -184,24 +184,44 @@
                     </div>
                     </div>
                     <div class="row">
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
-                            <label for="id_lugar_partida">Días de crédito*</label>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{f.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
+                                <label for="id_lugar_partida">Días de crédito*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{f.estatus|add_class:"form-control"|append_attr:"placeholder=Status"}}
+                                <label for="id_lugar_partida">Status*</label>
+                                </div>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.estatus|add_class:"form-control"|append_attr:"placeholder=Status"}}
-                            <label for="id_lugar_partida">Status*</label>
+                    <div class="row">
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{f.referencia|add_class:"form-control"|append_attr:"placeholder=Referencia"}}
+                                <label for="id_lugar_partida">Referencia</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{f.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
+                                <label for="id_lugar_partida">Convenio</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="row ms-3 my-2">
                         <div class="form-check form-switch col-sm">
