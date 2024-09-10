@@ -104,7 +104,7 @@ class Subproyecto(models.Model):
     status = models.ForeignKey(Status_Subproyecto, on_delete = models.CASCADE, null=True)
 
     def __str__(self):
-        return f'{self.nombre}-{self.presupuesto}'
+        return f'{self.nombre}'
 
 class Sector(models.Model):
     nombre = models.CharField(max_length=100, null=True, unique=True)

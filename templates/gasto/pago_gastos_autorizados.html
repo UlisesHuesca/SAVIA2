@@ -58,6 +58,37 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo de Gasto" }}
+                                <label style="color: #121212;" for="id_tipo">Tipo de Gasto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Campo de Proyecto -->
+                    <div class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-briefcase"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto" }}
+                                <label style="color: #121212;" for="id_proyecto"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Campo de Subproyecto -->
+                    <!--
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-layer-group"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto" }}
+                                <label style="color: #121212;" for="id_subproyecto"></label>
+                            </div>
+                        </div>
+                    </div>-->
                     <div class="col-1">
                         <button class="btn btn-outline-success btn-block m-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
@@ -230,6 +261,7 @@
 
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 ;(function(){
     const modal = new bootstrap.Modal(document.getElementById('dialog'))
@@ -244,6 +276,20 @@ var myModal = document.getElementById('dialog')
 myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
+
+$(document).ready(function() {
+    // Inicializar Select2 en el campo de Proyecto
+    $('#id_proyecto').select2({
+        placeholder: 'Selecciona un Proyecto',
+        allowClear: true
+    });
+
+    // Inicializar Select2 en el campo de Subproyecto
+    $('#id_subproyecto').select2({
+        placeholder: 'Selecciona un Subproyecto',
+        allowClear: true
+    });
+});
 
 </script>
 {% endblock %}

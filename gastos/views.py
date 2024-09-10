@@ -660,6 +660,9 @@ def pago_gastos_autorizados(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
 
+    proyectos = Proyecto.objects.filter(activo=True, complete=True)
+    subproyectos = Subproyecto.objects.filter(proyecto__in=proyectos)
+    
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh == True:
             gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYO DE MANTENIMIENTO")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
@@ -691,6 +694,8 @@ def pago_gastos_autorizados(request):
             'gastos_list':gastos_list,
             'gastos':gastos,
             'myfilter':myfilter,
+            'proyectos': proyectos,
+            'subproyectos': subproyectos,
             }
     else:
         context= {
