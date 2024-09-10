@@ -174,6 +174,8 @@ class Factura(models.Model):
     hecho = models.BooleanField(default=False)
     monto = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True)
     es_repetida = models.BooleanField(default=False)
+    uuid = models.CharField(max_length=36, blank=True, null=True)
+    fecha_timbrado = models.DateTimeField(null=True,blank=True)
     # Puedes agregar más campos si es necesario, como fecha, descripción, etc.
 
     @property   
