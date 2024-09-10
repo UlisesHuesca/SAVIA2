@@ -1,6 +1,7 @@
 from compras.models import Compra
 from xml.etree.ElementTree import ParseError
 from tesoreria.models import Pago, Facturas
+from gastos.models import Factura
 from gastos.models import Solicitud_Gasto
 from django.db.models import F, Sum, Q
 import mysql.connector
@@ -535,6 +536,59 @@ def actualizar_facturas():
     facturas = Facturas.objects.filter(uuid__isnull=True)  # Filtra facturas sin UUID guardado
     for factura in facturas:
         if factura.factura_xml and os.path.exists(factura.factura_xml.path):  # Verifica si el archivo XML existe
+            try:
+                data = factura.emisor  # Llama a la propiedad que ya tienes
+                if data:  # Verifica si se pudo obtener el UUID y la fecha
+                    uuid = data.get('uuid')
+                    fecha_timbrado = data.get('fecha_timbrado')
+
+                    if uuid and fecha_timbrado:
+                        factura.uuid = uuid
+                        factura.fecha_timbrado = fecha_timbrado
+                        factura.save()
+                        print(f'Actualizada Factura ID {factura.id}: UUID {uuid}')
+                    else:
+                        print(f'No se pudo obtener UUID y fecha para Factura ID {factura.id}')
+                else:
+                    print(f'El archivo XML de la factura ID {factura.id} no contiene la información esperada.')
+
+            except (ParseError, FileNotFoundError) as e:
+                print(f"Error al procesar el archivo XML para la factura ID {factura.id}: {e}")
+                continue  # Salta al siguiente registro si ocurre un error
+
+        else:
+            print(f'El archivo XML no existe para la factura ID {factura.id}.')
+            continue  # Salta al siguiente registro si el archivo XML no existe
+
+
+def corregir_rutas_facturas():
+    # Obtener todas las facturas
+    facturas = Facturas.objects.all()
+    
+    # Definir los directorios no deseados
+    rutas_invalidas = ['facturas/xml/', 'xml/']
+
+    # Iterar sobre cada factura
+    for factura in facturas:
+        # Verificar el campo archivo_xml
+        if factura.factura_xml and factura.factura_xml.name in rutas_invalidas:
+            print(f"Corrigiendo ruta XML para la factura ID {factura.id}: {factura.factura_xml.name}")
+            factura.factura_xml = None  # Simplemente asignar None sin intentar eliminar el archivo
+            factura.save()
+
+        # Verificar el campo archivo_pdf
+        if factura.factura_pdf and factura.factura_pdf.name in rutas_invalidas:
+            print(f"Corrigiendo ruta PDF para la factura ID {factura.id}: {factura.factura_pdf.name}")
+            factura.factura_pdf = None  # Simplemente asignar None sin intentar eliminar el archivo
+            factura.save()
+
+    print("Corrección de rutas completada.")
+
+def actualizar_facturas_gastos():
+    facturas = Factura.objects.filter(uuid__isnull=True)  # Filtra facturas sin UUID guardado
+    for factura in facturas:
+        print(factura.id)
+        if factura.archivo_xml and os.path.exists(factura.archivo_xml.path):  # Verifica si el archivo XML existe
             try:
                 data = factura.emisor  # Llama a la propiedad que ya tienes
                 if data:  # Verifica si se pudo obtener el UUID y la fecha
