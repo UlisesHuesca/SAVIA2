@@ -188,6 +188,24 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
+                                <label for="id_clabe">Swift*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
+                                <label for="id_clabe">Spid*</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="row ms-3 my-2">
                                     <div class="form-check form-switch col-sm">
@@ -208,7 +226,7 @@
                                     </div>
                     </div>
                     <hr>
-                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-product' %}">Cancelar</a>
+                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
                     <input class="btn btn-outline-info" type='submit' value="Actualizar">
                 </form>
                 </div>

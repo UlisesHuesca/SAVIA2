@@ -223,6 +223,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{f.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
+                            <label for="id_clabe">Spid*</label>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row ms-3 my-2">
                         <div class="form-check form-switch col-sm">
                         <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>
@@ -241,7 +250,6 @@
                             {{f.arrendamiento|add_class:"form-check-input"}}
                         </div>
                     </div>
-            
                     {% endfor %}
                     <hr>
                     <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
