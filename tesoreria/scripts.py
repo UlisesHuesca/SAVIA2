@@ -1,4 +1,5 @@
 from compras.models import Compra
+from xml.etree.ElementTree import ParseError
 from tesoreria.models import Pago, Facturas
 from gastos.models import Solicitud_Gasto
 from django.db.models import F, Sum, Q
@@ -533,17 +534,27 @@ def migrate_tablafacturasgastos_to_files_v2():
 def actualizar_facturas():
     facturas = Facturas.objects.filter(uuid__isnull=True)  # Filtra facturas sin UUID guardado
     for factura in facturas:
-        if factura.factura_xml:  # Asegúrate de que el XML existe
-            data = factura.emisor  # Llama a la property que ya tienes
-            uuid = data.get('uuid')
-            fecha_timbrado = data.get('fecha_timbrado')
+        if factura.factura_xml and os.path.exists(factura.factura_xml.path):  # Verifica si el archivo XML existe
+            try:
+                data = factura.emisor  # Llama a la propiedad que ya tienes
+                if data:  # Verifica si se pudo obtener el UUID y la fecha
+                    uuid = data.get('uuid')
+                    fecha_timbrado = data.get('fecha_timbrado')
 
-            if uuid and fecha_timbrado:  # Si se obtuvieron ambos valores
-                factura.uuid = uuid
-                factura.fecha_timbrado = fecha_timbrado
-                factura.save()
-                print(f'Actualizada Factura ID {factura.id}: UUID {uuid}')
-            else:
-                print(f'No se pudo obtener UUID y fecha para Factura ID {factura.id}')
+                    if uuid and fecha_timbrado:
+                        factura.uuid = uuid
+                        factura.fecha_timbrado = fecha_timbrado
+                        factura.save()
+                        print(f'Actualizada Factura ID {factura.id}: UUID {uuid}')
+                    else:
+                        print(f'No se pudo obtener UUID y fecha para Factura ID {factura.id}')
+                else:
+                    print(f'El archivo XML de la factura ID {factura.id} no contiene la información esperada.')
+
+            except (ParseError, FileNotFoundError) as e:
+                print(f"Error al procesar el archivo XML para la factura ID {factura.id}: {e}")
+                continue  # Salta al siguiente registro si ocurre un error
+
         else:
-            print(f'No se encontró el archivo XML para la factura ID {factura.id}')
+            print(f'El archivo XML no existe para la factura ID {factura.id}.')
+            continue  # Salta al siguiente registro si el archivo XML no existe

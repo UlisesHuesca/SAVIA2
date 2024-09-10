@@ -8,6 +8,7 @@ from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 import xml.etree.ElementTree as ET
 from .utils import encontrar_variables, extraer_texto_pdf_prop
+import os
 # Create your models here.
 
 
@@ -84,20 +85,30 @@ class Facturas(models.Model):
     
     @property   
     def emisor(self):
-        #with open(self.factura_xml.path,'r') as file:
-            #data = file.read()
+        if not os.path.isfile(self.factura_xml.path):
+            print(f"Error: {self.factura_xml.path} no es un archivo válido o es un directorio.")
+            return None
+        
         try:
             tree = ET.parse(self.factura_xml.path)
-        except ET.ParseError as e:
+            root = tree.getroot()  # Si tiene éxito, obtener la raíz
+        except (ET.ParseError, FileNotFoundError) as e:
             print(f"Error al parsear el archivo XML: {e}")
+            return None  # Salir de la función si ocurre un error
         # Manejo adicional del error
         #tree = ET.parse(self.archivo_xml.path)
         root = tree.getroot()
         version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
 
         ns = {}
+        prefix = ''  # Asegúrate de definir prefix inicialmente
         if 'http://www.sat.gob.mx/cfd/3' in version:
-            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
+            ns = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/3',
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+                'if': 'https://www.interfactura.com/Schemas/Documentos',
+                }
+            prefix = 'cfdi'
         elif 'http://www.sat.gob.mx/EstadoDeCuentaCombustible12' in version:
             ns = {
                 'cfdi': 'http://www.sat.gob.mx/cfd/4', 
@@ -224,7 +235,7 @@ class Facturas(models.Model):
         #cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible') or None
 
         # Datos adicionales del complemento
-        uuid, sello_cfd, sello_sat, fecha_timbrado = '', '', '', ''
+        uuid, sello_cfd, sello_sat, fecha_timbrado, no_certificadoSAT = '', '', '', '',''
         if complemento is not None:
             timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
             #print(timbre_fiscal)
