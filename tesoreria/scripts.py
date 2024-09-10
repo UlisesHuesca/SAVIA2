@@ -1,5 +1,5 @@
 from compras.models import Compra
-from tesoreria.models import Pago
+from tesoreria.models import Pago, Facturas
 from gastos.models import Solicitud_Gasto
 from django.db.models import F, Sum, Q
 import mysql.connector
@@ -530,3 +530,20 @@ def migrate_tablafacturasgastos_to_files_v2():
 
     print("Migración completada")
 
+def actualizar_facturas():
+    facturas = Facturas.objects.filter(uuid__isnull=True)  # Filtra facturas sin UUID guardado
+    for factura in facturas:
+        if factura.factura_xml:  # Asegúrate de que el XML existe
+            data = factura.emisor  # Llama a la property que ya tienes
+            uuid = data.get('uuid')
+            fecha_timbrado = data.get('fecha_timbrado')
+
+            if uuid and fecha_timbrado:  # Si se obtuvieron ambos valores
+                factura.uuid = uuid
+                factura.fecha_timbrado = fecha_timbrado
+                factura.save()
+                print(f'Actualizada Factura ID {factura.id}: UUID {uuid}')
+            else:
+                print(f'No se pudo obtener UUID y fecha para Factura ID {factura.id}')
+        else:
+            print(f'No se encontró el archivo XML para la factura ID {factura.id}')

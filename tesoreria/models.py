@@ -76,6 +76,8 @@ class Facturas(models.Model):
     hecho = models.BooleanField(default=False)
     factura_pdf = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
     factura_xml = models.FileField(blank=True, null=True, upload_to='xml', validators=[FileExtensionValidator(['xml'])])
+    uuid = models.CharField(max_length=36, blank=True, null=True)
+    fecha_timbrado = models.DateTimeField(null=True,blank=True)
 
     def __str__(self):
         return f'id:{self.id} oc:{self.oc}'
