@@ -180,8 +180,10 @@ class Factura(models.Model):
 
     @property   
     def emisor(self):
-        #with open(self.factura_xml.path,'r') as file:
-            #data = file.read()
+        if not self.archivo_xml:
+            print(f"Error: {self.archivo_xml.path} no tiene un archivo asociado.")
+            return None
+        
         try:
             tree = ET.parse(self.archivo_xml.path)
         except ET.ParseError as e:
@@ -190,7 +192,7 @@ class Factura(models.Model):
         #tree = ET.parse(self.archivo_xml.path)
         root = tree.getroot()
         version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
-
+        prefix = ''  # Asegúrate de definir prefix inicialmente
         ns = {}
         if 'http://www.sat.gob.mx/cfd/3' in version:
             ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
@@ -209,7 +211,8 @@ class Factura(models.Model):
             }
             prefix = 'cfdi'
         else:
-            raise ValueError("Versión del documento XML no reconocida")
+            print(f"Versión del documento XML no reconocida. Saltando archivo.{self.id}")
+            return None  # Saltar este archivo sin detener la ejecución
 
         #print(prefix)
         emisor = root.find(f'cfdi:Emisor', ns)

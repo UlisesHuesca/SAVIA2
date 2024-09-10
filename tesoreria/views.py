@@ -938,7 +938,7 @@ def matriz_facturas(request, pk):
         'compra':compra,
         }
 
-    return render(request, 'gasto/matriz_factura_gasto.html', context)
+    return render(request, 'tesoreria/matriz_facturas.html', context)
 
 @login_required(login_url='user-login')
 def matriz_facturas_nomodal(request, pk):

@@ -8,6 +8,7 @@ from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 import xml.etree.ElementTree as ET
 from .utils import encontrar_variables, extraer_texto_pdf_prop
+import os
 # Create your models here.
 
 
@@ -84,20 +85,31 @@ class Facturas(models.Model):
     
     @property   
     def emisor(self):
-        #with open(self.factura_xml.path,'r') as file:
-            #data = file.read()
+        if not self.factura_xml:
+            print(f"Error: {self.factura_xml.path} no tiene un archivo asociado.")
+            return None
+        
         try:
+            print(self.id)
             tree = ET.parse(self.factura_xml.path)
-        except ET.ParseError as e:
-            print(f"Error al parsear el archivo XML: {e}")
+            root = tree.getroot()  # Si tiene éxito, obtener la raíz
+        except (ET.ParseError, FileNotFoundError) as e:
+            print(f"Error al parsear el archivo XML:{self.id}: {e}")
+            return None  # Salir de la función si ocurre un error
         # Manejo adicional del error
         #tree = ET.parse(self.archivo_xml.path)
         root = tree.getroot()
-        version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
-
+        version = root.tag
+        print(version)
         ns = {}
+        prefix = ''  # Asegúrate de definir prefix inicialmente
         if 'http://www.sat.gob.mx/cfd/3' in version:
-            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
+            ns = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/3',
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+                'if': 'https://www.interfactura.com/Schemas/Documentos',
+                }
+            prefix = 'cfdi'
         elif 'http://www.sat.gob.mx/EstadoDeCuentaCombustible12' in version:
             ns = {
                 'cfdi': 'http://www.sat.gob.mx/cfd/4', 
@@ -110,10 +122,15 @@ class Facturas(models.Model):
                 'cfdi': 'http://www.sat.gob.mx/cfd/4', 
                 'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital', 
                 'if': 'https://www.interfactura.com/Schemas/Documentos',
-            }
+                }
             prefix = 'cfdi'
+        #elif 'GCG_EInvoiceCFDIReport_MX.Report' in version:
+            # Esquema GCG_EInvoiceCFDIReport_MX.Report
+        #    ns = {}  # No necesita un espacio de nombres específico
+        #    prefix = 'gcg'  # Prefijo ficticio para manejar este caso
         else:
-            raise ValueError("Versión del documento XML no reconocida")
+            print(f"Versión del documento XML no reconocida: {self.id}")
+            return None
 
         #print(prefix)
         emisor = root.find(f'cfdi:Emisor', ns)
@@ -204,7 +221,14 @@ class Facturas(models.Model):
             total = estado_cuenta.get('Total')
             subtotal = estado_cuenta.get('SubTotal')
            
-            
+        #elif prefix == 'gcg':
+            # Extraer UUID del nodo Tablix5, en el atributo Textbox61
+        #    uuid = root.find(".//Tablix5").attrib.get("Textbox61", "UUID no encontrado")
+        #    total = root.find(".//Report").attrib.get("Textbox52", "Total no encontrado")
+        #    for detalle in root.findall(".//Details5"):
+        #        descripcion = detalle.attrib.get("Textbox133", "Descripción no encontrada")
+        #        monto = detalle.attrib.get("Textbox79", "Monto no encontrado")
+        #        impuestos.append({'descripcion': descripcion, 'monto': monto})
 
         rfc_emisor = emisor.get('Rfc')
         nombre_emisor = emisor.get('Nombre')
@@ -224,7 +248,7 @@ class Facturas(models.Model):
         #cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible') or None
 
         # Datos adicionales del complemento
-        uuid, sello_cfd, sello_sat, fecha_timbrado = '', '', '', ''
+        uuid, sello_cfd, sello_sat, fecha_timbrado, no_certificadoSAT = '', '', '', '',''
         if complemento is not None:
             timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
             #print(timbre_fiscal)
