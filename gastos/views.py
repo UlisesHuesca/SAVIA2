@@ -651,7 +651,13 @@ def cancelar_gasto2(request, pk):
     return render(request,'gasto/cancelar_gasto2.html', context)
 
 
-
+def get_subproyectos(request):
+    proyecto_id = request.GET.get('proyecto_id')
+    if proyecto_id:
+        subproyectos = Subproyecto.objects.filter(proyecto_id=proyecto_id)
+        subproyecto_list = list(subproyectos.values('id', 'nombre'))  
+        return JsonResponse(subproyecto_list, safe=False)
+    return JsonResponse([], safe=False)
 
 # Create your views here.
 #@login_required(login_url='user-login')
@@ -696,6 +702,7 @@ def pago_gastos_autorizados(request):
             'myfilter':myfilter,
             'proyectos': proyectos,
             'subproyectos': subproyectos,
+            'selected_subproyecto': request.GET.get('subproyecto')
             }
     else:
         context= {

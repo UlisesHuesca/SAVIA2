@@ -22,9 +22,10 @@
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row g-12">
+                    <!-- Primera fila de filtros -->
                     <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
                                 <label style="color: #121212;" for="id_proyecto">Folio</label>
@@ -33,7 +34,7 @@
                     </div>
                     <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
                                 <label style="color: #121212;" for="id_staff">Solicitado por</label>
@@ -42,23 +43,27 @@
                     </div>
                     <div class="col-lg-2 col-sm-12">
                         <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_start_date">Desde:</label>
+                                <label style="color: #121212;" for="id_start_date">Desde:</label>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-2 col-sm-12">
                         <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_end_date">Hasta:</label>
+                                <label style="color: #121212;" for="id_end_date">Hasta:</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-2 col-sm-12">
+                </div>
+
+                <!-- Segunda fila de filtros -->
+                <div class="row g-12">
+                    <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -67,10 +72,12 @@
                             </div>
                         </div>
                     </div>
-                    <!-- Campo de Proyecto -->
-                    <div class="col-lg-2 col-sm-12">
+
+                    <div class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-briefcase"></i></span>
+                            <span class="input-group-text" id="basic-addon1">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto" }}
                                 <label style="color: #121212;" for="id_proyecto"></label>
@@ -78,21 +85,23 @@
                         </div>
                     </div>
 
-                    <!-- Campo de Subproyecto -->
-                    <!--
-                    <div class="col-lg-3 col-sm-12">
+                    <div class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-layer-group"></i></span>
+                            <span class="input-group-text" id="basic-addon1">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto" }}
                                 <label style="color: #121212;" for="id_subproyecto"></label>
                             </div>
                         </div>
-                    </div>-->
-                    <div class="col-1">
-                        <button class="btn btn-outline-success btn-block m-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
-                    </row>
+
+                    <div class="col-lg-1 col-sm-12">
+                        <button class="btn btn-outline-success btn-block m-1" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
                 </div>
                 <hr>
                 </form>
@@ -278,17 +287,58 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
 })
 
 $(document).ready(function() {
-    // Inicializar Select2 en el campo de Proyecto
+    //Select2 en el campo de Proyecto
     $('#id_proyecto').select2({
         placeholder: 'Selecciona un Proyecto',
         allowClear: true
     });
 
-    // Inicializar Select2 en el campo de Subproyecto
+    //Select2 en el campo de Subproyecto
     $('#id_subproyecto').select2({
         placeholder: 'Selecciona un Subproyecto',
         allowClear: true
     });
+
+    //obtener el valor del proyecto seleccionado al cargar la página
+    var selectedProyecto = $('#id_proyecto').val();
+    var selectedSubproyecto = $('#id_subproyecto').data('selected'); //valor desde el servidor
+
+    //si hay un proyecto seleccionado, cargar sus subproyectos
+    if (selectedProyecto) {
+        loadSubproyectos(selectedProyecto, selectedSubproyecto);
+    }
+
+    //para el cambio en el campo de Proyecto
+    $('#id_proyecto').on('change', function() {
+        var proyecto_id = $(this).val(); // obtener el valor del proyecto seleccionado
+        $('#id_subproyecto').empty().trigger('change'); // limpiar el select de subproyectos
+        
+        if (proyecto_id) {
+            loadSubproyectos(proyecto_id, null); // cargar subproyectos al cambiar proyecto
+        }
+    });
+
+    // Función para cargar los subproyectos relacionados
+    function loadSubproyectos(proyecto_id, selectedSubproyecto) {
+        $.ajax({
+            url: '{% url "get_subproyectos" %}',  // URL para obtener subproyectos
+            data: {
+                'proyecto_id': proyecto_id  // Enviar el ID del proyecto
+            },
+            success: function(data) {
+                var newOptions = '<option></option>';  // Opción vacía
+                $.each(data, function(index, subproyecto) {
+                    newOptions += '<option value="' + subproyecto.id + '">' + subproyecto.nombre + '</option>';
+                });
+                $('#id_subproyecto').html(newOptions);  // Actualizar las opciones del select de subproyectos
+                
+                // Si hay un subproyecto seleccionado, seleccionarlo en el dropdown
+                if (selectedSubproyecto) {
+                    $('#id_subproyecto').val(selectedSubproyecto).trigger('change');
+                }
+            }
+        });
+    }
 });
 
 </script>
