@@ -1702,7 +1702,10 @@ def carga_productos(request):
 
 @perfil_seleccionado_required
 def editar_comparativo(request, pk):
-    usuario = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    #colaborador_sel = Profile.objects.all()
+    usuario = Profile.objects.get(id = pk_perfil)
+    #usuario = Profile.objects.get(staff__id=request.user.id)
     comparativo =Comparativo.objects.get(id = pk)
     productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
     proveedores = Proveedor_direcciones.objects.all()

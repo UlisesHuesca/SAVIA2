@@ -18,7 +18,7 @@ from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_For
 from tesoreria.forms import Facturas_Viaticos_Form
 from tesoreria.views import eliminar_caracteres_invalidos
 from .filters import Solicitud_Viatico_Filter
-from user.decorators import perfil_seleccionado_required
+from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 
 from decimal import Decimal, ROUND_HALF_UP
 import io
@@ -426,6 +426,7 @@ def solicitudes_viaticos(request):
 
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria')
 def viaticos_autorizados(request):
 
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
@@ -459,6 +460,8 @@ def viaticos_autorizados(request):
 
     return render(request, 'viaticos/viaticos_autorizados.html', context)
 
+@perfil_seleccionado_required
+@tipo_usuario_requerido('tesoreria')
 def asignar_montos(request, pk):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
