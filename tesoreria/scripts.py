@@ -3,11 +3,14 @@ from xml.etree.ElementTree import ParseError
 from tesoreria.models import Pago, Facturas
 from gastos.models import Factura
 from gastos.models import Solicitud_Gasto
-from django.db.models import F, Sum, Q
+from django.db.models import F, Sum, Q, Count
+from django.db.models.functions import ExtractYear
 import mysql.connector
 from collections import defaultdict
 import os
 from datetime import datetime
+import openpyxl
+from openpyxl.utils import get_column_letter
 
 def update_pagado_real():
     pagos = Pago.objects.all()
@@ -612,3 +615,160 @@ def actualizar_facturas_gastos():
         else:
             print(f'El archivo XML no existe para la factura ID {factura.id}.')
             continue  # Salta al siguiente registro si el archivo XML no existe
+
+def generar_informe_duplicados_por_anio():
+    # Obtener facturas duplicadas sin usar ExtractYear
+    facturas_duplicadas = Facturas.objects.values('uuid', 'fecha_timbrado').annotate(uuid_count=Count('uuid')).filter(uuid_count__gt=1)
+    
+    total_facturas_duplicadas = 0
+    total_grupos_duplicados = facturas_duplicadas.count()
+    
+    # Diccionario para almacenar el conteo de facturas duplicadas por año
+    conteo_por_anio = {}
+
+    with open('informe_facturas_duplicadas_por_anio.txt', 'w') as file:
+        file.write(f"Total de grupos con UUID duplicados: {total_grupos_duplicados}\n")
+        
+        # Agrupar por año manualmente y mostrar facturas duplicadas
+        current_year = None
+        for factura_grupo in facturas_duplicadas:
+            fecha_timbrado = factura_grupo['fecha_timbrado']
+            if fecha_timbrado:
+                anio = fecha_timbrado.year  # Extraer el año directamente
+            else:
+                continue  # Saltar si no hay fecha de timbrado
+
+            uuid_duplicado = factura_grupo['uuid']
+            facturas_con_uuid = Facturas.objects.filter(uuid=uuid_duplicado)
+
+            # Imprimir el año cuando cambia y actualizar el conteo
+            if anio != current_year:
+                if current_year is not None:
+                    file.write(f"\nNúmero de facturas repetidas en el año {current_year}: {conteo_por_anio[current_year]}\n")
+                file.write(f"\nFacturas repetidas en el año {anio}:\n")
+                current_year = anio
+                conteo_por_anio[anio] = 0  # Inicializar el conteo para este año
+
+            # Escribir UUID duplicado y detalles de cada factura
+            file.write(f"UUID duplicado: {uuid_duplicado}\n")
+            for factura in facturas_con_uuid:
+                file.write(f"  Factura ID: {factura.id}, Fecha: {factura.fecha_timbrado}\n")
+            
+            # Contar las facturas duplicadas, excluyendo la primera
+            conteo_por_anio[anio] += len(facturas_con_uuid) - 1
+            total_facturas_duplicadas += len(facturas_con_uuid) - 1
+
+        # Escribir el conteo del último año procesado
+        if current_year is not None:
+            file.write(f"\nNúmero de facturas repetidas en el año {current_year}: {conteo_por_anio[current_year]}\n")
+
+        file.write(f"\nTotal de facturas duplicadas (excluyendo la primera en cada grupo): {total_facturas_duplicadas}\n")
+
+def generar_reporte_excel():
+    # Crear un nuevo libro de trabajo y una hoja
+    wb = openpyxl.Workbook()
+    ws = wb.active
+    ws.title = "Facturas Duplicadas"
+
+    # Definir los encabezados
+    encabezados = ['Fecha Timbrado', 'Folio Solicitud', 'Colaborador (Nombre)', 'Colaborador (Apellido)', 'UUID']
+    ws.append(encabezados)
+
+    # Obtener facturas duplicadas
+    facturas_duplicadas = Facturas.objects.values('uuid', 'fecha_timbrado', 'solicitud_gasto__folio','solicitud_gasto','solicitud_gasto__distrito__nombre').annotate(uuid_count=Count('uuid')).filter(uuid_count__gt=1)
+
+    for factura_grupo in facturas_duplicadas:
+        facturas_con_uuid = Facturas.objects.filter(uuid=factura_grupo['uuid'])
+        
+        for factura in facturas_con_uuid:
+            # Extraer la información requerida
+            fecha_timbrado = factura.fecha_timbrado
+            if fecha_timbrado and fecha_timbrado.tzinfo:
+                fecha_timbrado = fecha_timbrado.replace(tzinfo=None)  # Eliminar la información de la zona horaria
+            solicitud_gasto = factura.solicitud_gasto.folio if factura.solicitud_gasto else "N/A"
+            distrito = factura.solicitud_gasto.distrito.nombre
+            colaborador_nombre = f"{factura.solicitud_gasto.staff.staff.staff.first_name} {factura.solicitud_gasto.staff.staff.staff.last_name}"
+            uuid = factura.uuid
+
+            # Agregar la información a una nueva fila en el Excel
+            ws.append([fecha_timbrado, solicitud_gasto, colaborador_nombre, distrito, uuid])
+
+    # Ajustar el ancho de las columnas
+    for col in range(1, len(encabezados) + 1):
+        column_letter = get_column_letter(col)
+        ws.column_dimensions[column_letter].auto_size = True
+
+    # Guardar el archivo Excel
+    wb.save("informe_facturas_duplicadas.xlsx")
+
+def eliminar_facturas_duplicadas_compras():
+    # Buscar facturas duplicadas basadas en el UUID
+    facturas_duplicadas = Facturas.objects.values('uuid').annotate(uuid_count=Count('uuid')).filter(uuid_count__gt=1)
+
+    # Contador de facturas eliminadas
+    total_eliminadas = 0
+
+    # Procesar cada grupo de facturas duplicadas
+    for factura_grupo in facturas_duplicadas:
+        # Buscar todas las facturas con el mismo UUID
+        facturas_con_uuid = Facturas.objects.filter(uuid=factura_grupo['uuid']).order_by('fecha_timbrado')
+
+        # Mantener solo la primera factura (la más antigua, por ejemplo)
+        factura_a_conservar = facturas_con_uuid.first()
+
+        # Eliminar las demás facturas
+        facturas_a_eliminar = facturas_con_uuid.exclude(id=factura_a_conservar.id)
+        total_eliminadas += facturas_a_eliminar.count()
+
+        # Eliminar las facturas duplicadas
+        facturas_a_eliminar.delete()
+
+        print(f"Eliminadas {facturas_a_eliminar.count()} facturas duplicadas con UUID: {factura_grupo['uuid']}")
+
+    print(f"Total de facturas eliminadas: {total_eliminadas}")
+
+
+def eliminar_facturas_duplicadas():
+    # Buscar facturas duplicadas basadas en el UUID
+    facturas_duplicadas = Factura.objects.values('uuid').annotate(uuid_count=Count('uuid')).filter(uuid_count__gt=1)
+
+    # Contador de facturas eliminadas
+    total_eliminadas = 0
+
+    # Procesar cada grupo de facturas duplicadas
+    for factura_grupo in facturas_duplicadas:
+        # Buscar todas las facturas con el mismo UUID
+        facturas_con_uuid = Factura.objects.filter(uuid=factura_grupo['uuid']).order_by('fecha_timbrado')
+
+        # Mantener solo la primera factura (la más antigua, por ejemplo)
+        factura_a_conservar = facturas_con_uuid.first()
+
+        # Eliminar las demás facturas
+        facturas_a_eliminar = facturas_con_uuid.exclude(id=factura_a_conservar.id)
+        total_eliminadas += facturas_a_eliminar.count()
+
+        # Eliminar las facturas duplicadas
+        facturas_a_eliminar.delete()
+
+        print(f"Eliminadas {facturas_a_eliminar.count()} facturas duplicadas con UUID: {factura_grupo['uuid']}")
+
+    print(f"Total de facturas eliminadas: {total_eliminadas}")
+
+def eliminar_facturas_por_id(uuid_especifico):
+    # Filtrar todas las facturas que tienen el UUID específico
+    facturas_con_uuid = Factura.objects.filter(uuid=uuid_especifico).order_by('fecha_timbrado')
+
+    if facturas_con_uuid.count() > 1:
+        # Mantener solo la primera factura (la más antigua, por ejemplo)
+        factura_a_conservar = facturas_con_uuid.first()
+
+        # Eliminar las demás facturas
+        facturas_a_eliminar = facturas_con_uuid.exclude(id=factura_a_conservar.id)
+        total_eliminadas = facturas_a_eliminar.count()
+
+        # Eliminar las facturas duplicadas
+        facturas_a_eliminar.delete()
+
+        print(f"Eliminadas {total_eliminadas} facturas duplicadas con UUID: {uuid_especifico}")
+    else:
+        print(f"No hay facturas duplicadas para el UUID: {uuid_especifico}")
