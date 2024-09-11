@@ -75,7 +75,6 @@
                 {% endfor %}  
             </tbody>
         </table>
-
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -109,12 +108,16 @@
                 </tr>
             </tbody>
         </table>
-        <form method="POST" class="mb-3">
-            {% csrf_token %}
-            <button type="submit" name="btn_descargar_todo" class="btn btn-primary btn-sm float-end">
-                Descargar todas las facturas (.zip)
-            </button>
-        </form>
+        <br>
+            <li class="nav-item ms-auto">
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                        <i class="fas fa-file-archive"></i> Descargar Facturas
+                    </button>
+                </form>
+            </li>
+        <br>
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
