@@ -8,3 +8,4 @@ errors.log.save
 *.log
 .env
 *.sql
+savia2_antesdeborrarfacturas
