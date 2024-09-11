@@ -109,7 +109,12 @@
                 </tr>
             </tbody>
         </table>
-
+        <form method="POST" class="mb-3">
+            {% csrf_token %}
+            <button type="submit" name="btn_descargar_todo" class="btn btn-primary btn-sm float-end">
+                Descargar todas las facturas (.zip)
+            </button>
+        </form>
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
