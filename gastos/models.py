@@ -174,7 +174,7 @@ class Factura(models.Model):
     hecho = models.BooleanField(default=False)
     monto = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True)
     es_repetida = models.BooleanField(default=False)
-    uuid = models.CharField(max_length=36, blank=True, null=True)
+    uuid = models.CharField(max_length=36, blank=True, null=True, unique = True, db_index=True)
     fecha_timbrado = models.DateTimeField(null=True,blank=True)
     # Puedes agregar más campos si es necesario, como fecha, descripción, etc.
 
@@ -186,16 +186,23 @@ class Factura(models.Model):
         
         try:
             tree = ET.parse(self.archivo_xml.path)
+            root = tree.getroot()
         except ET.ParseError as e:
-            print(f"Error al parsear el archivo XML: {e}")
+            print(f"Error al parsear el archivo XML:{self.id}: {e}")
+            return None  # Salir de la función si ocurre un error
         # Manejo adicional del error
         #tree = ET.parse(self.archivo_xml.path)
-        root = tree.getroot()
-        version = root.get('{http://www.w3.org/2001/XMLSchema-instance}schemaLocation')
+        
+        version = root.tag
         prefix = ''  # Asegúrate de definir prefix inicialmente
         ns = {}
         if 'http://www.sat.gob.mx/cfd/3' in version:
-            ns = {'cfdi': 'http://www.sat.gob.mx/cfd/3'}
+            ns = {
+                'cfdi': 'http://www.sat.gob.mx/cfd/3',
+                'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+                'if': 'https://www.interfactura.com/Schemas/Documentos',
+                }
+            prefix = 'cfdi'
         elif 'http://www.sat.gob.mx/EstadoDeCuentaCombustible12' in version:
             ns = {
                 'cfdi': 'http://www.sat.gob.mx/cfd/4', 
@@ -208,11 +215,15 @@ class Factura(models.Model):
                 'cfdi': 'http://www.sat.gob.mx/cfd/4', 
                 'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital', 
                 'if': 'https://www.interfactura.com/Schemas/Documentos',
-            }
+                }
             prefix = 'cfdi'
+        #elif 'GCG_EInvoiceCFDIReport_MX.Report' in version:
+            # Esquema GCG_EInvoiceCFDIReport_MX.Report
+        #    ns = {}  # No necesita un espacio de nombres específico
+        #    prefix = 'gcg'  # Prefijo ficticio para manejar este caso
         else:
-            print(f"Versión del documento XML no reconocida. Saltando archivo.{self.id}")
-            return None  # Saltar este archivo sin detener la ejecución
+            print(f"Versión del documento XML no reconocida: {self.id}")
+            return None
 
         #print(prefix)
         emisor = root.find(f'cfdi:Emisor', ns)
@@ -323,7 +334,7 @@ class Factura(models.Model):
         #cadena_original = encabezado.get('cadenaOriginal', 'Cadena original no disponible') or None
 
         # Datos adicionales del complemento
-        uuid, sello_cfd, sello_sat, fecha_timbrado = '', '', '', ''
+        uuid, sello_cfd, sello_sat, fecha_timbrado, no_certificadoSAT  = '', '', '', '', ''
         if complemento is not None:
             timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
             #print(timbre_fiscal)

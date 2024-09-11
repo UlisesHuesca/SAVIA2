@@ -1171,7 +1171,10 @@ def autorizar_oc1(request, pk):
             costo_fletes = 0
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
-    porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+    try:
+        porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+    except ZeroDivisionError:
+        porcentaje = "0"
 
 
     if request.method == 'POST':
