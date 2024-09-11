@@ -109,14 +109,14 @@
             </tbody>
         </table>
         <br>
-            <li class="nav-item ms-auto">
-                <form method="POST" class="d-inline">
-                    {% csrf_token %}
-                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-                        <i class="fas fa-file-archive"></i> Descargar Facturas
-                    </button>
-                </form>
-            </li>
+        <div class="nav-item ms-auto">
+            <form method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                    <i class="fas fa-file-archive"></i> Descargar Facturas
+                </button>
+            </form>
+        </div>
         <br>
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
