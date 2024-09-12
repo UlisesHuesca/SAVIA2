@@ -8,4 +8,8 @@ errors.log.save
 *.log
 .env
 *.sql
+<<<<<<< HEAD
 savia2_antesdeborrarfacturas
+=======
+savia2_antesdeborrarfacturas
+>>>>>>> cambios_main

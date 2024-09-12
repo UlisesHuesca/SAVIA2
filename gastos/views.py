@@ -7,6 +7,8 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.conf import settings
+import zipfile
+
 
 import logging
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
@@ -818,6 +820,28 @@ def pago_gasto(request, pk):
 
     return render(request,'gasto/pago_gasto.html',context)
 
+
+def generar_archivo_zip(facturas, gasto):
+    nombre = gasto.folio if gasto.folio else ''
+    zip_filename = f'facturas_compragasto-{nombre}.zip'
+    
+    # Crear un archivo zip en memoria
+    in_memory_zip = io.BytesIO()
+
+    with zipfile.ZipFile(in_memory_zip, 'w') as zip_file:
+        for factura in facturas:
+            if factura.archivo_pdf:
+                pdf_path = factura.archivo_pdf.path
+                zip_file.write(pdf_path, os.path.basename(pdf_path))
+            if factura.archivo_xml:
+                xml_path = factura.archivo_xml.path
+                zip_file.write(xml_path, os.path.basename(xml_path))
+
+    # Resetear el puntero del archivo en memoria
+    in_memory_zip.seek(0)
+
+    return in_memory_zip, zip_filename
+
 @login_required(login_url='user-login')
 def matriz_facturas_gasto(request, pk):
     pk_usuario = request.session.get('selected_profile_id')
@@ -843,7 +867,11 @@ def matriz_facturas_gasto(request, pk):
                 return redirect(next_url) 
             else:
                 messages.error(request,'No está validando')
-    
+        elif "btn_descargar_todo" in request.POST:
+            in_memory_zip, zip_filename = generar_archivo_zip(facturas, gasto)
+            response = HttpResponse(in_memory_zip, content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+            return response
 
     context={
         'next_url':next_url,
