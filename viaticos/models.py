@@ -107,7 +107,7 @@ class Viaticos_Factura(models.Model):
     hecho = models.BooleanField(default=False)
     factura_pdf = models.FileField(blank=True, null=True, upload_to='facturastb',validators=[FileExtensionValidator(['pdf'])])
     factura_xml = models.FileField(blank=True, null=True, upload_to='xmltb', validators=[FileExtensionValidator(['xml'])])
-    uuid = models.CharField(max_length=36, blank=True, null=True, db_index=True) #unique = True
+    uuid = models.CharField(max_length=36, blank=True, null=True, db_index=True, unique = True) #
     fecha_timbrado = models.DateTimeField(null=True,blank=True)
     #def __str__(self):
     #    return f'Factura de viatico:{self.solicitud_viatico.folio}'

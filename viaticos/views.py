@@ -16,7 +16,8 @@ from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form
 from tesoreria.forms import Facturas_Viaticos_Form
-from tesoreria.views import eliminar_caracteres_invalidos
+from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
+from gastos.models import Factura
 from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 
@@ -758,27 +759,53 @@ def factura_nueva_viatico(request, pk):
                     messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
                     return HttpResponse(status=204)
                 
+                # Iterar sobre el número máximo de archivos en cualquiera de las listas
                 max_len = max(len(archivos_pdf), len(archivos_xml))
-                
-                
+                facturas_registradas = []
+                facturas_duplicadas = []
+
                 for i in range(max_len):
                     archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
                     archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-
                     factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico=viatico, hecho=False)
-                    if archivo_pdf:
-                        factura.factura_pdf = archivo_pdf
-                    factura.hecho = True
-                    factura.fecha_subida = datetime.now()
-                    factura.subido_por = usuario
-
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                        
+                        # Guardar temporalmente para extraer datos
+                        factura_temp = Viaticos_Factura(factura_xml=archivo_xml)
+                        factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                    
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.factura_xml.path)
 
-                    factura.save()
-
-                messages.success(request, 'Las facturas se registraron de manera exitosa')             
+                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                        if Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                            facturas_duplicadas.append(uuid_extraido)
+                            #print('estoy aca')
+                            continue  # Saltar al siguiente archivo si se encuentra duplicado
+                        else:
+                            factura.factura_xml = archivo_xml
+                            factura.uuid = uuid_extraido
+                            factura.fecha_timbrado = fecha_timbrado_extraida
+                            factura.hecho = True
+                            factura.fecha_subida = datetime.now()
+                            factura.subido_por = usuario
+                            factura.save()
+                            #messages.success(request, 'Las facturas se registraron de manera exitosa')
+                    if archivo_pdf:
+                        factura.factura_pdf = archivo_pdf
+                        factura.hecho = True
+                        factura.fecha_subida = datetime.now()
+                        factura.subido_por = usuario
+                        factura.save()
+                      
+                        facturas_registradas.append(uuid_extraido if archivo_xml else f"Factura PDF {archivo_pdf.name}")
+                    #messages.success(request, 'Los facturas se registraron de manera exitosa')
+                     # Mensajes de éxito o duplicados
+                #return HttpResponse(status=204)
+                if facturas_registradas:
+                    messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
+                if facturas_duplicadas:
+                    messages.error(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')        
             else:
                 messages.error(request,'No se pudo subir tu documento')
 
