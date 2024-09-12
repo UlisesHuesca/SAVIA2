@@ -1,8 +1,8 @@
 from compras.models import Compra
 from xml.etree.ElementTree import ParseError
 from tesoreria.models import Pago, Facturas
-from gastos.models import Factura
-from gastos.models import Solicitud_Gasto
+from gastos.models import Solicitud_Gasto, Factura
+from viaticos.models import Viaticos_Factura 
 from django.db.models import F, Sum, Q, Count
 from django.db.models.functions import ExtractYear
 import mysql.connector
@@ -588,7 +588,7 @@ def corregir_rutas_facturas():
     print("Corrección de rutas completada.")
 
 def actualizar_facturas_gastos():
-    facturas = Factura.objects.filter(uuid__isnull=True)  # Filtra facturas sin UUID guardado
+    facturas = Factura.objects.filter(uuid__isnull=True)  #Gastos Filtra facturas sin UUID guardado
     for factura in facturas:
         print(factura.id)
         if factura.archivo_xml and os.path.exists(factura.archivo_xml.path):  # Verifica si el archivo XML existe
@@ -616,9 +616,38 @@ def actualizar_facturas_gastos():
             print(f'El archivo XML no existe para la factura ID {factura.id}.')
             continue  # Salta al siguiente registro si el archivo XML no existe
 
+def actualizar_facturas_viaticos():
+    facturas = Viaticos_Factura.objects.filter(uuid__isnull=True)  #Gastos Filtra facturas sin UUID guardado
+    for factura in facturas:
+        print(factura.id)
+        if factura.factura_xml and os.path.exists(factura.factura_xml.path):  # Verifica si el archivo XML existe
+            try:
+                data = factura.emisor  # Llama a la propiedad que ya tienes
+                if data:  # Verifica si se pudo obtener el UUID y la fecha
+                    uuid = data.get('uuid')
+                    fecha_timbrado = data.get('fecha_timbrado')
+
+                    if uuid and fecha_timbrado:
+                        factura.uuid = uuid
+                        factura.fecha_timbrado = fecha_timbrado
+                        factura.save()
+                        print(f'Actualizada Factura ID {factura.id}: UUID {uuid}')
+                    else:
+                        print(f'No se pudo obtener UUID y fecha para Factura ID {factura.id}')
+                else:
+                    print(f'El archivo XML de la factura ID {factura.id} no contiene la información esperada.')
+
+            except (ParseError, FileNotFoundError) as e:
+                print(f"Error al procesar el archivo XML para la factura ID {factura.id}: {e}")
+                continue  # Salta al siguiente registro si ocurre un error
+
+        else:
+            print(f'El archivo XML no existe para la factura ID {factura.id}.')
+            continue  # Salta al siguiente registro si el archivo XML no existe
+
 def generar_informe_duplicados_por_anio():
     # Obtener facturas duplicadas sin usar ExtractYear
-    facturas_duplicadas = Facturas.objects.values('uuid', 'fecha_timbrado').annotate(uuid_count=Count('uuid')).filter(uuid_count__gt=1)
+    facturas_duplicadas = Viaticos_Factura.objects.values('uuid', 'fecha_timbrado').annotate(uuid_count=Count('uuid')).filter(uuid_count__gt=1)
     
     total_facturas_duplicadas = 0
     total_grupos_duplicados = facturas_duplicadas.count()
@@ -639,7 +668,7 @@ def generar_informe_duplicados_por_anio():
                 continue  # Saltar si no hay fecha de timbrado
 
             uuid_duplicado = factura_grupo['uuid']
-            facturas_con_uuid = Facturas.objects.filter(uuid=uuid_duplicado)
+            facturas_con_uuid = Viaticos_Factura.objects.filter(uuid=uuid_duplicado)
 
             # Imprimir el año cuando cambia y actualizar el conteo
             if anio != current_year:
@@ -772,3 +801,30 @@ def eliminar_facturas_por_id(uuid_especifico):
         print(f"Eliminadas {total_eliminadas} facturas duplicadas con UUID: {uuid_especifico}")
     else:
         print(f"No hay facturas duplicadas para el UUID: {uuid_especifico}")
+
+def eliminar_facturas_duplicadas_viaticos():
+    # Buscar facturas duplicadas basadas en el UUID
+    facturas_duplicadas = Viaticos_Factura.objects.values('uuid').annotate(uuid_count=Count('uuid')).filter(uuid_count__gt=1)
+
+    # Contador de facturas eliminadas
+    total_eliminadas = 0
+
+    # Procesar cada grupo de facturas duplicadas
+    for factura_grupo in facturas_duplicadas:
+        # Buscar todas las facturas con el mismo UUID
+        facturas_con_uuid = Viaticos_Factura.objects.filter(uuid=factura_grupo['uuid']).order_by('fecha_timbrado')
+
+        # Mantener solo la primera factura (la más antigua, por ejemplo)
+        factura_a_conservar = facturas_con_uuid.first()
+
+        # Eliminar las demás facturas
+        facturas_a_eliminar = facturas_con_uuid.exclude(id=factura_a_conservar.id)
+        total_eliminadas += facturas_a_eliminar.count()
+
+        # Eliminar las facturas duplicadas
+        facturas_a_eliminar.delete()
+
+        print(f"Eliminadas {facturas_a_eliminar.count()} facturas duplicadas con UUID: {factura_grupo['uuid']}")
+
+    print(f"Total de facturas eliminadas: {total_eliminadas}")
+
