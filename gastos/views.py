@@ -15,12 +15,12 @@ from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
-from tesoreria.models import Pago, Cuenta
+from tesoreria.models import Pago, Cuenta, Facturas
 from compras.models import Proveedor_direcciones
 from tesoreria.forms import Facturas_Gastos_Form 
 from compras.views import attach_oc_pdf
 from requisiciones.views import get_image_base64
-from tesoreria.views import eliminar_caracteres_invalidos
+from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
 import qrcode
 from num2words import num2words
 import tempfile
@@ -333,26 +333,51 @@ def factura_nueva_gasto(request, pk):
                 
                 # Iterar sobre el número máximo de archivos en cualquiera de las listas
                 max_len = max(len(archivos_pdf), len(archivos_xml))
+                facturas_registradas = []
+                facturas_duplicadas = []
 
                 for i in range(max_len):
                     archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
                     archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-
                     factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
-
-                    if archivo_pdf:
-                        factura.archivo_pdf = archivo_pdf
-                    factura.hecho = True
-                    factura.fecha_subida = datetime.now()
-                    factura.subido_por = usuario
-
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                        
+                        # Guardar temporalmente para extraer datos
+                        factura_temp = Factura(archivo_xml=archivo_xml)
+                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                    
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
 
-                    factura.save()
+                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                        if Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                            facturas_duplicadas.append(uuid_extraido)
+                            continue  # Saltar al siguiente archivo si se encuentra duplicado
+                        else:
+                            factura.archivo_xml = archivo_xml
+                            factura.uuid = uuid_extraido
+                            factura.fecha_timbrado = fecha_timbrado_extraida
+                            factura.hecho = True
+                            factura.fecha_subida = datetime.now()
+                            factura.subido_por = usuario
+                            factura.save()
+                            #messages.success(request, 'Las facturas se registraron de manera exitosa')
+                    if archivo_pdf:
+                        factura.archivo_pdf = archivo_pdf
+                        factura.hecho = True
+                        factura.fecha_subida = datetime.now()
+                        factura.subido_por = usuario
+                        factura.save()
+                      
+                        facturas_registradas.append(uuid_extraido if archivo_xml else f"Factura PDF {archivo_pdf.name}")
+                    #messages.success(request, 'Los facturas se registraron de manera exitosa')
+                     # Mensajes de éxito o duplicados
+                #return HttpResponse(status=204)
+                if facturas_registradas:
+                    messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
+                if facturas_duplicadas:
+                    messages.error(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
 
-                messages.success(request, 'Las facturas se registraron de manera exitosa')
             else:
                 messages.error(request,'No se pudo subir tu documento')
 

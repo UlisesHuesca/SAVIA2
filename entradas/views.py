@@ -289,6 +289,131 @@ def articulos_entrada(request, pk):
 
     return render(request, 'entradas/articulos_entradas.html', context)
 
+@perfil_seleccionado_required
+def articulos_entrada_servicios(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
+    compra = Compra.objects.get(id = pk)
+   
+    articulos = ArticuloComprado.objects.filter(
+        oc=pk, 
+        entrada_completa = False,  
+        seleccionado = False, 
+        producto__producto__articulos__producto__producto__servicio = True)
+
+
+    compra = Compra.objects.get(id=pk)
+    conteo_de_articulos = articulos.count()
+
+
+    entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
+    articulos_entrada = EntradaArticulo.objects.filter(entrada = entrada)
+    form = EntradaArticuloForm()
+    #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+    max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+    nuevo_folio = (max_folio or 0) + 1
+    
+    for articulo in articulos:
+        if articulo.cantidad_pendiente == None or articulo.cantidad_pendiente == "":
+            articulo.cantidad_pendiente = articulo.cantidad
+
+
+    if request.method == 'POST' and 'entrada' in request.POST:
+        articulos_comprados = ArticuloComprado.objects.filter(oc=pk)
+        num_art_comprados = articulos_comprados.count()
+        max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
+        nuevo_folio = (max_folio or 0) + 1
+        entrada.completo = True
+        entrada.folio = nuevo_folio
+        entrada.entrada_date = datetime.now()
+        #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+        articulos_entregados = articulos_comprados.filter(entrada_completa=True)
+        articulos_seleccionados = articulos_entregados.filter(seleccionado = True)
+        num_art_entregados = articulos_entregados.count()
+        for elemento in articulos_seleccionados:
+            elemento.seleccionado = False
+            elemento.save()
+
+        for articulo in articulos_entrada:
+            producto_surtir = ArticulosparaSurtir.objects.get(articulos = articulo.articulo_comprado.producto.producto.articulos)
+            producto_surtir.seleccionado = False
+            print(producto_surtir)
+            if producto_surtir.articulos.producto.producto.especialista == True:
+                print('Esta entrado al ciclo de calidad')
+                producto_surtir.surtir = False
+                articulo.liberado = False
+                archivo_oc = attach_oc_pdf(request, articulo.articulo_comprado.oc.id)
+                email = EmailMessage(
+                        f'Compra Autorizada {compra.get_folio}',
+                        f'Estimado *Inserte nombre de especialista*,\n Estás recibiendo este correo porque se ha recibido en almacén el producto código:{producto_surtir.articulos.producto.producto.codigo} descripción:{producto_surtir.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                        'savia@vordcab.com',
+                        ['ulises_huesc@hotmail.com'],
+                        )
+                email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
+                email.send()
+            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
+                #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
+                productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
+                    articulos__producto__producto = articulo.articulo_comprado.producto.producto.articulos.producto.producto,
+                    salida = False, 
+                    articulos__orden__tipo__tipo = 'normal',
+                    cantidad_requisitar__gt=0,
+                    articulos__producto__distrito = usuario.distritos
+                    )
+                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
+                print(inv_de_producto.cantidad)
+                for producto in productos_pendientes_surtir:    #Recorremos todas las solicitudes pendientes por surtir una por una
+                    if producto_surtir.cantidad > 0:             #Esto practicamente es un while gracias al for mientras la cantidad del resurtimiento sea mayor que 0
+                        cantidad_requisitar = Decimal(producto.cantidad_requisitar).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+                        cantidad_surtir = Decimal(producto_surtir.cantidad).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
+                        
+                        # Determinamos la cantidad a surtir con min
+                        cantidad_a_surtir = min(cantidad_requisitar, cantidad_surtir) #Se elige el mínimo entre la cantidad_requistar y la cantidad a surtir
+                        # Realizamos las actualizaciones
+                        producto_surtir.cantidad -= cantidad_a_surtir
+                        producto.cantidad += cantidad_a_surtir
+                        producto.cantidad_requisitar -= cantidad_a_surtir 
+                        inv_de_producto.cantidad -= cantidad_a_surtir
+                        inv_de_producto.cantidad_entradas -= cantidad_a_surtir
+                        
+                        # Actualizamos el estado del producto si ya no requiere más surtido
+                        if producto.cantidad_requisitar == 0:
+                            producto.requisitar = False
+                            producto.surtir = True
+                        
+                        producto_surtir.save()
+                        producto.save()
+                        inv_de_producto.save()
+                        solicitud = Order.objects.get(id = producto_surtir.articulos.orden.id)
+                        productos_orden = ArticulosparaSurtir.objects.filter(articulos__orden = solicitud, requisitar=False).count()
+                        if productos_orden == 0:
+                            solicitud.requisitar = False
+                            solicitud.save()
+                        
+            if entrada.oc.req.orden.tipo.tipo == 'normal':
+                if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
+                    producto_surtir.surtir = False
+                else:
+                    producto_surtir.surtir = True
+            producto_surtir.save()
+            articulo.save()    
+        evalua_entrada_completa(articulos_comprados,num_art_comprados, compra)
+        entrada.save()
+        messages.success(request, f'La entrada {entrada.folio} se ha realizado con éxito')
+        return redirect('pendientes_entrada')
+
+    context = {
+        'articulos':articulos,
+        'max_folio': nuevo_folio,
+        'entrada':entrada,
+        'compra':compra,
+        'form':form,
+        'articulos_entrada':articulos_entrada,
+        }
+
+    return render(request, 'entradas/articulos_entradas.html', context)
+
 def evalua_entrada_completa(articulos_comprados, num_art_comprados, compra):
     for articulo in articulos_comprados:
         if articulo.cantidad_pendiente == 0:  #Si la cantidad de la compra es igual a la cantidad entonces la entrada está completamente entregada
