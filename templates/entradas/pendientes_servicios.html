@@ -1,0 +1,400 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Entradas Pendientes{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class = "col bg-white" id="response-div">
+    <div class="card">
+        <div class="card-header">
+            <h5>Pendientes de Entrada</h5>
+        </div>
+        <div class="card-body">
+            {% csrf_token %}
+            <form method="GET">
+            <div class="row">
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio OC"}}
+                            <label style="color: #121212;" for="id_staff">Folio OC</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder= Solicitud"}}
+                            <label style="color: #121212;" for="id_solicitud">Solicitud</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                            <label style="color: #121212;" for="id_staff">Proveedor</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
+                            <label style="color: #121212;" for="id_staff">Requisición</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                            <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+                        </div>
+                    </div>
+                </div>       
+            
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
+                            <label style="color: #121212;" for="id_proyecto">Subproyecto</label>
+                        </div>
+                    </div>
+                </div>  
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.atrasado|add_class:"form-control"|append_attr:"placeholder= Atrasadas"}}
+                        <label style="color: #121212;" for="id_subproyecto">Atrasadas</label>
+                        </div>
+                    </div>
+                </div>
+                    <div class="col-2">
+                        <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                <form method=POST onsubmit="mostrarIndicadorCarga();">
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item mx-2 mt-1">
+                            <button name="btnExcel" type="submit" class="btn btn-outline-success btn-lg" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li style="text-align: center;" class="alert alert-primary col-lg-2 col-sm-12" role="alert">
+                            <strong>Número de OC: {{compras|length}}</strong>
+                        </li>
+                    <!--    <li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                    </ul>
+                    
+                </form>
+            </div>
+        </div>
+        
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        <p style="color: white; margin: 0;">Generando reporte, por favor espera... &nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+    </div>
+</div>
+
+<div class = "col">
+    <div class="card">
+        <div class ="table-responsive-sm">
+            <table class="table bg-white">
+            <thead class="text-black sticky-top" style="height: 80px;background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Compra</th>
+                    <th class="d-none d-lg-table-cell">Req.</th>
+                    <th scope="col">Sol.</th>
+                    <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    <th scope="col">Proyecto</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th class="d-none d-lg-table-cell">Autorizado</th>
+                    <th scope="col">Proveedor</th>
+                    <th scope="col">Acción</th>
+                    <th scope="col">Atraso</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras_list %}
+                <tr>
+                    <td id="folio" class="compra-row" folio="{{compra.folio}}">{{compra.folio}}</th>
+                    <td id="fecha_pago_{{compra.folio}}" dias_entrega="{{compra.dias_de_entrega}}" fecha_pago="{{compra|date:'Y-m-d'}}" class="d-none d-lg-table-cell">{{compra.req.folio}}</td>
+                    <td id="tipo_pago_{{compra.folio}}" tipo_pago="{{compra.cond_de_pago.nombre}}" status_pago = "{{compra.pagada}}">{{compra.req.orden.folio}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.staff.first_name}} {{compra.req.orden.staff.staff.staff.last_name}}</td>
+                    <td>{{compra.req.orden.proyecto.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
+                    <td id="fecha_autorizacion_{{compra.folio}}" fecha_autorizacion="{{compra.autorizado_at_2|date:'Y-m-d'}}" class="d-none d-lg-table-cell">{{compra.autorizado_at_2}} </td>
+                    {% if compra.proveedor.nombre.razon_social == "COLABORADOR" %}
+                    <td>{{compra.deposito_comprador.staff.staff.first_name}} {{compra.deposito_comprador.staff.staff.last_name}}</td>
+                    {% else %}
+                    <td>{{compra.proveedor.nombre}}</td>
+                    {% endif %}
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item m-1">
+                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'articulos-entrada-servicios' compra.id %}">Entrada</a>
+                            </li>
+                            <!-- Añadir el botón de productos aquí -->
+                            <li class="nav-item m-1">
+                            <a id="productosBtn" type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'productos' compra.id %}">Productos</a>
+                            </li>
+                            <!-- Añadir el botón de NC aquí -->
+                            <li class="nav-item m-1">
+                            <a id="ncBtn" type="button" class="btn btn-outline-warning" href="{% url 'no-conformidad' compra.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Botón para levantar NC relacionadas con calidad" class="tooltip-container">NC</a>
+                            </li> 
+                        </ul>
+                    </td>
+                    <td id="retraso_{{compra.folio}}"  class="d-none">
+                        <ul class="nav nav-pills">
+                            <li>
+                                <div  class="alert alert-warning" role="alert">
+                                    <i class="fa-solid fa-clock-rotate-left"></i><span id="text_span_{{compra.folio}}"></span>
+                                </div>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+
+                {% endfor %}
+            </tbody>
+            </table>
+
+        </div>
+   
+    </div>
+</div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if compras_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+
+            {% for item in compras_list.paginator.page_range %}
+                {% if compras_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if compras_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+// Función para obtener el valor de una cookie por su nombre
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function mostrarIndicadorCarga() {
+    var btn = document.getElementById('btnExcel')
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    verificarDescargaIniciada();
+    btn.classList.add('d-none')
+}
+
+function verificarDescargaIniciada(){
+    const checkDescarga = setInterval(() => {
+        const descargaIniciada = getCookie('descarga_iniciada');
+        if (descargaIniciada === 'true') {
+            // Ocultar el indicador de carga
+            document.getElementById('loadingIndicator').style.display = 'none';
+            
+            // Opcional: Borrar la cookie si es necesario
+            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
+            
+            clearInterval(checkDescarga);
+
+        }
+    }, 1000); // Revisar cada segundo
+}
+
+function indicador_retraso(folio) {
+    
+    var obj_dias_entrega = document.getElementById('fecha_pago_'+folio);
+    var obj_tipo_pago = document.getElementById('tipo_pago_'+folio);
+    var retraso_icon = document.getElementById('retraso_'+folio);
+    var obj_fecha_autorizacion = document.getElementById('fecha_autorizacion_'+folio);
+    var dias_entrega = obj_dias_entrega.getAttribute('dias_entrega');
+    var fecha_autorizacion = new Date(obj_fecha_autorizacion.getAttribute('fecha_autorizacion'));
+    var fecha_pago = new Date(obj_dias_entrega.getAttribute('fecha_pago'))
+    var elementoSpan = document.getElementById("text_span_" + folio);
+    var tipo_pago = obj_tipo_pago.getAttribute('tipo_pago');
+    console.log(tipo_pago)
+    var status_pago = obj_tipo_pago.getAttribute('status_pago');
+    var hoy = new Date()
+    hoy.setHours(0,0,0,0);
+    //console.log(hoy)
+
+    
+    if (tipo_pago == "CONTADO") {
+        console.log(fecha_pago, fecha_pago.getDate(), Number(dias_entrega))
+        fecha_pago.setDate(fecha_pago.getDate() + Number(dias_entrega));
+        var fecha_limite = new Date(fecha_pago);
+        console.log(fecha_limite)
+        fecha_limite.setHours(0,0,0,0)
+    } else if (tipo_pago == "CREDITO"){
+        
+        fecha_autorizacion.setDate(fecha_autorizacion.getDate() + Number(dias_entrega));
+        console.log(fecha_autorizacion, dias_entrega, )
+        var fecha_limite = new Date(fecha_autorizacion);
+        console.log(fecha_limite)
+        fecha_limite.setHours(0,0,0,0)
+    }
+    console.log(folio, fecha_limite)
+    if (fecha_limite > hoy){
+        retraso_icon.classList.add('d-none');   
+    } else {
+        retraso_icon.classList.remove('d-none');
+        var retraso = hoy - fecha_limite
+        var diferenciasDias =retraso/(1000*60*60*24)
+        diferenciasDias = Math.round(diferenciasDias);
+        elementoSpan.innerHTML = diferenciasDias; 
+
+        }  
+    
+}   
+    
+
+document.addEventListener('DOMContentLoaded', function() {
+  var filasCompra = document.querySelectorAll('.compra-row');
+  
+    
+
+  filasCompra.forEach(function(fila){
+    var folio = fila.getAttribute('folio');
+    indicador_retraso(folio)
+  });
+});
+
+</script>
+{% endblock %}
+</body>
+</html>

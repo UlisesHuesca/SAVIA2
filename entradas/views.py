@@ -164,12 +164,7 @@ def articulos_entrada(request, pk):
     vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
     compra = Compra.objects.get(id = pk)
     if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
-        articulos = ArticuloComprado.objects.filter(
-            Q(producto__producto__articulos__producto__producto__servicio = False) | 
-            (Q(producto__producto__articulos__producto__producto__servicio = True) & Q(oc__req__orden__staff=usuario)),
-            oc=pk, 
-            entrada_completa = False,  
-            seleccionado = False)
+        articulos = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False, producto__producto__articulos__producto__producto__servicio = False)
     else:
         articulos = ArticuloComprado.objects.filter(
             oc=pk, 
