@@ -130,7 +130,7 @@ def entrada_servicios(request):
         'compras_list':compras_list,
         }
 
-    return render(request, 'entradas/pendientes_entrada.html', context)
+    return render(request, 'entradas/pendientes_servicios.html', context)
 
 @login_required(login_url='user-login')
 def pendientes_calidad(request):
@@ -407,7 +407,7 @@ def articulos_entrada_servicios(request, pk):
         'articulos_entrada':articulos_entrada,
         }
 
-    return render(request, 'entradas/articulos_entradas.html', context)
+    return render(request, 'entradas/servicios_entradas.html', context)
 
 def evalua_entrada_completa(articulos_comprados, num_art_comprados, compra):
     for articulo in articulos_comprados:
