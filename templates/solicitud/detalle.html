@@ -117,7 +117,7 @@
                                                     <h2 class="accordion-header" id="headingSol"></h2>
                                                         {% if pago.hecho %}
                                                         <button class="accordion-button collapsed btn-success" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
-                                                            Pago: &nbsp<strong>{{pago.folio}}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> &nbspRealizado: {{ pago.pagado_real|default:pago.pagado_date}} 
+                                                            Pago: &nbsp<strong>{{pago.id}}</strong>&nbsp<i class="fa-solid fa-circle-check"></i> &nbspRealizado: {{ pago.pagado_real|default:pago.pagado_date}} 
                                                         </button>
                                                         {% endif %}
                                                     </h2>
