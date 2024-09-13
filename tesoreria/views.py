@@ -897,6 +897,48 @@ def eliminar_caracteres_invalidos(archivo_xml):
     # Guardar el nuevo archivo si es necesario, o retornarlo
     return new_file
 
+def extraer_datos_del_xml(ruta_xml):
+    try:
+        # Parsear el archivo XML
+        tree = ET.parse(ruta_xml)
+        root = tree.getroot()
+    except (ET.ParseError, FileNotFoundError) as e:
+        print(f"Error al parsear el archivo XML: {e}")
+        return None, None  # Si ocurre un error, devuelve None
+    
+    # Identificar la versión del XML y el espacio de nombres
+    version = root.tag
+    ns = {}
+    if 'http://www.sat.gob.mx/cfd/3' in version:
+        ns = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/3',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+            'if': 'https://www.interfactura.com/Schemas/Documentos',
+        }
+    elif 'http://www.sat.gob.mx/cfd/4' in version:
+        ns = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/4',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+            'if': 'https://www.interfactura.com/Schemas/Documentos',
+        }
+    else:
+        print(f"Versión del documento XML no reconocida")
+        return None, None
+    
+    # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
+    complemento = root.find('cfdi:Complemento', ns)
+    if complemento is not None:
+        timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
+        if timbre_fiscal is not None:
+            uuid = timbre_fiscal.get('UUID')
+            fecha_timbrado = timbre_fiscal.get('FechaTimbrado')
+            return uuid, fecha_timbrado  # Devolver UUID y fecha de timbrado
+        else:
+            print("Timbre Fiscal Digital no encontrado")
+            return None, None
+    else:
+        print("Complemento no encontrado")
+        return None, None
 
 
 @perfil_seleccionado_required
@@ -914,25 +956,48 @@ def matriz_facturas(request, pk):
             form = Facturas_Form(request.POST or None, request.FILES or None, instance = factura)
             
             if form.is_valid():
-                factura = form.save(commit = False)
-                factura.fecha_subido = date.today()
-                factura.hora_subido = datetime.now().time()
-                factura.hecho = True
-                factura.subido_por = usuario
                 archivo_xml = request.FILES.get('factura_xml')
                 if archivo_xml:
+                    factura = form.save(commit = False)
                     # Procesar el archivo XML para eliminar caracteres inválidos
                     archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                     # Guardar el archivo procesado de nuevo en el objeto factura
                     factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                factura.save()
-                messages.success(request,'Haz registrado tu factura')
-                return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
-            else:
-                messages.error(request,'No está validando')
-        #if "btn_editar" in request.POST:
-            #form
+                    # Extraer UUID y fecha de timbrado del XML (suponiendo que tienes una función que lo haga)
+                    uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura.factura_xml.path)
 
+                    # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                    if Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                        messages.error(request, f'La factura con UUID {uuid_extraido} no se puede registrar porque ya ha sido registrada.')
+                        print('este')
+                        return HttpResponse(status=204)
+                    else:
+                        #print('incorrecto')
+                        factura.fecha_subido = date.today()
+                        factura.hora_subido = datetime.now().time()
+                        factura.hecho = True
+                        factura.subido_por = usuario
+                        # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                        factura.uuid = uuid_extraido
+                        factura.fecha_timbrado = fecha_timbrado_extraida
+                        factura.save()
+                        messages.success(request,'Haz registrado tu factura')
+                        return HttpResponse(status=204)
+                else:        
+                    #print('incorrecto2')
+                    factura.fecha_subido = date.today()
+                    factura.hora_subido = datetime.now().time()
+                    factura.hecho = True
+                    factura.subido_por = usuario
+                    # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                    factura.uuid = uuid_extraido
+                    factura.fecha_timbrado = fecha_timbrado_extraida
+                    factura.save()
+                    messages.success(request,'Haz registrado tu factura')
+                    return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    else:
+        messages.error(request,'No está validando')
+        #if "btn_editar" in request.POST:    
     context={
         'form':form,
         'facturas':facturas,
@@ -980,21 +1045,48 @@ def factura_nueva(request, pk):
         if 'btn_registrar' in request.POST:
             form = Facturas_Form(request.POST or None, request.FILES or None, instance = factura)
             if form.is_valid():
-                factura = form.save(commit=False)
-                factura.hecho=True
-                factura.fecha_subido =date.today()
-                factura.hora_subido = datetime.now().time()
-                factura.subido_por =  usuario
                 archivo_xml = request.FILES.get('factura_xml')
                 if archivo_xml:
+                    factura = form.save(commit = False)
                     # Procesar el archivo XML para eliminar caracteres inválidos
                     archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                     # Guardar el archivo procesado de nuevo en el objeto factura
                     factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                factura.save()
-                messages.success(request,'La factura se registró de manera exitosa')
+                    # Extraer UUID y fecha de timbrado del XML (suponiendo que tienes una función que lo haga)
+                    uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura.factura_xml.path)
+
+                    # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                    if Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                        messages.error(request, f'La factura con UUID {uuid_extraido} no se puede registrar porque ya ha sido registrada.')
+                        print('este')
+                        return HttpResponse(status=204)
+                    else:
+                        #print('incorrecto')
+                        factura.fecha_subido = date.today()
+                        factura.hora_subido = datetime.now().time()
+                        factura.hecho = True
+                        factura.subido_por = usuario
+                        # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                        factura.uuid = uuid_extraido
+                        factura.fecha_timbrado = fecha_timbrado_extraida
+                        factura.save()
+                        messages.success(request,'Haz registrado tu factura')
+                        return HttpResponse(status=204)
+                else:        
+                    #print('incorrecto2')
+                    factura.fecha_subido = date.today()
+                    factura.hora_subido = datetime.now().time()
+                    factura.hecho = True
+                    factura.subido_por = usuario
+                    # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                    factura.uuid = uuid_extraido
+                    factura.fecha_timbrado = fecha_timbrado_extraida
+                    factura.save()
+                    messages.success(request,'Haz registrado tu factura')
+                    return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
             else:
-                messages.error(request,'No se pudo subir tu documento')
+                messages.error(request,'No está validando')
+        #if "btn_editar" in request.POST:
 
 
     context={

@@ -345,38 +345,35 @@ def compra_edicion(request, pk):
             requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
             cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
             cuenta_art_totales = requisitados.count()
-            if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0:
-                req.colocada = True
-            else:
-                req.colocada = False
-            for articulo in articulos:
-                costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
-                if articulo.producto.producto.articulos.producto.producto.iva == True:
-                    costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+           
+           
             for producto in requisitados:
                 dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
                 if producto.art_surtido == False:
                     producto.sel_comp = False
                     producto.save()
-            oc.complete = True
-            if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
-                oc.costo_iva = decimal.Decimal(costo_iva)
-                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
-            else:
-                oc.costo_iva = decimal.Decimal(costo_iva)
-                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
             if form.is_valid():
-                #abrev= usuario.distrito.abreviado
-                #oc.folio = str(abrev) + str(consecutivo).zfill(4)
+                #validación que comprueba si los art_comprados son igual a los articulos a los requisitados
+                if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0:
+                    req.colocada = True
+                else:
+                    req.colocada = False
+                #for articulo in articulos:
+                #    costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
+                #    if articulo.producto.producto.articulos.producto.producto.iva == True:
+                #        costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+                oc = form.save(commit = False)
+                oc.complete = True
+                oc.costo_iva = iva
+                oc.costo_oc = total
                 oc.regresar_oc = False
-                form.save()
                 oc.save()
                 req.save()
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has modificado la OC {oc.folio} correctamente')
                 return redirect('compras-devueltas')
-        else:
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
+            else:
+                for field, errors in form.errors.items():
+                    error_messages[field] = errors.as_text()
 
 
 
@@ -548,10 +545,11 @@ def oc_modal(request, pk):
                     folio = last_oc.folio + 1
                 else:
                     folio = 1
+                oc = form.save(commit = False)
                 oc.complete = True
                 oc.folio = folio
                 oc.created_at = date.today()
-                form.save()
+                #form.save()
                 oc.save()
                 req.save()
                 static_path = settings.STATIC_ROOT
@@ -1124,7 +1122,7 @@ def back_oc(request, pk):
             #requi.colocada = False
             compra.save()
             #requi.save()
-            messages.success(request,f'Has regresado la compra con FOLIO: {compra.get_folio} y ahora podrás encontrar esos productos en el apartado devolución')
+            messages.success(request,f'Has regresado la compra con FOLIO: {compra.folio} y ahora podrás encontrar esos productos en el apartado devolución')
             return redirect('compras-devueltas')
 
     context = {
