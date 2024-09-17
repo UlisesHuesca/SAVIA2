@@ -162,7 +162,9 @@
 </div>
 
 <div class="card bg-white my-2">
+    
     <form id="mass_payment_form" method="post" action="{% url 'compras-por-pagar' %}">
+        {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.staff.distritos == "MATRIZ" %}
         <ul class="nav nav-pills">
             <li class="nav-item mx-2">
                 <div col-lg-2>
@@ -176,6 +178,7 @@
             </li>
                 <input type="submit" value="Enviar a pago" id="enviar_a_pago_button" class="btn btn-primary">
         </ul>
+        {% endif %}
    
     {% csrf_token %}
     <div class="col-md-12">
@@ -196,9 +199,11 @@
                     <th class="d-none d-md-table-cell">Pagado</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
                     <th scope="col">Detalles</th>
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" %}
                     <th>Cancelar</th>
                     <th>Para Pago</th>
                     <th>Parcialidad</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -227,6 +232,7 @@
                             
                         </ul>
                     </td>
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" %}
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
@@ -240,6 +246,7 @@
                         <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
                         <input class="form-control diferencia" type="textbox" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
                     </td>
+                    {% endif %}
                 </tr>
                
                     
