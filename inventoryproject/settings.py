@@ -73,6 +73,7 @@ INSTALLED_APPS = [
     'crispy_bootstrap4',
     'rest_framework',
     'rest_framework.authtoken',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
@@ -81,6 +82,7 @@ MIDDLEWARE = [
     'django.middleware.locale.LocaleMiddleware',
     #'django.contrib.staticfiles.middleware.StaticFilesMiddleware',
     'django.middleware.cache.UpdateCacheMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -220,6 +222,7 @@ REST_FRAMEWORK = {
     # or allow read-only access for unauthenticated users.
     'DEFAULT_PERMISSION_CLASSES': [
         'rest_framework.permissions.DjangoModelPermissionsOrAnonReadOnly',
+        'rest_framework.authentication.TokenAuthentication',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -260,7 +263,9 @@ MEDIA_ROOT = '/home/savia/images'
 MEDIA_URL = '/images/'
 
 
-
+CORS_ALLOWED_ORIGINS = [
+    'https://uliseshuesca.pythonanywhere.com',
+]
 
 #STATIC_ROOT = os.path.join(BASE_DIR, "static/")
 #Esta etiqueta es para redigir cuando te logeas desde settings
@@ -273,7 +278,7 @@ AUTHENTICATION_BACKENDS = ['user.backends.EmailBackend']
 # https://docs.djangoproject.com/en/3.2/ref/settings/#default-auto-field
 
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
-DEFAULT_FROM_EMAIL ='savia@grupovordcab.com.mx'
+DEFAULT_FROM_EMAIL ='savia@vordcab.com'
 #DEFAULT_FROM_EMAIL = 'savia@grupovordcab.com.mx'
 
 
@@ -282,10 +287,11 @@ EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 
 #EMAIL_USE_TLS = True
 #EMAIL_USE_SSL = False
-EMAIL_HOST ='mail.grupovordcab.com.mx' #'smtp.gmail.com' 
+EMAIL_HOST ='mail.vordcab.com' #'smtp.gmail.com' 
 EMAIL_PORT ='26'#'465'
-EMAIL_HOST_USER ='savia@grupovordcab.com.mx'
-EMAIL_HOST_PASSWORD = '78UjYgAH-+/7857/*'
+EMAIL_HOST_USER ='savia@vordcab.com'
+EMAIL_HOST_PASSWORD = 'TgySq*/168*/'
+#EMAIL_HOST_PASSWORD = '78UjYgAH-+/7857/*'
 EMAIL_USE_TLS = True
 #EMAIL_USE_SSL = True
 #EMAIL_HOST = 'mail.vordcab.com'
@@ -301,3 +307,4 @@ CELERY_RESULT_BACKEND = 'rpc://'
 #USE_X_FORWARDED_HOST = True
 #SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
 
+DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB, ajusta el valor según lo que necesites

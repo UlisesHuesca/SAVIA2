@@ -84,6 +84,8 @@ class Proveedor_direcciones(models.Model):
     producto = models.BooleanField(default=False)
     arrendamiento = models.BooleanField(default=False)
     moneda = models.ForeignKey(Moneda, on_delete = models.CASCADE, null=True)
+    referencia = models.CharField(max_length=20, null=True, blank = True)
+    convenio = models.CharField(max_length=20, null=True, blank = True)
 
     def __str__(self):
         return f'{self.nombre}'
@@ -192,7 +194,7 @@ class Compra(models.Model):
     entrada_completa = models.BooleanField(default=False)
     solo_servicios = models.BooleanField(default=False)
     regresar_oc = models.BooleanField(default=False)
-    comentarios = models.TextField(max_length=400, null=True)
+    comentarios = models.TextField(max_length=400, null=True, blank=True)
     comentario_gerencia = models.TextField(null=True, blank=True)
     comentario_solicitud = models.BooleanField(default = False)
     saldo_a_favor = models.DecimalField(max_digits=14,decimal_places=2, default=0)

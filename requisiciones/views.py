@@ -38,7 +38,7 @@ from user.decorators import perfil_seleccionado_required
 from compras.models import Compra
 from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos, Tipo_Devolucion
 from .tasks import convert_entradas_to_xls_task, convert_salidas_to_xls_task
-from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter, HistoricalSalidasFilter
+from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter, HistoricalSalidasFilter, Historical_articulos_surtir_filter
 from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
 #from compras.views import clear_task_id, verificar_estado
 from openpyxl import Workbook
@@ -415,7 +415,7 @@ def salida_material(request, pk):
     orden = Order.objects.get(id = pk)
     print(orden)
     productos = ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
-    productos_no_seleccionados = productos.filter(seleccionado = False)
+    productos_no_seleccionados = productos.filter(seleccionado_salida = False)
     vale_salidas = ValeSalidas.objects.filter(solicitud__distrito = usuario.distritos)
     vale_salida, created = vale_salidas.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
     salidas = Salidas.objects.filter(vale_salida = vale_salida)
@@ -444,7 +444,7 @@ def salida_material(request, pk):
             cantidad_salidas = 0
             cantidad_productos = productos.count()
             for producto in productos:
-                producto.seleccionado = False
+                producto.seleccionado_salida = False
                 print(producto,"cantidad:", producto.cantidad)
                 if producto.cantidad <= 0:
                     producto.salida=True
@@ -625,7 +625,7 @@ def update_salida(request):
     if action == "add":
         #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
-        producto.seleccionado = True
+        producto.seleccionado_salida = True
         entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal').order_by('id')
 
         try:
@@ -644,6 +644,7 @@ def update_salida(request):
                     salida.precio = entrada.articulo_comprado.precio_unitario
                     if entrada.cantidad_por_surtir >= cantidad:
                         salida.cantidad = cantidad
+                        cantidad = 0 #la cantidad se vuelve 0 porque si la condición se cumple indica que la cantidad por surtir es capaz de abastecer toda la cantidad
                         producto.cantidad = producto.cantidad - salida.cantidad
                         salida.entrada = entrada.id
                         entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
@@ -653,7 +654,7 @@ def update_salida(request):
                         producto.save()
                         entrada.save()
                         salida.save()
-                    elif entrada.cantidad_por_surtir < cantidad:
+                    elif entrada.cantidad_por_surtir < cantidad and cantidad > 0: #Le meto la condicional para que no se repita el proceso si la cantidad es igual o menor que 0 
                         salida.cantidad = entrada.cantidad_por_surtir #No puedo surtir mas que la cantidad que tengo disponible en la entrada
                         cantidad = cantidad - salida.cantidad #La nueva cantidad a surtir es la cantidad menos lo que ya salió
                         producto.cantidad = producto.cantidad - salida.cantidad
@@ -716,7 +717,8 @@ def update_salida(request):
         
     if action == "remove":
         item = Salidas.objects.get(vale_salida = vale_salida, id = id_salida)
-        if item.entrada != 0:
+        id_entrada = item.entrada
+        if item.entrada != None:
             entrada = EntradaArticulo.objects.get(id=item.entrada)
             inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas + item.cantidad
             entrada.cantidad_por_surtir = entrada.cantidad_por_surtir + item.cantidad
@@ -727,7 +729,7 @@ def update_salida(request):
         if vale_salida.solicitud.tipo.tipo == "normal":
             inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
         #inv_del_producto.cantidad = inv_del_producto.cantidad + item.cantidad
-        producto.seleccionado = False
+        producto.seleccionado_salida = False
         producto.salida= False
         producto.cantidad = producto.cantidad + item.cantidad
         inv_del_producto._change_reason = f'Esta es una cancelación de un artìculo en una salida {item.id}'
@@ -990,7 +992,10 @@ def requisicion_autorizar(request, pk):
         #producto = producto.producto.articulos.producto.price
         costo_aprox = costo_aprox + producto.cantidad * producto.producto.articulos.producto.price
 
-    porcentaje = "{0:.2f}%".format((costo_aprox/requi.orden.subproyecto.presupuesto)*100)
+    try:
+        porcentaje = "{0:.2f}%".format((costo_aprox/requi.orden.subproyecto.presupuesto)*100)
+    except ZeroDivisionError:
+        porcentaje = " 0%"
     resta = requi.orden.subproyecto.presupuesto - requi.orden.subproyecto.gastado - costo_aprox
 
     if request.method == 'POST':
@@ -1470,8 +1475,17 @@ def clear_task_id_entradas(request):
 def historico_articulos_para_surtir(request):
     registros = ArticulosparaSurtir.history.all()
 
+    myfilter = Historical_articulos_surtir_filter(request.GET, queryset=registros)
+    registros = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(registros, 30)
+    page = request.GET.get('page')
+    registros_list = p.get_page(page)
+
     context = {
-        'registros':registros,
+        'myfilter': myfilter,
+        'registros_list':registros_list,
         }
 
     return render(request,'requisiciones/historicos_articulos_para_surtir.html',context)
@@ -2188,7 +2202,7 @@ def convert_entradas_to_xls2(entradas):
     for col_num in range(1, len(columns) + 1):
         if col_num == 5:  # Fecha
             ws.set_col_style(col_num, date_style)
-        elif col_num in [13, 15, 16, 17, 18]:  # Dinero
+        elif col_num in [15, 16, 17, 18]:  # Dinero
             ws.set_col_style(col_num, money_style)
         else:
             ws.set_col_style(col_num, body_style)
@@ -2230,7 +2244,7 @@ def generate_excel_report(salidas):
 
     # Escribe los encabezados
     columns = ['Vale Salida','Folio Solicitud','Fecha','Solicitante','Proyecto','Subproyecto','Área','Código','Articulo','Material recibido por',
-               'Cantidad','Precio','Total']
+               'Cantidad','Precio','Moneda','TC','Total']
     
     for i, column in enumerate(columns):
         worksheet.write(0, i, column, head_style)
@@ -2247,6 +2261,14 @@ def generate_excel_report(salidas):
         else:
             precio_condicional = salida.producto.articulos.producto.price
 
+        if salida.entrada:
+            entrada = Entrada.objects.get(id = entrada)
+            moneda = str(entrada.oc.moneda.nombre)
+            tc = entrada.oc.tipo_de_cambio
+        else:
+            moneda = "PESOS"
+            tc = " "
+
         rows = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
@@ -2259,7 +2281,9 @@ def generate_excel_report(salidas):
             salida.producto.articulos.producto.producto.nombre,
             f"{salida.vale_salida.material_recibido_por.staff.staff.first_name} {salida.vale_salida.material_recibido_por.staff.staff.last_name}",
             salida.cantidad,
-            precio_condicional
+            precio_condicional,
+            moneda,
+            tc
         ]
 
          # Escribe la fila en el archivo
@@ -2278,7 +2302,7 @@ def generate_excel_report(salidas):
             # Finalmente, escribe la celda con el valor y el formato correspondiente
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
-        worksheet.write_formula(row_num, 12, f'=K{row_num + 1}*L{row_num + 1}', money_style)
+        worksheet.write_formula(row_num, 14, f'=K{row_num + 1}*L{row_num + 1}', money_style)
     
     workbook.close()
 
@@ -2299,7 +2323,7 @@ def generate_excel_report(salidas):
 def generate_excel_report2(salidas):
     output = io.BytesIO()
 
-    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Total']
+    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Moneda','TC','Total']
     data = [columns]
 
     for salida in salidas:
@@ -2320,6 +2344,19 @@ def generate_excel_report2(salidas):
         else:
             comentario = " "
 
+        if salida.entrada:
+            id = salida.entrada
+            try:
+                entrada_articulo = EntradaArticulo.objects.get(id = id)
+                moneda = str(entrada_articulo.entrada.oc.moneda.nombre)
+                tc = entrada_articulo.entrada.oc.tipo_de_cambio
+            except EntradaArticulo.DoesNotExist:
+                moneda = "PESOS"
+                tc = 0       
+        else:
+            moneda = "PESOS"
+            tc = 0
+
         solicitante = f"{salida.vale_salida.solicitud.staff.staff.staff.first_name} {salida.vale_salida.solicitud.staff.staff.staff.last_name}"
 
         rows = [
@@ -2336,6 +2373,8 @@ def generate_excel_report2(salidas):
             comentario,
             salida.cantidad,
             precio_condicional,
+            moneda,
+            tc,
             None  # Placeholder for the total formula
         ]
         data.append(rows)
@@ -2364,13 +2403,15 @@ def generate_excel_report2(salidas):
         alignment=Alignment(horizontal='left')
     )
 
+   
     for row_num in range(2, len(data) + 1):
-        ws[row_num][14].value = f'=M{row_num}*L{row_num}'
+        formula = f'=IF(O{row_num} = 0, M{row_num}*L{row_num}, M{row_num}*L{row_num}*O{row_num})'
+        ws[row_num][16].value = formula
 
     for col_num in range(1, len(columns) + 1):
         if col_num == 3:  # Fecha
             ws.set_col_style(col_num, date_style)
-        elif col_num in [13, 14]:  # Dinero
+        elif col_num in [13, 15, 16]:  # Dinero
             ws.set_col_style(col_num, money_style)
         else:
             ws.set_col_style(col_num, body_style)

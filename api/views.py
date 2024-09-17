@@ -2,11 +2,11 @@ from django.shortcuts import render
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import generics
-from rest_framework.authentication import TokenAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from dashboard.models import Inventario 
-from compras.models import Compra
-from .serializers import InventarioSerializer, CompraSerializer
+from compras.models import Compra, Proveedor_direcciones
+from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 # Create your views here.
 
@@ -41,3 +41,26 @@ def CompraAPI(request):
     serialized_compras = CompraSerializer(compras, many=True)
         
     return Response(serialized_compras.data)
+
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def proveedores_api(request):
+    proveedores = Proveedor_direcciones.objects.filter(completo = True)
+    page = request.query_params.get('page', 1)
+    per_page = request.query_params.get('per_page', 20)
+    #
+    ordering = request.query_params.get('ordering')
+
+    if ordering:
+        proveedores = Proveedor_direcciones.order_by(ordering)
+        
+    paginator = Paginator(proveedores, per_page=per_page)
+    try: 
+        proveedores = paginator.page(number=page)
+    except EmptyPage:
+        proveedores = []
+    serialized_proveedores = ProveedorDireccionesSerializer(proveedores, many=True)
+        
+    return Response(serialized_proveedores.data)

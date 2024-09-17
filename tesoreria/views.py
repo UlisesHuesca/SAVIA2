@@ -40,6 +40,7 @@ import decimal
 import os
 import io
 import zipfile
+import xml.etree.ElementTree as ET
 
 #Excel stuff
 import xlsxwriter
@@ -116,7 +117,11 @@ def compras_autorizadas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     if usuario.tipo.tesoreria == True:
-        compras = Compra.objects.filter(para_pago=True,pagada=False,autorizado2=True, req__orden__distrito = usuario.distritos).order_by('-folio')
+        if usuario.tipo.rh:
+            compras = Compra.objects.none()
+        else: 
+            compras = Compra.objects.filter(para_pago=True,pagada=False,autorizado2=True, req__orden__distrito = usuario.distritos).order_by('-folio')
+    
    
     
     #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
@@ -408,23 +413,13 @@ def compras_pagos(request, pk):
                     tipo_de_cambio = decimal.Decimal(dof())
                     sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
                 #actualizar la cuenta de la que se paga
-            monto_pagado= monto_actual + suma_pago
-            compra.monto_pagado = monto_pagado
+            monto_total= monto_actual + suma_pago
+            compra.monto_pagado = monto_total
             costo_oc = compra.costo_plus_adicionales
-            print('monto_pagado:',monto_pagado,type(monto_pagado))
-            print('costo_oc:',costo_oc,type(costo_oc))
-            print('monto_actual:',monto_actual, type(monto_actual))
-            print('suma pago:',suma_pago, type(suma_pago))
-
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
+            elif round(monto_total,2) <= round(costo_oc,2):
                
-            elif round(monto_pagado,2) <= round(costo_oc,2): #si el monto_total pagado <= al costo de la oc 
-                if round(monto_pagado,2) == round(costo_oc,2): #si el monto_pagado es igual al costo_oc entonces la compra está pagada
-                    compra.pagada= True
-                if round(compra.parcial,2) == round(monto_pagado,2): #Si el monto de lo pagado es igual al monto de la compra parcial, la compra parcial en la ota cvista debe ser mayor al costo de lo pagado
-                    compra.parcial = 0
-                    compra.para_pago = False
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
@@ -434,88 +429,167 @@ def compras_pagos(request, pk):
                 img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
                 image_base64 = get_image_base64(img_path)
                 logo_v_base64 = get_image_base64(img_path2)
-                #if round(monto_pagado,2) == round(costo_oc,2): #si el monto_pagado es igual al costo de la oc
+                if round(monto_total,2) == round(costo_oc,2):
+                    compra.pagada= True
                     #if compra.cond_de_pago.nombre == "CONTADO":
-                pagos = Pago.objects.filter(oc=compra, hecho=True)
-                html_message = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body>
-                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                            <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido pagada por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name},</p>
-                            <p>El siguiente paso del sistema: Recepción por parte de Almacén</p>
-                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                        </body>
-                    </html>
-                    """
-                try:
-                    email = EmailMessage(
-                    f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                    body=html_message,
-                    from_email = settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com', compra.req.orden.staff.staff.staff.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    print('Aquí enviaría el correo')
-                #    email.send()
-                except (BadHeaderError, SMTPException) as e:
-                    error_message = f'Correo de notificación 1: No enviado'
-                html_message2 = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body>
-                            <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
-                            <p>Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.<p>
-                            <p>&nbsp;</p>
-                            <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
-                            <p>GRUPO VORDCAB S.A. de C.V.</p>
-                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                        </body>
-                    </html>
-                    """
-                try:
-                    email = EmailMessage(
-                    f'Compra Autorizada {compra.folio}|SAVIA',
-                    body=html_message2,
-                    from_email =settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
-                    email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
-                    email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
-                    email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
-                    email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
-                    #if pagos.count() > 0:
-                        #for pago in pagos:
-                            #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
-                #    email.send()
-                    messages.success(request,f'Has registrado exitosamente el pago')
-                    for producto in productos:
-                        if producto.producto.producto.articulos.producto.producto.especialista == True:
-                            archivo_oc = attach_oc_pdf(request, compra.id)
-                            email = EmailMessage(
-                            f'Compra Autorizada {compra.folio}',
-                            f'Estimado Especialista,\n Estás recibiendo este correo porque ha sido pagada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.codigo} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                            settings.DEFAULT_FROM_EMAIL,
-                            ['ulises_huesc@hotmail.com'],
-                            )
-                            email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
-                    #        email.send()
-                   
-                except (BadHeaderError, SMTPException) as e:
-                    error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
-                    messages.warning(request, error_message)
+                    pagos = Pago.objects.filter(oc=compra, hecho=True)
+                    html_message = f"""
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido pagada por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name},</p>
+                                <p>El siguiente paso del sistema: Recepción por parte de Almacén</p>
+                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                            </body>
+                        </html>
+                        """
+                    try:
+                        email = EmailMessage(
+                        f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                        body=html_message,
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com', compra.req.orden.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.send()
+                    except (BadHeaderError, SMTPException) as e:
+                        error_message = f'Correo de notificación 1: No enviado'
+                    html_message2 = f"""
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
+                                <p>Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.<p>
+                                <p>&nbsp;</p>
+                                <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
+                                <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                            </body>
+                        </html>
+                        """
+                    try:
+                        email = EmailMessage(
+                        f'Compra Autorizada {compra.folio}|SAVIA',
+                        body=html_message2,
+                        from_email =settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        if compra.entrada_completa == False:
+                            email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                        email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
+                        email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
+                        email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                        email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
+                        #if pagos.count() > 0:
+                            #for pago in pagos:
+                                #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                        email.send()
+                        messages.success(request,f'Has registrado exitosamente el pago')
+                        for producto in productos:
+                            if producto.producto.producto.articulos.producto.producto.especialista == True:
+                                archivo_oc = attach_oc_pdf(request, compra.id)
+                                email = EmailMessage(
+                                f'Compra Autorizada {compra.folio}',
+                                f'Estimado Especialista,\n Estás recibiendo este correo porque ha sido pagada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.codigo} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                                settings.DEFAULT_FROM_EMAIL,
+                                ['ulises_huesc@hotmail.com'],
+                                )
+                                email.attach(f'folio:{compra.get_folio}.pdf',archivo_oc,'application/pdf')
+                                email.send()
+                        messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                    except (BadHeaderError, SMTPException) as e:
+                        error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
+                        messages.warning(request, error_message)
+                else:
+                    pagos = Pago.objects.filter(oc=compra, hecho=True)
+                    html_message = f"""
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido pagada por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name},</p>
+                                <p>El siguiente paso del sistema: Recepción por parte de Almacén</p>
+                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                            </body>
+                        </html>
+                        """
+                    try:
+                        email = EmailMessage(
+                        f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                        body=html_message,
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com', compra.req.orden.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.send()
+                    except (BadHeaderError, SMTPException) as e:
+                        error_message = f'Correo de notificación 1: No enviado'
+                    html_message2 = f"""
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                             <body>
+                                <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
+                                <p>Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.<p>
+                                <p>&nbsp;</p>
+                                <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
+                                <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                            </body>
+                        </html>
+                        """
+                    try:
+                        email = EmailMessage(
+                        f'Compra Autorizada {compra.folio}|SAVIA',
+                        body=html_message2,
+                        from_email =settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        if compra.entrada_completa == False:
+                            email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                        email.attach(f'Política_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
+                        email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
+                        email.attach(f'Código_de_ética.pdf', pdf_etica, 'application/pdf')
+                        email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
+                        #if pagos.count() > 0:
+                            #for pago in pagos:
+                                #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                        email.send()
+                    except (BadHeaderError, SMTPException) as e:
+                        error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
+                        messages.warning(request, error_message)
+                            
+                pago.save()
+                compra.save()
+                form.save()
+                sub.save()
+                cuenta.save()
+                
+                return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
+            elif round(monto_total,2) > round(costo_oc,2):
+                messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {costo_oc}')
             else:
                 pagos = Pago.objects.filter(oc=compra, hecho=True)
                 html_message = f"""
@@ -940,6 +1014,48 @@ def eliminar_caracteres_invalidos(archivo_xml):
     # Guardar el nuevo archivo si es necesario, o retornarlo
     return new_file
 
+def extraer_datos_del_xml(ruta_xml):
+    try:
+        # Parsear el archivo XML
+        tree = ET.parse(ruta_xml)
+        root = tree.getroot()
+    except (ET.ParseError, FileNotFoundError) as e:
+        print(f"Error al parsear el archivo XML: {e}")
+        return None, None  # Si ocurre un error, devuelve None
+    
+    # Identificar la versión del XML y el espacio de nombres
+    version = root.tag
+    ns = {}
+    if 'http://www.sat.gob.mx/cfd/3' in version:
+        ns = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/3',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+            'if': 'https://www.interfactura.com/Schemas/Documentos',
+        }
+    elif 'http://www.sat.gob.mx/cfd/4' in version:
+        ns = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/4',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+            'if': 'https://www.interfactura.com/Schemas/Documentos',
+        }
+    else:
+        print(f"Versión del documento XML no reconocida")
+        return None, None
+    
+    # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
+    complemento = root.find('cfdi:Complemento', ns)
+    if complemento is not None:
+        timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
+        if timbre_fiscal is not None:
+            uuid = timbre_fiscal.get('UUID')
+            fecha_timbrado = timbre_fiscal.get('FechaTimbrado')
+            return uuid, fecha_timbrado  # Devolver UUID y fecha de timbrado
+        else:
+            print("Timbre Fiscal Digital no encontrado")
+            return None, None
+    else:
+        print("Complemento no encontrado")
+        return None, None
 
 
 @perfil_seleccionado_required
@@ -957,25 +1073,48 @@ def matriz_facturas(request, pk):
             form = Facturas_Form(request.POST or None, request.FILES or None, instance = factura)
             
             if form.is_valid():
-                factura = form.save(commit = False)
-                factura.fecha_subido = date.today()
-                factura.hora_subido = datetime.now().time()
-                factura.hecho = True
-                factura.subido_por = usuario
                 archivo_xml = request.FILES.get('factura_xml')
                 if archivo_xml:
+                    factura = form.save(commit = False)
                     # Procesar el archivo XML para eliminar caracteres inválidos
                     archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                     # Guardar el archivo procesado de nuevo en el objeto factura
                     factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                factura.save()
-                messages.success(request,'Haz registrado tu factura')
-                return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
-            else:
-                messages.error(request,'No está validando')
-        #if "btn_editar" in request.POST:
-            #form
+                    # Extraer UUID y fecha de timbrado del XML (suponiendo que tienes una función que lo haga)
+                    uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura.factura_xml.path)
 
+                    # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                    if Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                        messages.error(request, f'La factura con UUID {uuid_extraido} no se puede registrar porque ya ha sido registrada.')
+                        print('este')
+                        return HttpResponse(status=204)
+                    else:
+                        #print('incorrecto')
+                        factura.fecha_subido = date.today()
+                        factura.hora_subido = datetime.now().time()
+                        factura.hecho = True
+                        factura.subido_por = usuario
+                        # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                        factura.uuid = uuid_extraido
+                        factura.fecha_timbrado = fecha_timbrado_extraida
+                        factura.save()
+                        messages.success(request,'Haz registrado tu factura')
+                        return HttpResponse(status=204)
+                else:        
+                    #print('incorrecto2')
+                    factura.fecha_subido = date.today()
+                    factura.hora_subido = datetime.now().time()
+                    factura.hecho = True
+                    factura.subido_por = usuario
+                    # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                    factura.uuid = uuid_extraido
+                    factura.fecha_timbrado = fecha_timbrado_extraida
+                    factura.save()
+                    messages.success(request,'Haz registrado tu factura')
+                    return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    else:
+        messages.error(request,'No está validando')
+        #if "btn_editar" in request.POST:    
     context={
         'form':form,
         'facturas':facturas,
@@ -1023,21 +1162,48 @@ def factura_nueva(request, pk):
         if 'btn_registrar' in request.POST:
             form = Facturas_Form(request.POST or None, request.FILES or None, instance = factura)
             if form.is_valid():
-                factura = form.save(commit=False)
-                factura.hecho=True
-                factura.fecha_subido =date.today()
-                factura.hora_subido = datetime.now().time()
-                factura.subido_por =  usuario
                 archivo_xml = request.FILES.get('factura_xml')
                 if archivo_xml:
+                    factura = form.save(commit = False)
                     # Procesar el archivo XML para eliminar caracteres inválidos
                     archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                     # Guardar el archivo procesado de nuevo en el objeto factura
                     factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                factura.save()
-                messages.success(request,'La factura se registró de manera exitosa')
+                    # Extraer UUID y fecha de timbrado del XML (suponiendo que tienes una función que lo haga)
+                    uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura.factura_xml.path)
+
+                    # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                    if Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                        messages.error(request, f'La factura con UUID {uuid_extraido} no se puede registrar porque ya ha sido registrada.')
+                        print('este')
+                        return HttpResponse(status=204)
+                    else:
+                        #print('incorrecto')
+                        factura.fecha_subido = date.today()
+                        factura.hora_subido = datetime.now().time()
+                        factura.hecho = True
+                        factura.subido_por = usuario
+                        # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                        factura.uuid = uuid_extraido
+                        factura.fecha_timbrado = fecha_timbrado_extraida
+                        factura.save()
+                        messages.success(request,'Haz registrado tu factura')
+                        return HttpResponse(status=204)
+                else:        
+                    #print('incorrecto2')
+                    factura.fecha_subido = date.today()
+                    factura.hora_subido = datetime.now().time()
+                    factura.hecho = True
+                    factura.subido_por = usuario
+                    # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
+                    factura.uuid = uuid_extraido
+                    factura.fecha_timbrado = fecha_timbrado_extraida
+                    factura.save()
+                    messages.success(request,'Haz registrado tu factura')
+                    return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
             else:
-                messages.error(request,'No se pudo subir tu documento')
+                messages.error(request,'No está validando')
+        #if "btn_editar" in request.POST:
 
 
     context={
@@ -1104,6 +1270,9 @@ def mis_gastos(request):
 
         gasto.proyectos = ', '.join(proyectos)
         gasto.subproyectos = ', '.join(subproyectos)
+
+    if request.method =='POST' and 'btnExcel' in request.POST:
+        return convert_excel_gasto(gastos)
 
     context= {
         'gastos':gastos,
@@ -1938,3 +2107,173 @@ def generar_qr(data):
     qr_img.seek(0)
     
     return qr_img
+
+
+
+def convert_excel_gasto(gastos):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Gastos_' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Gastos')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+    percent_style = NamedStyle(name='percent_style', number_format='0.00%')
+    percent_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(percent_style)
+
+    columns = ['Folio','Fecha Autorización','Distrito','Proyectos','Subproyectos','Colaborador','Solicitado para',
+               'Importe','Fecha Creación','Status','Autorizado por','Facturas','Status Pago']
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 5: #Columna del proveedor
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 30
+        if col_num == 2:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
+
+    columna_max = len(columns)+2
+
+    # Agregar los mensajes
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 30
+
+    # Agregar los encabezados de las nuevas columnas debajo de los mensajes
+    ws.cell(row=3, column = columna_max, value="Total de Gastos").style = head_style
+    ws.cell(row=4, column = columna_max, value="Sumatoria de Pagos Pendientes").style = head_style
+   
+
+    # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
+    ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(F:F)").style = money_resumen_style
+  
+
+   
+    
+    for gasto in gastos:
+        row_num = row_num + 1    
+        
+        # Manejar autorizado_at_2
+        if gasto.approbado_fecha2 and isinstance(gasto.approbado_fecha2, datetime):
+        # Si autorizado_at_2 es timezone-aware, conviértelo a timezone-naive
+            autorizado_at_2_naive = gasto.approbado_fecha2.astimezone(pytz.utc).replace(tzinfo=None)
+        else:
+            autorizado_at_2_naive = ''
+        
+        # Manejar created_at
+        if gasto.created_at and isinstance(gasto.created_at, datetime):
+        # Si created_at es timezone-aware, conviértelo a timezone-naive
+           created_at_naive = gasto.created_at.astimezone(pytz.utc).replace(tzinfo=None)
+        else:
+            created_at_naive = ''
+
+        if gasto.pagada:
+            pagada = "Con Pago"
+        else:
+            pagada = "Sin Pago"
+
+        if gasto.facturas.exists():
+            facturas = "Con Facturas"
+        else:
+            facturas = "Sin Facturas"
+        
+        if gasto.autorizar2:
+            status = "Autorizado"
+            
+            if gasto.distrito.nombre == "MATRIZ":
+                autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            elif gasto.autorizado_por2:
+                autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
+            else:
+                autorizado_por = "NR"
+        elif gasto.autorizar2 == False:
+            status = "Cancelado"
+            if gasto.distrito.nombre == "MATRIZ":
+                autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            elif gasto.autorizado_por2:
+                autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
+            else:
+                autorizado_por = "NR"
+        elif gasto.autorizar:
+            autorizado_por =str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            status = "Autorizado | Falta una autorización"
+            if gasto.facturas:
+                facturas = gasto.facturas.exists()
+            else:
+                facturas = False
+        elif gasto.autorizar == False:
+            status = "Cancelado"
+            autorizado_por = str(gasto.superintendente.staff.staff.last_name)
+        else:
+            autorizado_por = "Faltan autorizaciones"
+            status = "Faltan autorizaciones"
+
+        proyectos = set()
+        subproyectos = set()
+        articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+        for articulo in articulos_gasto:
+            if articulo.proyecto:
+                proyectos.add(str(articulo.proyecto.nombre))
+            if articulo.subproyecto:
+                subproyectos.add(str(articulo.subproyecto.nombre))
+
+        proyectos_str = ', '.join(proyectos)
+        subproyectos_str = ', '.join(subproyectos)
+
+        row = [
+            gasto.folio,
+            autorizado_at_2_naive,
+            gasto.distrito.nombre,
+            proyectos_str,
+            subproyectos_str,
+            gasto.staff.staff.staff.first_name + ' ' + gasto.staff.staff.staff.last_name,
+            gasto.colaborador.staff.staff.first_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
+            gasto.get_total_solicitud,
+            created_at_naive,
+            status,
+            autorizado_por,
+            facturas,
+            pagada
+            #f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
+            #created_at_naive,
+        ]
+
+    
+        for col_num in range(len(row)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            if col_num ==1 or col_num == 6:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num == 5:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+       
+    
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    wb.save(response)
+
+    return(response)

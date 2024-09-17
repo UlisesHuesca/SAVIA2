@@ -345,38 +345,35 @@ def compra_edicion(request, pk):
             requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
             cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
             cuenta_art_totales = requisitados.count()
-            if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0:
-                req.colocada = True
-            else:
-                req.colocada = False
-            for articulo in articulos:
-                costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
-                if articulo.producto.producto.articulos.producto.producto.iva == True:
-                    costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+           
+           
             for producto in requisitados:
                 dif_cant = dif_cant + producto.cantidad - producto.cantidad_comprada
                 if producto.art_surtido == False:
                     producto.sel_comp = False
                     producto.save()
-            oc.complete = True
-            if oc.tipo_de_cambio != None and oc.tipo_de_cambio > 0:
-                oc.costo_iva = decimal.Decimal(costo_iva)
-                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
-            else:
-                oc.costo_iva = decimal.Decimal(costo_iva)
-                oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
             if form.is_valid():
-                #abrev= usuario.distrito.abreviado
-                #oc.folio = str(abrev) + str(consecutivo).zfill(4)
+                #validación que comprueba si los art_comprados son igual a los articulos a los requisitados
+                if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0:
+                    req.colocada = True
+                else:
+                    req.colocada = False
+                #for articulo in articulos:
+                #    costo_oc = costo_oc + articulo.precio_unitario * articulo.cantidad
+                #    if articulo.producto.producto.articulos.producto.producto.iva == True:
+                #        costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
+                oc = form.save(commit = False)
+                oc.complete = True
+                oc.costo_iva = iva
+                oc.costo_oc = total
                 oc.regresar_oc = False
-                form.save()
                 oc.save()
                 req.save()
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has modificado la OC {oc.folio} correctamente')
                 return redirect('compras-devueltas')
-        else:
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
+            else:
+                for field, errors in form.errors.items():
+                    error_messages[field] = errors.as_text()
 
 
 
@@ -548,10 +545,11 @@ def oc_modal(request, pk):
                     folio = last_oc.folio + 1
                 else:
                     folio = 1
+                oc = form.save(commit = False)
                 oc.complete = True
                 oc.folio = folio
                 oc.created_at = date.today()
-                form.save()
+                #form.save()
                 oc.save()
                 req.save()
                 static_path = settings.STATIC_ROOT
@@ -1124,7 +1122,7 @@ def back_oc(request, pk):
             #requi.colocada = False
             compra.save()
             #requi.save()
-            messages.success(request,f'Has regresado la compra con FOLIO: {compra.get_folio} y ahora podrás encontrar esos productos en el apartado devolución')
+            messages.success(request,f'Has regresado la compra con FOLIO: {compra.folio} y ahora podrás encontrar esos productos en el apartado devolución')
             return redirect('compras-devueltas')
 
     context = {
@@ -1171,7 +1169,10 @@ def autorizar_oc1(request, pk):
             costo_fletes = 0
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
-    porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+    try:
+        porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+    except ZeroDivisionError:
+        porcentaje = "0"
 
 
     if request.method == 'POST':
@@ -1702,7 +1703,10 @@ def carga_productos(request):
 
 @perfil_seleccionado_required
 def editar_comparativo(request, pk):
-    usuario = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    #colaborador_sel = Profile.objects.all()
+    usuario = Profile.objects.get(id = pk_perfil)
+    #usuario = Profile.objects.get(staff__id=request.user.id)
     comparativo =Comparativo.objects.get(id = pk)
     productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
     proveedores = Proveedor_direcciones.objects.all()
@@ -2120,20 +2124,21 @@ def generar_pdf(compra):
     #c.setFillColor(prussian_blue)
        
     total =  format(float(compra.costo_plus_adicionales), ',.2f')
-    if compra.costo_fletes:
-        importe_neto = importe_neto + compra.costo_fletes
-        c.drawRightString(montos_align,160,'Total:')
-        c.drawRightString(montos_align,180,'Costo fletes:')
-        c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
-        c.drawRightString(montos_align + 90,160,'$ ' + str(total))
     if compra.impuestos and compra.retencion and compra.costo_fletes:
         c.drawRightString(montos_align,150,'Total:')
         c.drawRightString(montos_align + 90,150,'$ ' + str(total))
     elif compra.impuestos and compra.retencion:
         c.drawRightString(montos_align,160,'Total:')
         c.drawRightString(montos_align + 90,160,'$ ' + str(total))
-    elif compra.impuestos or compra.retencion or compra.costo_fletes:
+    elif compra.impuestos or compra.retencion:
         c.drawRightString(montos_align,170,'Total:')
+        c.drawRightString(montos_align + 90,170,'$ ' + str(total))
+
+    if compra.costo_fletes:
+        importe_neto = importe_neto + compra.costo_fletes
+        c.drawRightString(montos_align,170,'Total:')
+        c.drawRightString(montos_align,180,'Costo fletes:')
+        c.drawRightString(montos_align + 90,180,'$ ' + str(compra.costo_fletes))
         c.drawRightString(montos_align + 90,170,'$ ' + str(total))
     
     
@@ -2466,7 +2471,10 @@ def generar_pdf_proveedor(request, pk):
     c.drawString(100,caja_proveedor-20, proveedor.nombre.razon_social)
     c.drawString(100,caja_proveedor-40, proveedor.banco.nombre)
     c.drawString(100,caja_proveedor-60, proveedor.clabe)
-    c.drawString(100,caja_proveedor-80, proveedor.contratocie)
+    if proveedor.contratocie is None:
+        c.drawString(100,caja_proveedor-80, '')
+    else:
+        c.drawString(100,caja_proveedor-80, proveedor.contratocie)
     #Segunda columna
     c.drawString(370,caja_proveedor-40, proveedor.cuenta)
     c.drawString(370,caja_proveedor-60, 'NR')
@@ -2500,7 +2508,10 @@ def generar_pdf_proveedor(request, pk):
     #Primera columna
     c.drawString(100,segunda_tabla-20, proveedor.nombre.razon_social)
     c.drawString(100,segunda_tabla-40, proveedor.banco.nombre)
-    c.drawString(100,segunda_tabla-60, proveedor.spid)
+    if proveedor.spid is None:
+        c.drawString(100,segunda_tabla-60, '')
+    else:
+        c.drawString(100,segunda_tabla-60, proveedor.spid)
     #Segunda columna
     c.drawString(370,segunda_tabla-40, proveedor.cuenta)
     if proveedor.swift:

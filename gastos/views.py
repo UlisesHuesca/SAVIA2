@@ -1,25 +1,32 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.core.paginator import Paginator
-from django.db.models import Sum, Q, Prefetch, Max
+from django.db.models.functions import Concat
+from django.db.models import Sum, Q, Prefetch, Max, Value
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.conf import settings
+import zipfile
+
 
 import logging
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
-from .filters import Solicitud_Gasto_Filter
+from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
-from tesoreria.models import Pago, Cuenta
+from tesoreria.models import Pago, Cuenta, Facturas
 from compras.models import Proveedor_direcciones
 from tesoreria.forms import Facturas_Gastos_Form 
 from compras.views import attach_oc_pdf
 from requisiciones.views import get_image_base64
-from tesoreria.views import eliminar_caracteres_invalidos
+from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
+from viaticos.models import Viaticos_Factura
+import qrcode
+from num2words import num2words
+import tempfile
 #PDF generator
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -36,6 +43,9 @@ from bs4 import BeautifulSoup
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
+import xlsxwriter
+from io import BytesIO
+
 
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from datetime import date, datetime
@@ -68,7 +78,7 @@ def crear_gasto(request):
         superintendentes = colaborador.filter(staff =  usuario.staff)  
     else:
         superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
-    
+
     proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
@@ -175,30 +185,56 @@ def crear_gasto(request):
                 if not archivos_pdf and not archivos_xml:
                     messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
                     return HttpResponse(status=204)
-
+                
                 # Iterar sobre el número máximo de archivos en cualquiera de las listas
                 max_len = max(len(archivos_pdf), len(archivos_xml))
+                facturas_registradas = []
+                facturas_duplicadas = []
 
                 for i in range(max_len):
                     archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
                     archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-
                     factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
-                    
-                    if archivo_pdf:
-                        factura.archivo_pdf = archivo_pdf
-                    factura.hecho = True
-                    factura.fecha_subida = datetime.now()
-                    factura.subido_por = usuario
-
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                    factura.save()
-                    messages.success(request, 'Las facturas se registraron de manera exitosa')
-                return redirect('crear-gasto')
-        else:
-            messages.error(request,'No se pudo subir tu documento, verificar cantidad o precio')
+                        
+                        # Guardar temporalmente para extraer datos
+                        factura_temp = Factura(archivo_xml=archivo_xml)
+                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                    
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
+
+                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                        if Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                            facturas_duplicadas.append(uuid_extraido)
+                            continue  # Saltar al siguiente archivo si se encuentra duplicado
+                        else:
+                            factura.archivo_xml = archivo_xml
+                            factura.uuid = uuid_extraido
+                            factura.fecha_timbrado = fecha_timbrado_extraida
+                            factura.hecho = True
+                            factura.fecha_subida = datetime.now()
+                            factura.subido_por = usuario
+                            factura.save()
+                            #messages.success(request, 'Las facturas se registraron de manera exitosa')
+                    if archivo_pdf:
+                        factura.archivo_pdf = archivo_pdf
+                        factura.hecho = True
+                        factura.fecha_subida = datetime.now()
+                        factura.subido_por = usuario
+                        factura.save()
+                      
+                        facturas_registradas.append(uuid_extraido if archivo_xml else f"Factura PDF {archivo_pdf.name}")
+                    #messages.success(request, 'Los facturas se registraron de manera exitosa')
+                     # Mensajes de éxito o duplicados
+                #return HttpResponse(status=204)
+                if facturas_registradas:
+                    messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
+                if facturas_duplicadas:
+                    messages.error(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
+
+            else:
+                messages.error(request,'No se pudo subir tu documento')
         
                 
                
@@ -326,26 +362,51 @@ def factura_nueva_gasto(request, pk):
                 
                 # Iterar sobre el número máximo de archivos en cualquiera de las listas
                 max_len = max(len(archivos_pdf), len(archivos_xml))
+                facturas_registradas = []
+                facturas_duplicadas = []
 
                 for i in range(max_len):
                     archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
                     archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-
                     factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
-
-                    if archivo_pdf:
-                        factura.archivo_pdf = archivo_pdf
-                    factura.hecho = True
-                    factura.fecha_subida = datetime.now()
-                    factura.subido_por = usuario
-
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        factura.archivo_xml.save(archivo_xml.name, archivo_procesado, save=True)
+                        
+                        # Guardar temporalmente para extraer datos
+                        factura_temp = Factura(archivo_xml=archivo_xml)
+                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                    
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
 
-                    factura.save()
+                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
+                        if Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
+                            facturas_duplicadas.append(uuid_extraido)
+                            continue  # Saltar al siguiente archivo si se encuentra duplicado
+                        else:
+                            factura.archivo_xml = archivo_xml
+                            factura.uuid = uuid_extraido
+                            factura.fecha_timbrado = fecha_timbrado_extraida
+                            factura.hecho = True
+                            factura.fecha_subida = datetime.now()
+                            factura.subido_por = usuario
+                            factura.save()
+                            #messages.success(request, 'Las facturas se registraron de manera exitosa')
+                    if archivo_pdf:
+                        factura.archivo_pdf = archivo_pdf
+                        factura.hecho = True
+                        factura.fecha_subida = datetime.now()
+                        factura.subido_por = usuario
+                        factura.save()
+                      
+                        facturas_registradas.append(uuid_extraido if archivo_xml else f"Factura PDF {archivo_pdf.name}")
+                    #messages.success(request, 'Los facturas se registraron de manera exitosa')
+                     # Mensajes de éxito o duplicados
+                #return HttpResponse(status=204)
+                if facturas_registradas:
+                    messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
+                if facturas_duplicadas:
+                    messages.error(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
 
-                messages.success(request, 'Las facturas se registraron de manera exitosa')
             else:
                 messages.error(request,'No se pudo subir tu documento')
 
@@ -407,9 +468,9 @@ def solicitudes_gasto(request):
     page = request.GET.get('page')
     ordenes_list = p.get_page(page)
 
-    #if request.method =='POST' and 'btnExcel' in request.POST:
+    if request.method =='POST' and 'btnExcel' in request.POST:
 
-        #return convert_excel_solicitud_matriz(solicitudes)
+        return convert_excel_gasto_matriz(solicitudes)
 
     context= {
         'ordenes_list':ordenes_list,
@@ -644,7 +705,13 @@ def cancelar_gasto2(request, pk):
     return render(request,'gasto/cancelar_gasto2.html', context)
 
 
-
+def get_subproyectos(request):
+    proyecto_id = request.GET.get('proyecto_id')
+    if proyecto_id:
+        subproyectos = Subproyecto.objects.filter(proyecto_id=proyecto_id)
+        subproyecto_list = list(subproyectos.values('id', 'nombre'))  
+        return JsonResponse(subproyecto_list, safe=False)
+    return JsonResponse([], safe=False)
 
 # Create your views here.
 #@login_required(login_url='user-login')
@@ -653,10 +720,31 @@ def pago_gastos_autorizados(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
 
+    proyectos = Proyecto.objects.filter(activo=True, complete=True)
+    subproyectos = Subproyecto.objects.filter(proyecto__in=proyectos)
+    
     if usuario.tipo.tesoreria == True:
-        gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
+        if usuario.tipo.rh == True:
+            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYO DE MANTENIMIENTO")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
+        else:
+            gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
         myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
         gastos = myfilter.qs
+
+        for gasto in gastos:
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+
+            proyectos = set()
+            subproyectos = set()
+
+            for articulo in articulos_gasto:
+                if articulo.proyecto:
+                    proyectos.add(str(articulo.proyecto.nombre))
+                if articulo.subproyecto:
+                    subproyectos.add(str(articulo.subproyecto.nombre))
+
+            gasto.proyectos = ', '.join(proyectos)
+            gasto.subproyectos = ', '.join(subproyectos)
 
         p = Paginator(gastos, 50)
         page = request.GET.get('page')
@@ -666,6 +754,9 @@ def pago_gastos_autorizados(request):
             'gastos_list':gastos_list,
             'gastos':gastos,
             'myfilter':myfilter,
+            'proyectos': proyectos,
+            'subproyectos': subproyectos,
+            'selected_subproyecto': request.GET.get('subproyecto')
             }
     else:
         context= {
@@ -675,7 +766,7 @@ def pago_gastos_autorizados(request):
 
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_gastos_autorizados(gastos)
+        return convert_excel_gasto_matriz(gastos)
 
         
 
@@ -756,6 +847,28 @@ def pago_gasto(request, pk):
 
     return render(request,'gasto/pago_gasto.html',context)
 
+
+def generar_archivo_zip(facturas, gasto):
+    nombre = gasto.folio if gasto.folio else ''
+    zip_filename = f'facturas_compragasto-{nombre}.zip'
+    
+    # Crear un archivo zip en memoria
+    in_memory_zip = io.BytesIO()
+
+    with zipfile.ZipFile(in_memory_zip, 'w') as zip_file:
+        for factura in facturas:
+            if factura.archivo_pdf:
+                pdf_path = factura.archivo_pdf.path
+                zip_file.write(pdf_path, os.path.basename(pdf_path))
+            if factura.archivo_xml:
+                xml_path = factura.archivo_xml.path
+                zip_file.write(xml_path, os.path.basename(xml_path))
+
+    # Resetear el puntero del archivo en memoria
+    in_memory_zip.seek(0)
+
+    return in_memory_zip, zip_filename
+
 @login_required(login_url='user-login')
 def matriz_facturas_gasto(request, pk):
     pk_usuario = request.session.get('selected_profile_id')
@@ -774,12 +887,18 @@ def matriz_facturas_gasto(request, pk):
         form = Facturas_Gastos_Form(request.POST, instance=gasto)
         if "btn_factura_completa" in request.POST:
             if form.is_valid():
-                form.save()
+                gasto = form.save(commit=False)
+                gasto.verificacion_facturas = usuario
+                gasto.save()
                 #messages.success(request,'Haz cambiado el status de facturas completas')
                 return redirect(next_url) 
             else:
                 messages.error(request,'No está validando')
-    
+        elif "btn_descargar_todo" in request.POST:
+            in_memory_zip, zip_filename = generar_archivo_zip(facturas, gasto)
+            response = HttpResponse(in_memory_zip, content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+            return response
 
     context={
         'next_url':next_url,
@@ -1387,11 +1506,11 @@ def render_pdf_gasto(pk):
     return buf
 
 
-def convert_excel_matriz_gastos_autorizados(gastos):
+def convert_excel_gasto_matriz(gastos):
     response= HttpResponse(content_type = "application/ms-excel")
-    response['Content-Disposition'] = 'attachment; filename = Pendientes_de_pago_' + str(dt.date.today())+'.xlsx'
+    response['Content-Disposition'] = 'attachment; filename = Gastos_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.create_sheet(title='Gastos Autorizados')
+    ws = wb.create_sheet(title='Gastos')
     #Comenzar en la fila 1
     row_num = 1
 
@@ -1422,8 +1541,8 @@ def convert_excel_matriz_gastos_autorizados(gastos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para'
-               'Importe','Total en Pesos','Fecha Creación']
+    columns = ['Folio','Fecha Autorización','Distrito','Proyectos','Subproyectos','Comentarios','Colaborador','Solicitado para',
+               'Importe','Fecha Creación','Status','Autorizado por','Facturas','Status de Pago']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1447,7 +1566,7 @@ def convert_excel_matriz_gastos_autorizados(gastos):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(F:F)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(I:I)").style = money_resumen_style
   
 
    
@@ -1468,14 +1587,74 @@ def convert_excel_matriz_gastos_autorizados(gastos):
            created_at_naive = gasto.created_at.astimezone(pytz.utc).replace(tzinfo=None)
         else:
             created_at_naive = ''
+
+        if gasto.pagada:
+            pagada = "Tiene Pago"
+        else: 
+            pagada ="No tiene pago"
+
+        if gasto.facturas.exists():
+            facturas = "Con Facturas"
+        else:
+            facturas = "Sin Facturas"
+        
+        if gasto.autorizar2:
+            status = "Autorizado"
+            
+            if gasto.distrito.nombre == "MATRIZ":
+                autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            else:
+                if gasto.autorizado_por2:
+                    autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
+                else:
+                    autorizado_por ="NR"
+        elif gasto.autorizar2 == False:
+            status = "Cancelado"
+            if gasto.distrito.nombre == "MATRIZ":
+                autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            else:
+                autorizado_por =   str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
+        elif gasto.autorizar:
+            autorizado_por =str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            status = "Autorizado | Falta una autorización"
+        elif gasto.autorizar == False:
+            status = "Cancelado"
+            autorizado_por = str(gasto.superintendente.staff.staff.last_name)
+        else:
+            autorizado_por = "Faltan autorizaciones"
+            status = "Faltan autorizaciones"
+
+        proyectos = set()
+        subproyectos = set()
+        comentarios = set()
+        articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+        for articulo in articulos_gasto:
+            if articulo.proyecto:
+                proyectos.add(str(articulo.proyecto.nombre))
+            if articulo.subproyecto:
+                subproyectos.add(str(articulo.subproyecto.nombre))
+            if articulo.comentario:
+                comentarios.add(str(articulo.comentario))
+
+        proyectos_str = ', '.join(proyectos)
+        subproyectos_str = ', '.join(subproyectos)
+        comentarios_str = ', '.join(comentarios)
+
         row = [
             gasto.folio,
             autorizado_at_2_naive,
             gasto.distrito.nombre,
+            proyectos_str,
+            subproyectos_str,
+            comentarios_str,
             gasto.staff.staff.staff.first_name + ' ' + gasto.staff.staff.staff.last_name,
-            gasto.colaborador.staff.staff.last_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
+            gasto.colaborador.staff.staff.first_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
             gasto.get_total_solicitud,
             created_at_naive,
+            status,
+            autorizado_por,
+            facturas,
+            pagada,
             #f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             #created_at_naive,
         ]
@@ -1483,9 +1662,9 @@ def convert_excel_matriz_gastos_autorizados(gastos):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num ==1 or col_num == 6:
+            if col_num ==1 or col_num == 9:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 5:
+            if col_num == 8:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
@@ -1494,3 +1673,393 @@ def convert_excel_matriz_gastos_autorizados(gastos):
     wb.save(response)
 
     return(response)
+
+def convert_excel_matriz_gastos(articulos_comprados):
+    #print('si entra a la función')
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Producto_pendientes")
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    columns = ['Compra', 'Requisición','Solicitud','Sector', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
+               'Usuario Solicitante']
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+    
+   
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    worksheet.set_column('L:L', 12,  money_style)
+    worksheet.set_column('M:M', 12, money_style) 
+    # Asumiendo que ya tienes tus datos de compras
+    row_num = 0
+    for articulo in articulos_comprados:
+        row_num += 1
+        # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
+        pagos = Pago.objects.filter(oc=articulo.oc)
+        
+        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+
+        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
+        if articulo.oc.req.orden.sector:
+            sector = f"{articulo.oc.req.orden.sector.nombre}"
+        else:
+            sector = ' '
+        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
+        #tipo_de_cambio = '' if tipo == 0 else tipo
+        #created_at = compra_list.created_at.replace(tzinfo=None)
+        #approved_at = compra_list.req.approved_at
+
+        row = [
+            articulo.oc.folio,
+            articulo.oc.req.folio,
+            articulo.oc.req.orden.folio,
+            sector,
+            articulo.producto.producto.articulos.producto.producto.codigo,
+            articulo.producto.producto.articulos.producto.producto.nombre,
+            articulo.cantidad_pendiente if articulo.cantidad_pendiente != None else articulo.cantidad,
+            articulo.producto.producto.articulos.producto.producto.unidad.nombre,
+            articulo.oc.proveedor.nombre.razon_social,
+            f"{articulo.oc.req.orden.staff.staff.staff.first_name} {articulo.oc.req.orden.staff.staff.staff.last_name}",
+        ]
+        
+        for col_num, cell_value in enumerate(row):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Aplica el formato de fecha para las columnas con fechas
+            if col_num in [7, 8]:  # Asume que estas son tus columnas de fechas
+                cell_format = date_style
+        
+            # Aplica el formato de dinero para las columnas con valores monetarios
+            elif col_num in [11, 12]:  # Asume que estas son tus columnas de dinero
+                cell_format = money_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+      
+        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Producto_pendientes_entrada_{dt.date.today()}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response
+
+def entradas_por_gasto(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    entradas = Conceptos_Entradas.objects.filter(entrada__completo=True, concepto_material__producto__servicio=False, entrada__gasto__gasto__distrito = usuario.distritos).order_by('-id')
+    myfilter = Conceptos_EntradasFilter(request.GET, queryset=entradas)
+    entradas = myfilter.qs
+   
+    entradas_data = list(entradas.values())
+
+    #Set up pagination
+    p = Paginator(entradas, 50)
+    page = request.GET.get('page')
+    entradas_list = p.get_page(page)
+
+    #if request.method == "POST" and 'btnExcel' in request.POST:
+        #print(entradas)
+    #    return convert_entradas_to_xls2(entradas)
+
+    context = {
+        'entradas_list':entradas_list,
+        'entradas':entradas,
+        'myfilter':myfilter,
+        }
+    #task_id_entradas =   request.session.get('task_id_entradas')
+
+    #if request.method == "POST" and 'btnExcel' in request.POST:
+        #if not task_id_entradas:
+            #task =  convert_entradas_to_xls_task.delay(entradas_data)
+            #task_id = task.id
+            #request.session['task_id_entradas'] = task_id
+            #context['task_id_entradas'] = task_id 
+
+    return render(request,'gasto/reporte_entradas_gasto.html', context)
+
+def generar_cfdi_gasto(request, pk):
+    factura = Factura.objects.get(id=pk)
+    data = factura.emisor
+    # Verificar y asignar un valor predeterminado para impuestos si es None
+    if data['impuestos'] is None:
+        data['impuestos'] = 0.0
+
+    # Verificar y asignar un valor predeterminado para total si es None
+    if data['total'] is None:
+        data['total'] = 0.0
+
+    # Verificar y asignar un valor predeterminado para subtotal si es None
+    if data['subtotal'] is None:
+        data['subtotal'] = 0.0
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    if not data:
+        return HttpResponse("Error al parsear el archivo XML", status=400)
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Generar código QR
+    qr_data = f"https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id={data['uuid']}&re={data['rfc_emisor']}&rr={data['rfc_receptor']}&tt={data['total']}&fe={data['sello_cfd'][-8:]}"
+    qr_img = qrcode.make(qr_data)
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+        qr_img.save(temp_file)
+        temp_file.seek(0)
+        qr_x = 500
+        qr_y = height - 700
+        qr_size = 2.75 * cm
+        c.drawImage(temp_file.name, qr_x, qr_y, qr_size, qr_size)
+
+    # Título
+    c.setFillColor(prussian_blue)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(30, height - 40, "FACTURA GENERADA POR SAVIA 2.0")
+
+    # Datos del Emisor
+    c.setFillColor(black)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(30, height - 80, "Datos del Emisor:")
+    
+    c.setFont("Helvetica", 8)
+    alineado_x = 30
+    alineado_y = height - 100
+    alineado_y2 = alineado_y
+    line_height = 12
+
+    c.drawString(alineado_x, alineado_y, f"RFC: {data['rfc_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Nombre: {data['nombre_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Régimen Fiscal: {data['regimen_fiscal_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Lugar de Expedición: {data['lugar_expedicion']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Fecha y hora de expedición: {data['fecha']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Moneda: {data['moneda']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Forma de Pago: {data['forma_pago']}")
+
+    # Datos del Receptor
+    alineado_y -= 2 * line_height
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(alineado_x + 350, height - 80, "Datos del Receptor:")
+    
+    c.setFont("Helvetica", 8)
+    alineado_y -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"RFC: {data['rfc_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Nombre: {data['nombre_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Régimen Fiscal: {data['regimen_fiscal_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Régimen Fiscal: {data['codigo_postal']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Uso del CFDI: {data['uso_cfdi']}")
+
+    # Conceptos (Tabla)
+    alineado_y -= line_height
+    # Configuración del estilo para los párrafos
+    styles = getSampleStyleSheet()
+    styleN = styles['Normal']
+    styleN.wordWrap = 'CJK'  # Ajusta automáticamente el texto
+    # Crear un estilo personalizado
+    custom_style = ParagraphStyle(
+        'CustomStyle',
+        parent=styleN,
+        fontSize=6,  # Ajusta el tamaño del texto aquí
+        leading=7,   # Ajusta el interlineado aquí si es necesario
+    )
+
+    # Preparamos los datos de la tabla
+    table_data = [["CANT", "CLAVE", "CONCEPTO", "U DE M", "P.U.", "IMPORTE", "IMPUESTO", "TIPO TASA"]]
+    for item in data['resultados']:
+        descripcion = item['descripcion']
+        cantidad = float(item['cantidad'])
+        unidad = item['unidad']
+        valor_unitario = float(item['precio'])
+        importe = float(item['importe'])
+        # Verificar y convertir solo si el valor no es 'N/A'
+         # Inicializar las variables impuesto y tasa
+        impuesto = item['impuesto']
+        tasa = item['tasa_cuota']
+        if impuesto != 'N/A':
+            impuesto = float(impuesto)
+        else:
+            impuesto = 0.0  # o cualquier valor predeterminado que consideres adecuado
+        
+        if tasa != 'N/A':
+            tasa = float(tasa)
+        else:
+            tasa = 0.0  # o cualquier valor predeterminado que consideres adecuado
+        clave = item['clave']
+         # Crear un párrafo para la descripción
+        descripcion_paragraph = Paragraph(descripcion, custom_style)
+        unidad_paragraph = Paragraph(unidad, custom_style)
+        table_data.append([
+            f"{cantidad:.2f}",
+            clave,
+            descripcion_paragraph,
+            unidad_paragraph,
+            f"{valor_unitario:,.2f}",
+            f"{importe:,.2f}",
+            f"{impuesto:,.2f}",
+            f"{tasa:.2f}",
+        ])
+
+    # Crear la tabla
+    table = Table(table_data, colWidths=[1.0 * cm, 1.5 * cm, 8.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm])
+    table.setStyle(TableStyle([
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, 0), 6),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 7),
+    ]))
+
+    # Guardar la tabla en el PDF
+    table.wrapOn(c, width, height)
+    table.drawOn(c, alineado_x, alineado_y - len(table_data) * line_height)
+
+    # Ajustar el alineado_y para seguir escribiendo debajo de la tabla
+    alineado_y -= len(table_data) * line_height + 2 * line_height
+
+    # Totales
+    c.setFont("Helvetica-Bold", 12)
+   
+    c.setFont("Helvetica", 10)
+    alineado_y -= line_height
+
+     # Importe con letra
+    alineado_y -= 2 * line_height
+    c.drawString(alineado_x, alineado_y, "Importe con Letra:")
+    total_letras = num2words(float(data['total']), lang='es', to='currency', currency='MXN')
+    c.drawString(alineado_x, alineado_y - 10, total_letras)
+    #c.drawRightString(alineado_x, alineado_y , f"{data['importe_con_letra']}")
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.setFillColor(prussian_blue)
+    c.rect(alineado_x + 390 ,alineado_y - 50,110,62, fill=True, stroke=False) #Barra azul superior | Subtotal
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y , f"Subtotal:")
+    c.setFillColor(black)
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['subtotal']):,.2f}")
+    alineado_y -= line_height
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos trasladados:")
+    c.setFillColor(black)
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['impuestos']):,.2f}")
+    alineado_y -= line_height
+    if data['iva_retenido'] > 0:
+        c.setFillColor(white)
+        c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos retenidos:")
+        c.setFillColor(black)
+        c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['iva_retenido']):,.2f}")
+        alineado_y -= line_height
+    if data['isr_retenido'] > 0:
+        c.setFillColor(white)
+        c.drawRightString(alineado_x + 500, alineado_y, f"ISR:")
+        c.setFillColor(black)
+        c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['isr_retenido']):,.2f}")
+        alineado_y -= line_height
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y, f"Total:")
+    c.setFillColor(black)
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['total']):,.2f}")
+    # Otros detalles
+    
+
+    otros_detalles = [
+        ["Folio Fiscal", "Fecha y Hora de Certificación", "No. Certificado Digital", "Método de Pago"],
+        [data['uuid'], data['fecha_timbrado'], data['no_certificado'], data['metodo_pago']]
+    ]
+    detalles_table = Table(otros_detalles, colWidths=[5 * cm, 5 * cm, 4.5 * cm, 4.5 * cm])
+    detalles_table.setStyle(TableStyle([
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 6),
+    ]))
+
+    # Guardar la tabla de detalles en el PDF
+    detalles_table.wrapOn(c, width, height)
+    detalles_table.drawOn(c, alineado_x, 180)
+    alineado_y -= 4 * line_height
+     # Utilizar Paragraph para las líneas largas
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+    styleN.fontSize = 6
+    c.setFont("Helvetica", 6)
+    c.line(30,177,580,177)
+    c.drawString(alineado_x, 170, f"ESTE DOCUMENTO ES UNA REPRESENTACIÓN IMPRESA DE UN CFDI v4.0")
+    
+    # Reducir el ancho de los párrafos
+    reduced_width = width * 0.7  # Ajusta este valor según sea necesario
+
+    sello_cfd_paragraph = Paragraph(f"Sello Digital del CFDI: {data['sello_cfd']}", styleN)
+    sello_cfd_paragraph.wrapOn(c,  reduced_width, line_height * 4)
+    sello_cfd_paragraph.drawOn(c, alineado_x, 130)
+    alineado_y -= line_height * 5
+    
+    sello_sat_paragraph = Paragraph(f"Sello del SAT: {data['sello_sat']}", styleN)
+    sello_sat_paragraph.wrapOn(c,  reduced_width, line_height * 4)
+    sello_sat_paragraph.drawOn(c, alineado_x, 90)
+    alineado_y -= line_height * 3
+    c.drawString(alineado_x, 40, f"No. serie CSD SAT {data['no_certificadoSAT']}")
+
+    sello_cfd_paragraph = Paragraph(f"Cadena Original del complemento de certificación digital del SAT: {data['cadena_original']}", styleN)
+    sello_cfd_paragraph.wrapOn(c,  reduced_width, line_height * 4)
+    sello_cfd_paragraph.drawOn(c, alineado_x, 50)
+    alineado_y -= line_height * 5
+    
+   
+
+    c.showPage()
+    c.save()
+
+    buffer.seek(0)
+    # Crear la respuesta HTTP con el PDF
+    folio_fiscal = data['uuid']
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{folio_fiscal}.pdf"'
+
+    return response

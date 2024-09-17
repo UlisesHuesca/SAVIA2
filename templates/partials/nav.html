@@ -242,7 +242,9 @@
                         <h6 class="dropdown-header">Proveedores</h6>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">Proveedores</a>
-                        <a class="dropdown-item" href="{% url 'matriz-revision-proveedor' %}">Matriz Revision Proveedores</a>
+                        {% if usuario.tipo.nombre != "ADQUISICIONES" %}
+                            <a class="dropdown-item" href="{% url 'matriz-revision-proveedor' %}">Matriz Revision Proveedores</a>
+                        {% endif %}
                     <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" %}
@@ -262,8 +264,14 @@
                     </div>
                     {% if usuario.tipo.tesoreria == False %}
                     <div class="d-none">
+                    {% if usuario.tipo.tesoreria %}
+                        {% if usuario.tipo.rh and not usuario.distritos.nombre == "MATRIZ" %}
+                            <div class="d-none">
+                        {% else %}
+                            <div>
+                        {% endif %}
                     {% else %}
-                    <div>
+                      <div class="d-none">
                     {% endif %}
                         <h6 class="dropdown-header">Tesorería</h6>
                         <div class="dropdown-divider"></div>
@@ -281,6 +289,11 @@
                                 <span class="badge bg-danger">({{conteo_viaticos_pagar}})</span>
                                 {% endif %}
                             </a>
+                            {% if usuario.tipo.rh %}
+                            <div class="d-none">
+                            {% else %}
+                            <div>
+                            {% endif %}
                             <a class="dropdown-item" href="{% url 'viaticos_autorizados' %}">
                                 Asignar Montos Viáticos
                                 {% if conteo_asignar_montos > 0 %}
@@ -290,10 +303,12 @@
                             <a class="dropdown-item" href="{% url 'control-cuentas' %}">
                                 Control de Cuentas
                             </a>
+                          
                             <!--<a class="dropdown-item" href="{% url 'cobranza-pagos' %}">
                                 Cobranza
                             </a>-->
                         <div class="dropdown-divider"></div>
+                        </div>
                     </div>
                     {% if usuario.tipo.autorizacion == True %}
                     <div>
@@ -344,10 +359,10 @@
                                 {% endif %}    
                                 </a>
                             </div>
-                            {% if usuario.tipo.subdirector == True %}
-                                <div class="d-none">
-                            {% else %}
+                            {% if usuario.tipo.superintendente or usuario.tipo.subdirector %}
                                 <div>
+                            {% else %}
+                                <div class="d-none">
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'matriz-autorizar-devolucion' %}">Autorización Devolución Almacén
                                     {% if conteo_devoluciones > 0 %}
@@ -439,6 +454,7 @@
                             <div class="d-none">
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'reporte-entradas' %}">Matriz Entradas</a>
+                            <a class="dropdown-item" href="{% url 'reporte-entradas-gasto' %}">Matriz Entradas por Gasto</a>
                             <a class="dropdown-item" href="{% url 'reporte-salidas' %}">Matriz Salidas</a>
                             </div>
                         {% if usuario.tipo.compras == True or usuario.tipo.nombre == "Gerente" %}

@@ -66,9 +66,11 @@
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores' %}">
                                 <i class="fa-solid fa-backward"></i>
                             </a>
+                            {% if usuario.tipo.nombre == "PROVEEDORES" %}
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-proveedor-direccion' proveedor.id %}">
                                 <i class="fa-solid fa-plus"> Agregar Direccion</i>
                             </a>
+                            {% endif %}
                         </li>
                     </ul>
             </div>
@@ -92,7 +94,9 @@
                     
                     <th scope="col">Dias de Crédito</th>
                     <th scope="col">Status</th>
+                    {% if usuario.tipo.nombre == "PROVEEDORES" %}
                     <th scope="col">Edición</th>
+                    {% endif %}
                     <th>Registro</th>
                 </tr>
             </thead>
@@ -115,9 +119,11 @@
                     {% endif %}
                     <td>{{direccion.dias_credito}}</td>
                     <td>{{direccion.estatus}}</td>
+                    {% if usuario.tipo.nombre == "PROVEEDORES" %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'edit_proveedor_direccion' direccion.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
+                    {% endif %}
                     <td>
                       
                         <a type="button" class="btn btn-outline-info" href="{% url 'generar-pdf-proveedor' direccion.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Registro"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>

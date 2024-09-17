@@ -44,11 +44,23 @@ class Proyecto(models.Model):
         unique_together = ('nombre', 'distrito',)
 
     
-    #@property
-    #def get_projects_gastado(self):
-    #    subproyectos = self.subproyecto_set.all()
-    #    total = sum([subproyecto.gastado for subproyecto in subproyectos])
-    #    return total
+    @property
+    def get_total_comprado(self):
+        total = 0
+        for order in self.order_set.filter(complete=True):
+            for requisicion in order.requis.all():
+                for compra in requisicion.compras.filter(pagada=True):
+                    total += compra.costo_plus_adicionales
+        return total
+    
+    @property
+    def get_total_gastado(self):
+        total = 0
+        for gasto in self.articulo_gasto_set.all():
+            total += gasto.total_parcial
+        return total
+
+
 
     @property
     def get_projects_total(self):
@@ -92,7 +104,7 @@ class Subproyecto(models.Model):
     status = models.ForeignKey(Status_Subproyecto, on_delete = models.CASCADE, null=True)
 
     def __str__(self):
-        return f'{self.nombre}-{self.presupuesto}'
+        return f'{self.nombre}'
 
 class Sector(models.Model):
     nombre = models.CharField(max_length=100, null=True, unique=True)

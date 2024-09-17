@@ -315,14 +315,15 @@ updateBtn.addEventListener('click',function(){
         var quantity = document.getElementById('id_cantidad');
         //Esta es la cantidad comprada de acuerdo a la requisición
         var val_cantidad = quantity.value;
-
-
+        // Reemplazar comas por puntos para convertir a número decimal
+        var cantidad_decimal = parseFloat(val_cantidad.replace(',', '.'));
+        console.log(cantidad_decimal)
         if (cantidad == 0) {
             if (cantidad_sol > 0) {
                 cantidad_pendiente = cantidad_sol
             }
         } else {
-            var cantidad_pendiente = cantidad - val_cantidad
+            var cantidad_pendiente = cantidad - cantidad_decimal
         }
 
 
@@ -354,13 +355,13 @@ updateBtn.addEventListener('click',function(){
                     "icon":"error",
                 })
         } else {
-            console.log('val:',val_cantidad)
+            console.log('val:',cantidad_decimal)
             console.log('salida:',salida)
             console.log('id',id)
             console.log('action',action)
             console.log('id_salida:',id_salida)
 
-            ActualizarArticulos(salida,id,val_cantidad,action,id_salida);
+            ActualizarArticulos(salida,id,cantidad_decimal,action,id_salida);
             //current_option.setAttribute("class","d-none");
             //select.value = default_sel;
 
@@ -376,13 +377,15 @@ function deleteRow(element) {
     id_salida = element.getAttribute('id_salida')
     id = element.getAttribute('producto_id');
     val_cantidad = element.getAttribute('cantidad');
+    var cantidad_decimal = parseFloat(val_cantidad.replace(','));
+    console.log(cantidad_decimal)
     var action = "remove"
-    ActualizarArticulos(salida, id, val_cantidad, action, id_salida);
+    ActualizarArticulos(salida, id, cantidad_decimal, action, id_salida);
 }
 
 
 
-function ActualizarArticulos(oc,id,val_cantidad,action){
+function ActualizarArticulos(oc,id, cantidad_decimal,action){
     console.log('User is logged in, sending data...' )
 
     var url = '/requisiciones/update_salida/'
@@ -393,7 +396,7 @@ function ActualizarArticulos(oc,id,val_cantidad,action){
             'Content-Type':'application/json',
             'X-CSRFToken': csrftoken,
         },
-        body:JSON.stringify({'salida':salida, 'id':id, 'val_cantidad':val_cantidad, 'action':action,'id_salida':id_salida})
+        body:JSON.stringify({'salida':salida, 'id':id, 'val_cantidad':cantidad_decimal, 'action':action,'id_salida':id_salida})
     })
     .then((response)=>{
         return response.json()

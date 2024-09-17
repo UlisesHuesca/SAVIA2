@@ -182,6 +182,7 @@
                     <th> Flete</th>
                     <th class="d-none d-md-table-cell">Moneda</th>
                     <th class="d-none d-md-table-cell">Pagado</th>
+                    <th class="d-none d-md-table-cell">Status Entrada</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
                     <th scope="col">Acción</th>
                     <th>Cancelar</th>
@@ -203,6 +204,7 @@
                     <td>${{compra.costo_fletes}}</td>
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
+                    <td class="d-none d-md-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregado</span>{% else %}<span class="badge bg-warning">No Entregado Aún</span>  {% endif %}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
                     <td>
                         <ul class="nav nav-pills">
@@ -215,7 +217,7 @@
                             </li>
                             {% endif %}
                             <li class="nav-item m-1">
-                                <button id="myBtn2" type="button" class="btn btn-outline-light" style="background-color:#990f0f" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'matriz-facturas' compra.id %}"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                                <button id="myBtn2" type="button" class="btn btn-outline-light" style="background-color:#990f0f" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'matriz-facturas-compras' compra.id %}"><i class="fa-solid fa-cloud-arrow-up"></i></button>
                             </li>
                             {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" %}
                             <li class="nav-item m-1">

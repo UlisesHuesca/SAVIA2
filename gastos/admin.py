@@ -3,7 +3,7 @@ from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_A
 # Register your models here.
 class Solicitud_Gasto_Admin(admin.ModelAdmin):
     list_display = ('id','created_at','folio','staff','colaborador', 'superintendente','pagada',)
-    raw_id_fields = ('staff','colaborador','superintendente') 
+    raw_id_fields = ('staff','colaborador','superintendente','proveedor','autorizado_por2') 
     search_fields = ('folio',)
 
 class Conceptos_Entradas_Admin(admin.ModelAdmin):
@@ -20,7 +20,7 @@ class Entrada_Gasto_Ajuste_Admin(admin.ModelAdmin):
 class Factura_Admin(admin.ModelAdmin):
     list_display = ('id','solicitud_gasto', 'fecha_subida', 'archivo_pdf', 'archivo_xml')   
     raw_id_fields = ('solicitud_gasto',) 
-    search_fields = ('solicitud_gasto__id', 'solicitud_gasto__folio')
+    search_fields = ('id','solicitud_gasto__id', 'solicitud_gasto__folio')
 
 
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)

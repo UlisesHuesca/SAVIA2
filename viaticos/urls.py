@@ -15,6 +15,7 @@ urlpatterns = [
     path('viaticos/delete_viatico/<int:pk>', views.delete_viatico, name='delete-viatico'),
     path('viaticos/viaticos_pendientes_autorizar2/', views.viaticos_pendientes_autorizar2, name='viaticos-pendientes-autorizar2'),
     path('viaticos/detalles_viaticos2/<int:pk>', views.detalles_viaticos2, name='detalles-viaticos2'),
+    path('viaticos/detalles_viaticos3/<int:pk>', views.detalles_viaticos3, name='detalles-viaticos3'),
     path('viaticos/autorizar_viaticos2/<int:pk>', views.autorizar_viaticos2, name='autorizar-viaticos2'),
     path('viaticos/cancelar_viaticos2/<int:pk>', views.cancelar_viaticos2, name='cancelar-viaticos2'),
     path('viaticos/viaticos_autorizados_pago/', views.viaticos_autorizados_pago, name='viaticos-autorizados-pago'),
