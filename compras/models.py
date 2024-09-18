@@ -189,7 +189,7 @@ class Compra(models.Model):
     costo_oc = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True)
     costo_iva = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True)
     pagada = models.BooleanField(default=False)
-    fecha_pago = models.DateTimeField(null=True)
+    fecha_pago = models.DateTimeField(null=True, blank= True)
     monto_pagado = models.DecimalField(max_digits=14,decimal_places=2, default=0)
     entrada_completa = models.BooleanField(default=False)
     solo_servicios = models.BooleanField(default=False)
