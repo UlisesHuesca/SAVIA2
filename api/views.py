@@ -8,6 +8,9 @@ from dashboard.models import Inventario
 from compras.models import Compra, Proveedor_direcciones
 from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.http import JsonResponse
+import requests
+
 # Create your views here.
 
 
@@ -64,3 +67,23 @@ def proveedores_api(request):
     serialized_proveedores = ProveedorDireccionesSerializer(proveedores, many=True)
         
     return Response(serialized_proveedores.data)
+
+def obtener_perfiles(request):
+    url = 'https://vordcab.cloud/apiapp/perfiles/'
+    token = 'defa1b040b2e8acf4d9ab20127e87d820eb913b9'
+    # Encabezados para la solicitud con el token
+    headers = {
+        'Authorization': f'Token {token}'
+    }
+
+    # Hacer la solicitud a la API con los encabezados
+    response = requests.get(url, headers=headers)
+    
+    if response.status_code == 200:
+        # Procesar el JSON de la respuesta
+        data = response.json()
+
+        # Pasar los datos al template
+        return render(request, 'api/perfiles_lista.html', {'data': data})
+    else:
+        return JsonResponse({'error': 'No se pudo obtener los datos de la API'}, status=response.status_code)

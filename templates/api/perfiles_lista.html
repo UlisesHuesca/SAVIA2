@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfiles</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Lista de Perfiles</h1>
+    
+    {% if data %}
+        <table>
+            <thead>
+                <tr>
+                    <th>Número de Trabajador</th>
+                    <th>Correo Vordcab</th>
+                    <th>Baja</th>
+                    <th>Empresa</th>
+                    <th>Distrito</th>
+                    <th>Nombre</th>
+                    <th>Apellidos</th>
+                    <th>Fecha de Nacimiento</th>
+                    <th>Correo Electrónico</th>
+                    <th>Proyecto</th>
+                    <th>Subproyecto</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for perfil in data %}
+                    <tr>
+                        <td>{{ perfil.numero_de_trabajador }}</td>
+                        <td>{{ perfil.correo_vordcab }}</td>
+                        <td>{{ perfil.baja }}</td>
+                        <td>{{ perfil.empresa.empresa }}</td>
+                        <td>{{ perfil.distrito.distrito }}</td>
+                        <td>{{ perfil.nombres }}</td>
+                        <td>{{ perfil.apellidos }}</td>
+                        <td>{{ perfil.fecha_nacimiento }}</td>
+                        <td>{{ perfil.correo_electronico }}</td>
+                        <td>{{ perfil.proyecto.proyecto }}</td>
+                        <td>{{ perfil.subproyecto.subproyecto }}</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    {% else %}
+        <p>No se encontraron perfiles.</p>
+    {% endif %}
+</body>
+</html>
