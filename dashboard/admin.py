@@ -37,7 +37,7 @@ class ArticulosparaSurtirAdmin(admin.ModelAdmin):
 
 class OrderAdmin(admin.ModelAdmin):
     list_display = ('id','folio','staff','proyecto','subproyecto','tipo','approved_at','requisitado','requisitar')
-    search_fields = ['folio']
+    search_fields = ['folio','distrito__nombre']
     raw_id_fields = ('staff','proyecto','subproyecto','superintendente','supervisor','activo',)
 
 
