@@ -10,6 +10,9 @@ from .serializers import InventarioSerializer, CompraSerializer, ProveedorDirecc
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 import requests
+from django.contrib.auth.models import User
+from user.models import CustomUser
+from django.contrib.auth.decorators import login_required
 
 # Create your views here.
 
@@ -68,22 +71,72 @@ def proveedores_api(request):
         
     return Response(serialized_proveedores.data)
 
+@login_required(login_url='user-login')
 def obtener_perfiles(request):
-    url = 'https://vordcab.cloud/apiapp/perfiles/'
-    token = 'defa1b040b2e8acf4d9ab20127e87d820eb913b9'
-    # Encabezados para la solicitud con el token
-    headers = {
-        'Authorization': f'Token {token}'
-    }
+    actualizado = False
+    empleados_actualizados = []  # Lista para almacenar los usuarios actualizados
 
-    # Hacer la solicitud a la API con los encabezados
-    response = requests.get(url, headers=headers)
+    if request.method == 'POST':
+        actualizado = True  # Actualizar de mensaje en template
+        #url = 'http://127.0.0.1:9000/apiapp/perfiles/'
+        #token = 'f36cf2df116c3aeab68b9ee948331f382f5edcc0'
+        url = 'https://vordcab.cloud/apiapp/perfiles/'
+        token = 'defa1b040b2e8acf4d9ab20127e87d820eb913b9'
+        headers = {
+            'Authorization': f'Token {token}'
+        }
+
+        # Hacer la solicitud a la API con los encabezados
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            # Procesar el JSON de la respuesta
+            data = response.json()
+
+            # Iterar sobre cada perfil recibido en el JSON
+            for perfil in data:
+                correo_vordcab = perfil.get('correo_vordcab')
+                baja = perfil.get('baja', False)  # Por defecto, es False si no existe
+                nivel_data = perfil.get('nivel')  # Obtener datos del nivel
+                # Extraer el nivel del JSON, si existe
+                if nivel_data and nivel_data.get('nivel') and nivel_data['nivel'].get('nivel'):
+                    nivel = nivel_data['nivel']['nivel']
+                else:
+                    nivel = None
+
+                try:
+                    # Buscar al usuario por su correo electrónico
+                    usuario = User.objects.get(email=correo_vordcab)
+                    custom_user = CustomUser.objects.get(staff=usuario)  # Obtener el CustomUser relacionado
+
+                    # Determinar si se necesita una actualización
+                    estado_anterior = usuario.is_active
+                    nivel_anterior = custom_user.nivel
+                    if baja:
+                        usuario.is_active = False
+                    else:
+                        usuario.is_active = True
+
+                    # Convertir nivel a float si no es None
+                    if nivel is not None and custom_user.nivel != float(nivel):
+                        custom_user.nivel = float(nivel)
+
+                    # Si hubo un cambio, guardar el usuario y agregarlo a la lista de actualizados
+                    if usuario.is_active != estado_anterior or nivel_anterior != custom_user.nivel:
+                        usuario.save()
+                        custom_user.save()
+                        empleados_actualizados.append({
+                            'nombre': usuario.get_full_name(),
+                            'correo': usuario.email,
+                            'activo': usuario.is_active,
+                            'activo_anterior':estado_anterior,
+                            'nivel': custom_user.nivel,
+                            'nivel_anterior': nivel_anterior,
+                        })
+                
+                except User.DoesNotExist:
+                    # Si no existe el usuario con ese correo
+                    print(f"Usuario con correo {correo_vordcab} no encontrado.")
     
-    if response.status_code == 200:
-        # Procesar el JSON de la respuesta
-        data = response.json()
-
-        # Pasar los datos al template
-        return render(request, 'api/perfiles_lista.html', {'data': data})
-    else:
-        return JsonResponse({'error': 'No se pudo obtener los datos de la API'}, status=response.status_code)
+    # Renderizar la página con la tabla actualizada después de procesar la solicitud
+    return render(request, 'api/perfiles_lista.html', {'empleados_actualizados': empleados_actualizados,'actualizado': actualizado})

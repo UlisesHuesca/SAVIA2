@@ -1,64 +1,120 @@
-<!DOCTYPE html>
-<html lang="en">
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Perfiles</title>
-    <style>
-        table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-        th, td {
-            border: 1px solid black;
-            padding: 8px;
-            text-align: left;
-        }
-        th {
-            background-color: #f2f2f2;
-        }
-    </style>
+    {% block title %}API Perfiles{% endblock %}
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha3/dist/css/bootstrap.min.css">
 </head>
 <body>
-    <h1>Lista de Perfiles</h1>
-    
-    {% if data %}
-        <table>
-            <thead>
+{% block content %}
+<hr>
+
+<div class="row text-center my-4">
+    <h3 class="text-secondary">Gestión de Perfiles</h3> <!-- Cambié el color a gris -->
+</div>
+
+<!-- Botón para enviar la solicitud POST -->
+<div class="row justify-content-center mb-4">
+    <div class="col-md-4 text-center">
+        <form method="POST">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-lg btn-secondary shadow"> <!-- Botón ahora en gris -->
+                <i class="bi bi-arrow-repeat"></i> Actualizar Perfiles
+            </button>
+        </form>
+    </div>
+</div>
+
+<!-- Mostrar mensajes con SweetAlert -->
+<div class="row">
+    <div class="col-md-12">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                swal({
+                    title: "¡Excelente!",
+                    text: "{{ message }}",
+                    icon: "success",
+                    button: "Ok",
+                });
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<!-- Mostrar mensaje si no hay empleados actualizados -->
+{% if actualizado == True %}
+<div class="row justify-content-center mt-3">
+    <div class="col-md-8 text-center">
+        {% if not empleados_actualizados %}
+            <div class="alert alert-warning" role="alert">
+                No se encontraron empleados por actualizar.
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endif %}
+
+<!-- Tabla de empleados actualizados -->
+<div class="card shadow my-4">
+    <div class="card-header bg-secondary text-white"> <!-- Header de la tarjeta en gris -->
+        <h5 class="mb-0">Empleados Actualizados</h5>
+    </div>
+    <div class="card-body p-0">
+        <table class="table table-hover table-bordered mb-0">
+            <thead class="table-light text-center">
                 <tr>
-                    <th>Número de Trabajador</th>
-                    <th>Correo Vordcab</th>
-                    <th>Baja</th>
-                    <th>Empresa</th>
-                    <th>Distrito</th>
                     <th>Nombre</th>
-                    <th>Apellidos</th>
-                    <th>Fecha de Nacimiento</th>
-                    <th>Correo Electrónico</th>
-                    <th>Proyecto</th>
-                    <th>Subproyecto</th>
+                    <th>Correo</th>
+                    <th>Estado Actual</th>
+                    <th>Estado Anterior</th>
+                    <th>Nivel Actual</th>
+                    <th>Nivel Anterior</th>
                 </tr>
             </thead>
             <tbody>
-                {% for perfil in data %}
-                    <tr>
-                        <td>{{ perfil.numero_de_trabajador }}</td>
-                        <td>{{ perfil.correo_vordcab }}</td>
-                        <td>{{ perfil.baja }}</td>
-                        <td>{{ perfil.empresa.empresa }}</td>
-                        <td>{{ perfil.distrito.distrito }}</td>
-                        <td>{{ perfil.nombres }}</td>
-                        <td>{{ perfil.apellidos }}</td>
-                        <td>{{ perfil.fecha_nacimiento }}</td>
-                        <td>{{ perfil.correo_electronico }}</td>
-                        <td>{{ perfil.proyecto.proyecto }}</td>
-                        <td>{{ perfil.subproyecto.subproyecto }}</td>
-                    </tr>
+                {% for empleado in empleados_actualizados %}
+                <tr class="text-center">
+                    <td>{{ empleado.nombre }}</td>
+                    <td>{{ empleado.correo }}</td>
+                    <td>
+                        {% if empleado.activo %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if empleado.activo_anterior %}
+                            <span class="badge bg-success">Activo</span>
+                        {% else %}
+                            <span class="badge bg-danger">Inactivo</span>
+                        {% endif %}
+                    </td>
+                    <td>{{ empleado.nivel }}</td>
+                    <td>{{ empleado.nivel_anterior }}</td>
+                </tr>
                 {% endfor %}
             </tbody>
         </table>
-    {% else %}
-        <p>No se encontraron perfiles.</p>
-    {% endif %}
+    </div>
+</div>
+
+<!-- Modal (si es necesario) -->
+<div class="modal fade" id="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <!-- Contenido del modal aquí -->
+        </div>
+    </div>
+</div>
+
+{% endblock %}
 </body>
 </html>
