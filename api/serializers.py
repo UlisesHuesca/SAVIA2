@@ -68,6 +68,7 @@ class CompraSerializer(serializers.ModelSerializer):
     def get_descargar(self, obj):
         # Retorna la URL del PDF con el ID de la compra
         return f'https://grupovordcab.cloud/api/oc-pdf/{obj.id}/'
+        #return f'http://127.0.0.1:8000/api/oc-pdf/{obj.id}/'
     
 class FamiliaSerializer(serializers.ModelSerializer):
     class Meta:

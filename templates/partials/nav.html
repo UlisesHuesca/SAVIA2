@@ -288,7 +288,7 @@
                                 <span class="badge bg-danger">({{conteo_viaticos_pagar}})</span>
                                 {% endif %}
                             </a>
-                            {% if usuario.tipo.rh %}
+                            {% if usuario.tipo.rh or usuario.tipo.nombre == 'CONTADOR' %}
                             <div class="d-none">
                             {% else %}
                             <div>
