@@ -531,17 +531,22 @@ def matriz_revision_proveedor(request):
 def proveedores_update(request, pk):
 
     proveedores = Proveedor.objects.get(id=pk)
-
+    error_messages = {}
     if request.method =='POST':
         form = ProveedoresForm(request.POST, instance=proveedores)
         if form.is_valid():
             form.save()
             messages.success(request,f'Has actualizado correctamente el proyecto {proveedores.razon_social}')
             return redirect('dashboard-proveedores')
+        else:
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
+
     else:
         form = ProveedoresForm(instance=proveedores)
 
     context = {
+        'error_messages': error_messages,
         'form': form,
         'proveedores':proveedores,
         }

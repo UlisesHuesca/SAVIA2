@@ -46,6 +46,12 @@
                 <div class="card-body">
                 <form method="POST">
                     {% csrf_token %}
+                    <hr>
+                    {% if error_messages %}
+                            <div class="alert alert-danger" role="alert">
+                                {{error_messages}}
+                            </div>
+                    {% endif %}
                     <div class="col-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
@@ -70,6 +76,15 @@
                             <div class="form-floating form-floating-group flex-grow-1">   
                             {{form.nombre_comercial|add_class:"form-control"|append_attr:"placeholder=Nombre Comercial"}}
                             <label for="id_lugar_partida">Nombre Comercial*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.familia|add_class:"form-control"|append_attr:"placeholder=Familia"}}
+                            <label for="id_lugar_partida">Familia*</label>
                             </div>
                         </div>
                     </div>
