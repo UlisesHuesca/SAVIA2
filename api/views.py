@@ -13,6 +13,11 @@ import requests
 from django.contrib.auth.models import User
 from user.models import CustomUser, Empresa
 from django.contrib.auth.decorators import login_required
+from rest_framework.views import APIView
+from django.shortcuts import get_object_or_404
+from django.http import FileResponse
+from compras.views import generar_pdf
+from rest_framework import status
 
 # Create your views here.
 
@@ -164,3 +169,23 @@ def obtener_perfiles(request):
                     print(f"Usuario con correo {correo_vordcab} no encontrado.")
 
     return render(request, 'api/perfiles_lista.html', {'empleados_actualizados': empleados_actualizados, 'actualizado': actualizado})
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication]) #Si quieres decargar el pdf desde el nodo desabilita este decorador de token
+@permission_classes([IsAuthenticated])
+def descargar_pdf_oc(request, pk):
+    try:
+        # Intentar obtener la orden de compra por su id
+        compra = Compra.objects.get(id=pk)
+    except Compra.DoesNotExist:
+        # Si no existe la OC, devolver un mensaje de éxito con estado 200 ya que si uso 404 me manda al middleware
+        return Response(
+            {"detail": "La OC que intenta traer no existe, pero la solicitud fue procesada correctamente."},
+            status=status.HTTP_200_OK
+        )
+
+    # Generar el PDF si la OC existe
+    buf = generar_pdf(compra)
+
+    # Devolver el PDF como respuesta
+    return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')

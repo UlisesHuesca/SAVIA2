@@ -59,11 +59,16 @@ class ProveedorDireccionesSerializer(serializers.ModelSerializer):
 class CompraSerializer(serializers.ModelSerializer):
     proveedor = ProveedorDireccionesSerializer(read_only=True)
     req = RequisicionSerializer(read_only=True)
+    descargar = serializers.SerializerMethodField()
 
     class Meta:
         model = Compra
-        fields = ['folio','proveedor','req','creada_por','created_at','moneda','cond_de_pago','costo_oc']
-
+        fields = ['folio','proveedor','req','creada_por','created_at','moneda','cond_de_pago','costo_oc','descargar',]
+    
+    def get_descargar(self, obj):
+        # Retorna la URL del PDF con el ID de la compra
+        return f'https://grupovordcab.cloud/api/oc-pdf/{obj.id}/'
+    
 class FamiliaSerializer(serializers.ModelSerializer):
     class Meta:
         model = Familia
