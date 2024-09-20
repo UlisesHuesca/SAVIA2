@@ -413,16 +413,16 @@ def compras_pagos(request, pk):
                     tipo_de_cambio = decimal.Decimal(dof())
                     sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
                 #actualizar la cuenta de la que se paga
-            monto_total= monto_actual + suma_pago
-            compra.monto_pagado = monto_total
+            monto_total_pagado= monto_actual + suma_pago
+            compra.monto_pagado = monto_total_pagado
             costo_oc = compra.costo_plus_adicionales 
-
+            monto_parcial = compra.parcial + suma_pago
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
-            elif round(monto_total,2) <= round(costo_oc,2):
-                if round(monto_total,2) == round(compra.parcial):
+            elif round(monto_total_pagado,2) <= round(costo_oc,2):
+                if round(monto_total_pagado,2) == round(monto_parcial,2):
                     compra.para_pago = False
-                elif round(monto_total,2) == round(costo_oc,2):
+                if round(monto_total_pagado,2) == round(costo_oc,2):
                     compra.pagada= True
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
@@ -588,8 +588,8 @@ def compras_pagos(request, pk):
                 cuenta.save()
                 
                 return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
-            elif round(monto_total,2) > round(costo_oc,2):
-                messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total} > {costo_oc}')
+            elif round(monto_total_pagado,2) > round(costo_oc,2):
+                messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total_pagado} > {costo_oc}')
             else:
                 pagos = Pago.objects.filter(oc=compra, hecho=True)
                 html_message = f"""
