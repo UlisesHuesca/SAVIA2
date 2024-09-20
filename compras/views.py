@@ -456,7 +456,7 @@ def oc_modal(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False, sel_comp = False)
     compras = Compra.objects.all()
     comparativos = Comparativo.objects.filter(creada_por__distritos = usuario.distritos, completo =True)
-    oc, created = compras.get_or_create(complete = False, req = req, creada_por = usuario)
+    oc, created = compras.get_or_create(complete = False, req = req, creada_por = usuario, regresar_oc = False)
     productos_comp = ArticuloComprado.objects.filter(oc=oc)
     form = CompraForm(instance=oc)
     form_product = ArticuloCompradoForm()
