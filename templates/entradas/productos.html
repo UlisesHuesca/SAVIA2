@@ -23,6 +23,8 @@
                 </div>
                 {% for articulo_comprado in articulos_comprados %}
                 <div class='cart-row'>
+                    <div style="flex:1">{{articulo_comprado.producto.producto.articulos.producto.producto.codigo}}
+                    </div>
                     <div style="flex:2">{{articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</div>
                     <div style="flex:1">
                         <p class='quantity' id='prod_quantity'>

@@ -4,7 +4,7 @@ from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_A
 class Solicitud_Gasto_Admin(admin.ModelAdmin):
     list_display = ('id','created_at','folio','staff','colaborador', 'superintendente','pagada',)
     raw_id_fields = ('staff','colaborador','superintendente','proveedor','autorizado_por2') 
-    search_fields = ('folio',)
+    search_fields = ('folio','id')
 
 class Conceptos_Entradas_Admin(admin.ModelAdmin):
     list_display =('id', 'concepto_material', 'entrada',)

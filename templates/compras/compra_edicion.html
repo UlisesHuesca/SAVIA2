@@ -333,7 +333,7 @@
                         {% if product.precio_unitario != None  and product.cantidad != None %}
                         <td scope="col">${% widthratio product.precio_unitario 1 product.cantidad %}</td>
                         {% endif %}
-                        <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow(this)" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad|unlocalize}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                        <td scope="col"><button type="button" class="btn btn-danger" value="Delete" onclick="deleteRow({{product.producto.id|unlocalize}})" iva="{{product.producto.producto.articulos.producto.producto.iva}}" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad|unlocalize}}" precio="{{product.precio_unitario.amount}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
                     </tr>
                     {% endfor %}
                 </tbody>
@@ -688,11 +688,11 @@ function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
 }
 
 //This is the function that remove any product from render product table and remove the specific element from the array
-function deleteRow(element) {
+function deleteRow(elemento) {
     let btn_delete = document.getElementById('delete');
     let oc_tag = document.getElementById('oc');
     let oc = oc_tag.getAttribute('target');
-    let id = btn_delete.getAttribute('producto');
+    var id = elemento;
     let val_cantidad = btn_delete.getAttribute('cantidad');
 
     let iva_resp = btn_delete.getAttribute('iva');
