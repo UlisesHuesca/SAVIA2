@@ -150,7 +150,11 @@
                     <th scope="col">Comprobación</th>
                     <th>Detalle</th>
                     <th>Registro</th>
+                    {% if usuario.tipo.nombre == 'CONTADOR' %}
+                    <div></div>
+                    {% else %}
                     <th>Cancelación</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -178,13 +182,21 @@
                         </ul>
                     </td>
                     <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item mx-1">
-                                <a id="myBtn2" type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}">
-                                    Comprobación
-                                </a>
-                            </li>
-                        </ul>
+                        {% if viatico.autorizar2 == True %}
+                            <ul class="nav nav-pills">
+                                <li class="nav-item mx-1">
+                                    {% if viatico.facturas.exists %}
+                                        <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas">
+                                            <i class="fa-solid fa-file-circle-check"></i>
+                                        </a>
+                                    {% else %}
+                                        <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                            <i class="fa-solid fa-file-circle-xmark"></i>
+                                        </a>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        {% endif %}
                     </td>
                     <td><a id="myBtn" type="button" class="btn btn-outline-info btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a>
                     <td>
@@ -195,9 +207,13 @@
                             
                         </ul>
                     </td>
+                    {% if usuario.tipo.nombre == 'CONTADOR' %}
+                    <div></div>
+                    {% else %}
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-viaticos2' viatico.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

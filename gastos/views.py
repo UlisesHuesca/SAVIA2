@@ -8,6 +8,7 @@ from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.conf import settings
 import zipfile
+from django.urls import reverse
 
 
 import logging
@@ -291,10 +292,17 @@ def eliminar_factura(request, pk):
 def eliminar_factura_gasto(request, pk):
     factura = Factura.objects.get(id=pk)
     gasto = factura.solicitud_gasto
+    # Obtener el parámetro `next` de la URL
+    next_url = request.GET.get('next', None)
+    # Construir la URL usando reverse
+    matriz_url = reverse('matriz-facturas-gasto', args=[gasto.id])
     messages.success(request,f'La factura {factura.id} ha sido eliminada exitosamente')
     factura.delete()
-
-    return redirect('matriz-facturas-gasto', pk= gasto.id)
+    # Si next_url existe, redirigir agregando el parámetro `next`
+    if next_url:
+        return redirect(f'{matriz_url}?next={next_url}')
+    else:
+        return redirect(matriz_url)
 
 def extraer_uuid_y_año(archivo_xml):
     try:

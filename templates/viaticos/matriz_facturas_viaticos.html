@@ -105,6 +105,16 @@
                 </tr>
             </tbody>
         </table>
+        <br>
+        <div class="nav-item ms-auto">
+            <form method="POST" class="d-inline">
+                {% csrf_token %}
+                <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                    <i class="fas fa-file-archive"></i> Descargar Facturas
+                </button>
+            </form>
+        </div>
+        <br>
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -155,7 +165,7 @@
                         </li>
                         {% endif %}
                         <td>
-                            <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-viatico' factura.id %}">         
+                            <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-viatico' factura.id %}?next={{ request.GET.next }}">         
                                 <i class="fa-regular fa-trash-can"></i>
                             </a>   
                         </td>

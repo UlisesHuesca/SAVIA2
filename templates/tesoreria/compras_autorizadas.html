@@ -184,9 +184,13 @@
                     <th class="d-none d-md-table-cell">Pagado</th>
                     <th class="d-none d-md-table-cell">Status Entrada</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
+                    {% if usuario.tipo.nombre == 'CONTADOR' %}
+                    <div></div>
+                    {% else %}
                     <th scope="col">Acción</th>
                     <th>Cancelar</th>
                     <th>Layout</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -206,6 +210,9 @@
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
                     <td class="d-none d-md-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregado</span>{% else %}<span class="badge bg-warning">No Entregado Aún</span>  {% endif %}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
+                    {% if usuario.tipo.nombre == 'CONTADOR' %}
+                    <div></div>
+                    {% else %}
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item m-1">
@@ -234,6 +241,7 @@
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
                     <td><input type="checkbox" name="compra_id" value="{{ compra.id|unlocalize }}"></td>
+                    {% endif %}
                 </tr>
                
                     

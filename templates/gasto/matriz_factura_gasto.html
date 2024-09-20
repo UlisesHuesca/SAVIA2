@@ -170,9 +170,9 @@
                             </a>
                         </td>
                         <td>
-                            <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-gasto' factura.id %}">               
+                            <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-gasto' factura.id %}?next={{ request.GET.next }}">               
                                 <i class="fa-regular fa-trash-can"></i>
-                            </a>   
+                            </a>
                         </td>
                    
                    

@@ -41,6 +41,8 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
+import zipfile
+from django.urls import reverse
 
 #Excel stuff
 from openpyxl import Workbook
@@ -817,6 +819,28 @@ def factura_nueva_viatico(request, pk):
 
     return render(request, 'viaticos/registrar_nueva_factura_viatico.html', context)
 
+
+def generar_archivo_zip(facturas, viatico):
+    nombre = viatico.folio if viatico.folio else ''
+    zip_filename = f'facturas_compraviatico-{nombre}.zip'
+    
+    # Crear un archivo zip en memoria
+    in_memory_zip = io.BytesIO()
+
+    with zipfile.ZipFile(in_memory_zip, 'w') as zip_file:
+        for factura in facturas:
+            if factura.factura_pdf:
+                pdf_path = factura.factura_pdf.path
+                zip_file.write(pdf_path, os.path.basename(pdf_path))
+            if factura.factura_xml:
+                xml_path = factura.factura_xml.path
+                zip_file.write(xml_path, os.path.basename(xml_path))
+
+    # Resetear el puntero del archivo en memoria
+    in_memory_zip.seek(0)
+
+    return in_memory_zip, zip_filename
+
 @login_required(login_url='user-login')
 def matriz_facturas_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id = pk)
@@ -835,7 +859,11 @@ def matriz_facturas_viaticos(request, pk):
                 return redirect(next_url)
             else:
                 messages.error(request,'No está validando')
-        
+        elif "btn_descargar_todo" in request.POST:
+            in_memory_zip, zip_filename = generar_archivo_zip(facturas, viatico)
+            response = HttpResponse(in_memory_zip, content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+            return response
             
 
     context={
@@ -849,12 +877,23 @@ def matriz_facturas_viaticos(request, pk):
     return render(request, 'viaticos/matriz_facturas_viaticos.html', context)
 
 def eliminar_factura_viatico(request, pk):
+    # Obtener la factura y el viático relacionado
     factura = Viaticos_Factura.objects.get(id=pk)
     viatico = factura.solicitud_viatico
-    messages.success(request,f'La factura {factura.id} ha sido eliminada exitosamente')
+
+    # Obtener el parámetro `next` de la URL
+    next_url = request.GET.get('next', None)
+
+    # Construir la URL de la matriz de facturas de viáticos
+    matriz_url = reverse('matriz-facturas-viaticos', args=[viatico.id])
+    messages.success(request, f'La factura {factura.id} ha sido eliminada exitosamente')
     factura.delete()
 
-    return redirect('matriz-facturas-viaticos', pk= viatico.id)
+    # Redirigir a 'matriz-facturas-viaticos' con el parámetro `next` si existe
+    if next_url:
+        return redirect(f'{matriz_url}?next={next_url}')
+    else:
+        return redirect(matriz_url)
 
 def factura_viatico_edicion(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
