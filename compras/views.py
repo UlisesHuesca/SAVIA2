@@ -2092,7 +2092,7 @@ def generar_pdf(compra):
     
     importe_neto = compra.costo_oc
     if compra.impuestos:
-        subtotal = subtotal - compra.impuestos
+        subtotal = subtotal #- compra.impuestos
         c.setFillColor(black)
         c.setFont('Helvetica-Bold',9)
         #c.drawRightString(montos_align,170,'Impuestos Adicionales:')
@@ -2102,12 +2102,12 @@ def generar_pdf(compra):
         c.drawRightString(montos_align, 180, 'Impuestos:')
         #importe_neto = importe_neto + compra.impuestos
     if compra.impuestos and compra.retencion:
-        subtotal = subtotal + compra.retencion
+        subtotal = subtotal #+ compra.retencion
         costo_retencion = format(float(compra.retencion), ',.2f')
         c.drawRightString(montos_align + 90, 170, '$' + str(costo_retencion))
         c.drawRightString(montos_align, 170, 'Retención:')
     elif compra.retencion:
-        subtotal = subtotal + compra.retencion
+        subtotal = subtotal #+ compra.retencion
         costo_retencion = format(float(compra.retencion), ',.2f')
         c.drawRightString(montos_align + 90, 180, '$' + str(costo_retencion))
         c.drawRightString(montos_align, 180, 'Retención:')
