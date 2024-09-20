@@ -18,6 +18,7 @@
 </div>
 
 <!-- Botón para enviar la solicitud POST -->
+{% if usuario.tipo.rh or usuario.tipo.nombre == 'Admin' %}
 <div class="row justify-content-center mb-4">
     <div class="col-md-4 text-center">
         <form method="POST">
@@ -28,6 +29,7 @@
         </form>
     </div>
 </div>
+{% endif %}
 
 <!-- Mostrar mensajes con SweetAlert -->
 <div class="row">
@@ -76,6 +78,8 @@
                     <th>Estado Anterior</th>
                     <th>Nivel Actual</th>
                     <th>Nivel Anterior</th>
+                    <th>Empresa Actual</th>
+                    <th>Empresa Anterior</th>
                 </tr>
             </thead>
             <tbody>
@@ -99,6 +103,8 @@
                     </td>
                     <td>{{ empleado.nivel }}</td>
                     <td>{{ empleado.nivel_anterior }}</td>
+                    <td>{{ empleado.empresa }}</td>
+                    <td>{{ empleado.empresa_anterior }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
