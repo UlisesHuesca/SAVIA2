@@ -9,4 +9,6 @@ urlpatterns = [
     path('compras', views.CompraAPI, name ='compras'),
     path('proveedores', views.proveedores_api, name="proveedores"),
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
+    path('perfiles_rh/', views.obtener_perfiles, name='perfiles_rh'),
+
     ]
