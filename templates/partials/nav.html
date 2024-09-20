@@ -248,6 +248,21 @@
                         {% endif %}
                     <div class="dropdown-divider"></div>
                     </div>
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.tesoreria %}
+                        <div>
+                    {% else %}
+                        <div class="d-none">
+                    {% endif %}
+                    <h6 class="dropdown-header">Cuentas por pagar</h6>
+                    <div class="dropdown-divider"></div>
+                        <a class="dropdown-item" href="{% url 'compras-por-pagar' %}">
+                            Compras por pagar
+                            {% if conteo_pagos > 0 %}
+                                <span class="badge bg-danger">({{conteo_pagos2}})</span>
+                            {% endif %}
+                        </a>
+                    <div class="dropdown-divider"></div>       
+                    </div>
                     {% if usuario.tipo.tesoreria %}
                         {% if usuario.tipo.rh and not usuario.distritos.nombre == "MATRIZ" %}
                             <div class="d-none">

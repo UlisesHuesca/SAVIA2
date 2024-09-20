@@ -6,7 +6,7 @@
 {% load l10n %}
 <html>
 <head>
-{% block title %}Matriz de compras autorizadas{% endblock %}
+{% block title %}Cuentas por pagar|Compras autorizadas{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -18,7 +18,7 @@
 <div class = "col" id="response-div">
         <div class="card">
             <div class="card-header">
-                <h5>Filtro de Compras Autorizadas</h5>
+                <h5>Filtro de Compras Autorizadas| Por pagar</h5>
             </div>
             <div class="card-body">
                 {% csrf_token %}
@@ -118,14 +118,14 @@
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
                         </li>-->
-                        <li class="nav-item mx-2">
+                        <!--<li class="nav-item mx-2">
                             <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                 <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-autorizadas' %}">Compras</a>
                                 <a type="button" class="btn btn-outline-info" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
                                 <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viaticos</a>
                                 
                             </div>
-                        </li>
+                        </li>-->
                     </ul>
                 </form>
             </div>
@@ -162,8 +162,24 @@
 </div>
 
 <div class="card bg-white my-2">
-    <form id="mass_payment_form" method="post" action="{% url 'vista_pagos_masivos' %}">
-    <input type="submit" value="Layout Pagos" class="btn btn-primary">
+    
+    <form id="mass_payment_form" method="post" action="{% url 'compras-por-pagar' %}">
+        {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.staff.distritos == "MATRIZ" %}
+        <ul class="nav nav-pills">
+            <li class="nav-item mx-2">
+                <div col-lg-2>
+                    <div class="alert alert-primary" role="alert">Total OC seleccionadas: <span id="oc_count">0</span></div>
+                </div>
+            </li>
+            <li class="nav-item mx-2">
+                <div col-lg-2>
+                    <div class="alert alert-primary" role="alert">Suma total: <span id="oc_sum">0.00</span></div>
+                </div>
+            </li>
+                <input type="submit" value="Enviar a pago" id="enviar_a_pago_button" class="btn btn-primary">
+        </ul>
+        {% endif %}
+   
     {% csrf_token %}
     <div class="col-md-12">
         <div class ="table-responsive-sm">
@@ -178,15 +194,16 @@
                     <th  class="d-none d-md-table-cell">Autorizado</th>
                     <th scope="col">Proveedor</th>
                     <th scope="col">Importe OC</th>
-                    <th>Parcialidad</th>
                     <th> Flete</th>
                     <th class="d-none d-md-table-cell">Moneda</th>
                     <th class="d-none d-md-table-cell">Pagado</th>
-                    <th class="d-none d-md-table-cell">Status Entrada</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Detalles</th>
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" %}
                     <th>Cancelar</th>
-                    <th>Layout</th>
+                    <th>Para Pago</th>
+                    <th>Parcialidad</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -199,41 +216,37 @@
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
                     <td class="d-none d-md-table-cell">{{compra.autorizado_at_2}}</td>
                     <td>{{compra.proveedor}}</td>
-                    <td class="d-none d-md-table-cell">${{compra.costo_plus_adicionales|floatformat:2}}</td>
-                    <td>{{compra.parcial}}</td>
+                    <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>${{compra.costo_fletes}}</td>
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
-                    <td class="d-none d-md-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregado</span>{% else %}<span class="badge bg-warning">No Entregado Aún</span>  {% endif %}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item m-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
                             </li>
-                            {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" %}
-                            <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'compras-pagos' compra.id %}">Pago</a>
-                            </li>
-                            {% endif %}
-                            <li class="nav-item m-1">
-                                <button id="myBtn2" type="button" class="btn btn-outline-light" style="background-color:#990f0f" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'matriz-facturas-compras' compra.id %}"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                            </li>
-                            {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" %}
-                            <li class="nav-item m-1">
-                                <button id="myBtn2" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'saldo-a-favor' compra.id %}">Saldo a Favor</button>
-                            </li>
-                            {% endif %}
                             <li>
                                 <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                             </li>
                             
                         </ul>
                     </td>
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" %}
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
-                    <td><input type="checkbox" name="compra_id" value="{{ compra.id|unlocalize }}"></td>
+                    <td>
+                        
+                        <input class="oc_checkbox form-check-input" data-id="{{ compra.id|unlocalize }}" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
+                        
+                    </td>
+                    <td>
+                        <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="costo_plus_adicionales" value="{{ compra.costo_plus_adicionales|unlocalize }}">
+                        <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
+                        <input class="form-control diferencia" type="textbox" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
+                    </td>
+                    {% endif %}
                 </tr>
                
                     
@@ -303,6 +316,118 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
 
+document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.oc_checkbox');
+        const ocCountElement = document.getElementById('oc_count');
+        const ocSumElement = document.getElementById('oc_sum');
+        const layoutPagosButton = document.getElementById('enviar_a_pago_button');
+        var diferenciaElements = document.querySelectorAll('.diferencia');
+
+        // Inicializar o cargar el array que almacenará los ids y montos seleccionados
+        let selectedPurchases = JSON.parse(localStorage.getItem('selectedPurchases')) || [];
+        // Cargar el estado de los checkboxes desde localStorage
+        initializeDifferencesAndCheckboxes();
+
+
+        // Actualizar la sumatoria y conteo al cargar la página
+        updateCountAndSum();
+
+        checkboxes.forEach(checkbox => {
+            //console.log('Estoy marcando los checkboxes')
+            checkbox.addEventListener('change', updateCountAndSum);
+        });
+
+        function updateCountAndSum() {
+            let count = 0;
+            let sum = 0;
+
+            checkboxes.forEach((checkbox) => {
+               
+                const id = checkbox.getAttribute('data-id');
+                const diferenciaElement = document.querySelector(`.diferencia[data-id="${id}"]`);
+                
+                if (checkbox.checked) {
+                     // Verificar si el ID ya está en el array
+                     const existingPurchase = selectedPurchases.find(purchase => purchase.id === id);
+                    if (!existingPurchase && diferenciaElement) {
+                        // Agregar el nuevo ID y monto al array
+                        selectedPurchases.push({
+                        id: id,
+                        monto: parseFloat(diferenciaElement.value) || 0
+                        });
+                    }
+                } else {
+                    // Si se desmarca, eliminar del array
+                    selectedPurchases = selectedPurchases.filter(purchase => purchase.id !== id);
+                }
+                
+            });
+             // Guardar el estado en localStorage
+            localStorage.setItem('selectedPurchases', JSON.stringify(selectedPurchases));
+            // Actualizar los contadores de cantidad y sumatoria
+            count = selectedPurchases.length;
+            sum = selectedPurchases.reduce((acc, purchase) => acc + purchase.monto, 0);
+
+            ocCountElement.textContent = count;
+            ocSumElement.textContent = sum.toFixed(2);
+           
+        }
+
+        layoutPagosButton.addEventListener('click', function(event) {
+             // Limpiar el localStorage cuando se presiona el botón
+            event.preventDefault(); // Detener el envío del formulario por defecto
+            const form = document.getElementById('mass_payment_form');  // Asegúrate de tener un id en tu formulario
+
+            selectedPurchases.forEach(purchase => {
+                // Crear inputs ocultos para cada compra_id seleccionada y su parcial
+                const inputCompraId = document.createElement('input');
+                inputCompraId.type = 'hidden';
+                inputCompraId.name = 'compra_ids';  // Debe coincidir con lo que esperas en la vista
+                inputCompraId.value = purchase.id;
+
+                const inputParcial = document.createElement('input');
+                inputParcial.type = 'hidden';
+                inputParcial.name = `parcial_${purchase.id}`;
+                inputParcial.value = purchase.monto;
+
+                // Agregar los inputs ocultos al formulario
+                form.appendChild(inputCompraId);
+                form.appendChild(inputParcial);
+            });
+        // Limpiar el localStorage después de agregar los datos
+        localStorage.removeItem('selectedPurchases');
+        // Finalmente enviar el formulario con todos los datos añadidos
+        form.submit();
+        });
+        function initializeDifferencesAndCheckboxes() {
+        // Revisar si el ID de los checkboxes actuales está en el array de seleccionados
+        checkboxes.forEach((checkbox) => {
+            const id = checkbox.getAttribute('data-id');
+            const existingPurchase = selectedPurchases.find(purchase => purchase.id === id);
+            if (existingPurchase) {
+                checkbox.checked = true;
+            }
+        });
+
+        // Calcular las diferencias y asignar a los inputs .diferencia
+        diferenciaElements.forEach((diferenciaElement) => {
+            const id = diferenciaElement.getAttribute('data-id');
+            const costoElement = document.querySelector(`.costo_plus_adicionales[data-id="${id}"]`);
+            const pagadoElement = document.querySelector(`.pagado[data-id="${id}"]`);
+
+            if (costoElement && pagadoElement) {
+                const costoPlusAdicionales = parseFloat(costoElement.value) || 0;
+                const pagado = parseFloat(pagadoElement.value) || 0;
+                const diferencia = costoPlusAdicionales - pagado;
+                
+                // Asignar la diferencia calculada al input de .diferencia
+                diferenciaElement.value = diferencia.toFixed(2);
+            }
+        })
+    }
+
+
+    });
 </script>
 {% endblock %}
 </body>
