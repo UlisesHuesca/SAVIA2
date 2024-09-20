@@ -39,6 +39,7 @@ def contadores_processor(request):
     conteo_viaticos=0
     conteo_devoluciones = 0
     conteo_ordenes = 0
+    conteo_pagos2 = 0
     
     conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
@@ -78,9 +79,11 @@ def contadores_processor(request):
             conteo_viaticos_gerencia = viaticos_gerencia.count()
         elif usuario.tipo.oc_superintendencia == True:
             oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__distrito = usuario.distritos)
-            devoluciones = Devolucion.objects.filter(complete = True, autorizada = None, solicitud__distrito = usuario.distritos)
+            oc_pendientes = Compra.objects.filter(pagada=False, autorizado2=True, req__orden__distrito = usuario.distritos)
+            devoluciones = Devolucion.objects.filter(complete = True, autorizada = None)
             conteo_oc1 = oc.count()
             conteo_devoluciones = devoluciones.count()
+            conteo_pagos2 = oc_pendientes.count()
 
         
         if usuario.tipo.oc_gerencia == True:
@@ -93,7 +96,7 @@ def contadores_processor(request):
             conteo_gastos_gerencia = gastos_gerencia.count()
            
         if usuario.tipo.tesoreria == True:
-            oc_pendientes = Compra.objects.filter(pagada=False, autorizado2=True, req__orden__distrito = usuario.distritos)
+            oc_pendientes = Compra.objects.filter(pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos)
             viaticos_por_asignar = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, montos_asignados=False, distrito = usuario.distritos)
             gastos_por_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, distrito = usuario.distritos  )
             viaticos_por_pagar = Solicitud_Viatico.objects.filter(complete = True, autorizar2=True, pagada=False, distrito = usuario.distritos)
@@ -125,6 +128,7 @@ def contadores_processor(request):
 
 
     return {
+    'conteo_pagos2': conteo_pagos2,
     'conteo_devoluciones': conteo_devoluciones,
     'solicitudes_generadas':solicitudes_generadas,
     'conteo_productos':conteo_productos,

@@ -47,7 +47,8 @@ for(var i=0; i< BotonActualizar.length; i++){
     BotonActualizar[i].addEventListener('click',function(){
         var productId = this.dataset.product
         var action = this.dataset.action
-        console.log('productId:',productId,'action:',action)
+        var type = this.dataset.action
+        console.log('productId:',productId,'action:',action, 'type',type)
         console.log('USER:',user)
 
         update_User_Order_Res(productId, action)
