@@ -1380,6 +1380,31 @@ def reporte_entradas(request):
 
     return render(request,'requisiciones/reporte_entradas.html', context)
 
+def reporte_entradas_servicios(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    entradas = EntradaArticulo.objects.filter(entrada__completo = True, articulo_comprado__producto__producto__articulos__producto__producto__servicio = True, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
+    myfilter = EntradasFilter(request.GET, queryset=entradas)
+    entradas = myfilter.qs
+   
+    #entradas_data = list(entradas.values())
+
+    #Set up pagination
+    p = Paginator(entradas, 50)
+    page = request.GET.get('page')
+    entradas_list = p.get_page(page)
+
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        return convert_entradas_to_xls2(entradas)
+
+    context = {
+        'entradas_list':entradas_list,
+        'entradas':entradas,
+        'myfilter':myfilter,
+        }
+
+    return render(request,'requisiciones/reporte_entradas.html', context)
+
 def reporte_salidas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)

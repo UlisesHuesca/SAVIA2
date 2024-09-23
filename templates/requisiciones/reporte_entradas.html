@@ -198,7 +198,7 @@
                 {% for entrada in entradas_list %}
                 <tr>
                     <th>{{entrada.entrada.folio}}</th>
-                    <th scope="row">F:{{entrada.entrada.oc.req.orden.folio}}|id:{{entrada.entrada.oc.req.orden.id}}</th>
+                    <th scope="row">{{entrada.entrada.oc.req.orden.folio}}</th>
                     <th>{{entrada.entrada.oc.folio}}</th>
                     <td class="d-none d-lg-table-cell">{{entrada.created_at}}</td>
                     <td class="d-none d-lg-table-cell">{{entrada.articulo_comprado.producto.producto.articulos.orden.staff.staff.staff.first_name}} {{entrada.articulo_comprado.producto.producto.articulos.orden.staff.staff.staff.last_name}}</td>

@@ -453,6 +453,9 @@
                             <div class="d-none">
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'reporte-entradas' %}">Matriz Entradas</a>
+                            {% if usuario.tipo.nombre == "Admin" %}
+                            <a class="dropdown-item" href="{% url 'reporte-entradas-servicios' %}">Matriz Entradas Servicios</a>
+                            {% endif %}
                             <a class="dropdown-item" href="{% url 'reporte-entradas-gasto' %}">Matriz Entradas por Gasto</a>
                             <a class="dropdown-item" href="{% url 'reporte-salidas' %}">Matriz Salidas</a>
                             </div>

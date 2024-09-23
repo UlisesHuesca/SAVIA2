@@ -30,6 +30,7 @@ urlpatterns = [
     path('sol_autorizadas_orden/requisicion_cancelar_compra/<int:pk>/', views.requisicion_cancelar_compras, name='requisicion-cancelar-compras'),
     path('salida_material/solicitud_pdf/<int:pk>/', views.render_pdf_view, name='solicitud-pdf'),
     path('reporte_entradas/', views.reporte_entradas, name='reporte-entradas'),
+    path('reporte_entradas_servicios/', views.reporte_entradas_servicios, name='reporte-entradas-servicios'),
     path('reporte_salidas/', views.reporte_salidas, name='reporte-salidas'),
     #path('inventario/upload_batch_inventario', views.upload_batch_inventario, name='upload_batch_inventario'),
     path('inventario/historico_articulos_para_surtir/', views.historico_articulos_para_surtir, name='historico-articulos-para-surtir'),
