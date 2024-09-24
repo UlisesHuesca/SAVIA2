@@ -1072,10 +1072,11 @@ def requisicion_cancelar_compras(request, pk):
             requis.autorizada_por = perfil
             requis.autorizar = False
             requis.save()
+            comentario_rechazo = requis.comentario_compras if requis.comentario_compras else requis.comentario_rechazo 
             try:
                 email = EmailMessage(
                     f'Requisición Rechazada {requis.folio}',
-                    f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {requis.comentario_compras} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                    f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {comentario_rechazo} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
                     settings.DEFAULT_FROM_EMAIL,
                     ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
                     )
@@ -1377,6 +1378,31 @@ def reporte_entradas(request):
             #task_id = task.id
             #request.session['task_id_entradas'] = task_id
             #context['task_id_entradas'] = task_id 
+
+    return render(request,'requisiciones/reporte_entradas.html', context)
+
+def reporte_entradas_servicios(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    entradas = EntradaArticulo.objects.filter(entrada__completo = True, articulo_comprado__producto__producto__articulos__producto__producto__servicio = True, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
+    myfilter = EntradasFilter(request.GET, queryset=entradas)
+    entradas = myfilter.qs
+   
+    #entradas_data = list(entradas.values())
+
+    #Set up pagination
+    p = Paginator(entradas, 50)
+    page = request.GET.get('page')
+    entradas_list = p.get_page(page)
+
+    if request.method == "POST" and 'btnExcel' in request.POST:
+        return convert_entradas_to_xls2(entradas)
+
+    context = {
+        'entradas_list':entradas_list,
+        'entradas':entradas,
+        'myfilter':myfilter,
+        }
 
     return render(request,'requisiciones/reporte_entradas.html', context)
 
