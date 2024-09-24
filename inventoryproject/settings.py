@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     'viaticos.apps.ViaticosConfig',
     'activos.apps.ActivosConfig',
     'api.apps.ApiConfig',
+    
 
 
 

@@ -2,6 +2,7 @@ from django import forms
 from dashboard.models import Activo, Marca
 from requisiciones.models import Salidas
 from dashboard.models import Profile 
+#from bootstrap_datepicker_plus.widgets import DatePickerInput
 #from django.contrib.admin.widgets import AdminDateWidget
 #from django.forms.fields import DateField
 
@@ -22,16 +23,19 @@ class Activo_Form(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
 
-    
+
 class Edit_Activo_Form(forms.ModelForm):
+    
     class Meta:
         model = Activo
         fields = ['tipo_activo','descripcion', 'responsable','eco_unidad','serie','marca','modelo','comentario','estatus','cuenta_contable','factura_interna','factura_pdf','factura_xml','documento_baja','fecha_asignacion']
-    
+       
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['responsable'].queryset = Profile.objects.none()
         self.fields['marca'].queryset = Marca.objects.none()
+
+        
         if 'responsable' in self.data:
             try:
                 seleccion_actual = int(self.data.get('responsable'))

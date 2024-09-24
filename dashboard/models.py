@@ -223,7 +223,7 @@ class Activo(models.Model):
     modified_by = models.ForeignKey(Profile, on_delete=models.CASCADE, null=True, related_name='modified_by')
     modified_at = models.DateField(null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
-    fecha_asignacion = models.DateField(null=True)
+    fecha_asignacion = models.DateField(null=True, blank= True)
 
     @property   
     def emisor(self):
@@ -274,7 +274,7 @@ class Activo(models.Model):
         return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}
 
     def __str__(self):
-        return f'{self.eco_unidad}'
+        return f'{self.eco_unidad} | {self.nombre}'
 
 class Order(models.Model):
     folio = models.IntegerField(null=True)

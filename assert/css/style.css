@@ -187,3 +187,116 @@ body {background-color: #9a9b9d;}
     color: #fff;
 }
 
+/* ---------------------
+# DATEPICKER DE JQUERY
+------------------------*/
+/* Fondo blanco y sombra suave para el contenedor del Datepicker */
+.ui-datepicker {
+    background-color: #ffffff !important;  /* Fondo blanco */
+    border-radius: 8px;  /* Bordes redondeados */
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);  /* Sombra suave */
+    padding: 10px;
+}
+
+/* Encabezado más llamativo */
+.ui-datepicker-header {
+    background-color: #122D45 !important;  /* Azul Bootstrap para el encabezado */
+    color: white !important;  /* Texto blanco */
+    border-radius: 8px 8px 0 0;  /* Bordes redondeados solo en la parte superior */
+    padding: 10px;  /* Agregar espacio para que no se vea comprimido */
+    text-align: center;
+}
+
+/* Mes y año en negrita y centrado */
+.ui-datepicker-title {
+    font-weight: bold !important;
+    font-size: 1.2em;  /* Tamaño de fuente más grande */
+    text-align: center;
+    color: white !important;
+}
+
+.ui-datepicker-prev {
+    margin-right: 60px;  /* Ajusta el valor para mayor separación */
+}
+
+.ui-datepicker-next {
+    margin-left: 60px;  /* Ajusta el valor para mayor separación */
+}
+/* Flechas de navegación más visibles */
+.ui-datepicker-prev span, .ui-datepicker-next span {
+    color: white !important;  /* Flechas en blanco */
+    font-size: 1.5em;  /* Hacer las flechas más grandes */
+}
+
+/* Personalizar las flechas de navegación */
+.ui-datepicker-prev .ui-icon, .ui-datepicker-next .ui-icon {
+    display: none;  /* Ocultar los íconos predeterminados */
+}
+
+/* Usar FontAwesome para las flechas */
+.ui-datepicker-prev:before {
+    content: "\f104";  /* Ícono de FontAwesome (fa-chevron-left) */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 1.5em;
+    color: #007bff;
+}
+
+.ui-datepicker-next:before {
+    content: "\f105";  /* Ícono de FontAwesome (fa-chevron-right) */
+    font-family: "Font Awesome 5 Free";
+    font-weight: 900;
+    font-size: 1.5em;
+    color: #007bff;
+}
+
+/* Estilos para las celdas del calendario */
+.ui-datepicker-calendar td {
+    background-color: #ffffff !important;  /* Fondo blanco para las celdas */
+    padding: 10px;  /* Espacio extra en las celdas */
+    border: 1px solid #ddd;  /* Bordes suaves */
+}
+
+/* Días por defecto */
+.ui-datepicker-calendar .ui-state-default {
+    background-color: #f8f9fa !important;  /* Fondo gris claro */
+    color: #333 !important;  /* Texto oscuro */
+    border-radius: 4px;  /* Bordes redondeados */
+}
+
+/* Día actual resaltado */
+.ui-datepicker-calendar .ui-state-highlight {
+    background-color: #ffc107 !important;  /* Amarillo Bootstrap */
+    color: #fff !important;
+    border-radius: 50%;  /* Hacerlo circular */
+}
+
+/* Día seleccionado */
+.ui-datepicker-calendar .ui-state-active {
+    background-color: #122D45 !important;  /* Azul Bootstrap para días seleccionados */
+    color: #fff !important;  /* Texto blanco */
+    border-radius: 25%;  /* Circular para resaltar */
+}
+
+
+
+/* Resaltar los días cuando el mouse pasa por encima */
+.ui-datepicker-calendar .ui-state-hover {
+    background-color: #122D45 !important;  /* Azul más oscuro cuando se pasa el ratón */
+    color: white !important;
+    border-radius: 25%;  /* Circular */
+}
+
+/* Mejorar los botones, si están presentes */
+.ui-datepicker-buttonpane {
+    background-color: #f8f9fa !important;  /* Fondo gris claro */
+    padding: 10px;
+    border-top: 1px solid #ddd;
+}
+
+.ui-datepicker-buttonpane .ui-datepicker-current {
+    background-color: #122D45 !important;  /* Azul para los botones */
+    color: white !important;
+    border-radius: 4px;
+    padding: 5px 10px;
+}

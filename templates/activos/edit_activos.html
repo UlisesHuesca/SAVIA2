@@ -5,6 +5,9 @@
 <html>
 <head>
 {% block title %} Agregar Activos {% endblock %}
+<!-- Incluir Bootstrap Datepicker CSS y JS -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
+
 </head>
 <body>
 {% block content %}
@@ -175,12 +178,15 @@
                     </div>
                 </div>
             </div>
-            <div class="col-lg-4 col-sm-12">
-                <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                    <div class="form-floating form-floating-group flex-grow-1">   
-                        {% render_field form.fecha_asignacion type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Fecha Asignación:</label>
+         
+            <div class="row">
+                <div class="col-lg-4 col-sm-12" >
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.fecha_asignacion|add_class:"form-control"|attr:"type:text" }}
+                            <label style="color: #121212;" for="id_subproyecto">Fecha Asignación:</label>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -229,11 +235,27 @@
 
     </div>
 </div>
+
+
 <!--AJAX CALL-->
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+$(document).ready(function(){
+        // Inicializar el Datepicker en el campo de fecha
+        $('#id_fecha_asignacion').datepicker({
+            dateFormat: 'dd/mm/yy', 
+            changeMonth: true,
+            changeYear: true, // Formato compatible con Django
+            prevText: '',  // Ícono de flecha izquierda
+            nextText: '',  // Ícono de flecha derecha
+            dayNamesMin: [ "Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa" ],
+            monthNamesShort: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
+        });
+    });
 
 document.getElementById('id_tipo_activo').addEventListener('change', (event) => {
 aparecer_serie()  
