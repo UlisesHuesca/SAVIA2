@@ -199,7 +199,7 @@
                     <th class="d-none d-md-table-cell">Pagado</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
                     <th scope="col">Detalles</th>
-                    {% if usuario.tipo.nombre == "SUPERIN_ADM" %}
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" %}
                     <th>Cancelar</th>
                     <th>Para Pago</th>
                     <th>Parcialidad</th>

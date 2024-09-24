@@ -184,6 +184,7 @@
                     <th class="d-none d-md-table-cell">Pagado</th>
                     <th class="d-none d-md-table-cell">Status Entrada</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
+                    <th>Facturas</th>
                     {% if usuario.tipo.nombre == 'CONTADOR' %}
                     <div></div>
                     {% else %}
@@ -191,6 +192,7 @@
                     <th>Cancelar</th>
                     <th>Layout</th>
                     {% endif %}
+                    
                 </tr>
             </thead>
             <tbody>
@@ -210,6 +212,23 @@
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
                     <td class="d-none d-md-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregado</span>{% else %}<span class="badge bg-warning">No Entregado Aún</span>  {% endif %}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
+                    {% if compra.facturas.exists %}
+                        {% if compra.facturas.all.count > 1 %}
+                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
+                        {% elif compra.facturas.all.count == 1 %}
+                            {% for factura in compra.facturas.all %}
+                                {% if factura.hecho %}
+                                <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
+                                {% else %}
+                                    <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                        {% endif %}
+                    {% else%}
+                        <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                    {% endif %}
                     {% if usuario.tipo.nombre == 'CONTADOR' %}
                     <div></div>
                     {% else %}
@@ -223,16 +242,16 @@
                                 <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'compras-pagos' compra.id %}">Pago</a>
                             </li>
                             {% endif %}
-                            <li class="nav-item m-1">
+                            <!--<li class="nav-item m-1">
                                 <button id="myBtn2" type="button" class="btn btn-outline-light" style="background-color:#990f0f" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'matriz-facturas-compras' compra.id %}"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                            </li>
+                            </li>-->
                             {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" %}
                             <li class="nav-item m-1">
                                 <button id="myBtn2" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'saldo-a-favor' compra.id %}">Saldo a Favor</button>
                             </li>
                             {% endif %}
                             <li>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="OC"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                             </li>
                             
                         </ul>
