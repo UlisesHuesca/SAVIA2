@@ -104,6 +104,7 @@ def compras_por_pagar(request):
             return redirect('compras-por-pagar')
 
     context= {
+        'usuario':usuario,
         'compras':compras,
         'myfilter':myfilter,
         'compras_list':compras_list,

@@ -5,6 +5,7 @@
 <html>
 <head>
 {% block title %}Editar Proveedor{% endblock %}
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
 </head>
 <body>
 {% block content %}
@@ -163,7 +164,7 @@
                             <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
-                                    {% render_field form.modificado_fecha type="date" class="form-control" %}
+                                    {{form.modificado_fecha|add_class:"form-control"|attr:"type:text"}}
                                     <label style="color: #121212;" for="id_subproyecto">Fecha Modificación Status:</label>
                                 </div>
                             </div>
@@ -239,7 +240,20 @@
 <!--AJAX CALL-->
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js"></script>
   <script>
+    $(document).ready(function(){
+        // Inicializar el Datepicker en el campo de fecha
+        $('#id_modificado_fecha').datepicker({
+            dateFormat: 'dd/mm/yy', 
+            changeMonth: true,
+            changeYear: true, // Formato compatible con Django
+            prevText: '',  // Ícono de flecha izquierda
+            nextText: '',  // Ícono de flecha derecha
+            dayNamesMin: [ "Do", "Lu", "Ma", "Mi", "Ju", "Vi", "Sa" ],
+            monthNamesShort: ["Ene","Feb","Mar","Abr","May","Jun","Jul","Ago","Sep","Oct","Nov","Dic"],
+        });
+    });
 
   </script>
 {% endblock %}

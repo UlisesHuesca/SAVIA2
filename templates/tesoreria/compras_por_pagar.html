@@ -18,7 +18,7 @@
 <div class = "col" id="response-div">
         <div class="card">
             <div class="card-header">
-                <h5>Filtro de Compras Autorizadas| Por pagar</h5>
+                <h5>Filtro de Compras Autorizadas| Por pagar </h5>
             </div>
             <div class="card-body">
                 {% csrf_token %}
@@ -164,7 +164,7 @@
 <div class="card bg-white my-2">
     
     <form id="mass_payment_form" method="post" action="{% url 'compras-por-pagar' %}">
-        {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.staff.distritos == "MATRIZ" %}
+        {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" %}
         <ul class="nav nav-pills">
             <li class="nav-item mx-2">
                 <div col-lg-2>
@@ -232,7 +232,7 @@
                             
                         </ul>
                     </td>
-                    {% if usuario.tipo.nombre == "SUPERIN_ADM" %}
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" %}
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
