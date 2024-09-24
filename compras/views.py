@@ -1888,9 +1888,6 @@ def generar_pdf(compra):
     caja_iso = 760
     #Elaborar caja
     #c.line(caja_iso,500,caja_iso,720)
-
-
-
     c.drawString(430,caja_iso,'Preparado por:')
     c.drawString(405,caja_iso-10,'SUPT. DE ADQUISIONES')
     c.drawString(520,caja_iso,'Aprobación')
@@ -2275,6 +2272,21 @@ def generar_pdf(compra):
         c.drawCentredString(280, 755, 'Orden de compra')
         c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)  # Imagen vortec
     
+    if compra.autorizado2 != True:
+        c.setFont('Helvetica-Bold', 50)  # Tamaño de la fuente
+        # Configurar color del texto (rojo claro, semitransparente)
+        c.setFillColorRGB(1, 0, 0, alpha=0.2)
+        # Guardar el estado del lienzo antes de rotar
+        c.saveState()
+        # Trasladar el origen de coordenadas al centro del lienzo
+        c.translate(width / 2, height / 2)
+        # Rotar el lienzo 45 grados
+        c.rotate(45)
+        # Dibujar el texto "NO AUTORIZADA" centrado
+        c.drawCentredString(0, 0, "NO AUTORIZADA")
+
+        # Restaurar el estado original del lienzo
+        c.restoreState()
     c.showPage()
     # Agregar el encabezado en la segunda página
     c.setFont('Helvetica', 8)
