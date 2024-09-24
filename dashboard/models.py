@@ -298,7 +298,7 @@ class Order(models.Model):
     #created_at_time = models.TimeField(null=True)
     approved_at = models.DateField(null=True)
     #approved_at_time = models.TimeField(null=True)
-    comentario =  models.TextField(max_length=200, null=True, blank=True)
+    comentario =  models.TextField(max_length=400, null=True, blank=True)
     soporte = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
    
 
