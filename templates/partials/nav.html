@@ -149,7 +149,7 @@
                                 {% endif %}
                             </a>
                             <a class="dropdown-item" href="{% url 'solicitud-autorizada' %}">
-                                Salidas | Solicitudes Pendientes
+                                Salidas | Matriz Solicitudes
                                 {% if conteo_ordenes > 0 %}
                                 <span class="badge bg-danger">({{conteo_ordenes}})</span>
                                 {% endif %}
@@ -179,15 +179,15 @@
                                 <a class="dropdown-item" href="{% url 'matriz-plantillas' %}">Matriz Plantillas</a>-->
                                 <a class="dropdown-item" href="{% url 'solicitud-product-selection' %}">Crear Solicitud</a>
                                 <a class="dropdown-item" href="{% url 'solicitud-matriz-productos' %}">Solicitudes por producto</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-pendientes' %}">Solicitudes pendientes</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-pendientes' %}">Matriz Solicitudes</a>
                             <div class="dropdown-divider"></div>
                         <div>
                             <h6 class="dropdown-header">Gastos y viáticos</h6>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="{% url 'crear-gasto' %}">Crear Solicitud de Gasto/Reembolso</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-gasto' %}">Solicitudes Gasto</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-gasto' %}">Matriz Gastos</a>
                                 <a class="dropdown-item" href="{% url 'solicitud-viatico' %}">Crear Viático</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">Solicitudes Viáticos</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">Matriz Viáticos</a>
                             <div class="dropdown-divider"></div>
                         </div>
                     </div>
