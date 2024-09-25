@@ -781,7 +781,7 @@ def solicitud_matriz(request):
         'myfilter':myfilter,
         }
 
-    return render(request, 'solicitud/solicitudes_creadas.html',context)
+    return render(request, 'solicitud/solicitudes_pendientes.html',context)
 
 @perfil_seleccionado_required
 @login_required(login_url='user-login')
