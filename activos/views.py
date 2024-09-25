@@ -1053,4 +1053,4 @@ def render_pdf_responsiva_activos_gerente(request):
     c.save()
     buf.seek(0)
 
-    return FileResponse(buf, as_attachment=True, filename='Responsiva_Gerencia' +  +'.pdf')
+    return FileResponse(buf, as_attachment=True, filename='Responsiva_Gerencia' + '.pdf')
