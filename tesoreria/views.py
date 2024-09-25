@@ -1410,7 +1410,7 @@ def convert_excel_matriz_compras_autorizadas(compras):
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)
-
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     return(response)
 
 def convert_excel_matriz_pagos(pagos):
