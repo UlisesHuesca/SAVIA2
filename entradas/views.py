@@ -104,7 +104,7 @@ def entrada_servicios(request):
     
 
     if usuario.tipo.nombre == "Admin":
-         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True).order_by('-folio')
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True).order_by('-folio')
     else:
         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
 
