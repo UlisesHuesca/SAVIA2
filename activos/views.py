@@ -110,7 +110,7 @@ def add_activo(request):
     form.fields['activo'].queryset = productos_activos
 
     if request.method =='POST':
-        form = Activo_Form(request.POST, instance = activo)
+        form = Activo_Form(request.POST, request.FILES, instance = activo)
         messages.success(request,f'Has agregado incorrectamente el activo')
         if form.is_valid():
             activo = form.save(commit=False)

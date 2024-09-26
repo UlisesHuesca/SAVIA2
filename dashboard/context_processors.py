@@ -65,7 +65,7 @@ def contadores_processor(request):
         #if usuario.staff.staff.is_staff:
             #requis.
         if usuario.tipo.compras == True:
-            requis= requis.filter(autorizar=True, colocada=False, orden__distrito = usuario.distritos)
+            requis= Requis.objects.filter(orden__distrito = usuario.distritos, autorizar=True, colocada=False, complete = True)
             conteo_requis = requis.count()
 
         if usuario.tipo.subdirector == True:
@@ -78,9 +78,9 @@ def contadores_processor(request):
             viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True, distrito = usuario.distritos, superintendente = usuario)
             conteo_viaticos_gerencia = viaticos_gerencia.count()
         elif usuario.tipo.oc_superintendencia == True:
-            oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__distrito = usuario.distritos)
+            oc = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos)
             oc_pendientes = Compra.objects.filter(pagada=False, autorizado2=True, req__orden__distrito = usuario.distritos)
-            devoluciones = Devolucion.objects.filter(complete = True, autorizada = None)
+            devoluciones = Devolucion.objects.filter(complete=True, autorizada=None, solicitud__distrito = usuario.distritos)
             conteo_oc1 = oc.count()
             conteo_devoluciones = devoluciones.count()
             conteo_pagos2 = oc_pendientes.count()
@@ -89,7 +89,7 @@ def contadores_processor(request):
         if usuario.tipo.oc_gerencia == True:
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None, req__orden__distrito = usuario.distritos)
             gastos_gerencia = Solicitud_Gasto.objects.filter(complete=True, autorizar=True, autorizar2=None, distrito = usuario.distritos)
-            viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True, distrito = usuario.distritos)
+            viaticos_gerencia = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = usuario.distritos, superintendente = usuario)
            
             conteo_oc = oc.count()
             conteo_viaticos_gerencia = viaticos_gerencia.count()
@@ -119,14 +119,22 @@ def contadores_processor(request):
             conteo_requis_pendientes = requisiciones_pendientes.count()
             conteo_gastos_pendientes = gastos_pendientes.count()
             conteo_viaticos = viaticos_pendientes.count()
-        if usuario.tipo.almacen == True:
-            entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), req__orden__distrito = usuario.distritos, solo_servicios= False, entrada_completa = False, autorizado2= True).order_by('-folio')
-            conteo_entradas = entradas.count()
+        #if usuario.tipo.almacen == True:
+        #    entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), req__orden__distrito = usuario.distritos, solo_servicios= False, entrada_completa = False, autorizado2= True).order_by('-folio')
+        #    conteo_entradas = entradas.count()
+        #else:
+        #    entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True),  req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+        #    conteo_entradas = entradas.count()
+        if usuario.tipo.nombre == 'Admin':
+            entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True)
         else:
-            entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True),  req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
-            conteo_entradas = entradas.count()
-
-
+            entradas = Compra.objects.filter(
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
+            Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
+            req__orden__distrito = usuario.distritos,  
+            entrada_completa = False, 
+            autorizado2= True).order_by('-folio')
+        conteo_entradas = entradas.count()
     return {
     'conteo_pagos2': conteo_pagos2,
     'conteo_devoluciones': conteo_devoluciones,
