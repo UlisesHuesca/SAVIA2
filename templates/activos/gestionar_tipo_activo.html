@@ -1,0 +1,50 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html lang="en">
+<head>
+{% block title %}Gestión Tipo Activo{% endblock %}
+</head>
+<body>
+    {% block content %}
+    <div class="container mt-4">
+        <h1 class="text-center">Gestión de Tipos de Activo</h1>
+
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Nuevo Tipo de Activo</h5>
+            </div>
+            <div class="card-body">
+                <form method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        {{ tipo_activo_form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre de Tipo de Activo" }}
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" class="btn btn-primary d-inline-block">Agregar Tipo de Activo</button>
+                        <a type="button" class="btn btn-secondary d-inline-block ms-2" id="cerrar" href="{% url 'activos' %}">Cerrar</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <div class="card mt-3">
+            <div class="card-header">
+                <h5>Tipos de Activos Existentes</h5>
+            </div>
+            <div class="card-body">
+                <ul class="list-group">
+                    {% for tipo in tipos_activos %}
+                        <li class="list-group-item">{{ tipo.nombre }}</li>
+                    {% empty %}
+                        <li class="list-group-item">No hay tipos de activos registrados.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+    </div>
+    {% endblock %}
+</body>
+</html>
