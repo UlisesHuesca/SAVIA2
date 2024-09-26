@@ -12,4 +12,6 @@ urlpatterns = [
     path('activos/render_pdf_responsiva_activos/<int:pk>/', views.render_pdf_responsiva_activos, name='render-pdf-responsiva-activos'),
     path('activos/render_pdf_responsiva_activos_gerente', views.render_pdf_responsiva_activos_gerente, name='render_pdf_responsiva_activos_gerente'),
     #path('configuracion/proyectos/editar/<int:pk>', views.proyectos_edit, name='proyectos-edit'),
+    path('activos/gestionar_tipo_activo/', views.gestionar_tipo_activo, name='gestionar_tipo_activo'),
+    path('activos/gestionar_marca/', views.gestionar_marca, name='gestionar_marca'),
     ]

@@ -1,5 +1,5 @@
 from django import forms
-from dashboard.models import Activo, Marca
+from dashboard.models import Activo, Marca, Tipo_Activo
 from requisiciones.models import Salidas
 from dashboard.models import Profile 
 #from bootstrap_datepicker_plus.widgets import DatePickerInput
@@ -50,7 +50,13 @@ class Edit_Activo_Form(forms.ModelForm):
                 self.fields['marca'].queryset = Marca.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
-
+        if 'tipo_activo' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('tipo_activo'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['tipo_activo'].queryset = Tipo_Activo.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida
 
 class UpdateResponsableForm(forms.ModelForm):
     
@@ -62,3 +68,13 @@ class SalidasActivoForm(forms.ModelForm):
     class Meta:
         model = Salidas
         fields = ['activo','comentario']
+
+class Tipo_ActivoForm(forms.ModelForm):
+    class Meta:
+        model = Tipo_Activo
+        fields = ['nombre',]
+
+class MarcaForm(forms.ModelForm):
+    class Meta:
+        model = Marca
+        fields = ['nombre','familia',]

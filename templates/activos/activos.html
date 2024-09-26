@@ -104,6 +104,16 @@
                                 </div>
                             </li>-->
                         </ul>
+                        {% if usuario.tipo.activos == True %}
+                        <div class="text-end mt-3"> <!-- Alinea los botones a la derecha -->
+                            <a class="btn btn-outline-primary" href="{% url 'gestionar_tipo_activo' %}">
+                                <i class="fa-solid fa-plus"></i> Agregar Tipo de Activo
+                            </a>
+                            <a class="btn btn-outline-primary ms-2" href="{% url 'gestionar_marca' %}">
+                                <i class="fa-solid fa-plus"></i> Agregar Marca
+                            </a>
+                        </div>
+                        {% endif %}
                     </form>
                 </div>
             </div>

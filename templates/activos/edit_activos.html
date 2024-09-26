@@ -80,15 +80,14 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-6">
+                <div class="col-sm-12 col-lg-6">
                     <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.tipo_activo|add_class:"form-control"|append_attr:"placeholder= Tipo de Activo"}}
-                            <label style="color: #121212;" for="id_lugar_partida">Tipo de Activo*</label>
+                            {{form.tipo_activo}}
                         </div>
                     </div>
-                </div>
+                </div> 
                 <div class="col-6">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
@@ -279,6 +278,25 @@ function aparecer_serie() {
     serie.classList.remove('d-none')
     }
 };
+
+$(document).ready(function() {
+    var datosTipoActivo = {{ tipo_activo_para_select2|safe }};
+    // Inicialización del select para tipo de activo
+    $('#id_tipo_activo').select2({
+        allowClear: true,
+        width: '100%',
+        data: datosTipoActivo,
+        placeholder: 'Tipo de Activo',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    // Si hay un tipo de activo predeterminado, selecciónalo
+    var tipoActivoSeleccionado = {{ tipo_activo_predeterminado|safe }};
+    if (tipoActivoSeleccionado) {
+        $('#id_tipo_activo').val(tipoActivoSeleccionado.id).trigger('change');
+    }
+});
 
 var datosResponsable= {{ responsables_para_select2|safe }};
 var responsablePredeterminado = {{ responsable_predeterminado|default:"null" |safe }};

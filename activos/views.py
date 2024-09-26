@@ -4,12 +4,14 @@ from dashboard.models import Inventario, Profile, Marca
 from django.core import serializers
 from django.db.models import Value, F, Q
 from django.db.models.functions import Concat
-from dashboard.models import Activo
+from dashboard.models import Activo, Marca, Tipo_Activo
 from requisiciones.models import Salidas 
-from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm
+from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm
 from django.contrib import messages
 from activos.filters import ActivoFilter
 from django.http import JsonResponse, HttpResponse, FileResponse
+from django.http import Http404
+
 #Todo para construir el código QR
 import qrcode
 import io
@@ -64,7 +66,8 @@ def add_activo(request):
     #activos = Activo.objects.filter(completo=True)
     productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos)
     personal = Profile.objects.all()
-    marcas = Marca.objects.all() 
+    marcas = Marca.objects.all()
+    tipo_activo = Tipo_Activo.objects.all() 
     #print(productos)
     if perfil.tipo.nombre == "ADMIN_ACTIVOS":
         responsables = personal.filter(st_activo = True)
@@ -76,6 +79,15 @@ def add_activo(request):
             'id': responsable.id, 
             'text': str(responsable.staff.staff.first_name) + (' ') + str(responsable.staff.staff.last_name)
         } for responsable in responsables
+    ]
+    tipo_activo_para_select2 = [
+        {'id': tipo.id, 'text': tipo.nombre}
+        for tipo in tipo_activo
+    ]
+
+    marca_para_select2 = [
+        {'id': marca.id, 'text': marca.nombre}
+        for marca in marcas
     ]
 
     for producto in productos:
@@ -116,6 +128,8 @@ def add_activo(request):
     
     context = {
         'responsables_para_select2':responsables_para_select2,
+        'tipo_activo_para_select2': tipo_activo_para_select2,
+        'marca_para_select2': marca_para_select2,
         'marcas': marcas,
         'form':form,
         'productos_activos':productos_activos,
@@ -258,6 +272,7 @@ def edit_activo(request, pk):
     perfil = empleados.get(id = pk_perfil)
     #producto = Salidas.objects.get(id=pk)
     activo = Activo.objects.get(id=pk)
+    tipo_activo = Tipo_Activo.objects.all()
     if activo.responsable:
         responsable = empleados.get(id=activo.responsable.id )
     if perfil.tipo.nombre == "ADMIN_ACTIVOS":
@@ -302,6 +317,20 @@ def edit_activo(request, pk):
             'text': marca.nombre if marca.nombre is not None else "",
         } for marca in marcas
     ]
+    # Obtiene los tipos de activo para select2
+    tipo_activo_para_select2 = [
+        {'id': tipo.id, 'text': tipo.nombre}
+        for tipo in tipo_activo
+    ]
+
+    # Obtiene el tipo de activo predeterminado
+    if activo.tipo_activo:
+        tipo_activo_predeterminado = {
+            'id': activo.tipo_activo.id,
+            'text': activo.tipo_activo.nombre
+        }
+    else:
+        tipo_activo_predeterminado = None
 
     error_messages = {}    
 
@@ -327,6 +356,8 @@ def edit_activo(request, pk):
         'responsables_para_select2':responsables_para_select2,
         'marcas_para_select2':marcas_para_select2,
         'marca_predeterminada':marca_predeterminada,
+        'tipo_activo_predeterminado': tipo_activo_predeterminado,
+        'tipo_activo_para_select2': tipo_activo_para_select2,
         'activo':activo,
         #'personal':personal,
         'marcas':marcas,
@@ -1054,3 +1085,53 @@ def render_pdf_responsiva_activos_gerente(request):
     buf.seek(0)
 
     return FileResponse(buf, as_attachment=True, filename='Responsiva_Gerencia' + '.pdf')
+
+@login_required(login_url='user-login')
+def gestionar_tipo_activo(request):
+    pk_perfil = request.session.get('selected_profile_id') 
+    perfil = Profile.objects.get(id = pk_perfil)
+    if perfil.tipo.activos == True:   
+        if request.method == "POST":
+            tipo_activo_form = Tipo_ActivoForm(request.POST)
+            if tipo_activo_form.is_valid():
+                nuevo_tipo_activo = tipo_activo_form.save()  # Guarda y obtiene el objeto
+                messages.success(request, f'Has agregado el tipo de activo: {nuevo_tipo_activo.nombre}')  # Muestra el nombre del nuevo tipo
+                return redirect('activos')  # Redirigir después de guardar
+        else:
+            tipo_activo_form = Tipo_ActivoForm()
+
+        tipos_activos = Tipo_Activo.objects.all().order_by('nombre')
+
+        context = {
+            'tipo_activo_form': tipo_activo_form,
+            'tipos_activos': tipos_activos,
+        }
+
+        return render(request, 'activos/gestionar_tipo_activo.html', context)
+    else:
+        raise Http404("No tienes permiso para agregar activos.")
+    
+@login_required(login_url='user-login')
+def gestionar_marca(request):
+    pk_perfil = request.session.get('selected_profile_id') 
+    perfil = Profile.objects.get(id = pk_perfil)
+    if perfil.tipo.activos == True:  
+        if request.method == "POST":
+            marca_form = MarcaForm(request.POST)
+            if marca_form.is_valid():
+                nueva_marca = marca_form.save()
+                messages.success(request,f'Has agregado la marca {nueva_marca.nombre}')
+                return redirect('activos')  # Redirigir después de guardar
+        else:
+            marca_form = MarcaForm()
+
+        marcas = Marca.objects.all().order_by('nombre')
+
+        context = {
+            'marca_form': marca_form,
+            'marcas': marcas,
+        }
+
+        return render(request, 'activos/gestionar_marca.html', context)
+    else:
+        raise Http404("No tienes permiso para agregar activos.")

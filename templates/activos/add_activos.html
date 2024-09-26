@@ -74,7 +74,7 @@
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form.tipo_activo|add_class:"form-control"|append_attr:"placeholder= Tipo de Activo"}}
-                            <label style="color: #121212;" for="id_lugar_partida">Tipo de Activo*</label>
+                            <label style="color: #121212;" for="id_lugar_partida"></label>
                         </div>
                         </div>
                     </div>
@@ -118,7 +118,7 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-sliders"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.marca|add_class:"form-control"|append_attr:"placeholder= Marca"}}
-                                <label style="color: #121212;" for="id_lugar_partida">Marca*</label>
+                                <label style="color: #121212;" for="id_lugar_partida"></label>
                                 </div>
                             </div>
                         </div>
@@ -220,7 +220,29 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+$(document).ready(function() {
+    // Datos para el select2 de tipo_activo (deberás pasarlos desde tu vista en el contexto)
+    var datosTipoActivo = {{ tipo_activo_para_select2|safe }};
+    $('#id_tipo_activo').select2({
+        allowClear: true,
+        width: '100%',
+        data: datosTipoActivo,
+        placeholder: 'Tipo de Activo*',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
 
+    // Datos para el select2 de marca (deberás pasarlos desde tu vista en el contexto)
+    var datosMarca = {{ marca_para_select2|safe }};
+    $('#id_marca').select2({
+        allowClear: true,
+        width: '100%',
+        data: datosMarca,
+        placeholder: 'Marca*',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+});
 {% if activos_completos_json %}
 
 document.getElementById("etiqueta_comentario").addEventListener("dblclick", function(){

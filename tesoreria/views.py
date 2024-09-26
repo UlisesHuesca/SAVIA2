@@ -58,7 +58,7 @@ from reportlab.lib.colors import Color, black, blue, red, white
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import letter
 from reportlab.rl_config import defaultPageSize
-
+from compras.tasks import convert_excel_matriz_compras_task
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
@@ -84,8 +84,9 @@ def compras_por_pagar(request):
     page = request.GET.get('page')
     compras_list = p.get_page(page)
     
-    #if request.method == 'POST' and 'btnReporte' in request.POST:
-        #return convert_excel_matriz_cuentas_por_pagar(compras)
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_matriz_compras_autorizadas(compras)
+    
     if request.method == 'POST':
         compra_ids = request.POST.getlist('compra_ids')
         print(compra_ids)
@@ -1409,7 +1410,7 @@ def convert_excel_matriz_compras_autorizadas(compras):
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)
-
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     return(response)
 
 def convert_excel_matriz_pagos(pagos):
