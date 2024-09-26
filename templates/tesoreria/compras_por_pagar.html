@@ -203,6 +203,7 @@
                     <th class="d-none d-md-table-cell">Moneda</th>
                     <th class="d-none d-md-table-cell">Pagado</th>
                     <th class="d-none d-md-table-cell">Condiciones</th>
+                    <th>Facturas</th>
                     <th scope="col">Detalles</th>
                     {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" %}
                     <th>Cancelar</th>
@@ -226,6 +227,23 @@
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
+                    {% if compra.facturas.exists %}
+                        {% if compra.facturas.all.count > 1 %}
+                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
+                        {% elif compra.facturas.all.count == 1 %}
+                            {% for factura in compra.facturas.all %}
+                                {% if factura.hecho %}
+                                <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
+                                {% else %}
+                                    <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                                {% endif %}
+                            {% endfor %}
+                        {% else %}
+                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                        {% endif %}
+                    {% else%}
+                        <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                    {% endif %}
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item m-1">
