@@ -9,5 +9,9 @@ errors.log.save
 .env
 *.sql
 savia2_antesdeborrarfacturas
+<<<<<<< HEAD
+**/__pycache__/
+=======
 *.pyc
 __pycache__/
+>>>>>>> 12590cd36001c924adc10ea9feeb020e0d5f41eb
