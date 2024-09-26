@@ -206,6 +206,7 @@ def articulos_entrada(request, pk):
             elemento.save()
 
         for articulo in articulos_entrada:
+            producto_surtir2 = ArticulosparaSurtir.objects.filter(articulos = articulo.articulo_comprado.producto.producto.articulos)
             producto_surtir = ArticulosparaSurtir.objects.get(articulos = articulo.articulo_comprado.producto.producto.articulos)
             producto_surtir.seleccionado = False
             print(producto_surtir)
@@ -396,7 +397,7 @@ def articulos_entrada_servicios(request, pk):
         evalua_entrada_completa(articulos_comprados,num_art_comprados, compra)
         entrada.save()
         messages.success(request, f'La entrada {entrada.folio} se ha realizado con éxito')
-        return redirect('pendientes_entrada')
+        return redirect('entrada-servicios')
 
     context = {
         'articulos':articulos,
