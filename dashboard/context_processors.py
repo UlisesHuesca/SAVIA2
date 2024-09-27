@@ -133,7 +133,7 @@ def contadores_processor(request):
             Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
             req__orden__distrito = usuario.distritos,  
             entrada_completa = False, 
-            autorizado2= True).order_by('-folio')
+            autorizado2= True, req__orden__staff = usuario).order_by('-folio')
         conteo_entradas = entradas.count()
     return {
     'conteo_pagos2': conteo_pagos2,
