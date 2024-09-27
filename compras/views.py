@@ -461,7 +461,7 @@ def oc_modal(request, pk):
     form = CompraForm(instance=oc)
     form_product = ArticuloCompradoForm()
     if (req.colocada != False):
-        logger.warning(f"Intento acceso no autorizado a compra cuya requisición {req.folio} por usuario  {colaborador.staff.staff.staff.first_name} {colaborador.staff.staff.staff.last_name}")
+        logger.warning(f"Intento acceso no autorizado a compra cuya requisición {req.folio} por usuario  {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}")
         return render(request,'partials/acceso_denegado.html') 
     else:
         tag = dof()

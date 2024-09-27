@@ -808,7 +808,6 @@ def edit_proveedor_direccion(request, pk):
         if form.is_valid():
             direccion = form.save(commit=False)
             direccion.actualizado_por = usuario
-            direccion.modificado_fecha = date.today()
             direccion.completo = True
             direccion.save()
             messages.success(request,'Has actualizado correctamente la direccion del proveedor')
