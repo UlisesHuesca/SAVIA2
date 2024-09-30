@@ -185,7 +185,6 @@
                             <h6 class="dropdown-header">Gastos y viáticos</h6>
                             <div class="dropdown-divider"></div>
                                 <a class="dropdown-item" href="{% url 'crear-gasto' %}">Crear Solicitud de Gasto/Reembolso</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-gasto' %}">Matriz Gastos</a>
                                 <a class="dropdown-item" href="{% url 'solicitud-viatico' %}">Crear Viático</a>
                                 <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">Matriz Viáticos</a>
                             <div class="dropdown-divider"></div>
@@ -473,6 +472,7 @@
                             <div class="d-none">
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'matriz-pagos' %}">Matriz Pagos</a>
+                            <a class="dropdown-item" href="{% url 'solicitudes-gasto' %}">Matriz Gastos</a>
                             </div>
                             {% if usuario.tipo.calidad == True %}
                             <div>

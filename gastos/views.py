@@ -164,7 +164,7 @@ def crear_gasto(request):
                 gasto.save()
                 #form.save()
                 messages.success(request, f'La solicitud {gasto.folio} ha sido creada')
-                return redirect('solicitudes-gasto')
+                return redirect('mis-gastos')
             else:
                 for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
