@@ -718,12 +718,13 @@ def update_salida(request):
     if action == "remove":
         item = Salidas.objects.get(vale_salida = vale_salida, id = id_salida)
         id_entrada = item.entrada
-        if item.entrada != None:
-            entrada = EntradaArticulo.objects.get(id=item.entrada)
-            inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas + item.cantidad
-            entrada.cantidad_por_surtir = entrada.cantidad_por_surtir + item.cantidad
-            entrada.agotado = False
-            entrada.save()
+        if id_entrada != None:
+            if id_entrada != 0:
+                entrada = EntradaArticulo.objects.get(id=item.entrada)
+                inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas + item.cantidad
+                entrada.cantidad_por_surtir = entrada.cantidad_por_surtir + item.cantidad
+                entrada.agotado = False
+                entrada.save()
             #if entrada.entrada.oc.req.orden.tipo.tipo == "normal":
             #    inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
         if vale_salida.solicitud.tipo.tipo == "normal":
