@@ -124,6 +124,7 @@
                     <th scope="col">Monto [XML]</th>
                     <th>PDF</th>
                     <th>XML</th>
+                    <th>PDF-render</th>
                     <th>Eliminar</th>
                 <tr>
             </thead>
@@ -164,6 +165,11 @@
                             </a>                 
                         </li>
                         {% endif %}
+                        <td>
+                            <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                            </a>
+                        </td>
                         <td>
                             <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-viatico' factura.id %}?next={{ request.GET.next }}">         
                                 <i class="fa-regular fa-trash-can"></i>
