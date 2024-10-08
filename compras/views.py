@@ -2865,7 +2865,7 @@ def convert_excel_solicitud_matriz_productos(productos):
     number_style = NamedStyle(name='number_style', number_format='#,##0.00')
     number_style.font = Font(name ='Calibri', size = 10)
 
-    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
+    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada','Comentario Solicitud']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -2916,6 +2916,8 @@ def convert_excel_solicitud_matriz_productos(productos):
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
 
+        comentarios = articulo.producto.articulos.producto.comentarios if articulo.producto.articulos.producto.comentario else "Sin comentario"
+
         # Constructing the row
         row = [
             articulo.oc.folio,
@@ -2944,6 +2946,7 @@ def convert_excel_solicitud_matriz_productos(productos):
             articulo.oc.req.orden.folio,
             status,
             pagado_text,
+            comentarios,
         ]
         rows.append(row)
 
@@ -3088,7 +3091,7 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
 def convert_excel_solicitud_matriz_productos_prov2(productos):
     start_time = time.time()  # Marca el tiempo de inicio
     print('Aqui comienza')
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
     data = [columns]
 
     for articulo in productos:
@@ -3112,6 +3115,8 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
+        
+        comentarios = articulo.producto.producto.articulos.comentario if articulo.producto.producto.articulos.comentario else "Sin comentario"
 
         row = [
             articulo.oc.folio,
@@ -3140,6 +3145,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             articulo.oc.req.orden.folio,
             status,
             pagado_text,
+            comentarios,
         ]
         data.append(row)
 
