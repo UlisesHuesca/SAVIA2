@@ -795,7 +795,22 @@ function impuestos_v(element) {
     impuesto_row.setAttribute('class','');
     impuesto_valor.innerHTML = '$' + impuesto;
     impuesto_valor.setAttribute('valor',impuesto)
+    calcular_total()
 };
+
+// Evento al cambiar el impuesto adicional
+document.getElementById("id_retencion").addEventListener("change",retencion_v)
+
+function retencion_v(element) {
+    let retencion = document.getElementById("id_retencion").value;
+    let retencion_row = document.getElementById('retencion_total');
+    let retencion_valor = document.getElementById('valor_retencion');
+    retencion_row.classList.remove('d-none');
+    retencion_valor.innerHTML = '$' + retencion;
+    retencion_valor.setAttribute('valor', retencion);
+    calcular_total()
+};
+
 
 var pago = document.getElementById("id_cond_de_pago")
 
@@ -813,6 +828,8 @@ document.getElementById("id_cond_de_pago").addEventListener("change", function(e
     }
 });
 
+
+
 var checkretencion = document.getElementById("SwitchRetencion")
 //This is the part off code that when impuesto swicth button change
 checkretencion.addEventListener("change", f_retencion);
@@ -823,13 +840,14 @@ function f_retencion(element){
 	console.log('checkretencion:'+document.getElementById("SwitchRetencion").checked);
 	var lbl_retencion = document.getElementById('div_retencion')
 	var txt_retencion = document.getElementById('id_retencion')
-    let retencion_row = document.getElementById('retencion_total')
+    //
     var v_retencion = document.getElementById('valor_retencion')
     
 
 	if (checkretencion.checked){
 		lbl_retencion.classList.remove('d-none'); 
 		txt_retencion.classList.remove('d-none'); 
+        //retencion_row.classList.remove('d-none');
 	} else {
 		lbl_retencion.classList.add('d-none');
 		txt_retencion.classList.add('d-none');
@@ -840,7 +858,6 @@ function f_retencion(element){
         v_retencion.innerHTML = " "
 	}
 };
-
 
 var checkdof = document.getElementById("SwitchDof");
 
@@ -936,7 +953,7 @@ function calcular_total(){
     var flete_element = document.getElementById('valor_flete');
     var retencion_element = document.getElementById('valor_retencion');
     valor_subtotal = subtotal_element.getAttribute('valor');
-    console.log(valor_subtotal)
+    console.log('valor_subtotal:',valor_subtotal)
     valor_iva = iva_element.getAttribute('valor');
     valor_impuesto = impuesto_element.getAttribute('valor');
     valor_flete = flete_element.getAttribute('valor');
@@ -956,11 +973,11 @@ function calcular_total(){
     } else {
         var retencion = 0
     }
-    //console.log('retencion:',retencion);
-    //console.log('flete', flete);
-    //console.log('impuestos',impuesto);
+    console.log('retencion:',retencion);
+    console.log('flete', flete);
+    console.log('impuestos',impuesto);
     total = Number(valor_subtotal) + Number(valor_iva) + impuesto + flete - retencion;
-    //console.log('total',total);
+    console.log('total',total);
     total_element.innerHTML = '$' + total.toFixed(2);
 };
 
@@ -980,6 +997,7 @@ document.getElementById("id_formulario").addEventListener('change', function() {
     datosGuardados["SwitchDof"] = document.getElementById("SwitchDof").checked;
     datosGuardados["SwitchReferencia"] = document.getElementById("SwitchReferencia").checked;
     datosGuardados["SwitchImpuesto"] = document.getElementById("SwitchImpuesto").checked;
+    datosGuardados["SwitchRetencion"] = document.getElementById("SwitchRetencion").checked;
     datosGuardados["SwitchFlete"] = document.getElementById("SwitchFlete").checked;
     localStorage.setItem("id_formulario_" + oc, JSON.stringify(datosGuardados));
     console.log("Formulario guardado para OC:",oc, datosGuardados)
