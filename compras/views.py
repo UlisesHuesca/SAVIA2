@@ -2895,7 +2895,7 @@ def convert_excel_solicitud_matriz_productos(productos):
         proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
         operacion_nombre = articulo.oc.req.orden.operacion.nombre if articulo.oc.req.orden.operacion else "Desconocido"
-        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+        fecha_creacion = articulo.created_at
         pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
 
         # Calculate total, subtotal, and IVA using attributes from producto
@@ -2957,7 +2957,7 @@ def convert_excel_solicitud_matriz_productos(productos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 16:
+            if col_num == 18:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num in [3]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
@@ -3137,7 +3137,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             articulo.oc.proveedor.nombre.razon_social,
             articulo.oc.proveedor.estatus.nombre,
             articulo.oc.proveedor.domicilio,
-            fecha_creacion.strftime('%d/%m/%Y'),
+            fecha_creacion,
             proyecto_nombre,
             subproyecto_nombre,
             articulo.oc.req.orden.distrito.nombre,
@@ -3164,7 +3164,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
 
    # Aplicar estilos a las celdas de datos
     date_style = Style(
-        format=Format('mm/dd/yy'),
+        format=Format('dd/mm/yyyy'),
         alignment=Alignment(horizontal='right')
     )
     #format_obj = pyexcelerate.Format('$#,##0.00')
@@ -3176,9 +3176,14 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         alignment=Alignment(horizontal='left')
     )
 
+
+    #for col_num, cell_value in enumerate(row):
+    #        cell_format = body_style
+    #        if col_num in [16]:  # Fecha
+    #            cell_format = date_style
     
     for col_num in range(1, len(columns) + 1):
-        if col_num == 18:  # Fecha
+        if col_num == 19:  # Fecha
             ws.set_col_style(col_num, date_style)
         elif col_num in [10, 12, 13, 14, 15]:  # Dinero
             ws.set_col_style(col_num, money_style)
