@@ -818,14 +818,13 @@ def no_conformidad(request, pk):
             for articulo in articulos_nc:
                 articulo_comprado = articulos_comprados.get(producto=articulo.articulo_comprado.producto)
                 try:
-                    articulo_entradas = EntradaArticulo.objects.get(entrada__oc = compra, articulo_comprado = articulo.articulo_comprado)
+                    total_cantidad = EntradaArticulo.objects.filter(entrada__oc = compra, articulo_comprado = articulo.articulo_comprado).aggregate(total=Sum('cantidad'))['total']
                 except ObjectDoesNotExist:
                     articulo_entradas = None
                 
-                if articulo_entradas is not None:
-                    cantidad_entradas = articulo_entradas.cantidad
-                else:
-                    cantidad_entradas = 0
+                
+                cantidad_entradas = total_cantidad or 0
+              
                 articulo_requisitado = ArticulosRequisitados.objects.get(req=compra.req, producto=articulo.articulo_comprado.producto.producto)
                 if articulo_comprado.cantidad_pendiente == None:
                     articulo_comprado.cantidad_pendiente = 0

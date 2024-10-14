@@ -83,6 +83,7 @@
                     <li class="nav-item mx-2">
                         <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
                     </li>
+                   
                     <!--<li class="nav-item mx-2">
                         <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
                     </li>
@@ -123,7 +124,11 @@
                     <th scope="col">Tipo</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Costo Total</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Detalles</th>
+                    <th>Status pago</th>
+                    {% if usuario.tipo.subdirector or usuario.tipo.gerente %}
+                    <th>Cancelar</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -153,10 +158,25 @@
                     <td>${{orden.get_total_solicitud|floatformat:2}}</td>
                     <td>
                     <a class="btn btn-outline-info" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'detalle-gastos' orden.id %}">Conceptos</a>
-                    <!--<a class="btn btn-outline-info" href="">Actualizar</a>
-                    <a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>
-                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>-->
+                    </td>  
+                    <td>
+                        {% if orden.pagada %}
+                        <span class="badge bg-primary">Pagada</span>
+                        {% else %}
+                        <span class="badge bg-danger">No pagada</span>
+                        {% endif %}
                     </td>
+                    <td>
+                    {% if usuario.tipo.subdirector or usuario.tipo.gerente %}
+                        {% if orden.pagada == False %}
+                            <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog"  hx-swap="innerHTML" hx-target="#document" hx-get="{% url 'cancelar-gasto2' orden.id %}"><i class="fa-solid fa-xmark"></i></a>
+                        </td>
+                        {% endif %}
+                    {% else %}    
+                    </td>
+                    {% endif %}
+                    <!--<a class="btn btn-light" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-diagram-project"></i></a>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>-->   
                 </tr>
                 {% endfor %}
             </tbody>

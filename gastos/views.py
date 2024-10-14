@@ -164,7 +164,7 @@ def crear_gasto(request):
                 gasto.save()
                 #form.save()
                 messages.success(request, f'La solicitud {gasto.folio} ha sido creada')
-                return redirect('solicitudes-gasto')
+                return redirect('mis-gastos')
             else:
                 for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
@@ -204,7 +204,8 @@ def crear_gasto(request):
                         factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
                     
                         uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
-
+                        print(uuid_extraido)
+                        print(fecha_timbrado_extraida)
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
                         if Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
                             facturas_duplicadas.append(uuid_extraido)

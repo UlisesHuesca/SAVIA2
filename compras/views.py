@@ -1189,6 +1189,10 @@ def autorizar_oc1(request, pk):
                 compra.oc_autorizada_por2 = usuario
                 compra.autorizado_at_2 = datetime.now()
             compra.save()
+            archivo_oc = attach_oc_pdf(request, compra.id)
+            pdf_antisoborno = attach_antisoborno_pdf(request)
+            pdf_privacidad = attach_aviso_privacidad_pdf(request)
+            pdf_etica = attach_codigo_etica_pdf(request)
             static_path = settings.STATIC_ROOT
             img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
             img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
@@ -1196,7 +1200,7 @@ def autorizar_oc1(request, pk):
             image_base64 = get_image_base64(img_path)
             logo_v_base64 = get_image_base64(img_path2)
             # Crear el mensaje HTML
-            if usuario.tipo.nombre == "Subdirector":
+            if usuario.tipo.subdirector == True:
                 html_message = f"""
                     <html>
                         <head>
@@ -1229,7 +1233,7 @@ def autorizar_oc1(request, pk):
                                 <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
                             </body>
                         </html>
-                    """
+                        """
                     try:
                         email = EmailMessage(
                         f'Compra Autorizada {compra.folio}|SAVIA',
@@ -1239,6 +1243,10 @@ def autorizar_oc1(request, pk):
                         headers={'Content-Type': 'text/html'}
                         )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                        email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
+                        email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
+                        email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
                         email.send()
                     except (BadHeaderError, SMTPException) as e:
                         error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
@@ -1260,20 +1268,19 @@ def autorizar_oc1(request, pk):
                     """
                     try:
                         email = EmailMessage(
-                            f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                            body=html_message,
-                            #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                            from_email = settings.DEFAULT_FROM_EMAIL,
-                            to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
-                            headers={'Content-Type': 'text/html'}
-                            )
+                        f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                        body=html_message,
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                        )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
                         email.send()
                         messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
                     except (BadHeaderError, SMTPException) as e:
                         error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
                         messages.success(request, error_message)    
-                return redirect('autorizacion-oc1')
+                    return redirect('autorizacion-oc1')
             else:
                 html_message = f"""
                     <html>
@@ -1294,7 +1301,6 @@ def autorizar_oc1(request, pk):
                 email = EmailMessage(
                     f'OC Autorizada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
                     body=html_message,
-                    #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                     from_email = settings.DEFAULT_FROM_EMAIL,
                     to= ['ulises_huesc@hotmail.com',compra.req.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
@@ -2859,7 +2865,7 @@ def convert_excel_solicitud_matriz_productos(productos):
     number_style = NamedStyle(name='number_style', number_format='#,##0.00')
     number_style.font = Font(name ='Calibri', size = 10)
 
-    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada']
+    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada','Comentario Solicitud']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -2889,7 +2895,7 @@ def convert_excel_solicitud_matriz_productos(productos):
         proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
         operacion_nombre = articulo.oc.req.orden.operacion.nombre if articulo.oc.req.orden.operacion else "Desconocido"
-        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+        fecha_creacion = articulo.created_at
         pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
 
         # Calculate total, subtotal, and IVA using attributes from producto
@@ -2909,6 +2915,8 @@ def convert_excel_solicitud_matriz_productos(productos):
 
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
+
+        comentarios = articulo.producto.articulos.producto.comentarios if articulo.producto.articulos.producto.comentario else "Sin comentario"
 
         # Constructing the row
         row = [
@@ -2938,6 +2946,7 @@ def convert_excel_solicitud_matriz_productos(productos):
             articulo.oc.req.orden.folio,
             status,
             pagado_text,
+            comentarios,
         ]
         rows.append(row)
 
@@ -2948,7 +2957,7 @@ def convert_excel_solicitud_matriz_productos(productos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 16:
+            if col_num == 18:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num in [3]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
@@ -3082,7 +3091,7 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
 def convert_excel_solicitud_matriz_productos_prov2(productos):
     start_time = time.time()  # Marca el tiempo de inicio
     print('Aqui comienza')
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
     data = [columns]
 
     for articulo in productos:
@@ -3106,6 +3115,8 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
+        
+        comentarios = articulo.producto.producto.articulos.comentario if articulo.producto.producto.articulos.comentario else "Sin comentario"
 
         row = [
             articulo.oc.folio,
@@ -3126,7 +3137,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             articulo.oc.proveedor.nombre.razon_social,
             articulo.oc.proveedor.estatus.nombre,
             articulo.oc.proveedor.domicilio,
-            fecha_creacion.strftime('%d/%m/%Y'),
+            fecha_creacion,
             proyecto_nombre,
             subproyecto_nombre,
             articulo.oc.req.orden.distrito.nombre,
@@ -3134,6 +3145,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             articulo.oc.req.orden.folio,
             status,
             pagado_text,
+            comentarios,
         ]
         data.append(row)
 
@@ -3152,7 +3164,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
 
    # Aplicar estilos a las celdas de datos
     date_style = Style(
-        format=Format('mm/dd/yy'),
+        format=Format('dd/mm/yyyy'),
         alignment=Alignment(horizontal='right')
     )
     #format_obj = pyexcelerate.Format('$#,##0.00')
@@ -3164,9 +3176,14 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         alignment=Alignment(horizontal='left')
     )
 
+
+    #for col_num, cell_value in enumerate(row):
+    #        cell_format = body_style
+    #        if col_num in [16]:  # Fecha
+    #            cell_format = date_style
     
     for col_num in range(1, len(columns) + 1):
-        if col_num == 18:  # Fecha
+        if col_num == 19:  # Fecha
             ws.set_col_style(col_num, date_style)
         elif col_num in [10, 12, 13, 14, 15]:  # Dinero
             ws.set_col_style(col_num, money_style)

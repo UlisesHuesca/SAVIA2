@@ -102,8 +102,11 @@
                         {% else %}
                         <tr> </tr>
                         {% endif %}
-
                         {% endif %}
+                        <tr>
+                            <th scope="col">Moneda</th>
+                            <th scope="col">{{compra.moneda.nombre}}</th>
+                        </tr>
                     </tbody>
                 </table>
               
@@ -424,7 +427,13 @@ document.getElementById('id_comprobante_pago').addEventListener('change', functi
     document.querySelector('[name="pagado_real"]').value = data.pagado_real;
     var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
     var $selectElement = $('[name="cuenta"]');
+    var divisa = data.divisa_cuenta
+    console.log(divisa)
     $selectElement.val(cuentaId).trigger('change');
+    if (divisa == "MXP" && compra_moneda == "DOLARES" ){
+    var tipo_cambio = document.getElementById('text_tc')
+    tipo_cambio.classList.remove('d-none');
+    }
   })
   .catch(error => console.error('Error:', error));
 });

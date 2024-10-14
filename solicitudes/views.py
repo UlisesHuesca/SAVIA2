@@ -1370,7 +1370,7 @@ def autorizada_sol(request, pk):
             if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
                 prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
                 prod_inventario.cantidad_apartada = prod_inventario.apartada
-                prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} cond:1'
+                prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} Autorización de solicitudes cond:1'
                 ordensurtir.cantidad = producto.cantidad
                 ordensurtir.precio = prod_inventario.price
                 ordensurtir.surtir = True

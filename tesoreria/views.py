@@ -1050,7 +1050,7 @@ def extraer_datos_del_xml(ruta_xml):
         timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
         if timbre_fiscal is not None:
             uuid = timbre_fiscal.get('UUID')
-            fecha_timbrado = timbre_fiscal.get('FechaTimbrado')
+            fecha_timbrado = timbre_fiscal.get('FechaTimbrado') or root.get('Fecha')
             return uuid, fecha_timbrado  # Devolver UUID y fecha de timbrado
         else:
             print("Timbre Fiscal Digital no encontrado")

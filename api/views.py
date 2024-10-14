@@ -5,8 +5,10 @@ from rest_framework import generics
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from dashboard.models import Inventario 
-from compras.models import Compra, Proveedor_direcciones
-from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer
+from compras.models import Compra, Proveedor_direcciones, Moneda
+from solicitudes.models import Proyecto, Subproyecto
+from user.models import Profile 
+from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer, ProfileSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 import requests
@@ -20,6 +22,104 @@ from compras.views import generar_pdf
 from rest_framework import status
 
 # Create your views here.
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def monedas_api(request):
+    monedas = Moneda.objects.all()
+    page = request.query_params.get('page', 1)
+    per_page = request.query_params.get('per_page', 20)
+    #
+    ordering = request.query_params.get('ordering')
+
+    if ordering:
+        monedas = monedas.order_by(ordering)
+        
+    
+    serialized_monedas = MonedaSerializer(monedas, many=True)
+
+    paginator = Paginator(monedas, per_page=per_page)
+    try: 
+        monedas = paginator.page(number=page)
+    except EmptyPage:
+        monedas = []
+        
+    return Response(serialized_monedas.data)
+
+# Create your views here.
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def profiles_api(request):
+    profiles = Profile.objects.all()
+    page = request.query_params.get('page', 1)
+    per_page = request.query_params.get('per_page', 20)
+    #
+    ordering = request.query_params.get('ordering')
+
+    if ordering:
+        profiles = profiles.order_by(ordering)
+        
+    
+    serialized_profiles = ProfileSerializer(profiles, many=True)
+
+    paginator = Paginator(profiles, per_page=per_page)
+    try: 
+        profiles = paginator.page(number=page)
+    except EmptyPage:
+        profiles = []
+        
+    return Response(serialized_profiles.data)
+
+# Create your views here.
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def proyectos_api(request):
+    proyectos = Proyecto.objects.filter(activo = True)
+    page = request.query_params.get('page', 1)
+    per_page = request.query_params.get('per_page', 20)
+    #
+    ordering = request.query_params.get('ordering')
+
+    if ordering:
+        proyectos = Proyecto.order_by(ordering)
+        
+    
+    serialized_proyectos = ProyectoSerializer(proyectos, many=True)
+
+    paginator = Paginator(proyectos, per_page=per_page)
+    try: 
+        proyectos = paginator.page(number=page)
+    except EmptyPage:
+        proyectos = []
+        
+    return Response(serialized_proyectos.data)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def subproyectos_api(request):
+    subproyectos = Subproyecto.objects.filter(activo = True)
+    page = request.query_params.get('page', 1)
+    per_page = request.query_params.get('per_page', 20)
+    #
+    ordering = request.query_params.get('ordering')
+
+    if ordering:
+        subproyectos = Subproyecto.order_by(ordering)
+        
+    
+    serialized_subproyectos = SubProyectoSerializer(subproyectos, many=True)
+
+    paginator = Paginator(subproyectos, per_page=per_page)
+    try: 
+        subproyectos = paginator.page(number=page)
+    except EmptyPage:
+        subproyectos = []
+        
+    return Response(serialized_subproyectos.data)
+
 
 
 @api_view(['GET'])
