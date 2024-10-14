@@ -485,7 +485,8 @@ def oc_modal(request, pk):
             'cantidad': str(producto.cantidad), 
             'cantidad_pendiente': str(producto.cantidad_comprada),
             'precioref': str(producto.producto.articulos.producto.producto.precioref),
-            'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje)
+            'porcentaje': str(producto.producto.articulos.producto.producto.porcentaje),
+            'comentario': str(producto.producto.articulos.comentario)
             } for producto in productos]
         
         productos_comp_to_function = [
