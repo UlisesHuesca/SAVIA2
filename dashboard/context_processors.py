@@ -128,12 +128,7 @@ def contadores_processor(request):
         if usuario.tipo.nombre == 'Admin':
             entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True)
         else:
-            entradas = Compra.objects.filter(
-            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
-            Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
-            req__orden__distrito = usuario.distritos,  
-            entrada_completa = False, 
-            autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+            entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
         conteo_entradas = entradas.count()
     return {
     'conteo_pagos2': conteo_pagos2,
