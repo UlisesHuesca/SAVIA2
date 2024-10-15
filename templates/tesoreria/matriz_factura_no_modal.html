@@ -96,7 +96,7 @@
                             <th scope="col-2">PDF</th>
                             <th scope="col-2">XML</th>
                             <th>PDF-Render</th>
-                            <th scope="col-2">Edición</th>
+                            <!--<th scope="col-2">Edición</th>-->
                             <th scope="col-2">Eliminar</th>
                         </tr>
                     </thead>
@@ -132,11 +132,11 @@
                             <td> </td>
                             {% endif %}
                             
-                            <td>           
+                            <!--<td>           
                                 <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-compra-edicion' p.id %}">               
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                 </a>    
-                            </td>
+                            </td>-->
                             <td>
                                 <a type="button" class="btn btn-outline-danger" href="{% url 'factura-eliminar' p.id %}">               
                                     <i class="fa-regular fa-trash-can"></i>
