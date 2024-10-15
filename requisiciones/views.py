@@ -1385,10 +1385,17 @@ def reporte_entradas(request):
 def reporte_entradas_servicios(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    entradas = EntradaArticulo.objects.filter(entrada__completo = True, articulo_comprado__producto__producto__articulos__producto__producto__servicio = True, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
+    if usuario.tipo.nombre == "Admin":
+        entradas = EntradaArticulo.objects.filter(entrada__completo = True, articulo_comprado__producto__producto__articulos__producto__producto__servicio = True,).order_by('-entrada__entrada_date')
+    elif usuario.tipo.nombre == "ALMACEN" or usuario.tipo.nombre == "SUPERIN_ADM" :
+        entradas = EntradaArticulo.objects.filter(entrada__completo = True,articulo_comprado__producto__producto__articulos__producto__producto__servicio = True, entrada__oc__req__orden__distrito = usuario.distritos).order_by('-entrada__entrada_date')
+    else:
+        entradas = EntradaArticulo.objects.filter(entrada__completo = True, entrada__almacenista__distritos = usuario.distritos,articulo_comprado__producto__producto__articulos__producto__producto__servicio = True, entrada__oc__req__orden__distrito = usuario.distritos, entrada__oc__req__orden__staff = usuario).order_by('-entrada__entrada_date')
+
+    
     myfilter = EntradasFilter(request.GET, queryset=entradas)
     entradas = myfilter.qs
-   
+
     #entradas_data = list(entradas.values())
 
     #Set up pagination
@@ -1892,7 +1899,7 @@ def render_entrada_pdf(request, pk):
 
     c.setFillColor(rojo)
     c.setFont('Helvetica-Bold',12)
-    c.drawString(530,caja_iso-50, str(vale.folio))
+    c.drawString(540,caja_iso-50, str(vale.folio))
     
 
     c.setFont('Helvetica',12)
@@ -1973,16 +1980,16 @@ def render_entrada_pdf(request, pk):
 
     c.setFont('Helvetica',8)
     c.setFillColor(black)
-    #c.drawCentredString(120,proyecto_y - 15, str(vale.solicitud.proyecto.nombre))
-    #c.drawCentredString(300,proyecto_y - 15, str(vale.solicitud.subproyecto.nombre))
+    c.drawCentredString(120,proyecto_y - 15, str(vale.oc.req.orden.proyecto))
+    c.drawCentredString(300,proyecto_y - 15, str(vale.oc.req.orden.subproyecto))
 
 
     c.setFillColor(black)
     c.setFont('Helvetica',8)
     #c.line(135,high-200,215, high-200) #Linea de Autorizacion
-    c.drawCentredString(150,proyecto_y - 30,'Recibió')
+    c.drawCentredString(200,proyecto_y - 40,'Recibió')
     if vale.almacenista:
-        c.drawCentredString(150,proyecto_y - 40, vale.almacenista.staff.staff.first_name +' '+vale.almacenista.staff.staff.last_name)
+        c.drawCentredString(200,proyecto_y - 50, vale.almacenista.staff.staff.first_name +' '+vale.almacenista.staff.staff.last_name)
 
     #c.line(370,proyecto_y - 20,430, proyecto_y - 20)
     #c.drawCentredString(400,proyecto_y - 30,'Recibió')
@@ -1990,8 +1997,8 @@ def render_entrada_pdf(request, pk):
 
 
     #c.line(240, high-200, 310, high-200)
-    c.drawCentredString(280,proyecto_y - 30,'Proveedor')
-    c.drawCentredString(280,proyecto_y - 40, vale.oc.proveedor.nombre.razon_social)
+    c.drawCentredString(425,proyecto_y - 40,'Proveedor')
+    c.drawCentredString(425,proyecto_y - 50, vale.oc.proveedor.nombre.razon_social)
 
     c.setFont('Helvetica',10)
     c.setFillColor(prussian_blue)
@@ -1999,7 +2006,7 @@ def render_entrada_pdf(request, pk):
     c.setFillColor(black)
 
     c.setFillColor(prussian_blue)
-    c.rect(20,proyecto_y - 65,565,20, fill=True, stroke=False)
+    c.rect(20,proyecto_y - 75,565,20, fill=True, stroke=False)
     c.setFillColor(white)
 
     width, height = letter

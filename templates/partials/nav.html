@@ -447,15 +447,13 @@
                         <a class="dropdown-item" href="{% url 'requisiciones-productos' %}">
                             Matriz Productos Requisiciones
                         </a>
+                        <a class="dropdown-item" href="{% url 'reporte-entradas-servicios' %}">Matriz Entradas Servicios</a>
                         {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.nombre == "Comprador" or usuario.tipo.nombre == "Tesoreria" %}
                             <div>
                         {% else %}
                             <div class="d-none">
                         {% endif %}
                             <a class="dropdown-item" href="{% url 'reporte-entradas' %}">Matriz Entradas</a>
-                            {% if usuario.tipo.nombre == "Admin" %}
-                            <a class="dropdown-item" href="{% url 'reporte-entradas-servicios' %}">Matriz Entradas Servicios</a>
-                            {% endif %}
                             <a class="dropdown-item" href="{% url 'reporte-entradas-gasto' %}">Matriz Entradas por Gasto</a>
                             <a class="dropdown-item" href="{% url 'reporte-salidas' %}">Matriz Salidas</a>
                             </div>
