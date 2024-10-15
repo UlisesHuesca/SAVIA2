@@ -11,6 +11,9 @@ from django.contrib import messages
 from activos.filters import ActivoFilter
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.http import Http404
+from dashboard.models import Product
+from django.core.paginator import Paginator
+from solicitudes.filters import InventarioFilter
 
 #Todo para construir el código QR
 import qrcode
@@ -1135,3 +1138,105 @@ def gestionar_marca(request):
         return render(request, 'activos/gestionar_marca.html', context)
     else:
         raise Http404("No tienes permiso para agregar activos.")
+    
+
+@login_required(login_url='user-login')
+def activos_producto(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
+        items = Inventario.objects.filter(complete = True, producto__activo = True).order_by('producto__codigo')
+    elif usuario.tipo.nombre == "ACTIVOS": 
+        items = Inventario.objects.filter(complete = True, producto__activo = True, distrito = usuario.distritos).order_by('producto__codigo')
+    else:
+        items = Inventario.objects.none()
+    
+    myfilter=InventarioFilter(request.GET, queryset=items)
+    items = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(items, 50)
+    page = request.GET.get('page')
+    items_list = p.get_page(page)
+    cantidad = items_list.paginator.count  # Total de elementos filtrados
+    if request.method =='POST' and 'btnExcel' in request.POST:
+        #return convert_excel_inventario(existencia, valor_inv, dict_entradas, dict_resultados)
+        return convert_excel_inventario_xlsxwriter(items_list,)
+    
+    context = {
+        'usuario':usuario,
+        'items': items,
+        'myfilter':myfilter,
+        'items_list':items_list,
+        'cantidad': cantidad,
+        }
+
+
+    return render(request,'activos/activos_producto.html', context)
+
+def convert_excel_inventario_xlsxwriter(existencia):
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet('Inventario')
+
+    # Definir los estilos antes de usarlos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'white', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    money_resumen_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 14, 'bold': True})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+
+    # Definir las columnas antes de utilizar la variable `columns`
+    columns = ['Código', 'Producto', 'Distrito', 'Unidad', 'Cantidad', 'Cantidad Apartada', 'Minimos', 'Ubicación', 'Estante',]
+    
+    # Escribir el encabezado con los estilos definidos
+    #worksheet.write_row('A1', columns, head_style)
+
+    # Establecer los anchos de las columnas después de definir `columns`
+    worksheet.set_column('A:A', 10)
+    worksheet.set_column('B:B', 30)
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    # Escribir los datos
+    row_num = 0
+    for inventario in existencia:
+        row_num += 1
+    
+        row = [
+            inventario.producto.codigo,
+            inventario.producto.nombre,
+            inventario.distrito.nombre,
+            inventario.producto.unidad.nombre,
+            inventario.cantidad,
+            inventario.cantidad_apartada,
+            inventario.minimo,
+            inventario.ubicacion,
+            inventario.estante,
+        ]
+    
+        for col_num, item in enumerate(row, start=1):  # Enumerate empieza con 1 para A1, ajusta según sea necesario
+            worksheet.write(row_num, col_num - 1, item, body_style)
+    
+
+    # Escribir el total del inventario
+    worksheet.set_column('N:N', 30)
+    worksheet.set_column('O:O', 30)
+
+    workbook.close()
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    
+
+    
+    response['Content-Disposition'] = f'attachment; filename=Inventario_{dt.date.today()}.xlsx'
+    output.close()
+    return response
+
