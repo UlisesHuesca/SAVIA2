@@ -38,7 +38,22 @@ def pendientes_entrada(request):
     
 
     if usuario.tipo.nombre == "Admin":
-         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+        for compra in compras:
+            articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
+            servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
+            cant_entradas = articulos_entrada.count()
+            cant_servicios = servicios_pendientes.count()
+            # Definir la subconsulta para obtener la fecha del primer pago realizado para cada compra
+            #primer_pago_subquery = Pago.objects.filter(
+            #    oc=OuterRef('pk'),  # Referencia a la compra en la consulta principal
+            #    hecho=True
+            #    ).order_by('pagado_real').values('pagado_real')[:1]  # Selecciona la fecha del primer pago
+            if  cant_entradas == cant_servicios and cant_entradas > 0:
+                compra.solo_servicios = True
+                compra.save()
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, solo_servicios = False).order_by('-folio')
+      
     elif usuario.tipo.almacen == True:
         compras = Compra.objects.filter(
             Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
@@ -64,13 +79,13 @@ def pendientes_entrada(request):
         # que sea del distrito del usuario (Y) que la entrada NO este completa (Y) que este autorizada 
         compras = Compra.objects.filter(
             Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
-            Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
+            Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)),
             req__orden__distrito = usuario.distritos,  
             entrada_completa = False, 
             autorizado2= True).order_by('-folio')
         #compras = Compra.objects.filter(autorizado2= True)
     else:
-        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+        compras = Compra.objects.none()
 
 
     myfilter = CompraFilter(request.GET, queryset=compras)
