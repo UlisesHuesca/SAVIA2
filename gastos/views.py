@@ -1172,7 +1172,49 @@ def render_pdf_gasto(pk):
     #Here ends conf.
     gasto = Solicitud_Gasto.objects.get(id=pk)
     productos = Articulo_Gasto.objects.filter(gasto=gasto, completo=True)
-    facturas = Factura.objects.filter(solicitud_gasto = gasto)
+    facturas = Factura.objects.filter(solicitud_gasto = gasto, hecho = True)
+
+    data_facturas = [['Datos de XML', 'Nombre', 'Monto']]  # Encabezados de la tabla de facturas
+    total_facturas = 0
+    suma_total = Decimal('0.00')
+
+    styles = getSampleStyleSheet()
+    normal_style = styles['Normal']
+    custom_style = ParagraphStyle(
+        name='CustomStyle',
+        parent=normal_style,
+        fontSize=10,
+        alignment=1,  # Alineación centrada (0 = izquierda, 1 = centro, 2 = derecha)
+    )
+
+    # Iterar sobre cada factura y sumar el total
+    for factura in facturas:
+        datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor' (Esto devuelve el diccionario de la propiedad)
+        if datos_emisor is not None:
+            # Acceder directamente a los datos de XML
+            resultados = datos_emisor.get('resultados', [])
+            nombre = datos_emisor.get('nombre', 'No disponible')
+            total_xml_str = datos_emisor.get('total', '0.00')  # Obtener el total o usar '0.00' como predeterminado
+            #Para el total de todas las factuas
+            total = datos_emisor.get('total', 0.0)  # Obtener el total o usar 0.0 si no está disponible
+            total_facturas += float(total)  # Sumar el total al total general
+            try:
+                total_factura = Decimal(total_xml_str)  # Convertir a Decimal
+            except (InvalidOperation, ValueError):
+                total_factura = Decimal('0.00')  # Si no es convertible, usar 0.00
+            
+            # Sumar al total acumulado
+            suma_total += total_factura
+
+            # Añadir los datos a la lista
+            data_facturas.append([
+                Paragraph(str(resultados), custom_style), 
+                Paragraph(nombre, custom_style),
+                Paragraph(f"${total_factura:,.2f}", custom_style)  # Formatear el total como una cadena de texto
+            ])
+            
+    print('MONTOOOOO')
+    print(total_facturas)
 
    #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
@@ -1292,7 +1334,7 @@ def render_pdf_gasto(pk):
 
     high = 540
     for producto in productos:
-         # Convert to Decimal and round to two decimal places
+        # Convert to Decimal and round to two decimal places
         cantidad = producto.cantidad if producto.cantidad is not None else 0
         cantidad_redondeada = Decimal(cantidad).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         precio = producto.precio_unitario if producto.cantidad is not None else 0
@@ -1384,7 +1426,10 @@ def render_pdf_gasto(pk):
 
     # Añadir filas de proyectos y subproyectos
     for producto in productos:
-        data_secundaria.append([producto.proyecto.nombre, producto.subproyecto.nombre])
+        if producto.proyecto is None:
+            data_secundaria.append(['None','None'])
+        else:
+            data_secundaria.append([producto.proyecto.nombre, producto.subproyecto.nombre])
 
     # Crear la tabla secundaria
     table_secundaria = Table(data_secundaria, colWidths=[7 * cm, 7 * cm])  # Ajusta las medidas según necesites
@@ -1411,46 +1456,9 @@ def render_pdf_gasto(pk):
     table_secundaria.wrapOn(c, width, height)
     table_secundaria.drawOn(c, x_pos, y_pos)
 
-    # 1. Preparar los datos para la tabla de facturas
-    facturas = Factura.objects.filter(solicitud_gasto=gasto)
-    data_facturas = [['Datos de XML', 'Nombre', 'Monto']]  # Encabezados de la tabla de facturas
-
-    suma_total = Decimal('0.00')
-    for factura in facturas:
-        
-        if factura.archivo_xml:
-            emisor = factura.emisor  # Aquí emisor es un diccionario
-            try:
-                descripciones = [tupla[0] for tupla in emisor['resultados']]
-                descripciones_str = ', '.join(descripciones)
-            except KeyError:
-                descripciones_str = "No disponible"
-
-           
-            try:
-                total_factura_str = emisor.get('total', '0.00')  # Obtén el valor o usa '0.00' como predeterminado
-                total_factura = Decimal(total_factura_str)
-            except (InvalidOperation, ValueError):
-                total_factura = Decimal('0.00')  # Si no es convertible, usa 0.00
-
-
-                suma_total += total_factura  # Suma al total acumulado
-                data_facturas.append([
-                    descripciones_str, 
-                    emisor['nombre'],
-                    f"${total_factura:,.2f}",  # Formatea el total como una cadena de texto
-                ])
-
-        for i, row in enumerate(data_facturas):
-            for j, item in enumerate(row):
-                if i!=0 and j == 0:
-                    # Proporcionar un valor predeterminado si 'item' es None
-                    text = '' if item is None else str(item)
-                    data_facturas[i][j] = Paragraph(text, custom_style)
-    # Crear un marco (frame) en la posición específica
-    
-    # 2. Crear la tabla de facturas
-    table_factura = Table(data_facturas, colWidths=[11 * cm, 6 * cm, 2 * cm,])
+    """
+    # Crear la tabla de facturas
+    table_factura = Table(data_facturas, colWidths=[11 * cm, 6 * cm, 2 * cm])
 
    # Estilo para la tabla secundaria
     table_facturas_style = TableStyle([ #estilos de la tabla
@@ -1468,24 +1476,25 @@ def render_pdf_gasto(pk):
     
 
     table_factura.setStyle(table_facturas_style)
+    """
     #Parrafó de totales
     data_totales = []
-    diferencia_totales = suma_total - Decimal(gasto.get_total_solicitud)
+    diferencia_totales = total_facturas - float(gasto.get_total_solicitud)
     if diferencia_totales > 0:
         color_diferencia = colors.green
     elif diferencia_totales < 0:
         color_diferencia = colors.red
     else:
         color_diferencia = colors.black 
-    total_str = "${:,.2f}".format(suma_total)  # Convierte Decimal a string y formatea
+    total_str = "${:,.2f}".format(total_facturas)  # Convierte Decimal a string y formatea
     # 4. Posición de la tabla de facturas en el PDF
     # Asumiendo que 'y_pos' es la posición Y después de dibujar la tabla secundaria y cualquier otro contenido
     
 
     data_totales = [
     ['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
-    ['$' + str(gasto.get_total_solicitud), f"${suma_total:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
-]
+    ['$' + str(gasto.get_total_solicitud), f"${total_facturas:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
+    ]
 
     #data_totales.append(['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'])  # Encabezados de la tabla secundaria
     #data_totales.append(['$' + str(gasto.get_total_solicitud), total_str, '$' + str(diferencia_totales) ])
@@ -1510,6 +1519,7 @@ def render_pdf_gasto(pk):
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
     c.drawCentredString(230, y_totales_pos-190, gasto.staff.staff.staff.first_name +' '+ gasto.staff.staff.staff.last_name)
+    c.line(150,  y_totales_pos-195,300,  y_totales_pos-195)
     c.drawCentredString(230,  y_totales_pos-205, 'Solicitado')
    
     c.setFillColor(black)
@@ -1519,16 +1529,53 @@ def render_pdf_gasto(pk):
 
 
     c.showPage()
-    y_facturas_pos =height - (len(data_facturas) * 18) - 220  # Ajusta según sea necesario
-    
-    
-    #total_paragraph = Paragraph(total_str, styleN)
-    #frame = Frame(50, 0, width, y_facturas_pos-100, id='normal')
-    #frame.addFromList([total_paragraph], c)
-    # Dibujar la tabla de facturas en el canvas
-    table_factura.wrapOn(c, width, height)
-    table_factura.drawOn(c, 20, y_facturas_pos)
+    #y_facturas_pos =height - (len(data_facturas) * 60)  # Ajusta según sea necesario
+    #table_factura.wrapOn(c, width, height)
+    #table_factura.drawOn(c, 20, y_facturas_pos)
+    # Crear la tabla de facturas
+    rows_per_page = 11
+    total_rows = len(data_facturas)
+    first = True
 
+    for page in range((total_rows - 1) // rows_per_page + 1):
+        start_row = page * rows_per_page
+        end_row = start_row + rows_per_page + 1  # +1 para incluir el encabezado
+        page_data = data_facturas[start_row:end_row]  # Datos de la página actual
+
+        table_factura = Table(page_data, colWidths=[11 * cm, 6 * cm, 3 * cm])
+        
+        # Estilo para la tabla
+        table_facturas_style = TableStyle([
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+            ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ])
+        
+        if first:
+            table_facturas_style.add('TEXTCOLOR', (0, 0), (-1, 0), colors.white)
+            table_facturas_style.add('FONTSIZE', (0, 0), (-1, 0), 8)
+            table_facturas_style.add('BACKGROUND', (0, 0), (-1, 0), prussian_blue)
+            first = False  # Cambiar el estado del booleano para las siguientes páginas
+        
+        # Estilo del cuerpo
+        table_facturas_style.add('TEXTCOLOR', (0, 1), (-1, -1), colors.black)
+        table_facturas_style.add('FONTSIZE', (0, 1), (-1, -1), 6)
+        table_factura.setStyle(table_facturas_style)
+
+        # Obtener la altura de la página
+        page_height = c._pagesize[1]
+
+        # Calcular la altura total que ocupará la tabla
+        table_height = len(page_data) * 60  # Ajusta el valor 20 según el tamaño de cada fila
+
+        # Calcular la posición vertical para dibujar la tabla
+        y_position = page_height - table_height - 10  # Deja espacio en la parte superior
+        table_factura.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        table_factura.drawOn(c, 20, y_position)
+
+        # Si no es la última página, añadir una nueva página
+        if page < (total_rows - 1) // rows_per_page:
+            c.showPage()  # Crear una nueva página
     
     
 
