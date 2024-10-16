@@ -376,12 +376,12 @@ def checkout(request):
                             prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id}|{order.folio} | S{ordensurtir.cantidad} R{ordensurtir.cantidad_requisitar} cond:2'
                             prod_inventario.save()
                             ordensurtir.save()
-                        elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or producto.producto.producto.servicio == True:
+                        elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                             ordensurtir.requisitar = True
                             ordensurtir.cantidad_requisitar = producto.cantidad
                             #order.requisitar = True
                             print(producto.producto.producto.servicio)
-                            if producto.producto.producto.servicio == True:
+                            if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                                 requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                                 requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad, almacenista = usuario)
                                 #requis = Requis.objects.filter(orden__distrito = usuario.distritos, complete = True)
