@@ -14,6 +14,9 @@ from django.http import Http404
 from dashboard.models import Product
 from django.core.paginator import Paginator
 from solicitudes.filters import InventarioFilter
+from django.db.models import Count
+from django.db.models import Count, Sum
+
 
 #Todo para construir el código QR
 import qrcode
@@ -1145,12 +1148,13 @@ def activos_producto(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
-        items = Inventario.objects.filter(complete = True, producto__activo = True).order_by('producto__codigo')
+        items = Inventario.objects.filter(complete = True, producto__activo = True).annotate(activo_count=Count('activo')).order_by('producto__codigo')
     elif usuario.tipo.nombre == "ACTIVOS": 
-        items = Inventario.objects.filter(complete = True, producto__activo = True, distrito = usuario.distritos).order_by('producto__codigo')
+        items = Inventario.objects.filter(complete = True, producto__activo = True, distrito = usuario.distritos).annotate(activo_count=Count('activo')).order_by('producto__codigo')
     else:
         items = Inventario.objects.none()
     
+
     myfilter=InventarioFilter(request.GET, queryset=items)
     items = myfilter.qs
 
@@ -1162,13 +1166,16 @@ def activos_producto(request):
     if request.method =='POST' and 'btnExcel' in request.POST:
         #return convert_excel_inventario(existencia, valor_inv, dict_entradas, dict_resultados)
         return convert_excel_inventario_xlsxwriter(items_list,)
-    
+    # Sumar el total de todos los activo_count
+    total_activo_count = items.aggregate(total=Sum('activo_count'))['total']
+
     context = {
         'usuario':usuario,
         'items': items,
         'myfilter':myfilter,
         'items_list':items_list,
         'cantidad': cantidad,
+        'total_activo_count':total_activo_count,
         }
 
 

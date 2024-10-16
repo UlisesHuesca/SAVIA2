@@ -112,8 +112,16 @@
                         </div>
                     </div>
                 </div>
-
-                <!-- Segunda tarjeta -->
+                <div class="col-auto">
+                    <div class="card my-4 mx-1" style="width: 20rem;">
+                        <div class="card-body">
+                            <h5 class="card-title">Cantidad de activos asignados:</h5>
+                            <hr>
+                            <h4 class="card-subtitle mb-2 text-muted">{{total_activo_count}}</h4>
+                        </div>
+                    </div>
+                </div>
+                <!-- Tercera tarjeta -->
                 <div class="col-auto">
                     <div class="card my-4 mx-1" style="width: 20rem;">
                         <div class="card-body">
@@ -158,6 +166,7 @@
                     <th>Cantidad</th>
                     <th>Apartados</th>
                     <th>Minimo</th>
+                    <th>Cantidad asignada</th>
                 </tr>
             </thead>
             <tbody>
@@ -174,6 +183,7 @@
                     <td>{{item.cantidad}}</td>
                     <td>{{item.cantidad_apartada}}</td>
                     <td>{{item.minimo}}</td>
+                    <td>{{item.activo_count}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
