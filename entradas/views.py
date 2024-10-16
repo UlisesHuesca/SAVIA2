@@ -181,11 +181,7 @@ def articulos_entrada(request, pk):
     if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
         articulos = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False, producto__producto__articulos__producto__producto__servicio = False)
     else:
-        articulos = ArticuloComprado.objects.filter(
-            oc=pk, 
-            entrada_completa = False,  
-            seleccionado = False, 
-            producto__producto__articulos__producto__producto__servicio = True)
+        articulos = ArticuloComprado.objects.none()
 
 
     compra = Compra.objects.get(id=pk)
