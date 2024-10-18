@@ -91,7 +91,6 @@ def index(request):
 
 
 @login_required(login_url='user-login')
-@perfil_seleccionado_required
 def select_profile(request):
     user = request.user.id
 
