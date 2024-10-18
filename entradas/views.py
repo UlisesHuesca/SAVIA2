@@ -234,7 +234,7 @@ def articulos_entrada(request, pk):
                         )
                 email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
                 email.send()
-            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
+            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': # or 
                 #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
                 productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
                     articulos__producto__producto = articulo.articulo_comprado.producto.producto.articulos.producto.producto,
@@ -272,12 +272,23 @@ def articulos_entrada(request, pk):
                         if productos_orden == 0:
                             solicitud.requisitar = False
                             solicitud.save()
-                        
-            if entrada.oc.req.orden.tipo.tipo == 'normal':
+            if entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
+                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
+                articulo.articulo_comprado.producto.producto.cantidad = 0
+                articulo.articulo_comprado.producto.producto.cantidad_requisitar = 0
+                articulo.articulo_comprado.producto.producto.surtir = False
+                articulo.articulo_comprado.producto.producto.requisitar = False
+                inv_de_producto.cantidad += articulo.cantidad
+                inv_de_producto.cantidad_entradas += articulo.cantidad
+                inv_de_producto.save()
+                articulo.save()
+                print('Tiene producto activo esta orden de tipo normal')
+            elif entrada.oc.req.orden.tipo.tipo == 'normal':
                 if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
                     producto_surtir.surtir = False
                 else:
                     producto_surtir.surtir = True
+                print('Entrada de tipo normal sin activo')
             producto_surtir.save()
             articulo.save()    
         evalua_entrada_completa(articulos_comprados,num_art_comprados, compra)

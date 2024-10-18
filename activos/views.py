@@ -70,6 +70,7 @@ def add_activo(request):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
     #activos = Activo.objects.filter(completo=True)
+    #productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos, cantidad__gte=1)  # Filtra por cantidad mayor o igual a 1
     productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos)
     personal = Profile.objects.all()
     marcas = Marca.objects.all()
@@ -96,20 +97,15 @@ def add_activo(request):
         for marca in marcas
     ]
 
-    for producto in productos:
-        producto.activo_disponible = True
-        activo = Activo.objects.filter(activo=producto)
-        activo_cont = activo.filter(completo = True).count()
-        salidas = Salidas.objects.filter(producto__articulos__producto = producto).count()
-        
-        existencia_inv = producto.cantidad + producto.apartada + salidas
-        print( activo, activo_cont, existencia_inv, salidas)
-        if activo_cont == existencia_inv and activo_cont > 0 or existencia_inv == 0: #Si el numero de activos es igual a la existencia en inventario #Si el numero de activos es igual a la existencia en inventario
-            producto.activo_disponible = False   
+    for producto in productos: #Asignar al producto que es un activo disponible si tiene más de 1
+        if producto.cantidad >= 1:
+            producto.activo_disponible = True
+        else:
+            producto.activo_disponible = False
         producto.save()         
             
     activo, created = Activo.objects.get_or_create(creado_por=perfil, completo=False)
-    productos_activos = productos.filter(activo_disponible =True)
+    productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
     #print(productos_activos)
     form = Activo_Form(instance = activo)
 
@@ -122,6 +118,8 @@ def add_activo(request):
             activo = form.save(commit=False)
             activo.completo = True
             activo.estatus.nombre = "ALTA"
+            activo.activo.cantidad -= 1 #Restar uno al inventario
+            activo.activo.save()  # Guarda el cambio en el inventario
             activo.save()
             messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
             return redirect('activos')

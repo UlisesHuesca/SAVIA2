@@ -1387,7 +1387,7 @@ def reporte_entradas_servicios(request):
     usuario = Profile.objects.get(id = pk_perfil)
     if usuario.tipo.nombre == "Admin":
         entradas = EntradaArticulo.objects.filter(entrada__completo = True, articulo_comprado__producto__producto__articulos__producto__producto__servicio = True,).order_by('-entrada__entrada_date')
-    elif usuario.tipo.nombre == "ALMACEN" or usuario.tipo.nombre == "SUPERIN_ADM" :
+    elif usuario.tipo.nombre == "ALMACEN" or usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.comprador == True:
         entradas = EntradaArticulo.objects.filter(entrada__completo = True,articulo_comprado__producto__producto__articulos__producto__producto__servicio = True, entrada__oc__req__orden__distrito = usuario.distritos).order_by('-entrada__entrada_date')
     else:
         entradas = EntradaArticulo.objects.filter(entrada__completo = True, entrada__almacenista__distritos = usuario.distritos,articulo_comprado__producto__producto__articulos__producto__producto__servicio = True, entrada__oc__req__orden__distrito = usuario.distritos, entrada__oc__req__orden__staff = usuario).order_by('-entrada__entrada_date')
