@@ -20,7 +20,7 @@ from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuent
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -32,6 +32,8 @@ from num2words import num2words
 import qrcode
 import tempfile
 from PIL import Image
+from django.utils import timezone
+
 
 import re
 
@@ -1152,64 +1154,106 @@ def matriz_facturas_nomodal(request, pk):
 
     return render(request, 'tesoreria/matriz_factura_no_modal.html', context)
 
+
+def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario):
+    factura.factura_xml = archivo_xml
+    factura.uuid = uuid_extraido
+    factura.fecha_timbrado = fecha_timbrado_extraida
+    factura.hecho = True
+    factura.fecha_subido = date.today()
+    factura.hora_subido = datetime.now().time()
+    factura.subido_por = usuario
+    factura.comentario = comentario
+    factura.save()
+    
 def factura_nueva(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     compra = Compra.objects.get(id = pk)
     #facturas = Facturas.objects.filter(pago = pago, hecho=True)
-    factura, created = Facturas.objects.get_or_create(oc=compra, hecho=False)
-    form = Facturas_Form()
+
+    form = UploadFileForm()
 
     if request.method == 'POST':
         if 'btn_registrar' in request.POST:
-            form = Facturas_Form(request.POST or None, request.FILES or None, instance = factura)
+            form = UploadFileForm(request.POST, request.FILES or None)
             if form.is_valid():
-                archivo_xml = request.FILES.get('factura_xml')
-                if archivo_xml:
-                    factura = form.save(commit = False)
-                    # Procesar el archivo XML para eliminar caracteres inválidos
-                    archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                    # Guardar el archivo procesado de nuevo en el objeto factura
-                    factura.factura_xml.save(archivo_xml.name, archivo_procesado, save=True)
-                    # Extraer UUID y fecha de timbrado del XML (suponiendo que tienes una función que lo haga)
-                    uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura.factura_xml.path)
+                archivos_pdf = request.FILES.getlist('archivo_pdf')
+                archivos_xml = request.FILES.getlist('archivo_xml')
+                if not archivos_pdf and not archivos_xml:
+                    messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
+                    return HttpResponse(status=204)
+                
+                # Iterar sobre el número máximo de archivos en cualquiera de las listas
+                max_len = max(len(archivos_pdf), len(archivos_xml))
+                facturas_registradas = []
+                facturas_duplicadas = []
+                comentario = request.POST.get('comentario', '')  # Extraer el comentario
+                print(comentario)
+                for i in range(max_len):
+                    archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
+                    archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
+                    factura, created = Facturas.objects.get_or_create(oc=compra, hecho=False)
+                    if archivo_xml:
+                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
 
-                    # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
-                    if Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
-                        messages.error(request, f'La factura con UUID {uuid_extraido} no se puede registrar porque ya ha sido registrada.')
-                        print('este')
-                        return HttpResponse(status=204)
-                    else:
-                        #print('incorrecto')
+                        # Guardar temporalmente para extraer datos
+                        factura_temp = Factura(archivo_xml=archivo_xml)
+                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
+
+                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
+                        factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        viaticos_factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+
+                        if factura_existente or facturas_existentes or viaticos_factura_existente:
+                            # Si una factura existente se encuentra, verificamos si su solicitud no está aprobada
+                            if factura_existente and (factura_existente.solicitud_gasto.autorizar is False or factura_existente.solicitud_gasto.autorizar2 is False):
+                                factura_existente.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+
+                            elif facturas_existentes and (facturas_existentes.oc.autorizado1 is False or facturas_existentes.oc.autorizado2 is False):
+                                facturas_existentes.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+
+                            elif viaticos_factura_existente and (viaticos_factura_existente.solicitud_viatico.autorizar is False or viaticos_factura_existente.solicitud_viatico.autorizar2 is False):
+                                viaticos_factura_existente.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+
+                            else:
+                                # Si no cumple las condiciones de eliminación, consideramos la factura duplicada
+                                facturas_duplicadas.append(uuid_extraido)
+                                continue  # Saltar al siguiente archivo si se encuentra duplicado
+                        else:
+                            # Si no existe ninguna factura, guardar la nueva
+                            guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+                            #messages.success(request, 'Las facturas se registraron de manera exitosa')
+                    if archivo_pdf:
+                        factura.factura_pdf = archivo_pdf
+                        factura.hecho = True
                         factura.fecha_subido = date.today()
                         factura.hora_subido = datetime.now().time()
-                        factura.hecho = True
                         factura.subido_por = usuario
-                        # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
-                        factura.uuid = uuid_extraido
-                        factura.fecha_timbrado = fecha_timbrado_extraida
+                        factura.comentario = comentario
                         factura.save()
-                        messages.success(request,'Haz registrado tu factura')
-                        return HttpResponse(status=204)
-                else:        
-                    #print('incorrecto2')
-                    factura.fecha_subido = date.today()
-                    factura.hora_subido = datetime.now().time()
-                    factura.hecho = True
-                    factura.subido_por = usuario
-                    # Asignar el UUID y la fecha de timbrado a la factura antes de guardarla
-                    factura.uuid = uuid_extraido
-                    factura.fecha_timbrado = fecha_timbrado_extraida
-                    factura.save()
-                    messages.success(request,'Haz registrado tu factura')
-                    return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
-            else:
-                messages.error(request,'No está validando')
-        #if "btn_editar" in request.POST:
+                      
+                        facturas_registradas.append(uuid_extraido if archivo_xml else f"Factura PDF {archivo_pdf.name}")
+                    #messages.success(request, 'Los facturas se registraron de manera exitosa')
+                     # Mensajes de éxito o duplicados
+                #return HttpResponse(status=204)
+                if facturas_registradas:
+                    messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
+                if facturas_duplicadas:
+                    messages.error(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
 
+            else:
+                messages.error(request,'No se pudo subir tu documento')
 
     context={
         'form':form,
+        'compra':compra,
         }
 
     return render(request, 'tesoreria/registrar_nueva_factura.html', context)

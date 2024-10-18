@@ -20,8 +20,8 @@ from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
 from gastos.models import Factura
 from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 
-from decimal import Decimal, ROUND_HALF_UP
 import io
 import json
 import os
@@ -739,6 +739,15 @@ def facturas_viaticos(request, pk):
 
     return render(request, 'viaticos/matriz_facturas.html', context)
 
+def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario):
+    factura.factura_xml = archivo_xml
+    factura.uuid = uuid_extraido
+    factura.fecha_timbrado = fecha_timbrado_extraida
+    factura.hecho = True
+    factura.fecha_subido = datetime.now()
+    factura.subido_por = usuario
+    factura.save()
+    
 def factura_nueva_viatico(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -772,31 +781,44 @@ def factura_nueva_viatico(request, pk):
                     factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico=viatico, hecho=False)
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
-                        
-                        # Guardar temporalmente para extraer datos
-                        factura_temp = Viaticos_Factura(factura_xml=archivo_xml)
-                        factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
-                    
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.factura_xml.path)
 
-                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
-                        if Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
-                            facturas_duplicadas.append(uuid_extraido)
-                            #print('estoy aca')
-                            continue  # Saltar al siguiente archivo si se encuentra duplicado
+                        # Guardar temporalmente para extraer datos
+                        factura_temp = Factura(archivo_xml=archivo_xml)
+                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
+
+                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
+                        factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        viaticos_factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+
+                        if factura_existente or facturas_existentes or viaticos_factura_existente:
+                            # Si una factura existente se encuentra, verificamos si su solicitud no está aprobada
+                            if factura_existente and (factura_existente.solicitud_gasto.autorizar is False or factura_existente.solicitud_gasto.autorizar2 is False):
+                                factura_existente.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+
+                            elif facturas_existentes and (facturas_existentes.oc.autorizado1 is False or facturas_existentes.oc.autorizado2 is False):
+                                facturas_existentes.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+
+                            elif viaticos_factura_existente and (viaticos_factura_existente.solicitud_viatico.autorizar is False or viaticos_factura_existente.solicitud_viatico.autorizar2 is False):
+                                viaticos_factura_existente.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+
+                            else:
+                                # Si no cumple las condiciones de eliminación, consideramos la factura duplicada
+                                facturas_duplicadas.append(uuid_extraido)
+                                continue  # Saltar al siguiente archivo si se encuentra duplicado
                         else:
-                            factura.factura_xml = archivo_xml
-                            factura.uuid = uuid_extraido
-                            factura.fecha_timbrado = fecha_timbrado_extraida
-                            factura.hecho = True
-                            factura.fecha_subida = datetime.now()
-                            factura.subido_por = usuario
-                            factura.save()
+                            # Si no existe ninguna factura, guardar la nueva
+                            guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
                             #messages.success(request, 'Las facturas se registraron de manera exitosa')
                     if archivo_pdf:
                         factura.factura_pdf = archivo_pdf
                         factura.hecho = True
-                        factura.fecha_subida = datetime.now()
+                        factura.fecha_subido = datetime.now()
                         factura.subido_por = usuario
                         factura.save()
                       
@@ -941,7 +963,8 @@ def generar_pdf_viatico(pk):
     #Here ends conf.
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico)
-    
+    facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho = True)
+
     #Configuraciones por default 
     styles = getSampleStyleSheet()
     width, height = letter
@@ -1128,8 +1151,9 @@ def generar_pdf_viatico(pk):
 
     high = 440
     total = 0
+
     for concepto in conceptos:
-         # Convert to Decimal and round to two decimal places
+        # Convert to Decimal and round to two decimal places
         cantidad_redondeada = Decimal(concepto.cantidad).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         precio_unitario_redondeado = Decimal(concepto.precio).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         subtotal = Decimal(cantidad_redondeada * precio_unitario_redondeado).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
@@ -1176,7 +1200,7 @@ def generar_pdf_viatico(pk):
     
    
     # Crear un marco (frame) en la posición específica
-    frame = Frame(20, 0, width-40, high-50, id='normal')
+    frame = Frame(35, 0, width-40, high-65, id='normal')
     options_conditions_paragraph = Paragraph(comentario, styleN)
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
@@ -1219,13 +1243,80 @@ def generar_pdf_viatico(pk):
     data_secundaria = []
     data_secundaria.append(['Proyecto', 'Subproyecto'])  # Encabezados de la tabla secundaria
 
-    c.setFillColor(prussian_blue)
-    c.drawString(290, high-20, 'Total:')
-    c.drawString(320, high-20, '$' + str(total))
+    #c.setFillColor(prussian_blue)
+    #c.drawString(290, high-20, 'Total:')
+    #c.drawString(320, high-20, '$' + str(total))
+    total_facturas = 0
+    suma_total = Decimal('0.00')
+    data_facturas = [['Datos de XML', 'Nombre', 'Monto']]  # Encabezados de la tabla de facturas
+    # Iterar sobre cada factura y sumar el total
+    for factura in facturas:
+        datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor' (Esto devuelve el diccionario de la propiedad)
+        if datos_emisor is not None:
+            # Acceder directamente a los datos de XML
+            resultados = datos_emisor.get('resultados', [])
+            nombre = datos_emisor.get('nombre', 'No disponible')
+            total_xml_str = datos_emisor.get('total', '0.00')  # Obtener el total o usar '0.00' como predeterminado
+            #Para el total de todas las factuas
+            total = datos_emisor.get('total', 0.0)  # Obtener el total o usar 0.0 si no está disponible
+            total_facturas += float(total)  # Sumar el total al total general
+            try:
+                total_factura = Decimal(total_xml_str)  # Convertir a Decimal
+            except (InvalidOperation, ValueError):
+                total_factura = Decimal('0.00')  # Si no es convertible, usar 0.00
+            
+            # Sumar al total acumulado
+            suma_total += total_factura
+
+            # Añadir los datos a la lista
+            data_facturas.append([
+                Paragraph(str(resultados), custom_style), 
+                Paragraph(nombre, custom_style),
+                Paragraph(f"${total_factura:,.2f}", custom_style)  # Formatear el total como una cadena de texto
+            ])
+    #Parrafó de totales
+    data_totales = []
+    diferencia_totales = total_facturas - float(viatico.get_total)
+    if diferencia_totales > 0:
+        color_diferencia = colors.green
+    elif diferencia_totales < 0:
+        color_diferencia = colors.red
+    else:
+        color_diferencia = colors.black 
+    total_str = "${:,.2f}".format(total_facturas)  # Convierte Decimal a string y formatea
+    # 4. Posición de la tabla de facturas en el PDF
+    # Asumiendo que 'y_pos' es la posición Y después de dibujar la tabla secundaria y cualquier otro contenido
+    
+    data_totales = [
+    ['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
+    ['$' + str(viatico.get_total), f"${total_facturas:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
+    ]
+
+    # Estilo para la tabla secundaria
+    table_secundaria_style = TableStyle([
+        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+        ('BOX', (0,0), (-1,-1), 0.25, colors.black),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('BACKGROUND', (0,0), (1,0), colors.grey),  # Fondo gris para los encabezados
+        ('TEXTCOLOR', (0,0), (1,0), colors.whitesmoke),  # Texto blanco para los encabezados
+        ('TEXTCOLOR', (0,1), (-1,-1), colors.black),  # Texto negro para el cuerpo
+        ('FONTSIZE', (0,0), (-1,-1), 8),  # Tamaño de fuente para toda la tabla
+        # Añade aquí más estilos si lo necesitas
+    ])
+
+    table_totales = Table(data_totales, colWidths=[5 * cm, 5 * cm, 5 * cm])  # Ajusta las medidas según necesites
+    table_totales.setStyle(table_secundaria_style)
+    # Añadir filas de proyectos y subproyectos
    
-    c.rect(20,high-50,565,25, fill=True, stroke=False)
+    table_totales.wrapOn(c, width, height)
+    y_totales_pos = high-10 - (len(data_totales) * 15 ) 
+    table_totales.drawOn(c, 20, y_totales_pos)
+
+
+    c.setFillColor(prussian_blue)
+    c.rect(25,high-70,540,20, fill=True, stroke=False)
     c.setFillColor(white)
-    c.drawCentredString(320,high-45,'Comentario General')
+    c.drawCentredString(320,high-65,'Comentario General')
     c.setFillColor(black)
     c.drawCentredString(230,high-190, viatico.staff.staff.staff.first_name +' '+ viatico.staff.staff.staff.last_name)
     c.line(180,high-195,280,high-195)

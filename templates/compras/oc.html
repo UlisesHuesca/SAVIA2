@@ -276,13 +276,21 @@
                             </div>
                     </div>
                 </div>
+            </div>
+            <div class="row">
                 <div id="etiqueta_solicitado" class="col-lg-4 col-sm-12">
                     <div class="alert alert-secondary" role="alert">
-                    <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                        <h6>Solicitado:</h6>
+                        <h6 style="color: #121212;" id="solicitado"></h6>   
+                    </div>
+                </div>
+                <div id="etiqueta_comentario" class="col-lg-8 col-sm-12">
+                    <div class="alert alert-secondary" role="alert">
+                        <h6>Producto comentario:</h6>
+                        <h6 style="color: #121212;" id="comentario"></h6>   
                     </div>
                 </div>
             </div>
-           
             <div class="row">  
                 <div id="etiqueta_precio_ref" class="col-lg-3 col-sm-12 d-none">
                     <div class="alert alert-primary" role="alert">
@@ -1150,8 +1158,15 @@ function formatRepo (repo) {
 
     return $container;
 }
-function formatRepoSelection (repo) {
-    return repo.text || repo.id;
+function formatRepoSelection(repo) {
+    var maxLength = 80; // Límite de caracteres
+    var text = repo.text || repo.id;
+    
+    if (text.length > maxLength) {
+        text = text.substring(0, maxLength) + '...';
+    }
+    
+    return text;
 }
 
 var datosProductos = {{ productos_para_select2|safe }};
@@ -1175,6 +1190,7 @@ $(document).ready(function() {
         var precioref = Number(data.precioref);
         //console.log(precioref)
         var porcentaje = data.porcentaje * 100;
+        var comentario = data.comentario
         if (precioref > 0) {
             $('#etiqueta_precio_ref').removeClass('d-none');
         } else {
@@ -1185,10 +1201,13 @@ $(document).ready(function() {
         } else {
             $('#etiqueta_porcentaje').addClass('d-none');
         }
-
         console.log(cantidad)
+        console.log(comentario)
         if (!cantidad_comprada) {
             cantidad_comprada = 0
+        }
+        if (comentario == 'None') {
+            comentario = '';
         }
         var cantidad_pendiente = Number(cantidad) - Number(cantidad_comprada);
 
@@ -1199,11 +1218,13 @@ $(document).ready(function() {
         $('#solicitado').attr('data-pendiente',cantidad_pendiente)
         $('#precio_ref').text(precioref)
         $('#porcentaje').text(porcentaje + "%")
+        $('#comentario').text(comentario)
     });
     $('#id_producto').on('select2:unselect', function(e) {
         $('#etiqueta_precio_ref').addClass('d-none');
         $('#etiqueta_porcentaje').addClass('d-none');
         $('#solicitado').text('')
+        $('#comentario').text('')
         
     });
 });

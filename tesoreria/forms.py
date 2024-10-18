@@ -90,4 +90,7 @@ class Transferencia_Form(forms.ModelForm):
     class Meta:
         model = Pago
         fields = ['cuenta']
-    
+
+class UploadFileForm(forms.Form):
+    factura_pdf = forms.FileField(required=False)
+    factura_xml = forms.FileField(required=False)

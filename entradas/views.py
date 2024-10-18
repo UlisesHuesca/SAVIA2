@@ -38,7 +38,22 @@ def pendientes_entrada(request):
     
 
     if usuario.tipo.nombre == "Admin":
-         compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+        for compra in compras:
+            articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
+            servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
+            cant_entradas = articulos_entrada.count()
+            cant_servicios = servicios_pendientes.count()
+            # Definir la subconsulta para obtener la fecha del primer pago realizado para cada compra
+            #primer_pago_subquery = Pago.objects.filter(
+            #    oc=OuterRef('pk'),  # Referencia a la compra en la consulta principal
+            #    hecho=True
+            #    ).order_by('pagado_real').values('pagado_real')[:1]  # Selecciona la fecha del primer pago
+            if  cant_entradas == cant_servicios and cant_entradas > 0:
+                compra.solo_servicios = True
+                compra.save()
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, solo_servicios = False).order_by('-folio')
+      
     elif usuario.tipo.almacen == True:
         compras = Compra.objects.filter(
             Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
@@ -64,13 +79,13 @@ def pendientes_entrada(request):
         # que sea del distrito del usuario (Y) que la entrada NO este completa (Y) que este autorizada 
         compras = Compra.objects.filter(
             Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
-            Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
+            Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)),
             req__orden__distrito = usuario.distritos,  
             entrada_completa = False, 
             autorizado2= True).order_by('-folio')
         #compras = Compra.objects.filter(autorizado2= True)
     else:
-        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+        compras = Compra.objects.none()
 
 
     myfilter = CompraFilter(request.GET, queryset=compras)
@@ -166,11 +181,7 @@ def articulos_entrada(request, pk):
     if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
         articulos = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False, producto__producto__articulos__producto__producto__servicio = False)
     else:
-        articulos = ArticuloComprado.objects.filter(
-            oc=pk, 
-            entrada_completa = False,  
-            seleccionado = False, 
-            producto__producto__articulos__producto__producto__servicio = True)
+        articulos = ArticuloComprado.objects.none()
 
 
     compra = Compra.objects.get(id=pk)
@@ -223,7 +234,7 @@ def articulos_entrada(request, pk):
                         )
                 email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
                 email.send()
-            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
+            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': # or 
                 #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
                 productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
                     articulos__producto__producto = articulo.articulo_comprado.producto.producto.articulos.producto.producto,
@@ -261,12 +272,23 @@ def articulos_entrada(request, pk):
                         if productos_orden == 0:
                             solicitud.requisitar = False
                             solicitud.save()
-                        
-            if entrada.oc.req.orden.tipo.tipo == 'normal':
+            if entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
+                inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
+                articulo.articulo_comprado.producto.producto.cantidad = 0
+                articulo.articulo_comprado.producto.producto.cantidad_requisitar = 0
+                articulo.articulo_comprado.producto.producto.surtir = False
+                articulo.articulo_comprado.producto.producto.requisitar = False
+                inv_de_producto.cantidad += articulo.cantidad
+                inv_de_producto.cantidad_entradas += articulo.cantidad
+                inv_de_producto.save()
+                articulo.save()
+                print('Tiene producto activo esta orden de tipo normal')
+            elif entrada.oc.req.orden.tipo.tipo == 'normal':
                 if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
                     producto_surtir.surtir = False
                 else:
                     producto_surtir.surtir = True
+                print('Entrada de tipo normal sin activo')
             producto_surtir.save()
             articulo.save()    
         evalua_entrada_completa(articulos_comprados,num_art_comprados, compra)

@@ -25,7 +25,7 @@ def contadores_processor(request):
     conteo_pagos = 0
     conteo_solicitudes = 0
     conteo_requis_pendientes = 0
-    conteo_salidas = 0
+    conteo_servicios = 0
     conteo_oc1 = 0
     conteo_entradas = 0
     conteo_gastos_pendientes = 0
@@ -126,15 +126,18 @@ def contadores_processor(request):
         #    entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True),  req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
         #    conteo_entradas = entradas.count()
         if usuario.tipo.nombre == 'Admin':
-            entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True)
+            entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, solo_servicios = False)
+            servicios = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True)         
         else:
             entradas = Compra.objects.filter(
-            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
-            Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
+            Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)),
             req__orden__distrito = usuario.distritos,  
             entrada_completa = False, 
-            autorizado2= True, req__orden__staff = usuario).order_by('-folio')
+            autorizado2= True)
+            servicios = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario)
         conteo_entradas = entradas.count()
+        conteo_servicios = servicios.count()
     return {
     'conteo_pagos2': conteo_pagos2,
     'conteo_devoluciones': conteo_devoluciones,
@@ -143,6 +146,7 @@ def contadores_processor(request):
     'conteo_usuario':conteo_usuario,
     'conteo_viaticos_pagar':conteo_viaticos_pagar,
     'conteo_gastos_pagar':conteo_gastos_pagar,
+    'conteo_servicios':conteo_servicios,
     'conteo_asignar_montos':conteo_asignar_montos,
     'conteo_viaticos': conteo_viaticos,
     'conteo_viaticos_gerencia':conteo_viaticos_gerencia,

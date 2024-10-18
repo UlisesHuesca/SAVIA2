@@ -42,7 +42,7 @@
 <h6 class="d-lg-none">&nbsp;</h6>
 <div class="container">
     <div class="card"  id="document" role="document">
-    <form method="POST" class="post-form" id="form_id" enctype="multipart/form-data">
+    <form method="POST" class="post-form" id="form_id" enctype="multipart/form-data" onsubmit="disableButton()">
     
         <div class="card-header">
             <h4 class="card-title">Agregar Activo</h4>
@@ -202,10 +202,10 @@
                     </div>
             </div>
         </div>
-        <div class="card-footer">
-                <button class="btn btn-success" id="crear" type="submit">Crear</button>
-                <a type="button" class="btn btn-secondary" id="cerrar" href="{% url 'activos' %}">Cerrar</a>
-        </div>
+    <div class="card-footer">
+        <button class="btn btn-success" id="crear" type="submit">Crear</button>
+        <a type="button" class="btn btn-secondary" id="cerrar" href="{% url 'activos' %}">Cerrar</a>
+    </div>
    
     </form>
 </div>
@@ -418,6 +418,13 @@ function formatRepo (repo) {
 function formatRepoSelection (repo) {
     return repo.text || repo.id;
 }
+
+function disableButton() {
+    const button = document.getElementById("crear");
+    button.disabled = true; // Deshabilita el botón cuando las validaciones pasan
+    button.innerText = "Creando..."; // Cambia el texto del botón opcionalmente
+}
+
 </script>
 {% endblock %}
 

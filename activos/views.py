@@ -11,6 +11,12 @@ from django.contrib import messages
 from activos.filters import ActivoFilter
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.http import Http404
+from dashboard.models import Product
+from django.core.paginator import Paginator
+from solicitudes.filters import InventarioFilter
+from django.db.models import Count
+from django.db.models import Count, Sum
+
 
 #Todo para construir el código QR
 import qrcode
@@ -64,6 +70,7 @@ def add_activo(request):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
     #activos = Activo.objects.filter(completo=True)
+    #productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos, cantidad__gte=1)  # Filtra por cantidad mayor o igual a 1
     productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos)
     personal = Profile.objects.all()
     marcas = Marca.objects.all()
@@ -90,20 +97,15 @@ def add_activo(request):
         for marca in marcas
     ]
 
-    for producto in productos:
-        producto.activo_disponible = True
-        activo = Activo.objects.filter(activo=producto)
-        activo_cont = activo.filter(completo = True).count()
-        salidas = Salidas.objects.filter(producto__articulos__producto = producto).count()
-        
-        existencia_inv = producto.cantidad + producto.apartada + salidas
-        print( activo, activo_cont, existencia_inv, salidas)
-        if activo_cont == existencia_inv and activo_cont > 0 or existencia_inv == 0: #Si el numero de activos es igual a la existencia en inventario #Si el numero de activos es igual a la existencia en inventario
-            producto.activo_disponible = False   
+    for producto in productos: #Asignar al producto que es un activo disponible si tiene más de 1
+        if producto.cantidad >= 1:
+            producto.activo_disponible = True
+        else:
+            producto.activo_disponible = False
         producto.save()         
             
     activo, created = Activo.objects.get_or_create(creado_por=perfil, completo=False)
-    productos_activos = productos.filter(activo_disponible =True)
+    productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
     #print(productos_activos)
     form = Activo_Form(instance = activo)
 
@@ -116,6 +118,8 @@ def add_activo(request):
             activo = form.save(commit=False)
             activo.completo = True
             activo.estatus.nombre = "ALTA"
+            activo.activo.cantidad -= 1 #Restar uno al inventario
+            activo.activo.save()  # Guarda el cambio en el inventario
             activo.save()
             messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')
             return redirect('activos')
@@ -1135,3 +1139,109 @@ def gestionar_marca(request):
         return render(request, 'activos/gestionar_marca.html', context)
     else:
         raise Http404("No tienes permiso para agregar activos.")
+    
+
+@login_required(login_url='user-login')
+def activos_producto(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
+        items = Inventario.objects.filter(complete = True, producto__activo = True).annotate(activo_count=Count('activo')).order_by('producto__codigo')
+    elif usuario.tipo.nombre == "ACTIVOS": 
+        items = Inventario.objects.filter(complete = True, producto__activo = True, distrito = usuario.distritos).annotate(activo_count=Count('activo')).order_by('producto__codigo')
+    else:
+        items = Inventario.objects.none()
+    
+
+    myfilter=InventarioFilter(request.GET, queryset=items)
+    items = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(items, 50)
+    page = request.GET.get('page')
+    items_list = p.get_page(page)
+    cantidad = items_list.paginator.count  # Total de elementos filtrados
+    if request.method =='POST' and 'btnExcel' in request.POST:
+        #return convert_excel_inventario(existencia, valor_inv, dict_entradas, dict_resultados)
+        return convert_excel_inventario_xlsxwriter(items_list,)
+    # Sumar el total de todos los activo_count
+    total_activo_count = items.aggregate(total=Sum('activo_count'))['total']
+
+    context = {
+        'usuario':usuario,
+        'items': items,
+        'myfilter':myfilter,
+        'items_list':items_list,
+        'cantidad': cantidad,
+        'total_activo_count':total_activo_count,
+        }
+
+
+    return render(request,'activos/activos_producto.html', context)
+
+def convert_excel_inventario_xlsxwriter(existencia):
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet('Inventario')
+
+    # Definir los estilos antes de usarlos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'white', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    money_resumen_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 14, 'bold': True})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+
+    # Definir las columnas antes de utilizar la variable `columns`
+    columns = ['Código', 'Producto', 'Distrito', 'Unidad', 'Cantidad', 'Cantidad Apartada', 'Minimos', 'Ubicación', 'Estante',]
+    
+    # Escribir el encabezado con los estilos definidos
+    #worksheet.write_row('A1', columns, head_style)
+
+    # Establecer los anchos de las columnas después de definir `columns`
+    worksheet.set_column('A:A', 10)
+    worksheet.set_column('B:B', 30)
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    # Escribir los datos
+    row_num = 0
+    for inventario in existencia:
+        row_num += 1
+    
+        row = [
+            inventario.producto.codigo,
+            inventario.producto.nombre,
+            inventario.distrito.nombre,
+            inventario.producto.unidad.nombre,
+            inventario.cantidad,
+            inventario.cantidad_apartada,
+            inventario.minimo,
+            inventario.ubicacion,
+            inventario.estante,
+        ]
+    
+        for col_num, item in enumerate(row, start=1):  # Enumerate empieza con 1 para A1, ajusta según sea necesario
+            worksheet.write(row_num, col_num - 1, item, body_style)
+    
+
+    # Escribir el total del inventario
+    worksheet.set_column('N:N', 30)
+    worksheet.set_column('O:O', 30)
+
+    workbook.close()
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    
+
+    
+    response['Content-Disposition'] = f'attachment; filename=Inventario_{dt.date.today()}.xlsx'
+    output.close()
+    return response
+

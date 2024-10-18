@@ -14,4 +14,5 @@ urlpatterns = [
     #path('configuracion/proyectos/editar/<int:pk>', views.proyectos_edit, name='proyectos-edit'),
     path('activos/gestionar_tipo_activo/', views.gestionar_tipo_activo, name='gestionar_tipo_activo'),
     path('activos/gestionar_marca/', views.gestionar_marca, name='gestionar_marca'),
+    path('activos/activos_producto/', views.activos_producto, name='activos_producto'),
     ]
