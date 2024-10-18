@@ -90,7 +90,8 @@ def index(request):
     return render(request,'dashboard/index.html',context)
 
 
-
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def select_profile(request):
     user = request.user.id
 
