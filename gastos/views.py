@@ -1189,30 +1189,33 @@ def render_pdf_gasto(pk):
 
     # Iterar sobre cada factura y sumar el total
     for factura in facturas:
-        datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor' (Esto devuelve el diccionario de la propiedad)
-        if datos_emisor is not None:
-            # Acceder directamente a los datos de XML
-            resultados = datos_emisor.get('resultados', [])
-            nombre = datos_emisor.get('nombre', 'No disponible')
-            total_xml_str = datos_emisor.get('total', '0.00')  # Obtener el total o usar '0.00' como predeterminado
-            #Para el total de todas las factuas
-            total = datos_emisor.get('total', 0.0)  # Obtener el total o usar 0.0 si no está disponible
-            total_facturas += float(total)  # Sumar el total al total general
-            try:
-                total_factura = Decimal(total_xml_str)  # Convertir a Decimal
-            except (InvalidOperation, ValueError):
-                total_factura = Decimal('0.00')  # Si no es convertible, usar 0.00
-            
-            # Sumar al total acumulado
-            suma_total += total_factura
+        try:
+            datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor' (Esto devuelve el diccionario de la propiedad)
+            if datos_emisor is not None:
+                # Acceder directamente a los datos de XML
+                resultados = datos_emisor.get('resultados', [])
+                nombre = datos_emisor.get('nombre', 'No disponible')
+                total_xml_str = datos_emisor.get('total', '0.00')  # Obtener el total o usar '0.00' como predeterminado
+                #Para el total de todas las factuas
+                total = datos_emisor.get('total', 0.0)  # Obtener el total o usar 0.0 si no está disponible
+                total_facturas += float(total)  # Sumar el total al total general
+                try:
+                    total_factura = Decimal(total_xml_str)  # Convertir a Decimal
+                except (InvalidOperation, ValueError):
+                    total_factura = Decimal('0.00')  # Si no es convertible, usar 0.00
+                
+                # Sumar al total acumulado
+                suma_total += total_factura
 
-            # Añadir los datos a la lista
-            data_facturas.append([
-                Paragraph(str(resultados), custom_style), 
-                Paragraph(nombre, custom_style),
-                Paragraph(f"${total_factura:,.2f}", custom_style)  # Formatear el total como una cadena de texto
-            ])
-            
+                # Añadir los datos a la lista
+                data_facturas.append([
+                    Paragraph(str(resultados), custom_style), 
+                    Paragraph(nombre, custom_style),
+                    Paragraph(f"${total_factura:,.2f}", custom_style)  # Formatear el total como una cadena de texto
+                ])
+        except AttributeError:
+            continue  # Si 'emisor' no existe, saltar a la siguiente iteración
+        
     print('MONTOOOOO')
     print(total_facturas)
 
