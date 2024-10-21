@@ -53,7 +53,7 @@ from io import BytesIO
 
 
 # Create your views here.
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def solicitud_viatico(request):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
@@ -168,7 +168,7 @@ def eliminar_punto(request):
 
     return JsonResponse(response_data)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def viaticos_pendientes_autorizar(request):
     #Autoriza
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
@@ -203,7 +203,7 @@ def viaticos_pendientes_autorizar(request):
 
     return render(request, 'viaticos/pendientes_autorizar_viaticos.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def viaticos_pendientes_autorizar2(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     colaborador = Profile.objects.all()
@@ -258,7 +258,7 @@ def viaticos_pendientes_autorizar2(request):
     return render(request, 'viaticos/pendientes_autorizar_viaticos2.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def detalles_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id=pk)
 
@@ -268,7 +268,7 @@ def detalles_viaticos(request, pk):
 
     return render(request, 'viaticos/detalles_viaticos.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def detalles_viaticos2(request, pk):
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico, completo = True)
@@ -280,7 +280,7 @@ def detalles_viaticos2(request, pk):
 
     return render(request, 'viaticos/detalles_viaticos_montos.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def detalles_viaticos3(request, pk):
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico, completo = True)
@@ -314,7 +314,7 @@ def autorizar_viaticos(request, pk):
 
     return render(request,'viaticos/autorizar_viaticos.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def autorizar_viaticos2(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -339,7 +339,7 @@ def autorizar_viaticos2(request, pk):
     return render(request,'viaticos/autorizar_viaticos2.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def cancelar_viaticos(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -366,7 +366,7 @@ def cancelar_viaticos(request, pk):
 
     return render(request,'viaticos/cancelar_viaticos.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def cancelar_viaticos2(request, pk):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
@@ -396,7 +396,7 @@ def cancelar_viaticos2(request, pk):
 
     return render(request,'viaticos/cancelar_viaticos2.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def solicitudes_viaticos(request):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     colaborador = Profile.objects.all()
@@ -517,6 +517,7 @@ def asignar_montos(request, pk):
 
     return render(request, 'viaticos/asignar_montos.html', context)
 
+@perfil_seleccionado_required
 def delete_viatico(request, pk):
     concepto = Concepto_Viatico.objects.get(id=pk)
     messages.success(request,f'El articulo {concepto.producto} ha sido eliminado exitosamente')
@@ -560,7 +561,7 @@ def viaticos_autorizados_pago(request):
 
     return render(request, 'viaticos/viaticos_autorizados_pago.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def viaticos_pagos(request, pk):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
@@ -700,7 +701,7 @@ def viaticos_pagos(request, pk):
 
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def facturas_viaticos(request, pk):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
@@ -747,7 +748,8 @@ def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida
     factura.fecha_subido = datetime.now()
     factura.subido_por = usuario
     factura.save()
-    
+
+@perfil_seleccionado_required
 def factura_nueva_viatico(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -863,7 +865,7 @@ def generar_archivo_zip(facturas, viatico):
 
     return in_memory_zip, zip_filename
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def matriz_facturas_viaticos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id = pk)
     concepto_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
@@ -898,6 +900,7 @@ def matriz_facturas_viaticos(request, pk):
 
     return render(request, 'viaticos/matriz_facturas_viaticos.html', context)
 
+@perfil_seleccionado_required
 def eliminar_factura_viatico(request, pk):
     # Obtener la factura y el viático relacionado
     factura = Viaticos_Factura.objects.get(id=pk)
@@ -917,6 +920,7 @@ def eliminar_factura_viatico(request, pk):
     else:
         return redirect(matriz_url)
 
+@perfil_seleccionado_required
 def factura_viatico_edicion(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
     factura = Viaticos_Factura.objects.get(id = pk)

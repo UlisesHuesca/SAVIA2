@@ -7,9 +7,11 @@ from django.core.paginator import Paginator
 from django.contrib.auth.decorators import login_required
 from django.http import HttpResponse
 from django.contrib import messages
+from user.decorators import perfil_seleccionado_required
 # Create your views here.
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def pagos_cobranza(request):
     pagos = Cobranza.objects.all()
 
@@ -29,6 +31,8 @@ def pagos_cobranza(request):
 
     return render(request,'cobranza/cobranza.html',context)
 
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_pago_cliente(request):
     #usuario = request.user.id
     form = Cobranza_Form()
@@ -51,6 +55,7 @@ def add_pago_cliente(request):
     return render(request,'cobranza/add_pago_cliente.html',context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def pagos_edit(request, pk):
 #def product_update_modal(request, pk):
 

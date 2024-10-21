@@ -1127,7 +1127,7 @@ def matriz_facturas(request, pk):
 
     return render(request, 'tesoreria/matriz_facturas.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def matriz_facturas_nomodal(request, pk):
     compra = Compra.objects.get(id = pk)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
@@ -1165,7 +1165,8 @@ def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida
     factura.subido_por = usuario
     factura.comentario = comentario
     factura.save()
-    
+
+@perfil_seleccionado_required
 def factura_nueva(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -1258,6 +1259,7 @@ def factura_nueva(request, pk):
 
     return render(request, 'tesoreria/registrar_nueva_factura.html', context)
 
+@perfil_seleccionado_required
 def factura_compra_edicion(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -1286,6 +1288,7 @@ def factura_compra_edicion(request, pk):
 
     return render(request, 'tesoreria/factura_compra_edicion.html', context)
 
+@perfil_seleccionado_required
 def factura_eliminar(request, pk):
     factura = Facturas.objects.get(id = pk)
     compra = factura.oc
@@ -1327,6 +1330,7 @@ def mis_gastos(request):
 
     return render(request, 'tesoreria/mis_gastos.html',context)
 
+@perfil_seleccionado_required
 def mis_viaticos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)

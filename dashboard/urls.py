@@ -29,7 +29,6 @@ urlpatterns = [
     path('proveedor/edit_direccion/<int:pk>', views.edit_proveedor_direccion, name='edit_proveedor_direccion'),
     path('proveedores/upload_batch_proveedores', views.upload_batch_proveedores, name='upload_batch_proveedores'),
     path('proveedores/upload_batch_proveedores_direcciones', views.upload_batch_proveedores_direcciones, name='upload_batch_proveedores_direcciones'),
-    path('order/', views.order, name='dashboard-order'),
     path('ajax/load-subfamilias/', views.load_subfamilias, name='ajax_load_subfamilias'),  # <-- rutina en Ajax
     path('dashboard/staff_detail/<int:pk>/', views.staff_detail, name='dashboard-staff-detail'),
 ]
