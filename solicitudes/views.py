@@ -98,6 +98,7 @@ def updateItemRes(request):
 
 #Vista de seleccion de productos, requiere login
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def product_selection_resurtimiento(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -122,6 +123,7 @@ def product_selection_resurtimiento(request):
     return render(request, 'solicitud/product_selection_resurtimiento.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def crear_plantilla(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaboradores = Profile.objects.all()
@@ -519,6 +521,8 @@ def checkout(request):
     }
     return render(request, 'solicitud/checkout.html', context)
 
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def product_quantity_edit(request, pk):
     item = ArticulosOrdenados.objects.get(id= pk)
     form= ArticulosOrdenadosForm(instance = item)
@@ -556,7 +560,8 @@ def update_comentario(request):
 
     return JsonResponse(response_data, safe=False)
     
-
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def product_comment_add(request, pk):
     item = ArticulosOrdenados.objects.get(id= pk)
     form= ArticulosOrdenadosComentForm(instance = item)
@@ -682,8 +687,8 @@ def checkout_resurtimiento(request):
 
 
 #Vista para crear solicitud
-@perfil_seleccionado_required
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def checkout_editar(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -713,6 +718,7 @@ def checkout_editar(request, pk):
     return render(request, 'solicitud/checkout.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def solicitud_pendiente(request):
 
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
@@ -816,6 +822,7 @@ def matriz_plantillas(request):
     return render(request, 'solicitud/matriz_plantillas.html',context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def productos_plantilla(request, pk):
     plantilla = Plantilla.objects.get(id=pk)
     productos = ArticuloPlantilla.objects.filter(plantilla=plantilla)
@@ -930,6 +937,7 @@ def solicitud_matriz_productos(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def inventario(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
@@ -1038,6 +1046,7 @@ def inventario(request):
     return render(request,'dashboard/inventario.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def ajuste_inventario(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
@@ -1139,6 +1148,7 @@ def update_ajuste(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def upload_batch_inventario(request):
 
     form = Inventario_BatchForm(request.POST or None, request.FILES or None)
@@ -1194,7 +1204,8 @@ def upload_batch_inventario(request):
 
 
 
-
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def inventario_add(request):
     #usuario = request.user.id
     pk = request.session.get('selected_profile_id')
@@ -1226,6 +1237,7 @@ def inventario_add(request):
     return render(request,'dashboard/inventario_add.html',context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def inventario_update_modal(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -1270,6 +1282,7 @@ def inventario_update_modal(request, pk):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def historico_inventario(request):
     registros = Inventario.history.all()
 
@@ -1290,6 +1303,7 @@ def historico_inventario(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def historico_producto(request):
     registros = Product.history.all()
 
@@ -1310,6 +1324,7 @@ def historico_producto(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def inventario_delete(request, pk):
     item = Inventario.objects.get(id=pk)
 
@@ -1344,6 +1359,8 @@ def solicitud_autorizacion(request):
 
     return render(request, 'autorizacion/solicitudes_pendientes_autorizacion.html',context)
 
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def detalle_autorizar(request, pk):
     orden = Order.objects.get(id=pk)
     productos = ArticulosOrdenados.objects.filter(orden=pk)
@@ -1355,6 +1372,7 @@ def detalle_autorizar(request, pk):
     return render(request,'autorizacion/detail.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def autorizada_sol(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -1436,6 +1454,8 @@ def autorizada_sol(request, pk):
 
     return render(request,'autorizacion/autorizada.html', context)
 
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def cancelada_sol(request, pk):
     order = Order.objects.get(id = pk)
     productos = ArticulosOrdenados.objects.filter(orden = pk)
@@ -1454,7 +1474,8 @@ def cancelada_sol(request, pk):
 
     return render(request,'autorizacion/cancelada.html', context)
 
-
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def status_sol(request, pk):
     solicitud = Order.objects.get(id = pk)
     product_solicitudes = ArticulosOrdenados.objects.filter(orden=pk)

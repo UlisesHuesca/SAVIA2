@@ -40,9 +40,11 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
+from user.decorators import perfil_seleccionado_required
 
 # Create your views here.
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def activos(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
@@ -65,6 +67,7 @@ def activos(request):
     return render(request,'activos/activos.html',context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_activo(request):
     #perfil = Profile.objects.get(staff__id=request.user.id)
     pk_perfil = request.session.get('selected_profile_id') 
@@ -142,6 +145,7 @@ def add_activo(request):
     return render(request,'activos/add_activos.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_activo2(request, pk):
     personal = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id') 
@@ -270,6 +274,7 @@ def add_activo2(request, pk):
     return render(request,'activos/add_activos.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def edit_activo(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     empleados = Profile.objects.all()
@@ -370,7 +375,8 @@ def edit_activo(request, pk):
 
     return render(request,'activos/edit_activos.html', context)
 
-
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def asignar_activo(request, pk):
     salida = Salidas.objects.get(id=pk)
     activos = Activo.objects.filter(activo = salida.producto.articulos.producto, completo=True)
@@ -1091,6 +1097,7 @@ def render_pdf_responsiva_activos_gerente(request):
     return FileResponse(buf, as_attachment=True, filename='Responsiva_Gerencia' + '.pdf')
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def gestionar_tipo_activo(request):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
@@ -1116,6 +1123,7 @@ def gestionar_tipo_activo(request):
         raise Http404("No tienes permiso para agregar activos.")
     
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def gestionar_marca(request):
     pk_perfil = request.session.get('selected_profile_id') 
     perfil = Profile.objects.get(id = pk_perfil)
@@ -1142,6 +1150,7 @@ def gestionar_marca(request):
     
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def activos_producto(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)

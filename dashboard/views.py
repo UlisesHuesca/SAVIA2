@@ -30,6 +30,7 @@ import datetime as dt
 
 
 # Create your views here.
+@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def index(request):
     pk = request.session.get('selected_profile_id')
@@ -90,7 +91,7 @@ def index(request):
     return render(request,'dashboard/index.html',context)
 
 
-
+@login_required(login_url='user-login')
 def select_profile(request):
     user = request.user.id
 
@@ -281,6 +282,7 @@ def asignar_totales(proyectos_queryset, dict_compras, dict_pagos, dict_gastos, d
     return proyectos_queryset
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def subproyectos(request, pk):
     proyecto = Proyecto.objects.get(id=pk)
     subproyectos = Subproyecto.objects.filter(proyecto=proyecto)
@@ -305,6 +307,7 @@ def subproyectos(request, pk):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def proyectos_edit(request, pk):
 
     proyecto = Proyecto.objects.get(id=pk)
@@ -326,6 +329,7 @@ def proyectos_edit(request, pk):
     return render(request,'dashboard/proyectos_edit.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def proveedor_direcciones(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -344,6 +348,7 @@ def proveedor_direcciones(request, pk):
     return render(request,'dashboard/direcciones_proveedor.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def proyectos_add(request):
     #usuario = Profile.objects.get(staff=request.user
     pk_perfil = request.session.get('selected_profile_id')
@@ -372,6 +377,7 @@ def proyectos_add(request):
     return render(request,'dashboard/proyectos_add.html',context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def subproyectos_add(request, pk):
     proyecto = Proyecto.objects.get(id=pk)
     form = Subproyectos_Add_Form()
@@ -395,6 +401,7 @@ def subproyectos_add(request, pk):
     return render(request,'dashboard/subproyectos_add.html',context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def subproyectos_edit(request, pk):
     subproyecto = Subproyecto.objects.get(id=pk)
     proyecto = Proyecto.objects.get(id=subproyecto.proyecto.id)
@@ -418,6 +425,7 @@ def subproyectos_edit(request, pk):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def staff(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -443,6 +451,7 @@ def staff(request):
     return render(request,'dashboard/staff.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def product(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -468,6 +477,7 @@ def product(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -503,6 +513,7 @@ def proveedores(request):
     return render(request,'dashboard/proveedores.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def matriz_revision_proveedor(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -531,6 +542,7 @@ def matriz_revision_proveedor(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def proveedores_update(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -562,6 +574,7 @@ def proveedores_update(request, pk):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_proveedores_old(request):
     usuario = Profile.objects.get(staff=request.user)
     item, created = Proveedor.objects.get_or_create(creado_por=usuario, completo = False)
@@ -585,6 +598,7 @@ def add_proveedores_old(request):
     return render(request,'dashboard/add_proveedores.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_proveedor_direccion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -621,6 +635,7 @@ def add_proveedor_direccion(request, pk):
     return render(request,'dashboard/add_proveedor_direccion.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_proveedores2(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
@@ -677,6 +692,7 @@ def add_proveedores2(request, pk=None):
     return render(request, 'dashboard/add_proveedores_&_direccion.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_proveedores_comparativo(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -727,6 +743,7 @@ def add_proveedores_comparativo(request, pk=None):
     return render(request, 'dashboard/add_proveedor_direccion_cotizacion.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_proveedores(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -765,6 +782,7 @@ def add_proveedores(request, pk=None):
     return render(request, 'dashboard/proveedor_exist_&_direccion.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def edit_proveedores(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
@@ -805,6 +823,7 @@ def edit_proveedores(request, pk):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def edit_proveedor_direccion(request, pk):
 
     pk_perfil = request.session.get('selected_profile_id')
@@ -836,6 +855,7 @@ def edit_proveedor_direccion(request, pk):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def upload_batch_proveedores(request):
 
     form = Proveedores_BatchForm(request.POST or None, request.FILES or None)
@@ -869,6 +889,7 @@ def upload_batch_proveedores(request):
     return render(request,'dashboard/upload_batch_proveedor.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def upload_batch_proveedores_direcciones(request):
 
     form = Proveedores_Direcciones_BatchForm(request.POST or None, request.FILES or None)
@@ -921,6 +942,7 @@ def upload_batch_proveedores_direcciones(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def upload_batch_products(request):
 
     form = Products_BatchForm(request.POST or None, request.FILES or None)
@@ -974,27 +996,18 @@ def upload_batch_products(request):
 
     return render(request,'dashboard/upload_batch_products.html', context)
 
+#@login_required(login_url='user-login')
+#def product_delete(request, pk):
+#    item = Product.objects.get(id=pk)
+#    if request.method == 'POST':
+#        item.delete()
+#        return redirect('dashboard-product')
 
-@login_required(login_url='user-login')
-def order(request):
-    orders = Order.objects.all()
-    context= {
-        'orders':orders,
-        }
-
-    return render(request,'dashboard/order.html', context)
-
-@login_required(login_url='user-login')
-def product_delete(request, pk):
-    item = Product.objects.get(id=pk)
-    if request.method == 'POST':
-        item.delete()
-        return redirect('dashboard-product')
-
-    return render(request,'dashboard/product_delete.html')
+#    return render(request,'dashboard/product_delete.html')
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def add_product(request):
     item, created = Product.objects.get_or_create(completado=False)
 
@@ -1018,6 +1031,7 @@ def add_product(request):
     return render(request,'dashboard/add_product.html', context)
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def product_update(request, pk):
 #def product_update_modal(request, pk):
 
@@ -1041,6 +1055,7 @@ def product_update(request, pk):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def precio_referencia(request, pk):
 #def product_update_modal(request, pk):
 
@@ -1073,6 +1088,7 @@ def load_subfamilias(request):
 
 
 @login_required(login_url='user-login')
+@perfil_seleccionado_required
 def staff_detail(request, pk):
     worker = User.objects.get(id=pk)
     context={

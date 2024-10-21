@@ -276,6 +276,7 @@ def crear_gasto(request):
     }
     return render(request, 'gasto/crear_gasto.html', context)
 
+@perfil_seleccionado_required
 def delete_gasto(request, pk):
     articulo = Articulo_Gasto.objects.get(id=pk)
     messages.success(request,f'El articulo {articulo.producto} ha sido eliminado exitosamente')
@@ -283,6 +284,7 @@ def delete_gasto(request, pk):
 
     return redirect('crear-gasto')
 
+@perfil_seleccionado_required
 def eliminar_factura(request, pk):
     articulo = Factura.objects.get(id=pk)
     messages.success(request,f'La factura {articulo.id} ha sido eliminada exitosamente')
@@ -290,6 +292,7 @@ def eliminar_factura(request, pk):
 
     return redirect('crear-gasto')
 
+@perfil_seleccionado_required
 def eliminar_factura_gasto(request, pk):
     factura = Factura.objects.get(id=pk)
     gasto = factura.solicitud_gasto
@@ -358,6 +361,7 @@ def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida
     factura.subido_por = usuario
     factura.save()
 
+@perfil_seleccionado_required
 def factura_nueva_gasto(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
@@ -450,6 +454,7 @@ def factura_nueva_gasto(request, pk):
 
     return render(request, 'gasto/registrar_nueva_factura_gasto.html', context)
 
+@perfil_seleccionado_required
 def editar_gasto(request, pk):
     producto = Articulo_Gasto.objects.get(id=pk)
 
@@ -511,7 +516,7 @@ def solicitudes_gasto(request):
 
     return render(request, 'gasto/solicitudes_gasto.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def detalle_gastos(request, pk):
     productos = Articulo_Gasto.objects.filter(gasto__id=pk)
     facturas = Factura.objects.filter(solicitud_gasto__id = pk)
@@ -524,7 +529,7 @@ def detalle_gastos(request, pk):
 
     return render(request, 'gasto/detalle_gasto.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def gastos_pendientes_autorizar(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
@@ -575,7 +580,7 @@ def gastos_pendientes_autorizar(request):
 
     return render(request, 'gasto/pendientes_autorizar_gasto.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def gastos_pendientes_autorizar2(request):
 
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
@@ -622,7 +627,7 @@ def gastos_pendientes_autorizar2(request):
 
     return render(request, 'gasto/pendientes_autorizar_gasto2.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def autorizar_gasto(request, pk):
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     pk_perfil = request.session.get('selected_profile_id')
@@ -661,7 +666,7 @@ def autorizar_gasto(request, pk):
     return render(request,'gasto/autorizar_gasto.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def cancelar_gasto(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)    
@@ -684,7 +689,7 @@ def cancelar_gasto(request, pk):
 
     return render(request,'gasto/cancelar_gasto.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def autorizar_gasto2(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)    
@@ -708,7 +713,7 @@ def autorizar_gasto2(request, pk):
     return render(request,'gasto/autorizar_gasto2.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def cancelar_gasto2(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)    
@@ -804,7 +809,7 @@ def pago_gastos_autorizados(request):
 
     return render(request, 'gasto/pago_gastos_autorizados.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def pago_gasto(request, pk):
     pk_usuario = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_usuario)
@@ -901,7 +906,7 @@ def generar_archivo_zip(facturas, gasto):
 
     return in_memory_zip, zip_filename
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def matriz_facturas_gasto(request, pk):
     pk_usuario = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_usuario)
@@ -945,7 +950,7 @@ def matriz_facturas_gasto(request, pk):
 
     return render(request, 'gasto/matriz_factura_gasto.html', context)
 
-
+@perfil_seleccionado_required
 def facturas_gasto(request, pk):
     articulo = Articulo_Gasto.objects.get(id = pk)
     #facturas = Facturas.objects.filter(pago = pago, hecho=True)
@@ -971,7 +976,7 @@ def facturas_gasto(request, pk):
     return render(request, 'gasto/facturas_gasto.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def matriz_gasto_entrada(request):
     pk_usuario = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_usuario)
@@ -993,7 +998,7 @@ def matriz_gasto_entrada(request):
 
     return render(request, 'gasto/matriz_entrada_almacen.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def gasto_entrada(request, pk):
     pk_usuario = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_usuario)
@@ -1143,7 +1148,7 @@ def gasto_entrada(request, pk):
     return render(request, 'gasto/crear_entrada.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def delete_articulo_entrada(request, pk):
    
     articulo = Conceptos_Entradas.objects.get(id=pk)
@@ -1153,7 +1158,7 @@ def delete_articulo_entrada(request, pk):
 
     return redirect('gasto-entrada',pk= gasto)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def descargar_pdf_gasto(request, pk):
     gasto = get_object_or_404(Solicitud_Gasto, id=pk)
     buf = render_pdf_gasto(gasto.id)
@@ -1189,8 +1194,10 @@ def render_pdf_gasto(pk):
 
     # Iterar sobre cada factura y sumar el total
     for factura in facturas:
-        datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor' (Esto devuelve el diccionario de la propiedad)
-        if datos_emisor is not None:
+        try:
+            if not factura.archivo_xml:  # Verifica si hay un archivo asociado
+                continue  # Si no hay archivo, salta a la siguiente factura
+            datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor'
             # Acceder directamente a los datos de XML
             resultados = datos_emisor.get('resultados', [])
             nombre = datos_emisor.get('nombre', 'No disponible')
@@ -1212,7 +1219,10 @@ def render_pdf_gasto(pk):
                 Paragraph(nombre, custom_style),
                 Paragraph(f"${total_factura:,.2f}", custom_style)  # Formatear el total como una cadena de texto
             ])
-            
+        except (AttributeError, FileNotFoundError) as e:
+
+            continue  # Si 'emisor' no existe, saltar a la siguiente iteración
+
     print('MONTOOOOO')
     print(total_facturas)
 

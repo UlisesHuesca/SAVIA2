@@ -82,6 +82,7 @@ logger = get_custom_logger(__name__)
 
 # Create your views here.
 
+@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def requisiciones_autorizadas(request):
     pk = request.session.get('selected_profile_id')
@@ -112,6 +113,7 @@ def requisiciones_autorizadas(request):
 
     return render(request, 'compras/requisiciones_autorizadas.html',context)
 
+@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def productos_pendientes(request):
     perfil = Profile.objects.get(staff__id=request.user.id)
@@ -139,6 +141,7 @@ def productos_pendientes(request):
     return render(request, 'compras/productos_pendientes.html',context)
 
 
+@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def eliminar_articulos(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
@@ -912,7 +915,7 @@ def upload_facturas(request, pk):
 
     return render(request, 'compras/upload.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def upload_xml(request, pk):
     compra = Compra.objects.get(id = pk)
     form = CompraFactForm()

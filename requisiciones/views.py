@@ -10,7 +10,7 @@ from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.conf import settings
 from django.utils import timezone
-
+from celery.result import AsyncResult
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 from io import BytesIO
@@ -64,7 +64,7 @@ from bs4 import BeautifulSoup
 import urllib.request, urllib.parse, urllib.error
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def requisiciones_status(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
@@ -96,7 +96,7 @@ def requisiciones_status(request):
     return render(request, 'requisiciones/requisiciones.html',context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def requisiciones_productos(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
@@ -129,7 +129,7 @@ def requisiciones_productos(request):
 
 
 # Create your views here.
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def liberar_stock(request, pk):
     usuario = Profile.objects.get(staff__id=request.user.id)
     orden = Order.objects.get(id = pk)
@@ -175,7 +175,7 @@ def liberar_stock(request, pk):
 
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def solicitud_autorizada(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -210,7 +210,7 @@ def solicitud_autorizada(request):
         }
     return render(request, 'requisiciones/solicitudes_autorizadas.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def solicitudes_autorizadas_pendientes(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -297,7 +297,7 @@ def update_devolucion(request):
 
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def autorizar_devolucion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -351,7 +351,7 @@ def autorizar_devolucion(request, pk):
 
     return render(request, 'requisiciones/autorizar_devolucion.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def cancelar_devolucion(request, pk):
     devolucion= Devolucion.objects.get(id=pk)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
@@ -378,7 +378,7 @@ def cancelar_devolucion(request, pk):
     return render(request, 'requisiciones/cancelar_devolucion.html',context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def matriz_autorizar_devolucion(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -408,7 +408,7 @@ def matriz_autorizar_devolucion(request):
         }
     return render(request, 'requisiciones/matriz_devoluciones_autorizar.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def salida_material(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -480,7 +480,7 @@ def salida_material(request, pk):
 
     return render(request, 'requisiciones/salida_material.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def devolucion_material(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -530,7 +530,7 @@ def devolucion_material(request, pk):
 
     return render(request, 'requisiciones/devolucion_material_no_salida.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def devolucion_material_salida(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -583,7 +583,7 @@ def devolucion_material_salida(request, pk):
 
     return render(request, 'requisiciones/devolucion_material.html',context)
 
-
+@perfil_seleccionado_required
 def solicitud_autorizada_firma(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -741,7 +741,7 @@ def update_salida(request):
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def salida_material_usuario(request, pk):
     producto= Salidas.objects.get(id = pk)
     producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
@@ -762,7 +762,7 @@ def salida_material_usuario(request, pk):
 
     return render(request, 'requisiciones/salida_material_usuario.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def matriz_salida_activos(request):
     productos = Salidas.objects.filter(validacion_activos = False, producto__articulos__producto__producto__activo = True)
     #producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
@@ -775,7 +775,7 @@ def matriz_salida_activos(request):
 
     return render(request, 'requisiciones/matriz_salida_activos.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def solicitud_autorizada_orden(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -806,7 +806,7 @@ def solicitud_autorizada_orden(request):
 
     return render(request, 'requisiciones/solicitudes_autorizadas_orden.html',context)
 
-
+@perfil_seleccionado_required
 def detalle_orden(request, pk):
     orden = Order.objects.get(id=pk)
     productos = ArticulosparaSurtir.objects.filter(articulos__orden__id = pk, requisitar= True)
@@ -818,7 +818,7 @@ def detalle_orden(request, pk):
     return render(request,'requisiciones/orden_detail.html', context)
 
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def requisicion_autorizacion(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -845,6 +845,7 @@ def requisicion_autorizacion(request):
 
     return render(request, 'requisiciones/requisiciones_autorizacion.html',context)
 
+@perfil_seleccionado_required
 def requisicion_creada_detalle(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk)
     requis = Requis.objects.get(id = pk)
@@ -1348,6 +1349,7 @@ def render_pdf_view(request, pk):
 
     return FileResponse(buf, as_attachment=True, filename='reporte_' + str(orden.folio) +'.pdf')
 
+@perfil_seleccionado_required
 def reporte_entradas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1382,6 +1384,7 @@ def reporte_entradas(request):
 
     return render(request,'requisiciones/reporte_entradas.html', context)
 
+@perfil_seleccionado_required
 def reporte_entradas_servicios(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1414,6 +1417,7 @@ def reporte_entradas_servicios(request):
 
     return render(request,'requisiciones/reporte_entradas.html', context)
 
+@perfil_seleccionado_required
 def reporte_salidas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1446,10 +1450,6 @@ def reporte_salidas(request):
     #        context['task_id_salidas'] = task_id 
 
     return render(request,'requisiciones/reporte_salidas.html', context)
-
-from celery.result import AsyncResult
-
-
 
 def verificar_estado_salidas(request):
     task_id = request.session.get('task_id_salidas')  # Asumiendo que el task_id se pasa como parámetro GET
@@ -1505,7 +1505,7 @@ def clear_task_id_entradas(request):
         del request.session['task_id_entradas']
     return JsonResponse({'status': 'success'})
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def historico_articulos_para_surtir(request):
     registros = ArticulosparaSurtir.history.all()
 
@@ -1524,7 +1524,7 @@ def historico_articulos_para_surtir(request):
 
     return render(request,'requisiciones/historicos_articulos_para_surtir.html',context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def historico_salidas(request):
     registros = Salidas.history.all()
 

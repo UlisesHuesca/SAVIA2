@@ -147,7 +147,7 @@ def entrada_servicios(request):
 
     return render(request, 'entradas/pendientes_servicios.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def pendientes_calidad(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
@@ -160,7 +160,7 @@ def pendientes_calidad(request):
 
     return render(request, 'entradas/pendientes_calidad.html', context)
 
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def devolucion_a_proveedor(request):
 
     articulos = Reporte_Calidad.objects.filter(completo = True, autorizado = False)
@@ -604,7 +604,7 @@ def update_entrada(request):
     return JsonResponse(mensaje, safe=False)
     
 
-
+@perfil_seleccionado_required
 def reporte_calidad(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -700,7 +700,7 @@ def reporte_calidad(request, pk):
 
     return render(request,'entradas/calidad_entrada.html',context)
 
-
+@perfil_seleccionado_required
 def matriz_nc(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -715,6 +715,7 @@ def matriz_nc(request):
 
     return render(request,'entradas/matriz_nc.html',context)
 
+@perfil_seleccionado_required
 def productos_nc(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -726,6 +727,7 @@ def productos_nc(request, pk):
 
     return render(request, 'entradas/productos_nc.html', context)
 
+@perfil_seleccionado_required
 def cierre_nc(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -763,6 +765,7 @@ def cierre_nc(request, pk):
 
     return render(request, 'entradas/cierre_nc.html', context)
 
+@perfil_seleccionado_required
 def matriz_reportes_calidad(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
@@ -786,6 +789,7 @@ def matriz_reportes_calidad(request):
 
     return render(request,'entradas/matriz_reportes_calidad.html',context)
 
+@perfil_seleccionado_required
 def productos(request, pk):
     compra = Compra.objects.get(id=pk)
     articulos_comprados = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False)
@@ -797,7 +801,7 @@ def productos(request, pk):
 
     return render(request, 'entradas/productos.html', context)
 
-
+@perfil_seleccionado_required
 def no_conformidad(request, pk):
     # Obtén la compra y el perfil asociado con la sesión actual
     compra = Compra.objects.get(id=pk)
