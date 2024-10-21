@@ -1400,7 +1400,7 @@ def autorizada_sol(request, pk):
                 ordensurtir.requisitar = False
                 ordensurtir.save()
                 prod_inventario.save()
-            elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False: #si la cantidad solicitada es mayor que la cantidad en inventario 
+            elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False and producto.producto.producto.activo == False: #si la cantidad solicitada es mayor que la cantidad en inventario 
                 ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
                 ordensurtir.precio = prod_inventario.price
                 ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
@@ -1412,7 +1412,7 @@ def autorizada_sol(request, pk):
                 order.requisitar = True
                 prod_inventario.save()
                 ordensurtir.save()
-            elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True:
+            elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
                 #order.requisitar = True
