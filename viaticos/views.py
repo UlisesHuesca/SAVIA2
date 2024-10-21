@@ -28,7 +28,7 @@ import os
 import datetime as dt
 import pytz
 
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 #PDF generator
 from reportlab.pdfgen import canvas
@@ -873,6 +873,20 @@ def matriz_facturas_viaticos(request, pk):
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico =viatico, hecho=True)
     form = Facturas_Viaticos_Form(instance=viatico)
     next_url = request.GET.get('next', 'mis-viaticos')
+    fecha_limite = viatico.fecha_retorno + timedelta(days=5)
+    fecha_actual = date.today()
+    print('Fecha limite retorno')
+    print(viatico.fecha_retorno)
+    print('Fecha limite para ingresar factura')
+    print(fecha_limite)
+    print('Fecha actual')
+    print(fecha_actual)
+    fuera_de_tiempo = True
+    if fecha_actual > fecha_limite:
+        fuera_de_tiempo = True
+    else:
+        fuera_de_tiempo = False
+
 
     if request.method == 'POST':
         form = Facturas_Viaticos_Form(request.POST, instance=viatico)
@@ -896,6 +910,7 @@ def matriz_facturas_viaticos(request, pk):
         'form':form,
         'conceptos_viatico': concepto_viatico,
         'viatico': viatico,
+        'fuera_de_tiempo':fuera_de_tiempo,
         }
 
     return render(request, 'viaticos/matriz_facturas_viaticos.html', context)
