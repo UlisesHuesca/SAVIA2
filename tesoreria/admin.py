@@ -8,12 +8,12 @@ class CuentaAdmin(admin.ModelAdmin):
 class PagoAdmin(admin.ModelAdmin):
     list_display = ('id','oc','gasto','viatico','tesorero','monto', 'hecho','tipo','cuenta','pagado_real')
     #list_filter = ('familia',)
-    search_fields = ['id','hecho','oc__folio','viatico__folio', 'gasto__folio','cuenta__cuenta','uuid']
+    search_fields = ['id','hecho','oc__folio','viatico__folio', 'gasto__folio','cuenta__cuenta']
     raw_id_fields = ('oc','gasto','viatico','tesorero',)
 
 
 class FacturasAdmin(admin.ModelAdmin):
-    search_fields = ['oc__folio','id']
+    search_fields = ['oc__folio','id','uuid']
     raw_id_fields = ('oc',)
     list_display = ('id','oc','factura_pdf')
 
