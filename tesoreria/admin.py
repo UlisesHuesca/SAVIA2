@@ -13,7 +13,7 @@ class PagoAdmin(admin.ModelAdmin):
 
 
 class FacturasAdmin(admin.ModelAdmin):
-    search_fields = ['oc__folio','id']
+    search_fields = ['oc__folio','id','uuid']
     raw_id_fields = ('oc',)
     list_display = ('id','oc','factura_pdf')
 
