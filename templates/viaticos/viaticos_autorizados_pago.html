@@ -145,6 +145,7 @@
                     <th scope="col">Autorizado</th>
                     <th scope="col">Colaborador</th>
                     <th scope="col">Importe Viático</th>
+                    <th scope="col">Facturas validas xml</th>
                     <th scope="col">Pagado</th>
                     <th scope="col">Acción</th>
                     <th scope="col">Comprobación</th>
@@ -168,6 +169,7 @@
                     <td>{{viatico.approved_at2}} </td>
                     <td>{{viatico.colaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}</td>
                     <td>${{viatico.get_total|floatformat:2}}</td>
+                    <td>${{viatico.suma_total_facturas|floatformat:2}}</td>
                     <td>${{viatico.monto_pagado}}</td>
                     <td>
                         <ul class="nav nav-pills">
@@ -185,13 +187,17 @@
                         {% if viatico.autorizar2 == True %}
                             <ul class="nav nav-pills">
                                 <li class="nav-item mx-1">
-                                    {% if viatico.facturas.exists %}
-                                        <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas">
-                                            <i class="fa-solid fa-file-circle-check"></i>
-                                        </a>
-                                    {% else %}
+                                    {% if viatico.estado_facturas == "sin_facturas" %}
                                         <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
                                             <i class="fa-solid fa-file-circle-xmark"></i>
+                                        </a>
+                                    {% elif viatico.estado_facturas == "todas_autorizadas" %}
+                                        <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
+                                            <i class="fa-solid fa-file-circle-check"></i>
+                                        </a>
+                                    {% elif viatico.estado_facturas == "pendientes" %}
+                                        <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
+                                            <i class="fa-solid fa-file-circle-exclamation"></i>
                                         </a>
                                     {% endif %}
                                 </li>

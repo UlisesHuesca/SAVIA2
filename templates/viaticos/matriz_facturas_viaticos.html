@@ -106,144 +106,172 @@
             </tbody>
         </table>
         <br>
-        <div class="nav-item ms-auto">
-            <form method="POST" class="d-inline">
-                {% csrf_token %}
-                <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-                    <i class="fas fa-file-archive"></i> Descargar Facturas
-                </button>
-            </form>
-        </div>
-        <br>
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th>Clasificación</th>
-                    <th scope="col">Concepto [XML]</th>
-                    <th scope="col">Proveedor [XML]</th>
-                    <th scope="col">Monto [XML]</th>
-                    <th>PDF</th>
-                    <th>XML</th>
-                    <th>PDF-render</th>
-                    <th>Eliminar</th>
-                <tr>
-            </thead>
-            <tbody>
+<div class="nav-item ms-auto">
+    <form method="POST" class="d-inline">
+        {% csrf_token %}
+        <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+            <i class="fas fa-file-archive"></i> Descargar Facturas
+        </button>
+    </form>
+</div>
+
+<br>
+<form method="POST">
+    {% csrf_token %}
+    <table class="table bg-white">
+        <thead class="text-black" style="background-color: #F5F5F5;">
             <tr>
-                {% for factura in facturas  %}
-                    <td data-clasificacion="{% if factura.factura_xml %}{% if factura.emisor %}{{ factura.emisor.clasificacion_general }}{% endif %}{% endif %}">
-                        {% if factura.factura_xml %}
-                            {% if factura.emisor %}
-                                <strong>{{ factura.emisor.clasificacion_general }}</strong>
-                            {% endif %}
-                        {% endif %}
-                    </td>
-                    <td>{% if factura.factura_xml %} {{factura.emisor.resultados}} {% endif %}</td>
-                    <td>{% if factura.factura_xml %} {{factura.emisor.nombre}} {% endif %}</td>
-                    {% if factura.factura_xml %}
-                    <td class="total-xml" total={{factura.emisor.total}}> ${{factura.emisor.total}} </td>
-                    {%else%}
-                    <td></td>
+                <th>Clasificación</th>
+                <th scope="col">Concepto [XML]</th>
+                <th scope="col">Proveedor [XML]</th>
+                <th scope="col">Monto [XML]</th>
+                <th>PDF</th>
+                <th>XML</th>
+                <th>PDF-render</th>
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                <th>Autorizar</th>
+                {% endif %}
+                <th>Eliminar</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for factura in facturas %}
+            <tr>
+                <td data-clasificacion="{% if factura.factura_xml %}{% if factura.emisor %}{{ factura.emisor.clasificacion_general }}{% endif %}{% endif %}">
+                    {% if factura.factura_xml and factura.emisor %}
+                    <strong>{{ factura.emisor.clasificacion_general }}</strong>
                     {% endif %}
-                    <td>
+                </td>
+                <td>{% if factura.factura_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
+                <td>{% if factura.factura_xml %} {{ factura.emisor.nombre }} {% endif %}</td>
+                <td>
+                    {% if factura.factura_xml %}
+                    <span class="total-xml" total="{{ factura.emisor.total }}"> ${{ factura.emisor.total }} </span>
+                    {% else %}
+                    <span></span>
+                    {% endif %}
+                </td>
+                <td>
                     <ul class="nav nav-pills">
                         {% if factura.factura_pdf %}
                         <li class="nav-item mx-1">
-                            <a href="{{factura.factura_pdf.url}}" download class="btn btn-outline-danger">
+                            <a href="{{ factura.factura_pdf.url }}" download class="btn btn-outline-danger">
                                 <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </a>                 
+                            </a>
                         </li>
-                    </ul>
-                    </td>
-                    <td>
-                    <ul class="nav nav-pills">
                         {% endif %}
+                    </ul>
+                </td>
+                <td>
+                    <ul class="nav nav-pills">
                         {% if factura.factura_xml %}
                         <li class="nav-item mx-1">
-                            <a href="{{factura.factura_xml.url}}" download class="btn btn-outline-secondary">
+                            <a href="{{ factura.factura_xml.url }}" download class="btn btn-outline-secondary">
                                 <i class="fa-solid fa-file-code fa-2xl"></i>
-                            </a>                 
+                            </a>
                         </li>
                         {% endif %}
-                        <td>
-                            <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
-                            </a>
-                        </td>
-                        <td>
-                            <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-viatico' factura.id %}?next={{ request.GET.next }}">         
-                                <i class="fa-regular fa-trash-can"></i>
-                            </a>   
-                        </td>
                     </ul>
-                    </td> 
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th>Total Hospedaje</th>
-                    <td scope="col" id="hospedaje"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th>Total Gasolina</th>
-                    <td scope="col" id="gasolina"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th>Total Alimentos</th>
-                    <td scope="col" id="alimentos"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th>Total Peajes</th>
-                    <td scope="col" id="peaje"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th>Total Otros</th>
-                    <td scope="col" id="otros"></td>
-                </tr>
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th>Total</th>
-                    <td scope="col" id="total2"></td>
-                </tr>
-            </tbody>
-        </table>
-    </div>
-    </div>
-    <form method="post">
-        {% csrf_token %}
-        <div class="row ms-3 my-2">
-            <div class="form-check form-switch col-sm">
-            <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas</strong></label>
-            {{form.facturas_completas|add_class:"form-check-input"}}
-            </div>
-            <hr>
-        <!--<h6>Nueva factura</h6>-->
+                </td>
+                <td>
+                    <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
+                        <i class="fa-solid fa-file-invoice-dollar"></i>
+                    </a>
+                </td>
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                <td>
+                    <input type="checkbox" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %} onchange="actualizarTotales()">
+                </td>
+                {% endif %}
+                <td>
+                    <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-viatico' factura.id %}?next={{ request.GET.next }}">
+                        <i class="fa-regular fa-trash-can"></i>
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+            <tr>
+                <td></td>
+                <td></td>
+                <th></th>
+                <th></th>
+                <th class="center">Autorizadas</th>
+            </tr>
+            {% endif %}
+            <tr>
+                <td></td>
+                <td></td>
+                <th>Total Hospedaje</th>
+                <td scope="col" id="hospedaje"></td>
+                <td scope="col" id="hospedaje-autorizadas"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <th>Total Gasolina</th>
+                <td scope="col" id="gasolina"></td>
+                <td scope="col" id="gasolina-autorizadas"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <th>Total Alimentos</th>
+                <td scope="col" id="alimentos"></td>
+                <td scope="col" id="alimentos-autorizadas"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <th>Total Peajes</th>
+                <td scope="col" id="peaje"></td>
+                <td scope="col" id="peaje-autorizadas"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <th>Total Otros</th>
+                <td scope="col" id="otros"></td>
+                <td scope="col" id="otros-autorizadas"></td>
+            </tr>
+            <tr>
+                <td></td>
+                <td></td>
+                <th>Total</th>
+                <td scope="col" id="total2"></td>
+                <td scope="col" id="total3"></td>
+            </tr>
+        </tbody>
+    </table>
+    <div class="row ms-3 my-2">
+        <div class="form-check form-switch col-sm">
+            <label for="form.facturas_completas" class="form-check-label"><strong>Facturas Completas</strong></label>
+            {{ form.facturas_completas|add_class:"form-check-input" }}
+        </div>
+        <hr>
         <ul class="nav">
             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" %}
             <li class="nav-item">
-                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}"><i class="fa-solid fa-arrow-up-from-bracket"></i>Factura</a>
+                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Factura
+                </a>
             </li>
             {% elif fuera_de_tiempo == False %}
             <li class="nav-item">
-                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}"><i class="fa-solid fa-arrow-up-from-bracket"></i>Factura</a>
+                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}">
+                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Factura
+                </a>
             </li>
             {% endif %}
             <li class="nav-item ms-4">
-                <button type="submit" name="btn_factura_completa" class="btn btn-secondary">Cerrar</button>
+                <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
+            </li>
+            <li class="nav-item ms-4">      
+                <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
             </li>
         </ul>
-    </form>
-</div>
+    </div>
+</form>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
@@ -255,58 +283,48 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-;(function(){
+;(function() {
     const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
-    htmx.on('htmx:beforeSwap',(e)=>{
+    htmx.on('htmx:beforeSwap', (e) => {
         if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
+            modal.hide()
     })
 })()
-var myModal = document.getElementById('dialog')
 
-//var elementos = document.getElementsByClassName('subtotal-linea');
+// Funciones para la primera tabla
 var xml = document.getElementsByClassName('total-xml');
 var elementos_t = document.getElementsByClassName('total-linea');
 
-function total(elementos,id){
-    console.log(elementos)
-    var lbltotal = document.getElementById(id)
+function calcularTotal(elementos, id) {
+    var lbltotal = document.getElementById(id);
     var total = 0;
 
-    for (var i = 0 ; i < elementos.length; i++){
+    for (var i = 0; i < elementos.length; i++) {
         total += Number(elementos[i].getAttribute('total'));
-        console.log(elementos[i].getAttribute('total'))
-    };
-    //console.log(total)
-    lbltotal.innerText = `$${total.toFixed(2)}`
+    }
+    lbltotal.innerText = `$${total.toFixed(2)}`;
+}
 
-};
-
-//total(elementos,'subtotal');
-total(elementos_t,'total')
-total(xml, 'total2');
+calcularTotal(elementos_t, 'total');
+calcularTotal(xml, 'total2');
 
 function calcularTotalesPorClasificacion(elementos, clasificacion) {
     var total = 0;
 
     for (var i = 0; i < elementos.length; i++) {
-            var elementoClasificacion = elementos[i].getAttribute('data-clasificacion');
-            console.log(`Elemento Clasificación: ${elementoClasificacion}`);  // Depuración
-            if (elementoClasificacion === clasificacion) {
-                var totalElemento = Number(elementos[i].closest('tr').querySelector('.total-xml').getAttribute('total'));
-                console.log(`Total Elemento: ${totalElemento}`);  // Depuración
-                total += totalElemento;
-            }
+        var elementoClasificacion = elementos[i].getAttribute('data-clasificacion');
+        if (elementoClasificacion === clasificacion) {
+            var totalElemento = Number(elementos[i].closest('tr').querySelector('.total-xml').getAttribute('total'));
+            total += totalElemento;
         }
-
-        return total;
     }
+    return total;
+}
 
 function mostrarTotalPorClasificacion(clasificacion, id) {
     var elementos = document.querySelectorAll('td[data-clasificacion]');
     var total = calcularTotalesPorClasificacion(elementos, clasificacion);
-    //console.log(`Elementos Encontrados para ${clasificacion}: ${elementos.length}`);  // Depuración
     var lblTotal = document.getElementById(id);
     lblTotal.innerText = `$${total.toFixed(2)}`;
 }
@@ -318,12 +336,81 @@ mostrarTotalPorClasificacion('Peaje', 'peaje');
 mostrarTotalPorClasificacion('Hospedaje', 'hospedaje');
 mostrarTotalPorClasificacion('Otros', 'otros');
 
+// Funciones para la tabla de autorizados
+function calcularTotalesPorClasificacionAutorizadas(elementos, clasificacion) {
+    var total = 0;
 
+    for (var i = 0; i < elementos.length; i++) {
+        var elementoClasificacion = elementos[i].getAttribute('data-clasificacion');
+        if (elementoClasificacion === clasificacion) {
+            var tr = elementos[i].closest('tr');
+            var totalElemento = Number(tr.querySelector('.total-xml').getAttribute('total'));
+            var autorizada = tr.querySelector('input[type="checkbox"]').checked;
+            if (autorizada) {
+                total += totalElemento;
+            }
+        }
+    }
+    return total;
+}
 
-myModal.addEventListener('hidden.bs.modal', function (event) {
-  location.reload();
-})
+function mostrarTotalPorClasificacionAutorizadas(clasificacion, id) {
+    var elementos = document.querySelectorAll('td[data-clasificacion]');
+    var total = calcularTotalesPorClasificacionAutorizadas(elementos, clasificacion);
+    var lblTotal = document.getElementById(id);
+    lblTotal.innerText = `$${total.toFixed(2)}`;
+}
 
+// Calcular y mostrar los totales autorizadas
+mostrarTotalPorClasificacionAutorizadas('Alimentos', 'alimentos-autorizadas');
+mostrarTotalPorClasificacionAutorizadas('Gasolina', 'gasolina-autorizadas');
+mostrarTotalPorClasificacionAutorizadas('Peaje', 'peaje-autorizadas');
+mostrarTotalPorClasificacionAutorizadas('Hospedaje', 'hospedaje-autorizadas');
+mostrarTotalPorClasificacionAutorizadas('Otros', 'otros-autorizadas');
+
+// Total general autorizadas
+function calcularTotalAutorizadas() {
+    var total = 0;
+    var elementos = document.querySelectorAll('td[data-clasificacion]');
+
+    for (var i = 0; i < elementos.length; i++) {
+        var autorizada = elementos[i].closest('tr').querySelector('input[type="checkbox"]').checked;
+        if (autorizada) {
+            var totalElementoEl = elementos[i].closest('tr').querySelector('.total-xml');
+            var totalElemento = totalElementoEl ? Number(totalElementoEl.getAttribute('total')) : 0; 
+            total += totalElemento;
+        }
+    }
+
+    var lblTotal = document.getElementById('total3');
+    lblTotal.innerText = `$${total.toFixed(2)}`;
+}
+
+document.getElementById('total3').innerText = `$${calcularTotalAutorizadas().toFixed(2)}`;
+
+// Actualizar totales
+function actualizarTotales() {
+    // Actualiza totales generales
+    calcularTotal(xml, 'total2');
+    calcularTotal(elementos_t, 'total');
+
+    // Actualiza totales por clasificación
+    mostrarTotalPorClasificacion('Alimentos', 'alimentos');
+    mostrarTotalPorClasificacion('Gasolina', 'gasolina');
+    mostrarTotalPorClasificacion('Peaje', 'peaje');
+    mostrarTotalPorClasificacion('Hospedaje', 'hospedaje');
+    mostrarTotalPorClasificacion('Otros', 'otros');
+
+    // Actualiza totales de autorizadas
+    mostrarTotalPorClasificacionAutorizadas('Alimentos', 'alimentos-autorizadas');
+    mostrarTotalPorClasificacionAutorizadas('Gasolina', 'gasolina-autorizadas');
+    mostrarTotalPorClasificacionAutorizadas('Peaje', 'peaje-autorizadas');
+    mostrarTotalPorClasificacionAutorizadas('Hospedaje', 'hospedaje-autorizadas');
+    mostrarTotalPorClasificacionAutorizadas('Otros', 'otros-autorizadas');
+
+    // Actualiza total general autorizadas
+    calcularTotalAutorizadas();
+}
 </script>
 {% endblock %}
 </body>

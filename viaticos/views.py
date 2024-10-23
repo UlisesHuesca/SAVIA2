@@ -21,6 +21,8 @@ from gastos.models import Factura
 from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
+from api.models import TablaFestivos
+from django.db.models import Count, Q, Case, When, Value, CharField
 
 import io
 import json
@@ -527,7 +529,6 @@ def delete_viatico(request, pk):
 
 @perfil_seleccionado_required
 def viaticos_autorizados_pago(request):
-
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
@@ -538,9 +539,9 @@ def viaticos_autorizados_pago(request):
         if perfil.tipo.rh:
             viaticos = Solicitud_Viatico.objects.none()
         else:
-            viaticos = Solicitud_Viatico.objects.filter(complete=True, distrito = perfil.distritos, autorizar = True, autorizar2 = True, pagada=False).order_by('-folio')
-    
-       
+            viaticos = Solicitud_Viatico.objects.filter(complete=True,distrito=perfil.distritos,autorizar=True,autorizar2=True,pagada=False).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+                ).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
@@ -553,7 +554,19 @@ def viaticos_autorizados_pago(request):
     #if request.method =='POST' and 'btnExcel' in request.POST:
 
         #return convert_excel_solicitud_matriz(solicitudes)
-
+    # Calcular el estado de las facturas basado en los conteos
+    for viatico in viaticos_list:
+        if viatico.total_facturas == 0:
+            viatico.estado_facturas = 'sin_facturas'
+            print(f"Viatico {viatico.id} - Estado: sin_facturas")
+        elif viatico.autorizadas == viatico.total_facturas:
+            viatico.estado_facturas = 'todas_autorizadas'
+            print(f"Viatico {viatico.id} - Estado: todas_autorizadas")
+        else:
+            viatico.estado_facturas = 'pendientes'
+            print(f"Viatico {viatico.id} - Estado: pendientes")
+        # Paso 2: Suma el total de facturas utilizando la propiedad emisor, con comprobación de existencia
+        viatico.suma_total_facturas = sum(Decimal(factura.emisor['total']) for factura in viatico.facturas.all() if factura.factura_xml and factura.hecho and factura.autorizada and factura.emisor is not None)
     context= {
         'viaticos_list':viaticos_list,
         'myfilter':myfilter,
@@ -865,32 +878,63 @@ def generar_archivo_zip(facturas, viatico):
 
     return in_memory_zip, zip_filename
 
+def calcular_fecha_limite(fecha_inicio, dias_habiles, festivos):
+    fecha_actual = fecha_inicio
+    dias_contados = 0
+
+    while dias_contados < dias_habiles:
+        fecha_actual += timedelta(days=1)
+
+        # Verifica si es sábado o domingo
+        if fecha_actual.weekday() in (5, 6):
+            continue
+
+        # Verifica si la fecha actual es un día festivo
+        if fecha_actual in festivos:
+            continue
+
+        dias_contados += 1
+
+    return fecha_actual
+
 @perfil_seleccionado_required
 def matriz_facturas_viaticos(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id = pk)
     concepto_viatico = Concepto_Viatico.objects.filter(viatico = viatico)
-    print(concepto_viatico)
+    #print(concepto_viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico =viatico, hecho=True)
     form = Facturas_Viaticos_Form(instance=viatico)
     next_url = request.GET.get('next', 'mis-viaticos')
-    fecha_limite = viatico.fecha_retorno + timedelta(days=5)
-    fecha_actual = date.today()
-    print('Fecha limite retorno')
-    print(viatico.fecha_retorno)
-    print('Fecha limite para ingresar factura')
-    print(fecha_limite)
-    print('Fecha actual')
-    print(fecha_actual)
-    fuera_de_tiempo = True
-    if fecha_actual > fecha_limite:
-        fuera_de_tiempo = True
-    else:
-        fuera_de_tiempo = False
+    # Obtener días festivos de la base de datos
+    festivos = set(TablaFestivos.objects.values_list('dia_festivo', flat=True))
 
+    # Calcular la fecha límite
+    fecha_limite = calcular_fecha_limite(viatico.fecha_retorno, 10, festivos) #Se define en 10 díash habiles por intrucción del contador Heriberto 23/10/24
+
+    #print('Fecha limite retorno:', viatico.fecha_retorno)
+    #print('Fecha limite para ingresar factura:', fecha_limite)
+    #print('Fecha actual:', date.today())
+    fuera_de_tiempo = date.today() > fecha_limite
+    #print(fuera_de_tiempo)
 
     if request.method == 'POST':
         form = Facturas_Viaticos_Form(request.POST, instance=viatico)
         if "btn_factura_completa" in request.POST:
+            # Procesar los checkboxes de las facturas
+            #print("Contenido de request.POST:", request.POST)  # Para ver qué datos se están recibiendo
+            fecha_hora = datetime.today()
+            for factura in facturas:
+                checkbox_name = f'autorizar_factura_{factura.id}'
+                #print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
+                if checkbox_name in request.POST:
+                    factura.autorizada = True
+                    factura.autorizada_por = perfil
+                    factura.autorizada_el = fecha_hora
+                else:
+                    factura.autorizada = False
+                factura.save()
             if form.is_valid():
                 form.save()
                 messages.success(request,'Haz cambiado el status de facturas completas')
@@ -902,7 +946,8 @@ def matriz_facturas_viaticos(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
-            
+        elif 'salir' in request.POST:
+            return redirect(next_url)
 
     context={
         'next_url':next_url,
@@ -982,7 +1027,7 @@ def generar_pdf_viatico(pk):
     #Here ends conf.
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico)
-    facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho = True)
+    facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho = True, autorizada=True)
 
     #Configuraciones por default 
     styles = getSampleStyleSheet()
@@ -1270,8 +1315,8 @@ def generar_pdf_viatico(pk):
     data_facturas = [['Datos de XML', 'Nombre', 'Monto']]  # Encabezados de la tabla de facturas
     # Iterar sobre cada factura y sumar el total
     for factura in facturas:
-        datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor' (Esto devuelve el diccionario de la propiedad)
-        if datos_emisor is not None:
+        if factura.factura_xml:
+            datos_emisor = factura.emisor  # Llamar a la propiedad 'emisor' (Esto devuelve el diccionario de la propiedad)
             # Acceder directamente a los datos de XML
             resultados = datos_emisor.get('resultados', [])
             nombre = datos_emisor.get('nombre', 'No disponible')
