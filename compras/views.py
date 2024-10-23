@@ -2714,8 +2714,10 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(8, columna_max - 1, "OC Entregadas/Pagadas/Productos", head_style)
     worksheet.write(9, columna_max - 1, "OC Pagadas/Productos", head_style)
     worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
-    
-    indicador = num_requis_atendidas/num_approved_requis
+    try:
+        indicador = num_requis_atendidas/num_approved_requis
+    except ZeroDivisionError:
+        indicador = 0
     letra_columna = xl_col_to_name(columna_max)
     formula = f"={letra_columna}9/{letra_columna}10"
     # Escribir datos y fórmulas
