@@ -199,25 +199,37 @@ def crear_gasto(request):
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                         
-                        # Guardar temporalmente para extraer datos
                         factura_temp = Factura(archivo_xml=archivo_xml)
                         factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
-                    
+
                         uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
-                        print(uuid_extraido)
-                        print(fecha_timbrado_extraida)
-                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado
-                        if Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists() or Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists():
-                            facturas_duplicadas.append(uuid_extraido)
-                            continue  # Saltar al siguiente archivo si se encuentra duplicado
+
+                        # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
+                        factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        viaticos_factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+
+                        if factura_existente or facturas_existentes or viaticos_factura_existente:
+                            # Si una factura existente se encuentra, verificamos si su solicitud no está aprobada
+                            if factura_existente and (factura_existente.solicitud_gasto.autorizar is False or factura_existente.solicitud_gasto.autorizar2 is False):
+                                factura_existente.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+
+                            elif facturas_existentes and (facturas_existentes.oc.autorizado1 is False or facturas_existentes.oc.autorizado2 is False):
+                                facturas_existentes.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+
+                            elif viaticos_factura_existente and (viaticos_factura_existente.solicitud_viatico.autorizar is False or viaticos_factura_existente.solicitud_viatico.autorizar2 is False):
+                                viaticos_factura_existente.delete()
+                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+
+                            else:
+                                # Si no cumple las condiciones de eliminación, consideramos la factura duplicada
+                                facturas_duplicadas.append(uuid_extraido)
+                                continue  # Saltar al siguiente archivo si se encuentra duplicado
                         else:
-                            factura.archivo_xml = archivo_xml
-                            factura.uuid = uuid_extraido
-                            factura.fecha_timbrado = fecha_timbrado_extraida
-                            factura.hecho = True
-                            factura.fecha_subida = datetime.now()
-                            factura.subido_por = usuario
-                            factura.save()
+                            # Si no existe ninguna factura, guardar la nueva
+                            guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
                             #messages.success(request, 'Las facturas se registraron de manera exitosa')
                     if archivo_pdf:
                         factura.archivo_pdf = archivo_pdf
