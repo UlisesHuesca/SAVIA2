@@ -105,19 +105,19 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{form.motivo|add_class:"form-control"|append_attr:"placeholder=Motivo"}}
-                                            <label for="id_transporte">Motivo</label>
+                                            <label for="id_transporte">Motivo*</label>
                                         </div>
                                 </div>
                             </div>
                         </div>
                         <div class="row my-2">
-                            <div class="col-lg-4 col-sm-12" >
+                            <div class="col-lg-4 col-sm-12">
                                 <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-car"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.transporte|add_class:"form-control"|append_attr:"placeholder=Transporte marca, modelo, rendimiento"}}
-                                            <label for="id_transporte">Transporte(marca, modelo, rendimiento)*</label>
-                                        </div>
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-clock"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {% render_field form.hora_partida type="time" class="form-control" %}
+                                        <label for="id_hora_partida">Hora de partida*</label>
+                                    </div>
                                 </div>
                             </div>
                             <div id="serie" class="col-lg-4 col-sm-12">
@@ -139,56 +139,140 @@
                                 </div>
                             </div>
                         </div>
-                            <div class="row">
-                                <div class="col-lg-4 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.lugar_partida|add_class:"form-control"|append_attr:"placeholder=Lugar de partida*"}}
-                                            <label for="id_lugar_partida">Lugar de partida*</label>
-                                        </div>
+                        <div class="row my-2">
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-car"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        <select id="transporte" name="tipo" class="form-control" required onchange="actualizarEtiqueta()">
+                                            <option value="" disabled selected>Seleccione su transporte</option>
+                                            <option value="vehiculo_propio">Vehículo propio</option>
+                                            <option value="vehiculo_empresa">Vehículo empresa</option>
+                                            <option value="autobus">Autobús</option>
+                                            <option value="avion">Avión</option>
+                                            <option value="tercero">Vehículo de compañero</option>
+                                        </select>
+                                        <label for="labeltransporte" id="etiquetaTransporte" class="form-label small">Tipo de transporte*</label>
                                     </div>
                                 </div>
-                                <div class="col-lg-4 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                            {{form.lugar_comision|add_class:"form-control"|append_attr:"placeholder=Lugar de comision*"}}
-                                            <label for="id_lugar_partida">Lugar de comision*</label>
-                                        </div>
+                            </div>
+
+                            <div class="col-lg-8 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1">
+                                        <i class="fa-solid fa-car" id="iconoTransporte"></i>
+                                    </span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.transporte|add_class:"form-control"|append_attr:"maxlength=120" }}
+                                        <label for="id_transporte" id="id_etiquetaTransporte" class="form-label small">Seleccione primero el tipo de transporte*</label>
                                     </div>
                                 </div>
-                                <div class="form-check form-switch col-auto mx-4" id="puntos_intermedios_sw">
+                            </div>
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.lugar_partida|add_class:"form-control"|append_attr:"placeholder=Lugar de partida*"}}
+                                        <label for="id_lugar_partida">Lugar de partida*</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-6 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.lugar_comision|add_class:"form-control"|append_attr:"placeholder=Lugar de comision*"}}
+                                        <label for="id_lugar_comision">Lugar de comisión*</label> 
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-2 col-sm-12">
+                                <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch" id="SwitchPuntos">
-                                    <label class="form-check-label" for="flexSwitchCheckDefault" id="LabelPuntos">Puntos Intermedios</label>
+                                    <label class="form-check-label mx-auto" for="SwitchPuntos">Puntos Intermedios</label>
                                 </div>
                             </div>
-                            <div class="row">
-                                <div class="col-lg-6 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">  
-                                        {{form.comentario_jefe_inmediato|add_class:"form-control"|append_attr:"placeholder=Comentario para Jefe Inmediato"}}
-                                        <label for="id_comentario">Comentario para Jefe Inmediato*</label>
-                                        </div>
-                                    </div>
-                                </div>
-                                <div class="form-check form-switch col-sm-3">
-                                    <label for="form.lugar_comision" class="col-auto col-form-label"><strong>Hospedaje*</strong></label>
-                                    {{form.hospedaje|add_class:"form-check-input mt-3"}}
-                                </div>
-                            </div>
-                            <div class="row">
-                                <div class="col-lg-6 col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">  
-                                        {{form.comentario_general|add_class:"form-control"|append_attr:"placeholder=Comentario General"}}
-                                        <label for="id_comentario">Comentario General*</label>
-                                        </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">  
+                                    {{form.comentario_jefe_inmediato|add_class:"form-control"|append_attr:"placeholder=Comentario para Jefe Inmediato"}}
+                                    <label for="id_comentario">Comentario para Jefe Inmediato</label>
                                     </div>
                                 </div>
                             </div>
+                            <div class="form-check form-switch col-sm-3">
+                                <label for="form.lugar_comision" class="col-auto col-form-label"><strong>Hospedaje*</strong></label>
+                                {{form.hospedaje|add_class:"form-check-input mt-3"}}
+                            </div>
+                            <div class="form-check form-switch col-sm-3">
+                                <label for="form.lugar_comision" class="col-auto col-form-label"><strong>Comidas c/factura*</strong></label>
+                                {{form.comidas_facturas|add_class:"form-check-input mt-3"}}
+                            </div>
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-6 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">  
+                                    {{form.comentario_general|add_class:"form-control"|append_attr:"placeholder=Comentario General"}}
+                                    <label for="id_comentario">Comentario General</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="form-check form-switch col-auto mx-4">
+                                <input class="form-check-input" type="checkbox" id="toggleBankFields" name="toggleBankFields" value="true">
+                                <label class="form-check-label" for="toggleBankFields">Cuenta Alterna</label>
+                            </div>
+                            <div class="form-check form-switch col-auto mx-4">
+                                <input class="form-check-input" type="checkbox" id="toggleEmergencyPhone" name="toggleEmergencyPhone" value="true">
+                                <label class="form-check-label" for="toggleEmergencyPhone">Número de Emergencia</label>
+                            </div>
+                        </div>
+                        <div id="emergencyPhoneField" class="row my-2 d-none">
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.phone|add_class:"form-control"|append_attr:"placeholder=Número de emergencia" }}
+                                        <label for="id_phone">Número de emergencia</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="bankFields" class="row my-2 d-none">
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-credit-card"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.cuenta_bancaria|add_class:"form-control"|append_attr:"placeholder=Cuenta bancaria" }}
+                                        <label for="id_cuenta_bancaria">Cuenta bancaria*</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-key"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.clabe|add_class:"form-control"|append_attr:"placeholder=CLABE interbancaria" }}
+                                        <label for="id_clabe">CLABE interbancaria*</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">
+                                        {{ form.banco|add_class:"form-control"|append_attr:"placeholder=Seleccione su banco" }}
+                                        <label for="id_banco">Banco*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         <div class="d-grid gap-2 d-md-flex justify-content-md-end">
                             <input class="btn btn-outline-info btn-block my-2 col-sm-12 col-lg-3" id="btn_agregar" name="btn_agregar" type="submit" value="Crear Solicitud">
                         </div>
@@ -680,7 +764,48 @@ function cambio_en_formulario(data,key) {
     localStorage.setItem("id_solicitud_" + viatico_id , JSON.stringify(datosGuardados));
     
 };
+    $(document).ready(function() {
+        $('#toggleBankFields').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#bankFields').removeClass('d-none');  // Mostrar los campos
+            } else {
+                $('#bankFields').addClass('d-none');  // Ocultar los campos
+            }
+        });
+    });
+    $(document).ready(function() {
+        $('#toggleEmergencyPhone').on('change', function() {
+            if ($(this).is(':checked')) {
+                $('#emergencyPhoneField').removeClass('d-none');  // Mostrar el campo
+            } else {
+                $('#emergencyPhoneField').addClass('d-none');  // Ocultar el campo
+            }
+        });
+    });
+function actualizarEtiqueta() {
+    const select = document.getElementById('transporte');
+    const etiqueta = document.getElementById('id_etiquetaTransporte');
+    const icono = document.getElementById('iconoTransporte');
+    const opcionSeleccionada = select.options[select.selectedIndex].value;
 
+    // Cambia el contenido de la etiqueta y el icono según la opción seleccionada
+    if (opcionSeleccionada === 'vehiculo_propio' || opcionSeleccionada === 'vehiculo_empresa') {
+        etiqueta.textContent = 'Transporte (marca, modelo, rendimiento)*';
+        icono.className = 'fa-solid fa-car'; // Icono de coche
+    } else if (opcionSeleccionada === 'autobus') {
+        etiqueta.textContent = 'Comentarios transporte';
+        icono.className = 'fa-solid fa-bus'; // Icono de autobús
+    } else if (opcionSeleccionada === 'avion') {
+        etiqueta.textContent = 'Comentarios transporte';
+        icono.className = 'fa-solid fa-plane'; // Icono de avión
+    } else if (opcionSeleccionada === 'tercero') {
+        etiqueta.textContent = 'Detalles transporte';
+        icono.className = 'fa-sharp fa-solid fa-people-arrows'; // Icono de terceros
+    } else {
+        etiqueta.textContent = 'Seleccione primero el tipo de transporte*'; // Opción por defecto
+        icono.className = 'fa-solid fa-car'; // Icono por defecto
+    }
+}
 </script>
 {% endblock %}
 </body>

@@ -108,7 +108,21 @@ def solicitud_viatico(request):
             max_folio = Solicitud_Viatico.objects.all().aggregate(Max('folio'))['folio__max']
             nuevo_folio = (max_folio or 0) + 1
             #abrev= usuario.distrito.abreviado
+            
             if form.is_valid():
+                transporte_seleccionado = request.POST.get('tipo')
+                cuenta_alterna = request.POST.get('toggleBankFields', 'false')  # 'true' si está marcado, 'false' si no
+                numero_emergencia = request.POST.get('toggleEmergencyPhone', 'false')  # 'true' si está marcado, 'false' si no
+                # Convertir a booleanos
+                cuenta_alterna_marcada = (cuenta_alterna == 'true')  # True si marcado, False si no
+                numero_emergencia_marcado = (numero_emergencia == 'true')  # True si marcado, False si no
+                if cuenta_alterna_marcada == False:
+                    viatico.banco = None
+                    viatico.cuenta_bancaria = None 
+                    viatico.clabe = None
+                if numero_emergencia_marcado == False:
+                    viatico.phone = None
+                comentario_transporte = viatico.transporte
                 viatico = form.save(commit=False)
                 viatico.complete = True
                 viatico.created_at =  datetime.now()
@@ -116,6 +130,7 @@ def solicitud_viatico(request):
                 viatico.staff =  usuario
                 viatico.distrito = usuario.distritos
                 viatico.folio = nuevo_folio
+                viatico.transporte = transporte_seleccionado + '-'  + comentario_transporte
                 if usuario.distritos.nombre == "MATRIZ":
                     viatico.gerente = viatico.superintendente
                 else:
