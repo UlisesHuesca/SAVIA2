@@ -122,6 +122,10 @@
                     <th scope="col">Cantidad Anterior</th>
                     <th>Cantidad Requisitar Actual</th>
                     <th>Cantidad Requisitar Anterior</th>
+                    <th>Surtir</th>
+                    <th>Surtir Anterior</th>
+                    <th>Requisitar</th>
+                    <th>Requisitar Anterior</th>
                 </tr>
             </thead>
             <tbody>
@@ -137,6 +141,10 @@
                     <td>{{registro.prev_record.cantidad}}</td>
                     <td>{{registro.cantidad_requisitar}}</td>
                     <td>{{registro.prev_record.cantidad_requisitar}}</td>
+                    <td>{{registro.surtir}}</td>
+                    <td>{{registro.prev_record.surtir}}</td>
+                    <td>{{registro.requisitar}}</td>
+                    <td>{{registro.prev_record.requisitar}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
