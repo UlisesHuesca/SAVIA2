@@ -11,3 +11,4 @@ errors.log.save
 savia2_antesdeborrarfacturas
 *.pyc
 __pycache__/
+savia2_service_log.txt
