@@ -8,6 +8,7 @@
 <body>
 {% block content %}
 <!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
 <div class="row my-4">
     <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -16,17 +17,25 @@
                 {% if message.tags == "error" %}
                 <script>
                 Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
+                    "title": "Error",
+                    "text": "{{ message }}",
+                    "icon": "error",
+                })
+                </script>
+                {% elif message.tags == "warning" %}
+                <script>
+                Swal.fire({
+                    "title": "Facturas repetidas",
+                    "text": "{{ message }}",
+                    "icon": "warning",
                 })
                 </script>
                 {% else %}
                 <script>
                 Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
+                    "title": "Excelente",
+                    "text": "{{ message }}",
+                    "icon": "success",
                 })
                 </script>
                 {% endif %}

@@ -18,17 +18,25 @@
                 {% if message.tags == "error" %}
                 <script>
                 Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
+                    "title": "Error",
+                    "text": "{{ message }}",
+                    "icon": "error",
+                })
+                </script>
+                {% elif message.tags == "warning" %}
+                <script>
+                Swal.fire({
+                    "title": "Facturas repetidas",
+                    "text": "{{ message }}",
+                    "icon": "warning",
                 })
                 </script>
                 {% else %}
                 <script>
                 Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
+                    "title": "Excelente",
+                    "text": "{{ message }}",
+                    "icon": "success",
                 })
                 </script>
                 {% endif %}
