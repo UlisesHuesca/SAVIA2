@@ -250,7 +250,7 @@
         </div>
         <hr>
         <ul class="nav">
-            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" %}
+            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
             <li class="nav-item">
                 <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}">
                     <i class="fa-solid fa-arrow-up-from-bracket"></i> Factura
