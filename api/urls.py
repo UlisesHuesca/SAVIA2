@@ -14,5 +14,6 @@ urlpatterns = [
     path('profiles', views.profiles_api, name="profiles"),
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     path('perfiles_rh/', views.obtener_perfiles, name='perfiles_rh'),
+    path('tabla_festivos/', views.tabla_festivos, name='tabla_festivos'),
     path('oc-pdf/<int:pk>/', views.descargar_pdf_oc, name='api-oc-pdf'),
     ]

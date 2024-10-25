@@ -1,6 +1,6 @@
 from django.db import models
 from solicitudes.models import Proyecto, Subproyecto, Operacion
-from user.models import Profile, Distrito
+from user.models import Profile, Distrito, Banco
 from dashboard.models import Inventario, Product
 from django.core.validators import FileExtensionValidator
 import decimal
@@ -25,14 +25,20 @@ class Solicitud_Viatico(models.Model):
     created_at = models.DateTimeField(null=True)
     #created_at_time = models.TimeField(null=True)
     fecha_partida = models.DateField(null=True)
+    hora_partida = models.TimeField(null=True)
     fecha_retorno = models.DateField(null=True)
     periodo_comision = models.PositiveSmallIntegerField(null=True)
     lugar_partida = models.CharField(max_length=50, null=True, blank=False)
     lugar_comision = models.TextField(null=True, blank=False)
-    transporte = models.CharField(max_length=90, null=True, blank=False)
+    transporte = models.CharField(max_length=150, null=True, blank=False)
     hospedaje = models.BooleanField(default=False)
-    comentario_jefe_inmediato = models.TextField(null=True)
-    comentario_general = models.TextField(null=True)
+    comentario_jefe_inmediato = models.TextField(null=True, blank=True)
+    comentario_general = models.TextField(null=True, blank=True)
+    phone = models.CharField(max_length=20, null=True, blank=True) #numero de emergencia
+    banco = models.ForeignKey(Banco, on_delete=models.CASCADE, null=True, blank=True)
+    cuenta_bancaria = models.CharField(max_length=25, null=True, blank=True)
+    clabe = models.CharField(max_length=22, null=True, blank=True)
+    comidas_facturas = models.BooleanField(default=True)
     approved_at = models.DateTimeField(null=True)
     #approved_at_time = models.TimeField(null=True)
     approved_at2 = models.DateTimeField(null=True)
@@ -109,6 +115,9 @@ class Viaticos_Factura(models.Model):
     factura_xml = models.FileField(blank=True, null=True, upload_to='xmltb', validators=[FileExtensionValidator(['xml'])])
     uuid = models.CharField(max_length=36, blank=True, null=True, db_index=True, unique = True) #
     fecha_timbrado = models.DateTimeField(null=True,blank=True)
+    autorizada = models.BooleanField(null=True, default=None)
+    autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='autorizado_factura')
+    autorizada_el = models.DateTimeField(null=True)
     #def __str__(self):
     #    return f'Factura de viatico:{self.solicitud_viatico.folio}'
     @property
