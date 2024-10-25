@@ -16,10 +16,14 @@ from django.contrib.auth.models import User
 from user.models import CustomUser, Empresa
 from django.contrib.auth.decorators import login_required
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404
+from django.shortcuts import get_object_or_404, redirect
 from django.http import FileResponse
 from compras.views import generar_pdf
 from rest_framework import status
+from user.decorators import perfil_seleccionado_required
+from api.models import TablaFestivos
+from datetime import datetime
+from django.contrib import messages
 
 # Create your views here.
 @api_view(['GET'])
@@ -178,7 +182,7 @@ def proveedores_api(request):
 
 #url = 'https://vordcab.cloud/apiapp/perfiles/'
 #token = 'defa1b040b2e8acf4d9ab20127e87d820eb913b9'
-@login_required(login_url='user-login')
+@perfil_seleccionado_required
 def obtener_perfiles(request):
     actualizado = False
     empleados_actualizados = []  # Lista para almacenar los usuarios actualizados
@@ -289,3 +293,40 @@ def descargar_pdf_oc(request, pk):
 
     # Devolver el PDF como respuesta
     return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')
+
+@perfil_seleccionado_required
+def tabla_festivos(request):
+    datos = TablaFestivos.objects.all()
+    
+    if request.method == 'POST':
+        url = 'https://vordcab.cloud/apiapp/festivos_actual/'
+        api_key = 'defa1b040b2e8acf4d9ab20127e87d820eb913b9'
+        #url = 'http://127.0.0.1:9000/apiapp/festivos_actual/'
+        #api_key = 'f36cf2df116c3aeab68b9ee948331f382f5edcc0'
+        # Hacer la solicitud a tu API de festivos
+        headers = {
+            'Authorization': f'Token {api_key}',
+        }
+        response = requests.get(url, headers=headers)
+        
+        if response.status_code == 200:
+            # Procesar el JSON de la respuesta
+            data = response.json()
+            
+            # Recorrer la lista de días festivos recibidos
+            for holiday in data:
+                holiday_date_str = holiday.get('dia_festivo')  # Obtener la fecha en formato YYYY-MM-DD
+                if holiday_date_str:
+                    # Crear o actualizar el objeto en la base de datos directamente con el formato YYYY-MM-DD
+                    TablaFestivos.objects.update_or_create(dia_festivo=holiday_date_str)
+            
+            messages.success(request, 'Has actualizado correctamente los días festivos')
+            return redirect('tabla_festivos')
+        else:
+            messages.error(request, 'Ocurrió un error al recibir la respuesta de la API')
+    
+    context = {
+        'datos': datos,
+    }
+
+    return render(request, 'api/tabla_festivos.html', context)

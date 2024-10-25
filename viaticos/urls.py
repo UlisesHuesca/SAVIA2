@@ -18,12 +18,13 @@ urlpatterns = [
     path('viaticos/detalles_viaticos3/<int:pk>', views.detalles_viaticos3, name='detalles-viaticos3'),
     path('viaticos/autorizar_viaticos2/<int:pk>', views.autorizar_viaticos2, name='autorizar-viaticos2'),
     path('viaticos/cancelar_viaticos2/<int:pk>', views.cancelar_viaticos2, name='cancelar-viaticos2'),
-    path('viaticos/viaticos_autorizados_pago/', views.viaticos_autorizados_pago, name='viaticos-autorizados-pago'),
+    path('viaticos/viaticos_autorizados_pago/', views.viaticos_autorizados_pago, name='viaticos-autorizados-pago'), #Vista donde se ve la solicitud de viatico
     path('viaticos/viaticos_pagos/<int:pk>/', views.viaticos_pagos, name='viaticos-pagos'),
-    path('viaticos/matriz_facturas_viaticos/<int:pk>/', views.matriz_facturas_viaticos, name='matriz-facturas-viaticos'),
+    path('viaticos/matriz_facturas_viaticos/<int:pk>/', views.matriz_facturas_viaticos, name='matriz-facturas-viaticos'), #Vista donde se ven las facturas
     path('viaticos/matriz_facturas/<int:pk>', views.facturas_viaticos, name='facturas-viaticos'),
     path('viaticos/factura_viatico_edicion/<int:pk>', views.factura_viatico_edicion, name='factura-viatico-edicion'),
     path('viaticos/render_viatico/<int:pk>', views.render_pdf_viatico, name='render-pdf-viatico'),
     path('viaticos/eliminar_factura_viatico/<int:pk>/', views.eliminar_factura_viatico, name='eliminar-factura-viatico'),
-    path('viaticos/factura_nueva/<int:pk>', views.factura_nueva_viatico, name='factura-nueva-viatico'),
+    path('viaticos/factura_nueva/<int:pk>', views.factura_nueva_viatico, name='factura-nueva-viatico'), #Agregar factura
+
 ]
