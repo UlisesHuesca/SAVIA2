@@ -316,23 +316,24 @@ def autorizar_devolucion(request, pk):
                 producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
                 inv_del_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos )
                 inv_del_producto._change_reason = f'Esta es una devolucion desde un surtimiento de inventario {devolucion.id}'
-                try:
-                    entrada = EntradaArticulo.objects.get(articulo_comprado__producto__producto=producto_surtir, entrada__oc__req__orden=producto_surtir.articulos.orden, agotado = False)
+                #try: Por el momento es un poco confuso lo que se quiere lograr acá, por ello lo voy a comentar, al parecer es un intento de regresar a la entrada ese material pero puede generar más errores que beneficios
+                    # y en realidad lo único requerido es devolver el material al almacén  
+                    #entrada = EntradaArticulo.objects.get(articulo_comprado__producto__producto=producto_surtir, entrada__oc__req__orden=producto_surtir.articulos.orden, agotado = False)
                     
                     # Verificar si la cantidad en la entrada es suficiente
-                    if entrada.cantidad_por_surtir >= producto.cantidad:
-                        print(entrada)
+                    #if entrada.cantidad_por_surtir >= producto.cantidad:
+                    #    print(entrada)
                         # Reducir la cantidad de la entrada según la cantidad de la devolución
-                        entrada.cantidad_por_surtir -= producto.cantidad 
-                        entrada.save()
-                    else:
+                    #    entrada.cantidad_por_surtir -= producto.cantidad 
+                    #   entrada.save()
+                    #else:
                         # Manejar el caso en que no hay suficiente cantidad en la entrada (opcional)
-                        entrada.cantidad_por_surtir = 0
-                        entrada.agotado = True
-                        entrada.save()
-                except EntradaArticulo.DoesNotExist:
+                    #    entrada.cantidad_por_surtir = 0
+                    #    entrada.agotado = True
+                    #    entrada.save()
+                #except EntradaArticulo.DoesNotExist:
                     # Manejar el caso en que no hay una entrada asociada (opcional)
-                    messages.error(request, 'No se encontró una entrada asociada para el producto.')
+                    #messages.error(request, 'No se encontró una entrada asociada para el producto.')
                     
             inv_del_producto.cantidad = inv_del_producto.cantidad + producto.cantidad
             inv_del_producto.save()
