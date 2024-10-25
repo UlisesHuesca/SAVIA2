@@ -151,6 +151,7 @@
                                             <option value="autobus">Autobús</option>
                                             <option value="avion">Avión</option>
                                             <option value="tercero">Vehículo de compañero</option>
+                                            <option value="otros">Otros</option>
                                         </select>
                                         <label for="labeltransporte" id="etiquetaTransporte" class="form-label small">Tipo de transporte*</label>
                                     </div>
@@ -801,9 +802,12 @@ function actualizarEtiqueta() {
     } else if (opcionSeleccionada === 'tercero') {
         etiqueta.textContent = 'Detalles transporte';
         icono.className = 'fa-sharp fa-solid fa-people-arrows'; // Icono de terceros
+    } else if (opcionSeleccionada === 'otros') {
+        etiqueta.textContent = 'Detalles';
+        icono.className = 'fa-solid fa-democrat'; // Icono de otros
     } else {
         etiqueta.textContent = 'Seleccione primero el tipo de transporte*'; // Opción por defecto
-        icono.className = 'fa-solid fa-car'; // Icono por defecto
+        icono.className = 'fa-solid fa-car'; // Icono por defecto <i class="fa-solid fa-democrat"></i>
     }
 }
 </script>
