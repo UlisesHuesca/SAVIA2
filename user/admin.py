@@ -17,9 +17,9 @@ class CustomUserAdmin(admin.ModelAdmin):
 class DistritoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre')
 
-class UserAdmin(admin.ModelAdmin):
-    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active')
-    search_fields = ('first_name','email')
+#class UserAdmin(admin.ModelAdmin):
+#    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active')
+#    search_fields = ('first_name','email')
 
 # Register your models here.
 
@@ -38,7 +38,7 @@ admin.site.register(Almacen)
 admin.site.register(Empresa)
 
 # Desregistra el modelo User original y registra el nuevo con la personalización
-admin.site.unregister(User)
-admin.site.register(User, UserAdmin)
+#admin.site.unregister(User)
+#admin.site.register(User, UserAdmin)
 
 
