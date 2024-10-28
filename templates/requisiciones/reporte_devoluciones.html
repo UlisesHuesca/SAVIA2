@@ -1,0 +1,198 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Devoluciones{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row my-4">
+        <div class="card">
+           <div class="card-header">
+            <h5>Solicitudes Devoluciones</h5>
+            </div>
+        <div class="card-body">
+            
+            <form method="GET" class="row g-7">
+                {% csrf_token %}
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.solicitud|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                            <label style="color: #121212;" for="id_staff">Solicitado por</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-helmet-safety"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.almacenista|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                            <label style="color: #121212;" for="id_proyecto">Almacenista</label>
+                        </div>
+                    </div>
+                </div>
+                
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.inicio type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                        </div>
+                    </div>
+                </div>
+                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.fin type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-auto">
+                <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+            </div>
+            </form>
+            <hr>
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>
+                </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Folio solicitud</th>
+                    <th class="d-none d-lg-table-cell">Solicito</th>
+                    <th class="d-none d-lg-table-cell">Almacenista</th>
+                    <th class="d-none d-lg-table-cell">Proyecto</th>
+                    <th class="d-none d-lg-table-cell">Subproyecto</th>
+                    <th>Fecha devolución</th>
+                    <th>Productos</th>
+                    <th scope="col">Tipo</th>
+                    <th scope="col">Autorizada</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for orden in ordenes_list %}
+                <tr>
+                    <th scope="row">{{orden.solicitud.folio}}</th>
+                    <td>{{orden.solicitud.staff.staff.staff.first_name}} {{orden.solicitud.staff.staff.staff.last_name}}</td>
+                    <th scope="row">{{orden.almacenista.staff.staff.first_name}} {{orden.almacenista.staff.staff.last_name}}</th>
+                    <td>{{orden.solicitud.proyecto.nombre}}</td>
+                    <td>{{orden.solicitud.subproyecto.nombre}}</td>
+                    <td>{{orden.fecha}} {{orden.hora}}</td>
+                    <td>
+                        <!-- Botón para abrir el modal -->
+                        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productosModal{{ orden.id }}">
+                            Productos
+                        </button>
+
+                        <!-- Modal de productos -->
+                        <div class="modal fade" id="productosModal{{ orden.id }}" tabindex="-1" aria-labelledby="productosModalLabel{{ orden.id }}" aria-hidden="true">
+                            <div class="modal-dialog modal-lg">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="productosModalLabel{{ orden.id }}">Productos de la Solicitud {{ orden.solicitud.folio }}</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <ul>
+                                            {% for producto in orden.solicitud.productos.all %}
+                                                <li>{{ producto.producto.producto.nombre}} Cantidad: {{ producto.cantidad }}</li>
+                                            {% empty %}
+                                                <li>No hay productos para esta solicitud.</li>
+                                            {% endfor %}
+                                        </ul>
+                                    </div>
+                                    <div class="modal-footer">
+                                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{orden.tipo.nombre}}</td>
+                    <td>{{orden.autorizada}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if ordenes_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in ordenes_list.paginator.page_range %}
+                    {% if ordenes_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if ordenes_list.paginator.num_pages > ordenes_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if ordenes_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!-- Modal para mostrar los productos -->
+<div class="modal fade" id="productosModal" tabindex="-1" role="dialog" aria-labelledby="productosModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg" role="document">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="productosModalLabel">Productos de la Orden</h5>
+                <button type="button" class="close" data-dismiss="modal" aria-label="Cerrar">
+                    <span aria-hidden="true">&times;</span>
+                </button>
+            </div>
+            <div class="modal-body">
+                <ul id="productosList" class="list-group">
+                    <!-- Aquí se insertarán los productos -->
+                </ul>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- JavaScript para cargar productos en el modal -->
+{% endblock %}
+</body>
+</html>

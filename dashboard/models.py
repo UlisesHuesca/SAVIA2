@@ -278,7 +278,7 @@ class Activo(models.Model):
 
 class Order(models.Model):
     folio = models.IntegerField(null=True)
-    last_folio_number = models.IntegerField(null=True)
+    last_folio_number = models.IntegerField(null=True, blank = True)
     staff = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Crea')
     proyecto = models.ForeignKey(Proyecto, on_delete = models.CASCADE, null=True)
     subproyecto = models.ForeignKey(Subproyecto, on_delete = models.CASCADE, null=True)
