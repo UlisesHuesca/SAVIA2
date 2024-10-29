@@ -1,0 +1,106 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Mi Gasto Anual{% endblock %}
+</head>
+<body>
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="col-12">
+    <div class="card">
+        <div class="card-header">
+            <!-- Formulario solo para el botón de Excel -->
+            <form method="POST" class="d-inline">
+                {% csrf_token %}
+                <ul class="nav nav-pills d-flex justify-content-center">
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel">
+                            <i class="fa-solid fa-file-excel fa-2xl"></i>
+                        </button>
+                    </li></form>
+                <!-- Botones Gastos y Viáticos fuera del formulario -->
+                    <li class="nav-item mx-2">
+                        <button type="button" class="btn btn-primary">Gastos</button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a href="{% url 'mis_comprobaciones_viaticos' %}" class="btn btn-outline-secondary">Viaticos</a>
+                    </li>
+                </ul>
+        </div>
+    </div>
+</div>
+
+<div class="card  mt-2">
+    <div class="card-header">
+        <h5>Mis Gastos {{ año_actual }}</h5>
+    </div>
+        <div class="d-flex justify-content-center mt-2">
+            <p class="mx-3"><strong>Total Monto Gastos:</strong> ${{ total_monto_gastos|floatformat:2 }}</p>
+            <p class="mx-3"><strong>Total de Facturas:</strong> ${{ total_todas_facturas|floatformat:2 }}</p>
+        </div>
+            <table class="table bg-white">
+                <thead class="text-black" style="background-color: #F5F5F5;">
+                    <tr>
+                        <th scope="col">Gasto</th>
+                        <th class="d-none d-lg-table-cell">Solicitado</th>
+                        <th scope="col">Importe</th>
+                        <th scope="col">Monto XML</th>
+                        <th scope="col">Facturas</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for gasto in gastos %}
+                    <tr>
+                        <th>{{gasto.folio}}</th>
+                        <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
+                        <td>${{gasto.get_total_solicitud}}</td>
+                        <td>${{gasto.suma_total_facturas|floatformat:2}}</td>
+                        <td>
+                            {% if gasto.facturas.exists %}
+                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
+                            {% else %}
+                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>

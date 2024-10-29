@@ -102,7 +102,11 @@
                     <th scope="row">{{orden.almacenista.staff.staff.first_name}} {{orden.almacenista.staff.staff.last_name}}</th>
                     <td>{{orden.solicitud.proyecto.nombre}}</td>
                     <td>{{orden.solicitud.subproyecto.nombre}}</td>
-                    <td>{{orden.fecha}} {{orden.hora}}</td>
+                    {% if orden.fecha %}
+                        <td>{{ orden.fecha }} {{ orden.hora }}</td>
+                    {% else %}
+                        <td>Sin fecha</td>
+                    {% endif %}
                     <td>
                         <!-- Botón para abrir el modal -->
                         <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#productosModal{{ orden.id }}">
@@ -134,7 +138,13 @@
                         </div>
                     </td>
                     <td>{{orden.tipo.nombre}}</td>
-                    <td>{{orden.autorizada}}</td>
+                    {% if orden.autorizada == True %}
+                        <td>Autorizada</td>
+                    {% elif orden.autorizada == False %}
+                        <td>No Autorizada</td>
+                    {% else %} 
+                        <td>Pendiente</td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
