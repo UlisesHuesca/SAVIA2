@@ -1,7 +1,106 @@
 {% load static %}
 <head>
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
+    <style>
+    .head {
+    width:99px;
+    height:100px;
+    background: white;
+    position:relative;
+    border-radius:50%;
+    animation: float 1.5s ease-in-out alternate infinite;
+    }
+
+    @keyframes float {
+    to {transform: translateY(20px);}
+    }
+
+    .head::after {
+    content: 'O';
+    height:20px;
+    width:20px;
+    background:black;
+    position:absolute;
+    text-align:center;
+    font-family:sans-serif;
+    color:orange;
+    left:20px;
+    top:40px;
+    border-radius:50%;
+    z-index:1000;
     
+    }
+
+    .head::before {
+    content: 'O';
+    height:20px;
+    width:20px;
+    background:black;
+    position:absolute;
+    text-align:center;
+    font-family:sans-serif;
+    color:orange;
+    left:60px;
+    top:40px;
+    border-radius:50%;
+    z-index:1000;
+    }
+
+    .left {
+    width:33px;
+    height:85px;
+    background:white;
+    position:absolute;
+    bottom:-39px;
+    border-radius: 0% 25% 50% 40%;
+    }
+    .middle {
+    width:33px;
+    height:65px;
+    background:white;
+    position:absolute;
+    bottom:-39px;
+    left:33px;
+    border-radius: 0% 25% 50% 50%;
+    }
+    .right {
+    width:33px;
+    height:85px;
+    background:white;
+    position:absolute;
+    bottom:-39px;
+    left:66px;
+    border-radius: 0% 0% 40% 50%;
+    }
+    .mouth {
+    position:absolute;
+    height:15px;
+    width:10px;
+    background:black;
+    left:46px;
+    top:70%;
+    border-radius:50%;
+    }
+
+    .boo {
+    position:absolute;
+    width:fit-content;
+    left:110%;
+    top:70%;
+    border-radius:50%;
+    color:white;
+    font-family:system-ui;
+    }
+
+    .ghost-container {
+        position: absolute;
+        right: 40px; /* Ajusta la posición desde la derecha */
+        top: -30px; /* Levanta el fantasma hacia arriba para que sobresalga sin agrandar la navbar */
+        transform: scale(0.5); /* Escala el fantasma al tamaño deseado */
+    }
+    </style>
+    
+     
     <!--FotAwesome CDN-->
     <!--<script src="https://kit.fontawesome.com/259463dc50.js" crossorigin="anonymous"></script>-->
     <!--<script src="https://kit.fontawesome.com/b6755a6261.js" crossorigin="anonymous"></script>-->
@@ -24,10 +123,22 @@
                 </li>
             </ul>
             <ul class="nav justify-content-end">
+                <li class="nav-item">
                     <form id="logout-form" method="post" action="{% url 'user-logout' %}">
                         {% csrf_token %}
                         <button class="btn btn-secondary" type="submit">Logout</button>
                     </form>
+                </li>
+                <li class="nav-item ghost-container">
+                    <div class="ghost-background">
+                    <div class="head ";>
+                        <div class="left"></div>
+                        <div class="middle"></div>
+                        <div class="right"></div>
+                        <div class="mouth"></div>
+                        <div class="boo">Boo</div>
+                    </div>
+                    </div>
                 </li>
                 <li class="nav-item">
                 <div>
@@ -49,7 +160,7 @@
                     </div>
                 </div>
                 </li>
-            </ul>
+        </ul>
             {% if request.session.selected_profile_id %} 
             <button class="navbar-toggler" type="button" data-bs-toggle="offcanvas" data-bs-target="#offcanvasNavbar" aria-controls="offcanvasNavbar">
                     <span class="navbar-toggler-icon"></span>
