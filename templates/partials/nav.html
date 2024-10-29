@@ -110,10 +110,10 @@
                     <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'mis-gastos' %}">Mis Gastos</a>
                         <a class="dropdown-item" href="{% url 'mis-viaticos' %}">Mis Viáticos</a>
-                        <a class="dropdown-item" href="{% url 'mis_comprobaciones_gasto' %}">Comprobación Gastos | Viáticos</a>
+                        <a class="dropdown-item" href="{% url 'mis_comprobaciones_gasto' %}">Resumen Gastos | Viáticos</a>
                         <a class="dropdown-item" href="{% url 'entrada-servicios' %}">
                             Servicios pendientes
-                            {% if conteo_entradas > 0 %}
+                            {% if conteo_servicios > 0 %}
                             <span class="badge bg-danger">({{conteo_servicios}})</span>
                              {% endif %}
                         </a>
@@ -258,7 +258,7 @@
                     <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'compras-por-pagar' %}">
                             Compras por pagar
-                            {% if conteo_pagos > 0 %}
+                            {% if conteo_pagos2 > 0 %}
                                 <span class="badge bg-danger">({{conteo_pagos2}})</span>
                             {% endif %}
                         </a>

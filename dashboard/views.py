@@ -1060,18 +1060,22 @@ def precio_referencia(request, pk):
 #def product_update_modal(request, pk):
 
     item = Product.objects.get(id=pk)
-
+    error_messages = {}
     if request.method =='POST':
         form = PrecioRef_Form(request.POST, request.FILES or None, instance=item, )
         if form.is_valid():
             form.save()
             messages.success(request,f'Has actualizado correctamente el precio de referencia del producto {item.nombre}')
             return redirect('dashboard-product')
+        else:
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
     else:
         form = PrecioRef_Form(instance=item)
 
 
     context = {
+        'error_messages': error_messages,
         'form': form,
         'item':item,
         }
