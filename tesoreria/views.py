@@ -4,7 +4,7 @@ from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
-from django.db.models import Sum, Q
+from django.db.models import Count, Q, Case, When, Value, CharField
 from django.db.models.functions import Concat
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -33,7 +33,6 @@ import qrcode
 import tempfile
 from PIL import Image
 from django.utils import timezone
-
 
 import re
 
@@ -1279,6 +1278,235 @@ def mis_viaticos(request):
 
     return render(request, 'tesoreria/mis_viaticos.html',context)
 
+@perfil_seleccionado_required
+def mis_comprobaciones_gasto(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    año_actual = datetime.now().year
+    gastos = Solicitud_Gasto.objects.filter(Q(staff = usuario) |Q(colaborador = usuario),autorizar2=True, created_at__year=año_actual, complete=True).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
+                ).order_by('-folio')
+
+    #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
+    #viaticos = myfilter.qs
+
+    #p = Paginator(pagos, 25)
+    #page = request.GET.get('page')
+    #pagos_list = p.get_page(page)
+    total_todas_facturas = decimal.Decimal(0)
+    total_monto_gastos = decimal.Decimal(0)
+    for gasto in gastos:
+        gasto.suma_total_facturas = sum(decimal.Decimal(factura.emisor['total']) for factura in gasto.facturas.all() if factura.archivo_xml and factura.hecho and factura.emisor is not None)
+        # Agrega la suma del gasto actual al total general
+        total_todas_facturas += gasto.suma_total_facturas
+        total_monto_gastos += gasto.get_total_solicitud
+    if request.method =='POST' and 'btnExcel' in request.POST:
+        return convert_comprobacion_gastos_to_xls2(gastos, año_actual,total_todas_facturas,total_monto_gastos)
+    context= {
+        'gastos':gastos,
+        'total_todas_facturas':total_todas_facturas,
+        'total_monto_gastos':total_monto_gastos,
+        'año_actual':str(año_actual),
+        #'myfilter':myfilter,
+        }
+
+    return render(request, 'tesoreria/mis_comprobaciones_gasto.html',context)
+
+@perfil_seleccionado_required
+def mis_comprobaciones_viaticos(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    año_actual = datetime.now().year
+    viaticos = Solicitud_Viatico.objects.filter(Q(staff = usuario) |Q(colaborador = usuario),autorizar2=True, created_at__year=año_actual, complete=True).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+                ).order_by('-folio')
+
+    #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
+    #viaticos = myfilter.qs
+
+    #p = Paginator(pagos, 25)
+    #page = request.GET.get('page')
+    #pagos_list = p.get_page(page)
+    
+    #for viatico in viaticos_list:
+    total_todas_facturas = decimal.Decimal(0)
+    total_monto_viaticos = decimal.Decimal(0)
+    for viatico in viaticos:
+        viatico.suma_total_facturas = sum(decimal.Decimal(factura.emisor['total']) for factura in viatico.facturas.all() if factura.factura_xml and factura.hecho and factura.autorizada and factura.emisor is not None)
+            # Agrega la suma del gasto actual al total general
+        total_todas_facturas += viatico.suma_total_facturas
+        total_monto_viaticos += viatico.get_total
+
+    if request.method =='POST' and 'btnExcel' in request.POST:
+        return convert_comprobacion_viaticos_to_xls2(viaticos, año_actual,total_todas_facturas,total_monto_viaticos)
+    context= {
+        'viaticos':viaticos,
+        'total_todas_facturas':total_todas_facturas,
+        'total_monto_viaticos':total_monto_viaticos,
+        'año_actual':str(año_actual),
+        #'myfilter':myfilter,
+        }
+
+    return render(request, 'tesoreria/mis_comprobaciones_viaticos.html',context)
+
+
+def convert_comprobacion_gastos_to_xls2(entradas, año_actual, total_todas_facturas, total_monto_gastos):
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Mis_gastos_" + str(año_actual))
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    #columns = ['Folio Solicitud', 'Solicitante', 'Almacenista','Proyecto', 'Subproyecto', 'Fecha creación','Productos','Tipo','Autorizada','Fecha autorización','Comentario']
+    columns = ['Folio Gasto', 'Solicitante', 'Importe','Monto XML',]
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.0 Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.write(2, columna_max - 1, 'Monto total de facturas:', messages_style)
+    worksheet.write(2, columna_max, total_todas_facturas, messages_style)
+    worksheet.write(3, columna_max - 1, 'Monto total de importe: ', messages_style)
+    worksheet.write(3, columna_max, total_monto_gastos, messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    row_num = 0
+    for gasto in entradas:
+        row_num += 1
+        # Crear la lista de productos con nombre y cantidad
+        #productos_lista = [
+        #    f"{producto['producto__producto__nombre']} (Cantidad: {producto['cantidad']})"
+        #    for producto in dev.solicitud.productos.values('producto__producto__nombre', 'cantidad')
+        #]
+        # Unir la lista en una cadena
+        #productos_str = ", ".join(productos_lista)
+
+        row = [
+            gasto.folio,
+            f"{gasto.staff.staff.staff.first_name} {gasto.staff.staff.staff.last_name}",
+            gasto.get_total_solicitud,
+            gasto.suma_total_facturas,
+        ]
+        
+        for col_num, cell_value in enumerate(row):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+      
+        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Mis_gastos_{str(año_actual) +' ' +str(dt.date.today())}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response
+
+def convert_comprobacion_viaticos_to_xls2(entradas, año_actual, total_todas_facturas, total_monto_viaticos):
+    # Crea un objeto BytesIO para guardar el archivo Excel
+    output = BytesIO()
+
+    # Crea un libro de trabajo y añade una hoja
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Mis_viaticos_" + str(año_actual))
+
+     
+    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    # Define los estilos
+    head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    money_style = workbook.add_format({'num_format': '$ #,##0.00', 'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
+    messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
+
+    #columns = ['Folio Solicitud', 'Solicitante', 'Almacenista','Proyecto', 'Subproyecto', 'Fecha creación','Productos','Tipo','Autorizada','Fecha autorización','Comentario']
+    columns = ['Folio Viatico', 'Solicitante', 'Importe','Monto XML',]
+
+    columna_max = len(columns)+2
+
+    worksheet.write(0, columna_max - 1, 'Reporte Creado Automáticamente por SAVIA 2.0 Vordcab. UH', messages_style)
+    worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
+    worksheet.write(2, columna_max - 1, 'Monto total de facturas:', messages_style)
+    worksheet.write(2, columna_max, total_todas_facturas, messages_style)
+    worksheet.write(3, columna_max - 1, 'Monto total de importe: ', messages_style)
+    worksheet.write(3, columna_max, total_monto_viaticos, messages_style)
+    worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
+
+    for i, column in enumerate(columns):
+        worksheet.write(0, i, column, head_style)
+        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+
+    row_num = 0
+    for viatico in entradas:
+        row_num += 1
+        # Crear la lista de productos con nombre y cantidad
+        #productos_lista = [
+        #    f"{producto['producto__producto__nombre']} (Cantidad: {producto['cantidad']})"
+        #    for producto in dev.solicitud.productos.values('producto__producto__nombre', 'cantidad')
+        #]
+        # Unir la lista en una cadena
+        #productos_str = ", ".join(productos_lista)
+
+        row = [
+            viatico.folio,
+            f"{viatico.staff.staff.staff.first_name} {viatico.staff.staff.staff.last_name}",
+            viatico.get_total,
+            viatico.suma_total_facturas,
+        ]
+        
+        for col_num, cell_value in enumerate(row):
+        # Define el formato por defecto
+            cell_format = body_style
+
+            # Finalmente, escribe la celda con el valor y el formato correspondiente
+            worksheet.write(row_num, col_num, cell_value, cell_format)
+
+      
+        #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
+    
+   
+    workbook.close()
+
+    # Construye la respuesta
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(), 
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+        )
+    response['Content-Disposition'] = f'attachment; filename=Mis_viaticos_{str(año_actual) +' ' +str(dt.date.today())}.xlsx'
+      # Establecer una cookie para indicar que la descarga ha iniciado
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
+    return response
 
 def convert_excel_matriz_compras_autorizadas(compras):
     response= HttpResponse(content_type = "application/ms-excel")

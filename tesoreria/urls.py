@@ -9,6 +9,10 @@ urlpatterns = [
     path('tesoreria/compras_autorizadas', views.compras_autorizadas, name='compras-autorizadas'),
     path('tesoreria/compras_autorizadas/pagos/<int:pk>/', views.compras_pagos, name='compras-pagos'),
     path('tesoreria/matriz_pagos/', views.matriz_pagos, name='matriz-pagos'),
+
+    path('mis_comprobaciones_gasto/', views.mis_comprobaciones_gasto, name='mis_comprobaciones_gasto'),
+    path('mis_comprobaciones_viatico/', views.mis_comprobaciones_viaticos, name='mis_comprobaciones_viaticos'),
+
     path('tesoreria/control_cuentas/', views.control_cuentas, name ='control-cuentas'),
     path('tesoreria/control_bancos/<int:pk>', views.control_bancos, name='control-bancos'),
     path('tesoreria/transferencia_cuentas/', views.transferencia_cuentas, name='transferencia-cuentas'),
