@@ -169,12 +169,10 @@
                         </a>
                     </td>
                     <td>
-                        {% if gasto.autorizar2 == True %}
-                            {% if gasto.facturas.exists %}
-                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
-                            {% else %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
-                            {% endif %}
+                        {% if gasto.facturas.exists %}
+                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
+                        {% else %}
+                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
                         {% endif %}
                     </td>
                     <td>

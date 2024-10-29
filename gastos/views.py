@@ -245,7 +245,7 @@ def crear_gasto(request):
                 if facturas_registradas:
                     messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
                 if facturas_duplicadas:
-                    messages.error(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
+                    messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
 
             else:
                 messages.error(request,'No se pudo subir tu documento')
@@ -453,7 +453,7 @@ def factura_nueva_gasto(request, pk):
                 if facturas_registradas:
                     messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
                 if facturas_duplicadas:
-                    messages.error(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
+                    messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
 
             else:
                 messages.error(request,'No se pudo subir tu documento')

@@ -458,8 +458,19 @@ def oc_modal(request, pk):
     
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False, sel_comp = False)
     compras = Compra.objects.all()
+
+    #Traigo el folio de la ultima compra con el folio más grande, no importa este complete o no  
+    last_oc = compras.filter(req__orden__distrito = req.orden.distrito).order_by('-folio').first()
+    new_folio = last_oc.folio + 1
+    #Hago un get or create para traer el ultimo dato a llenar y si este es un create entonces se le asigna el nuevo valor para el folio 
+    oc, created = compras.get_or_create(complete = False, req = req, creada_por = usuario, regresar_oc = False, defaults={'folio': new_folio})
+    # Esta lógica es para aquellos que ya se crearon pero no tienen folio, se les asigna el nuevo folio
+    if not oc.folio:
+        oc.folio = new_folio
+        oc.save()
+    folio_preview = oc.folio
+    
     comparativos = Comparativo.objects.filter(creada_por__distritos = usuario.distritos, completo =True)
-    oc, created = compras.get_or_create(complete = False, req = req, creada_por = usuario, regresar_oc = False)
     productos_comp = ArticuloComprado.objects.filter(oc=oc)
     form = CompraForm(instance=oc)
     form_product = ArticuloCompradoForm()
@@ -473,13 +484,14 @@ def oc_modal(request, pk):
         total = 0
         dif_cant = 0
 
-        last_oc = compras.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
-        if last_oc:
-            folio = last_oc.folio + 1
-        else:
-            folio = 1
+        #last_oc = compras.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
+        #if last_oc:
+        #    folio = last_oc.folio + 1
+        #else:
+        #    folio = 1
+        #folio_preview = folio
+            
         #abrev = req.orden.distrito.abreviado
-        folio_preview = folio
         error_messages = {}
 
         productos_para_select2 = [
@@ -544,14 +556,14 @@ def oc_modal(request, pk):
                     oc.costo_iva = decimal.Decimal(costo_iva)
                     oc.costo_oc = decimal.Decimal(costo_oc + costo_iva)
 
-                last_oc = Compra.objects.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
-                if last_oc:
-                    folio = last_oc.folio + 1
-                else:
-                    folio = 1
+                #last_oc = Compra.objects.filter(complete = True, req__orden__distrito = req.orden.distrito).order_by('-folio').first()
+                #if last_oc:
+                #    folio = last_oc.folio + 1
+                #else:
+                #    folio = 1
                 oc = form.save(commit = False)
                 oc.complete = True
-                oc.folio = folio
+                #oc.folio = folio ############
                 oc.created_at = date.today()
                 #form.save()
                 oc.save()
@@ -2714,10 +2726,8 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(8, columna_max - 1, "OC Entregadas/Pagadas/Productos", head_style)
     worksheet.write(9, columna_max - 1, "OC Pagadas/Productos", head_style)
     worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
-    try:
-        indicador = num_requis_atendidas/num_approved_requis
-    except ZeroDivisionError:
-        indicador = 0
+    
+    indicador = num_requis_atendidas/num_approved_requis
     letra_columna = xl_col_to_name(columna_max)
     formula = f"={letra_columna}9/{letra_columna}10"
     # Escribir datos y fórmulas

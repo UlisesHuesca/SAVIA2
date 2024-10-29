@@ -11,6 +11,7 @@ urlpatterns = [
     path('devolucion_material/<int:pk>/', views.devolucion_material, name='devolucion-material'),
     path('devolucion_salida/<int:pk>/', views.devolucion_material_salida, name='devolucion-material-salida'),
     path('devolucion/matriz_autorizar', views.matriz_autorizar_devolucion, name='matriz-autorizar-devolucion'),
+    path('matriz/devolucion_ordenes', views.reporte_devoluciones, name='devolucion_ordenes'),
     path('devolucion/autorizar/<int:pk>/', views.autorizar_devolucion, name='autorizar-devolucion'),
     path('devolucion/cancelar/<int:pk>/', views.cancelar_devolucion, name='cancelar-devolucion'),
     path('update_requi/', views.update_requisicion, name='update-requi'),

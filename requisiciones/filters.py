@@ -97,20 +97,25 @@ class EntradasFilter(django_filters.FilterSet):
         return queryset.filter(Q(articulo_comprado__producto__articulos__orden__staff__staff__first_name__icontains = value) | Q(articulo_comprado__producto__articulos__orden__staff__staff__last_name__icontains=value))
 
 class DevolucionFilter(django_filters.FilterSet):
-    solicitud = CharFilter(field_name='solicitud__nombre', lookup_expr='icontains')
-    almacenista = CharFilter(method ='my_custom_filter', label="Search")
+    solicitud = CharFilter(method='solicitante_custom_filter', lookup_expr='icontains')
+    almacenista = CharFilter(method='almacenista_custom_filter', lookup_expr='icontains')
     start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at',lookup_expr='lte')
+    inicio = DateFilter(field_name = 'fecha', lookup_expr='gte')
+    fin =  DateFilter(field_name='fecha',lookup_expr='lte')
     #fecha = DateFilter(field_name='created_at',lookup_expr='lte')
     #hora = models.TimeField(null=True)
 
     class Meta:
         model = Devolucion
-        fields = ['solicitud','almacenista','start_date','end_date',]
+        fields = ['solicitud','almacenista','start_date','end_date','fecha']
 
-    def my_custom_filter(self, queryset, name, value):
-        return queryset.filter(Q(solictud__staff__staff__first_name__icontains = value) | Q(solicitud__staff__staff__last_name__icontains=value))
+    def solicitante_custom_filter(self, queryset, name, value):
+        return queryset.filter(Q(solicitud__staff__staff__staff__first_name__icontains = value) | Q(solicitud__staff__staff__staff__last_name__icontains=value))
 
+    def almacenista_custom_filter(self, queryset, name, value):
+        return queryset.filter(Q(almacenista__staff__staff__first_name__icontains = value) | Q(almacenista__staff__staff__last_name__icontains=value))
+    
 
 class HistoricalSalidasFilter(django_filters.FilterSet):
     history_id = CharFilter(field_name='history_id', lookup_expr='icontains')

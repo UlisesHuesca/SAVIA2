@@ -74,6 +74,10 @@
                         <th scope="col">{{viatico.fecha_partida}}</th>
                     </tr>
                     <tr>
+                        <th scope="col"><i class="fa-solid fa-clock"></i> Hora de Partida:</th>
+                        <th scope="col">{{viatico.hora_partida}}</th>
+                    </tr>
+                    <tr>
                         <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Retorno:</th>
                         <th scope="col">{{viatico.fecha_retorno}}</th>
                     </tr>
@@ -98,9 +102,37 @@
                         {% endif %}
                     </tr>
                     <tr>
+                        <th scope="col"><i class="fa-solid fa-bowl-food"></i> Comidas c/Factura:</th>
+                        {% if viatico.comidas_facturas %}
+                        <th scope="col">Sí</th>
+                        {% else %}
+                        <th>No</th>
+                        {% endif %}
+                    </tr>
+                    <tr>
                         <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
                         <th scope="col">{{viatico.comentario_general}}</th>
                     </tr>
+                    {% if viatico.phone %}
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-mobile-screen"></i> Telefono de emergencia</th>
+                        <th scope="col">{{viatico.phone}}</th>
+                    </tr>
+                    {% endif %}
+                    {% if viatico.banco %}
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-building-columns"></i> Banco cuenta de emergencia</th>
+                        <th scope="col">{{viatico.banco}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-money-check"></i> Cuenta bancaria de emergencia</th>
+                        <th scope="col">{{viatico.cuenta_bancaria}}</th>
+                    </tr>
+                    <tr>
+                        <th scope="col"><i class="fa-solid fa-money-check"></i> Clave interbancaria</th>
+                        <th scope="col">{{viatico.clabe}}</th>
+                    </tr>
+                    {% endif %}
                     </tbody> 
                 </table>
                 <form method="post">
