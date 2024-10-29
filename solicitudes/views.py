@@ -353,7 +353,7 @@ def checkout(request):
                         if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                             ordensurtir.requisitar = True
                             ordensurtir.cantidad_requisitar = producto.cantidad
-                            #order.requisitar = True
+                            ordensurtir.procesado = True
                             print(producto.producto.producto.servicio)
                             if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                                 requi, created = Requis.objects.get_or_create(complete = True, orden = order)
