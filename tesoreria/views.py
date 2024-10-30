@@ -1423,7 +1423,8 @@ def convert_comprobacion_gastos_to_xls2(entradas, año_actual, total_todas_factu
         output.read(), 
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-    #response['Content-Disposition'] = f'attachment; filename=Mis_gastos_{str(año_actual) +' ' +str(dt.date.today())}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=Mis_gastos_{año_actual} {dt.date.today()}.xlsx'
+
       # Establecer una cookie para indicar que la descarga ha iniciado
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
@@ -1502,7 +1503,7 @@ def convert_comprobacion_viaticos_to_xls2(entradas, año_actual, total_todas_fac
         output.read(), 
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-    #response['Content-Disposition'] = f'attachment; filename=Mis_viaticos_{str(año_actual) +' ' +str(dt.date.today())}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=Mis_viaticos_{año_actual} {dt.date.today()}.xlsx'
       # Establecer una cookie para indicar que la descarga ha iniciado
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
