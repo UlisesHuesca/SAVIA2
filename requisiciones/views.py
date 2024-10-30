@@ -2078,7 +2078,7 @@ def convert_excel_matriz_requis(requis):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Requisición', 'Solicitud', 'Proyecto', 'Subproyecto', 'Area', 'Solicitante', 'Creado','Autorización',   'Status']
+    columns = ['Requisición', 'Solicitud', 'Distrito', 'Proyecto', 'Subproyecto', 'Area', 'Solicitante', 'Creado','Autorización',   'Status']
 
     columna_max = len(columns)+2
 
@@ -2144,6 +2144,7 @@ def convert_excel_matriz_requis(requis):
         row = [
             req.folio,
             req.orden.folio,
+            req.orden.distrito.nombre,
             req.orden.proyecto.nombre if req.orden.proyecto else '',
             req.orden.subproyecto.nombre if req.orden.subproyecto else '',
             req.orden.operacion.nombre if req.orden.operacion else '',
