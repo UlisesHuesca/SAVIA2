@@ -711,16 +711,30 @@
         </div>
     </div>
 </div>
-    <script>
-        const offcanvas = document.getElementById('offcanvasNavbar');
-        const halloweenContent = document.getElementById('halloween-content');
+<script>
+    const offcanvas = document.getElementById('offcanvasNavbar');
+    const halloweenContent = document.getElementById('halloween-content');
 
-        // Escuchar eventos de apertura y cierre del offcanvas
-        offcanvas.addEventListener('show.bs.offcanvas', () => {
-            halloweenContent.style.display = 'block'; // Muestra el contenido de Halloween
-        });
+    // Función para verificar si es una pantalla de teléfono
+    function isMobileScreen() {
+        return window.innerWidth <= 768; 
+    }
 
-        offcanvas.addEventListener('hide.bs.offcanvas', () => {
-            halloweenContent.style.display = 'none'; // Oculta el contenido de Halloween
-        });
-    </script>
+    // Escuchar eventos de apertura y cierre del offcanvas
+    offcanvas.addEventListener('show.bs.offcanvas', () => {
+        if (!isMobileScreen()) {
+            halloweenContent.style.display = 'block'; // Muestra el contenido de Halloween solo en pantallas grandes
+        }
+    });
+
+    offcanvas.addEventListener('hide.bs.offcanvas', () => {
+        halloweenContent.style.display = 'none'; // Oculta el contenido de Halloween
+    });
+
+    // Escuchar cambios de tamaño de pantalla para ocultar el contenido si cambia a pantalla de teléfono
+    window.addEventListener('resize', () => {
+        if (isMobileScreen()) {
+            halloweenContent.style.display = 'none'; // Oculta el contenido si cambia a pantalla de teléfono
+        }
+    });
+</script>
