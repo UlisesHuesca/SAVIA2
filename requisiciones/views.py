@@ -2293,7 +2293,7 @@ def convert_entradas_to_xls2(entradas):
             entrada.entrada.oc.req.orden.folio,
             entrada.entrada.oc.folio,
             entrada.entrada.oc.req.folio,
-            entrada.created_at.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
+            entrada.created_at.date(),#.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
             f"{entrada.entrada.oc.req.orden.staff.staff.staff.first_name} {entrada.entrada.oc.req.orden.staff.staff.staff.last_name}",
             entrada.entrada.oc.proveedor.nombre.razon_social,
             entrada.entrada.oc.req.orden.proyecto.nombre,
@@ -2327,7 +2327,7 @@ def convert_entradas_to_xls2(entradas):
 
     # Aplicar estilos a las celdas de datos
     date_style = Style(
-        format=Format('yyyy-mm-dd'),
+        format=Format('dd/mm/yyyy'),
         alignment=Alignment(horizontal='left')
     )
     number_style = Style(
@@ -2598,7 +2598,7 @@ def generate_excel_report2(salidas):
         rows = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
-            salida.created_at.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
+            salida.created_at.date(),#.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
             solicitante,
             salida.vale_salida.solicitud.proyecto.nombre if salida.vale_salida.solicitud.proyecto else " ",
             salida.vale_salida.solicitud.subproyecto.nombre if salida.vale_salida.solicitud.subproyecto else " ",
@@ -2628,7 +2628,7 @@ def generate_excel_report2(salidas):
 
     # Aplicar estilos a las celdas de datos
     date_style = Style(
-        format=Format('yyyy-mm-dd'),
+        format=Format('dd/mm/yyyy'),
         alignment=Alignment(horizontal='left')
     )
     money_style = Style(
