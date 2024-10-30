@@ -39,10 +39,11 @@ class SolicitudesFilter(django_filters.FilterSet):
     start_date = DateFilter(field_name ='created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at', lookup_expr='lte')
     producto = CharFilter(method='producto_filter', label="Producto")
+    distrito = CharFilter(field_name='distrito__nombre', lookup_expr='icontains') #Solo para admin
 
     class Meta:
         model = Order
-        fields = ['staff','folio','proyecto','start_date','end_date','activo']
+        fields = ['staff','folio','proyecto','start_date','end_date','activo','distrito']
 
     def my_filter(self, queryset, name, value):
         return queryset.filter(Q(staff__staff__staff__first_name__icontains = value) | Q(staff__staff__staff__last_name__icontains = value))

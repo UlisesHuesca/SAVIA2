@@ -1725,7 +1725,7 @@ def convert_excel_solicitud_matriz(ordenes):
     row_num = 6
     
 
-    columns = ['Folio','Solicitante','Proyecto','Subproyecto','Operación','Creado']
+    columns = ['Folio','Solicitante','Distrito','Proyecto','Subproyecto','Operación','Creado']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1736,7 +1736,7 @@ def convert_excel_solicitud_matriz(ordenes):
     columna_max = len(columns)+2
 
     
-    rows = ordenes.values_list('folio',Concat('staff__staff__staff__first_name',Value(' '),'staff__staff__staff__last_name'),'proyecto__nombre','subproyecto__nombre',
+    rows = ordenes.values_list('folio',Concat('staff__staff__staff__first_name',Value(' '),'staff__staff__staff__last_name'),'distrito__nombre','proyecto__nombre','subproyecto__nombre',
                                 'operacion__nombre','created_at')
 
     for row in rows:
@@ -1744,10 +1744,10 @@ def convert_excel_solicitud_matriz(ordenes):
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             cell_value = row[col_num]
-            if col_num == 5 and isinstance(cell_value, datetime):
+            if col_num == 6 and isinstance(cell_value, datetime):
                 cell_value = cell_value.replace(tzinfo=None)  # Remover información de zona horaria
             (ws.cell(row = row_num, column = col_num+1, value=str(cell_value))).style = body_style
-            if col_num == 5:
+            if col_num == 6:
                 (ws.cell(row = row_num, column = col_num+1, value=cell_value)).style = date_style
     sheet = wb['Sheet']
     wb.remove(sheet)

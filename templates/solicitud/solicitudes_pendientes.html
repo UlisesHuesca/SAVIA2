@@ -86,6 +86,17 @@
                         </div>
                     </div>
                 </div>
+                {% if usuario.tipo.nombre == "Admin" %}
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                            <label style="color: #121212;" for="id_proyecto">Distrito</label>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
                 <div class="col-auto">
                 <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
