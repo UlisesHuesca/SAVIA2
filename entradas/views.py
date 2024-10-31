@@ -259,11 +259,11 @@ def articulos_entrada(request, pk):
                         producto.cantidad_requisitar -= cantidad_a_surtir 
                         inv_de_producto.cantidad -= cantidad_a_surtir
                         inv_de_producto.cantidad_entradas -= cantidad_a_surtir
-                        
+                        producto.surtir = True
                         # Actualizamos el estado del producto si ya no requiere más surtido
                         if producto.cantidad_requisitar == 0:
                             producto.requisitar = False
-                            producto.surtir = True
+                           
                         
                         producto_surtir.save()
                         producto.save()
