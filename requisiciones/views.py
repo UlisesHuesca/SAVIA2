@@ -1021,14 +1021,38 @@ def requisicion_autorizar(request, pk):
             <head>
                 <meta charset="UTF-8">
             </head>
-            <body>
-                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                <p>Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},</p>
-                <p>Estás recibiendo este correo porque tu sol: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,</p>
-                <p>por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.</p>
-                <p>El siguiente paso del sistema: Generación de OC</p>
-                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+            <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                    <tr>
+                        <td align="center">
+                            <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                <tr>
+                                    <td align="center">
+                                        <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="font-size: 18px; text-align: justify;">
+                                            <p>Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},</p>
+                                        </p>
+                                        <p style="font-size: 16px; text-align: justify;">
+                                            Estás recibiendo este correo porque tu sol: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada, por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.</p>
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        <p>El siguiente paso del sistema: Generación de OC</p>
+                                    </p>
+                                        <p style="text-align: center; margin: 20px 0;">
+                                            <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                        </p>
+                                        <p style="font-size: 14px; color: #999; text-align: justify;">
+                                            Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
             </body>
         </html>
         """
