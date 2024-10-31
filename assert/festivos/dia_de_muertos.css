@@ -1,0 +1,167 @@
+#halloween-content {
+  position: fixed; /* Para que esté sobre otros elementos y no recorra la vista */
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: rgba(0, 0, 0, 0.7); /* Fondo semi-transparente para enfocar la vista */
+  z-index: 20; /* Mayor que el contenido subyacente */
+}
+
+.altar-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transform: scale(0.8); /* Escala ajustable */
+  margin: 20px; /* Márgenes ajustables */
+  z-index: 9999; /* Índice ajustable */
+  position: relative;
+}
+
+.altar {
+  height: 315px;
+  width: 250px;
+  margin: auto;
+  position: relative;
+}
+
+.altar .foto {
+  background: tomato;
+  width: 330px;
+  height: 400px;
+  position: absolute;
+  top: 25px;
+  left: 50%;
+  margin-left: -172px;
+  background-size: cover;
+  border: 7px solid #55453D;
+  outline: 25px solid #7A6255;
+  overflow: hidden;
+  z-index: 1;
+}
+
+.altar .light {
+  background: rgba(255, 255, 255, 0.3);
+  height: 330px;
+  width: 330px;
+  clip-path: polygon(0 75%, 0 100%, 100% 25%, 100% 0);
+  animation: reflection 10s infinite;
+  position: absolute;
+}
+
+@keyframes reflection {
+  0% { top: -400px; }
+  15% { top: 400px; }
+  100% { top: 400px; }
+}
+
+.altar .mesa {
+  clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+  height: 100px;
+  width: 500px;
+  background: #EA6D56;
+  top: 425px;
+  position: absolute;
+}
+
+.altar .delantal {
+  width: 100px;
+  height: 100px;
+  background: #e76148;
+  position: absolute;
+  top: 525px;
+  border-radius: 0 0 50px 50px;
+}
+
+.altar .del1 { left: 0; }
+.altar .del2 { left: 100px; }
+.altar .del3 { left: 200px; }
+.altar .del4 { left: 300px; }
+.altar .del5 { left: 400px; }
+
+.flawas {
+  height: 170px;
+  width: 500px;
+  position: absolute;
+  z-index: 2;
+  top: 400px;
+}
+
+.skull {
+  background-size: cover;
+  position: absolute;
+  height: 150px;
+  width: 150px;
+  left: 50%;
+  margin-left: -75px;
+  top: -35px;
+}
+
+.flaw {
+  background-size: cover;
+  position: absolute;
+}
+
+.flaw1 { height: 70px; width: 70px; top: 20px; left: 25px; }
+.flaw2 { height: 85px; width: 85px; top: 50px; left: 65px; }
+.flaw3 { height: 55px; width: 55px; top: 65px; left: 30px; }
+.flaw4 { height: 80px; width: 80px; top: 25px; left: 120px; }
+
+.letterto {
+  background: #eee;
+  height: 80px;
+  width: 140px;
+  position: absolute;
+  right: 20px;
+  top: 20px;
+}
+
+.letterto .triangu {
+  background: #ddd;
+  width: 140px;
+  height: 50px;
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  top: 0;
+  position: absolute;
+  transition: all 0.5s ease-in-out;
+}
+
+.letterto .triangu2 {
+  background: #cfcfcf;
+  width: 140px;
+  height: 50px;
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  top: 0;
+  position: absolute;
+  transition: all 0.5s ease-in-out;
+}
+
+.letterto:hover .triangu {
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  top: -50px;
+  transition: all 0.5s ease-in-out;
+}
+
+.letterto .triangu2 .paper {
+  background: #fff;
+  height: 50px;
+  width: 100px;
+  margin-left: 20px;
+  margin-top: 10px;
+}
+
+#cyala-sign {
+  font-size: 6px;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  margin: 0;
+  font-family: arial;
+  margin-top: 10px;
+}
+
+#cyala-sign a {
+  text-decoration: none !important;
+}

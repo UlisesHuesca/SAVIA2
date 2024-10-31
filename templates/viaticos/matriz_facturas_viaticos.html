@@ -204,35 +204,45 @@
                 <td></td>
                 <th>Total Hospedaje</th>
                 <td scope="col" id="hospedaje"></td>
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                 <td scope="col" id="hospedaje-autorizadas"></td>
+                {% endif %}
             </tr>
             <tr>
                 <td></td>
                 <td></td>
                 <th>Total Gasolina</th>
                 <td scope="col" id="gasolina"></td>
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                 <td scope="col" id="gasolina-autorizadas"></td>
+                {% endif %}
             </tr>
             <tr>
                 <td></td>
                 <td></td>
                 <th>Total Alimentos</th>
                 <td scope="col" id="alimentos"></td>
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                 <td scope="col" id="alimentos-autorizadas"></td>
+                {% endif %}
             </tr>
             <tr>
                 <td></td>
                 <td></td>
                 <th>Total Peajes</th>
                 <td scope="col" id="peaje"></td>
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                 <td scope="col" id="peaje-autorizadas"></td>
+                {% endif %}
             </tr>
             <tr>
                 <td></td>
                 <td></td>
                 <th>Total Otros</th>
                 <td scope="col" id="otros"></td>
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                 <td scope="col" id="otros-autorizadas"></td>
+                {% endif %}
             </tr>
             <tr>
                 <td></td>

@@ -929,7 +929,7 @@ def matriz_facturas_viaticos(request, pk):
     fecha_limite = calcular_fecha_limite(viatico.fecha_retorno, 10, festivos) #Se define en 10 díash habiles por intrucción del contador Heriberto 23/10/24
 
     #print('Fecha limite retorno:', viatico.fecha_retorno)
-    #print('Fecha limite para ingresar factura:', fecha_limite)
+    print('Fecha limite para ingresar factura:', fecha_limite)
     #print('Fecha actual:', date.today())
     fuera_de_tiempo = date.today() > fecha_limite
     #print(fuera_de_tiempo)

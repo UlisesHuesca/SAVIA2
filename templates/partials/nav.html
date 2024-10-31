@@ -2,7 +2,8 @@
 <head>
     <!-- Vincular CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'festivos/halloween.css' %}">
+    <link rel="stylesheet" type="text/css" href="{% static 'festivos/dia_de_muertos.css' %}">   
+
     <!--FotAwesome CDN-->
     <!--<script src="https://kit.fontawesome.com/259463dc50.js" crossorigin="anonymous"></script>-->
     <!--<script src="https://kit.fontawesome.com/b6755a6261.js" crossorigin="anonymous"></script>-->
@@ -31,15 +32,38 @@
                         <button class="btn btn-secondary" type="submit">Logout</button>
                     </form>
                 </li>
-                <li class="nav-item ghost-container">
-                    <div class="ghost-background">
-                    <div class="head ";>
-                        <div class="left"></div>
-                        <div class="middle"></div>
-                        <div class="right"></div>
-                        <div class="mouth"></div>
-                        <div class="boo">Boo</div>
-                    </div>
+                <li class="nav-item">
+                    <div class="mascara"> 
+                        <div class="skull" title="">
+                            <div class="decor">☙</div>
+                            <div class="decor">❧</div>
+                            <div class="eyes">
+                                <div class="eye">
+                                    <div class="symbol">✸</div>
+                                </div>
+                                <div class="eye">
+                                    <div class="symbol">✸</div>
+                                </div>
+                            </div>
+                            <div class="nose"></div>
+                            <div class="mustache">
+                                <span>∼ </span><span>∽</span>
+                            </div>
+                            <div class="teeth">
+                                <div class="top">
+                                    <div class="tooth"></div>
+                                    <div class="tooth"></div>
+                                    <div class="tooth"></div>
+                                    <div class="tooth"></div>
+                                </div>
+                                <div class="bottom">
+                                    <div class="tooth"></div>
+                                    <div class="tooth"></div>
+                                    <div class="tooth"></div>
+                                    <div class="tooth"></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </li>
                 <li class="nav-item">
@@ -548,94 +572,55 @@
         </div>
 </nav>
 
-<div class="halloween-container">
-    <div id="main-content" style="margin-top: 56px;">
-        <div id="halloween-content" style="display: none;"> <!-- Oculta por defecto -->
-            <!-- Contenido de Halloween -->
-            <div class="wrap">
-                <i class="star-a"></i>
-                <i class="star-b"></i>
-                <i class="star-c"></i>
-                <i class="star-d"></i>
-                <i class="star-e"></i>
-                <i class="star-f"></i>
-                <i class="star-g"></i>
-                <div class="tree">
-                    <i class="dtl-a"></i>
-                    <i class="dtl-b"></i>
-                    <i class="dtl-c"></i>
-                    <i class="dtl-d"></i>
-                    <i class="dtl-e"></i>
-                    <i class="dtl-f"></i>
-                    <i class="dtl-g"></i>
-                    <i class="dtl-h"></i>
-                    <i class="dtl-i"></i>
-                    <i class="dtl-j"><i class="dtl-1"></i><i class="dtl-2"></i></i>
-                    <i class="dtl-k"></i>
-                    <i class="dtl-l"></i>
-                    <i class="dtl-m"><i class="dtl-1"></i><i class="dtl-2"></i></i>
-                    <i class="dtl-n"><i class="dtl-1"></i></i>
-                    <i class="dtl-o"><i class="dtl-1"></i></i>
+<div class="altar-container">
+    <div id="main-content">
+        <div id="altar-content" style="display: none;"> <!-- Oculta por defecto -->
+            <div class="altar">
+                  <div class="texto">Feliz Día de Muertos</div>
+                {% if usuario.staff.imageURL %}
+                    <div class="foto" style="background-image: url('{{ usuario.staff.imageURL }}');"></div>
+                {% else %}
+                    <div class="foto"></div>
+                {% endif %}
+                <div class="light"></div>
+
+                <div class="mesa"></div>
+                <div class="delantal del1"></div>
+                <div class="delantal del2"></div>
+                <div class="delantal del3"></div>
+                <div class="delantal del4"></div>
+                <div class="delantal del5"></div>
+
+                <div class="flawas">
+                    <div class="letterto">
+                        <div class="triangu2">
+                            <div class="paper">
+                                <div class="card"></div>
+                            </div>
+                        </div>
+                        <div class="triangu"></div>
+                    </div>
+                    <div class="skulll" style="background-image:url('{% static 'festivos/muertos1.png' %}');"></div>
+                    <div class="flaw flaw1" style="background-image:url('{% static 'festivos/muertos2.png' %}');"></div>
+                    <div class="flaw flaw2" style="background-image:url('{% static 'festivos/muertos3.png' %}');"></div>
+                    <div class="flaw flaw3" style="background-image:url('{% static 'festivos/muertos4.png' %}');"></div>
+                    <div class="flaw flaw4" style="background-image:url('{% static 'festivos/muertos5.png' %}');"></div>
                 </div>
-                <div class="bottom"></div>
-                <div class="text">
-                    <i>H</i><i>a</i><i>p</i><i>p</i><i>y</i><i></i>
-                    <i>H</i><i>a</i><i>l</i><i>l</i><i>o</i><i>w</i><i>e</i><i>e</i><i>n</i>
-                </div>
-                <div class="ghost"><i class="ghom"></i><i class="ghot"></i><i class="ghod"></i></div>
-                <div class="pumpkin pa"><i class="face"></i><i class="mouth"><i class="teeth"></i><i class="detail"></i></i></div>
-                <div class="pumpkin pb"><i class="face"></i><i class="mouth"><i class="teeth"></i><i class="detail"></i></i></div>
-                <div class="pumpkin pc"><i class="face"></i><i class="mouth"><i class="teeth"></i><i class="detail"></i></i></div>
-                <div class="pumpkin pd"><i class="face"></i><i class="mouth"><i class="teeth"></i><i class="detail"></i></i></div>
-                <div class="pillar">
-                    <i class="pila"></i>
-                    <i class="pilb"></i>
-                    <i class="pilc"></i>
-                    <i class="pild"></i>
-                    <i class="pils-a"></i>
-                    <i class="pils-b"></i>
-                    <i class="pils-c"></i>
-                    <i class="spider">
-                        <i class="leg-a"></i>
-                        <i class="leg-b"></i>
-                        <i class="leg-c"></i>
-                    </i>
-                </div>
-                <div class="stone sa"><i class="mrk"><i></i><i></i></i><i class="stoa"></i><i class="stob"></i><i class="stoc"></i></div>
-                <div class="stone sb"><i class="txt"></i><i class="stoa"></i><i class="stob"></i><i class="stoc"></i><i class="stod"></i></div>
-                <div class="owl"><i class="head"></i></div>
-                <div class="bone ba"><i class="bl"></i><i class="br"></i></div>
-                <div class="bone bb"><i class="bl"></i><i class="br"></i></div>
-                <div class="bone bc"><i class="bl"></i><i class="br"></i></div>
-                <div class="skull"><i class="eye el"></i><i class="eye er"></i><i class="nose"></i><i class="teeth"></i><i class="crack"></i></div>
             </div>
         </div>
     </div>
 </div>
+
 <script>
     const offcanvas = document.getElementById('offcanvasNavbar');
-    const halloweenContent = document.getElementById('halloween-content');
-
-    // Función para verificar si es una pantalla de teléfono
-    function isMobileScreen() {
-        return window.innerWidth <= 768; 
-    }
+    const halloweenContent = document.getElementById('altar-content');
 
     // Escuchar eventos de apertura y cierre del offcanvas
     offcanvas.addEventListener('show.bs.offcanvas', () => {
-        if (!isMobileScreen()) {
-            halloweenContent.style.display = 'block'; // Muestra el contenido de Halloween solo en pantallas grandes
-        }
+        halloweenContent.style.display = 'block'; // Muestra el contenido de Halloween
     });
 
     offcanvas.addEventListener('hide.bs.offcanvas', () => {
         halloweenContent.style.display = 'none'; // Oculta el contenido de Halloween
-    });
-
-    // Escuchar cambios de tamaño de pantalla para ocultar el contenido si cambia a pantalla de teléfono
-    window.addEventListener('resize', () => {
-        if (isMobileScreen()) {
-            halloweenContent.style.display = 'none'; // Oculta el contenido si cambia a pantalla de teléfono
-        }
     });
 </script>

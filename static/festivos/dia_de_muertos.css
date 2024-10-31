@@ -1,71 +1,229 @@
-@charset "UTF-8";
-.skull-container html {
-  font-size: 10px;
-  box-sizing: border-box;
-  position: relative;
+.altar {
+  height: 315px; /* 630px / 2 */
+  width: 250px;  /* 500px / 2 */
+  margin: auto;
+  position: absolute; /* Cambiado a absolute para centrarlo en la hoja */
+  top: 50%; /* Centrado verticalmente */
+  left: 50%; /* Centrado horizontalmente */
+  transform: translate(-50%, -50%); /* Ajusta el posicionamiento */
+  z-index: 9999; /* Asegura que esté por encima de otros elementos */
 }
 
-.skull-container *, .skull-container *:before, .skull-container *:after {
-  position: relative;
-  box-sizing: inherit;
-}
-
-.skull-container html, .skull-container body {
-  height: 100%;
-  width: 100%;
-  background-color: ghostwhite;
-}
-
-.skull-container body {
-  font-size: 1.618rem;
-}
-
-.title {
+.altar .foto {
+  background: tomato;
+  width: 165px;  /* 330px / 2 */
+  height: 200px; /* 400px / 2 */
   position: absolute;
-  font-family: "Rancho", sans-serif;
-  text-align: center;
-  top: 22%;
-  left: 0;
-  right: 0;
-  font-size: 4rem;
-  color: #333;
-  transform: translateY(-22%);
+  top: 12.5px;   /* 25px / 2 */
+  left: 50%;
+  margin-left: -86px; /* -172px / 2 */
+  background-size: cover;
+  border: 3.5px solid #55453d; /* 7px / 2 */
+  outline: 12.5px solid #7a6255; /* 25px / 2 */
+  overflow: hidden;
+  z-index: 1;
 }
-.title span {
-  font-family: "Open Sans", sans-serif;
-  display: block;
-  font-size: 1.4rem;
-  color: #555;
-}
-.title .fine-print {
+
+/*
+.altar .light {
+  background: rgba(255, 255, 255, 0.3);
+  height: 200px;
+  width: 200px;
+  clip-path: polygon(20% 75%, 20% 100%, 100% 25%, 100% 0);
+  animation: reflection 10s infinite;
   position: absolute;
+  z-index: 2;
+}
+
+@keyframes reflection {
+  0% {
+    top: -210px;
+  }
+  15% {
+    top: 210px;
+  }
+  100% {
+    top: 210px;
+  }
+}
+*/
+.altar .texto {
+  position: absolute;
+  top: -75px; /* Mueve el texto más arriba */
+  left: 50%; /* Centra horizontalmente */
+  transform: translateX(-50%); /* Ajusta el centrado */
+  font-size: 18px; /* Ajusta el tamaño de fuente según tu preferencia */
+  color: white; /* Cambia el color según el fondo */
+  background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente para mayor legibilidad */
+  padding: 5px 10px; /* Espaciado alrededor del texto */
+  border-radius: 5px; /* Esquinas redondeadas */
+  z-index: 3; /* Asegura que esté por encima de otros elementos */
+  text-align: center; /* Centra el texto */
+  font-style: italic; /* Cambia a cursiva */
+  font-family: 'Georgia', serif; /* Cambia la fuente a una más estilizada */
+}
+
+.altar .mesa {
+  clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
+  height: 52px;  /* 100px / 2 */
+  width: 250px;   /* 500px / 2 */
+  background: #ea6d56;
+  top: 212.5px;  /* 425px / 2 */
+  position: absolute;
+  z-index: 2;
+
+}
+
+.altar .delantal {
+  width: 50px;  /* 100px / 2 */
+  height: 50px; /* 100px / 2 */
+  background: #e76148;
+  position: absolute;
+  top: 262.5px; /* 525px / 2 */
+  border-radius: 0 0 25px 25px; /* 50px / 2 */
+}
+
+.altar .del1 {
   left: 0;
-  right: 0;
-  top: 40rem;
+}
+.altar .del2 {
+  left: 50px;  /* 100px / 2 */
+}
+.altar .del3 {
+  left: 100px; /* 200px / 2 */
+}
+.altar .del4 {
+  left: 150px; /* 300px / 2 */
+}
+.altar .del5 {
+  left: 200px; /* 400px / 2 */
+}
+
+.flawas {
+  height: 85px; /* 170px / 2 */
+  width: 250px;  /* 500px / 2 */
+  position: absolute;
+  z-index: 2;
+  top: 200px;    /* 400px / 2 */
+}
+
+.skulll {
+  background-size: cover;
+  position: absolute;
+  height: 75px;  /* 150px / 2 */
+  width: 75px;   /* 150px / 2 */
+  left: 50%;
+  margin-left: -37.5px; /* -75px / 2 */
+  top: -17.5px; /* -35px / 2 */
+}
+
+.flaw {
+  background-size: cover;
+  position: absolute;
+}
+
+.flaw1 {
+  height: 35px;  /* 70px / 2 */
+  width: 35px;   /* 70px / 2 */
+  top: 10px;     /* 20px / 2 */
+  left: 12.5px;  /* 25px / 2 */
+}
+.flaw2 {
+  height: 42.5px; /* 85px / 2 */
+  width: 42.5px;  /* 85px / 2 */
+  top: 25px;      /* 50px / 2 */
+  left: 32.5px;   /* 65px / 2 */
+}
+.flaw3 {
+  height: 27.5px; /* 55px / 2 */
+  width: 27.5px;  /* 55px / 2 */
+  top: 32.5px;    /* 65px / 2 */
+  left: 15px;     /* 30px / 2 */
+}
+.flaw4 {
+  height: 40px;   /* 80px / 2 */
+  width: 40px;    /* 80px / 2 */
+  top: 12.5px;    /* 25px / 2 */
+  left: 60px;     /* 120px / 2 */
+}
+
+.letterto {
+  background: #eee;
+  height: 40px;  /* 80px / 2 */
+  width: 70px;   /* 140px / 2 */
+  position: absolute;
+  right: 10px;   /* 20px / 2 */
+  top: 10px;     /* 20px / 2 */
+}
+
+.letterto .triangu {
+  background: #ddd;
+  width: 70px;   /* 140px / 2 */
+  height: 25px;  /* 50px / 2 */
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  top: 0;
+  position: absolute;
+  transition: all 0.5s ease-in-out;
+}
+
+.letterto .triangu2 {
+  background: #cfcfcf;
+  width: 70px;   /* 140px / 2 */
+  height: 25px;  /* 50px / 2 */
+  clip-path: polygon(0 0, 50% 100%, 100% 0);
+  top: 0;
+  position: absolute;
+  transition: all 0.5s ease-in-out;
+}
+
+.letterto:hover .triangu {
+  clip-path: polygon(0 100%, 50% 0, 100% 100%);
+  top: -25px; /* -50px / 2 */
+  transition: all 0.5s ease-in-out;
+}
+
+.letterto .triangu2 .paper {
+  background: #fff;
+  height: 25px;  /* 50px / 2 */
+  width: 50px;   /* 100px / 2 */
+  margin-left: 10px; /* 20px / 2 */
+  margin-top: 5px;   /* 10px / 2 */
+}
+
+/* Mascara */
+.mascara {
+  position: absolute;
+  width: 5rem;  /* 25rem original * 0.2 para el 20% */
+  height: 5rem; /* 25rem original * 0.2 para el 20% */
+  margin: 0 auto; /* Centra el contenedor */
+  transform: scale(0.2); /* Escala al 20% */
+  transform-origin: right; /* Escala desde el centro */
 }
 
 .skull {
-  position: absolute;
-  top: 50%;
-  left: 0;
-  right: 0;
-  transform: translateY(-50%);
-  width: 25rem;
-  height: 25rem;
-  margin: 0 auto;
+  position: absolute; /* Mantiene la posición absoluta */
+  top: 50%;          /* Centra verticalmente */
+  left: 50%;         /* Centra horizontalmente */
+  transform: translate(-50%, -50%); /* Centra el elemento */
+  z-index: 10;      /* Asegúrate de que el z-index sea alto para que quede por encima */
+  width: 25rem;     /* Mantiene el tamaño original */
+  height: 25rem;    /* Mantiene el tamaño original */
   overflow: hidden;
   border-radius: 50%;
   background-color: #e74c3c;
-  box-shadow: 0 0.25rem 0 0.25rem rgba(0, 0, 0, 0.15), inset 0 0.5rem 0 0rem rgba(0, 0, 0, 0.1), inset -0.5rem 0rem 0 0rem rgba(0, 0, 0, 0.1), inset 0.5rem 0rem 0 0rem rgba(0, 0, 0, 0.1);
+  box-shadow: 0 0.25rem 0 0.25rem rgba(0, 0, 0, 0.15), inset 0 0.5rem 0 0rem rgba(0, 0, 0, 0.1);
   cursor: pointer;
   transition: transform 0.28s ease-in-out;
 }
+
 .skull:hover {
   transform: translateY(-50%) rotateZ(-180deg);
 }
+
 .skull:active {
   transform: translateY(-50%) rotateZ(-180deg) rotateY(-180deg);
 }
+
 .skull:before {
   content: "";
   position: absolute;
@@ -76,33 +234,52 @@
   background-color: rgba(0, 0, 0, 0.15);
   z-index: 1;
 }
+
 .skull:after {
-  content: "❤";
+  content: "💛";
   position: absolute;
-  top: -0.75rem;
+  top: -2.3rem;
   left: 0;
   right: 0;
   font-size: 10rem;
   color: #f1c40f;
   text-align: center;
-  text-stroke: 3px #3498db;
+  text-shadow: 
+  -3px -3px 0 #3498db,
+  3px -3px 0 #3498db,
+  -3px 3px 0 #3498db,
+  3px 3px 0 #3498db;
 }
+
 .skull .decor {
   position: absolute;
   display: block;
   font-size: 20rem;
   z-index: 10;
 }
+
 .skull .decor:nth-child(1) {
-  left: -8rem;
+  left: -9rem;
+  top: -4rem;
   color: #3498db;
-  text-stroke: 2px #f1c40f;
+  text-shadow: 
+  -3px -3px 0 #f1c40f,
+  3px -3px 0 #f1c40f,
+  -3px 3px 0 #f1c40f,
+  3px 3px 0 #f1c40f;
 }
+
 .skull .decor:nth-child(2) {
-  right: -7.25rem;
+  right: -8.25rem;
+  top: -4rem;
   color: #f1c40f;
-  text-stroke: 2px #3498db;
+  text-shadow: 
+  -3px -3px 0 #3498db,
+  3px -3px 0 #3498db,
+  -3px 3px 0 #3498db,
+  3px 3px 0 #3498db;
 }
+
 .skull .eyes {
   position: absolute;
   top: 38%;
@@ -111,6 +288,7 @@
   right: 0;
   z-index: 100;
 }
+
 .skull .eye {
   position: absolute;
   width: 3.75rem;
@@ -120,28 +298,42 @@
   overflow: hidden;
   box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.1);
 }
+
 .skull .eye:first-child {
   left: 25%;
   transform: translateY(-40%) rotate(15deg);
 }
+
 .skull .eye:last-child {
   right: 25%;
   transform: translateY(-40%) rotate(-15deg);
 }
+
 .skull .eye:last-child .symbol {
   color: #3498db;
-  text-stroke: 2px #f1c40f;
+  top: -0.4rem;
+  text-shadow: 
+  -3px -3px 0 #f1c40f,
+  3px -3px 0 #f1c40f,
+  -3px 3px 0 #f1c40f,
+  3px 3px 0 #f1c40f;
 }
+
 .skull .eye .symbol {
   position: absolute;
-  top: 0.45rem;
+  top: -0.4rem;
   left: 0;
   right: 0;
   text-align: center;
   font-size: 3.8rem;
   color: #f1c40f;
-  text-stroke: 2px #3498db;
+  text-shadow: 
+  -3px -3px 0 #3498db,
+  3px -3px 0 #3498db,
+  -3px 3px 0 #3498db,
+  3px 3px 0 #3498db;
 }
+
 .skull .nose,
 .skull .nose:before,
 .skull .nose:after {
@@ -152,11 +344,13 @@
   border-top-right-radius: 60%;
   z-index: 10;
 }
+
 .skull .nose:before,
 .skull .nose:after {
   content: "";
   position: absolute;
 }
+
 .skull .nose {
   position: absolute;
   left: 0;
@@ -165,12 +359,15 @@
   margin: 0 auto;
   transform: rotate(-60deg) skewX(-30deg) scale(1, 0.866);
 }
+
 .skull .nose:before {
   transform: rotate(-135deg) skewX(-45deg) scale(1.414, 0.707) translate(0, -50%);
 }
+
 .skull .nose:after {
   transform: rotate(135deg) skewY(-45deg) scale(0.707, 1.414) translate(50%);
 }
+
 .skull .mustache {
   position: absolute;
   bottom: 2.5rem;
@@ -181,12 +378,15 @@
   z-index: 100;
   text-align: center;
 }
+
 .skull .mustache span:first-child {
   color: #f1c40f;
 }
+
 .skull .mustache span:last-child {
   color: #3498db;
 }
+
 .skull .teeth {
   position: absolute;
   width: 100%;
@@ -194,7 +394,9 @@
   bottom: 0rem;
   background-color: #2b2b2b;
 }
-.skull .teeth:before, .skull .teeth:after {
+
+.skull .teeth:before,
+.skull .teeth:after {
   content: "⬢";
   position: absolute;
   top: -6.5rem;
@@ -202,36 +404,43 @@
   color: #2b2b2b;
   z-index: -1;
 }
+
 .skull .teeth:before {
   left: -9.75rem;
 }
+
 .skull .teeth:after {
   right: -9.75rem;
 }
+
 .skull .teeth .top,
 .skull .teeth .bottom {
   width: 50%;
   height: 3rem;
   margin: 0 auto;
 }
+
 .skull .teeth .top {
   top: 0rem;
 }
+
 .skull .teeth .top .tooth {
   border-radius: 0 0 50% 50%;
   box-shadow: inset 0 -3px 0 0 rgba(0, 0, 0, 0.18);
 }
+
 .skull .teeth .bottom {
   top: 1rem;
 }
+
 .skull .teeth .bottom .tooth {
   border-radius: 50%;
   box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.18);
 }
+
 .skull .teeth .tooth {
   width: 25%;
   height: 100%;
   display: inline-block;
   background-color: #e74c3c;
 }
-
