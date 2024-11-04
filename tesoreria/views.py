@@ -1513,7 +1513,7 @@ def convert_comprobacion_gastos_to_xls2(entradas, año_actual, total_todas_factu
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
     #columns = ['Folio Solicitud', 'Solicitante', 'Almacenista','Proyecto', 'Subproyecto', 'Fecha creación','Productos','Tipo','Autorizada','Fecha autorización','Comentario']
-    columns = ['Folio Gasto', 'Solicitante', 'Importe','Monto XML',]
+    columns = ['Folio Gasto','Comentario', 'Solicitante', 'Importe','Monto XML',]
 
     columna_max = len(columns)+2
 
@@ -1542,6 +1542,7 @@ def convert_comprobacion_gastos_to_xls2(entradas, año_actual, total_todas_factu
 
         row = [
             gasto.folio,
+            gasto.comentario,
             f"{gasto.staff.staff.staff.first_name} {gasto.staff.staff.staff.last_name}",
             gasto.get_total_solicitud,
             gasto.suma_total_facturas,
@@ -1593,7 +1594,7 @@ def convert_comprobacion_viaticos_to_xls2(entradas, año_actual, total_todas_fac
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
     #columns = ['Folio Solicitud', 'Solicitante', 'Almacenista','Proyecto', 'Subproyecto', 'Fecha creación','Productos','Tipo','Autorizada','Fecha autorización','Comentario']
-    columns = ['Folio Viatico', 'Solicitante', 'Importe','Monto XML',]
+    columns = ['Folio Viatico','Motivo', 'Solicitante', 'Importe','Monto XML',]
 
     columna_max = len(columns)+2
 
@@ -1622,6 +1623,7 @@ def convert_comprobacion_viaticos_to_xls2(entradas, año_actual, total_todas_fac
 
         row = [
             viatico.folio,
+            viatico.motivo,
             f"{viatico.staff.staff.staff.first_name} {viatico.staff.staff.staff.last_name}",
             viatico.get_total,
             viatico.suma_total_facturas,
