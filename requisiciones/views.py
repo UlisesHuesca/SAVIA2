@@ -13,6 +13,7 @@ from django.utils import timezone
 from celery.result import AsyncResult
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
+
 from io import BytesIO
 
 import os
@@ -1786,6 +1787,7 @@ def render_salida_pdf(request, pk):
     productos_data = []
     high = 670
     data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad''']) #,'''P.Unitario''', '''Importe'''
+
     for producto in productos:
         producto_nombre = Paragraph(producto.producto.articulos.producto.producto.nombre, styles["BodyText"])
         data.append([producto.producto.articulos.producto.producto.codigo, producto_nombre, producto.cantidad, producto.producto.articulos.producto.producto.unidad])
@@ -1803,39 +1805,72 @@ def render_salida_pdf(request, pk):
         }
         productos_data.append(producto_info)
     
-    
-    # Generar el código QR
-    qr = qrcode.QRCode(
-        #version=1,
-        error_correction=qrcode.constants.ERROR_CORRECT_L,
-        box_size=10,
-        border=4,
-    )
-    folio = str(vale.folio)
-    fecha = vale.created_at.strftime("%d/%m/%Y")
-    qr_info = {
-        'folio': folio,
-        'fecha': fecha,
-        'productos': productos_data
-    }
-    qr_data = json.dumps(qr_info)
+    # Variables de paginación
+    width, height = letter
+    high = 680  # Posición inicial en la primera página
+    rows_per_page_first = 21
+    rows_per_page_subsequent = 24
+    row_height = 18  # Altura por fila en puntos
 
-    TAMAÑO_UMBRAL = 40
-    if len(qr_data) < TAMAÑO_UMBRAL:
-        qr.add_data(qr_data)
-        qr.make(fit=True)
+    remaining_data = data[1:]  # Excluir encabezado para procesamiento
 
-        # Generar la imagen del QR y guardarla
-        qr_image = qr.make_image(fill_color="black", back_color="white")
-        qr_image_path = '/tmp/temp_qr.png'
-        qr_image.save(qr_image_path)
-        c.drawInlineImage(qr_image_path, 500, 440, 100, 100)  # Reemplaza x, y, width, height con tus valores
-
+    # Dibujar primera página
+    c.setFillColor(black)
+    c.setFont('Helvetica', 8)
+    current_page_data = [data[0]] + remaining_data[:rows_per_page_first]
+    remaining_data = remaining_data[rows_per_page_first:]
+    table = Table(current_page_data, colWidths=[2.0 * cm, 12 * cm, 3.0 * cm, 3.0 * cm])
+    table.setStyle(TableStyle([
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), white),
+        ('FONTSIZE', (0, 0), (-1, 0), 10),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 6)
+    ]))
+    table.wrapOn(c, width, height)
+    table.drawOn(c, 20, high - row_height * len(current_page_data))  # Ajuste de posición de acuerdo a la altura de filas
 
     c.setFillColor(black)
     c.setFont('Helvetica',8)
-    proyecto_y = 485 if high > 500 else high - 30
+    proyecto_y = 285 if high > 500 else high - 30
+    proyecto_y -= 60
+    # Generar el código QR
+    qr = qrcode.QRCode(
+        error_correction=qrcode.constants.ERROR_CORRECT_Q,  # Aumenta el nivel de corrección
+        box_size=10,
+        border=6,  # Aumentar el borde
+    )
 
+    folio = str(vale.folio)
+    fecha = vale.created_at.strftime("%d/%m/%Y")
+
+    # Limitar productos_data a 5 elementos
+    if len(productos_data) > 5:
+        productos_data = productos_data[:5] + [{"nombre": "etc..."}]  # Tomar solo los primeros 5 y añadir "etc."
+
+    # Crear una lista de nombres de productos
+    productos_string = ', '.join(producto['nombre'] for producto in productos_data)  # Asegúrate de que 'nombre' es la clave correcta
+
+    # Crear el string QR
+    qr_info = f'Folio: {folio}, Fecha: {fecha}, Productos: {productos_string}'
+
+    # Añadir datos al QR
+    try:
+        qr.add_data(qr_info)
+        qr.make(fit=True)  # Intentar ajustar automáticamente
+    except ValueError as e:
+        print(f"Error: {e}")
+
+    # Generar la imagen del QR
+    qr_image = qr.make_image(fill_color="black", back_color="white")
+
+    # Guardar la imagen del QR en un archivo temporal
+    qr_image_path = 'temp_qr.png'
+    qr_image.save(qr_image_path)
+    c.drawImage(qr_image_path, 440, proyecto_y-50, 100, 100)
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(20,proyecto_y - 5 ,350,20, fill=True, stroke=False) #3ra linea azul
@@ -1854,26 +1889,26 @@ def render_salida_pdf(request, pk):
     c.setFillColor(black)
     c.drawCentredString(120,proyecto_y - 15, str(vale.solicitud.proyecto.nombre))
     c.drawCentredString(300,proyecto_y - 15, str(vale.solicitud.subproyecto.nombre))
-    c.drawString(20,proyecto_y-35,'Comentarios:')
+    c.drawString(20,proyecto_y-65,'Comentarios:')
     if vale.comentario:
-        c.drawString(80,proyecto_y - 35, str(vale.comentario))
+        c.drawString(80,proyecto_y - 65, str(vale.comentario))
     else:
-        c.drawString(80,proyecto_y - 35, 'Sin comentarios')
+        c.drawString(80,proyecto_y - 65, 'Sin comentarios')
 
     c.setFillColor(black)
     c.setFont('Helvetica',8)
     #c.line(135,high-200,215, high-200) #Linea de Autorizacion
-    c.drawCentredString(150,proyecto_y - 50,'Entregó')
-    c.drawCentredString(150,proyecto_y - 60, vale.almacenista.staff.staff.first_name +' '+vale.almacenista.staff.staff.last_name)
+    c.drawCentredString(150,proyecto_y - 180,'Entregó')
+    c.drawCentredString(150,proyecto_y - 190, vale.almacenista.staff.staff.first_name +' '+vale.almacenista.staff.staff.last_name)
 
     #c.line(370,proyecto_y - 20,430, proyecto_y - 20)
-    c.drawCentredString(450,proyecto_y - 50,'Recibió')
-    c.drawCentredString(450,proyecto_y - 60, vale.material_recibido_por.staff.staff.first_name +' '+vale.material_recibido_por.staff.staff.last_name)
+    c.drawCentredString(450,proyecto_y - 180,'Recibió')
+    c.drawCentredString(450,proyecto_y - 190, vale.material_recibido_por.staff.staff.first_name +' '+vale.material_recibido_por.staff.staff.last_name)
 
 
     #c.line(240, high-200, 310, high-200)
-    c.drawCentredString(280,proyecto_y - 50,'Autorizó')
-    c.drawCentredString(280,proyecto_y - 60, vale.solicitud.staff.staff.staff.first_name + ' ' + vale.solicitud.staff.staff.staff.last_name)
+    c.drawCentredString(280,proyecto_y - 180,'Autorizó')
+    c.drawCentredString(280,proyecto_y - 190, vale.solicitud.staff.staff.staff.first_name + ' ' + vale.solicitud.staff.staff.staff.last_name)
 
     c.setFont('Helvetica',10)
     c.setFillColor(prussian_blue)
@@ -1881,25 +1916,40 @@ def render_salida_pdf(request, pk):
     c.setFillColor(black)
 
     c.setFillColor(prussian_blue)
-    c.rect(20,proyecto_y - 85,565,20, fill=True, stroke=False)
+    c.rect(20,proyecto_y - 215,565,20, fill=True, stroke=False)
     c.setFillColor(white)
+    if remaining_data:
+        c.showPage()
 
-    width, height = letter
-    table = Table(data, colWidths=[2.0 * cm, 12 * cm, 3.0 * cm, 3.0 * cm]) #, 2.0 * cm, 2.0 * cm
-    table.setStyle(TableStyle([ #estilos de la tabla
-        ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
-        ('BOX',(0,0),(-1,-1), 0.25, colors.black),
-        ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-        #ENCABEZADO
-        ('TEXTCOLOR',(0,0),(-1,0), white),
-        ('FONTSIZE',(0,0),(-1,0), 10),
-        ('BACKGROUND',(0,0),(-1,0), prussian_blue),
-        #CUERPO
-        ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
-        ('FONTSIZE',(0,1),(-1,-1), 6),
+    # Dibujar páginas subsiguientes
+    while remaining_data:
+        c.setFillColor(black)
+        c.setFont('Helvetica', 8)
+        current_page_data = [data[0]] + remaining_data[:rows_per_page_subsequent]
+        remaining_data = remaining_data[rows_per_page_subsequent:]
+
+        # Altura acumulativa para cada página
+        high_subsequent = 720  # Ajusta esta altura si deseas comenzar desde más abajo en cada página
+        num_rows_current_page = len(current_page_data) - 1  # Excluye el encabezado
+        total_table_height = row_height * num_rows_current_page
+
+        table = Table(current_page_data, colWidths=[2.0 * cm, 12 * cm, 3.0 * cm, 3.0 * cm])
+        table.setStyle(TableStyle([
+            ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+            ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('TEXTCOLOR', (0, 0), (-1, 0), white),
+            ('FONTSIZE', (0, 0), (-1, 0), 10),
+            ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+            ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+            ('FONTSIZE', (0, 1), (-1, -1), 6)
         ]))
-    table.wrapOn(c, width, height)
-    table.drawOn(c, 20, high)
+        table.wrapOn(c, width, height)
+        table.drawOn(c, 20, high_subsequent - total_table_height)  # Ajusta la posición en cada página
+        
+        if remaining_data:
+            c.showPage()
+
     c.save()
     c.showPage()
     buf.seek(0)
