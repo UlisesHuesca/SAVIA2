@@ -62,7 +62,7 @@ class CompraFilter(django_filters.FilterSet):
                 if compra.cond_de_pago.nombre == 'CREDITO':
                     fecha_limite = compra.autorizado_at_2.date() + timedelta(days=compra.dias_de_credito)
                 elif compra.cond_de_pago.nombre == 'CONTADO':
-                    if compra.fecha_pago is not 0:
+                    if compra.fecha_pago != 0:
                         fecha_limite = compra.fecha_pago.date() + timedelta(days=compra.dias_de_credito)
 
                 
@@ -83,7 +83,7 @@ class CompraFilter(django_filters.FilterSet):
                 if compra.cond_de_pago == 'CREDITO':
                     fecha_limite = compra.autorizado_at_2.date() + timedelta(days=compra.dias_de_credito)
                 elif compra.cond_de_pago == 'CONTADO':
-                    if compra.fecha_pago is not 0:
+                    if compra.fecha_pago != 0:
                         fecha_limite = compra.fecha_pago.date() + timedelta(days=compra.dias_de_credito)
 
                 if not fecha_limite:
