@@ -2688,7 +2688,7 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
 
 
 def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):
-      #print('si entra a la función')
+    print('conteo compras:', compras.count())
     # Crea un objeto BytesIO para guardar el archivo Excel
     output = BytesIO()
 
