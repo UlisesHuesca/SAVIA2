@@ -608,15 +608,40 @@ def oc_modal(request, pk):
                     <head>
                         <meta charset="UTF-8">
                     </head>
-                    <body>
-                        <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                        <p>Estimado {oc.req.orden.staff.staff.staff.first_name} {oc.req.orden.staff.staff.staff.last_name},</p>
-                        <p>Estás recibiendo este correo porque tu solicitud: {oc.req.orden.folio}| Req: {oc.req.folio} se ha convertido en la OC: {oc.folio},</p>
-                        <p>creada por {oc.creada_por.staff.staff.first_name} {oc.creada_por.staff.staff.last_name}.</p>
-                        <p>El siguiente paso del sistema: Autorización de OC por Superintedencia Administrativa</p>
-                         {articulos_html}
-                        <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                        <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    <p>Estimado {oc.req.orden.staff.staff.staff.first_name} {oc.req.orden.staff.staff.staff.last_name},</p>
+                                                </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    Estás recibiendo este correo porque tu solicitud: {oc.req.orden.folio}| Req: {oc.req.folio} se ha convertido en la OC: {oc.folio}, creada por {oc.creada_por.staff.staff.first_name} {oc.creada_por.staff.staff.last_name}.</p>
+                                                </p>
+                                            <p style="font-size: 16px; text-align: justify;">
+                                                El siguiente paso del sistema: Autorización de OC por Superintedencia Administrativa.
+                                            </p>
+                                            {articulos_html}
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
                     </body>
                 </html>
                 """
@@ -1218,44 +1243,96 @@ def autorizar_oc1(request, pk):
             # Crear el mensaje HTML
             if usuario.tipo.subdirector == True:
                 html_message = f"""
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                                </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name}.</p>
+                                                </p>
+                                            <p style="font-size: 16px; text-align: justify;">
+                                                El siguiente paso del sistema: Pago por parte de tesorería.
+                                            </p>
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                </html>
+                """
+                if compra.cond_de_pago.nombre == "CREDITO":
+                    html_message2 = f"""
                     <html>
                         <head>
                             <meta charset="UTF-8">
                         </head>
-                        <body>
-                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                            <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name},</p>
-                            <p>El siguiente paso del sistema: Pago por parte de tesorería</p>
-                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                            <tr>
+                                                <td align="center">
+                                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 20px;">
+                                                    <p style="font-size: 18px; text-align: justify;">
+                                                        <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
+                                                    </p>
+                                                    <p style="font-size: 16px; text-align: justify;">
+                                                        Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.</p>
+                                                    </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    <p>&nbsp;</p>
+                                                    Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}.
+                                                    <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                                </p>
+                                                    <p style="text-align: center; margin: 20px 0;">
+                                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                    </p>
+                                                    <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
                         </body>
                     </html>
-                """
-                if compra.cond_de_pago.nombre == "CREDITO":
-                    html_message2 = f"""
-                        <html>
-                            <head>
-                                <meta charset="UTF-8">
-                            </head>
-                            <body>
-                                <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
-                                <p>Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.<p>
-                                <p>&nbsp;</p>
-                                <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
-                                <p>GRUPO VORDCAB S.A. de C.V.</p>
-                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                            </body>
-                        </html>
-                        """
+                    """    
                     try:
                         email = EmailMessage(
                         f'Compra Autorizada {compra.folio}|SAVIA',
                         body=html_message2,
                         from_email =settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                        to= [compra.creada_por.staff.staff.email, compra.proveedor.email,],
                         headers={'Content-Type': 'text/html'}
                         )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -1268,26 +1345,52 @@ def autorizar_oc1(request, pk):
                         error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
                 else:
                     html_message = f"""
-                        <html>
-                            <head>
-                                <meta charset="UTF-8">
-                            </head>
-                            <body>
-                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                                <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                                <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name},</p>
-                                <p>El siguiente paso del sistema: Pago por parte de tesorería</p>
-                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                            </body>
-                        </html>
-                    """
+                    <html>
+                        <head>
+                            <meta charset="UTF-8">
+                        </head>
+                        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                            <tr>
+                                                <td align="center">
+                                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 20px;">
+                                                    <p style="font-size: 18px; text-align: justify;">
+                                                        <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                                    </p>
+                                                    <p style="font-size: 16px; text-align: justify;">
+                                                        Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name}.</p>
+                                                    </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    El siguiente paso del sistema: Pago por parte de tesorería.
+                                                </p>
+                                                    <p style="text-align: center; margin: 20px 0;">
+                                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                    </p>
+                                                    <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </body>
+                    </html>
+                    """    
                     try:
                         email = EmailMessage(
                         f'OC Autorizada Gerencia {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
                         body=html_message,
                         from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                        to= [compra.creada_por.staff.staff.email],
                         headers={'Content-Type': 'text/html'}
                         )
                         email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -1299,26 +1402,52 @@ def autorizar_oc1(request, pk):
                     return redirect('autorizacion-oc1')
             else:
                 html_message = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body>
-                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                            <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name},</p>
-                            <p>El siguiente paso del sistema: Autorización de OC por Gerencia de Distrito</p>
-                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                        </body>
-                    </html>
-                """
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                                </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por.staff.staff.first_name} {compra.oc_autorizada_por.staff.staff.last_name}.</p>
+                                                </p>
+                                            <p style="font-size: 16px; text-align: justify;">
+                                                El siguiente paso del sistema: Autorización de OC por Gerencia de Distrito.
+                                            </p>
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                </html>
+                """    
             try:
                 email = EmailMessage(
                     f'OC Autorizada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
                     body=html_message,
                     from_email = settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com',compra.req.orden.staff.staff.staff.email],
+                    to= [compra.req.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                 )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -1417,28 +1546,52 @@ def autorizar_oc2(request, pk):
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
                 pdf_etica = attach_codigo_etica_pdf(request)
                 html_message2 = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body>
-                            <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
-                            <p>Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.<p>
-                            <p>&nbsp;</p>
-                            <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
-                            <p>GRUPO VORDCAB S.A. de C.V.</p>
-                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                        </body>
-                    </html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
+                                                </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.</p>
+                                                    <p>&nbsp;</p>
+                                                    <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
+                                                    <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                                </p>
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                </html>
                 """
                 try:
                     email = EmailMessage(
                     f'Compra Autorizada {compra.folio}|SAVIA',
                     body=html_message2,
                     from_email =settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email],
+                    to= [compra.creada_por.staff.staff.email, compra.proveedor.email,],
                     headers={'Content-Type': 'text/html'}
                     )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -1449,21 +1602,44 @@ def autorizar_oc2(request, pk):
                     email.send()
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
-
                 html_message = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body>
-                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                            <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por2.staff.staff.first_name} {compra.oc_autorizada_por2.staff.staff.last_name},</p>
-                            <p>El siguiente paso del sistema: Recepción por parte de Almacén |Compra a crédito</p>
-                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                        </body>
-                    </html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                                </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por2.staff.staff.first_name} {compra.oc_autorizada_por2.staff.staff.last_name}.</p>
+                                                    <p>El siguiente paso del sistema: Recepción por parte de Almacén |Compra a crédito</p>
+                                                </p>
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                </html>
                 """
                 try:
                     email = EmailMessage(
@@ -1471,7 +1647,7 @@ def autorizar_oc2(request, pk):
                         body=html_message,
                         #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                         from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                        to= [compra.creada_por.staff.staff.email,],
                         headers={'Content-Type': 'text/html'}
                         )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -1495,19 +1671,43 @@ def autorizar_oc2(request, pk):
                 
             else:
                 html_message = f"""
-                    <html>
-                        <head>
-                            <meta charset="UTF-8">
-                        </head>
-                        <body>
-                            <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                            <p>Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por2.staff.staff.first_name} {compra.oc_autorizada_por2.staff.staff.last_name},</p>
-                            <p>El siguiente paso del sistema: Pago por parte de tesorería</p>
-                            <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                            <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                        </body>
-                    </html>
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name}.</p>
+                                                </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido autorizada por {compra.oc_autorizada_por2.staff.staff.first_name} {compra.oc_autorizada_por2.staff.staff.last_name}.</p>
+                                                    <p>El siguiente paso del sistema: Pago por parte de tesorería</p>
+                                                </p>
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                </html>
                 """
                 try:
                     email = EmailMessage(
@@ -1515,7 +1715,7 @@ def autorizar_oc2(request, pk):
                         body=html_message,
                         #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                         from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com'],#[requi.orden.staff.staff.staff.email],
+                        to= [compra.creada_por.staff.staff.email],
                         headers={'Content-Type': 'text/html'}
                         )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -2706,7 +2906,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Compra', 'Requisición', 'Solicitud', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
+    columns = ['Compra', 'Requisición', 'Solicitud','Distrito', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
                'Status Proveedor','Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización','Tipo Item', 'Días de entrega', 'Moneda',
                'Tipo de cambio', 'Entregada', "Total en pesos"]
 
@@ -2726,7 +2926,8 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet.write(8, columna_max - 1, "OC Entregadas/Pagadas/Productos", head_style)
     worksheet.write(9, columna_max - 1, "OC Pagadas/Productos", head_style)
     worksheet.write(10, columna_max - 1, "KPI OC Entregadas/Total de OC", head_style)
-    
+    if num_approved_requis <= 0:
+         num_approved_requis=1
     indicador = num_requis_atendidas/num_approved_requis
     letra_columna = xl_col_to_name(columna_max)
     formula = f"={letra_columna}9/{letra_columna}10"
@@ -2788,6 +2989,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             compra_list.folio,
             compra_list.req.folio,
             compra_list.req.orden.folio,
+            compra_list.req.orden.distrito.nombre,
             compra_list.req.orden.proyecto.nombre if compra_list.req.orden.proyecto else '',
             compra_list.req.orden.subproyecto.nombre if compra_list.req.orden.subproyecto else '',
             compra_list.req.orden.operacion.nombre if compra_list.req.orden.operacion else '',

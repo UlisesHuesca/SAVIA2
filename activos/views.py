@@ -122,6 +122,7 @@ def add_activo(request):
             activo.completo = True
             activo.estatus.nombre = "ALTA"
             activo.activo.cantidad -= 1 #Restar uno al inventario
+            activo.activo.cantidad_entradas -= 1 
             activo.activo.save()  # Guarda el cambio en el inventario
             activo.save()
             messages.success(request,f'Has agregado correctamente el activo {activo.eco_unidad}')

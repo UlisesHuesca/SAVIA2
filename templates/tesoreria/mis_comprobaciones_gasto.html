@@ -74,6 +74,7 @@
                 <thead class="text-black" style="background-color: #F5F5F5;">
                     <tr>
                         <th scope="col">Gasto</th>
+                        <th scope="col">Comentario</th>
                         <th class="d-none d-lg-table-cell">Solicitado</th>
                         <th scope="col">Importe</th>
                         <th scope="col">Monto XML</th>
@@ -84,6 +85,7 @@
                     {% for gasto in gastos %}
                     <tr>
                         <th>{{gasto.folio}}</th>
+                        <th>{{gasto.comentario}}</th>
                         <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
                         <td>${{gasto.get_total_solicitud}}</td>
                         <td>${{gasto.suma_total_facturas|floatformat:2}}</td>

@@ -274,13 +274,14 @@ def articulos_entrada(request, pk):
                             solicitud.requisitar = False
                             solicitud.save()
             if entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
+                print('Activo valores antes de las cuentas')
                 inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
                 articulo.articulo_comprado.producto.producto.cantidad = 0
                 articulo.articulo_comprado.producto.producto.cantidad_requisitar = 0
                 articulo.articulo_comprado.producto.producto.surtir = False
                 articulo.articulo_comprado.producto.producto.requisitar = False
                 inv_de_producto.cantidad += articulo.cantidad
-                inv_de_producto.cantidad_entradas += articulo.cantidad
+                #inv_de_producto.cantidad_entradas += articulo.cantidad
                 inv_de_producto.save()
                 articulo.save()
                 print('Tiene producto activo esta orden de tipo normal')

@@ -2,7 +2,6 @@
 <head>
     <!-- Vincular CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
-    <link rel="stylesheet" type="text/css" href="{% static 'festivos/dia_de_muertos.css' %}">   
 
     <!--FotAwesome CDN-->
     <!--<script src="https://kit.fontawesome.com/259463dc50.js" crossorigin="anonymous"></script>-->
@@ -31,40 +30,6 @@
                         {% csrf_token %}
                         <button class="btn btn-secondary" type="submit">Logout</button>
                     </form>
-                </li>
-                <li class="nav-item">
-                    <div class="mascara"> 
-                        <div class="skull" title="">
-                            <div class="decor">☙</div>
-                            <div class="decor">❧</div>
-                            <div class="eyes">
-                                <div class="eye">
-                                    <div class="symbol">✸</div>
-                                </div>
-                                <div class="eye">
-                                    <div class="symbol">✸</div>
-                                </div>
-                            </div>
-                            <div class="nose"></div>
-                            <div class="mustache">
-                                <span>∼ </span><span>∽</span>
-                            </div>
-                            <div class="teeth">
-                                <div class="top">
-                                    <div class="tooth"></div>
-                                    <div class="tooth"></div>
-                                    <div class="tooth"></div>
-                                    <div class="tooth"></div>
-                                </div>
-                                <div class="bottom">
-                                    <div class="tooth"></div>
-                                    <div class="tooth"></div>
-                                    <div class="tooth"></div>
-                                    <div class="tooth"></div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
                 </li>
                 <li class="nav-item">
                 <div>
@@ -571,56 +536,3 @@
     {% endif %}
         </div>
 </nav>
-
-<div class="altar-container">
-    <div id="main-content">
-        <div id="altar-content" style="display: none;"> <!-- Oculta por defecto -->
-            <div class="altar">
-                  <div class="texto">Feliz Día de Muertos</div>
-                {% if usuario.staff.imageURL %}
-                    <div class="foto" style="background-image: url('{{ usuario.staff.imageURL }}');"></div>
-                {% else %}
-                    <div class="foto"></div>
-                {% endif %}
-                <div class="light"></div>
-
-                <div class="mesa"></div>
-                <div class="delantal del1"></div>
-                <div class="delantal del2"></div>
-                <div class="delantal del3"></div>
-                <div class="delantal del4"></div>
-                <div class="delantal del5"></div>
-
-                <div class="flawas">
-                    <div class="letterto">
-                        <div class="triangu2">
-                            <div class="paper">
-                                <div class="card"></div>
-                            </div>
-                        </div>
-                        <div class="triangu"></div>
-                    </div>
-                    <div class="skulll" style="background-image:url('{% static 'festivos/muertos1.png' %}');"></div>
-                    <div class="flaw flaw1" style="background-image:url('{% static 'festivos/muertos2.png' %}');"></div>
-                    <div class="flaw flaw2" style="background-image:url('{% static 'festivos/muertos3.png' %}');"></div>
-                    <div class="flaw flaw3" style="background-image:url('{% static 'festivos/muertos4.png' %}');"></div>
-                    <div class="flaw flaw4" style="background-image:url('{% static 'festivos/muertos5.png' %}');"></div>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
-
-<script>
-    const offcanvas = document.getElementById('offcanvasNavbar');
-    const halloweenContent = document.getElementById('altar-content');
-
-    // Escuchar eventos de apertura y cierre del offcanvas
-    offcanvas.addEventListener('show.bs.offcanvas', () => {
-        halloweenContent.style.display = 'block'; // Muestra el contenido de Halloween
-    });
-
-    offcanvas.addEventListener('hide.bs.offcanvas', () => {
-        halloweenContent.style.display = 'none'; // Oculta el contenido de Halloween
-    });
-</script>

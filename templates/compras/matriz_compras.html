@@ -209,6 +209,9 @@
                     <th class="d-none d-lg-table-cell">Req</th>
                     <th class="d-none d-lg-table-cell">Sol</th>
                     <th class="d-none d-lg-table-cell">Solicitado por</th>
+                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ"%}
+                    <th class="d-none d-lg-table-cell">Distrito</th>
+                    {% endif %}
                     <th scope="col">Proyecto</th>
                     <th class="d-none d-lg-table-cell">Subproyecto</th>
                     <th class="d-none d-lg-table-cell">Operación</th>
@@ -238,6 +241,9 @@
                     <th class="d-none d-lg-table-cell">{{compra.req.folio}}</th>
                     <th class="d-none d-lg-table-cell">{{compra.req.orden.folio}}</th>
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.staff.staff.staff.first_name}} {{compra.req.orden.staff.staff.staff.last_name}}</td>
+                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ"%}
+                    <td>{{compra.req.orden.distrito.nombre}}</td>
+                    {% endif %}
                     <td>{{compra.req.orden.proyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.subproyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.req.orden.operacion}}</td>
