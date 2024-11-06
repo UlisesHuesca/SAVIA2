@@ -893,7 +893,10 @@ def matriz_oc_productos(request):
     
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        #if articulos.count() > 3500:
+        if articulos.count() > 10000:
+            return convert_excel_solicitud_matriz_productos_quick(articulos)
+        else:
+            return convert_excel_solicitud_matriz_productos_prov2(articulos)
         #    if not task_id_producto:
         #        task = convert_excel_solicitud_matriz_productos_task2.delay(articulos_data)
         #        task_id_producto = task.id
@@ -904,7 +907,7 @@ def matriz_oc_productos(request):
         #        messages.success(request, f'Tu reporte se está generando {task_id_producto}')
         #elif usuario.tipo.nombre == "PROVEEDORES":
             #print(articulos.count())
-        return convert_excel_solicitud_matriz_productos_prov2(articulos)
+        
         #else:
         #    return convert_excel_solicitud_matriz_productos(articulos)
         
@@ -3028,7 +3031,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 23, f'=IF(ISBLANK(V{row_num+1}), N{row_num+1}, N{row_num+1}*V{row_num+1})', money_style)
+        worksheet.write_formula(row_num, 24, f'=IF(ISBLANK(W{row_num+1}), O{row_num+1}, O{row_num+1}*W{row_num+1})', money_style)
     
    
     workbook.close()
@@ -3042,7 +3045,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         )
     response['Content-Disposition'] = f'attachment; filename=Matriz_compras_{dt.date.today()}.xlsx'
       # Establecer una cookie para indicar que la descarga ha iniciado
-    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    response.set_cookie('descarga_iniciada', 'true', max_age=3)  # La cookie expira en 20 segundos
     output.close()
     return response
 
@@ -3308,7 +3311,8 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
 
 def convert_excel_solicitud_matriz_productos_prov2(productos):
     start_time = time.time()  # Marca el tiempo de inicio
-    print('Aqui comienza')
+    print('Aqui comienza',productos.count())
+
     columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
     data = [columns]
 
@@ -3428,6 +3432,114 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
     #print(f"Tiempo total para generar el archivo: {total_time} segundos")
 
     return response
+
+
+def convert_excel_solicitud_matriz_productos_quick(productos): 
+    start_time = time.time()  # Start timing
+    print('Starting count:', productos.count())
+
+    # Define headers and initial data array
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
+    data = [columns]
+
+    # Populate data rows
+    for articulo in productos:
+        compra_id = articulo.oc.id
+        moneda_nombre = articulo.oc.moneda.nombre
+        proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
+        subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
+        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+        pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
+        subtotal_parcial = articulo.subtotal_parcial
+        iva_parcial = articulo.iva_parcial
+        total = articulo.total
+        status = (
+            'Autorizado Gerente' if articulo.oc.autorizado2 else 'Cancelada' if articulo.oc.autorizado2 is False else
+            'Autorizado Superintendente' if articulo.oc.autorizado1 else 'Cancelada' if articulo.oc.autorizado1 is False else
+            'Sin autorizaciones aún'
+        )
+        subfamilia_nombre = (
+            articulo.producto.producto.articulos.producto.producto.subfamilia.nombre
+            if articulo.producto.producto.articulos.producto.producto.subfamilia else "Desconocido"
+        )
+
+        pagos = Pago.objects.filter(oc_id=compra_id)
+        tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
+        tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
+        if moneda_nombre == "DOLARES" and tipo_de_cambio:
+            total *= tipo_de_cambio
+
+        comentarios = articulo.producto.producto.articulos.comentario or "Sin comentario"
+
+        row = [
+            articulo.oc.folio,
+            articulo.oc.req.orden.distrito.nombre,
+            articulo.producto.producto.articulos.producto.producto.codigo,
+            articulo.producto.producto.articulos.producto.producto.nombre,
+            articulo.cantidad,
+            articulo.producto.producto.articulos.producto.producto.unidad.nombre,
+            'SERVICIO' if articulo.producto.producto.articulos.producto.producto.servicio else 'PRODUCTO',
+            articulo.producto.producto.articulos.producto.producto.familia.nombre,
+            subfamilia_nombre,
+            articulo.precio_unitario,
+            moneda_nombre,
+            tipo_de_cambio,
+            subtotal_parcial,
+            iva_parcial,
+            total,
+            articulo.oc.proveedor.nombre.razon_social,
+            articulo.oc.proveedor.estatus.nombre,
+            articulo.oc.proveedor.domicilio,
+            fecha_creacion,
+            proyecto_nombre,
+            subproyecto_nombre,
+            articulo.oc.req.orden.distrito.nombre,
+            articulo.oc.req.folio,
+            articulo.oc.req.orden.folio,
+            status,
+            pagado_text,
+            comentarios,
+        ]
+        data.append(row)
+
+    # Create Excel workbook and worksheet
+    wb = Workbook()
+    ws = wb.new_sheet("Compras_Producto", data=data)
+
+    # Define styles
+    header_style = Style(
+        font=Font(bold=True),
+        alignment=Alignment(horizontal='center', vertical='center')
+    )
+    date_style = Style(format=Format('dd/mm/yyyy'))
+    money_style = Style(format=Format('$#,##0.00'))
+
+    # Apply header style
+    for col_num in range(1, len(columns) + 1):
+        ws[1][col_num].style = header_style
+
+    # Apply styles for specific columns
+    for row_num in range(2, len(data) + 1):
+        ws[row_num][19].style = date_style  # Fecha
+        ws[row_num][10].style = money_style  # P.U.
+        ws[row_num][13].style = money_style  # IVA
+        ws[row_num][14].style = money_style  # Total
+
+    # Save to BytesIO
+    output = BytesIO()
+    wb.save(output)
+
+    # Set up response for download
+    output.seek(0)
+    response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
+    file_name = f'Matriz_compras_por_producto_{date.today()}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename={file_name}'
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)
+    output.close()
+
+    print(f"Total time to generate file: {time.time() - start_time} seconds")
+    return response
+
 
 def generar_politica_antisoborno():
     #Configuration of the PDF object
