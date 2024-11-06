@@ -16,7 +16,7 @@ urlpatterns = [
     path('product_calidad/', views.product_calidad, name='product_calidad'),
     path('product_calidad/<int:pk>/', views.product_calidad_update, name='product_calidad_update'),
     path('product/<int:pk>/add_requerimiento/', views.add_requerimiento_calidad, name='add_requerimiento_calidad'),
-
+    path('eliminar_requerimiento_calidad/<int:pk>/', views.eliminar_requerimiento_calidad, name='eliminar_requerimiento_calidad'),
     path('product/precio_referencia/<int:pk>', views.precio_referencia, name = 'precio-referencia'),
     path('product/upload_batch_products', views.upload_batch_products, name='upload_batch_products'),
     #path('product/delete/<int:pk>/', views.product_delete, name='dashboard-product-delete'),

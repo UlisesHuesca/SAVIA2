@@ -60,9 +60,12 @@
                     <div class="col-12">
                         {{form.image|add_class:"form-control"}}
                     </div>
-                    <label for="form.price_2" class="col-auto col-form-label my-1"><strong>Liberado:</strong></label>
+                    <label for="form.autorizado" class="col-auto col-form-label my-1"><strong>Liberado:</strong></label>
                     <div class="col-12">
-                        {{ form.autorizado|add_class:"form-control"}}
+                        <select class="form-control" name="autorizado" id="id_autorizado">
+                            <option value="True" {% if form.autorizado.value == True %}selected{% endif %}>Sí</option>
+                            <option value="False" {% if form.autorizado.value == False %}selected{% endif %}>No</option>
+                        </select>
                     </div>
             </div>
         </div>

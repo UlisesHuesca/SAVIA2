@@ -273,7 +273,7 @@ def articulos_entrada(request, pk):
                         if productos_orden == 0:
                             solicitud.requisitar = False
                             solicitud.save()
-            if entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
+            elif entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
                 print('Activo valores antes de las cuentas')
                 inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
                 articulo.articulo_comprado.producto.producto.cantidad = 0
@@ -372,7 +372,7 @@ def articulos_entrada_servicios(request, pk):
                         )
                 email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
                 email.send()
-            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
+            elif entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
                 #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
                 productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
                     articulos__producto__producto = articulo.articulo_comprado.producto.producto.articulos.producto.producto,
@@ -411,7 +411,7 @@ def articulos_entrada_servicios(request, pk):
                             solicitud.requisitar = False
                             solicitud.save()
                         
-            if entrada.oc.req.orden.tipo.tipo == 'normal':
+            elif entrada.oc.req.orden.tipo.tipo == 'normal':
                 if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
                     producto_surtir.surtir = False
                 else:

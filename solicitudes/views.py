@@ -9,7 +9,7 @@ from django.db.models.functions import Concat
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
-from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max
+from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max, Q
 from dashboard.models import Activo, Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden, Plantilla, ArticuloPlantilla
 from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas
 from requisiciones.views import get_image_base64
@@ -104,7 +104,7 @@ def product_selection_resurtimiento(request):
     usuario = Profile.objects.get(id = pk_perfil)
     tipo = Tipo_Orden.objects.get(tipo ='resurtimiento')
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
-    productos = Inventario.objects.filter(cantidad__lt =F('minimo'), distrito = usuario.distritos)
+    productos = Inventario.objects.filter(cantidad__lt =F('minimo'), distrito = usuario.distritos).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
     cartItems = order.get_cart_quantity
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
@@ -206,7 +206,8 @@ def product_selection(request):
     tipo = Tipo_Orden.objects.get(tipo ='normal')
     #order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo = tipo)
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
-    productos = Inventario.objects.filter(complete=True, distrito = usuario.distritos)
+    #Traer todos los productos no criticos y solo los criticos con rev_Calidad
+    productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
     cartItems = order.get_cart_quantity
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs

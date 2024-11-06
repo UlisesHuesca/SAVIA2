@@ -5,7 +5,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper
-from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad
+from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
@@ -1293,6 +1293,8 @@ def product_calidad(request):
     return render(request,'dashboard/product_calidad.html', context)
 
 def add_requerimiento_calidad(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
     producto_calidad = get_object_or_404(Producto_Calidad, producto__id=pk)
     if request.method == 'POST':
         req_form = RequerimientoCalidadForm(request.POST, request.FILES)
@@ -1300,27 +1302,47 @@ def add_requerimiento_calidad(request, pk):
         if req_form.is_valid():
             requerimiento = req_form.save(commit=False)
             requerimiento.solicitud = producto_calidad
+            requerimiento.updated_by = usuario
             requerimiento.save()
-            return JsonResponse({'success': True, 'nombre': requerimiento.nombre, 'fecha': requerimiento.fecha.strftime('%Y-%m-%d')})
+            return JsonResponse({'success': True, 'id': requerimiento.id, 'nombre': requerimiento.nombre, 'fecha': requerimiento.fecha.strftime('%Y-%m-%d'), 'url': requerimiento.url.url,})
         else:
             errors = req_form.errors.as_json()
             return JsonResponse({'success': False, 'errors': errors})
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
+def eliminar_requerimiento_calidad(request, pk):
+    try:
+        requerimiento = Requerimiento_Calidad.objects.get(id=pk)
+        requerimiento.delete()
+        return JsonResponse({'success': True})
+    except Requerimiento_Calidad.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Requerimiento no encontrado'})
+    
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def product_calidad_update(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
     item = get_object_or_404(Product, id=pk)
     error_messages = {}
     
     # Obtener o crear Producto_Calidad asociado
     producto_calidad, created = Producto_Calidad.objects.get_or_create(producto=item)
-
+    requisitos = producto_calidad.requisitos
+    if requisitos is None:
+        requisitos = ''
     if request.method == 'POST':
         form = ProductCalidadForm(request.POST, instance=item)
-        req_form = RequerimientoCalidadForm(request.POST, request.FILES)
+        req_form = RequerimientoCalidadForm(request.POST, request.FILES) #Se manda para poder utilizarlo en el modal
         
         if form.is_valid():
+            requisitos = request.POST.get('requisitos')
+            if requisitos:
+                producto_calidad.requisitos = requisitos
+                producto_calidad.save()
+            producto_calidad.updated_by = usuario  
+            producto_calidad.updated_at = datetime.now()
+            producto_calidad.save()  
             form.save()
             
             messages.success(request, f'Se ha actualizado el producto {item.nombre}')
@@ -1341,5 +1363,6 @@ def product_calidad_update(request, pk):
         'req_form': req_form,
         'item': item,
         'producto_calidad': producto_calidad,
+        'requisitos': requisitos,  # Aquí pasas el campo
     }
     return render(request, 'dashboard/product_calidad_update.html', context)

@@ -96,9 +96,7 @@ class Requerimiento_Calidad(models.Model):
     solicitud = models.ForeignKey(Producto_Calidad,on_delete=models.CASCADE,null=False, related_name='requerimientos_calidad')
     fecha = models.DateTimeField(null=False,auto_now_add=True)
     url = models.FileField(upload_to="bonos/",unique=True,null=False,validators=[validar_size,FileExtensionValidator(allowed_extensions=['pdf', 'png', 'jpg','jpeg','xls', 'xlsx'])])
-    updated_at = models.DateTimeField(null=True)
     updated_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
 
 class Products_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])

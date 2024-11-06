@@ -21,17 +21,22 @@
                     <!-- Información del producto -->
                     <div class="mb-4">
                         <label class="form-label"><strong>Código:</strong> {{ item.codigo }}</label><br>
-                        <label class="form-label"><strong>Producto:</strong> {{ item.nombre }}</label>
+                        <label class="form-label"><strong>Producto:</strong> {{ item.nombre }}</label><br>
+                        <label class="form-label"><strong>Ultima actualización:</strong> {{ item.updated_at }}</label>
                     </div>
                     
                     <!-- Formulario principal -->
                     <form method="POST" id="ProductForm" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <div class="form-check form-switch mb-3">
-                            {{ form.rev_calidad }}
-                            <label class="form-check-label" for="rev_calidad">Revisión de Calidad</label>
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" id="rev_calidad" name="rev_calidad" {% if form.rev_calidad.value %}checked{% endif %}>
+                            <label class="form-check-label" for="rev_calidad"><strong>Validación de Calidad</strong></label>
                         </div>
-                        
+                        <!-- Campo de descripción editable -->
+                        <div class="mb-4">
+                            <label for="requisitos" class="form-label"><strong>Comentario requisitos:</strong></label>
+                            <textarea class="form-control" id="requisitos" name="requisitos" rows="3">{{ requisitos }}</textarea>
+                        </div>
                         <div class="d-flex justify-content-end mt-4">
                             <a class="btn btn-outline-secondary me-2" href="{% url 'product_calidad' %}">Cancelar</a>
                             <input type="submit" id="submit-button" class="btn btn-outline-info" value="Actualizar">
@@ -43,15 +48,34 @@
                     </button>
 
 
-                    <!-- Lista de Requerimientos -->
+                    <!-- Tabla de Requerimientos de Calidad -->
                     <h5 class="mt-5">Requerimientos de Calidad:</h5>
-                    <ul id="requerimientos-list" class="list-group">
-                        {% for requerimiento in producto_calidad.requerimientos_calidad.all %}
-                            <li class="list-group-item d-flex justify-content-between align-items-center">
-                                {{ requerimiento.nombre }} - {{ requerimiento.fecha }}
-                            </li>
-                        {% endfor %}
-                    </ul>
+                    <div class="table-responsive">
+                        <table class="table table-bordered table-striped mt-3">
+                            <thead class="text-black" style="background-color: #F5F5F5;">
+                                <tr>
+                                    <th scope="col">Nombre del Requerimiento</th>
+                                    <th scope="col">Fecha</th>
+                                    <th scope="col">Archivo</th>
+                                    <th scope="col">Acciones</th>
+                                </tr>
+                            </thead>
+                            <tbody id="requerimientos-list">
+                                {% for requerimiento in producto_calidad.requerimientos_calidad.all %}
+                                    <tr id="requerimiento-{{ requerimiento.id }}">
+                                        <td>{{ requerimiento.nombre }}</td>
+                                        <td>{{ requerimiento.fecha }}</td>
+                                        <td>
+                                            <a href="{{ requerimiento.url.url }}" download>Descargar</a>
+                                        </td>
+                                        <td>
+                                            <button class="btn btn-danger btn-sm" onclick="eliminarRequerimiento({{ requerimiento.id }})">Eliminar</button>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
                 </div>
             </div>
         </div>
@@ -124,18 +148,123 @@ document.getElementById('requerimientoForm').addEventListener('submit', function
             $('#requerimientoModal').modal('hide');
             this.reset();
             
-            // Añadir el nuevo requerimiento a la lista
+            // Añadir el nuevo requerimiento a la tabla
             const requerimientosList = document.getElementById('requerimientos-list');
-            const newRequerimiento = document.createElement('li');
-            newRequerimiento.textContent = `${data.nombre} - ${data.fecha}`;
-            requerimientosList.appendChild(newRequerimiento);
+
+            // Crear una nueva fila <tr> para el requerimiento
+            const newRow = document.createElement('tr');
+
+            // Crear las celdas <td> para nombre y fecha
+            const newNombreCell = document.createElement('td');
+            newNombreCell.textContent = data.nombre;
+
+            const newFechaCell = document.createElement('td');
+            newFechaCell.textContent = data.fecha;
+
+            // Crear una celda para el archivo, con un enlace de descarga
+            const newUrlCell = document.createElement('td');
+            const newLink = document.createElement('a');
+            newLink.href = data.url;  // URL del archivo
+            newLink.textContent = 'Descargar';  // Texto del enlace
+            newLink.target = '_blank';  // Abrir en nueva pestaña
+            newUrlCell.appendChild(newLink);
+            // Crear una celda para el botón de eliminación
+            const newActionCell = document.createElement('td');
+            const deleteButton = document.createElement('button');
+            deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
+            deleteButton.textContent = 'Eliminar';
+            deleteButton.onclick = function() {
+                eliminarRequerimiento(data.id); // Llamar a la función de eliminación
+            };
+            newActionCell.appendChild(deleteButton);
+
+            // Agregar las celdas a la fila
+            newRow.appendChild(newNombreCell);
+            newRow.appendChild(newFechaCell);
+            newRow.appendChild(newUrlCell);  
+            newRow.appendChild(newActionCell); 
+
+            // Agregar la nueva fila a la tabla
+            requerimientosList.appendChild(newRow);
+
+            // Mostrar mensaje de éxito usando SweetAlert
+            Swal.fire({
+                "title": "Excelente",
+                "text": `Se ha agregado el requerimiento: ${data.nombre}`,
+                "icon": "success"
+            });
         } else {
+            // Mostrar mensaje de error
+            Swal.fire({
+                "title": "Error",
+                "text": "Error al añadir el requerimiento. Por favor, revisa el formulario.",
+                "icon": "error"
+            });
             console.error('Error:', data.errors);
-            alert('Error al añadir el requerimiento. Por favor, revisa el formulario.');
         }
     })
-    .catch(error => console.error('Error:', error));
+    .catch(error => {
+        Swal.fire({
+            "title": "Error",
+            "text": "Hubo un problema al procesar la solicitud.",
+            "icon": "error"
+        });
+        console.error('Error:', error);
+    });
 });
+function eliminarRequerimiento(id) {
+    // Mostrar una alerta de confirmación antes de eliminar
+    Swal.fire({
+        title: '¿Estás seguro?',
+        text: "No podrás revertir esta acción",
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonText: 'Sí, eliminar',
+        cancelButtonText: 'Cancelar'
+    }).then((result) => {
+        if (result.isConfirmed) {
+            // Enviar la solicitud de eliminación al servidor
+            fetch(`/eliminar_requerimiento_calidad/${id}/`, {
+                method: 'POST',
+                headers: {
+                    'X-CSRFToken': '{{ csrf_token }}',
+                },
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    // Eliminar la fila de la tabla
+                    const row = document.getElementById('requerimiento-' + id);
+                    if (row) {
+                        row.remove();  // Eliminar la fila
+                    }
 
+                    Swal.fire({
+                        title: 'Eliminado',
+                        text: 'El requerimiento ha sido eliminado.',
+                        icon: 'success'
+                    }).then(() => {
+                        // Recargar la página después de eliminar
+                        location.reload();
+                    });
+                } else {
+                    Swal.fire({
+                        title: 'Error',
+                        text: 'Hubo un problema al eliminar el requerimiento.',
+                        icon: 'error'
+                    });
+                }
+            })
+            .catch(error => {
+                Swal.fire({
+                    title: 'Error',
+                    text: 'Hubo un problema al procesar la solicitud.',
+                    icon: 'error'
+                });
+                console.error('Error:', error);
+            });
+        }
+    });
+}
 </script>
 {% endblock %}
