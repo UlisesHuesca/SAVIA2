@@ -5,6 +5,7 @@ from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector
 #from djmoney.models.fields import MoneyField
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
+from django.core.exceptions import ValidationError
 import xml.etree.ElementTree as ET
 #from django.db.models.functions import TruncDate
 
@@ -52,7 +53,9 @@ class Product(models.Model):
     completado = models.BooleanField(default = False)
     precioref = models.DecimalField(max_digits=14, decimal_places=2, null=True)
     porcentaje = models.DecimalField(max_digits=4, decimal_places=2, null=True)
-
+    #Para calidad
+    critico = models.BooleanField(default = False)
+    rev_calidad = models.BooleanField(default = False)
     #Estas opciones de guardado de creación y actualización las voy a utilizar en todos mis modelos
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -70,6 +73,32 @@ class Product(models.Model):
         except:
             url = ''
         return url
+
+#Este modelo fue enteramente creado para cumplimiento con la API
+class Producto_Calidad(models.Model):
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(null=True)
+    updated_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    producto = models.OneToOneField(Product, on_delete = models.CASCADE, null=True,  related_name='producto_calidad')
+    requisitos = models.TextField(blank=True, null=True)
+    history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+
+    def __str__(self):
+        return f'{self.producto}'
+
+def validar_size(value):
+    filesize = value.size
+    if filesize > 10 * 1024 * 1024:  # 10 MB en bytes
+        raise ValidationError('El tamaño del archivo no puede ser mayor a 10 MB.')    
+
+class Requerimiento_Calidad(models.Model):
+    nombre = models.CharField(max_length=50, null=True, unique=True)
+    solicitud = models.ForeignKey(Producto_Calidad,on_delete=models.CASCADE,null=False, related_name='requerimientos_calidad')
+    fecha = models.DateTimeField(null=False,auto_now_add=True)
+    url = models.FileField(upload_to="bonos/",unique=True,null=False,validators=[validar_size,FileExtensionValidator(allowed_extensions=['pdf', 'png', 'jpg','jpeg','xls', 'xlsx'])])
+    updated_at = models.DateTimeField(null=True)
+    updated_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
 
 class Products_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])

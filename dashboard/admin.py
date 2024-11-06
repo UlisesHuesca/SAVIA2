@@ -1,6 +1,7 @@
 from django.contrib import admin
 from simple_history.admin import SimpleHistoryAdmin
-from .models import Product, Order, Familia, Unidad, Subfamilia, Marca, Inventario, ArticulosOrdenados, ArticulosparaSurtir, Products_Batch, Tipo_Orden, Inventario_Batch, Activo, Estatus_Activo 
+from .models import Product, Order, Familia, Unidad, Subfamilia, Marca, Inventario, ArticulosOrdenados, ArticulosparaSurtir, Products_Batch, Tipo_Orden, Inventario_Batch, Activo, Estatus_Activo
+from .models import Producto_Calidad, Requerimiento_Calidad
 from compras.models import Proveedor_Batch
 # Esta línea es para cambiarle el nombre al sitio administrador por default (Django administration)
 admin.site.site_header = 'SAVIA 2.0 | Administración'
@@ -77,3 +78,8 @@ admin.site.register(Tipo_Orden)
 admin.site.register(Activo, ActivoAdmin)
 
 admin.site.register(Estatus_Activo)
+
+admin.site.register(Producto_Calidad)
+
+admin.site.register(Requerimiento_Calidad)
+

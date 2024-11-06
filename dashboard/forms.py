@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Subfamilia, Products_Batch, Inventario_Batch
+from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad
 from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch
 from user.models import Distrito
 from solicitudes.models import Proyecto, Subproyecto
@@ -34,6 +34,16 @@ class ProductForm(forms.ModelForm):
                 pass  # invalid input from the client; ignore and fallback to empty City queryset
         elif self.instance.pk:
             self.fields['subfamilia'].queryset = self.instance.familia.subfamilia_set.order_by('nombre')
+
+class ProductCalidadForm(forms.ModelForm):
+    class Meta:
+        model = Product
+        fields = ['rev_calidad']
+
+class RequerimientoCalidadForm(forms.ModelForm):
+    class Meta:
+        model = Requerimiento_Calidad
+        fields = ['nombre', 'url']
 
 
 class PrecioRef_Form(forms.ModelForm):
@@ -106,7 +116,7 @@ class Proveedores_Direcciones_BatchForm(forms.ModelForm):
 class AddProduct_Form(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['codigo','nombre','unidad','familia','subfamilia','especialista','iva','activo','servicio','image','gasto']
+        fields = ['codigo','nombre','unidad','familia','subfamilia','especialista','iva','activo','critico','servicio','image','gasto']
 
 #Sobreescribiendo el método __init__ y configurando el queryset para que esté vacío
     def __init__(self, *args, **kwargs):
