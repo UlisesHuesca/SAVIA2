@@ -2906,7 +2906,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Compra', 'Requisición', 'Solicitud', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
+    columns = ['Compra', 'Requisición', 'Solicitud','Distrito', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
                'Status Proveedor','Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización','Tipo Item', 'Días de entrega', 'Moneda',
                'Tipo de cambio', 'Entregada', "Total en pesos"]
 
@@ -2989,6 +2989,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             compra_list.folio,
             compra_list.req.folio,
             compra_list.req.orden.folio,
+            compra_list.req.orden.distrito.nombre,
             compra_list.req.orden.proyecto.nombre if compra_list.req.orden.proyecto else '',
             compra_list.req.orden.subproyecto.nombre if compra_list.req.orden.subproyecto else '',
             compra_list.req.orden.operacion.nombre if compra_list.req.orden.operacion else '',
