@@ -1,18 +1,19 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper
-from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario
+from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
+from .forms import ProductCalidadForm, RequerimientoCalidadForm
 from user.decorators import perfil_seleccionado_required
-from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter
+from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter
 from user.filters import ProfileFilter
 import csv
 from django.core.paginator import Paginator
@@ -22,6 +23,8 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
+from django.http import JsonResponse
+
 #import decimal
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -1263,3 +1266,103 @@ def convert_excel_proveedores(proveedores):
     wb.save(response)
 
     return(response)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def product_calidad(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    items = Product.objects.filter(critico = True, completado = True).order_by('codigo')
+
+    myfilter=ProductCalidadFilter(request.GET, queryset=items)
+    items = myfilter.qs
+
+    #Set up pagination
+    p = Paginator(items, 50)
+    page = request.GET.get('page')
+    items_list = p.get_page(page)
+
+    context = {
+        'usuario':usuario,
+        'items': items,
+        'myfilter':myfilter,
+        'items_list':items_list,
+        }
+
+
+    return render(request,'dashboard/product_calidad.html', context)
+
+def add_requerimiento_calidad(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    producto_calidad = get_object_or_404(Producto_Calidad, producto__id=pk)
+    if request.method == 'POST':
+        req_form = RequerimientoCalidadForm(request.POST, request.FILES)
+        
+        if req_form.is_valid():
+            requerimiento = req_form.save(commit=False)
+            requerimiento.solicitud = producto_calidad
+            requerimiento.updated_by = usuario
+            requerimiento.save()
+            return JsonResponse({'success': True, 'id': requerimiento.id, 'nombre': requerimiento.nombre, 'fecha': requerimiento.fecha.strftime('%Y-%m-%d'), 'url': requerimiento.url.url,})
+        else:
+            errors = req_form.errors.as_json()
+            return JsonResponse({'success': False, 'errors': errors})
+    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+
+def eliminar_requerimiento_calidad(request, pk):
+    try:
+        requerimiento = Requerimiento_Calidad.objects.get(id=pk)
+        requerimiento.delete()
+        return JsonResponse({'success': True})
+    except Requerimiento_Calidad.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'Requerimiento no encontrado'})
+    
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def product_calidad_update(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    item = get_object_or_404(Product, id=pk)
+    error_messages = {}
+    
+    # Obtener o crear Producto_Calidad asociado
+    producto_calidad, created = Producto_Calidad.objects.get_or_create(producto=item)
+    requisitos = producto_calidad.requisitos
+    if requisitos is None:
+        requisitos = ''
+    if request.method == 'POST':
+        form = ProductCalidadForm(request.POST, instance=item)
+        req_form = RequerimientoCalidadForm(request.POST, request.FILES) #Se manda para poder utilizarlo en el modal
+        
+        if form.is_valid():
+            requisitos = request.POST.get('requisitos')
+            if requisitos:
+                producto_calidad.requisitos = requisitos
+                producto_calidad.save()
+            producto_calidad.updated_by = usuario  
+            producto_calidad.updated_at = datetime.now()
+            producto_calidad.save()  
+            form.save()
+            
+            messages.success(request, f'Se ha actualizado el producto {item.nombre}')
+            return redirect('product_calidad')
+        else:
+            # Manejo de errores en formularios
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
+            for field, errors in req_form.errors.items():
+                error_messages[field] = errors.as_text()
+    else:
+        form = ProductCalidadForm(instance=item)
+        req_form = RequerimientoCalidadForm()
+
+    context = {
+        'error_messages': error_messages,
+        'form': form,
+        'req_form': req_form,
+        'item': item,
+        'producto_calidad': producto_calidad,
+        'requisitos': requisitos,  # Aquí pasas el campo
+    }
+    return render(request, 'dashboard/product_calidad_update.html', context)

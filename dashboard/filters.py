@@ -13,6 +13,17 @@ class ProductFilter(django_filters.FilterSet):
         model = Product
         fields = ['codigo','nombre','familia', 'subfamilia',]
 
+class ProductCalidadFilter(django_filters.FilterSet):
+    nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
+    codigo = CharFilter(field_name='codigo', lookup_expr='icontains')
+    familia = CharFilter(field_name='familia__nombre', lookup_expr='icontains')
+    subfamilia = CharFilter(field_name='subfamilia__nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = Product
+        fields = ['codigo','nombre','familia', 'subfamilia','rev_calidad']
+
+
 class ProyectoFilter(django_filters.FilterSet):
     id = CharFilter(field_name='id', lookup_expr='icontains')
     nombre = CharFilter(field_name='nombre', lookup_expr='icontains')

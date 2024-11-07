@@ -273,7 +273,7 @@ def articulos_entrada(request, pk):
                         if productos_orden == 0:
                             solicitud.requisitar = False
                             solicitud.save()
-            if entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
+            elif entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
                 print('Activo valores antes de las cuentas')
                 inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
                 articulo.articulo_comprado.producto.producto.cantidad = 0
@@ -372,7 +372,7 @@ def articulos_entrada_servicios(request, pk):
                         )
                 email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
                 email.send()
-            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
+            elif entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
                 #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
                 productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
                     articulos__producto__producto = articulo.articulo_comprado.producto.producto.articulos.producto.producto,
@@ -411,7 +411,7 @@ def articulos_entrada_servicios(request, pk):
                             solicitud.requisitar = False
                             solicitud.save()
                         
-            if entrada.oc.req.orden.tipo.tipo == 'normal':
+            elif entrada.oc.req.orden.tipo.tipo == 'normal':
                 if articulo.articulo_comprado.producto.producto.articulos.producto.producto.servicio == True:
                     producto_surtir.surtir = False
                 else:
@@ -510,33 +510,37 @@ def update_entrada(request):
                     precio_unit_promedio = monto_total/nueva_cantidad_inventario
 
                 producto_inv.price = precio_unit_promedio
-            #Esta parte determina el comportamiento de todos las solicitudes que se tienen que activar cuando la entrada es de resurtimiento
-            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
-                if producto_surtir: #producto_surtir es la solicitud de la que proviene el resurtimiento
-                    producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #la cantidad de entrada es igual a la sumatoria de la cantidad pendiente_surtir + cantidad de la entrada 
-                    producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad 
-                    producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad
-                    producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad 
-                    if producto_surtir.cantidad_requisitar == 0:
-                        producto_surtir.requisitar = False
-                    producto_surtir.precio = producto_comprado.precio_unitario
-                    producto_surtir.save()
+
+            if producto_inv.producto.especialista == False:
+            ##########################################################InicioEvitar
+                #Esta parte determina el comportamiento de todos las solicitudes que se tienen que activar cuando la entrada es de resurtimiento
+                if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
+                    if producto_surtir: #producto_surtir es la solicitud de la que proviene el resurtimiento
+                        producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #la cantidad de entrada es igual a la sumatoria de la cantidad pendiente_surtir + cantidad de la entrada 
+                        producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad 
+                        producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad
+                        producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad 
+                        if producto_surtir.cantidad_requisitar == 0:
+                            producto_surtir.requisitar = False
+                        producto_surtir.precio = producto_comprado.precio_unitario
+                        producto_surtir.save()
+                        producto_inv.save()
+                    producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para resurtimiento'
+                else:
+                    producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #Todo lo que está pendiente en una entrada más la entrada misma
+                    producto_inv.cantidad_apartada = producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
+                    producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad                       #Al producto disponible para surtir se le suma lo que entra
+                    #Es probable que esta cantidad ya le esté restando en otro lado
+                    producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
                     producto_inv.save()
-                producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para resurtimiento'
-            else:
-                producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #Todo lo que está pendiente en una entrada más la entrada misma
-                producto_inv.cantidad_apartada = producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
-                producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad                       #Al producto disponible para surtir se le suma lo que entra
-                #Es probable que esta cantidad ya le esté restando en otro lado
-                producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
-                producto_inv.save()
-                producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para solicitud normal'
-                entrada.entrada_date = date.today()
-                entrada.entrada_hora = datetime.now().time()
-                entrada.save()
-                producto_surtir.save()
+                    producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para solicitud normal'
+                    entrada.entrada_date = date.today()
+                    entrada.entrada_hora = datetime.now().time()
+                    entrada.save()
+                    producto_surtir.save()
             #Se guardan todas las bases de datos
-          
+            ##########################################################Fin
+
             #cantidad_entradas = entradas_producto.cantidad - entradas_producto.cantidad_por_surtir
             messages.success(request,'Haz agregado exitosamente un producto')
             if producto_comprado.producto.producto.articulos.producto.producto.servicio == True:
@@ -563,33 +567,37 @@ def update_entrada(request):
                 producto_inv.price = 0
             else:
                 producto_inv.price = monto_total/cantidad_inventario or 0
-                
-        #cantidad_total = cantidad_inventario - entrada_item.cantidad
-        if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
-            producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
-            producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar + entrada_item.cantidad
-            producto_inv.cantidad = producto_inv.cantidad - entrada_item.cantidad
-            producto_surtir.requisitar = True
-            producto_surtir.save()
-            #if producto_surtir.cantidad > entrada_item.cantidad:
-            #    producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
-            #if producto_surtir.cantidad <= entrada_item.cantidad:
-            #    producto_surtir.cantidad_requisitar = producto_surtir.cantidad
-            #    producto_surtir.cantidad = 0
-            #    producto_inv.cantidad = producto_inv.cantidad - entrada_item.cantidad + producto_surtir.cantidad
-            #    producto_inv.cantidad_apartada = producto_inv.cantidad_apartada - producto_surtir.cantidad_requisitar
-            #    producto_surtir.save()
+        if producto_inv.producto.especialista == False:
+            #########################################################################InicioEvitar     
+            #cantidad_total = cantidad_inventario - entrada_item.cantidad
+            if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
+                producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
+                producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar + entrada_item.cantidad
+                producto_inv.cantidad = producto_inv.cantidad - entrada_item.cantidad
+                producto_surtir.requisitar = True
+                producto_surtir.save()
+                #if producto_surtir.cantidad > entrada_item.cantidad:
+                #    producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
+                #if producto_surtir.cantidad <= entrada_item.cantidad:
+                #    producto_surtir.cantidad_requisitar = producto_surtir.cantidad
+                #    producto_surtir.cantidad = 0
+                #    producto_inv.cantidad = producto_inv.cantidad - entrada_item.cantidad + producto_surtir.cantidad
+                #    producto_inv.cantidad_apartada = producto_inv.cantidad_apartada - producto_surtir.cantidad_requisitar
+                #    producto_surtir.save()
 
-        else:
-            #producto_inv.cantidad_apartada = producto_inv.cantidad_apartada - entrada_item.cantidad
-            producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar + entrada_item.cantidad
-            producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
-            if producto_surtir == 0:
-                producto_surtir.surtir = False
-                producto_surtir.precio = 0
-            producto_surtir.save()
-        producto_inv._change_reason = 'Se está borrando una entrada. view: update_entrada'
-        producto_inv.cantidad_entradas = producto_inv.cantidad_entradas - entrada_item.cantidad
+            else:
+                #producto_inv.cantidad_apartada = producto_inv.cantidad_apartada - entrada_item.cantidad
+                producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar + entrada_item.cantidad
+                producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
+                if producto_surtir == 0:
+                    producto_surtir.surtir = False
+                    producto_surtir.precio = 0
+                producto_surtir.save()
+            
+
+            producto_inv._change_reason = 'Se está borrando una entrada. view: update_entrada'
+            producto_inv.cantidad_entradas = producto_inv.cantidad_entradas - entrada_item.cantidad
+            #######################################################################Fin
         if producto_comprado.cantidad_pendiente == None:
             producto_comprado.cantidad_pendiente = 0
         producto_comprado.cantidad_pendiente = producto_comprado.cantidad_pendiente + entrada_item.cantidad
@@ -639,9 +647,13 @@ def reporte_calidad(request, pk):
                         if articulos_restantes == 0:
                             articulo_entrada.liberado = True
                         #Lo estoy comentando porque según yo la cantidad ya está afectada en la cantidad en entró el sumarle sería afectarlo doble 
-                        #producto_surtir.cantidad = producto_surtir.cantidad + item.cantidad
-                        #producto_surtir.surtir = True
-                        #producto_surtir.save()
+                        producto_surtir.cantidad = producto_surtir.cantidad + item.cantidad
+                        producto_surtir.surtir = True
+                        producto_surtir.save()
+                        producto = producto_surtir.articulos.producto
+                        producto.cantidad_entradas += item.cantidad
+                        producto.save()
+
                     if item.autorizado == False:
                        
                         #Esta condiconal solo afectara la cantidad de articulos en la entrada si ya son los ultimos articulos dentro de la liberacion

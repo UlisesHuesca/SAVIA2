@@ -8,6 +8,7 @@ class EntradaArticuloForm(forms.ModelForm):
         fields = ['cantidad','referencia']
 
 class Reporte_CalidadForm(forms.ModelForm):
+    autorizado = forms.BooleanField(required=False)
     class Meta:
         model = Reporte_Calidad
         fields = ['cantidad','comentarios','image','autorizado']
