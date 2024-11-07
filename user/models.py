@@ -26,6 +26,9 @@ class CustomUser(models.Model):
     nivel =  models.DecimalField(max_digits=10, decimal_places=2, null=True)
     empresa = models.ForeignKey(Empresa, on_delete= models.CASCADE, null=True)
     puesto = models.CharField(max_length=40, null=True, blank=True)
+    apoyo_renta = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
+    apoyo_mantto = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
+
 
     @property
     def imageURL(self):
