@@ -144,9 +144,21 @@
                     <td>{{item.nombre}}</td>
                     <td>{{item.familia}}</td>
                     <td>{{item.unidad}}</td>
-                    <td>{{item.activo}}</td>
-                    <td>{{item.servicio}}</td>
-                    <td>{{item.rev_calidad}}</td>
+                    {% if item.activo %}
+                        <td>Si</td>
+                    {% else %}
+                        <td>No</td>
+                    {% endif %}
+                    {% if item.servicio %}
+                        <td>Si</td>
+                    {% else %}
+                        <td>No</td>
+                    {% endif %}
+                    {% if item.rev_calidad %}
+                        <td>Si</td>
+                    {% else %}
+                        <td>No</td>
+                    {% endif %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'product_calidad_update' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
