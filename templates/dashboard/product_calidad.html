@@ -98,6 +98,25 @@
                 </div>
                 <hr>
                 </form>
+                <div class = "row mt-2 bg-white">
+                    <form method=POST>
+                        {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <!--<li class="nav-item mx-2">
+                            <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
+                        </li> -->
+                        <li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" name="btnReporte"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                        </li>
+                        <!--<li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                        </li>-->
+                        <li class="nav-item mx-2">
+                            <a class="btn btn-outline-info" href="{% url 'product_calidad_add' %}"><i class="fa-solid fa-plus"></i>Agregar Productos</a>
+                        </li>
+                    </ul>
+                    </form>
+                </div>
             </div>
         </div>
 </div>

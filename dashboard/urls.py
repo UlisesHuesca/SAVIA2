@@ -14,6 +14,7 @@ urlpatterns = [
     path('staff/', views.staff, name='dashboard-staff'),
     path('product/', views.product, name='dashboard-product'),
     path('product_calidad/', views.product_calidad, name='product_calidad'),
+    path('product_calidad_add/', views.Add_Product_Critico, name='product_calidad_add'),
     path('product_calidad/<int:pk>/', views.product_calidad_update, name='product_calidad_update'),
     path('product/<int:pk>/add_requerimiento/', views.add_requerimiento_calidad, name='add_requerimiento_calidad'),
     path('eliminar_requerimiento_calidad/<int:pk>/', views.eliminar_requerimiento_calidad, name='eliminar_requerimiento_calidad'),

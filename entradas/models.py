@@ -27,7 +27,7 @@ class EntradaArticulo(models.Model):
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     created_at = models.DateTimeField(auto_now_add=True)
     agotado = models.BooleanField(default=False)
-    liberado = models.BooleanField(default=True)
+    liberado = models.BooleanField(default=True) #Este debe cambiar a False para que se vea en el liberado y se deben hacer todas las cuentas despues del liberado
     referencia = models.CharField(max_length=50, null=True, blank=True)
 
     def __str__(self):

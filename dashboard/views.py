@@ -11,7 +11,7 @@ from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import ProductCalidadForm, RequerimientoCalidadForm
+from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm
 from user.decorators import perfil_seleccionado_required
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter
 from user.filters import ProfileFilter
@@ -1298,16 +1298,22 @@ def add_requerimiento_calidad(request, pk):
     producto_calidad = get_object_or_404(Producto_Calidad, producto__id=pk)
     if request.method == 'POST':
         req_form = RequerimientoCalidadForm(request.POST, request.FILES)
-        
-        if req_form.is_valid():
-            requerimiento = req_form.save(commit=False)
-            requerimiento.solicitud = producto_calidad
-            requerimiento.updated_by = usuario
-            requerimiento.save()
-            return JsonResponse({'success': True, 'id': requerimiento.id, 'nombre': requerimiento.nombre, 'fecha': requerimiento.fecha.strftime('%Y-%m-%d'), 'url': requerimiento.url.url,})
+        archivo = request.FILES.get('url')  # Obtiene el archivo del campo 'url'
+        if archivo and archivo.size > 10 * 1024 * 1024:  # 10 MB en bytes
+            return JsonResponse({
+                'success': False,
+                'errors': {'url': ['El tamaño del archivo no puede ser mayor a 10 MB.']}
+            })
         else:
-            errors = req_form.errors.as_json()
-            return JsonResponse({'success': False, 'errors': errors})
+            if req_form.is_valid():
+                requerimiento = req_form.save(commit=False)
+                requerimiento.solicitud = producto_calidad
+                requerimiento.updated_by = usuario
+                requerimiento.save()
+                return JsonResponse({'success': True, 'id': requerimiento.id, 'nombre': requerimiento.nombre, 'fecha': requerimiento.fecha.strftime('%Y-%m-%d'), 'url': requerimiento.url.url,})
+            else:
+                errors = req_form.errors.as_json()
+                return JsonResponse({'success': False, 'errors': errors})
     return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
 def eliminar_requerimiento_calidad(request, pk):
@@ -1366,3 +1372,58 @@ def product_calidad_update(request, pk):
         'requisitos': requisitos,  # Aquí pasas el campo
     }
     return render(request, 'dashboard/product_calidad_update.html', context)
+
+def Add_Product_Critico(request):
+    # Obtén el perfil y distrito
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+    distrito = usuario.distritos
+
+    # Filtra los productos disponibles
+    productos_filtrados = Product.objects.filter(critico=False)
+
+    # Maneja la solicitud AJAX de Select2
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        term = request.GET.get('term', '')
+        productos_filtrados = productos_filtrados.filter(nombre__icontains=term)[:10]
+        productos_data = [
+            {
+                'id': producto.id,
+                'text': producto.nombre,
+                'codigo': producto.codigo,
+                'nombre': producto.nombre,
+                'unidad': producto.unidad.nombre if producto.unidad else '',
+                'familia': producto.familia.nombre if producto.familia else '',
+                'subfamilia': producto.subfamilia.nombre if producto.subfamilia else '',
+                'servicio': producto.servicio
+            }
+            for producto in productos_filtrados
+        ]
+        return JsonResponse(productos_data, safe=False)
+
+    # Inicializa el formulario
+    form = Add_Product_CriticoForm()
+    form.fields['product'].queryset = productos_filtrados.none()  # Asegúrate de que el queryset esté configurado antes de validar
+
+    if request.method == 'POST':
+        form = Add_Product_CriticoForm(request.POST)
+        form.fields['product'].queryset = productos_filtrados  # Reasigna el queryset para asegurar que esté actualizado
+
+        if form.is_valid():
+            product = form.cleaned_data['product']
+            product.critico = True
+            product.save()
+            messages.success(request, f'El producto {product.nombre} ha sido marcado como crítico.')
+            return redirect('product_calidad')
+        else:
+            # Mostrar los errores de validación
+            error_message = "Hubo un error con el formulario. Los siguientes campos no son válidos:\n"
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_message += f" - {field}: {error}\n"
+            messages.error(request, error_message)
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'dashboard/add_product_critico.html', context)

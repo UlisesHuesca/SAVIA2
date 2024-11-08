@@ -146,3 +146,15 @@ class Subproyectos_Add_Form(forms.ModelForm):
     class Meta:
         model = Subproyecto
         fields = ['nombre','descripcion','presupuesto','status']
+
+class Add_Product_CriticoForm(forms.Form):
+    product = forms.ModelChoiceField(
+        queryset=Product.objects.none(),  # Dejamos el queryset vacío por defecto
+        label="Seleccionar Producto",
+        widget=forms.Select(attrs={'class': 'select2'})
+    )
+
+    class Meta:
+        fields = ['product']
+
+

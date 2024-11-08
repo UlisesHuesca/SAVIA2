@@ -194,10 +194,17 @@ document.getElementById('requerimientoForm').addEventListener('submit', function
                 "icon": "success"
             });
         } else {
-            // Mostrar mensaje de error
+            // Mostrar mensaje de error detallado
+            let errorMessage = "Error al añadir el requerimiento. Por favor, revisa el formulario.";
+            
+            if (data.errors) {
+                // Si hay errores específicos, los concatenamos en un solo mensaje
+                errorMessage = Object.values(data.errors).map(errorList => errorList.join(", ")).join("\n");
+            }
+            
             Swal.fire({
                 "title": "Error",
-                "text": "Error al añadir el requerimiento. Por favor, revisa el formulario.",
+                "text": errorMessage,
                 "icon": "error"
             });
             console.error('Error:', data.errors);
