@@ -11,7 +11,7 @@ from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import ProductCalidadForm, RequerimientoCalidadForm
+from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm
 from user.decorators import perfil_seleccionado_required
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter
 from user.filters import ProfileFilter
@@ -1272,33 +1272,35 @@ def convert_excel_proveedores(proveedores):
 def product_calidad(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    items = Product.objects.filter(critico = True, completado = True).order_by('codigo')
+    if usuario.tipo.calidad == True:    
+        items = Product.objects.filter(critico = True, completado = True).order_by('codigo')
 
-    myfilter=ProductCalidadFilter(request.GET, queryset=items)
-    items = myfilter.qs
+        myfilter=ProductCalidadFilter(request.GET, queryset=items)
+        items = myfilter.qs
 
-    #Set up pagination
-    p = Paginator(items, 50)
-    page = request.GET.get('page')
-    items_list = p.get_page(page)
+        #Set up pagination
+        p = Paginator(items, 50)
+        page = request.GET.get('page')
+        items_list = p.get_page(page)
 
-    context = {
-        'usuario':usuario,
-        'items': items,
-        'myfilter':myfilter,
-        'items_list':items_list,
-        }
+        context = {
+            'usuario':usuario,
+            'items': items,
+            'myfilter':myfilter,
+            'items_list':items_list,
+            }
 
 
-    return render(request,'dashboard/product_calidad.html', context)
-
+        return render(request,'dashboard/product_calidad.html', context)
+    else:
+        raise Http404("No tienes permiso para ver esta vista")
+    
 def add_requerimiento_calidad(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     producto_calidad = get_object_or_404(Producto_Calidad, producto__id=pk)
     if request.method == 'POST':
         req_form = RequerimientoCalidadForm(request.POST, request.FILES)
-        
         if req_form.is_valid():
             requerimiento = req_form.save(commit=False)
             requerimiento.solicitud = producto_calidad
@@ -1323,46 +1325,106 @@ def eliminar_requerimiento_calidad(request, pk):
 def product_calidad_update(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    item = get_object_or_404(Product, id=pk)
-    error_messages = {}
-    
-    # Obtener o crear Producto_Calidad asociado
-    producto_calidad, created = Producto_Calidad.objects.get_or_create(producto=item)
-    requisitos = producto_calidad.requisitos
-    if requisitos is None:
-        requisitos = ''
-    if request.method == 'POST':
-        form = ProductCalidadForm(request.POST, instance=item)
-        req_form = RequerimientoCalidadForm(request.POST, request.FILES) #Se manda para poder utilizarlo en el modal
+    if usuario.tipo.calidad == True:  
+        item = get_object_or_404(Product, id=pk)
+        error_messages = {}
         
-        if form.is_valid():
-            requisitos = request.POST.get('requisitos')
-            if requisitos:
-                producto_calidad.requisitos = requisitos
-                producto_calidad.save()
-            producto_calidad.updated_by = usuario  
-            producto_calidad.updated_at = datetime.now()
-            producto_calidad.save()  
-            form.save()
+        # Obtener o crear Producto_Calidad asociado
+        producto_calidad, created = Producto_Calidad.objects.get_or_create(producto=item)
+        requisitos = producto_calidad.requisitos
+        if requisitos is None:
+            requisitos = ''
+        if request.method == 'POST':
+            form = ProductCalidadForm(request.POST, instance=item)
+            req_form = RequerimientoCalidadForm(request.POST, request.FILES) #Se manda para poder utilizarlo en el modal
             
-            messages.success(request, f'Se ha actualizado el producto {item.nombre}')
-            return redirect('product_calidad')
+            if form.is_valid():
+                requisitos = request.POST.get('requisitos')
+                if requisitos:
+                    producto_calidad.requisitos = requisitos
+                    producto_calidad.save()
+                producto_calidad.updated_by = usuario  
+                producto_calidad.updated_at = datetime.now()
+                producto_calidad.save()  
+                form.save()
+                
+                messages.success(request, f'Se ha actualizado el producto {item.nombre}')
+                return redirect('product_calidad')
+            else:
+                # Manejo de errores en formularios
+                for field, errors in form.errors.items():
+                    error_messages[field] = errors.as_text()
+                for field, errors in req_form.errors.items():
+                    error_messages[field] = errors.as_text()
         else:
-            # Manejo de errores en formularios
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
-            for field, errors in req_form.errors.items():
-                error_messages[field] = errors.as_text()
-    else:
-        form = ProductCalidadForm(instance=item)
-        req_form = RequerimientoCalidadForm()
+            form = ProductCalidadForm(instance=item)
+            req_form = RequerimientoCalidadForm()
 
-    context = {
-        'error_messages': error_messages,
-        'form': form,
-        'req_form': req_form,
-        'item': item,
-        'producto_calidad': producto_calidad,
-        'requisitos': requisitos,  # Aquí pasas el campo
-    }
-    return render(request, 'dashboard/product_calidad_update.html', context)
+        context = {
+            'error_messages': error_messages,
+            'form': form,
+            'req_form': req_form,
+            'item': item,
+            'producto_calidad': producto_calidad,
+            'requisitos': requisitos,  # Aquí pasas el campo
+        }
+        return render(request, 'dashboard/product_calidad_update.html', context)
+    else:
+        raise Http404("No tienes permiso para ver esta vista")
+    
+def Add_Product_Critico(request):
+    # Obtén el perfil y distrito
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+    distrito = usuario.distritos
+    if usuario.tipo.calidad == True:
+        # Filtra los productos disponibles
+        productos_filtrados = Product.objects.filter(critico=False)
+
+        # Maneja la solicitud AJAX de Select2
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+            term = request.GET.get('term', '')
+            productos_filtrados = productos_filtrados.filter(nombre__icontains=term)[:10]
+            productos_data = [
+                {
+                    'id': producto.id,
+                    'text': producto.nombre,
+                    'codigo': producto.codigo,
+                    'nombre': producto.nombre,
+                    'unidad': producto.unidad.nombre if producto.unidad else '',
+                    'familia': producto.familia.nombre if producto.familia else '',
+                    'subfamilia': producto.subfamilia.nombre if producto.subfamilia else '',
+                    'servicio': producto.servicio
+                }
+                for producto in productos_filtrados
+            ]
+            return JsonResponse(productos_data, safe=False)
+
+        # Inicializa el formulario
+        form = Add_Product_CriticoForm()
+        form.fields['product'].queryset = productos_filtrados.none()  # Asegúrate de que el queryset esté configurado antes de validar
+
+        if request.method == 'POST':
+            form = Add_Product_CriticoForm(request.POST)
+            form.fields['product'].queryset = productos_filtrados  # Reasigna el queryset para asegurar que esté actualizado
+
+            if form.is_valid():
+                product = form.cleaned_data['product']
+                product.critico = True
+                product.save()
+                messages.success(request, f'El producto {product.nombre} ha sido marcado como crítico.')
+                return redirect('product_calidad')
+            else:
+                # Mostrar los errores de validación
+                error_message = "Hubo un error con el formulario. Los siguientes campos no son válidos:\n"
+                for field, errors in form.errors.items():
+                    for error in errors:
+                        error_message += f" - {field}: {error}\n"
+                messages.error(request, error_message)
+
+        context = {
+            'form': form,
+        }
+        return render(request, 'dashboard/add_product_critico.html', context)
+    else:
+        raise Http404("No tienes permiso para ver esta vista")
