@@ -141,7 +141,7 @@
                     <th scope="col">Razón Social</th>
                     <th scope="col">Nombre Comercial</th>
                     <th scope="col">RFC</th>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" %}
+                    {% if usuario.tipo.proveedores %}
                     <th scope="col">Edición</th>
                     {% endif %}
                     <th scope="col">Direcciones</th>
@@ -158,7 +158,7 @@
                     <td>{{proveedor.nombre_comercial}}</td>
                     {% endif %}
                     <td>{{proveedor.rfc}}</td>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" %}
+                    {% if usuario.tipo.proveedores %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
