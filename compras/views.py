@@ -690,12 +690,14 @@ def oc_modal(request, pk):
 
 @perfil_seleccionado_required
 def mostrar_comparativo(request, pk):
-    comparativo = Comparativo.objects.get(id=pk)
+    compra = Compra.objects.get(id=pk)
+    comparativo = Comparativo.objects.get(id=compra.comparativo_model.id)
     productos = Item_Comparativo.objects.filter(comparativo = comparativo)
     
     context= {
         'comparativo':comparativo,
         'productos':productos,
+        'compra':compra,
         }
 
     return render(request, 'compras/mostrar_comparativo.html',context)
@@ -4285,3 +4287,194 @@ solicitado por autoridades competentes.<br/>
     c.save()
     buf.seek(0)
     return buf 
+
+def pdf_formato_comparativo(request, pk):
+    # Aquí va el código para generar el PDF
+    compra = Compra.objects.get(id = pk)
+    comparativo = Comparativo.objects.get(id = compra.comparativo_model.id)
+    productos = Item_Comparativo.objects.filter(comparativo=comparativo)
+
+
+
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+
+    # Colores
+    azul = Color(0.0859375,0.1953125,0.30859375) #prussian_blue 
+    blanco = colors.white
+    negro = colors.black
+
+    # Cabecera azul
+    c.setFillColor(azul)
+    c.rect(35, 715, 550, 50, stroke=0, fill=1)
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(white)
+    c.drawCentredString(306, 730, "Tabla Comparativa")
+
+    # Logo
+    c.drawInlineImage('static/images/logo_vordcab.jpg',40,600, 6 * cm, 3 * cm) #Imagen vortec
+    #Estilo de parrafo
+    objective_style = ParagraphStyle(
+        name='ObjectiveStyle',
+        fontName='Helvetica',
+        fontSize=12,
+        textColor=colors.black,
+        spaceBefore=10,
+        spaceAfter=10,
+        leftIndent=10,
+        rightIndent=10,
+        alignment=0  # Alineación justificada
+    )
+    styles = getSampleStyleSheet()
+    style = styles["BodyText"]
+
+    # Justificación
+    c.setFillColor(negro)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(40, 705, "Comparativa:")
+    c.drawString(390, 680, "Fecha de comparativa:")
+    c.drawString(220, 660, "Justificación/Observación:")
+    #c.rect(400, 610, 180, 40, stroke=1, fill=0)  # Caja de justificación vacía
+
+    c.setFont("Helvetica", 10)
+    parrafo = Paragraph(comparativo.nombre, style)
+    ancho_parrafo, altura_parrafo = parrafo.wrap(440, 0)
+    inicio_x = 125
+    inicio_y = 715 - altura_parrafo  # Ajusta el inicio para que crezca hacia abajo
+    parrafo.drawOn(c, inicio_x, inicio_y)  # Dibuja el párrafo en las coordenadas (x, y)
+    #c.drawString(125, 700, comparativo.nombre + 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    fecha_formateada = comparativo.created_at.strftime("%d-%m-%Y")
+    c.drawString(530, 680, fecha_formateada)
+    text = comparativo.comentarios
+    parrafo = Paragraph(text, style)
+    # Calcular el ancho y la altura del párrafo
+    ancho_parrafo, altura_parrafo = parrafo.wrap(340, 0)  # Limita el ancho del párrafo a 340
+    inicio_x = 220
+    inicio_y = 650 - altura_parrafo  # Ajusta el inicio para que crezca hacia abajo
+    parrafo.drawOn(c, inicio_x, inicio_y)  # Dibuja el párrafo en las coordenadas (x, y)
+
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(45, 580, "Proveedor A:")
+    c.drawString(45, 550, "Proveedor B:")
+    c.drawString(45, 520, "Proveedor C:")
+    c.setFont('Helvetica',12)
+    c.drawString(125, 580, comparativo.proveedor.razon_social)
+    if comparativo.cotizacion:
+        c.drawString(125, 565, 'Tiene archivo cotización')
+    else:
+        c.drawString(125, 565, 'No tiene archivo cotización')
+    c.drawString(125, 550, comparativo.proveedor2.razon_social)
+    if comparativo.cotizacion2:
+        c.drawString(125, 535, 'Tiene archivo cotización')
+    else:
+        c.drawString(125, 535, 'No tiene archivo cotización')
+    c.drawString(125, 520, comparativo.proveedor3.razon_social)
+    if comparativo.cotizacion3:
+        c.drawString(125, 505, 'Tiene archivo cotización')
+    else:
+        c.drawString(125, 505, 'No tiene archivo cotización')
+
+    # Definir encabezado y estilos de la tabla
+    c.setFont("Helvetica-Bold", 10)
+    encabezado = [["Unidad", "Producto", "Código", "Marca", "Modelo", "Precio A", "Precio B", "Precio C"]]
+
+    # Definir encabezado y estilos de la tabla
+    styles = getSampleStyleSheet()
+    style_normal = styles["BodyText"]  # Estilo de párrafo base
+    style_normal.fontSize = 7  # Ajustar el tamaño de la fuente
+
+    # Añadir cada producto como una fila en la tabla
+    for producto in productos:
+        if producto.marca:
+            valor1 = str(producto.marca)
+        else:
+            valor1 = ''
+        if producto.modelo:
+            valor2 = str(producto.modelo)
+        else: 
+            valor2 = ''
+        fila = [
+            Paragraph(str(producto.producto.producto.unidad), style_normal),
+            Paragraph(str(producto.producto.producto.nombre), style_normal),
+            Paragraph(str(producto.producto.producto.codigo), style_normal),
+            Paragraph(valor1, style_normal),
+            Paragraph(valor2, style_normal),
+            Paragraph('$' + str(producto.precio), style_normal),
+            Paragraph('$' + str(producto.precio2), style_normal),
+            Paragraph('$' + str(producto.precio3), style_normal),
+        ]
+        encabezado.append(fila)
+
+    # Crear la tabla
+    tabla = Table(encabezado, colWidths=[1.4 * cm, 6.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm])
+    tabla.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), azul),
+        ("TEXTCOLOR", (0, 0), (-1, 0), blanco),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica"),
+        ("FONTSIZE", (0, 0), (-1, 0), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+        ("BACKGROUND", (0, 1), (-1, -1), blanco),
+        ("GRID", (0, 0), (-1, -1), 1, negro),
+    ]))
+
+    # Calcular la altura de la tabla
+    ancho_tabla, altura_tabla = tabla.wrap(0, 0)  # Calcular el tamaño necesario para la tabla
+
+    # Ajustar la posición inicial para que la tabla crezca hacia abajo
+    inicio_x = 35
+    inicio_y = 480 - altura_tabla
+
+    # Dibujar la tabla en el PDF en la posición ajustada
+    tabla.drawOn(c, inicio_x, inicio_y)
+
+    # Área de firmas
+    c.setFont("Helvetica", 8)
+    c.drawString(120, 100, "Gerencia")
+    c.line(70, 110, 200, 110)
+    c.drawString(285, 100, "Comprador")
+    c.line(240, 110, 370, 110)
+    c.drawString(470, 100, "Superintendente")
+    c.line(430, 110, 560, 110)
+    #Nombres
+    if compra.oc_autorizada_por:
+        autorizado1 = str(compra.oc_autorizada_por.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por.staff.staff.last_name)
+    else:
+        autorizado1 = ''
+    if compra.creada_por:
+        comprador = str(compra.creada_por.staff.staff.first_name) + ' ' + str(compra.creada_por.staff.staff.last_name)
+    else:
+        comprador = ''
+    if compra.oc_autorizada_por2:
+        autorizado2 = str(compra.oc_autorizada_por2.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por2.staff.staff.last_name)
+    else:
+        autorizado2 = ''
+    c.drawCentredString(140, 115, autorizado1)
+    c.drawCentredString(305, 115, comprador)
+    c.drawCentredString(490, 115, autorizado2)
+    # Pie de página
+    c.setFillColor(azul)
+    c.rect(35, 25, 550, 60, stroke=0, fill=1)
+    c.setFillColor(white)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawCentredString(110, 70, "Preparado por:")
+    c.drawCentredString(110, 60, "SUPTE ADQ")
+    c.drawCentredString(110, 45, "Nivel:")
+    c.drawCentredString(110, 35, "N5")
+    c.drawCentredString(240, 70, "Aprobado:")
+    c.drawCentredString(240, 60, "SUB ADM")
+    c.drawCentredString(240, 45, "Rev:")
+    c.drawCentredString(240, 35, "000")
+    c.drawCentredString(370, 70, "No. Documento:")
+    c.drawCentredString(370, 60, "SEOV-ADQ-N4-01.05")
+    c.drawCentredString(370, 45, "Fecha emisión:")
+    c.drawCentredString(370, 35, "03-MAY-2023")
+    c.drawCentredString(520, 70, "Clasificación:")
+    c.drawCentredString(520, 60, "Controlado")
+    c.drawCentredString(520, 45, "Fecha revisión")
+
+    # Guardar PDF
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return FileResponse(buf, as_attachment=True, filename=f'Comparativo_{pk}.pdf')

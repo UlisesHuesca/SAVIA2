@@ -281,7 +281,7 @@
                     {% if compra.proveedor.estatus.nombre == 'NUEVO' %}
                         {% if compra.comparativo_model %}
                             
-                                <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'mostrar-comparativo' compra.comparativo_model.id %}">
+                                <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'mostrar-comparativo' compra.id %}">
                                     <i class="fa-solid fa-scale-balanced"></i>
                                 </a>
                             
