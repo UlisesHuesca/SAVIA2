@@ -267,6 +267,11 @@ def articulos_entrada(request, pk):
             </table>
             """
         if productos_criticos:
+            # Consulta para obtener los usuarios
+            calidad_usuarios = Profile.objects.filter(tipo__calidad=True, distritos=compra.req.orden.distrito)
+            #calidad_usuarios = Profile.objects.filter(tipo__nombre = 'Admin')
+            # Lista de correos electrónicos de los usuarios
+            correos = [usuario.staff.staff.email for usuario in calidad_usuarios]
             static_path = settings.STATIC_ROOT
             img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
             img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
@@ -290,7 +295,7 @@ def articulos_entrada(request, pk):
                                         <tr>
                                             <td style="padding: 20px;">
                                                 <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado Victor Joshua Hernández Ramón,</p>
+                                                    <p>Estimado Supervisor de Calidad,</p>
                                                 </p>
                                                 <p style="font-size: 16px; text-align: justify;">
                                                     Estás recibiendo este correo porque se ha recibido en almacén los siguientes productos críticos que requieren la liberación por parte de calidad.</p>
@@ -317,7 +322,7 @@ def articulos_entrada(request, pk):
                     f'Entrada recibida: {entrada.folio}',
                     body=html_message,
                     from_email =settings.DEFAULT_FROM_EMAIL,
-                    to=['victorjosh02@hotmail.com',],
+                    to=correos,
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML

@@ -33,7 +33,16 @@
                 </div>
                 <div class="col-lg-4 col-sm-12">
                     <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-helmet-safety"></i></span>
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                            <label style="color: #121212;" for="id_staff">Folio</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-helmet-safety"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{myfilter.form.almacenista|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
                             <label style="color: #121212;" for="id_proyecto">Almacenista</label>
@@ -41,7 +50,7 @@
                     </div>
                 </div>
                 
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                <div id="serie" class="col-lg-4 col-md-auto col-sm-auto">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
@@ -50,7 +59,7 @@
                         </div>
                     </div>
                 </div>
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                <div id="serie" class="col-lg-4 col-md-auto col-sm-auto">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
