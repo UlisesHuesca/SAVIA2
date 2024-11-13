@@ -3450,7 +3450,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
-        if articulo.oc.proveedor.visita == True:
+        if articulo.oc.proveedor.nombre.visita == True:
             visita = 'Si'
         else:
             visita = 'No'
@@ -3585,7 +3585,7 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total *= tipo_de_cambio
-        if articulo.oc.proveedor.visita == True:
+        if articulo.oc.proveedor.nombre.visita == True:
             visita = 'Si'
         else:
             visita = 'No'
