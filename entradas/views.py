@@ -24,7 +24,8 @@ from datetime import date, datetime
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from io import BytesIO
 from decimal import Decimal, ROUND_DOWN
-
+from django.core.mail import EmailMessage, BadHeaderError
+from smtplib import SMTPException
 # Import Excel Stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -152,7 +153,7 @@ def pendientes_calidad(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
     
-    articulos_entrada = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto__producto__especialista = True, liberado = False, articulo_comprado__oc__req__orden__distrito = usuario.distritos)
+    articulos_entrada = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto__producto__critico = True, liberado = False, articulo_comprado__oc__req__orden__distrito = usuario.distritos)
     print(articulos_entrada)
     context = {
         'articulos_entrada':articulos_entrada,
@@ -186,7 +187,17 @@ def articulos_entrada(request, pk):
 
     compra = Compra.objects.get(id=pk)
     conteo_de_articulos = articulos.count()
-
+    articulos_html = """
+        <table border="1" style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr>
+                    <th>Producto Crítico</th>
+                    <th>Requisitos</th>
+                    <th>Requerimiento</th>
+                </tr>
+            </thead>
+            <tbody>
+        """
 
     entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
     articulos_entrada = EntradaArticulo.objects.filter(entrada = entrada)
@@ -215,25 +226,115 @@ def articulos_entrada(request, pk):
         for elemento in articulos_seleccionados:
             elemento.seleccionado = False
             elemento.save()
+        
+        #Parte para envio de mensaje si hay productos criticos en las entradas
+        articulos_html = """
+            <table border="1" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Producto Crítico</th>
+                        <th>Requisitos</th>
+                        <th>Requerimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+        productos_criticos = articulos_entrada.filter(articulo_comprado__producto__producto__articulos__producto__producto__critico=True)
+        for articulo in productos_criticos:
+            producto = articulo.articulo_comprado.producto.producto.articulos.producto.producto
+            requerimientos = producto.producto_calidad.requerimientos_calidad.all()
 
+            # Tabla para productos criticos 
+            if requerimientos.exists():
+                for requerimiento in requerimientos:
+                    articulos_html += f"""
+                        <tr>
+                            <td>{producto.codigo}</td>
+                            <td>{producto.producto_calidad.requisitos}</td>
+                            <td>{requerimiento.nombre}</td>
+                        </tr>
+                    """
+            else:
+                articulos_html += f"""
+                    <tr>
+                        <td>{producto.codigo}</td>
+                        <td>{producto.producto_calidad.requisitos}</td>
+                        <td>Sin requerimiento</td>
+                    </tr>
+                """
+            articulos_html += """
+                </tbody>
+            </table>
+            """
+        if productos_criticos:
+            static_path = settings.STATIC_ROOT
+            img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+            img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+            image_base64 = get_image_base64(img_path)
+            logo_v_base64 = get_image_base64(img_path2)
+            html_message = f"""
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    <p>Estimado Victor Joshua Hernández Ramón,</p>
+                                                </p>
+                                                <p style="font-size: 16px; text-align: justify;">
+                                                    Estás recibiendo este correo porque se ha recibido en almacén los siguientes productos críticos que requieren la liberación por parte de calidad.</p>
+                                                <p>Productos a liberar</p>
+                                                {articulos_html}
+                                                </p>
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                </html>
+            """
+            try:
+                email = EmailMessage(
+                    f'Entrada recibida: {entrada.folio}',
+                    body=html_message,
+                    from_email =settings.DEFAULT_FROM_EMAIL,
+                    to=['victorjosh02@hotmail.com',],
+                    headers={'Content-Type': 'text/html'}
+                    )
+                email.content_subtype = "html " # Importante para que se interprete como HTML
+                email.send()
+                messages.success(request, f'La entrada {entrada.folio} ha sido creada')
+            except (BadHeaderError, SMTPException) as e:
+                error_message = f'La entrada {entrada.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
+                messages.success(request, error_message)
         for articulo in articulos_entrada:
             producto_surtir2 = ArticulosparaSurtir.objects.filter(articulos = articulo.articulo_comprado.producto.producto.articulos)
             producto_surtir = ArticulosparaSurtir.objects.get(articulos = articulo.articulo_comprado.producto.producto.articulos)
             producto_surtir.seleccionado = False
             print(producto_surtir)
-            if producto_surtir.articulos.producto.producto.especialista == True:
+            if producto_surtir.articulos.producto.producto.critico == True:
                 print('Esta entrado al ciclo de calidad')
                 producto_surtir.surtir = False
                 articulo.liberado = False
-                archivo_oc = attach_oc_pdf(request, articulo.articulo_comprado.oc.id)
-                email = EmailMessage(
-                        f'Compra Autorizada {compra.get_folio}',
-                        f'Estimado *Inserte nombre de especialista*,\n Estás recibiendo este correo porque se ha recibido en almacén el producto código:{producto_surtir.articulos.producto.producto.codigo} descripción:{producto_surtir.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                        'savia@vordcab.com',
-                        ['ulises_huesc@hotmail.com'],
-                        )
-                email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
-                email.send()
             if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': # or 
                 #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
                 productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
@@ -359,19 +460,19 @@ def articulos_entrada_servicios(request, pk):
             producto_surtir = ArticulosparaSurtir.objects.get(articulos = articulo.articulo_comprado.producto.producto.articulos)
             producto_surtir.seleccionado = False
             print(producto_surtir)
-            if producto_surtir.articulos.producto.producto.especialista == True:
+            if producto_surtir.articulos.producto.producto.critico == True:
                 print('Esta entrado al ciclo de calidad')
                 producto_surtir.surtir = False
                 articulo.liberado = False
                 archivo_oc = attach_oc_pdf(request, articulo.articulo_comprado.oc.id)
-                email = EmailMessage(
-                        f'Compra Autorizada {compra.get_folio}',
-                        f'Estimado *Inserte nombre de especialista*,\n Estás recibiendo este correo porque se ha recibido en almacén el producto código:{producto_surtir.articulos.producto.producto.codigo} descripción:{producto_surtir.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
-                        'savia@vordcab.com',
-                        ['ulises_huesc@hotmail.com'],
-                        )
-                email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
-                email.send()
+            #    email = EmailMessage(
+            #            f'Compra Autorizada {compra.get_folio}',
+            #            f'Estimado *Inserte nombre de especialista*,\n Estás recibiendo este correo porque se ha recibido en almacén el producto código:{producto_surtir.articulos.producto.producto.codigo} descripción:{producto_surtir.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+            #            'savia@vordcab.com',
+            #            ['ulises_huesc@hotmail.com'],
+            #            )
+            #    email.attach(f'OC_folio:{articulo.articulo_comprado.oc.folio}.pdf',archivo_oc,'application/pdf')
+            #    email.send()
             elif entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
                 #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
                 productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
@@ -511,7 +612,7 @@ def update_entrada(request):
 
                 producto_inv.price = precio_unit_promedio
 
-            if producto_inv.producto.especialista == False:
+            if producto_inv.producto.critico == False:
             ##########################################################InicioEvitar
                 #Esta parte determina el comportamiento de todos las solicitudes que se tienen que activar cuando la entrada es de resurtimiento
                 if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
@@ -567,7 +668,7 @@ def update_entrada(request):
                 producto_inv.price = 0
             else:
                 producto_inv.price = monto_total/cantidad_inventario or 0
-        if producto_inv.producto.especialista == False:
+        if producto_inv.producto.critico == False:
             #########################################################################InicioEvitar     
             #cantidad_total = cantidad_inventario - entrada_item.cantidad
             if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':

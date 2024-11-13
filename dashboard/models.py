@@ -88,8 +88,8 @@ class Producto_Calidad(models.Model):
 
 def validar_size(value):
     filesize = value.size
-    if filesize > 10 * 1024 * 1024:  # 10 MB en bytes
-        raise ValidationError('El tamaño del archivo no puede ser mayor a 10 MB.')    
+    if filesize > 2 * 1024 * 1024:  # 10 MB en bytes
+        raise ValidationError('El tamaño del archivo no puede ser mayor a 2 MB.')    
 
 class Requerimiento_Calidad(models.Model):
     nombre = models.CharField(max_length=50, null=True, unique=True)

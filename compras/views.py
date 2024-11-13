@@ -651,7 +651,7 @@ def oc_modal(request, pk):
                         body=html_message,
                         #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                         from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email],
+                        to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email, 'victorjosh02@hotmail.com'],
                         headers={'Content-Type': 'text/html'}
                         )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -1194,6 +1194,7 @@ def autorizar_oc1(request, pk):
    
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
+    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
     form = Compra_ComentarioForm()
 
     if compra.costo_fletes == None:
@@ -1245,6 +1246,45 @@ def autorizar_oc1(request, pk):
         
             image_base64 = get_image_base64(img_path)
             logo_v_base64 = get_image_base64(img_path2)
+
+            articulos_html = """
+            <table border="1" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Producto Crítico</th>
+                        <th>Requisitos</th>
+                        <th>Requerimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            productos_criticos = productos_criticos
+            for articulo in productos_criticos:
+                producto = articulo.producto.producto.articulos.producto.producto
+                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+
+                # Si el producto tiene requerimientos, agregar una fila por cada uno
+                if requerimientos.exists():
+                    for requerimiento in requerimientos:
+                        articulos_html += f"""
+                            <tr>
+                                <td>{producto.codigo}</td>
+                                <td>{producto.producto_calidad.requisitos}</td>
+                                <td>{requerimiento.nombre}</td>
+                            </tr>
+                        """
+                else:
+                    articulos_html += f"""
+                        <tr>
+                            <td>{producto.codigo}</td>
+                            <td>{producto.producto_calidad.requisitos}</td>
+                            <td>Sin requerimiento</td>
+                        </tr>
+                    """
+            articulos_html += """
+                </tbody>
+            </table>
+            """
             # Crear el mensaje HTML
             if usuario.tipo.subdirector == True:
                 html_message = f"""
@@ -1316,6 +1356,7 @@ def autorizar_oc1(request, pk):
                                                     <p>&nbsp;</p>
                                                     Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}.
                                                     <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                                    {f"{articulos_html}" if productos_criticos.exists() else ""}
                                                 </p>
                                                     <p style="text-align: center; margin: 20px 0;">
                                                         <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
@@ -1345,6 +1386,21 @@ def autorizar_oc1(request, pk):
                         email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                         email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                         email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                        # Adjuntar los archivos con nombres personalizados
+                        for articulo in productos:
+                            producto = articulo.producto.producto.articulos.producto.producto
+                            if producto.critico:
+                                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                                contador = 1  # Contador para evitar nombres duplicados
+                                for requerimiento in requerimientos:
+                                    archivo_path = requerimiento.url.path
+                                    nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
+                                    
+                                    # Abrir el archivo en modo binario y adjuntarlo directamente
+                                    with open(archivo_path, 'rb') as archivo:
+                                        email.attach(nombre_archivo, archivo.read())
+
+                                    contador += 1  # Incrementar el contador para el siguiente archivo
                         email.send()
                     except (BadHeaderError, SMTPException) as e:
                         error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
@@ -1504,7 +1560,7 @@ def autorizar_oc2(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
-
+    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
     if compra.costo_fletes == None:
         costo_fletes = 0
     #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
@@ -1544,6 +1600,44 @@ def autorizar_oc2(request, pk):
             img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
             image_base64 = get_image_base64(img_path)
             logo_v_base64 = get_image_base64(img_path2)
+            articulos_html = """
+            <table border="1" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Producto Crítico</th>
+                        <th>Requisitos</th>
+                        <th>Requerimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            productos_criticos = productos_criticos
+            for articulo in productos_criticos:
+                producto = articulo.producto.producto.articulos.producto.producto
+                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+
+                # Si el producto tiene requerimientos, agregar una fila por cada uno
+                if requerimientos.exists():
+                    for requerimiento in requerimientos:
+                        articulos_html += f"""
+                            <tr>
+                                <td>{producto.codigo}</td>
+                                <td>{producto.producto_calidad.requisitos}</td>
+                                <td>{requerimiento.nombre}</td>
+                            </tr>
+                        """
+                else:
+                    articulos_html += f"""
+                        <tr>
+                            <td>{producto.codigo}</td>
+                            <td>{producto.producto_calidad.requisitos}</td>
+                            <td>Sin requerimiento</td>
+                        </tr>
+                    """
+            articulos_html += """
+                </tbody>
+            </table>
+            """
             # Crear el mensaje HTML
             if compra.cond_de_pago.nombre == "CREDITO":
                 archivo_oc = attach_oc_pdf(request, compra.id)
@@ -1575,6 +1669,7 @@ def autorizar_oc2(request, pk):
                                                     <p>&nbsp;</p>
                                                     <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
                                                     <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                                    {f"{articulos_html}" if productos_criticos.exists() else ""}
                                                 </p>
                                                 <p style="text-align: center; margin: 20px 0;">
                                                     <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
@@ -1604,6 +1699,22 @@ def autorizar_oc2(request, pk):
                     email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                     email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                     email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                    # Adjuntar los archivos con nombres personalizados
+                    articulos = ArticuloComprado.objects.filter(oc=compra)
+                    for articulo in articulos:
+                        producto = articulo.producto.producto.articulos.producto.producto
+                        if producto.critico:
+                            requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                            contador = 1  # Contador para evitar nombres duplicados
+                            for requerimiento in requerimientos:
+                                archivo_path = requerimiento.url.path
+                                nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
+                                
+                                # Abrir el archivo en modo binario y adjuntarlo directamente
+                                with open(archivo_path, 'rb') as archivo:
+                                    email.attach(nombre_archivo, archivo.read())
+
+                                contador += 1  # Incrementar el contador para el siguiente archivo
                     email.send()
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
@@ -1658,17 +1769,17 @@ def autorizar_oc2(request, pk):
                     email.content_subtype = "html " # Importante para que se interprete como HTML
                     email.send()
                     
-                    for producto in productos:
-                        if producto.producto.producto.articulos.producto.producto.especialista == True:
-                            archivo_oc = attach_oc_pdf(request, compra.id)
-                            email = EmailMessage(
-                                f'Compra Autorizada {compra.folio}',
-                                f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                                settings.DEFAULT_FROM_EMAIL,
-                                ['ulises_huesc@hotmail.com'],
-                                )
-                            email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-                            email.send()
+                    #for producto in productos:
+                    #    if producto.producto.producto.articulos.producto.producto.especialista == True:
+                    #        archivo_oc = attach_oc_pdf(request, compra.id)
+                    #        email = EmailMessage(
+                    #            f'Compra Autorizada {compra.folio}',
+                    #            f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                    #            settings.DEFAULT_FROM_EMAIL,
+                    #            ['ulises_huesc@hotmail.com'],
+                    #            )
+                    #        email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+                    #        email.send()
                     messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
