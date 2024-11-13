@@ -65,7 +65,7 @@ class DireccionComparativoForm(forms.ModelForm):
 class ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda','modificado_fecha','referencia','convenio']
+        fields = ['estado','telefono','distrito','domicilio','contacto','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','moneda','modificado_fecha','referencia','convenio','visita']
 
     def __init__(self, *args, **kwargs):
         
@@ -86,7 +86,7 @@ class ProveedoresExistDireccionesForm(forms.ModelForm):
 class Add_ProveedoresDireccionesForm(forms.ModelForm):
     class Meta:
         model = Proveedor_direcciones
-        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','referencia','convenio']
+        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','visita','servicio','arrendamiento','referencia','convenio']
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

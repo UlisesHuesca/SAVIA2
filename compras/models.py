@@ -82,6 +82,7 @@ class Proveedor_direcciones(models.Model):
     enviado_fecha = models.DateField(null=True)
     servicio = models.BooleanField(default=False)
     producto = models.BooleanField(default=False)
+    visita = models.BooleanField(default=False)
     arrendamiento = models.BooleanField(default=False)
     moneda = models.ForeignKey(Moneda, on_delete = models.CASCADE, null=True)
     referencia = models.CharField(max_length=20, null=True, blank = True)

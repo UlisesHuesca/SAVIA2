@@ -3329,7 +3329,7 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
     number_style = workbook.add_format({'num_format': '#,##0.00', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name': 'Arial Narrow', 'font_size': 11})
 
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor','Visita', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
 
     
 
@@ -3426,7 +3426,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
     start_time = time.time()  # Marca el tiempo de inicio
     print('Aqui comienza',productos.count())
 
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Visita']
     data = [columns]
 
     for articulo in productos:
@@ -3450,7 +3450,10 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
-        
+        if articulo.oc.proveedor.visita == True:
+            visita = 'Si'
+        else:
+            visita = 'No'
         comentarios = articulo.producto.producto.articulos.comentario if articulo.producto.producto.articulos.comentario else "Sin comentario"
 
         row = [
@@ -3481,6 +3484,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             status,
             pagado_text,
             comentarios,
+            visita,
         ]
         data.append(row)
 
@@ -3552,7 +3556,7 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
     print('Starting count:', productos.count())
 
     # Define headers and initial data array
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Visita']
     data = [columns]
 
     # Populate data rows
@@ -3581,7 +3585,10 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total *= tipo_de_cambio
-
+        if articulo.oc.proveedor.visita == True:
+            visita = 'Si'
+        else:
+            visita = 'No'
         comentarios = articulo.producto.producto.articulos.comentario or "Sin comentario"
 
         row = [
@@ -3612,6 +3619,7 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
             status,
             pagado_text,
             comentarios,
+            visita,
         ]
         data.append(row)
 
