@@ -18,6 +18,7 @@ from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_For
 from tesoreria.forms import Facturas_Viaticos_Form
 from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
 from gastos.models import Factura
+from tesoreria.views import generar_cfdi
 from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
@@ -29,7 +30,9 @@ import json
 import os
 import datetime as dt
 import pytz
-
+import qrcode
+from num2words import num2words
+import tempfile
 from datetime import date, datetime, timedelta
 
 #PDF generator
@@ -885,6 +888,12 @@ def generar_archivo_zip(facturas, viatico):
                 pdf_path = factura.factura_pdf.path
                 zip_file.write(pdf_path, os.path.basename(pdf_path))
             if factura.factura_xml:
+                # Generar el PDFreader
+                response = generar_cfdi_viaticos(None, factura.id)
+                pdf_filename = f"{factura.id}.pdf" if factura.id else f"factura_{factura.id}.pdf"
+                # Añadir el contenido del PDF al ZIP
+                zip_file.writestr(pdf_filename, response.content)
+                #Añadir el xml
                 xml_path = factura.factura_xml.path
                 zip_file.write(xml_path, os.path.basename(xml_path))
 
@@ -1572,3 +1581,258 @@ def convert_excel_viatico(viaticos):
     wb.save(response)
 
     return(response)
+
+def generar_cfdi_viaticos(request, pk):
+    factura = Viaticos_Factura.objects.get(id=pk)
+    data = factura.emisor
+    # Verificar y asignar un valor predeterminado para impuestos si es None
+    if data['impuestos'] is None:
+        data['impuestos'] = 0.0
+
+    # Verificar y asignar un valor predeterminado para total si es None
+    if data['total'] is None:
+        data['total'] = 0.0
+
+    # Verificar y asignar un valor predeterminado para subtotal si es None
+    if data['subtotal'] is None:
+        data['subtotal'] = 0.0
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    if not data:
+        return HttpResponse("Error al parsear el archivo XML", status=400)
+
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+    
+    # Generar código QR
+    qr_data = f"https://verificacfdi.facturaelectronica.sat.gob.mx/default.aspx?id={data['uuid']}&re={data['rfc_emisor']}&rr={data['rfc_receptor']}&tt={data['total']}&fe={data['sello_cfd'][-8:]}"
+    qr_img = qrcode.make(qr_data)
+    
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".png") as temp_file:
+        qr_img.save(temp_file)
+        temp_file.seek(0)
+        qr_x = 500
+        qr_y = height - 700
+        qr_size = 2.75 * cm
+        c.drawImage(temp_file.name, qr_x, qr_y, qr_size, qr_size)
+
+    # Título
+    c.setFillColor(prussian_blue)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(30, height - 40, "FACTURA GENERADA POR SAVIA 2.0")
+
+    # Datos del Emisor
+    c.setFillColor(black)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(30, height - 80, "Datos del Emisor:")
+    
+    c.setFont("Helvetica", 8)
+    alineado_x = 30
+    alineado_y = height - 100
+    alineado_y2 = alineado_y
+    line_height = 12
+
+    c.drawString(alineado_x, alineado_y, f"RFC: {data['rfc_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Nombre: {data['nombre_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Régimen Fiscal: {data['regimen_fiscal_emisor']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Lugar de Expedición: {data['lugar_expedicion']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Fecha y hora de expedición: {data['fecha']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Moneda: {data['moneda']}")
+    alineado_y -= line_height
+    c.drawString(alineado_x, alineado_y, f"Forma de Pago: {data['forma_pago']}")
+
+    # Datos del Receptor
+    alineado_y -= 2 * line_height
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(alineado_x + 350, height - 80, "Datos del Receptor:")
+    
+    c.setFont("Helvetica", 8)
+    alineado_y -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"RFC: {data['rfc_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Nombre: {data['nombre_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Régimen Fiscal: {data['regimen_fiscal_receptor']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Régimen Fiscal: {data['codigo_postal']}")
+    alineado_y2 -= line_height
+    c.drawString(alineado_x + 350, alineado_y2, f"Uso del CFDI: {data['uso_cfdi']}")
+
+    # Conceptos (Tabla)
+    alineado_y -= line_height
+    # Configuración del estilo para los párrafos
+    styles = getSampleStyleSheet()
+    styleN = styles['Normal']
+    styleN.wordWrap = 'CJK'  # Ajusta automáticamente el texto
+    # Crear un estilo personalizado
+    custom_style = ParagraphStyle(
+        'CustomStyle',
+        parent=styleN,
+        fontSize=6,  # Ajusta el tamaño del texto aquí
+        leading=7,   # Ajusta el interlineado aquí si es necesario
+    )
+
+    # Preparamos los datos de la tabla
+    table_data = [["CANT", "CLAVE", "CONCEPTO", "U DE M", "P.U.", "IMPORTE", "IMPUESTO", "TIPO TASA"]]
+    for item in data['resultados']:
+        descripcion = item['descripcion']
+        cantidad = float(item['cantidad'])
+        unidad = item['unidad']
+        valor_unitario = float(item['precio'])
+        importe = float(item['importe'])
+        # Verificar y convertir solo si el valor no es 'N/A'
+         # Inicializar las variables impuesto y tasa
+        impuesto = item['impuesto']
+        tasa = item['tasa_cuota']
+        if impuesto != 'N/A':
+            impuesto = float(impuesto)
+        else:
+            impuesto = 0.0  # o cualquier valor predeterminado que consideres adecuado
+        
+        if tasa != 'N/A':
+            tasa = float(tasa)
+        else:
+            tasa = 0.0  # o cualquier valor predeterminado que consideres adecuado
+        clave = item['clave_prod_serv']
+         # Crear un párrafo para la descripción
+        descripcion_paragraph = Paragraph(descripcion, custom_style)
+        unidad_paragraph = Paragraph(unidad, custom_style)
+        table_data.append([
+            f"{cantidad:.2f}",
+            clave,
+            descripcion_paragraph,
+            unidad_paragraph,
+            f"{valor_unitario:,.2f}",
+            f"{importe:,.2f}",
+            f"{impuesto:,.2f}",
+            f"{tasa:.2f}",
+        ])
+
+    # Crear la tabla
+    table = Table(table_data, colWidths=[1.0 * cm, 1.5 * cm, 8.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm])
+    table.setStyle(TableStyle([
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, 0), 6),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 7),
+    ]))
+
+    # Guardar la tabla en el PDF
+    table.wrapOn(c, width, height)
+    table.drawOn(c, alineado_x, alineado_y - len(table_data) * line_height)
+
+    # Ajustar el alineado_y para seguir escribiendo debajo de la tabla
+    alineado_y -= len(table_data) * line_height + 2 * line_height
+
+    # Totales
+    c.setFont("Helvetica-Bold", 12)
+   
+    c.setFont("Helvetica", 10)
+    alineado_y -= line_height
+
+     # Importe con letra
+    alineado_y -= 2 * line_height
+    c.drawString(alineado_x, alineado_y, "Importe con Letra:")
+    total_letras = num2words(float(data['total']), lang='es', to='currency', currency='MXN')
+    c.drawString(alineado_x, alineado_y - 10, total_letras)
+    #c.drawRightString(alineado_x, alineado_y , f"{data['importe_con_letra']}")
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.setFillColor(prussian_blue)
+    c.rect(alineado_x + 390 ,alineado_y - 50,110,62, fill=True, stroke=False) #Barra azul superior | Subtotal
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y , f"Subtotal:")
+    c.setFillColor(black)
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['subtotal']):,.2f}")
+    alineado_y -= line_height
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos trasladados:")
+    c.setFillColor(black)
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['impuestos']):,.2f}")
+    alineado_y -= line_height
+    if data['iva_retenido'] > 0:
+        c.setFillColor(white)
+        c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos retenidos:")
+        c.setFillColor(black)
+        c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['iva_retenido']):,.2f}")
+        alineado_y -= line_height
+    if data['isr_retenido'] > 0:
+        c.setFillColor(white)
+        c.drawRightString(alineado_x + 500, alineado_y, f"ISR:")
+        c.setFillColor(black)
+        c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['isr_retenido']):,.2f}")
+        alineado_y -= line_height
+    c.setFillColor(white)
+    c.drawRightString(alineado_x + 500, alineado_y, f"Total:")
+    c.setFillColor(black)
+    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['total']):,.2f}")
+    # Otros detalles
+    
+
+    otros_detalles = [
+        ["Folio Fiscal", "Fecha y Hora de Certificación", "No. Certificado Digital", "Método de Pago"],
+        [data['uuid'], data['fecha_timbrado'], data['no_certificado'], data['metodo_pago']]
+    ]
+    detalles_table = Table(otros_detalles, colWidths=[5 * cm, 5 * cm, 4.5 * cm, 4.5 * cm])
+    detalles_table.setStyle(TableStyle([
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.black),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        ('TEXTCOLOR', (0, 0), (-1, 0), colors.white),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 6),
+    ]))
+
+    # Guardar la tabla de detalles en el PDF
+    detalles_table.wrapOn(c, width, height)
+    detalles_table.drawOn(c, alineado_x, 180)
+    alineado_y -= 4 * line_height
+     # Utilizar Paragraph para las líneas largas
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+    styleN.fontSize = 6
+    c.setFont("Helvetica", 6)
+    c.line(30,177,580,177)
+    c.drawString(alineado_x, 170, f"ESTE DOCUMENTO ES UNA REPRESENTACIÓN IMPRESA DE UN CFDI v4.0")
+    
+    # Reducir el ancho de los párrafos
+    reduced_width = width * 0.7  # Ajusta este valor según sea necesario
+
+    sello_cfd_paragraph = Paragraph(f"Sello Digital del CFDI: {data['sello_cfd']}", styleN)
+    sello_cfd_paragraph.wrapOn(c,  reduced_width, line_height * 4)
+    sello_cfd_paragraph.drawOn(c, alineado_x, 130)
+    alineado_y -= line_height * 5
+    
+    sello_sat_paragraph = Paragraph(f"Sello del SAT: {data['sello_sat']}", styleN)
+    sello_sat_paragraph.wrapOn(c,  reduced_width, line_height * 4)
+    sello_sat_paragraph.drawOn(c, alineado_x, 90)
+    alineado_y -= line_height * 3
+    c.drawString(alineado_x, 40, f"No. serie CSD SAT {data['no_certificadoSAT']}")
+
+    sello_cfd_paragraph = Paragraph(f"Cadena Original del complemento de certificación digital del SAT: {data['cadena_original']}", styleN)
+    sello_cfd_paragraph.wrapOn(c,  reduced_width, line_height * 4)
+    sello_cfd_paragraph.drawOn(c, alineado_x, 50)
+    alineado_y -= line_height * 5
+    
+   
+
+    c.showPage()
+    c.save()
+
+    buffer.seek(0)
+    # Crear la respuesta HTTP con el PDF
+    folio_fiscal = data['uuid']
+    response = HttpResponse(buffer, content_type='application/pdf')
+    response['Content-Disposition'] = f'attachment; filename="{folio_fiscal}.pdf"'
+
+    return response

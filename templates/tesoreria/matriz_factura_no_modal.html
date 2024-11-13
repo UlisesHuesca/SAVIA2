@@ -85,7 +85,14 @@
                         </tr>
                     </thead>
                 </table>
-
+                <div class="nav-item ms-auto">
+                    <form method="POST" class="d-inline">
+                        {% csrf_token %}
+                        <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                            <i class="fas fa-file-archive"></i> Descargar Facturas
+                        </button>
+                    </form>
+                </div>
                 <table class='table table-striped'>
                     <thead>
                         <tr>

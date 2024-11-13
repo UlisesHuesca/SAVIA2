@@ -1159,6 +1159,34 @@ def extraer_datos_del_xml(ruta_xml):
         print("Complemento no encontrado")
         return None, None
 
+def generar_archivo_zip(facturas, compra):
+    nombre = compra.folio if compra.folio else ''
+    zip_filename = f'facturas_compragasto-{nombre}.zip'
+    
+    # Crear un archivo zip en memoria
+    in_memory_zip = io.BytesIO()
+
+    with zipfile.ZipFile(in_memory_zip, 'w') as zip_file:
+        for factura in facturas:
+            if factura.factura_pdf:
+                pdf_path = factura.factura_pdf.path
+                zip_file.write(pdf_path, os.path.basename(pdf_path))
+            if factura.factura_xml:
+                # Generar el PDFreader
+                response = generar_cfdi(None, factura.id)
+                pdf_filename = f"{factura.id}.pdf" if factura.id else f"factura_{factura.id}.pdf"
+                # Añadir el contenido del PDF al ZIP
+                zip_file.writestr(pdf_filename, response.content)
+                #Añadir el xml
+                xml_path = factura.factura_xml.path
+                zip_file.write(xml_path, os.path.basename(xml_path))
+
+    # Resetear el puntero del archivo en memoria
+    in_memory_zip.seek(0)
+
+    return in_memory_zip, zip_filename
+
+
 @perfil_seleccionado_required
 def matriz_facturas_nomodal(request, pk):
     compra = Compra.objects.get(id = pk)
@@ -1176,7 +1204,12 @@ def matriz_facturas_nomodal(request, pk):
                 return redirect(next_url)
             else:
                 messages.error(request,'No está validando')
-
+        elif "btn_descargar_todo" in request.POST:
+            in_memory_zip, zip_filename = generar_archivo_zip(facturas, compra)
+            response = HttpResponse(in_memory_zip, content_type='application/zip')
+            response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+            return response
+    
     context={
         'pagos':pagos,
         'form':form,

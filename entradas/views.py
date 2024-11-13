@@ -737,6 +737,7 @@ def reporte_calidad(request, pk):
         print(decimal.Decimal(request.POST['cantidad']) )
         if decimal.Decimal(request.POST['cantidad']) <=  restantes_liberacion:
             if not request.POST['autorizado'] == None:
+                #if item.cantidad <= 0:
                 if form.is_valid():
                     item = form.save()
                     item.articulo = articulo_entrada
