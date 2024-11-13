@@ -92,7 +92,16 @@ class Add_ProveedoresDireccionesForm(forms.ModelForm):
         super().__init__(*args, **kwargs)
         self.fields['distrito'].queryset = Distrito.objects.exclude(id__in=[7, 8])
 
-        
+class Add_ProveedoresDir_Alt_Form(forms.ModelForm):
+    class Meta:
+        model = Proveedor_direcciones
+        fields = ['domicilio','estado','distrito','contacto','telefono','email','email_opt','banco','swift','spid','clabe','cuenta','financiamiento','dias_credito','estatus','producto','servicio','arrendamiento','referencia','convenio']
+
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['distrito'].queryset = Distrito.objects.filter(id__in=[8])
+
+
 class Products_BatchForm(forms.ModelForm):
     class Meta:
         model = Products_Batch

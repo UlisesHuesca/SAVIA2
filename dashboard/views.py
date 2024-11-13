@@ -11,7 +11,7 @@ from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm
+from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form
 from user.decorators import perfil_seleccionado_required
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter
 from user.filters import ProfileFilter
@@ -336,10 +336,10 @@ def proyectos_edit(request, pk):
 def proveedor_direcciones(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    if usuario.tipo.proveedores == True:
+    if usuario.tipo.proveedores:
         proveedor = Proveedor.objects.get(id=pk)
         if usuario.tipo.nombre == "Subdirector_Alt":
-            direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True)
+            direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True, distrito__id= 8)
         else:
             direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True).exclude(distrito__id__in=[7, 8])
     else:
@@ -487,7 +487,8 @@ def proveedores(request):
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
     proveedores_dir = Proveedor_direcciones.objects.all()
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
-    if usuario.tipo.proveedores == True:
+    
+    if usuario.tipo.proveedores:
         proveedores = Proveedor.objects.filter(id__in=proveedores_ids, completo=True).exclude(familia__nombre="IMPUESTOS")
     else:
         proveedores = Proveedor.objects.none()
@@ -643,50 +644,56 @@ def add_proveedores2(request, pk=None):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
-    if usuario.tipo.proveedores == True:
+    if usuario.tipo.nombre == "Subdirector_Alt":
+        proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
+        proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distritos)).values_list('id', flat=True)
+    elif usuario.tipo.proveedores == True:
         proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
         proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distritos)).values_list('id', flat=True)
         
-        proveedores = Proveedor.objects.filter(proveedor_direcciones__id__in=proveedores_dir_ids)
-        print('proveedores:',proveedores.count())
+    proveedores = Proveedor.objects.filter(proveedor_direcciones__id__in=proveedores_dir_ids)
+    print('proveedores:',proveedores.count())
 
-        if usuario.tipo.proveedores == True:
-            ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=Add_ProveedoresDireccionesForm, extra=1)
-        else:
-            ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=ProveedoresDireccionesForm, extra=1)
+    if usuario.tipo.nombre == "Subdirector_Alt":
+        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=Add_ProveedoresDir_Alt_Form, extra=1)
+    elif usuario.tipo.proveedores == True:
+        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=Add_ProveedoresDireccionesForm, extra=1)
+    else:
+        ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form=ProveedoresDireccionesForm, extra=1)
         
-        error_messages = {}
-        if request.method == 'POST':
-            form = ProveedoresForm(request.POST, instance = proveedor)
-            formset = ProveedorDireccionesFormSet(request.POST, instance=proveedor)
-            if form.is_valid() and formset.is_valid():
-                proveedor = form.save(commit=False)
-                proveedor.completo = True
-                proveedor.save()
-                direcciones = formset.save(commit=False)
-                direccion = direcciones[0]
-                #direccion.distrito = usuario.distritos
-                if usuario.tipo.proveedores == False:
-                    estatus = Estatus_proveedor.objects.get(nombre ="REVISION")
-                    direccion.estatus = estatus
-                direccion.creado_por = usuario
-                direccion.enviado_fecha = date.today()
-                direccion.completo = True
-                direccion.save()
-                messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
-                return redirect('dashboard-proveedores')
-            else:
+    error_messages = {}
+    if request.method == 'POST':
+        form = ProveedoresForm(request.POST, instance = proveedor)
+        formset = ProveedorDireccionesFormSet(request.POST, instance=proveedor)
+        if form.is_valid() and formset.is_valid():
+            proveedor = form.save(commit=False)
+            proveedor.completo = True
+            proveedor.save()
+            direcciones = formset.save(commit=False)
+            direccion = direcciones[0]
+            #direccion.distrito = usuario.distritos
+            if usuario.tipo.proveedores == False:
+                estatus = Estatus_proveedor.objects.get(nombre ="REVISION")
+                direccion.estatus = estatus
+            direccion.creado_por = usuario
+            direccion.enviado_fecha = date.today()
+            direccion.completo = True
+            direccion.save()
+            messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
+            return redirect('dashboard-proveedores')
+        else:
+            for field, errors in form.errors.items():
+                error_messages[field] = errors.as_text()
+            for form in formset.forms:
                 for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
-                for form in formset.forms:
-                    for field, errors in form.errors.items():
-                        error_messages[field] = errors.as_text()
                 
-        else:
-            form = ProveedoresForm(instance=proveedor)
-            formset = ProveedorDireccionesFormSet(instance=proveedor)
     else:
-        raise Http404("No tienes permiso para ver esta vista")
+        form = ProveedoresForm(instance=proveedor)
+        formset = ProveedorDireccionesFormSet(instance=proveedor)
+
+    #else:
+        #raise Http404("No tienes permiso para ver esta vista")
     context = {
         'form': form,
         'formset': formset,
