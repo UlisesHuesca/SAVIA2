@@ -1414,7 +1414,7 @@ def reporte_entradas(request):
 def reporte_devoluciones(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    if usuario.tipo.nombre == 'ALMACEN':
+    if usuario.tipo.almacen == True:
         entradas = Devolucion.objects.filter(solicitud__distrito = usuario.distritos).order_by('-fecha').select_related('solicitud')
     else:
         entradas = Devolucion.objects.none()
