@@ -492,7 +492,7 @@ def convert_activos_to_xls(activos):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Eco', 'Responsable', 'Tipo Activo', 'Serie', 'Marca', 'Modelo', 'Descripción', 'Status']
+    columns = ['Eco','Producto', 'Responsable', 'Tipo Activo', 'Serie', 'Marca', 'Modelo', 'Descripción', 'Status']
 
     columna_max = len(columns)+2
 
@@ -523,6 +523,7 @@ def convert_activos_to_xls(activos):
 
         row = [
             activo.eco_unidad,
+            activo.activo.producto.nombre if activo.activo else " ",
             f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}",
             activo.tipo_activo.nombre,
             activo.serie,

@@ -155,6 +155,7 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">Eco</th>
+                    <th scope="col">Producto</th>
                     <th scope="col">Responsable</th>
                     <th scope="col">Tipo Activo</th>
                     <th scope="col">Serie</th>
@@ -174,6 +175,7 @@
                 {% for item in activos %}
                 <tr>
                     <th scope="row">{{item.eco_unidad}}</th>
+                    <th scope="row">{{item.activo.producto.nombre}}</th>
                     <td>{{item.responsable.staff.staff.first_name}} {{item.responsable.staff.staff.last_name}}</td>
                     <td>{{item.tipo_activo}}</td>
                     <td>{% if item.serie %} {{item.serie}} {% endif %}</td>
