@@ -55,7 +55,12 @@
                 {% endif %}
             <div class="col-12">
                 <div class="alert alert-secondary" role="alert">
-                    <h4 style="color: #121212;">&nbsp;Activo:&nbsp;{{activo.eco_unidad}}</h4>   
+                    {% if activo.activo %}
+                        <h4 style="color: #121212;">&nbsp;Producto en inventario:&nbsp;{{activo.activo.producto.nombre}}</h4> 
+                    {% else %}
+                        <h4 style="color: #121212;">&nbsp;Producto en inventario:&nbsp;No asignado</h4> 
+                    {% endif %}
+                    <h6 style="color: #121212;">&nbsp;Activo:&nbsp;{{activo.eco_unidad}}</h4>   
                 </div>
             </div>
             {% if activo.factura_xml %}

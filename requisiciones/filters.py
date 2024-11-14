@@ -98,6 +98,7 @@ class EntradasFilter(django_filters.FilterSet):
 
 class DevolucionFilter(django_filters.FilterSet):
     solicitud = CharFilter(method='solicitante_custom_filter', lookup_expr='icontains')
+    folio = CharFilter(field_name = 'solicitud__folio', lookup_expr='icontains')
     almacenista = CharFilter(method='almacenista_custom_filter', lookup_expr='icontains')
     start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at',lookup_expr='lte')

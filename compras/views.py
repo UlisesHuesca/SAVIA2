@@ -651,7 +651,7 @@ def oc_modal(request, pk):
                         body=html_message,
                         #f'Estimado {requi.orden.staff.staff.staff.first_name} {requi.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requi.orden.folio}| Req: {requi.folio} ha sido autorizada,\n por {requi.requi_autorizada_por.staff.staff.first_name} {requi.requi_autorizada_por.staff.staff.last_name}.\n El siguiente paso del sistema: Generación de OC \n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                         from_email = settings.DEFAULT_FROM_EMAIL,
-                        to= ['ulises_huesc@hotmail.com',oc.req.orden.staff.staff.staff.email],
+                        to= [oc.req.orden.staff.staff.staff.email,],
                         headers={'Content-Type': 'text/html'}
                         )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
@@ -690,12 +690,14 @@ def oc_modal(request, pk):
 
 @perfil_seleccionado_required
 def mostrar_comparativo(request, pk):
-    comparativo = Comparativo.objects.get(id=pk)
+    compra = Compra.objects.get(id=pk)
+    comparativo = Comparativo.objects.get(id=compra.comparativo_model.id)
     productos = Item_Comparativo.objects.filter(comparativo = comparativo)
     
     context= {
         'comparativo':comparativo,
         'productos':productos,
+        'compra':compra,
         }
 
     return render(request, 'compras/mostrar_comparativo.html',context)
@@ -1192,6 +1194,7 @@ def autorizar_oc1(request, pk):
    
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
+    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
     form = Compra_ComentarioForm()
 
     if compra.costo_fletes == None:
@@ -1243,6 +1246,45 @@ def autorizar_oc1(request, pk):
         
             image_base64 = get_image_base64(img_path)
             logo_v_base64 = get_image_base64(img_path2)
+
+            articulos_html = """
+            <table border="1" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Producto Crítico</th>
+                        <th>Requisitos</th>
+                        <th>Requerimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            productos_criticos = productos_criticos
+            for articulo in productos_criticos:
+                producto = articulo.producto.producto.articulos.producto.producto
+                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+
+                # Si el producto tiene requerimientos, agregar una fila por cada uno
+                if requerimientos.exists():
+                    for requerimiento in requerimientos:
+                        articulos_html += f"""
+                            <tr>
+                                <td>{producto.codigo}</td>
+                                <td>{producto.producto_calidad.requisitos}</td>
+                                <td>{requerimiento.nombre}</td>
+                            </tr>
+                        """
+                else:
+                    articulos_html += f"""
+                        <tr>
+                            <td>{producto.codigo}</td>
+                            <td>{producto.producto_calidad.requisitos}</td>
+                            <td>Sin requerimiento</td>
+                        </tr>
+                    """
+            articulos_html += """
+                </tbody>
+            </table>
+            """
             # Crear el mensaje HTML
             if usuario.tipo.subdirector == True:
                 html_message = f"""
@@ -1314,6 +1356,7 @@ def autorizar_oc1(request, pk):
                                                     <p>&nbsp;</p>
                                                     Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}.
                                                     <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                                    {f"{articulos_html}" if productos_criticos.exists() else ""}
                                                 </p>
                                                     <p style="text-align: center; margin: 20px 0;">
                                                         <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
@@ -1343,6 +1386,21 @@ def autorizar_oc1(request, pk):
                         email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                         email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                         email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                        # Adjuntar los archivos con nombres personalizados
+                        for articulo in productos:
+                            producto = articulo.producto.producto.articulos.producto.producto
+                            if producto.critico:
+                                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                                contador = 1  # Contador para evitar nombres duplicados
+                                for requerimiento in requerimientos:
+                                    archivo_path = requerimiento.url.path
+                                    nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
+                                    
+                                    # Abrir el archivo en modo binario y adjuntarlo directamente
+                                    with open(archivo_path, 'rb') as archivo:
+                                        email.attach(nombre_archivo, archivo.read())
+
+                                    contador += 1  # Incrementar el contador para el siguiente archivo
                         email.send()
                     except (BadHeaderError, SMTPException) as e:
                         error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
@@ -1502,7 +1560,7 @@ def autorizar_oc2(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
-
+    productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
     if compra.costo_fletes == None:
         costo_fletes = 0
     #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
@@ -1542,6 +1600,44 @@ def autorizar_oc2(request, pk):
             img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
             image_base64 = get_image_base64(img_path)
             logo_v_base64 = get_image_base64(img_path2)
+            articulos_html = """
+            <table border="1" style="border-collapse: collapse; width: 100%;">
+                <thead>
+                    <tr>
+                        <th>Producto Crítico</th>
+                        <th>Requisitos</th>
+                        <th>Requerimiento</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            productos_criticos = productos_criticos
+            for articulo in productos_criticos:
+                producto = articulo.producto.producto.articulos.producto.producto
+                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+
+                # Si el producto tiene requerimientos, agregar una fila por cada uno
+                if requerimientos.exists():
+                    for requerimiento in requerimientos:
+                        articulos_html += f"""
+                            <tr>
+                                <td>{producto.codigo}</td>
+                                <td>{producto.producto_calidad.requisitos}</td>
+                                <td>{requerimiento.nombre}</td>
+                            </tr>
+                        """
+                else:
+                    articulos_html += f"""
+                        <tr>
+                            <td>{producto.codigo}</td>
+                            <td>{producto.producto_calidad.requisitos}</td>
+                            <td>Sin requerimiento</td>
+                        </tr>
+                    """
+            articulos_html += """
+                </tbody>
+            </table>
+            """
             # Crear el mensaje HTML
             if compra.cond_de_pago.nombre == "CREDITO":
                 archivo_oc = attach_oc_pdf(request, compra.id)
@@ -1573,6 +1669,7 @@ def autorizar_oc2(request, pk):
                                                     <p>&nbsp;</p>
                                                     <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
                                                     <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                                    {f"{articulos_html}" if productos_criticos.exists() else ""}
                                                 </p>
                                                 <p style="text-align: center; margin: 20px 0;">
                                                     <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
@@ -1602,6 +1699,22 @@ def autorizar_oc2(request, pk):
                     email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                     email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                     email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                    # Adjuntar los archivos con nombres personalizados
+                    articulos = ArticuloComprado.objects.filter(oc=compra)
+                    for articulo in articulos:
+                        producto = articulo.producto.producto.articulos.producto.producto
+                        if producto.critico:
+                            requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                            contador = 1  # Contador para evitar nombres duplicados
+                            for requerimiento in requerimientos:
+                                archivo_path = requerimiento.url.path
+                                nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
+                                
+                                # Abrir el archivo en modo binario y adjuntarlo directamente
+                                with open(archivo_path, 'rb') as archivo:
+                                    email.attach(nombre_archivo, archivo.read())
+
+                                contador += 1  # Incrementar el contador para el siguiente archivo
                     email.send()
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
@@ -1656,17 +1769,17 @@ def autorizar_oc2(request, pk):
                     email.content_subtype = "html " # Importante para que se interprete como HTML
                     email.send()
                     
-                    for producto in productos:
-                        if producto.producto.producto.articulos.producto.producto.especialista == True:
-                            archivo_oc = attach_oc_pdf(request, compra.id)
-                            email = EmailMessage(
-                                f'Compra Autorizada {compra.folio}',
-                                f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                                settings.DEFAULT_FROM_EMAIL,
-                                ['ulises_huesc@hotmail.com'],
-                                )
-                            email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
-                            email.send()
+                    #for producto in productos:
+                    #    if producto.producto.producto.articulos.producto.producto.especialista == True:
+                    #        archivo_oc = attach_oc_pdf(request, compra.id)
+                    #        email = EmailMessage(
+                    #            f'Compra Autorizada {compra.folio}',
+                    #            f'Estimado Nombre de Calidad,\n Estás recibiendo este correo porque ha sido aprobada una OC que contiene el producto código:{producto.producto.producto.articulos.producto.producto.codigo} descripción:{producto.producto.producto.articulos.producto.producto.nombre} el cual requiere la liberación de calidad\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                    #            settings.DEFAULT_FROM_EMAIL,
+                    #            ['ulises_huesc@hotmail.com'],
+                    #            )
+                    #        email.attach(f'folio:{compra.folio}.pdf',archivo_oc,'application/pdf')
+                    #        email.send()
                     messages.success(request, f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio}')
                 except (BadHeaderError, SMTPException) as e:
                     error_message = f'{usuario.staff.staff.first_name} has autorizado la compra {compra.folio} pero el correo de notificación no ha sido enviado debido a un error: {e}'
@@ -3216,7 +3329,7 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
     number_style = workbook.add_format({'num_format': '#,##0.00', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name': 'Arial Narrow', 'font_size': 11})
 
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor','Visita', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada']
 
     
 
@@ -3313,7 +3426,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
     start_time = time.time()  # Marca el tiempo de inicio
     print('Aqui comienza',productos.count())
 
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Visita']
     data = [columns]
 
     for articulo in productos:
@@ -3337,7 +3450,10 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total = total * tipo_de_cambio
-        
+        if articulo.oc.proveedor.nombre.visita == True:
+            visita = 'Si'
+        else:
+            visita = 'No'
         comentarios = articulo.producto.producto.articulos.comentario if articulo.producto.producto.articulos.comentario else "Sin comentario"
 
         row = [
@@ -3368,6 +3484,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             status,
             pagado_text,
             comentarios,
+            visita,
         ]
         data.append(row)
 
@@ -3439,7 +3556,7 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
     print('Starting count:', productos.count())
 
     # Define headers and initial data array
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Visita']
     data = [columns]
 
     # Populate data rows
@@ -3468,7 +3585,10 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or articulo.oc.tipo_de_cambio
         if moneda_nombre == "DOLARES" and tipo_de_cambio:
             total *= tipo_de_cambio
-
+        if articulo.oc.proveedor.nombre.visita == True:
+            visita = 'Si'
+        else:
+            visita = 'No'
         comentarios = articulo.producto.producto.articulos.comentario or "Sin comentario"
 
         row = [
@@ -3499,6 +3619,7 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
             status,
             pagado_text,
             comentarios,
+            visita,
         ]
         data.append(row)
 
@@ -4285,3 +4406,194 @@ solicitado por autoridades competentes.<br/>
     c.save()
     buf.seek(0)
     return buf 
+
+def pdf_formato_comparativo(request, pk):
+    # Aquí va el código para generar el PDF
+    compra = Compra.objects.get(id = pk)
+    comparativo = Comparativo.objects.get(id = compra.comparativo_model.id)
+    productos = Item_Comparativo.objects.filter(comparativo=comparativo)
+
+
+
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+
+    # Colores
+    azul = Color(0.0859375,0.1953125,0.30859375) #prussian_blue 
+    blanco = colors.white
+    negro = colors.black
+
+    # Cabecera azul
+    c.setFillColor(azul)
+    c.rect(35, 715, 550, 50, stroke=0, fill=1)
+    c.setFont("Helvetica-Bold", 16)
+    c.setFillColor(white)
+    c.drawCentredString(306, 730, "Tabla Comparativa")
+
+    # Logo
+    c.drawInlineImage('static/images/logo_vordcab.jpg',40,600, 6 * cm, 3 * cm) #Imagen vortec
+    #Estilo de parrafo
+    objective_style = ParagraphStyle(
+        name='ObjectiveStyle',
+        fontName='Helvetica',
+        fontSize=12,
+        textColor=colors.black,
+        spaceBefore=10,
+        spaceAfter=10,
+        leftIndent=10,
+        rightIndent=10,
+        alignment=0  # Alineación justificada
+    )
+    styles = getSampleStyleSheet()
+    style = styles["BodyText"]
+
+    # Justificación
+    c.setFillColor(negro)
+    c.setFont("Helvetica-Bold", 12)
+    c.drawString(40, 705, "Comparativa:")
+    c.drawString(390, 680, "Fecha de comparativa:")
+    c.drawString(220, 660, "Justificación/Observación:")
+    #c.rect(400, 610, 180, 40, stroke=1, fill=0)  # Caja de justificación vacía
+
+    c.setFont("Helvetica", 10)
+    parrafo = Paragraph(comparativo.nombre, style)
+    ancho_parrafo, altura_parrafo = parrafo.wrap(440, 0)
+    inicio_x = 125
+    inicio_y = 715 - altura_parrafo  # Ajusta el inicio para que crezca hacia abajo
+    parrafo.drawOn(c, inicio_x, inicio_y)  # Dibuja el párrafo en las coordenadas (x, y)
+    #c.drawString(125, 700, comparativo.nombre + 'aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa')
+    fecha_formateada = comparativo.created_at.strftime("%d-%m-%Y")
+    c.drawString(530, 680, fecha_formateada)
+    text = comparativo.comentarios
+    parrafo = Paragraph(text, style)
+    # Calcular el ancho y la altura del párrafo
+    ancho_parrafo, altura_parrafo = parrafo.wrap(340, 0)  # Limita el ancho del párrafo a 340
+    inicio_x = 220
+    inicio_y = 650 - altura_parrafo  # Ajusta el inicio para que crezca hacia abajo
+    parrafo.drawOn(c, inicio_x, inicio_y)  # Dibuja el párrafo en las coordenadas (x, y)
+
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(45, 580, "Proveedor A:")
+    c.drawString(45, 550, "Proveedor B:")
+    c.drawString(45, 520, "Proveedor C:")
+    c.setFont('Helvetica',12)
+    c.drawString(125, 580, comparativo.proveedor.razon_social)
+    if comparativo.cotizacion:
+        c.drawString(125, 565, 'Tiene archivo cotización')
+    else:
+        c.drawString(125, 565, 'No tiene archivo cotización')
+    c.drawString(125, 550, comparativo.proveedor2.razon_social)
+    if comparativo.cotizacion2:
+        c.drawString(125, 535, 'Tiene archivo cotización')
+    else:
+        c.drawString(125, 535, 'No tiene archivo cotización')
+    c.drawString(125, 520, comparativo.proveedor3.razon_social)
+    if comparativo.cotizacion3:
+        c.drawString(125, 505, 'Tiene archivo cotización')
+    else:
+        c.drawString(125, 505, 'No tiene archivo cotización')
+
+    # Definir encabezado y estilos de la tabla
+    c.setFont("Helvetica-Bold", 10)
+    encabezado = [["Unidad", "Producto", "Código", "Marca", "Modelo", "Precio A", "Precio B", "Precio C"]]
+
+    # Definir encabezado y estilos de la tabla
+    styles = getSampleStyleSheet()
+    style_normal = styles["BodyText"]  # Estilo de párrafo base
+    style_normal.fontSize = 7  # Ajustar el tamaño de la fuente
+
+    # Añadir cada producto como una fila en la tabla
+    for producto in productos:
+        if producto.marca:
+            valor1 = str(producto.marca)
+        else:
+            valor1 = ''
+        if producto.modelo:
+            valor2 = str(producto.modelo)
+        else: 
+            valor2 = ''
+        fila = [
+            Paragraph(str(producto.producto.producto.unidad), style_normal),
+            Paragraph(str(producto.producto.producto.nombre), style_normal),
+            Paragraph(str(producto.producto.producto.codigo), style_normal),
+            Paragraph(valor1, style_normal),
+            Paragraph(valor2, style_normal),
+            Paragraph('$' + f"{producto.precio:,.3f}", style_normal),
+            Paragraph('$' + f"{producto.precio2:,.3f}", style_normal),
+            Paragraph('$' + f"{producto.precio3:,.3f}", style_normal),
+        ]
+        encabezado.append(fila)
+
+    # Crear la tabla
+    tabla = Table(encabezado, colWidths=[1.4 * cm, 6.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm])
+    tabla.setStyle(TableStyle([
+        ("BACKGROUND", (0, 0), (-1, 0), azul),
+        ("TEXTCOLOR", (0, 0), (-1, 0), blanco),
+        ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+        ("FONTNAME", (0, 0), (-1, 0), "Helvetica"),
+        ("FONTSIZE", (0, 0), (-1, 0), 6),
+        ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+        ("BACKGROUND", (0, 1), (-1, -1), blanco),
+        ("GRID", (0, 0), (-1, -1), 1, negro),
+    ]))
+
+    # Calcular la altura de la tabla
+    ancho_tabla, altura_tabla = tabla.wrap(0, 0)  # Calcular el tamaño necesario para la tabla
+
+    # Ajustar la posición inicial para que la tabla crezca hacia abajo
+    inicio_x = 35
+    inicio_y = 480 - altura_tabla
+
+    # Dibujar la tabla en el PDF en la posición ajustada
+    tabla.drawOn(c, inicio_x, inicio_y)
+
+    # Área de firmas
+    c.setFont("Helvetica", 8)
+    c.drawString(120, 100, "Gerencia")
+    c.line(70, 110, 200, 110)
+    c.drawString(285, 100, "Comprador")
+    c.line(240, 110, 370, 110)
+    c.drawString(470, 100, "Superintendente")
+    c.line(430, 110, 560, 110)
+    #Nombres
+    if compra.oc_autorizada_por:
+        autorizado1 = str(compra.oc_autorizada_por.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por.staff.staff.last_name)
+    else:
+        autorizado1 = ''
+    if compra.creada_por:
+        comprador = str(compra.creada_por.staff.staff.first_name) + ' ' + str(compra.creada_por.staff.staff.last_name)
+    else:
+        comprador = ''
+    if compra.oc_autorizada_por2:
+        autorizado2 = str(compra.oc_autorizada_por2.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por2.staff.staff.last_name)
+    else:
+        autorizado2 = ''
+    c.drawCentredString(140, 115, autorizado2)
+    c.drawCentredString(305, 115, comprador)
+    c.drawCentredString(490, 115, autorizado1)
+    # Pie de página
+    c.setFillColor(azul)
+    c.rect(35, 25, 550, 60, stroke=0, fill=1)
+    c.setFillColor(white)
+    c.setFont("Helvetica-Bold", 8)
+    c.drawCentredString(110, 70, "Preparado por:")
+    c.drawCentredString(110, 60, "SUPTE ADQ")
+    c.drawCentredString(110, 45, "Nivel:")
+    c.drawCentredString(110, 35, "N5")
+    c.drawCentredString(240, 70, "Aprobado:")
+    c.drawCentredString(240, 60, "SUB ADM")
+    c.drawCentredString(240, 45, "Rev:")
+    c.drawCentredString(240, 35, "000")
+    c.drawCentredString(370, 70, "No. Documento:")
+    c.drawCentredString(370, 60, "SEOV-ADQ-N4-01.05")
+    c.drawCentredString(370, 45, "Fecha emisión:")
+    c.drawCentredString(370, 35, "03-MAY-2023")
+    c.drawCentredString(520, 70, "Clasificación:")
+    c.drawCentredString(520, 60, "Controlado")
+    c.drawCentredString(520, 45, "Fecha revisión")
+
+    # Guardar PDF
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return FileResponse(buf, as_attachment=True, filename=f'Comparativo_{pk}.pdf')

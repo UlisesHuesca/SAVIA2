@@ -910,6 +910,12 @@ def generar_archivo_zip(facturas, gasto):
                 pdf_path = factura.archivo_pdf.path
                 zip_file.write(pdf_path, os.path.basename(pdf_path))
             if factura.archivo_xml:
+                # Generar el PDFreader
+                response = generar_cfdi_gasto(None, factura.id)
+                pdf_filename = f"{factura.id}.pdf" if factura.id else f"factura_{factura.id}.pdf"
+                # Añadir el contenido del PDF al ZIP
+                zip_file.writestr(pdf_filename, response.content)
+                #Añadir el xml
                 xml_path = factura.archivo_xml.path
                 zip_file.write(xml_path, os.path.basename(xml_path))
 

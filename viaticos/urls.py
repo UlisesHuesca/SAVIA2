@@ -21,6 +21,7 @@ urlpatterns = [
     path('viaticos/viaticos_autorizados_pago/', views.viaticos_autorizados_pago, name='viaticos-autorizados-pago'), #Vista donde se ve la solicitud de viatico
     path('viaticos/viaticos_pagos/<int:pk>/', views.viaticos_pagos, name='viaticos-pagos'),
     path('viaticos/matriz_facturas_viaticos/<int:pk>/', views.matriz_facturas_viaticos, name='matriz-facturas-viaticos'), #Vista donde se ven las facturas
+    path('factura_cfdi/<int:pk>/', views.generar_cfdi_viaticos, name='generar_cfdi_viaticos'),
     path('viaticos/matriz_facturas/<int:pk>', views.facturas_viaticos, name='facturas-viaticos'),
     path('viaticos/factura_viatico_edicion/<int:pk>', views.factura_viatico_edicion, name='factura-viatico-edicion'),
     path('viaticos/render_viatico/<int:pk>', views.render_pdf_viatico, name='render-pdf-viatico'),

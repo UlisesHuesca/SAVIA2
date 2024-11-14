@@ -47,21 +47,17 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.nombre_comercial|add_class:"form-control"|append_attr:"placeholder=Nombre Comercial"}}
-                            <label for="id_lugar_partida">Nombre Comercial*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
                             {{form.familia|add_class:"form-control"|append_attr:"placeholder=Familia"}}
                             <label for="id_lugar_partida">Familia</label>
                             </div>
                         </div>
                     </div>
-                    
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                        <label for="form.visita" class="form-check-label"><strong>Visita</strong></label>
+                            {{form.visita|add_class:"form-check-input"}}
+                        </div>
+                    </div>
                     {{ formset.management_form}}
                     <hr>
                     {% for f in formset %}

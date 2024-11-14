@@ -19,11 +19,11 @@ class Estatus_proveedor(models.Model):
 
 class Proveedor(models.Model):
     razon_social = models.CharField(max_length=150, null=True, unique=True)
-    nombre_comercial = models.CharField(max_length=100, null=True, blank=True)
     rfc = models.CharField(max_length=13, null=True, unique=True)
     creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     completo = models.BooleanField(default=False)
     extranjero = models.BooleanField(default=False)
+    visita = models.BooleanField(default=False)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 

@@ -1229,7 +1229,7 @@ def convert_excel_proveedores(proveedores):
     money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
     wb.add_named_style(money_resumen_style)
 
-    columns = ['Distrito','Razón Social','RFC','Nombre Comercial','Domicilio','Teléfono','Estado','Contacto','Email','Email Opción',
+    columns = ['Distrito','Razón Social','RFC','Domicilio','Teléfono','Estado','Contacto','Email','Email Opción',
                'Banco','Clabe','Cuenta','Financiamiento','Días Crédito','Estatus']
 
     for col_num in range(len(columns)):
@@ -1251,7 +1251,7 @@ def convert_excel_proveedores(proveedores):
     ws.cell(row=3, column= columna_max, value="Número de proveedores:")
     ws.cell(row=3, column = columna_max + 1, value=proveedores_unicos).style = number_style
 
-    rows = proveedores.values_list('distrito__nombre','nombre__razon_social','nombre__rfc','nombre__nombre_comercial','domicilio','telefono','estado__nombre',
+    rows = proveedores.values_list('distrito__nombre','nombre__razon_social','nombre__rfc','domicilio','telefono','estado__nombre',
                                    'contacto','email','email_opt','banco__nombre','clabe','cuenta','financiamiento','dias_credito',
                                    'estatus__nombre'
                               )
@@ -1264,9 +1264,9 @@ def convert_excel_proveedores(proveedores):
         #row_with_additional_columns = list(row) + [subtotal, iva, total]  # Agrega el subtotal a la fila existente
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 6:
+            if col_num == 5:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 14:
+            if col_num == 13:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
     sheet = wb['Sheet']
     wb.remove(sheet)
