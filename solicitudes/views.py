@@ -400,6 +400,7 @@ def checkout(request):
                             prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id}|{order.folio} | S{ordensurtir.cantidad} R{ordensurtir.cantidad_requisitar} cond:2'
                             prod_inventario.save()
                             ordensurtir.save()
+                            order.save()
                         elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0:
                             ordensurtir.requisitar = True
                             ordensurtir.cantidad_requisitar = producto.cantidad
@@ -1440,6 +1441,7 @@ def autorizada_sol(request, pk):
                 order.requisitar = True
                 prod_inventario.save()
                 ordensurtir.save()
+                order.save()
             elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad

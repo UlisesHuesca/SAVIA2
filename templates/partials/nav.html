@@ -327,10 +327,10 @@
                                 <div>
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'solicitud-pendientes-autorizacion' %}">
-                                Solicitudes
-                                {% if conteo_solicitudes > 0 %}
-                                <span class="badge bg-danger">({{conteo_solicitudes}})</span>
-                                {% endif %}
+                                    Solicitudes
+                                    {% if conteo_solicitudes > 0 %}
+                                    <span class="badge bg-danger">({{conteo_solicitudes}})</span>
+                                    {% endif %}
                                 </a>
                                 </div>
                                 {% if usuario.tipo.nombre == 'Admin' %}
@@ -339,12 +339,12 @@
                             {% if usuario.tipo.superintendente == True %}
                                 <div>
                             {% else %}
-                                <div class="d-none"></div>
+                                <div class="d-none">
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'requisicion-autorizacion' %}">Requisiciones
-                                {% if conteo_requis_pendientes > 0 %}
-                                <span class="badge bg-danger">({{conteo_requis_pendientes}})</span>
-                                {% endif %}
+                                    {% if conteo_requis_pendientes > 0 %}
+                                    <span class="badge bg-danger">({{conteo_requis_pendientes}})</span>
+                                    {% endif %}
                                 </a>
                                 </div>
                             {% if usuario.tipo.oc_superintendencia == False %}
