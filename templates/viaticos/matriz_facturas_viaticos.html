@@ -446,10 +446,25 @@ function actualizarTotales() {
     calcularTotalAutorizadas();
 }
 
+//Parte del modal factura eliminar
 function setDeleteUrl(facturaId) {
     const deleteForm = document.getElementById('deleteForm');
-    const baseUrl = "{% url 'eliminar-factura-viatico' 0 %}";  // URL base con un placeholder
-    deleteForm.action = baseUrl.replace('0', facturaId);  // Reemplaza el '0' con el ID real
+    const baseUrl = "{% url 'eliminar-factura-viatico' 0 %}"; // URL base con un placeholder
+
+    // Obtener el parámetro 'next' de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextParam = urlParams.get('next');  // Captura el valor de 'next' si está presente
+
+    // Construir la URL de eliminación con el ID de la factura
+    let deleteUrl = baseUrl.replace('0', facturaId);
+    
+    // Agregar el parámetro 'next' si existe
+    if (nextParam) {
+        deleteUrl += `?next=${encodeURIComponent(nextParam)}`;
+    }
+
+    // Establecer la acción del formulario
+    deleteForm.action = deleteUrl;
 }
 
 function enviarFormulario() {

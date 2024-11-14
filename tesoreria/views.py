@@ -33,7 +33,7 @@ import qrcode
 import tempfile
 from PIL import Image
 from django.utils import timezone
-
+from django.urls import reverse
 import re
 
 from datetime import date, datetime
@@ -1355,12 +1355,103 @@ def factura_compra_edicion(request, pk):
 
 @perfil_seleccionado_required
 def factura_eliminar(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
     factura = Facturas.objects.get(id = pk)
     compra = factura.oc
-    messages.success(request,f'La factura {factura.id} ha sido eliminado exitosamente')
+    comentario = request.POST.get('comentario')
+    # Obtener el parámetro `next` de la URL
+    next_url = request.GET.get('next', None)
+
+    # Construir la URL de la matriz de facturas de viáticos
+    matriz_url = reverse('matriz-facturas-nomodal', args=[compra.id])
+
+    static_path = settings.STATIC_ROOT
+    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+    img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+    image_base64 = get_image_base64(img_path)
+    logo_v_base64 = get_image_base64(img_path2)
+    # Crear el mensaje HTML
+    html_message = f"""
+    <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                            <tr>
+                                <td align="center">
+                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 20px;">
+                                    <p style="font-size: 18px; text-align: justify;">
+                                        <p>Estimado {factura.subido_por.staff.staff.first_name} {factura.subido_por.staff.staff.last_name},</p>
+                                    </p>
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        Estás recibiendo este correo porque tu factura subida el: <strong>{factura.fecha_subido}</strong> en la compra <strong>{factura.oc.folio}</strong> ha sido eliminada.</p>
+                                    <p>Comentario:</p>
+                                    {comentario}
+                                    </p>
+                                <p style="font-size: 16px; text-align: justify;">
+                                    Att: {perfil.staff.staff.first_name} {perfil.staff.staff.last_name}
+                                </p>
+                                    <p style="text-align: center; margin: 20px 0;">
+                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                    </p>
+                                    <p style="font-size: 14px; color: #999; text-align: justify;">
+                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+    """
+    try:
+        email = EmailMessage(
+            f'Factura eliminada',
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[compra.creada_por.staff.staff.email],
+            headers={'Content-Type': 'text/html'}
+            )
+        email.content_subtype = "html " # Importante para que se interprete como HTML
+        if factura.factura_pdf:
+            pdf_path = factura.factura_pdf.path
+            if os.path.exists(pdf_path):  # Verificar si el archivo realmente existe
+                with open(pdf_path, 'rb') as pdf_file:
+                    email.attach(factura.factura_pdf.name, pdf_file.read(), 'application/pdf')
+            else:
+                print(f"El archivo PDF no se encuentra en la ruta: {pdf_path}")
+
+        if factura.factura_xml:
+            xml_path = factura.factura_xml.path
+            if os.path.exists(xml_path):  # Verificar si el archivo realmente existe
+                with open(xml_path, 'rb') as xml_file:
+                    email.attach(factura.factura_xml.name, xml_file.read(), 'application/xml')
+            else:
+                print(f"El archivo XML no se encuentra en la ruta: {xml_path}")
+
+        email.send()
+        messages.success(request, f'La factura {factura.id} ha sido eliminada exitosamente')
+    except (BadHeaderError, SMTPException) as e:
+        error_message = f'La factura {factura.id} ha sido eliminada, pero el correo no ha sido enviado debido a un error: {e}'
+        messages.success(request, error_message)
     factura.delete()
 
-    return redirect('matriz-facturas-nomodal',pk= compra.id)
+    # Redirigir a 'matriz-facturas-viaticos' con el parámetro `next` si existe
+    if next_url:
+        return redirect(f'{matriz_url}?next={next_url}')
+    else:
+        return redirect(matriz_url)
 
 @perfil_seleccionado_required
 def mis_gastos(request):
