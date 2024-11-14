@@ -46,134 +46,148 @@
             <h5 class="card-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Facturas de Compra: {{compra.folio}}</h5>
         </div>
 
-        <div class="card-body">
+        <form method="POST">
+            {% csrf_token %}
+            <div class="card-body">
+                <!-- Proveedor Info -->
                 <table class='table table-striped'>
                     <thead>
                         <tr>
-                        <th scope="col">Proveedor:</th>
-                        <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
+                            <th scope="col">Proveedor:</th>
+                            <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
                         </tr>
                     </thead>
+                </table>
+
+                <!-- Pagos Section -->
+                <table class='table table-striped'>
                     <tbody>
-                        
                         {% for pago in pagos %}
                         <tr>
                             {% if pago.comprobante_pago %}
-                        <th scope="col">Pago:</th>
-                        <th scope="col">
-                            <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
-                            <i class="fa-solid fa-file-invoice-dollar"></i>
-                            {% if usuario.tipo.tesoreria == True %}
-                            </a>
-                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">               
-                                <i class="fa-solid fa-cloud-arrow-up"></i>
-                            </a>   
-                            {% endif %}
-                            
-                        </th>
+                            <th scope="col">Pago:</th>
+                            <th scope="col">
+                                <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                                {% if usuario.tipo.tesoreria %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>
+                                {% endif %}
+                            </th>
                             {% endif %}
                         </tr>
                         {% endfor %}
-                        
                     </tbody>
                 </table>
+
+                <!-- Importe Compra Section -->
                 <hr>
                 <table class='table table-striped'>
                     <thead>
                         <tr>
-                        <th scope="col">Importe Compra</th>
-                        <th id="importe" value={{compra.costo_oc}} moneda={{compra.moneda.nombre}} scope="col">{{compra.costo_oc|floatformat:2}}</th>
+                            <th scope="col">Importe Compra</th>
+                            <th id="importe" value="{{compra.costo_oc}}" moneda="{{compra.moneda.nombre}}">${{compra.costo_oc|floatformat:2}}</th>
                         </tr>
                     </thead>
                 </table>
+
+                <!-- Descargar Facturas Button -->
                 <div class="nav-item ms-auto">
-                    <form method="POST" class="d-inline">
-                        {% csrf_token %}
-                        <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-                            <i class="fas fa-file-archive"></i> Descargar Facturas
-                        </button>
-                    </form>
+                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                        <i class="fas fa-file-archive"></i> Descargar Facturas
+                    </button>
                 </div>
+
+                <!-- Facturas Table -->
                 <table class='table table-striped'>
                     <thead>
                         <tr>
-                            <th scope="col-3">#</th>
-                            <th scope="col-2">Fecha</th>
-                            <th scope="col-3">Hora</th>
-                            <th scope="col-3">Comentario</th>
-                            <th scope="col-2">PDF</th>
-                            <th scope="col-2">XML</th>
+                            <th>#</th>
+                            <th>Fecha</th>
+                            <th>Hora</th>
+                            <th>Comentario</th>
+                            <th>PDF</th>
+                            <th>XML</th>
                             <th>PDF-Render</th>
-                            <!--<th scope="col-2">Edición</th>-->
-                            <th scope="col-2">Eliminar</th>
+                            {% if usuario.tipo.tesoreria %}
+                            <th>Autorizar</th>
+                            {% endif %}
+                            <th>Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
-                    {% for p in facturas %}
+                        {% for p in facturas %}
                         <tr>
                             <th scope="row">{{p.id}}</th>
                             <td>{{p.fecha_subido}}</td>
                             <td>{{p.hora_subido}}</td>
                             <td>{{p.comentario}}</td>
-                            {% if p.factura_pdf %}
                             <td>
+                                {% if p.factura_pdf %}
                                 <a href="{{p.factura_pdf.url}}" download class="btn btn-outline-danger">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
                                 </a>
+                                {% endif %}
                             </td>
-                            {% else %}
-                            <td> </td>
-                            {% endif %}
-                            {% if p.factura_xml %}
                             <td>
+                                {% if p.factura_xml %}
                                 <a href="{{p.factura_xml.url}}" download class="btn btn-outline-info">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
                                 </a>
+                                {% endif %}
                             </td>
                             <td>
                                 <a href="{% url 'generar_cfdi' p.id %}" download class="btn btn-outline-info">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
                                 </a>
                             </td>
-                            {% else %}
-                            <td> </td>
-                            <td> </td>
-                            {% endif %}
-                            
-                            <!--<td>           
-                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-compra-edicion' p.id %}">               
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                </a>    
-                            </td>-->
+                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                             <td>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ p.id | unlocalize}})">
-                                        <i class="fa-regular fa-trash-can"></i>
-                                    </button>   
+                                <input type="checkbox" name="autorizar_factura_{{ p.id | unlocalize }}" {% if p.autorizada %}checked{% endif %}>
+                            </td>
+                            {% endif %}
+                            <td>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ p.id | unlocalize }})">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
                             </td>
                         </tr>
-                   {% endfor %}
-                   </tbody>
+                        {% endfor %}
+                    </tbody>
                 </table>
-        </div>
-        <form method="post">
-            {% csrf_token %}
-            <div class="row ms-3 my-2">
-                <div class="form-check form-switch col-sm">
-                <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas</strong></label>
-                {{form.facturas_completas|add_class:"form-check-input"}}
+
+                <!-- Facturas Completa Toggle -->
+                {% if usuario.tipo.tesoreria %}
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                        <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas</strong></label>
+                        {{form.facturas_completas|add_class:"form-check-input"}}
+                    </div>
                 </div>
+                {% endif %}
+                <!-- Subir Nueva Factura and Cerrar Buttons -->
                 <hr>
-            <h6>Subir Nueva factura</h6>
-            <ul class="nav">
-                <li class="nav-item">
-                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' compra.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i> </a>
-                </li>
-                <li class="nav-item ms-4">
-                    <button type="submit" name="btn_factura_completa" class="btn btn-secondary">Cerrar</button>
-                </li>
-            </ul>
+                <h6>Subir Nueva factura</h6>
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' compra.id %}">
+                            Facturas <i class="fa-solid fa-file-arrow-up"></i>
+                        </a>
+                    </li>
+                    {% if usuario.tipo.tesoreria %}
+                        <li class="nav-item ms-4">
+                            <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
+                        </li>
+                    {% endif %}
+                    <li class="nav-item ms-4">      
+                        <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
+                    </li>
+                </ul>
+            </div>
         </form>
-    </div>   
+    </div>
 </div>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">

@@ -1024,7 +1024,7 @@ def eliminar_factura_viatico(request, pk):
                             <tr>
                                 <td style="padding: 20px;">
                                     <p style="font-size: 18px; text-align: justify;">
-                                        <p>Estimado {factura.subido_por.staff.staff.first_name} {factura.subido_por.staff.staff.last_name},</p>
+                                        <p>Estimado {factura.solicitud_viatico.staff.staff.staff.first_name} {factura.solicitud_viatico.staff.staff.staff.last_name},</p>
                                     </p>
                                     <p style="font-size: 16px; text-align: justify;">
                                         Estás recibiendo este correo porque tu factura subida el: <strong>{factura.fecha_subido.date()}</strong> en el viatico <strong>{viatico.folio}</strong> ha sido eliminada.</p>

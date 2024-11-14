@@ -79,6 +79,9 @@ class Facturas(models.Model):
     factura_xml = models.FileField(blank=True, null=True, upload_to='xml', validators=[FileExtensionValidator(['xml'])])
     uuid = models.CharField(max_length=36, blank=True, null=True, unique = True, db_index=True) #unique = True
     fecha_timbrado = models.DateTimeField(null=True,blank=True)
+    autorizada = models.BooleanField(null=True, default=None)
+    autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='autorizado_factura_compra')
+    autorizada_el = models.DateTimeField(null=True)
 
     def __str__(self):
         return f'id:{self.id} oc:{self.oc}'

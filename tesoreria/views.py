@@ -1189,6 +1189,8 @@ def generar_archivo_zip(facturas, compra):
 
 @perfil_seleccionado_required
 def matriz_facturas_nomodal(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
     compra = Compra.objects.get(id = pk)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
@@ -1198,6 +1200,17 @@ def matriz_facturas_nomodal(request, pk):
     if request.method == 'POST':
         form = Facturas_Completas_Form(request.POST, instance=compra)
         if "btn_factura_completa" in request.POST:
+            fecha_hora = datetime.today()
+            for factura in facturas:
+                checkbox_name = f'autorizar_factura_{factura.id}'
+                #print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
+                if checkbox_name in request.POST:
+                    factura.autorizada = True
+                    factura.autorizada_por = perfil
+                    factura.autorizada_el = fecha_hora
+                else:
+                    factura.autorizada = False
+                factura.save()
             if form.is_valid():
                 form.save()
                 messages.success(request,'Haz cambiado el status de facturas completas')
@@ -1209,6 +1222,8 @@ def matriz_facturas_nomodal(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
+        elif 'salir' in request.POST:
+            return redirect(next_url)
     
     context={
         'pagos':pagos,

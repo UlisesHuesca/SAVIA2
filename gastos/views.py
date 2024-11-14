@@ -1026,11 +1026,24 @@ def matriz_facturas_gasto(request, pk):
     if request.method == 'POST':
         form = Facturas_Gastos_Form(request.POST, instance=gasto)
         if "btn_factura_completa" in request.POST:
+            fecha_hora = datetime.today()
+            for factura in facturas:
+                checkbox_name = f'autorizar_factura_{factura.id}'
+                #print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
+                if checkbox_name in request.POST:
+                    print('PASO 1')
+                    factura.autorizada = True
+                    factura.autorizada_por = usuario
+                    factura.autorizada_el = fecha_hora
+                else:
+                    print('No paso')
+                    factura.autorizada = False
+                factura.save()
             if form.is_valid():
                 gasto = form.save(commit=False)
                 gasto.verificacion_facturas = usuario
                 gasto.save()
-                #messages.success(request,'Haz cambiado el status de facturas completas')
+                messages.success(request,'Haz cambiado el status de facturas completas')
                 return redirect(next_url) 
             else:
                 messages.error(request,'No está validando')
@@ -1039,7 +1052,8 @@ def matriz_facturas_gasto(request, pk):
             response = HttpResponse(in_memory_zip, content_type='application/zip')
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
-
+        elif 'salir' in request.POST:
+            return redirect(next_url)
     context={
         'next_url':next_url,
         'form':form,
