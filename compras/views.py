@@ -4518,9 +4518,9 @@ def pdf_formato_comparativo(request, pk):
             Paragraph(str(producto.producto.producto.codigo), style_normal),
             Paragraph(valor1, style_normal),
             Paragraph(valor2, style_normal),
-            Paragraph('$' + str(producto.precio), style_normal),
-            Paragraph('$' + str(producto.precio2), style_normal),
-            Paragraph('$' + str(producto.precio3), style_normal),
+            Paragraph('$' + f"{producto.precio:,.3f}", style_normal),
+            Paragraph('$' + f"{producto.precio2:,.3f}", style_normal),
+            Paragraph('$' + f"{producto.precio3:,.3f}", style_normal),
         ]
         encabezado.append(fila)
 
@@ -4568,9 +4568,9 @@ def pdf_formato_comparativo(request, pk):
         autorizado2 = str(compra.oc_autorizada_por2.staff.staff.first_name) + ' ' + str(compra.oc_autorizada_por2.staff.staff.last_name)
     else:
         autorizado2 = ''
-    c.drawCentredString(140, 115, autorizado1)
+    c.drawCentredString(140, 115, autorizado2)
     c.drawCentredString(305, 115, comprador)
-    c.drawCentredString(490, 115, autorizado2)
+    c.drawCentredString(490, 115, autorizado1)
     # Pie de página
     c.setFillColor(azul)
     c.rect(35, 25, 550, 60, stroke=0, fill=1)
