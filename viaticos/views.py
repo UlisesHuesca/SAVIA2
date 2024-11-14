@@ -24,6 +24,7 @@ from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from api.models import TablaFestivos
 from django.db.models import Count, Q, Case, When, Value, CharField
+from django.http import HttpResponseRedirect
 
 import io
 import json
@@ -862,7 +863,7 @@ def factura_nueva_viatico(request, pk):
                 if facturas_registradas:
                     messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
                 if facturas_duplicadas:
-                    messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')        
+                    messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}') 
             else:
                 messages.error(request,'No se pudo subir tu documento')
 

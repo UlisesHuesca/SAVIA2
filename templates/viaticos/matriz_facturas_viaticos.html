@@ -174,7 +174,7 @@
                     </ul>
                 </td>
                 <td>
-                    <a href="{% url 'generar_cfdi_viaticos' factura.id %}" download class="btn btn-outline-info">
+                    <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                     </a>
                 </td>
@@ -262,15 +262,11 @@
         <ul class="nav">
             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
             <li class="nav-item">
-                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}">
-                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Factura
-                </a>
+                <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
             </li>
             {% elif fuera_de_tiempo == False %}
             <li class="nav-item">
-                <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}">
-                    <i class="fa-solid fa-arrow-up-from-bracket"></i> Factura
-                </a>
+                <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
             </li>
             {% endif %}
             <li class="nav-item ms-4">
@@ -282,14 +278,13 @@
         </ul>
     </div>
 </form>
+</div>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
 
     </div>
 </div>
-</div>
-
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
@@ -301,6 +296,10 @@
             modal.hide()
     })
 })()
+var myModal = document.getElementById('dialog')
+myModal.addEventListener('hidden.bs.modal', function (event) {
+      location.reload();
+    })
 
 // Funciones para la primera tabla
 var xml = document.getElementsByClassName('total-xml');
