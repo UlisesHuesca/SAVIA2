@@ -1047,7 +1047,68 @@ def cancelar_oc1(request, pk):
         compra.autorizado_date1 = date.today()
         compra.autorizado_hora1 = datetime.now().time()
         compra.save()
-        messages.error(request,f'Has cancelado la compra con FOLIO: {compra.folio}')
+
+        static_path = settings.STATIC_ROOT
+        img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+        img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+        image_base64 = get_image_base64(img_path)
+        logo_v_base64 = get_image_base64(img_path2)
+        # Crear el mensaje HTML
+        html_message = f"""
+        <html>
+            <head>
+                <meta charset="UTF-8">
+            </head>
+            <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                    <tr>
+                        <td align="center">
+                            <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                <tr>
+                                    <td align="center">
+                                        <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="font-size: 18px; text-align: justify;">
+                                            <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                        </p>
+                                        <p style="font-size: 16px; text-align: justify;">
+                                            Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> ha sido cancelada.</p>
+                                        </p>
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        Att: {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}
+                                    </p>
+                                        <p style="text-align: center; margin: 20px 0;">
+                                            <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                        </p>
+                                        <p style="font-size: 14px; color: #999; text-align: justify;">
+                                            Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                        </p>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+        </html>
+        """
+        try:
+            email = EmailMessage(
+                f'OC Cancelada',
+                body=html_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[compra.req.orden.staff.staff.staff.email],
+                headers={'Content-Type': 'text/html'}
+                )
+            email.content_subtype = "html " # Importante para que se interprete como HTML
+            email.send()
+            messages.success(request,f'Has cancelado la compra con FOLIO: {compra.folio}')
+        except (BadHeaderError, SMTPException) as e:
+            error_message = f'La compra {compra.folio} ha sido cancelada, pero el correo no ha sido enviado debido a un error: {e}'
+            messages.success(request, error_message)
         return redirect('autorizacion-oc1')
 
     context = {
@@ -1098,7 +1159,68 @@ def cancelar_oc2(request, pk):
             compra.autorizado_date2 = date.today()
             compra.autorizado_hora2 = datetime.now().time()
             compra.save()
-            messages.success(request,f'Has cancelado la compra con FOLIO: {compra.folio}')
+
+            static_path = settings.STATIC_ROOT
+            img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+            img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+            image_base64 = get_image_base64(img_path)
+            logo_v_base64 = get_image_base64(img_path2)
+            # Crear el mensaje HTML
+            html_message = f"""
+            <html>
+                <head>
+                    <meta charset="UTF-8">
+                </head>
+                <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                    <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                        <tr>
+                            <td align="center">
+                                <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                    <tr>
+                                        <td align="center">
+                                            <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="padding: 20px;">
+                                            <p style="font-size: 18px; text-align: justify;">
+                                                <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                            </p>
+                                            <p style="font-size: 16px; text-align: justify;">
+                                                Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> ha sido cancelada.</p>
+                                            </p>
+                                        <p style="font-size: 16px; text-align: justify;">
+                                            Att: {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}
+                                        </p>
+                                            <p style="text-align: center; margin: 20px 0;">
+                                                <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                            </p>
+                                            <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </table>
+                            </td>
+                        </tr>
+                    </table>
+                </body>
+            </html>
+            """
+            try:
+                email = EmailMessage(
+                    f'OC Cancelada',
+                    body=html_message,
+                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    to=[compra.req.orden.staff.staff.staff.email],
+                    headers={'Content-Type': 'text/html'}
+                    )
+                email.content_subtype = "html " # Importante para que se interprete como HTML
+                email.send()
+                messages.success(request,f'Has cancelado la compra con FOLIO: {compra.folio}')
+            except (BadHeaderError, SMTPException) as e:
+                error_message = f'La compra {compra.folio} ha sido cancelada, pero el correo no ha sido enviado debido a un error: {e}'
+                messages.success(request, error_message)
             return HttpResponse(status=204)
     
     context = {
