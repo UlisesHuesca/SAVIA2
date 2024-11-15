@@ -42,7 +42,6 @@ class Product(models.Model):
     unidad = models.ForeignKey(Unidad, on_delete = models.CASCADE, null=True)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     subfamilia = models.ForeignKey(Subfamilia, on_delete =models.CASCADE, null=True, blank=True)
-    especialista = models.BooleanField(default=False)
     iva = models.BooleanField(default=True)
     activo = models.BooleanField(default=False)
     servicio = models.BooleanField(default=False)
