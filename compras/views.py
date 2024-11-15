@@ -895,10 +895,10 @@ def matriz_oc_productos(request):
     
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        #if articulos.count() > 10000:
-        #    return convert_excel_solicitud_matriz_productos_quick(articulos)
-        #else:
-        return convert_excel_solicitud_matriz_productos_prov2(articulos)
+        if articulos.count() > 10000:
+            return convert_excel_solicitud_matriz_productos_quick(articulos)
+        else:
+            return convert_excel_solicitud_matriz_productos_prov2(articulos)
         #    if not task_id_producto:
         #        task = convert_excel_solicitud_matriz_productos_task2.delay(articulos_data)
         #        task_id_producto = task.id
@@ -3354,7 +3354,7 @@ def convert_excel_solicitud_matriz_productos_prov(productos):
         moneda_nombre = articulo.oc.moneda.nombre
         proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
-        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+        fecha_creacion = articulo.created_at
         pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
         subtotal_parcial = articulo.subtotal_parcial
         iva_parcial = articulo.iva_parcial
@@ -3434,7 +3434,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
         moneda_nombre = articulo.oc.moneda.nombre
         proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
-        fecha_creacion = articulo.created_at.replace(tzinfo=None)
+        fecha_creacion = articulo.oc.created_at.date()
         pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
         subtotal_parcial = articulo.subtotal_parcial
         iva_parcial = articulo.iva_parcial
@@ -3565,7 +3565,7 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
         moneda_nombre = articulo.oc.moneda.nombre
         proyecto_nombre = articulo.oc.req.orden.proyecto.nombre if articulo.oc.req.orden.proyecto else "Desconocido"
         subproyecto_nombre = articulo.oc.req.orden.subproyecto.nombre if articulo.oc.req.orden.subproyecto else "Desconocido"
-        fecha_creacion = articulo.oc.created_at.replace(tzinfo=None)
+        fecha_creacion = articulo.oc.created_at.date()
         pagado_text = 'Pagada' if articulo.oc.pagada else 'No Pagada'
         subtotal_parcial = articulo.subtotal_parcial
         iva_parcial = articulo.iva_parcial
@@ -3655,7 +3655,7 @@ def convert_excel_solicitud_matriz_productos_quick(productos):
     response = HttpResponse(output.read(), content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
     file_name = f'Matriz_compras_por_producto_{date.today()}.xlsx'
     response['Content-Disposition'] = f'attachment; filename={file_name}'
-    response.set_cookie('descarga_iniciada', 'true', max_age=20)
+    response.set_cookie('descarga_iniciada', 'true', max_age=3)
     output.close()
 
     print(f"Total time to generate file: {time.time() - start_time} seconds")
