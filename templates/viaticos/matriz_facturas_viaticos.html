@@ -128,7 +128,7 @@
                 <th>PDF</th>
                 <th>XML</th>
                 <th>PDF-render</th>
-                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                {% if usuario.tipo.tesoreria %}
                 <th>Autorizar</th>
                 {% endif %}
                 <th>Eliminar</th>
@@ -178,7 +178,7 @@
                         <i class="fa-solid fa-file-invoice-dollar"></i>
                     </a>
                 </td>
-                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                {% if usuario.tipo.tesoreria %}
                 <td>
                     <input type="checkbox" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %} onchange="actualizarTotales()">
                 </td>
@@ -190,7 +190,7 @@
                 </td>
             </tr>
             {% endfor %}
-            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+            {% if usuario.tipo.tesoreria %}
             <tr>
                 <td></td>
                 <td></td>
@@ -254,10 +254,12 @@
         </tbody>
     </table>
     <div class="row ms-3 my-2">
+        {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
         <div class="form-check form-switch col-sm">
             <label for="form.facturas_completas" class="form-check-label"><strong>Facturas Completas</strong></label>
             {{ form.facturas_completas|add_class:"form-check-input" }}
         </div>
+        {% endif %}
         <hr>
         <ul class="nav">
             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
@@ -446,10 +448,25 @@ function actualizarTotales() {
     calcularTotalAutorizadas();
 }
 
+//Parte del modal factura eliminar
 function setDeleteUrl(facturaId) {
     const deleteForm = document.getElementById('deleteForm');
-    const baseUrl = "{% url 'eliminar-factura-viatico' 0 %}";  // URL base con un placeholder
-    deleteForm.action = baseUrl.replace('0', facturaId);  // Reemplaza el '0' con el ID real
+    const baseUrl = "{% url 'eliminar-factura-viatico' 0 %}"; // URL base con un placeholder
+
+    // Obtener el parámetro 'next' de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextParam = urlParams.get('next');  // Captura el valor de 'next' si está presente
+
+    // Construir la URL de eliminación con el ID de la factura
+    let deleteUrl = baseUrl.replace('0', facturaId);
+    
+    // Agregar el parámetro 'next' si existe
+    if (nextParam) {
+        deleteUrl += `?next=${encodeURIComponent(nextParam)}`;
+    }
+
+    // Establecer la acción del formulario
+    deleteForm.action = deleteUrl;
 }
 
 function enviarFormulario() {

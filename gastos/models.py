@@ -176,6 +176,9 @@ class Factura(models.Model):
     es_repetida = models.BooleanField(default=False)
     uuid = models.CharField(max_length=36, blank=True, null=True, unique = True, db_index=True)
     fecha_timbrado = models.DateTimeField(null=True,blank=True)
+    autorizada = models.BooleanField(null=True, default=None)
+    autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='autorizado_factura_gasto')
+    autorizada_el = models.DateTimeField(null=True)
     # Puedes agregar más campos si es necesario, como fecha, descripción, etc.
 
     @property   

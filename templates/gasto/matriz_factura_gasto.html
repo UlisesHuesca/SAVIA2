@@ -42,183 +42,223 @@
         {% endif %}
     </div>
 </div>
-
 <div class="container">
-<div class = "card">
-    <div class="card-header" ver = "{{next_url}}">
-        <h5>Facturas de Gasto: {{gasto.folio}}</h5>
-    </div>
-    <div class="card-body">
-        <!--{% if messages %}
-            {% for message in messages %}
-                <div class="alert alert-danger" role="alert">
-                    {{ message }}
-                </div>
-            {% endfor %}
-        {% endif %}-->
-        <table class='table table-striped'>
-            <thead>
-                <tr>
-                    <th scope="col">Nombre:</th>
-                    <th scope="col">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for pago in pagos %}
-                <tr>
-                    {% if pago.comprobante_pago %}
-                <th scope="col">Pago:</th>
-                <th scope="col">
-                    <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
-                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                    </a>
-                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">               
-                        <i class="fa-solid fa-cloud-arrow-up"></i>
-                    </a>   
-                    
-                </th>
-                    {% endif %}
-                </tr>
-                {% endfor %}  
-            </tbody>
-        </table>
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Gasto ID</th>
-                    <th>ID articulo</th>
-                    <th scope="col">Artículo</th>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Subtotal</th>
-                    <th scope="col">Importe Gasto</th>
-                    
-                </tr>
-            </thead>
-            <tbody>
-                {% for gasto in articulos_gasto %}
-                <tr>
-                    <th>{{gasto.gasto.folio}}</th>
-                    <th scope="row">{{gasto.id}}</th>
-                    <td>{{gasto.producto}}</td>
-                    <td>{{gasto.descripcion}}</td>
-                    <td class="subtotal-linea" total="{{gasto.get_subtotal|unlocalize}}">${{gasto.get_subtotal|floatformat:2}}</td>
-                    <td class="total-linea" total="{{gasto.total_parcial|unlocalize}}">${{gasto.total_parcial|floatformat:2}}</td>
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <td></td>
-                    <th>Total</th>
-                    <td id="subtotal"></td>
-                    <td id="total"></td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-        <div class="nav-item ms-auto">
-            <form method="POST" class="d-inline">
+    <div class="card">
+        <div class="card-header" ver="{{ next_url }}">
+            <h5>Facturas de Gasto: {{ gasto.folio }}</h5>
+        </div>
+        <div class="card-body">
+            <!-- Formulario único para envío de toda la información -->
+            <form method="POST">
                 {% csrf_token %}
-                <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-                    <i class="fas fa-file-archive"></i> Descargar Facturas
-                </button>
+
+                <!-- Información de facturas de gasto -->
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Nombre:</th>
+                            <th scope="col">{{ gasto.staff.staff.staff.first_name }} {{ gasto.staff.staff.staff.last_name }}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for pago in pagos %}
+                        {% if pago.comprobante_pago %}
+                        <tr>
+                            <th scope="col">Pago:</th>
+                            <th scope="col">
+                                <a class="btn btn-outline-info" href="{{ pago.comprobante_pago.url }}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                                <a class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>
+                            </th>
+                        </tr>
+                        {% endif %}
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Tabla de artículos de gasto -->
+                <table class="table bg-white">
+                    <thead class="text-black" style="background-color: #F5F5F5;">
+                        <tr>
+                            <th scope="col">Gasto ID</th>
+                            <th scope="col">ID Artículo</th>
+                            <th scope="col">Artículo</th>
+                            <th scope="col">Descripción</th>
+                            <th scope="col">Subtotal</th>
+                            <th scope="col">Importe Gasto</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for gasto in articulos_gasto %}
+                        <tr>
+                            <th>{{ gasto.gasto.folio }}</th>
+                            <th scope="row">{{ gasto.id }}</th>
+                            <td>{{ gasto.producto }}</td>
+                            <td>{{ gasto.descripcion }}</td>
+                            <td class="subtotal-linea" total="{{ gasto.get_subtotal|unlocalize }}">${{ gasto.get_subtotal|floatformat:2 }}</td>
+                            <td class="total-linea" total="{{ gasto.total_parcial|unlocalize }}">${{ gasto.total_parcial|floatformat:2 }}</td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td colspan="4"></td>
+                            <th>Total</th>
+                            <td id="total"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Botón para descargar todas las facturas -->
+                <div class="nav-item ms-auto">
+                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                        <i class="fas fa-file-archive"></i> Descargar Facturas
+                    </button>
+                </div>
+
+                <!-- Tabla de datos XML y autorización -->
+                <table class="table bg-white">
+                    <thead class="text-black" style="background-color: #F5F5F5;">
+                        <tr>
+                            <th scope="col">Concepto [XML]</th>
+                            <th scope="col">Proveedor [XML]</th>
+                            <th scope="col">Monto [XML]</th>
+                            <th>Facturas</th>
+                            <th>PDF-Render</th>
+                            {% if usuario.tipo.tesoreria %}
+                            <th>Autorizar</th>
+                            {% endif %}
+                            <th>Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for factura in facturas %}
+                        <tr>
+                            <td>{% if factura.archivo_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
+                            <td>{% if factura.archivo_xml %} {{ factura.emisor.nombre }} {% endif %}</td>
+                            {% if factura.archivo_xml %}
+                            <td class="total-xml" total="{{ factura.emisor.total }}">${{ factura.emisor.total }}</td>
+                            {% else %}
+                            <td>{{ factura.monto }}</td>
+                            {% endif %}
+
+                            <!-- Archivos PDF y XML -->
+                            <td>
+                                <ul class="nav nav-pills">
+                                    {% if factura.archivo_pdf %}
+                                    <li class="nav-item mx-1">
+                                        <a href="{{ factura.archivo_pdf.url }}" download class="btn btn-outline-danger">
+                                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                    {% if factura.archivo_xml %}
+                                    <li class="nav-item mx-1">
+                                        <a href="{{ factura.archivo_xml.url }}" download class="btn btn-outline-secondary">
+                                            <i class="fa-solid fa-file-code fa-2xl"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </td>
+
+                            <!-- PDF Render -->
+                            <td>
+                                <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+
+                            <!-- Checkbox de autorización -->
+                            {% if usuario.tipo.tesoreria %}
+                            <td>
+                                <input type="checkbox" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %}>
+                            </td>
+                            {% endif %}
+
+                            <!-- Botón de eliminación -->
+                            <td>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id }})">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        <tr>
+                            <td colspan="2"></td>
+                            <th>Total</th>
+                            <td scope="col" id="total2"></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- Botón para subir nueva factura -->
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}">
+                            Facturas <i class="fa-solid fa-file-arrow-up"></i>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Cierre del formulario y botón de cierre de facturas -->
+                {% if usuario.tipo.tesoreria %}
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                        <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas | Validado por: {{ gasto.verificacion_facturas.staff.staff.first_name }} {{ gasto.verificacion_facturas.staff.staff.last_name }}</strong></label>
+                        {{ form.facturas_completas|add_class:"form-check-input" }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Botón de cierre -->
+                <hr>
+                <ul class="nav">
+                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                    <li class="nav-item ms-4">
+                        <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
+                    </li>
+                {% endif %}
+                    <li class="nav-item ms-4">      
+                        <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
+                    </li>
+                </ul>
             </form>
         </div>
-        <br>
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Concepto [XML]</th>
-                    <th scope="col">Proveedor [XML]</th>
-                    <th scope="col">Monto [XML]</th>
-                    <th>Facturas</th>
-                    <th>PDF-Render</th>
-                    <th>Eliminar</th>
-                <tr>
-            </thead>
-            <tbody>
-                {% for factura in facturas  %}
-                <tr>
-                    <td>{% if factura.archivo_xml %} {{factura.emisor.resultados}} {% endif %}</td>
-                    <td>{% if factura.archivo_xml %} {{factura.emisor.nombre}} {% endif %}</td>
-                    {% if factura.archivo_xml %}
-                    <td class="total-xml" total={{factura.emisor.total}}>${{factura.emisor.total}}</td>
-                    {%else%}
-                    <td>{{factura.monto}}</td>
-                    {% endif %}
-                    <td>
-                    <ul class="nav nav-pills">
-                        {% if factura.archivo_pdf %}
-                        <li class="nav-item mx-1">
-                            <a href="{{factura.archivo_pdf.url}}" download class="btn btn-outline-danger">
-                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </a>                 
-                        </li>
-                        {% endif %}
-                        {% if factura.archivo_xml %}
-                        <li class="nav-item mx-1">
-                            <a href="{{factura.archivo_xml.url}}" download class="btn btn-outline-secondary">
-                                <i class="fa-solid fa-file-code fa-2xl"></i>
-                            </a>                 
-                        </li>
-                        {% endif %}
-                    </ul>
-                    </td> 
-                        <td>
-                            <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
-                            </a>
-                        </td>
-                        <td>
-                            <a type="button" class="btn btn-outline-danger" href="{% url 'eliminar-factura-gasto' factura.id %}?next={{ request.GET.next }}">               
-                                <i class="fa-regular fa-trash-can"></i>
-                            </a>
-                        </td>
-                   
-                   
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td></td>
-                    <th>Total</th>
-                    <td scope="col" id="total2"></td>
-                </tr>
-            </tbody>
-        </table>
-        <ul class="nav">
-            <li class="nav-item">
-                <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
-            </li>
-        </ul>
     </div>
-    <form method="post">
-        {% csrf_token %}
-        {% if usuario.tipo.tesoreria %}
-        <div class="row ms-3 my-2">
-            <div class="form-check form-switch col-sm">
-            <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas| Validado por: {{gasto.verificacion_facturas.staff.staff.first_name}} {{gasto.verificacion_facturas.staff.staff.last_name}}</strong></label>
-            {{form.facturas_completas|add_class:"form-check-input"}}
-            </div>
-        {% endif %}
-            <hr>
-       
-        <!--<h6>Nueva factura</h6>-->
-        <ul class="nav">
-            <li class="nav-item ms-4">
-                <button type="submit" name="btn_factura_completa" class="btn btn-lg btn-secondary">Cerrar</button>
-            </li>
-        </ul>
-        </div>
-    </form>
 </div>
-</div>
+
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
 
     </div>
 </div>
-
+<!-- Modal de Confirmación eliminación-->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Eliminar Factura</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">Comentario</label>
+                        <input type="text" class="form-control" id="comentario" name="comentario" placeholder="Escribe un comentario" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="enviarFormulario()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
@@ -257,7 +297,49 @@ function total(elementos,id){
 total(elementos,'subtotal');
 total(elementos_t,'total')
 total(xml, 'total2');
+//Parte del modal factura eliminar
+function setDeleteUrl(facturaId) {
+    const deleteForm = document.getElementById('deleteForm');
+    const baseUrl = "{% url 'eliminar-factura-gasto' 0 %}"; // URL base con un placeholder
 
+    // Obtener el parámetro 'next' de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextParam = urlParams.get('next');  // Captura el valor de 'next' si está presente
+
+    // Construir la URL de eliminación con el ID de la factura
+    let deleteUrl = baseUrl.replace('0', facturaId);
+    
+    // Agregar el parámetro 'next' si existe
+    if (nextParam) {
+        deleteUrl += `?next=${encodeURIComponent(nextParam)}`;
+    }
+
+    // Establecer la acción del formulario
+    deleteForm.action = deleteUrl;
+}
+
+function enviarFormulario() {
+    const comentario = document.getElementById('comentario').value;
+    if (!comentario) {
+        alert("Por favor, escribe un comentario antes de continuar.");
+    } else {
+        document.getElementById('deleteForm').submit();  
+    }
+}
+;(function() {
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap', (e) => {
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+            modal.hide()
+    })
+})()
+
+// Recargar la página cuando se cierre el modal de confirmación
+var confirmModal = document.getElementById('confirmModal');
+confirmModal.addEventListener('hidden.bs.modal', function (event) {
+    location.reload();  
+});
 </script>
 {% endblock %}
 </body>
