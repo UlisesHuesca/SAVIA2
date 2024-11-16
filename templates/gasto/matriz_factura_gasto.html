@@ -186,8 +186,18 @@
                         </tr>
                         {% endfor %}
                         <tr>
+                            <td colspan="4"></td>
+                            <th>Total Subtotal</th>
+                            <td id="subtotal"></td> <!-- Este ID faltaba -->
+                        </tr>
+                        <tr>
+                            <td colspan="4"></td>
+                            <th>Total Artículos</th>
+                            <td id="total"></td>
+                        </tr>
+                        <tr>
                             <td colspan="2"></td>
-                            <th>Total</th>
+                            <th>Total XML</th>
                             <td scope="col" id="total2"></td>
                         </tr>
                     </tbody>
@@ -289,7 +299,7 @@ function total(elementos,id){
         total += Number(elementos[i].getAttribute('total'));
         console.log(elementos[i].getAttribute('total'))
     };
-    //console.log(total)
+    console.log(total)
     lbltotal.innerText = `$${total.toFixed(2)}`
 
 };
