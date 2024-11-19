@@ -1910,7 +1910,7 @@ def convert_excel_matriz_pagos(pagos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Id','Compra/Gasto','Solicitado','Proyecto','Subproyecto','Proveedor/Colaborador','Factuas_Completas',
+    columns = ['Id','Compra/Gasto','Solicitado','Proyecto','Subproyecto','Proveedor/Colaborador','Facturas Completas','Tiene Facturas',
                'Importe','Fecha', 'Moneda','Tipo de cambio', 'Total en Pesos']
 
     for col_num in range(len(columns)):
@@ -1933,7 +1933,7 @@ def convert_excel_matriz_pagos(pagos):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(L:L)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(M:M)").style = money_resumen_style
   
 
    # Aquí debes extraer el conjunto completo de pagos en lugar de solo ciertos valores
@@ -1945,6 +1945,11 @@ def convert_excel_matriz_pagos(pagos):
             proveedor = pago.oc.proveedor
             facturas_completas = pago.oc.facturas_completas
             cuenta_moneda = pago.cuenta.moneda.nombre if pago.cuenta else None
+            if pago.oc.facturas.exists():
+                #print(pago.oc.facturas)
+                tiene_facturas = 'Sí'
+            else:
+                tiene_facturas = 'No'
             if cuenta_moneda == 'PESOS':
                 tipo_de_cambio = ''
             elif cuenta_moneda == 'DOLARES':
@@ -1955,10 +1960,20 @@ def convert_excel_matriz_pagos(pagos):
             proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             facturas_completas = pago.gasto.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para gastos
+            if pago.gasto.facturas.exists():
+                
+                tiene_facturas = 'Sí'
+            else:
+                tiene_facturas = 'No'
+            
         elif pago.viatico:
             proveedor = pago.viatico.staff.staff.staff.first_name
             facturas_completas = pago.viatico.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para viáticos
+            if pago.viatico.facturas.exists():
+                tiene_facturas = 'Sí'
+            else:
+                tiene_facturas = 'No'
         else:
             proveedor = None
             facturas_completas = None
@@ -1974,19 +1989,20 @@ def convert_excel_matriz_pagos(pagos):
             pago.oc.req.orden.subproyecto.nombre if pago.oc else '',
             proveedor,
             facturas_completas,
+            tiene_facturas,
             pago.monto,
             pago.pagado_date.strftime('%d/%m/%Y') if pago.pagado_date else '',
             pago.oc.moneda.nombre if pago.oc else '',  # Modificación aquí
             tipo_de_cambio,
-            f'=IF(K{row_num}="",H{row_num},H{row_num}*K{row_num})'  # Calcula total en pesos usando la fórmula de Excel
+            f'=IF(L{row_num}="",I{row_num},I{row_num}*L{row_num})'  # Calcula total en pesos usando la fórmula de Excel
         ]
 
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 8:
+            if col_num == 9:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 7 or col_num == 10 or col_num == 11:
+            if col_num == 8 or col_num == 11 or col_num == 12:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
