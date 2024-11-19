@@ -1933,7 +1933,7 @@ def convert_excel_matriz_pagos(pagos):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(L:L)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(M:M)").style = money_resumen_style
   
 
    # Aquí debes extraer el conjunto completo de pagos en lugar de solo ciertos valores
