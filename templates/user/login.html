@@ -83,4 +83,17 @@
 </section>
 <!-- Section: Design Block -->
 {% endif%}
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const userAgent = navigator.userAgent;
+        if (!userAgent.includes("Chrome") && !userAgent.includes("Chromium")) {
+            Swal.fire({
+                title: "Advertencia",
+                text: "Para una mejor experiencia, se recomienda usar Google Chrome.",
+                icon: "warning",
+                confirmButtonText: "Entendido"
+            });
+        }
+    });
+</script>
 {% endblock%}
