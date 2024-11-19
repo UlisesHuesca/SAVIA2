@@ -1946,7 +1946,7 @@ def convert_excel_matriz_pagos(pagos):
             facturas_completas = pago.oc.facturas_completas
             cuenta_moneda = pago.cuenta.moneda.nombre if pago.cuenta else None
             if pago.oc.facturas.exists():
-                print(pago.oc.facturas)
+                #print(pago.oc.facturas)
                 tiene_facturas = 'Sí'
             else:
                 tiene_facturas = 'No'
