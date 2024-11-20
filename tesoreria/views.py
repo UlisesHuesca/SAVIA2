@@ -940,7 +940,29 @@ def matriz_pagos(request):
         Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2=True) |
         Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True), 
         hecho=True
-    ).order_by('-pagado_real')
+        ).annotate(
+        # Detectar la relación que tiene facturas
+        total_facturas=Count(
+            'oc__facturas', filter=Q(oc__facturas__hecho=True)
+        ) + Count(
+            'gasto__facturas__hecho', filter=Q(gasto__facturas__hecho=True)
+        ) + Count(
+            'viatico__facturas__hecho', filter=Q(viatico__facturas__hecho=True)
+        ),
+        autorizadas=Count(
+            Case(
+                When(Q(oc__facturas__autorizada=True, oc__facturas__hecho=True), then=Value(1))
+            )
+        ) + Count(
+            Case(
+                When(Q(gasto__facturas__autorizada=True, gasto__facturas__hecho=True), then=Value(1))
+            )
+        ) + Count(
+            Case(
+                When(Q(viatico__facturas__autorizada=True, viatico__facturas__hecho=True), then=Value(1))
+            )
+        ),
+        ).order_by('-pagado_real')
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
     distritos = Distrito.objects.exclude(id__in=[7, 8])
@@ -1038,7 +1060,13 @@ def matriz_pagos(request):
             response = HttpResponse(zip_buffer, content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=facturas.zip'
             return response
-
+    for pago in pagos_list:
+        if pago.total_facturas == 0:
+            pago.estado_facturas = 'sin_facturas'
+        elif pago.autorizadas == pago.total_facturas:
+            pago.estado_facturas = 'todas_autorizadas'
+        else:
+            pago.estado_facturas = 'pendientes'
     context= {
         'pagos_list':pagos_list,
         'pagos':pagos,
@@ -1224,7 +1252,7 @@ def matriz_facturas_nomodal(request, pk):
             return response
         elif 'salir' in request.POST:
             return redirect(next_url)
-    
+
     context={
         'pagos':pagos,
         'form':form,

@@ -288,23 +288,25 @@
                             <td>Incompletas</td>
                         {% endif %}
                         
-                        {% if pago.oc.facturas.exists %}
-                            {% if pago.oc.facturas.all.count > 1 %}
-                                <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
-                            {% elif pago.oc.facturas.all.count == 1 %}
-                                {% for factura in pago.oc.facturas.all %}
-                                    {% if factura.hecho %}
-                                    <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
-                                    {% else %}
-                                        <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
-                                    {% endif %}
-                                {% endfor %}
-                            {% else %}
-                                <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
-                            {% endif %}
-                        {% else%}
-                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
-                        {% endif %}
+                            <td>
+                                <ul class="nav nav-pills">
+                                    <li class="nav-item mx-1">
+                                        {% if pago.estado_facturas == "sin_facturas" %}
+                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                                <i class="fa-solid fa-file-circle-xmark"></i>
+                                            </a>
+                                        {% elif pago.estado_facturas == "todas_autorizadas" %}
+                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
+                                                <i class="fa-solid fa-file-circle-check"></i>
+                                            </a>
+                                        {% elif pago.estado_facturas == "pendientes" %}
+                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
+                                                <i class="fa-solid fa-file-circle-exclamation"></i>
+                                            </a>
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                            </td>
                     {% endif %}
                    
                     {% if pago.gasto %}
@@ -323,11 +325,25 @@
                         {% else %}
                             <td>Incompletas</td>
                         {% endif %}
-                        {% if pago.gasto.facturas.exists %}
-                            <td><a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
-                        {% else %}
-                            <td><a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
-                        {% endif %}
+                            <td>
+                                <ul class="nav nav-pills">
+                                    <li class="nav-item mx-1">
+                                        {% if pago.estado_facturas == "sin_facturas" %}
+                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                                <i class="fa-solid fa-file-circle-xmark"></i>
+                                            </a>
+                                        {% elif pago.estado_facturas == "todas_autorizadas" %}
+                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
+                                                <i class="fa-solid fa-file-circle-check"></i>
+                                            </a>
+                                        {% elif pago.estado_facturas == "pendientes" %}
+                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
+                                                <i class="fa-solid fa-file-circle-exclamation"></i>
+                                            </a>
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                            </td>
                     {% endif %}
 
                     {% if pago.viatico %}
@@ -346,11 +362,25 @@
                         {% else %}
                             <td>Incompletas</td>
                         {% endif %}
-                        {% if pago.viatico.facturas.exists %}
-                            <td><a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a></td>
-                        {% else %}
-                            <td><a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a></td>
-                        {% endif %}
+                            <td>
+                                <ul class="nav nav-pills">
+                                    <li class="nav-item mx-1">
+                                        {% if pago.estado_facturas == "sin_facturas" %}
+                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                                <i class="fa-solid fa-file-circle-xmark"></i>
+                                            </a>
+                                        {% elif pago.estado_facturas == "todas_autorizadas" %}
+                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas Autorizadas">
+                                                <i class="fa-solid fa-file-circle-check"></i>
+                                            </a>
+                                        {% elif pago.estado_facturas == "pendientes" %}
+                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas Pendientes">
+                                                <i class="fa-solid fa-file-circle-exclamation"></i>
+                                            </a>
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                            </td>
                     {% endif %}
                     <td>{{pago.monto|floatformat:2}}</td>
                     <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
