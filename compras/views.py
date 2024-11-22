@@ -4644,7 +4644,10 @@ def pdf_formato_comparativo(request, pk):
     # Definir encabezado y estilos de la tabla
     c.setFont("Helvetica-Bold", 10)
     encabezado = [["Unidad", "Producto", "Código", "Marca", "Modelo", "Precio A", "Precio B", "Precio C"]]
-
+    datos_restantes = []
+    altura_maxima = 340  # Altura máxima permitida
+    altura_actual = 0    # Altura acumulada de la tabla
+    
     # Definir encabezado y estilos de la tabla
     styles = getSampleStyleSheet()
     style_normal = styles["BodyText"]  # Estilo de párrafo base
@@ -4670,7 +4673,17 @@ def pdf_formato_comparativo(request, pk):
             Paragraph('$' + f"{producto.precio2:,.3f}", style_normal),
             Paragraph('$' + f"{producto.precio3:,.3f}", style_normal),
         ]
-        encabezado.append(fila)
+        # Crear una tabla temporal para calcular la altura de la fila
+        tabla_temp = Table([fila], colWidths=[1.4 * cm, 6.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm])
+        ancho_fila, altura_fila = tabla_temp.wrap(0, 0)
+
+        # Verificar si se supera la altura máxima
+        if altura_actual + altura_fila > altura_maxima:
+            datos_restantes.append(fila)  # Guardar en datos_restantes
+        else:
+            encabezado.append(fila)       # Añadir a la tabla
+            altura_actual += altura_fila  # Actualizar la altura acumulada
+
 
     # Crear la tabla
     tabla = Table(encabezado, colWidths=[1.4 * cm, 6.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm])
@@ -4690,7 +4703,7 @@ def pdf_formato_comparativo(request, pk):
 
     # Ajustar la posición inicial para que la tabla crezca hacia abajo
     inicio_x = 35
-    inicio_y = 480 - altura_tabla
+    inicio_y = 480 - altura_actual
 
     # Dibujar la tabla en el PDF en la posición ajustada
     tabla.drawOn(c, inicio_x, inicio_y)
@@ -4739,7 +4752,78 @@ def pdf_formato_comparativo(request, pk):
     c.drawCentredString(520, 70, "Clasificación:")
     c.drawCentredString(520, 60, "Controlado")
     c.drawCentredString(520, 45, "Fecha revisión")
+    # Configuración de la altura máxima por página
+    altura_maxima_pagina = 550
+    # Lista para almacenar todos los elementos del documento
+    elementos = []
+    while datos_restantes:
+        encabezado_restante = []  # Encabezado de la tabla actual
+        altura_actual = 0         # Altura acumulada de la tabla
 
+        # Añadir filas a la tabla mientras no supere la altura máxima
+        i = 0
+        while i < len(datos_restantes):
+            fila = datos_restantes[i]
+            
+            # Crear tabla temporal para calcular la altura de la fila
+            tabla_temp = Table([fila], colWidths=[1.4 * cm, 6.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm])
+            _, altura_fila = tabla_temp.wrap(0, 0)
+
+            # Verificar si la fila cabe en la página
+            if altura_actual + altura_fila > altura_maxima_pagina:
+                break  # Salir del bucle y procesar los datos restantes en la siguiente página
+            
+            # Añadir la fila a la tabla actual
+            encabezado_restante.append(fila)
+            altura_actual += altura_fila
+            i += 1
+
+        # Eliminar las filas procesadas de datos_restantes
+        datos_restantes = datos_restantes[i:]
+
+        # Crear la tabla con los datos procesados
+        tabla_adicional = Table(encabezado_restante, colWidths=[1.4 * cm, 6.5 * cm, 1.5 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm, 2 * cm])
+        tabla_adicional.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), blanco),
+            ("TEXTCOLOR", (0, 0), (-1, 0), blanco),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica"),
+            ("FONTSIZE", (0, 0), (-1, 0), 6),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 6),
+            ("BACKGROUND", (0, 1), (-1, -1), blanco),
+            ("GRID", (0, 0), (-1, -1), 1, negro),
+        ]))
+
+        # Añadir un salto de página y luego la tabla al documento
+        c.showPage()
+        # Calcular la altura de la tabla
+        ancho_tabla, altura_tabla = tabla_adicional.wrap(0, 0)  # Calcular el tamaño necesario para la tabla
+
+        # Ajustar la posición inicial para que la tabla crezca hacia abajo
+        inicio_x = 35
+        inicio_y = 750 - altura_actual
+
+        # Dibujar la tabla en el PDF en la posición ajustada
+        tabla_adicional.drawOn(c, inicio_x, inicio_y)
+        c.setFillColor(azul)
+        c.rect(35, 25, 550, 60, stroke=0, fill=1)
+        c.setFillColor(white)
+        c.setFont("Helvetica-Bold", 8)
+        c.drawCentredString(110, 70, "Preparado por:")
+        c.drawCentredString(110, 60, "SUPTE ADQ")
+        c.drawCentredString(110, 45, "Nivel:")
+        c.drawCentredString(110, 35, "N5")
+        c.drawCentredString(240, 70, "Aprobado:")
+        c.drawCentredString(240, 60, "SUB ADM")
+        c.drawCentredString(240, 45, "Rev:")
+        c.drawCentredString(240, 35, "000")
+        c.drawCentredString(370, 70, "No. Documento:")
+        c.drawCentredString(370, 60, "SEOV-ADQ-N4-01.05")
+        c.drawCentredString(370, 45, "Fecha emisión:")
+        c.drawCentredString(370, 35, "03-MAY-2023")
+        c.drawCentredString(520, 70, "Clasificación:")
+        c.drawCentredString(520, 60, "Controlado")
+        c.drawCentredString(520, 45, "Fecha revisión")
     # Guardar PDF
     c.showPage()
     c.save()
