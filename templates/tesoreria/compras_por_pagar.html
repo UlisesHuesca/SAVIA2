@@ -169,7 +169,7 @@
 <div class="card bg-white my-2">
     
     <form id="mass_payment_form" method="post" action="{% url 'compras-por-pagar' %}">
-        {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" %}
+        {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" %}
         <ul class="nav nav-pills">
             <li class="nav-item mx-2">
                 <div col-lg-2>
@@ -205,7 +205,7 @@
                     <th class="d-none d-md-table-cell">Condiciones</th>
                     <th>Facturas</th>
                     <th scope="col">Detalles</th>
-                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" %}
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" %}
                     <th>Cancelar</th>
                     <th>Para Pago</th>
                     <th>Parcialidad</th>
@@ -255,7 +255,7 @@
                             
                         </ul>
                     </td>
-                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" %}
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" %}
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
