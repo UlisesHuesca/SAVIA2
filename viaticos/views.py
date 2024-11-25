@@ -577,15 +577,10 @@ def viaticos_autorizados_pago(request):
     for viatico in viaticos_list:
         if viatico.total_facturas == 0:
             viatico.estado_facturas = 'sin_facturas'
-            print(f"Viatico {viatico.id} - Estado: sin_facturas")
         elif viatico.autorizadas == viatico.total_facturas:
             viatico.estado_facturas = 'todas_autorizadas'
-            print(f"Viatico {viatico.id} - Estado: todas_autorizadas")
         else:
             viatico.estado_facturas = 'pendientes'
-            print(f"Viatico {viatico.id} - Estado: pendientes")
-        # Paso 2: Suma el total de facturas utilizando la propiedad emisor, con comprobación de existencia
-        viatico.suma_total_facturas = sum(Decimal(factura.emisor['total']) for factura in viatico.facturas.all() if factura.factura_xml and factura.hecho and factura.autorizada and factura.emisor is not None)
     context= {
         'viaticos_list':viaticos_list,
         'myfilter':myfilter,

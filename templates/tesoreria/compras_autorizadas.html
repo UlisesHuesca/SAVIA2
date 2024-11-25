@@ -212,23 +212,31 @@
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
                     <td class="d-none d-md-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregado</span>{% else %}<span class="badge bg-warning">No Entregado Aún</span>  {% endif %}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
-                    {% if compra.facturas.exists %}
-                        {% if compra.facturas.all.count > 1 %}
-                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
-                        {% elif compra.facturas.all.count == 1 %}
-                            {% for factura in compra.facturas.all %}
-                                {% if factura.hecho %}
-                                <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
-                                {% else %}
-                                    <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item mx-1">
+                                {% if compra.estado_facturas == "sin_facturas" %}
+                                    <a type="button" class="btn btn-outline-danger" 
+                                    href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                        <i class="fa-solid fa-file-circle-xmark"></i>
+                                    </a>
+                                {% elif compra.estado_facturas == "todas_autorizadas" %}
+                                    <a type="button" class="btn btn-outline-info" 
+                                    href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
+                                        <i class="fa-solid fa-file-circle-check"></i>
+                                    </a>
+                                {% elif compra.estado_facturas == "pendientes" %}
+                                    <a type="button" class="btn btn-outline-warning" 
+                                    href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" 
+                                    data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
+                                        <i class="fa-solid fa-file-circle-exclamation"></i>
+                                    </a>
                                 {% endif %}
-                            {% endfor %}
-                        {% else %}
-                            <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
-                        {% endif %}
-                    {% else%}
-                        <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" class="btn btn-outline-danger" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></button></td>
-                    {% endif %}
+                            </li>
+                        </ul>
+                    </td>
                     {% if usuario.tipo.nombre == 'CONTADOR' %}
                     <div></div>
                     {% else %}

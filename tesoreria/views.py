@@ -123,7 +123,9 @@ def compras_autorizadas(request):
         if usuario.tipo.rh:
             compras = Compra.objects.none()
         else: 
-            compras = Compra.objects.filter(para_pago=True,pagada=False,autorizado2=True, req__orden__distrito = usuario.distritos).order_by('-folio')
+            compras = Compra.objects.filter(para_pago=True,pagada=False,autorizado2=True, req__orden__distrito = usuario.distritos).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
+                ).order_by('-folio')
     
    
     
@@ -134,7 +136,15 @@ def compras_autorizadas(request):
     p = Paginator(compras, 50)
     page = request.GET.get('page')
     compras_list = p.get_page(page)
-    
+
+    for compra in compras_list:
+        if compra.total_facturas == 0:
+            compra.estado_facturas = 'sin_facturas'
+        elif compra.autorizadas == compra.total_facturas:
+            compra.estado_facturas = 'todas_autorizadas'
+        else:
+            compra.estado_facturas = 'pendientes'
+
     if request.method == 'POST' and 'btnReporte' in request.POST:
         return convert_excel_matriz_compras_autorizadas(compras)
     

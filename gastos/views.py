@@ -2,7 +2,8 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.core.paginator import Paginator
 from django.db.models.functions import Concat
-from django.db.models import Sum, Q, Prefetch, Max, Value
+from django.db.models import Sum, Q, Prefetch, Max, Value,Count, When, Case,DecimalField
+
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import EmailMessage
@@ -858,9 +859,13 @@ def pago_gastos_autorizados(request):
     
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh == True:
-            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYO DE MANTENIMIENTO")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
+            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYO DE MANTENIMIENTO")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
+                )).order_by('-approbado_fecha2')
         else:
-            gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).order_by('-approbado_fecha2')
+            gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
+                )).order_by('-approbado_fecha2')
         myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
         gastos = myfilter.qs
 
@@ -882,6 +887,15 @@ def pago_gastos_autorizados(request):
         p = Paginator(gastos, 50)
         page = request.GET.get('page')
         gastos_list = p.get_page(page)
+
+        for gasto in gastos_list:
+            # Determinar estado basado en total_facturas y autorizadas
+            if gasto.total_facturas == 0:
+                gasto.estado_facturas = 'sin_facturas'
+            elif gasto.autorizadas == gasto.total_facturas:
+                gasto.estado_facturas = 'todas_autorizadas'
+            else:
+                gasto.estado_facturas = 'pendientes'
 
         context= {
             'gastos_list':gastos_list,

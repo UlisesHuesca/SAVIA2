@@ -214,16 +214,30 @@
                         {% endif %}
                     </td>
                     <td>
-                        {% if gasto.autorizar2 == True %}
-                            {% if gasto.facturas.exists %}
-                                <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas">
-                                    <i class="fa-solid fa-file-circle-check"></i>
-                                </a>
-                            {% else %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
-                                    <i class="fa-solid fa-file-circle-xmark"></i>
-                                </a>
-                            {% endif %}
+                        {% if gasto.autorizar2 %}
+                            <ul class="nav nav-pills">
+                                <li class="nav-item mx-1">
+                                    {% if gasto.estado_facturas == "sin_facturas" %}
+                                        <a type="button" class="btn btn-outline-danger" 
+                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" 
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                            <i class="fa-solid fa-file-circle-xmark"></i>
+                                        </a>
+                                    {% elif gasto.estado_facturas == "todas_autorizadas" %}
+                                        <a type="button" class="btn btn-outline-info" 
+                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" 
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
+                                            <i class="fa-solid fa-file-circle-check"></i>
+                                        </a>
+                                    {% elif gasto.estado_facturas == "pendientes" %}
+                                        <a type="button" class="btn btn-outline-warning" 
+                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" 
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
+                                            <i class="fa-solid fa-file-circle-exclamation"></i>
+                                        </a>
+                                    {% endif %}
+                                </li>
+                            </ul>
                         {% endif %}
                     </td>
                     <td>
