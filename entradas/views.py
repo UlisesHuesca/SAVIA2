@@ -1110,7 +1110,7 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
     columns = ['Compra', 'Requisición','Solicitud','Sector', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
-               'Usuario Solicitante']
+               'Usuario Solicitante','Fecha de pago']
 
     columna_max = len(columns)+2
 
@@ -1143,7 +1143,10 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
         #tipo_de_cambio = '' if tipo == 0 else tipo
         #created_at = compra_list.created_at.replace(tzinfo=None)
         #approved_at = compra_list.req.approved_at
-
+        if articulo.oc.fecha_pago:
+            fecha_pago = str(articulo.oc.fecha_pago.date())
+        else:
+            fecha_pago = 'No pagado'
         row = [
             articulo.oc.folio,
             articulo.oc.req.folio,
@@ -1155,6 +1158,7 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
             articulo.producto.producto.articulos.producto.producto.unidad.nombre,
             articulo.oc.proveedor.nombre.razon_social,
             f"{articulo.oc.req.orden.staff.staff.staff.first_name} {articulo.oc.req.orden.staff.staff.staff.last_name}",
+            fecha_pago,
         ]
         
         for col_num, cell_value in enumerate(row):

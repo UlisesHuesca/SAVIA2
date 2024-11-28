@@ -282,6 +282,15 @@ def edit_activo(request, pk):
     perfil = empleados.get(id = pk_perfil)
     #producto = Salidas.objects.get(id=pk)
     activo = Activo.objects.get(id=pk)
+    if activo.activo is None:
+        familia = 'Sin producto asociado'
+        subfamilia = ''
+    else:
+        familia = activo.activo.producto.familia.nombre
+        if activo.activo.producto.subfamilia:
+            subfamilia = activo.activo.producto.subfamilia.nombre
+        else:
+            subfamilia = ''
     tipo_activo = Tipo_Activo.objects.all()
     if activo.responsable:
         responsable = empleados.get(id=activo.responsable.id )
@@ -372,6 +381,8 @@ def edit_activo(request, pk):
         #'personal':personal,
         'marcas':marcas,
         'form':form,
+        'familia':familia,
+        'subfamilia':subfamilia,
     }
 
     return render(request,'activos/edit_activos.html', context)
@@ -492,7 +503,7 @@ def convert_activos_to_xls(activos):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Eco','Producto', 'Responsable', 'Tipo Activo', 'Serie', 'Marca', 'Modelo', 'Descripción', 'Status']
+    columns = ['Eco','Producto','Familia','Subfamilia', 'Responsable', 'Tipo Activo', 'Serie', 'Marca', 'Modelo', 'Descripción', 'Status']
 
     columna_max = len(columns)+2
 
@@ -510,6 +521,15 @@ def convert_activos_to_xls(activos):
     
     row_num = 0
     for activo in activos:
+        if activo.activo is None:
+            familia = 'Sin producto asociado'
+            subfamilia = ''
+        else:
+            familia = activo.activo.producto.familia.nombre
+            if activo.activo.producto.subfamilia:
+                subfamilia = activo.activo.producto.subfamilia.nombre
+            else:
+                subfamilia = ''
         row_num += 1
         # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
         #pagos = Pago.objects.filter(oc=compra_list)
@@ -524,6 +544,8 @@ def convert_activos_to_xls(activos):
         row = [
             activo.eco_unidad,
             activo.activo.producto.nombre if activo.activo else " ",
+            familia,
+            subfamilia,
             f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}",
             activo.tipo_activo.nombre,
             activo.serie,
@@ -935,6 +957,12 @@ def render_pdf_responsiva_activos_gerente(request):
     )
 
     for activo in activos:
+        #if activo.activo is None:
+        #    menor = 'NA'
+        #elif activo.activo.producto.subfamilia and  activo.activo.producto.subfamilia.nombre == 'ACTIVO MENOR':
+        #    menor = 'Si'
+        #else:
+        #    menor = 'No'
         data.append([
             Paragraph(activo.eco_unidad, custom_paragraph_style), 
             Paragraph(activo.descripcion, custom_paragraph_style),
@@ -942,6 +970,7 @@ def render_pdf_responsiva_activos_gerente(request):
             activo.serie,
             activo.marca.nombre if activo.marca else "NR", 
             activo.modelo,
+            #menor,
             ])
         cont = cont + 1
         if cont < 26:
@@ -1203,7 +1232,7 @@ def convert_excel_inventario_xlsxwriter(existencia):
     date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
 
     # Definir las columnas antes de utilizar la variable `columns`
-    columns = ['Código', 'Producto', 'Distrito', 'Unidad', 'Cantidad', 'Cantidad Apartada', 'Minimos', 'Ubicación', 'Estante',]
+    columns = ['Código', 'Producto', 'Distrito', 'Unidad', 'Cantidad', 'Cantidad Apartada', 'Minimos', 'Ubicación', 'Estante','Familia','Subfamilia']
     
     # Escribir el encabezado con los estilos definidos
     #worksheet.write_row('A1', columns, head_style)
@@ -1218,6 +1247,15 @@ def convert_excel_inventario_xlsxwriter(existencia):
     # Escribir los datos
     row_num = 0
     for inventario in existencia:
+        if inventario.producto is None:
+            familia = 'Sin producto asociado'
+            subfamilia = ''
+        else:
+            familia = inventario.producto.familia.nombre
+            if inventario.producto.subfamilia:
+                subfamilia = inventario.producto.subfamilia.nombre
+            else:
+                subfamilia = ''
         row_num += 1
     
         row = [
@@ -1230,6 +1268,8 @@ def convert_excel_inventario_xlsxwriter(existencia):
             inventario.minimo,
             inventario.ubicacion,
             inventario.estante,
+            familia,
+            subfamilia,
         ]
     
         for col_num, item in enumerate(row, start=1):  # Enumerate empieza con 1 para A1, ajusta según sea necesario

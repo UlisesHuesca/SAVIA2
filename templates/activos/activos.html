@@ -51,6 +51,24 @@
                             </div>
                             <div class="col-lg-4 col-sm-12">
                                 <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
+                                <label style="color: #121212;" for="id_familia">Familia</label>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
+                                <label style="color: #121212;" for="id_familia">Subfamilia</label>
+                                </div>
+                            </div>
+                        </div>
+                            <div class="col-lg-4 col-sm-12">
+                                <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {{myfilter.form.estatus|add_class:"form-control"|append_attr:"placeholder= Status"}}
