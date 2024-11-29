@@ -4,7 +4,7 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework import generics
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-from dashboard.models import Inventario 
+from dashboard.models import Inventario, Order
 from compras.models import Compra, Proveedor_direcciones, Moneda
 from solicitudes.models import Proyecto, Subproyecto
 from user.models import Profile 
@@ -24,6 +24,17 @@ from user.decorators import perfil_seleccionado_required
 from api.models import TablaFestivos
 from datetime import datetime
 from django.contrib import messages
+#import openai
+from openai import OpenAI
+#import os
+from django.conf import settings
+import mysql.connector
+client = OpenAI(
+    organization='org-9Legd0seRBYosepjlvTnzipq',
+    project='proj_82cTfrUnAMXikaj5cdr1Dk5a',
+    api_key = settings.OPENAI_API_KEY,
+    )
+
 
 # Create your views here.
 @api_view(['GET'])
@@ -330,3 +341,214 @@ def tabla_festivos(request):
     }
 
     return render(request, 'api/tabla_festivos.html', context)
+
+def chatbot_view2(request):
+    #print('chatbot')
+    if request.method == "POST":
+        #print('chatbot_post')
+        user_message = request.POST.get("message", "").lower()
+      
+        print(user_message)
+
+        #procesos = {
+        #    "solicitud": {
+        #        "pasos": (
+        #           "Para hacer una solicitud en 'SAVIA 2.0', sigue estos pasos:\n"
+        #            "1. Accede al módulo de **Solicitudes** desde el menú principal.\n"
+        #            "2. Haz clic en el botón **Nueva Solicitud**.\n"
+        #            "3. Llena el formulario con los datos requeridos.\n"
+        #            "4. Adjunta los documentos necesarios.\n"
+        #            "5. Haz clic en **Enviar** para guardar y enviar la solicitud."
+        #        ),
+        #        "video": "https://www.ejemplo.com/tutorial-solicitudes"
+        #    },
+        #    "reporte": {
+        #        "pasos": (
+        #            "Para generar un reporte:\n"
+        #            "1. Ve al módulo de **Reportes**.\n"
+        #            "2. Selecciona el tipo de reporte.\n"
+        #            "3. Define el rango de fechas.\n"
+        #            "4. Haz clic en **Generar** para descargar el reporte."
+        #        ),
+        #        "video": "https://www.ejemplo.com/tutorial-reportes"
+        #    }
+        #}
+
+        #if "solicitud" in user_message:
+        #    bot_reply = f"{procesos['solicitud']['pasos']}\n\nVideo: {procesos['solicitud']['video']}"
+        #elif "reporte" in user_message:
+        #    bot_reply = f"{procesos['reporte']['pasos']}\n\nVideo: {procesos['reporte']['video']}"
+        #else:
+        sql_generation_response = client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role":"system",
+                    "content":(
+                        "Eres un experto en MySQL y conoces la estructura de la base de las tablas de SAVIA2 donde la tabla order(solicitud) está relacionada"
+                        "utiliza la información dada para construir consultas SQL basada en preguntas en lenguaje natural"
+                        "La relación entre tablas es dashboard_product(id) << dashboard_inventario(producto_id) << dashboard_articulosordenados(producto_id) << dashboard_order(alias: solicitud)"
+                        "<< requisiciones_requis << compras_compra << entradas_entrada -- Todas los campos distrito están ligados a una tabla llamada user_distrito"
+                        "En la tabla user_distrito la columna nombre es la variable del nombre del distrito.Distrito está ligado a las tablas dashboard_inventario y dashboard_order"
+                        "En la tabla dashboard_inventario el importe_producto = (cantidad + cantidad_apartada) * price"
+                        "En la tabla dashboard_inventario el valor_inventario =  SUM(importe_producto)"
+                        "Solo genera la consulta SQL, no incluyas texto adicional. Solo SQL sintaxis por favor"
+                    )
+                },
+                {
+                    "role": "user", 
+                    "content": f"Genera una consulta SQL para: {user_message}"
+                }
+            ],
+            temperature=0,
+            max_tokens=200
+        )
+        print(sql_generation_response)
+        sql_query = sql_generation_response.choices[0].message.content
+        sql_query = sql_query.replace("sql","").replace("```sql", "").replace("```", "").strip()
+        print(f"Consulta SQL generada: {sql_query}")
+        conn_savia2 = mysql.connector.connect(
+            host='localhost', 
+            user='root', 
+            password='peruzzi25', 
+            database='savia2'
+        )
+        db_cursor = conn_savia2.cursor()
+            
+        db_cursor.execute(sql_query)
+        result = db_cursor.fetchall()
+        conn_savia2.close()
+        # Convertir el resultado en un formato más legible
+        result_text = f"El resultado de tu consulta es: {result}"
+        #bot_reply = response.choices[0].message.content
+        #print(bot_reply)
+                #except Exception as e:
+                #    bot_reply = "I'm sorry, there was an error processing your request."
+
+        natural_language_response =client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system", "content": (
+                    "Eres un asistente que convierte resultados de consultas SQL en respuestas naturales para los usuarios."
+                )
+                },
+                {"role": "user", "content": f"El resultado del query es: {result}"}
+                ],
+                temperature=0.3,
+                max_tokens=180
+            )
+        bot_reply = natural_language_response.choices[0].message.content
+        print(bot_reply)
+        return JsonResponse({"response": bot_reply})
+    
+
+def chatbot_view(request):
+    #print('chatbot')
+    if request.method == "POST":
+        #print('chatbot_post')
+        user_message = request.POST.get("message", "").lower()
+      
+        print(user_message)
+        if 'status' and 'solicitud' and 'folio' and 'distrito' in user_message:
+            #folio_number = 
+            
+            status_solicitud()
+        else:
+            orm_generation_response = client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {
+                        "role":"system",
+                        "content":(
+                            "Eres un experto en Django ORM. Conoces la estructura de los modelos en un proyecto Django."
+                            "Tu tarea es generar consultas utilizando el ORM de Django"
+                            "Si algún modelo o relación es necesario para construir la consulta, genera las clases de modelos correspondientes."
+                            "La relación entre modelos es: "
+                            "dashboard.models Product(id) -> dashboard.models Inventario(FK producto_id, fields: cantidad_apartada, cantidad, price, distrito) -> dashboard.models ArticuloOrdenado(FK producto_id) -> dashboard.Order(alias: Solicitud, FK distrito_id, fields folio) -> requisiciones.models Requis(id, FK orden_id) -> compras.models Compra(id, FK req_id)"
+                            "el modelo user.Distrito está relacionado con dashboard.models.Inventario y dashboard.models.Order a través de una FK llamada distrito_id."
+                            "En Inventario, el valor del producto se calcula como: importe_producto = (cantidad + cantidad_apartada) * price."
+                            "El valor total del inventario por distrito se calcula como: SUM(importe_producto)."
+                            "Cuando se proporciona el folio de una solicitud el estatus se refiere a interpretar lo siguiente"
+                            "### Reglas para Interpretar el Estado de las Solicitudes:"
+                            "1. Si `order.autorizar` es `None`, describe: 'La solicitud con folio {order.folio} no ha sido autorizada aún.'"
+                            "2. Si `order.autorizar` es `False`, describe: 'La solicitud con folio {order.folio} está cancelada.'"
+                            "3. Si `order.autorizar` es `True`, describe: 'La solicitud con folio {order.folio} ha sido autorizada.'"
+                            "\n\n"
+                            "1. Si `order.requis.exists()` es `True`, recorre todas las requisiciones con un ciclo `for`."
+                            "2. Recuerda que el modelo requi proviene de requisiciones.models Para cada requisición (`requi`) en `order.requis.all()`:"
+                            "    a. Si `requi.autorizar` es `None`, describe: 'La requisición con folio {requi.folio} no ha sido autorizada aún.'"
+                            "    b. Si `requi.autorizar` es `False`, describe: 'La requisición con folio {requi.folio} está cancelada.'"
+                            "    c. Si `requi.autorizar` es `True`, describe: 'La requisición con folio {requi.folio} ha sido autorizada.'"
+                            "\n\n"
+                            "### Respuesta Esperada:"
+                            "Siempre responde en formato de código Python utilizando el ORM de Django, los modelos ya existen solo hay que importarlos para hacer la consulta"
+                            "Tu respuesta debe incluir todas las importaciones necesarias para que el código funcione correctamente. No incluyas comentarios explicativos solo código funcional"
+                            "Por ejemplo, asegúrate de importar desde 'django.db.models' funciones como 'F', 'Sum', 'Count', 'Value', 'Case', etc."
+                            "Siempre asigna el resultado a una variable llamada 'resultado'."
+                            #"Puedes intentar desarrollar el código de un gráfico sí el usuario así lo solicita el usuario utilizando plotly y es posible"
+                        )
+                    },
+                    {
+                        "role": "user", 
+                        "content": f"Genera una consulta SQL para: {user_message}"
+                    }
+                ],
+                temperature=0,
+                max_tokens=100
+            )
+            print(orm_generation_response)
+            orm_query = orm_generation_response.choices[0].message.content
+            print(orm_query)
+            orm_query = orm_query.replace("```python","").replace("```","").strip()
+            print(f"Consulta ORM generada: {orm_query}")
+            # Paso 2: Ejecutar el código dinámicamente
+            local_variables = {}
+            exec(orm_query, globals(), local_variables)
+            print(local_variables)
+            result = local_variables.get('resultado', None)
+
+        natural_language_response =client.chat.completions.create(
+            model="gpt-4o-mini",
+            messages=[
+                {
+                    "role": "system", "content": (
+                        "Eres un asistente que convierte resultados de consultas del ORM de Django en respuestas naturales para los usuarios"
+                        "En caso de ser necesario en la respuesta se prefiere el uso de nombre que de ID's"
+                        "Reproducir los status de manera completa de acuerdo al resultado"
+                        "Dar formato de tabla atractivo en la medida que aplique en html"
+                        #"si el campo se refiere a cantidad no es dinero por lo tanto no se formatea, si la respuesta incluye un monto o valor que se infiera que es dinero incluir formato de pesos"
+                    )
+                    },
+                    {
+                        "role": "user", "content": f"El resultado del query es: {result}"
+                    }
+            ],
+                    temperature=0.3,
+                    max_tokens=200
+                )
+        bot_reply = natural_language_response.choices[0].message.content
+        print(bot_reply)
+        return JsonResponse({"response": bot_reply})
+    
+def status_solicitud(folio, distrito):
+    order = Order.objects.filter(folio=folio, distrito__nombre=distrito).first()
+
+    if order:
+        if order.autorizar is None:
+            resultado = f'La solicitud con folio {order.folio} no ha sido autorizada aún.'
+        elif order.autorizar is False:
+            resultado = f'La solicitud con folio {order.folio} está cancelada.'
+        elif order.autorizar is True:
+            resultado = f'La solicitud con folio {order.folio} ha sido autorizada.'
+
+            requisiciones = order.requis.all()
+            for requi in requisiciones:
+                if requi.autorizar is None:
+                    resultado += f'\nLa requisición con folio {requi.folio} no ha sido autorizada aún.'
+                elif requi.autorizar is False:
+                    resultado += f'\nLa requisición con folio {requi.folio} está cancelada.'
+                elif requi.autorizar is True:
+                    resultado += f'\nLa requisición con folio {requi.folio} ha sido autorizada.'
+    else:
+        resultado = f'No se encontró la solicitud con folio {folio} en el distrito {distrito}.'
