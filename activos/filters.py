@@ -18,7 +18,7 @@ class ActivoFilter(django_filters.FilterSet):
     tipo_activo = CharFilter(field_name='tipo_activo__nombre', lookup_expr='icontains')
     familia = django_filters.ModelChoiceFilter(queryset=Familia.objects.filter(nombre__in=['ACTIVO', 'ACTIVO MENOR']),field_name='activo__producto__familia',
         label="Familia",empty_label="Todas las familias")
-    subfamilia = CharFilter(field_name='subfamilia__nombre', lookup_expr='icontains')
+    subfamilia = CharFilter(field_name='activo__producto__subfamilia__nombre', lookup_expr='icontains')
     estatus = ModelChoiceFilter(queryset=Estatus_Activo.objects.all())
     distrito = CharFilter(field_name='responsable__distritos__nombre', lookup_expr='icontains')
 
