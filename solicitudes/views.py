@@ -25,7 +25,7 @@ from user.decorators import perfil_seleccionado_required
 import json
 from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter, HistoricalInventarioFilter, HistoricalProductoFilter
 import decimal
-
+from django.utils import timezone
 
 import xlsxwriter
 from django.http import HttpResponse
@@ -257,9 +257,9 @@ def checkout(request):
     operaciones = Operacion.objects.exclude(nombre='GASTO')
 
     order, created = ordenes.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
-    #if not order.inicio_form:
-    #    order.inicio_form = datetime.now()
-    #    order.save()
+    if not order.inicio_form:
+        order.inicio_form = timezone.now()  # Asigna la fecha y hora con zona horaria
+        order.save()
     if usuario.tipo.supervisor:
         supervisores = usuarios.filter(id = pk)
         order.supervisor = usuario
@@ -333,7 +333,7 @@ def checkout(request):
         form = OrderForm(request.POST, request.FILES, instance=order)
         if form.is_valid():
             order = form.save(commit=False)
-            order.created_at = datetime.now()
+            order.created_at = timezone.now()
             #order.created_at_time = datetime.now().time() 
             lineas_productos = []
             order.folio = folio_number
@@ -515,17 +515,17 @@ def checkout(request):
                     messages.success(request, error_message)
             order.complete = True
             order.save()
-            # Eliminar la zona horaria de ambos objetos datetime
-            #order_created_at_naive = order.created_at.replace(tzinfo=None)
-            #order_inicio_form_naive = order.inicio_form.replace(tzinfo=None)
             #print(order.inicio_form)
             #print(order.created_at)
-            # Calcular la diferencia entre los dos objetos naive
-            #print(order_inicio_form_naive)
-            #print(order_created_at_naive)
-            #delta = order_inicio_form_naive - order_created_at_naive  
-            #print ('Deltaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aquí')
-            #print(f"Segundos totales: {delta.total_seconds()}")
+            #inicio_form_naive = order.inicio_form.replace(tzinfo=None)
+            #created_at_naive = order.created_at.replace(tzinfo=None)
+            #delta = order.created_at - order.inicio_form
+
+            # Obtenemos los segundos totales de la diferencia
+            #segundos_totales = delta.total_seconds()
+            #print(segundos_totales)
+            #print(inicio_form_naive)
+            #print(created_at_naive)
             return redirect('solicitud-matriz')
         else:
             for field, errors in form.errors.items():
