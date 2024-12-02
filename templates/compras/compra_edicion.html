@@ -38,13 +38,32 @@
                         </div>  
                     </div>
                 </div>
-                <div id="comparativo" class="row my-2 d-none">
+                <div class="row my-2">
+                    <div id="etiqueta_domicilio" class="col-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Domicilio:</h6><h6 style="color: #121212;" id="lbl_domicilio"></h6>   
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div id="etiqueta_status" class="col-lg-6 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Status:</h6><h6 style="color: #121212;" id="lbl_status"></h6>   
+                        </div>
+                    </div>
+                    
+                    <div id="etiqueta_distrito" class="col-lg-6 col-md-6">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Distrito:</h6><h6 style="color: #121212;" id="lbl_distrito"></h6>   
+                        </div>
+                    </div>
+                </div>
+                <div id="comparativo" class="row my-2">
                     <div class="col-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.comparativo_model|add_class:"form-control"|append_attr:"placeholder= Comparativo"}}
-                                <label style="color: #121212;" for="id_comparativo">Comparativo*</label>
+                                {{form.comparativo_model}}
                             </div>
                         </div>
                     </div>
@@ -1003,9 +1022,35 @@ document.getElementById("id_formulario").addEventListener('change', function() {
     console.log("Formulario guardado para OC:",oc, datosGuardados)
     calcular_total();
 });
+var ProvInicial = {{ proveedor_inicial|safe }};
+var CompInicial = {{ comparativo_inicial|unlocalize }};
+
+var datosComparativos = {{comparativos_para_select2 | safe}};
+
+// Imprimir los datos en la consola
+console.log(datosComparativos);
+$(document).ready(function() {
+    var comparativoSelect = $('#id_comparativo_model');
+    comparativoSelect.select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona un comparativo',
+        data: datosComparativos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+
+    // Asignar el valor inicial si está definido
+    if (CompInicial !== null) {
+        comparativoSelect.val(CompInicial).trigger('change');
+    }
+
+});
 
 var datosProveedor = {{ proveedor_para_select2 | safe}}
 
+// Imprimir los datos en la consola
+console.log(datosProveedor);
 $(document).ready(function() {
     var proveedorSelect = $('#id_proveedor');
     $('#id_proveedor').select2({
@@ -1017,10 +1062,32 @@ $(document).ready(function() {
         templateSelection: formatRepoSelection // Función para renderizar la selección
         
     });
-     // Establecer el valor predefinido como seleccionado
-    if (datosProveedor.length > 0) {
-        proveedorSelect.val(datosProveedor[0].id).trigger('change');
+    if (ProvInicial !== null) {
+        proveedorSelect.val(ProvInicial.id).trigger('change'); // Seleccionar el proveedor inicial
+
+        // Actualizar etiquetas con los datos iniciales
+        $('#lbl_distrito').text(ProvInicial.distrito || 'N/A');
+        $('#lbl_domicilio').text(ProvInicial.domicilio || 'N/A');
+        $('#lbl_status').text(ProvInicial.status || 'N/A');
     }
+
+    // Evento cuando se selecciona un proveedor
+    $('#id_proveedor').on('select2:select', function(e) {
+        var data = e.params.data; // Datos del proveedor seleccionado
+
+        // Actualizar las etiquetas con los datos seleccionados
+        $('#lbl_distrito').text(data.distrito || 'N/A');
+        $('#lbl_domicilio').text(data.domicilio || 'N/A');
+        $('#lbl_status').text(data.status || 'N/A');
+    });
+
+    // Evento cuando se deselecciona el proveedor
+    $('#id_proveedor').on('select2:unselect', function() {
+        // Limpiar las etiquetas
+        $('#lbl_distrito').text('');
+        $('#lbl_domicilio').text('');
+        $('#lbl_status').text('');
+    });
 });
 $('#id_proveedor').on('select2:unselect', function(e) {
     $(this).select2('destroy').select2({
@@ -1053,6 +1120,23 @@ $('#id_proveedor').on('select2:unselect', function(e) {
         },
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    // Evento cuando se selecciona un proveedor
+    $('#id_proveedor').on('select2:select', function(e) {
+        var data = e.params.data; // Datos del proveedor seleccionado
+
+        // Actualizar los valores en las etiquetas correspondientes
+        $('#lbl_distrito').text(data.distrito || 'N/A');
+        $('#lbl_domicilio').text(data.domicilio || 'N/A');
+        $('#lbl_status').text(data.status || 'N/A');
+    });
+
+    // Evento cuando se deselecciona el proveedor
+    $('#id_proveedor').on('select2:unselect', function() {
+        // Limpiar las etiquetas
+        $('#lbl_distrito').text('');
+        $('#lbl_domicilio').text('');
+        $('#lbl_status').text('');
     });
 });
 

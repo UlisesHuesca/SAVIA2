@@ -27,7 +27,7 @@ class Requis(models.Model):
     approved_at_time = models.TimeField(null=True)
 
     def __str__(self):
-        return f'{self.get_folio} order {self.orden} req {self.id}'
+        return f'{self.get_folio} order {self.orden} req_id:{self.id} folio:{self.folio}'
 
     @property
     def comprado_parcial(self):

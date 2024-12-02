@@ -117,13 +117,14 @@ def requisiciones_autorizadas(request):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def productos_pendientes(request):
-    perfil = Profile.objects.get(staff__id=request.user.id)
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
     if perfil.tipo.compras == True:
         requis = Requis.objects.filter(autorizar=True, colocada=False)
     else:
         requis = Requis.objects.filter(complete=None)
 
-    articulos = ArticulosRequisitados.objects.filter(req__autorizar = True, req__colocada=False, cancelado = False)
+    articulos = ArticulosRequisitados.objects.filter(req__autorizar = True, req__colocada=False, cancelado = False).order_by('-req__orden__folio')
     myfilter = ArticulosRequisitadosFilter(request.GET, queryset=articulos)
     articulos = myfilter.qs
 
@@ -146,41 +147,90 @@ def productos_pendientes(request):
 @perfil_seleccionado_required
 def eliminar_articulos(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
-    colaborador = Profile.objects.all()
-    perfil = colaborador.get(id = pk_perfil)
-    #perfil = Profile.objects.get(staff__id=request.user.id)
-    productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
-    requis = Requis.objects.get(id = pk)
-    
-
+    perfil = Profile.objects.get(id=pk_perfil)
+    requis = Requis.objects.get(id=pk)
+    productos = ArticulosRequisitados.objects.filter(req=pk, cantidad_comprada__lt=F("cantidad"), cancelado=False).annotate(
+        cantidad_restante=ExpressionWrapper(F("cantidad") - F("cantidad_comprada"),output_field=DecimalField(max_digits=14, decimal_places=2)))
     form = Articulo_Cancelado_Form()
 
-    if request.method == 'POST' and "btn_eliminar" in request.POST:
-        pk = request.POST.get('id')
-        producto = ArticulosRequisitados.objects.get(id=pk)
-        form = Articulo_Cancelado_Form(request.POST,instance=producto)
-        if form.is_valid():
-            articulo = form.save()
-            productos = ArticulosRequisitados.objects.filter(req = producto.req)
-            productos_cancelados = productos.filter(cancelado = True).count()
-            productos_requisitados = productos.count() 
-            productos_comprados = productos.filter(art_surtido = True).count() + productos_cancelados
-            if productos_requisitados == productos_comprados:
-                requis.colocada = True
-                requis.save()
+    if request.method == 'POST' and 'btn_eliminar' in request.POST:
+        # Procesar los checkboxes de los productos seleccionados
+        fecha_hora = datetime.now()
+        productos_eliminados = []
+        for producto in productos:
+            checkbox_name = f'seleccionar_producto_{producto.id}'
+            if checkbox_name in request.POST:
+                producto.cancelado = True
+                producto.comentario_cancelacion = request.POST.get(f'comentario_producto_{producto.id}', '')
+                productos_eliminados.append({
+                    'nombre': producto.producto.articulos.producto.producto.nombre,
+                    'cantidad': producto.cantidad,
+                    'comentario': producto.comentario_cancelacion,
+                })
+            else:
+                producto.cancelado = False
+            producto.save()
+        if productos_eliminados:
+            productos_eliminados_html = "".join(
+                f"<tr>"
+                f"<td>{producto['nombre']}</td>"
+                f"<td>{producto['cantidad']}</td>"
+                f"<td>{producto['comentario']}</td>"
+                f"</tr>"
+                for producto in productos_eliminados
+            )
+        else:
+            productos_eliminados_html = "<tr><td colspan='3'>Ningún producto eliminado.</td></tr>"
+        #static_path = settings.STATIC_ROOT
+        #img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+        #img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+        #image_base64 = get_image_base64(img_path)
+        #logo_v_base64 = get_image_base64(img_path2)
+        # Actualizar el estado de la requisición
+        productos_actualizados = ArticulosRequisitados.objects.filter(req=pk, cantidad_comprada__lt=F("cantidad"))
+        productos_cancelados = productos_actualizados.filter(cancelado=True).count()
+        productos_requisitados = productos_actualizados.count()
+        productos_comprados = productos_actualizados.filter(art_surtido=True).count() + productos_cancelados
+        if productos_requisitados == productos_comprados:
+            requis.colocada = True
+            requis.save()
+        # Enviar correo electrónico con formato HTML
+        correo_html = f"""
+        <p>Estimado(a) {requis.orden.staff.staff.staff.first_name}:</p>
+        <p>Estás recibiendo este correo porque los siguientes productos han sido eliminados de la solicitud:</p>
+        <p><b>Folio de orden:</b> {requis.orden.folio} <br>
+        <b>Folio de requisición:</b> {requis.folio}</p>
+        <table border="1" cellpadding="5" cellspacing="0" style="border-collapse: collapse; width: 100%;">
+            <thead>
+                <tr>
+                    <th>Producto</th>
+                    <th>Cantidad</th>
+                    <th>Comentario</th>
+                </tr>
+            </thead>
+            <tbody>
+                {productos_eliminados_html}
+            </tbody>
+        </table>
+        <p>Atte.<br>
+        {perfil.staff.staff.first_name} {perfil.staff.staff.last_name}<br>
+        GRUPO VORDCAB S.A. de C.V.</p>
+        <p><i>Este mensaje ha sido automáticamente generado por SAVIA VORDCAB.</i></p>
+        """
+        try:
             email = EmailMessage(
-                f'Producto Eliminado {producto.producto.articulos.producto.producto.nombre}',
-                f'Estimado(a) {producto.req.orden.staff.staff.staff.first_name}:\n\nEstás recibiendo este correo porque el producto: {producto.producto.articulos.producto.producto.nombre} de la solicitud: {producto.req.orden.folio} ha sido eliminado, por la siguiente razón: {producto.comentario_cancelacion} \n\n Atte.{perfil.staff.staff.first_name}{perfil.staff.staff.last_name}  \nGRUPO VORDCAB S.A. de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDCAB',
+                f'Producto Eliminado',
+                correo_html,
                 settings.DEFAULT_FROM_EMAIL,
-                ['ulises_huesc@hotmail.com',producto.req.orden.staff.staff.staff.email],
-                )
+                ['ulises_huesc@hotmail.com', requis.orden.staff.staff.staff.email],
+            )
+            email.content_subtype = "html"  # Indicar que el contenido es HTML
             email.send()
-            messages.success(request,f' Has eliminado el {producto.producto.articulos.producto} correctamente')
-            return redirect('requisicion-autorizada')
-
-
-
-
+            messages.success(request,f' Has eliminado el producto correctamente')
+        except (BadHeaderError, SMTPException) as e:
+            error_message = f'{perfil.staff.staff.first_name}, Has eliminado el producto correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
+            messages.success(request, error_message)
+        return redirect('requisicion-autorizada')
     context = {
         'form':form,
         'productos': productos,
@@ -281,16 +331,31 @@ def compra_edicion(request, pk):
     oc = get_object_or_404(Compra, id=pk)
     #colaborador_sel = Profile.objects.all()
     productos_comp = ArticuloComprado.objects.filter(oc = oc)
-    productos = ArticulosRequisitados.objects.filter(req = oc.req, sel_comp = False)
+    productos = ArticulosRequisitados.objects.filter(req = oc.req, sel_comp = False, cancelado = False)
     req = Requis.objects.get(id = oc.req.id)
-    comparativos = Comparativo.objects.filter(creada_por__distritos = usuario.distritos, completo =True)
+    comparativos = Comparativo.objects.filter(creada_por__distritos = usuario.distritos, completo =True,)
+    if comparativos.filter(id=oc.comparativo_model.id):
+        comparativo_inicial = (comparativos.get(id=oc.comparativo_model.id,)).id
+    else:
+        comparativo_inicial = 'null'
     #proveedores = Proveedor_direcciones.objects.filter(
     #    Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO'))
     if not (oc.complete == False and oc.regresar_oc == True):
         logger.warning(f"Intento acceso no autorizado a compra edición por usuario  {request.user.first_name} {request.user.last_name}")
         return render(request,'partials/acceso_denegado.html') 
     else:
-        proveedores = Proveedor_direcciones.objects.filter(id = oc.proveedor.id)
+        proveedores = Proveedor_direcciones.objects.filter(Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO"),distrito = usuario.distritos,)
+        if proveedores.filter(id = oc.proveedor.id):
+            proveedor_obj = proveedores.get(id=oc.proveedor.id)
+            proveedor_inicial = {
+                'id': proveedor_obj.id,
+                'text': proveedor_obj.nombre.razon_social,
+                'distrito': proveedor_obj.distrito.nombre,
+                'status': proveedor_obj.estatus.nombre,
+                'domicilio': proveedor_obj.domicilio
+            }
+        else:
+            proveedor_inicial = 'null'
         form_product = ArticuloCompradoForm()
         form = CompraForm(instance=oc)
         error_messages = {}
@@ -298,6 +363,9 @@ def compra_edicion(request, pk):
         proveedor_para_select2 = [
             {'id': proveedor.id, 
             'text': proveedor.nombre.razon_social,
+            'distrito': proveedor.distrito.nombre,
+            'status': proveedor.estatus.nombre,
+            'domicilio': proveedor.domicilio
             #'distrito': proveedor.
             } for proveedor in proveedores]
 
@@ -319,6 +387,7 @@ def compra_edicion(request, pk):
                 'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
             } for producto in productos_comp
         ] 
+
 
         comparativos_para_select2 = [
             {
@@ -383,7 +452,9 @@ def compra_edicion(request, pk):
 
         context= {
             'comparativos_para_select2': comparativos_para_select2,
+            'comparativo_inicial':comparativo_inicial,
             'proveedor_para_select2': proveedor_para_select2,
+            'proveedor_inicial':proveedor_inicial,
             'productos_comp_to_function': productos_comp_to_function,
             'error_messages': error_messages,
             'req':req,
@@ -534,7 +605,9 @@ def oc_modal(request, pk):
                 costo_iva = 0
                 articulos = ArticuloComprado.objects.filter(oc=oc)
                 requisitados = ArticulosRequisitados.objects.filter(req = oc.req)
-                cuenta_art_comprados = requisitados.filter(art_surtido = True).count()
+                borrados = requisitados.filter(cancelado = True).count()
+                cuenta_art_comprados = requisitados.filter(art_surtido = True).count() #Añadir aquí que sume los articulos que hayan sido cancelados con el borrador para que la saque de la vista
+                cuenta_art_comprados += borrados
                 cuenta_art_totales = requisitados.count()
                 if cuenta_art_totales == cuenta_art_comprados and cuenta_art_comprados > 0: #Compara los artículos comprados vs artículos requisitados
                     req.colocada = True
