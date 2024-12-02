@@ -1133,9 +1133,12 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
         pagos = Pago.objects.filter(oc=articulo.oc)
         if pagos:
             ultimo = pagos.last()
-            
+        else:
+            ultimo = None
         if articulo.oc.pagada == True:
             pago = 'Pagada'
+        elif articulo.oc.pagada == False and ultimo:
+            pago = 'Pagada parcialmente'
         else:
             pago = 'No pagado'
         if pagos:
