@@ -40,7 +40,7 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
-
+from django.utils import timezone
 #Excel stuff
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -120,6 +120,9 @@ def crear_gasto(request):
     ] 
     
     gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False, staff=usuario)
+    if not gasto.inicio_form:
+        gasto.inicio_form = timezone.now()  # Asigna la fecha y hora con zona horaria
+        gasto.save()
 
     max_folio = Solicitud_Gasto.objects.filter(distrito = usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
 

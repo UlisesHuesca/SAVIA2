@@ -32,6 +32,7 @@ class Solicitud_Gasto(models.Model):
     autorizar = models.BooleanField(null=True, default=None)
     autorizar2 = models.BooleanField(null=True, default=None)
     created_at = models.DateTimeField(null=True)
+    inicio_form = models.DateTimeField(null=True)
     #created_at_time = models.TimeField(null=True)
     approved_at = models.DateTimeField(null=True)
     #approved_at_time = models.TimeField(null=True)
