@@ -16,4 +16,5 @@ urlpatterns = [
     path('perfiles_rh/', views.obtener_perfiles, name='perfiles_rh'),
     path('tabla_festivos/', views.tabla_festivos, name='tabla_festivos'),
     path('oc-pdf/<int:pk>/', views.descargar_pdf_oc, name='api-oc-pdf'),
+    path('chatbot/', views.chatbot_view, name='chatbot'),
     ]
