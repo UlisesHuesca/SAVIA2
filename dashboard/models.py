@@ -321,6 +321,7 @@ class Order(models.Model):
     #sol_autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Autoriza')
     autorizar = models.BooleanField(null=True, default=None)
     created_at = models.DateTimeField(null=True)
+    inicio_form = models.DateTimeField(null=True)
     #created_at_time = models.TimeField(null=True)
     approved_at = models.DateField(null=True)
     #approved_at_time = models.TimeField(null=True)

@@ -1109,8 +1109,8 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Compra', 'Requisición','Solicitud','Sector', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
-               'Usuario Solicitante','Fecha de pago']
+    columns = ['Compra', 'Requisición','Solicitud', 'Codigo', 'Producto', 'Cantidad Pendiente', 'Unidad','Proveedor',
+               'Usuario Solicitante','Pagada','Ultimo pago']
 
     columna_max = len(columns)+2
 
@@ -1131,34 +1131,34 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
         row_num += 1
         # Aquí asumimos que ya hiciste el procesamiento necesario de cada compra
         pagos = Pago.objects.filter(oc=articulo.oc)
-        
-        #tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
-
-        # Usar el tipo de cambio de los pagos, si existe. De lo contrario, usar el tipo de cambio de la compra
-        if articulo.oc.req.orden.sector:
-            sector = f"{articulo.oc.req.orden.sector.nombre}"
+        if pagos:
+            ultimo = pagos.last()
+            
+        if articulo.oc.pagada == True:
+            pago = 'Pagada'
         else:
-            sector = ' '
-        #tipo = tipo_de_cambio_promedio_pagos or compra_list.tipo_de_cambio
-        #tipo_de_cambio = '' if tipo == 0 else tipo
-        #created_at = compra_list.created_at.replace(tzinfo=None)
-        #approved_at = compra_list.req.approved_at
-        if articulo.oc.fecha_pago:
-            fecha_pago = str(articulo.oc.fecha_pago.date())
+            pago = 'No pagado'
+        if pagos:
+            ultimo = pagos.last()
+            if ultimo.pagado_date:
+                ultimo = str(ultimo.pagado_date.date())
+            else:
+                ultimo = ''
         else:
-            fecha_pago = 'No pagado'
+            ultimo = ''
         row = [
             articulo.oc.folio,
             articulo.oc.req.folio,
             articulo.oc.req.orden.folio,
-            sector,
             articulo.producto.producto.articulos.producto.producto.codigo,
             articulo.producto.producto.articulos.producto.producto.nombre,
             articulo.cantidad_pendiente if articulo.cantidad_pendiente != None else articulo.cantidad,
             articulo.producto.producto.articulos.producto.producto.unidad.nombre,
             articulo.oc.proveedor.nombre.razon_social,
             f"{articulo.oc.req.orden.staff.staff.staff.first_name} {articulo.oc.req.orden.staff.staff.staff.last_name}",
-            fecha_pago,
+            pago,
+            ultimo,
+            
         ]
         
         for col_num, cell_value in enumerate(row):

@@ -257,8 +257,8 @@ def checkout(request):
     operaciones = Operacion.objects.exclude(nombre='GASTO')
 
     order, created = ordenes.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
-    #if not order.inicio:
-    #    order.inicio = datetime.now()
+    #if not order.inicio_form:
+    #    order.inicio_form = datetime.now()
     #    order.save()
     if usuario.tipo.supervisor:
         supervisores = usuarios.filter(id = pk)
@@ -322,11 +322,6 @@ def checkout(request):
     form = OrderForm(instance = order)
     form_comentario = ArticulosOrdenadosComentForm(prefix='form_comentario')
     
-
-
-
-
-
     if order.staff != usuario:
         productos = None
         cartItems = 0
@@ -520,13 +515,21 @@ def checkout(request):
                     messages.success(request, error_message)
             order.complete = True
             order.save()
+            # Eliminar la zona horaria de ambos objetos datetime
+            #order_created_at_naive = order.created_at.replace(tzinfo=None)
+            #order_inicio_form_naive = order.inicio_form.replace(tzinfo=None)
+            #print(order.inicio_form)
+            #print(order.created_at)
+            # Calcular la diferencia entre los dos objetos naive
+            #print(order_inicio_form_naive)
+            #print(order_created_at_naive)
+            #delta = order_inicio_form_naive - order_created_at_naive  
+            #print ('Deltaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa aquí')
+            #print(f"Segundos totales: {delta.total_seconds()}")
             return redirect('solicitud-matriz')
         else:
             for field, errors in form.errors.items():
                 error_messages[field] = errors.as_text()
-
-
-    
 
 
     context= {
