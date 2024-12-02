@@ -257,7 +257,9 @@ def checkout(request):
     operaciones = Operacion.objects.exclude(nombre='GASTO')
 
     order, created = ordenes.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
-
+    #if not order.inicio:
+    #    order.inicio = datetime.now()
+    #    order.save()
     if usuario.tipo.supervisor:
         supervisores = usuarios.filter(id = pk)
         order.supervisor = usuario
@@ -371,6 +373,7 @@ def checkout(request):
                                 requi.save()
                                 requitem.save()
                             ordensurtir.save()
+                            #order.fin = datetime.now()
                             order.save()
                         #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
                         elif prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":  #si la cantidad solicitada es menor que la cantidad en inventario

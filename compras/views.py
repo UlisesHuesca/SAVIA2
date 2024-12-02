@@ -255,6 +255,10 @@ def articulos_restantes(request, pk):
 def dof():
 #Trying to fetch DOF
     try:
+        # Configurar el tiempo máximo de espera (en segundos)
+        timeout = 2  # Ajusta el tiempo de espera según tus necesidades
+        socket.setdefaulttimeout(timeout)
+    
         ctx = ssl.create_default_context()
         ctx.check_hostname = False
         ctx.verify_mode = ssl.CERT_NONE
@@ -277,6 +281,8 @@ def dof():
         tag = tags[4][3]
 
         return tag
+    except socket.timeout:
+        return "Error: El tiempo de espera para la consulta ha sido superado."
     except Exception as e:
         # Manejo de la excepción - log, mensaje de error, etc.
         return f"Error al obtener datos: {e}"
@@ -334,8 +340,14 @@ def compra_edicion(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = oc.req, sel_comp = False, cancelado = False)
     req = Requis.objects.get(id = oc.req.id)
     comparativos = Comparativo.objects.filter(creada_por__distritos = usuario.distritos, completo =True,)
-    if comparativos.filter(id=oc.comparativo_model.id):
-        comparativo_inicial = (comparativos.get(id=oc.comparativo_model.id,)).id
+    if oc.comparativo_model:
+        try:
+            comparativo_inicial = oc.comparativo_model.id
+        except Comparativo.DoesNotExist:
+            comparativo_inicial = 'null' 
+        except Comparativo.MultipleObjectsReturned:
+            # Manejo opcional si hay múltiples objetos (esto no debería suceder si la lógica está bien diseñada)
+            comparativo_inicial = 'null' 
     else:
         comparativo_inicial = 'null'
     #proveedores = Proveedor_direcciones.objects.filter(
