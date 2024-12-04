@@ -996,23 +996,28 @@ def control_bancos(request, pk):
 def eliminar_caracteres_invalidos(archivo_xml):
     # Definir la expresión regular para encontrar caracteres inválidos
     regex = re.compile(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]')
-    
+
     # Leer el contenido del archivo XML
     xml_content = archivo_xml.read().decode('utf-8')
-        
-    # Eliminar los caracteres inválidos específicos ("o;?") de los primeros tres espacios
+
     if xml_content.startswith("o;?"):
+        print('Detectado "o;?" en el inicio del XML')
         xml_content = xml_content[3:]
-    #xml_content = xml_content[:3].replace("o;?", "") + xml_content[3:]
-    
-    # Reemplazar los caracteres inválidos con una cadena vacía
+
+    # Eliminar caracteres inválidos según la expresión regular
     xml_content = regex.sub('', xml_content)
-    
-    # Volver a escribir el contenido corregido al archivo XML en memoria
-    new_file = ContentFile(xml_content.encode('utf-8'))
-    
-    # Guardar el nuevo archivo si es necesario, o retornarlo
-    return new_file
+
+    # Volver a posicionar el puntero del archivo al principio
+    archivo_xml.seek(0)
+
+    # Guardar el contenido modificado en el archivo original
+    archivo_xml.write(xml_content.encode('utf-8'))
+    archivo_xml.truncate()  # Asegurarse de que no quede contenido sobrante
+
+    print('Contenido corregido guardado exitosamente.')
+
+    # Retornar el archivo con el contenido modificado
+    return archivo_xml
 
 def extraer_datos_del_xml(ruta_xml):
     try:
