@@ -973,17 +973,17 @@ def upload_batch_products(request):
                     unidad = Unidad.objects.get(nombre = row[2])
                     if Familia.objects.filter(nombre = row[3]):
                         familia = Familia.objects.get(nombre = row[3])
-                        especialista = True if row[5] == 'SI' else False
+                        critico = True if row[5] == 'SI' else False
                         iva = True if row[6] == 'SI' else False
                         activo = True if row[7] == 'SI' else False
                         servicio = True if row[8] == 'SI' else False
                         if Subfamilia.objects.filter(nombre = row[4], familia = familia):
                             subfamilia = Subfamilia.objects.get(nombre = row[4], familia = familia)
                             
-                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia, subfamilia=subfamilia,especialista=especialista,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
+                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia, subfamilia=subfamilia,critico=critico,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
                             producto.save()
                         else:
-                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia,especialista=especialista,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
+                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia,critico=critico,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
                             producto.save()
                     else:
                         messages.error(request,f'La familia no existe dentro de la base de datos, producto:{row[0]}')
