@@ -2301,7 +2301,7 @@ def convert_excel_matriz_requis_productos(requis):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto', 'Producto', 'Cantidad','Autorización','Status']
+    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto','Código', 'Producto','Unidad', 'Cantidad','Autorización','Status']
 
     columna_max = len(columns)+2
 
@@ -2332,8 +2332,9 @@ def convert_excel_matriz_requis_productos(requis):
             f"{req.req.orden.staff.staff.staff.first_name} {req.req.orden.staff.staff.staff.last_name}",
             req.req.orden.proyecto.nombre if req.req.orden.proyecto else '',
             req.req.orden.subproyecto.nombre if req.req.orden.subproyecto else '',
-            str(req.producto.articulos.producto.producto) if req.producto.articulos.producto else '',
-
+            req.producto.articulos.producto.producto.codigo if req.producto.articulos.producto else '',
+            str(req.producto.articulos.producto.producto.nombre) if req.producto.articulos.producto else '',
+            str(req.producto.articulos.producto.producto.unidad) if req.producto.articulos.producto else '',
 
             req.cantidad,
             (str(req.req.approved_at) + str(req.req.approved_at_time)) if req.req.autorizar else '',
