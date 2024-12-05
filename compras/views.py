@@ -1099,10 +1099,10 @@ def autorizacion_oc1(request):
 
 
     if usuario.tipo.subdirector == True:
-        if usuario.distritos.nombre == "MATRIZ":
-            compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__superintendente = usuario).order_by('-folio')
-        else:
-            compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
+        #if usuario.distritos.nombre == "MATRIZ": #Esto lo comenté para que sirvan los cambios para Brasil
+        compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__superintendente = usuario).order_by('-folio')
+        #else:
+        #    compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     elif usuario.tipo.oc_superintendencia == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     else:
