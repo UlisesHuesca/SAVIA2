@@ -683,7 +683,7 @@ def update_salida(request):
                     #L4 se vacía la entrada y por lo tanto se marca como agotada.
                     # Y si no la cantidad de la salida es igual a la cantidad(puede ser modificada por el bucle anterior o no) y 
                     # entrada por surtir es igual a la cantidad por surtir menos la cantidad de la salida y la cantidad se agota 04/12/2024 
-                    if cantidad > entrada.cantidad_por_surtir:
+                    if cantidad >= entrada.cantidad_por_surtir:
                         cantidad_ant = cantidad
                         cantidad = cantidad - entrada.cantidad_por_surtir
                         salida.cantidad = cantidad_ant - cantidad
