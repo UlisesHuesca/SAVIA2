@@ -36,6 +36,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     cuenta = CharFilter(field_name = 'cuenta__cuenta', lookup_expr='icontains')
     start_date = DateFilter(field_name ='pagado_real', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_real', lookup_expr='lte')
+    proveedor = CharFilter( field_name = 'oc__proveedor__nombre__razon_social', lookup_expr='icontains')
 
 
     class Meta:
