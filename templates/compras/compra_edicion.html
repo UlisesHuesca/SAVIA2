@@ -468,7 +468,9 @@ function verificar() {
     let comparativo = document.getElementById('id_comparativo_model');
     let rows = document.getElementById("mytbl").rows.length;
     console.log(comparativo.value)
-    
+    const comparativoElement = document.getElementById('comparativo');
+    const isHidden = comparativoElement.classList.contains('d-none');
+    console.log('Está oculto: ' + isHidden);
     val_moneda = moneda.value;
     val_tipo_cambio = tipo_cambio.value;
     if (!proveedor.value) {
@@ -479,7 +481,7 @@ function verificar() {
                     "icon":"error",
                 })
                 return false
-    } else if ((status_comparativo == 'true') && (comparativo.value =='')){
+    } else if ((status_comparativo == false ) && (comparativo.value =='')){
         
         Swal.fire({
                 "title":"Error",

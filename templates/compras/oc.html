@@ -434,8 +434,12 @@ function verificar() {
     var status_comparativo = status_txt.getAttribute('status');
     var comparativo = document.getElementById('id_comparativo_model');
     var rows = document.getElementById("mytbl").rows.length;
-    console.log(comparativo.value)
-    
+    console.log('Valor del comparativo' + status_comparativo)
+    var comparativoElement = document.getElementById('comparativo');
+    var isHidden = comparativoElement.classList.contains('d-none');
+
+    console.log('Está oculto: ' + isHidden);comparativo.value
+    console.log('Comparativo: ' + comparativo.value);
     val_moneda = moneda.value;
     val_tipo_cambio = tipo_cambio.value;
     if (!proveedor.value) {
@@ -446,7 +450,7 @@ function verificar() {
                     "icon":"error",
                 })
                 return false
-    } else if ((status_comparativo == 'true') && (comparativo.value =='')){
+    } else if ((isHidden == false ) && (comparativo.value =='')){
         
         Swal.fire({
                 "title":"Error",
