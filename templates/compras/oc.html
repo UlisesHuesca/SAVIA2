@@ -430,12 +430,20 @@ function verificar() {
     var retencion = document.getElementById('id_retencion');
     var moneda = document.getElementById('id_moneda');
     var tipo_cambio = document.getElementById('id_tipo_de_cambio');
-    var status_txt = document.getElementById('comparativo');
-    var status_comparativo = status_txt.getAttribute('status');
+    var status_txt = document.getElementById('lbl_status');
+    var status_comparativo = status_txt.innerText;
     var comparativo = document.getElementById('id_comparativo_model');
+    var comparativoElement = document.getElementById('comparativo');
+    var isHidden = comparativoElement.classList.contains('d-none');
     var rows = document.getElementById("mytbl").rows.length;
+<<<<<<< HEAD
     console.log('comparativo',comparativo.value)
+=======
+    console.log('comparativo',comparativo.value === '', status_comparativo)
+>>>>>>> refs/remotes/origin/main
     
+    console.log('Está oculto: ' + isHidden);comparativo.value
+    console.log('Comparativo: ' + comparativo.value);
     val_moneda = moneda.value;
     val_tipo_cambio = tipo_cambio.value;
     if (!proveedor.value) {
@@ -446,14 +454,12 @@ function verificar() {
                     "icon":"error",
                 })
                 return false
-    } else if ((status_comparativo == 'true') && (comparativo.value =='')){
-        
+    } else if((isHidden == false ) && (status_comparativo == "NUEVO") && (comparativo.value ==='')){
         Swal.fire({
                 "title":"Error",
                 "text":"Debes elegir una opción en comparativo",
                 "icon":"error",
         })
-        return false
     } else if (!cond_pago.value){
         
         let dias_credito = 0;

@@ -463,12 +463,12 @@ function verificar() {
     let anticipo = document.getElementById('id_monto_anticipo');
     let moneda = document.getElementById('id_moneda');
     let tipo_cambio = document.getElementById('id_tipo_de_cambio');
-    var status_txt = document.getElementById('comparativo');
-    let status_comparativo = status_txt.getAttribute('status');
+    var status_txt = document.getElementById('lbl_status');
+    var status_comparativo = status_txt.innerText;
     let comparativo = document.getElementById('id_comparativo_model');
     let rows = document.getElementById("mytbl").rows.length;
     console.log(comparativo.value)
-    
+   
     val_moneda = moneda.value;
     val_tipo_cambio = tipo_cambio.value;
     if (!proveedor.value) {
@@ -479,8 +479,7 @@ function verificar() {
                     "icon":"error",
                 })
                 return false
-    } else if ((status_comparativo == 'true') && (comparativo.value =='')){
-        
+    } else if ((status_comparativo == "NUEVO") && (comparativo.value ==='')){
         Swal.fire({
                 "title":"Error",
                 "text":"Debes elegir una opción en comparativo",
