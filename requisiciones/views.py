@@ -2389,7 +2389,7 @@ def convert_entradas_to_xls2(entradas):
             entrada.created_at.date(),#.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
             f"{entrada.entrada.oc.req.orden.staff.staff.staff.first_name} {entrada.entrada.oc.req.orden.staff.staff.staff.last_name}",
             entrada.entrada.oc.proveedor.nombre.razon_social,
-            entrada.entrada.oc.req.orden.proyecto.nombre,
+            entrada.entrada.oc.req.orden.proyecto if entrada.entrada.oc.req.orden.proyecto.nombre else "Sin Proyecto",
             entrada.entrada.oc.req.orden.subproyecto.nombre,
             entrada.entrada.oc.req.orden.operacion.nombre if entrada.entrada.oc.req.orden.operacion else "Sin operación",
             entrada.articulo_comprado.producto.producto.articulos.producto.producto.codigo,
