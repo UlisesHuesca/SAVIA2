@@ -2380,6 +2380,8 @@ def convert_entradas_to_xls2(entradas):
         pagos = Pago.objects.filter(oc=entrada.entrada.oc)
         tipo_de_cambio_promedio_pagos = pagos.aggregate(Avg('tipo_de_cambio'))['tipo_de_cambio__avg']
         tipo_de_cambio = tipo_de_cambio_promedio_pagos or entrada.entrada.oc.tipo_de_cambio
+        print(tipo_de_cambio)
+        print(item)
 
         row = [
             entrada.entrada.folio,
@@ -2389,8 +2391,8 @@ def convert_entradas_to_xls2(entradas):
             entrada.created_at.date(),#.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
             f"{entrada.entrada.oc.req.orden.staff.staff.staff.first_name} {entrada.entrada.oc.req.orden.staff.staff.staff.last_name}",
             entrada.entrada.oc.proveedor.nombre.razon_social,
-            entrada.entrada.oc.req.orden.proyecto if entrada.entrada.oc.req.orden.proyecto.nombre else "Sin Proyecto",
-            entrada.entrada.oc.req.orden.subproyecto.nombre,
+            entrada.entrada.oc.req.orden.proyecto.nombre if entrada.entrada.oc.req.orden.proyecto else "Sin Proyecto",
+            entrada.entrada.oc.req.orden.subproyecto.nombre if entrada.entrada.oc.req.orden.subproyecto else "Sin Subproyecto",
             entrada.entrada.oc.req.orden.operacion.nombre if entrada.entrada.oc.req.orden.operacion else "Sin operación",
             entrada.articulo_comprado.producto.producto.articulos.producto.producto.codigo,
             entrada.articulo_comprado.producto.producto.articulos.producto.producto.nombre,
