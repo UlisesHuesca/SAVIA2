@@ -19,8 +19,7 @@ class InventoryFilter(django_filters.FilterSet):
 class InventarioFilter(django_filters.FilterSet):
     codigo = CharFilter(field_name='producto__codigo', lookup_expr='icontains')
     producto = CharFilter(field_name='producto__nombre', lookup_expr='icontains')
-    familia = django_filters.ModelChoiceFilter(queryset=Familia.objects.filter(nombre__in=['ACTIVO', 'ACTIVO MENOR']),field_name='producto__familia',
-        label="Familia",empty_label="Todas las familias")
+    familia = CharFilter(field_name='producto__familia__nombre', lookup_expr='icontains')
     subfamilia = CharFilter(field_name='producto__subfamilia__nombre', lookup_expr='icontains')
     ubicacion = CharFilter(field_name='ubicacion', lookup_expr='icontains')
     estante = CharFilter(field_name='estante', lookup_expr='icontains')
