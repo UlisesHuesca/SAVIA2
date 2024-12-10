@@ -7,6 +7,7 @@ from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
+from django.core.cache import cache
 from compras.models import Compra, ArticuloComprado
 from compras.filters import CompraFilter
 from compras.views import attach_oc_pdf
@@ -172,9 +173,18 @@ def devolucion_a_proveedor(request):
 
     return render(request, 'entradas/devolucion_a_proveedor.html', context)
 
+def entrada_usada(request):
+    return render(request, 'entradas/entrada_been_used.html')
+
+
 @perfil_seleccionado_required
 @tipo_usuario_requerido('almacenista')
 def articulos_entrada(request, pk):
+    # Check if the `pk` is currently in use
+    
+
+    # Mark the `pk` as in use in the cache
+    cache.set(f'compra_in_use_{pk}', True)  # Lock for 5 minutes (300 seconds)
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
@@ -402,7 +412,12 @@ def articulos_entrada(request, pk):
         evalua_entrada_completa(articulos_comprados,num_art_comprados, compra)
         entrada.save()
         messages.success(request, f'La entrada {entrada.folio} se ha realizado con éxito')
+        cache.delete(f'compra_is_use_{pk}')
         return redirect('pendientes_entrada')
+    
+    elif cache.get(f'compra_in_use_{pk}') and usuario !=  entrada.almacenista:
+        #messages.error(request, "This entry is currently being accessed by another user.")
+        return redirect('entrada-usada')  # Redirect to another view or template
 
     context = {
         'articulos':articulos,
