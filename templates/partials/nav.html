@@ -1,4 +1,5 @@
 {% load static %}
+
 <head>
     <!-- Vincular CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
@@ -34,7 +35,7 @@
                 <li class="nav-item">
                 <div>
                     <div class="form-inline my-2 my-lg-0 position-relative d-none" id="cart">
-                        <a href="{% url 'solicitud-checkout' %}">
+                        <a data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-checkout' %}">
                         <img id="cart-icon" src="{% static 'images/cart.png' %}">
                         </a>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
