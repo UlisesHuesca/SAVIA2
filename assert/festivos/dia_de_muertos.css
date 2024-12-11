@@ -1,103 +1,120 @@
-#halloween-content {
-  position: fixed; /* Para que esté sobre otros elementos y no recorra la vista */
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  background-color: rgba(0, 0, 0, 0.7); /* Fondo semi-transparente para enfocar la vista */
-  z-index: 20; /* Mayor que el contenido subyacente */
-}
-
-.altar-container {
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  transform: scale(0.8); /* Escala ajustable */
-  margin: 20px; /* Márgenes ajustables */
-  z-index: 9999; /* Índice ajustable */
-  position: relative;
-}
-
 .altar {
-  height: 315px;
-  width: 250px;
+  height: 315px; /* 630px / 2 */
+  width: 250px;  /* 500px / 2 */
   margin: auto;
-  position: relative;
+  position: absolute; /* Cambiado a absolute para centrarlo en la hoja */
+  top: 50%; /* Centrado verticalmente */
+  left: 50%; /* Centrado horizontalmente */
+  transform: translate(-50%, -50%); /* Ajusta el posicionamiento */
+  z-index: 9999; /* Asegura que esté por encima de otros elementos */
 }
 
 .altar .foto {
   background: tomato;
-  width: 330px;
-  height: 400px;
+  width: 165px;  /* 330px / 2 */
+  height: 200px; /* 400px / 2 */
   position: absolute;
-  top: 25px;
+  top: 12.5px;   /* 25px / 2 */
   left: 50%;
-  margin-left: -172px;
+  margin-left: -86px; /* -172px / 2 */
   background-size: cover;
-  border: 7px solid #55453D;
-  outline: 25px solid #7A6255;
+  border: 3.5px solid #55453d; /* 7px / 2 */
+  outline: 12.5px solid #7a6255; /* 25px / 2 */
   overflow: hidden;
   z-index: 1;
 }
 
+/*
 .altar .light {
   background: rgba(255, 255, 255, 0.3);
-  height: 330px;
-  width: 330px;
-  clip-path: polygon(0 75%, 0 100%, 100% 25%, 100% 0);
+  height: 200px;
+  width: 200px;
+  clip-path: polygon(20% 75%, 20% 100%, 100% 25%, 100% 0);
   animation: reflection 10s infinite;
   position: absolute;
+  z-index: 2;
 }
 
 @keyframes reflection {
-  0% { top: -400px; }
-  15% { top: 400px; }
-  100% { top: 400px; }
+  0% {
+    top: -210px;
+  }
+  15% {
+    top: 210px;
+  }
+  100% {
+    top: 210px;
+  }
+}
+*/
+.altar .texto {
+  position: absolute;
+  top: -75px; /* Mueve el texto más arriba */
+  left: 50%; /* Centra horizontalmente */
+  transform: translateX(-50%); /* Ajusta el centrado */
+  font-size: 18px; /* Ajusta el tamaño de fuente según tu preferencia */
+  color: white; /* Cambia el color según el fondo */
+  background: rgba(0, 0, 0, 0.5); /* Fondo semi-transparente para mayor legibilidad */
+  padding: 5px 10px; /* Espaciado alrededor del texto */
+  border-radius: 5px; /* Esquinas redondeadas */
+  z-index: 3; /* Asegura que esté por encima de otros elementos */
+  text-align: center; /* Centra el texto */
+  font-style: italic; /* Cambia a cursiva */
+  font-family: 'Georgia', serif; /* Cambia la fuente a una más estilizada */
 }
 
 .altar .mesa {
   clip-path: polygon(10% 0, 90% 0, 100% 100%, 0 100%);
-  height: 100px;
-  width: 500px;
-  background: #EA6D56;
-  top: 425px;
+  height: 52px;  /* 100px / 2 */
+  width: 250px;   /* 500px / 2 */
+  background: #ea6d56;
+  top: 212.5px;  /* 425px / 2 */
   position: absolute;
+  z-index: 2;
+
 }
 
 .altar .delantal {
-  width: 100px;
-  height: 100px;
+  width: 50px;  /* 100px / 2 */
+  height: 50px; /* 100px / 2 */
   background: #e76148;
   position: absolute;
-  top: 525px;
-  border-radius: 0 0 50px 50px;
+  top: 262.5px; /* 525px / 2 */
+  border-radius: 0 0 25px 25px; /* 50px / 2 */
 }
 
-.altar .del1 { left: 0; }
-.altar .del2 { left: 100px; }
-.altar .del3 { left: 200px; }
-.altar .del4 { left: 300px; }
-.altar .del5 { left: 400px; }
+.altar .del1 {
+  left: 0;
+}
+.altar .del2 {
+  left: 50px;  /* 100px / 2 */
+}
+.altar .del3 {
+  left: 100px; /* 200px / 2 */
+}
+.altar .del4 {
+  left: 150px; /* 300px / 2 */
+}
+.altar .del5 {
+  left: 200px; /* 400px / 2 */
+}
 
 .flawas {
-  height: 170px;
-  width: 500px;
+  height: 85px; /* 170px / 2 */
+  width: 250px;  /* 500px / 2 */
   position: absolute;
   z-index: 2;
-  top: 400px;
+  top: 200px;    /* 400px / 2 */
 }
 
-.skull {
+.skulll {
   background-size: cover;
   position: absolute;
-  height: 150px;
-  width: 150px;
+  height: 75px;  /* 150px / 2 */
+  width: 75px;   /* 150px / 2 */
   left: 50%;
-  margin-left: -75px;
-  top: -35px;
+  margin-left: -37.5px; /* -75px / 2 */
+  top: -17.5px; /* -35px / 2 */
 }
 
 .flaw {
@@ -105,24 +122,44 @@
   position: absolute;
 }
 
-.flaw1 { height: 70px; width: 70px; top: 20px; left: 25px; }
-.flaw2 { height: 85px; width: 85px; top: 50px; left: 65px; }
-.flaw3 { height: 55px; width: 55px; top: 65px; left: 30px; }
-.flaw4 { height: 80px; width: 80px; top: 25px; left: 120px; }
+.flaw1 {
+  height: 35px;  /* 70px / 2 */
+  width: 35px;   /* 70px / 2 */
+  top: 10px;     /* 20px / 2 */
+  left: 12.5px;  /* 25px / 2 */
+}
+.flaw2 {
+  height: 42.5px; /* 85px / 2 */
+  width: 42.5px;  /* 85px / 2 */
+  top: 25px;      /* 50px / 2 */
+  left: 32.5px;   /* 65px / 2 */
+}
+.flaw3 {
+  height: 27.5px; /* 55px / 2 */
+  width: 27.5px;  /* 55px / 2 */
+  top: 32.5px;    /* 65px / 2 */
+  left: 15px;     /* 30px / 2 */
+}
+.flaw4 {
+  height: 40px;   /* 80px / 2 */
+  width: 40px;    /* 80px / 2 */
+  top: 12.5px;    /* 25px / 2 */
+  left: 60px;     /* 120px / 2 */
+}
 
 .letterto {
   background: #eee;
-  height: 80px;
-  width: 140px;
+  height: 40px;  /* 80px / 2 */
+  width: 70px;   /* 140px / 2 */
   position: absolute;
-  right: 20px;
-  top: 20px;
+  right: 10px;   /* 20px / 2 */
+  top: 10px;     /* 20px / 2 */
 }
 
 .letterto .triangu {
   background: #ddd;
-  width: 140px;
-  height: 50px;
+  width: 70px;   /* 140px / 2 */
+  height: 25px;  /* 50px / 2 */
   clip-path: polygon(0 0, 50% 100%, 100% 0);
   top: 0;
   position: absolute;
@@ -131,8 +168,8 @@
 
 .letterto .triangu2 {
   background: #cfcfcf;
-  width: 140px;
-  height: 50px;
+  width: 70px;   /* 140px / 2 */
+  height: 25px;  /* 50px / 2 */
   clip-path: polygon(0 0, 50% 100%, 100% 0);
   top: 0;
   position: absolute;
@@ -141,27 +178,269 @@
 
 .letterto:hover .triangu {
   clip-path: polygon(0 100%, 50% 0, 100% 100%);
-  top: -50px;
+  top: -25px; /* -50px / 2 */
   transition: all 0.5s ease-in-out;
 }
 
 .letterto .triangu2 .paper {
   background: #fff;
-  height: 50px;
-  width: 100px;
-  margin-left: 20px;
-  margin-top: 10px;
+  height: 25px;  /* 50px / 2 */
+  width: 50px;   /* 100px / 2 */
+  margin-left: 10px; /* 20px / 2 */
+  margin-top: 5px;   /* 10px / 2 */
 }
 
-#cyala-sign {
-  font-size: 6px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  margin: 0;
-  font-family: arial;
-  margin-top: 10px;
+/* Mascara */
+.mascara {
+  position: absolute;
+  width: 5rem;  /* 25rem original * 0.2 para el 20% */
+  height: 5rem; /* 25rem original * 0.2 para el 20% */
+  margin: 0 auto; /* Centra el contenedor */
+  transform: scale(0.2); /* Escala al 20% */
+  transform-origin: right; /* Escala desde el centro */
 }
 
-#cyala-sign a {
-  text-decoration: none !important;
+.skull {
+  position: absolute; /* Mantiene la posición absoluta */
+  top: 50%;          /* Centra verticalmente */
+  left: 50%;         /* Centra horizontalmente */
+  transform: translate(-50%, -50%); /* Centra el elemento */
+  z-index: 10;      /* Asegúrate de que el z-index sea alto para que quede por encima */
+  width: 25rem;     /* Mantiene el tamaño original */
+  height: 25rem;    /* Mantiene el tamaño original */
+  overflow: hidden;
+  border-radius: 50%;
+  background-color: #e74c3c;
+  box-shadow: 0 0.25rem 0 0.25rem rgba(0, 0, 0, 0.15), inset 0 0.5rem 0 0rem rgba(0, 0, 0, 0.1);
+  cursor: pointer;
+  transition: transform 0.28s ease-in-out;
+}
+
+.skull:hover {
+  transform: translateY(-50%) rotateZ(-180deg);
+}
+
+.skull:active {
+  transform: translateY(-50%) rotateZ(-180deg) rotateY(-180deg);
+}
+
+.skull:before {
+  content: "";
+  position: absolute;
+  display: block;
+  right: 0;
+  width: 50%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.15);
+  z-index: 1;
+}
+
+.skull:after {
+  content: "💛";
+  position: absolute;
+  top: -2.3rem;
+  left: 0;
+  right: 0;
+  font-size: 10rem;
+  color: #f1c40f;
+  text-align: center;
+  text-shadow: 
+  -3px -3px 0 #3498db,
+  3px -3px 0 #3498db,
+  -3px 3px 0 #3498db,
+  3px 3px 0 #3498db;
+}
+
+.skull .decor {
+  position: absolute;
+  display: block;
+  font-size: 20rem;
+  z-index: 10;
+}
+
+.skull .decor:nth-child(1) {
+  left: -9rem;
+  top: -4rem;
+  color: #3498db;
+  text-shadow: 
+  -3px -3px 0 #f1c40f,
+  3px -3px 0 #f1c40f,
+  -3px 3px 0 #f1c40f,
+  3px 3px 0 #f1c40f;
+}
+
+.skull .decor:nth-child(2) {
+  right: -8.25rem;
+  top: -4rem;
+  color: #f1c40f;
+  text-shadow: 
+  -3px -3px 0 #3498db,
+  3px -3px 0 #3498db,
+  -3px 3px 0 #3498db,
+  3px 3px 0 #3498db;
+}
+
+.skull .eyes {
+  position: absolute;
+  top: 38%;
+  transform: translateY(-38%);
+  left: 0;
+  right: 0;
+  z-index: 100;
+}
+
+.skull .eye {
+  position: absolute;
+  width: 3.75rem;
+  height: 4.9875rem;
+  background-color: #2b2b2b;
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow: inset 0 0 0 5px rgba(0, 0, 0, 0.1);
+}
+
+.skull .eye:first-child {
+  left: 25%;
+  transform: translateY(-40%) rotate(15deg);
+}
+
+.skull .eye:last-child {
+  right: 25%;
+  transform: translateY(-40%) rotate(-15deg);
+}
+
+.skull .eye:last-child .symbol {
+  color: #3498db;
+  top: -0.4rem;
+  text-shadow: 
+  -3px -3px 0 #f1c40f,
+  3px -3px 0 #f1c40f,
+  -3px 3px 0 #f1c40f,
+  3px 3px 0 #f1c40f;
+}
+
+.skull .eye .symbol {
+  position: absolute;
+  top: -0.4rem;
+  left: 0;
+  right: 0;
+  text-align: center;
+  font-size: 3.8rem;
+  color: #f1c40f;
+  text-shadow: 
+  -3px -3px 0 #3498db,
+  3px -3px 0 #3498db,
+  -3px 3px 0 #3498db,
+  3px 3px 0 #3498db;
+}
+
+.skull .nose,
+.skull .nose:before,
+.skull .nose:after {
+  width: 2rem;
+  height: 2rem;
+  position: relative;
+  background: #2b2b2b;
+  border-top-right-radius: 60%;
+  z-index: 10;
+}
+
+.skull .nose:before,
+.skull .nose:after {
+  content: "";
+  position: absolute;
+}
+
+.skull .nose {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 9rem;
+  margin: 0 auto;
+  transform: rotate(-60deg) skewX(-30deg) scale(1, 0.866);
+}
+
+.skull .nose:before {
+  transform: rotate(-135deg) skewX(-45deg) scale(1.414, 0.707) translate(0, -50%);
+}
+
+.skull .nose:after {
+  transform: rotate(135deg) skewY(-45deg) scale(0.707, 1.414) translate(50%);
+}
+
+.skull .mustache {
+  position: absolute;
+  bottom: 2.5rem;
+  left: -1.8rem;
+  right: 0;
+  font-size: 7rem;
+  letter-spacing: -1.75rem;
+  z-index: 100;
+  text-align: center;
+}
+
+.skull .mustache span:first-child {
+  color: #f1c40f;
+}
+
+.skull .mustache span:last-child {
+  color: #3498db;
+}
+
+.skull .teeth {
+  position: absolute;
+  width: 100%;
+  height: 6rem;
+  bottom: 0rem;
+  background-color: #2b2b2b;
+}
+
+.skull .teeth:before,
+.skull .teeth:after {
+  content: "⬢";
+  position: absolute;
+  top: -6.5rem;
+  font-size: 20rem;
+  color: #2b2b2b;
+  z-index: -1;
+}
+
+.skull .teeth:before {
+  left: -9.75rem;
+}
+
+.skull .teeth:after {
+  right: -9.75rem;
+}
+
+.skull .teeth .top,
+.skull .teeth .bottom {
+  width: 50%;
+  height: 3rem;
+  margin: 0 auto;
+}
+
+.skull .teeth .top {
+  top: 0rem;
+}
+
+.skull .teeth .top .tooth {
+  border-radius: 0 0 50% 50%;
+  box-shadow: inset 0 -3px 0 0 rgba(0, 0, 0, 0.18);
+}
+
+.skull .teeth .bottom {
+  top: 1rem;
+}
+
+.skull .teeth .bottom .tooth {
+  border-radius: 50%;
+  box-shadow: inset 0 0 0 3px rgba(0, 0, 0, 0.18);
+}
+
+.skull .teeth .tooth {
+  width: 25%;
+  height: 100%;
+  display: inline-block;
+  background-color: #e74c3c;
 }

@@ -169,6 +169,28 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+const viewKey = "{{compra.id|unlocalize}}";
+console.log(viewKey)
+console.log("Initial localStorage state:", localStorage.getItem(viewKey));
+
+if (localStorage.getItem(viewKey)) {
+    let principal = document.getElementById('Principal');
+    principal.classList.add('d-none');
+    alert("This view is already open in another tab or window.");
+    window.location.href = "{% url 'entrada-usada' %}";
+} else {
+    localStorage.setItem(viewKey, true);
+    console.log("Set viewKey in localStorage:", viewKey);
+}
+
+// Listen for the unload event
+window.addEventListener("beforeunload", function () {
+    console.log("Removing viewKey from localStorage:", viewKey);
+    localStorage.removeItem(viewKey);
+});
+
+
+
 function mostrarIndicadorCarga(form) {
     document.getElementById('loadingIndicator').style.display = 'flex';
 
