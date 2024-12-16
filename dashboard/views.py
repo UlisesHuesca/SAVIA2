@@ -98,7 +98,7 @@ def index(request):
 def select_profile(request):
     user = request.user.id
 
-    profiles = Profile.objects.filter( Q(staff__staff__id=user) & Q(sustituto__isnull = True) | Q(sustituto__staff__id=user))
+    profiles = Profile.objects.filter( Q(staff__staff__id=user) & Q(sustituto__isnull = True) & Q(st_activo = True)| Q(sustituto__staff__id=user))
     
     if request.method == 'POST':
         profile_id = request.POST.get('profile')

@@ -7,6 +7,7 @@ from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.core.exceptions import ObjectDoesNotExist
 from django.conf import settings
+from django.core.cache import cache
 from compras.models import Compra, ArticuloComprado
 from compras.filters import CompraFilter
 from compras.views import attach_oc_pdf
@@ -172,20 +173,40 @@ def devolucion_a_proveedor(request):
 
     return render(request, 'entradas/devolucion_a_proveedor.html', context)
 
+def entrada_usada(request):
+    return render(request, 'entradas/entrada_been_used.html')
+
+
 @perfil_seleccionado_required
 @tipo_usuario_requerido('almacenista')
 def articulos_entrada(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
+    compra = Compra.objects.get(id=pk)
+    try:
+        entrada = Entrada.objects.get(oc=compra, almacenista= usuario, completo = False)
+    except Entrada.DoesNotExist:
+        entrada = None  # Set entrada to None if no matching object is foundexcept 
+    
+    # Check if the `pk` is currently in use
+    #print('entrada_value:', entrada)
+    #print(cache.get(f'compra_in_use_{pk}'))
+    if cache.get(f'compra_in_use_{pk}') and entrada is None:
+        messages.error(request, "This entry is currently being accessed by another user.")
+        return redirect('entrada-usada')  # Redirect to another view or template
+    # Mark the `pk` as in use in the cache
+    cache.set(f'compra_in_use_{pk}', True)  # Lock for 5 minutes (300 seconds)
+    
+    
     vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
-    compra = Compra.objects.get(id = pk)
     if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
         articulos = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False, producto__producto__articulos__producto__producto__servicio = False)
     else:
         articulos = ArticuloComprado.objects.none()
 
-
-    compra = Compra.objects.get(id=pk)
+    entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
+    articulos_entrada = EntradaArticulo.objects.filter(entrada = entrada)
+  
     conteo_de_articulos = articulos.count()
     articulos_html = """
         <table border="1" style="border-collapse: collapse; width: 100%;">
@@ -199,8 +220,7 @@ def articulos_entrada(request, pk):
             <tbody>
         """
 
-    entrada, created = Entrada.objects.get_or_create(oc=compra, almacenista= usuario, completo = False)
-    articulos_entrada = EntradaArticulo.objects.filter(entrada = entrada)
+    
     form = EntradaArticuloForm()
     #max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
     max_folio = vale_entrada.aggregate(Max('folio'))['folio__max']
@@ -402,7 +422,12 @@ def articulos_entrada(request, pk):
         evalua_entrada_completa(articulos_comprados,num_art_comprados, compra)
         entrada.save()
         messages.success(request, f'La entrada {entrada.folio} se ha realizado con éxito')
+        cache.delete(f'compra_is_use_{pk}')
         return redirect('pendientes_entrada')
+    
+    elif cache.get(f'compra_in_use_{pk}') and usuario !=  entrada.almacenista:
+        #messages.error(request, "This entry is currently being accessed by another user.")
+        return redirect('entrada-usada')  # Redirect to another view or template
 
     context = {
         'articulos':articulos,
