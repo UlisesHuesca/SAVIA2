@@ -36,7 +36,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     cuenta = CharFilter(field_name = 'cuenta__cuenta', lookup_expr='icontains')
     start_date = DateFilter(field_name ='pagado_real', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_real', lookup_expr='lte')
-    proveedor = CharFilter( field_name = 'oc__proveedor__nombre__razon_social', lookup_expr='icontains')
+    proveedor = CharFilter(method = 'beneficiario_proveedor', lookup_expr='icontains')
 
 
     class Meta:
@@ -45,6 +45,9 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
 
     def my_filter(self, queryset, name, value):
         return queryset.filter(Q(oc__folio__icontains = value) | Q(gasto__folio__icontains = value)| Q(viatico__folio__icontains = value))
+
+    def beneficiario_proveedor(self, queryset, name, value):
+        return queryset.filter(Q(oc__proveedor__nombre__razon_social__icontains = value) | Q(gasto__colaborador__staff__staff__first_name__icontains = value)| Q(gasto__staff__staff__staff__first_name__icontains = value)| Q(gasto__colaborador__staff__staff__last_name__icontains = value)| Q(gasto__staff__staff__staff__last_name__icontains = value))
 
     def my_proyecto(self, queryset, name, value):
         return queryset.filter(Q(oc__req__orden__proyecto__nombre__icontains = value) | Q(gasto__articulos__proyecto__nombre__icontains = value) | Q(viatico__proyecto__nombre__icontains = value))

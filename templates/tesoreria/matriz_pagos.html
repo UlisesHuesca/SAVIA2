@@ -82,8 +82,8 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
-                                <label style="color: #121212;" for="id_id">Proveedor</label>
+                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor/Colaborador"}}
+                                <label style="color: #121212;" for="id_id">Proveedor/Colaborador</label>
                             </div>
                         </div>
                     </div>
@@ -325,9 +325,9 @@
                         <td  class="d-none d-lg-table-cell">{{pago.gasto.subproyecto.nombre}}</td>
                         <td>{{pago.gasto.superintendente.staff.staff.first_name}} {{pago.gasto.superintendente.staff.staff.last_name}}</td>
                         {% if pago.gasto.colaborador %}
-                            <td>{{pago.gasto.colaborador.staff.first_name}} {{pago.gasto.colaborador.staff.last_name}}</td>
+                            <td>{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}}</td>
                         {% else %}
-                            <td>{{pago.gasto.staff.staff.first_name}} {{pago.gasto.staff.staff.last_name}}</td>
+                            <td>{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
                         {% endif %}
                         {% if pago.gasto.facturas_completas == True %}
                             <td>Completas</td>
