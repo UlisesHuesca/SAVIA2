@@ -300,6 +300,7 @@ def update_devolucion(request):
 
 @perfil_seleccionado_required
 def autorizar_devolucion(request, pk):
+    print("Estoy en autorizar_devolucion")
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     devolucion= Devolucion.objects.get(id=pk)
@@ -345,7 +346,21 @@ def autorizar_devolucion(request, pk):
             salida.save()
         devolucion.save()
         return redirect('matriz-autorizar-devolucion')
-
+    elif request.method == 'POST' and 'btnCancelar' in request.POST:
+        for producto in productos:
+            if devolucion.tipo.nombre == "SALIDA":
+                producto_surtir = Salidas.objects.get(id=devolucion.salida.id)
+            else:
+                producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
+            producto_surtir.cantidad = producto_surtir.cantidad + producto.cantidad
+            producto_surtir.surtir = True
+            producto_surtir.save()
+            #inv_del_producto.save()
+        devolucion.autorizada = False
+        devolucion.save()
+        return redirect('matriz-autorizar-devolucion')
+    
+    
     context= {
         'productos':productos,
         'devolucion':devolucion,
