@@ -47,7 +47,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
         return queryset.filter(Q(oc__folio__icontains = value) | Q(gasto__folio__icontains = value)| Q(viatico__folio__icontains = value))
 
     def beneficiario_proveedor(self, queryset, name, value):
-        return queryset.filter(Q(oc__proveedor__nombre__razon_social__icontains = value) | Q(gasto__colaborador__staff__staff__first_name__icontains = value)| Q(gasto__staff__staff__staff__first_name__icontains = value)| Q(gasto__colaborador__staff__staff__last_name__icontains = value)| Q(gasto__staff__staff__staff__last_name__icontains = value))
+        return queryset.filter(Q(oc__proveedor__nombre__razon_social__icontains = value) | Q(gasto__colaborador__staff__staff__first_name__icontains = value)| Q(gasto__staff__staff__staff__first_name__icontains = value)| Q(gasto__colaborador__staff__staff__last_name__icontains = value)| Q(gasto__staff__staff__staff__last_name__icontains = value)| Q(viatico__colaborador__staff__staff__first_name__icontains = value)| Q(viatico__staff__staff__staff__first_name__icontains = value)| Q(viatico__colaborador__staff__staff__last_name__icontains = value)| Q(viatico__staff__staff__staff__last_name__icontains = value))
 
     def my_proyecto(self, queryset, name, value):
         return queryset.filter(Q(oc__req__orden__proyecto__nombre__icontains = value) | Q(gasto__articulos__proyecto__nombre__icontains = value) | Q(viatico__proyecto__nombre__icontains = value))
