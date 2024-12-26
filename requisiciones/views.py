@@ -557,7 +557,9 @@ def devolucion_material_salida(request, pk):
     orden = Order.objects.get(id = vale_salida.solicitud.id)
     #Esta es la parte que varía de devolución de material, aquí los productos deben ser salida = True
     #productos_sel = ArticulosparaSurtir.objects.filter(articulos__orden = orden, salida=True)
-    productos_sel = salidas.get(id=pk)
+    productos_sel = salida
+    #print(productos_sel)
+   
     tipo = Tipo_Devolucion.objects.get(nombre ="SALIDA" )
     devolucion, created = Devolucion.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden,tipo =tipo, salida =salida)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
@@ -575,13 +577,13 @@ def devolucion_material_salida(request, pk):
                 devolucion.hora = datetime.now().time()
                 devolucion.fecha = date.today()
                 devolucion.save()
-                for producto in productos_sel:
-                    producto.seleccionado = False
-                    producto.save()
+                #for producto in productos_sel:
+                productos_sel.seleccionado = False
+                productos_sel.save()
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has hecho la devolución de manera exitosa')
                 email = EmailMessage(
                     f'Cancelación de solicitud: {orden.folio}',
-                    f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                     settings.DEFAULT_FROM_EMAIL,
                     ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
                     )
