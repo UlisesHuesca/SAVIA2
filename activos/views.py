@@ -280,6 +280,15 @@ def edit_activo(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     empleados = Profile.objects.all()
     perfil = empleados.get(id = pk_perfil)
+    productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos)
+
+    for producto in productos: #Asignar al producto que es un activo disponible si tiene más de 1
+        if producto.cantidad >= 1:
+            producto.activo_disponible = True
+        else:
+            producto.activo_disponible = False
+        producto.save()  
+
     #producto = Salidas.objects.get(id=pk)
     activo = Activo.objects.get(id=pk)
     if activo.activo is None:
@@ -304,8 +313,25 @@ def edit_activo(request, pk):
     else:
         marca_p = None
 
-
+    productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
     form = Edit_Activo_Form(instance = activo)
+    form.fields['activo'].queryset = productos_activos
+
+    productos_para_select2 = [
+        {
+            'id': producto.id, 
+            'text': str(producto.producto.nombre)
+        } for producto in productos_activos
+    ]
+    if activo.activo:
+        producto_predeterminado = {
+            'id': activo.activo.id, 
+            'text': str(activo.activo.producto.nombre)
+        }
+    else:
+        producto_predeterminado = None
+
+
 
     responsables_para_select2 = [
         {
@@ -373,6 +399,8 @@ def edit_activo(request, pk):
         'error_messages': error_messages,
         'responsable_predeterminado':responsable_predeterminado,
         'responsables_para_select2':responsables_para_select2,
+        'productos_para_select2':productos_para_select2,
+        'producto_predeterminado':producto_predeterminado,
         'marcas_para_select2':marcas_para_select2,
         'marca_predeterminada':marca_predeterminada,
         'tipo_activo_predeterminado': tipo_activo_predeterminado,

@@ -78,6 +78,16 @@
             </div>
             {% endif %}
             <div class="col-12">
+                <div class="col-sm-12 col-lg-6">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.activo}}
+                        </div>
+                    </div>
+                </div> 
+            </div>
+            <div class="col-12">
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                     <div class="form-floating form-floating-group flex-grow-1">   
@@ -302,6 +312,25 @@ $(document).ready(function() {
     var tipoActivoSeleccionado = {{ tipo_activo_predeterminado|safe }};
     if (tipoActivoSeleccionado) {
         $('#id_tipo_activo').val(tipoActivoSeleccionado.id).trigger('change');
+    }
+});
+
+var datosProductos= {{ productos_para_select2|safe }};
+var productoPredeterminado = {{ producto_predeterminado|default:"null" |safe }};
+
+$(document).ready(function() {
+    var ProductoSelect = $('#id_activo');
+    // Inicializar select2 con datos predefinidos
+    ProductoSelect.select2({
+        allowClear: true,
+        width: '100%',
+        data: datosProductos,
+        placeholder: 'Producto',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+    if (productoPredeterminado != null){
+        ProductoSelect.val(productoPredeterminado.id).trigger('change');
     }
 });
 
