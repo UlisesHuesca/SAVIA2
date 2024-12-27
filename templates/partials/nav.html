@@ -337,7 +337,7 @@
                                 {% if usuario.tipo.nombre == 'Admin' %}
                                 <a class="dropdown-item" href="{% url 'matriz-salida-activos' %}">Revisión Activos</a>
                                 {% endif %}
-                            {% if usuario.tipo.superintendente == True %}
+                            {% if usuario.tipo.superintendente == True or usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" %}
                                 <div>
                             {% else %}
                                 <div class="d-none">
