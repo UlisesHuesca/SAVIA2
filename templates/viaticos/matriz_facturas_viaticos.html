@@ -267,10 +267,11 @@
                 <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
             </li>
             {% elif fuera_de_tiempo == False %}
+            {% endif %}
             <li class="nav-item">
                 <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
             </li>
-            {% endif %}
+           <!--- aquí iba el endif del fuera de tiempo se quita por indicación de HT 31/12/2024-->
             <li class="nav-item ms-4">
                 <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
             </li>
