@@ -59,6 +59,7 @@ from reportlab.lib.pagesizes import letter, portrait
 from reportlab.rl_config import defaultPageSize 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
 
@@ -1287,15 +1288,32 @@ def render_pdf_view(request, pk):
         c.drawString(130,caja_proveedor-100, "No Aprobado aún")
     #Create blank list
     data =[]
-
+    styles = getSampleStyleSheet()
+    paragraph_style = styles["BodyText"]
+    compact_style = ParagraphStyle(
+        name="CompactStyle",
+        fontName="Helvetica",
+        fontSize=6,  # Tamaño de fuente más pequeño
+        leading=7,  # Espaciado entre líneas
+        textColor=colors.black,
+        alignment=0,  # Alineación a la izquierda (puedes cambiar a 1=centrado o 2=derecha si es necesario)
+        spaceBefore=0,  # Sin espacio antes del párrafo
+        spaceAfter=0,   # Sin espacio después del párrafo
+    )
     encabezado = [['''Código''', '''Nombre''', '''Cantidad''','''Comentario''']]
 
 
-    high = 540
-    for producto in productos:
-        data.append([producto.producto.producto.codigo, producto.producto.producto.nombre,producto.cantidad, producto.comentario])
-        high = high - 18
-
+    high = 480
+    for i in range(1):
+        for producto in productos:
+            if producto.comentario:
+                comentario = Paragraph(producto.comentario, compact_style)
+            else:
+                comentario = ''
+            data.append([producto.producto.producto.codigo, producto.producto.producto.nombre,producto.cantidad,comentario])
+            high = high - 15
+    if high <= 480-(15*15):
+        high= 480-(15*15)
 
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
@@ -1331,36 +1349,35 @@ def render_pdf_view(request, pk):
     c.drawCentredString(320,235,'Observaciones')
     options_conditions_paragraph = Paragraph(comentario, styleN)
     # Crear un marco (frame) en la posición específica
-    frame = Frame(20, -110, width-40, high-50, id='normal')
+    frame = Frame(20, 30, 570, 200, id='normal')
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
-    c.setFillColor(white)
 
     c.setFillColor(black)
-    c.drawCentredString(180,high-240, orden.staff.staff.staff.first_name +' '+ orden.staff.staff.staff.last_name)
-    c.line(140,high-241,220,high-241)
-    c.drawCentredString(180,high-250, 'Solicitado')
+    c.drawCentredString(180,140, orden.staff.staff.staff.first_name +' '+ orden.staff.staff.staff.last_name)
+    c.line(140,139,220,139)
+    c.drawCentredString(180,130, 'Solicitado')
     if orden.autorizar == False:
         c.setFillColor(rojo)
-        c.drawCentredString(410, high-240, '{Esta orden ha sido Cancelada}')
+        c.drawCentredString(410,140, '{Esta orden ha sido Cancelada}')
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'CANCELADA')
     elif orden.autorizar:
+        c.drawCentredString(410,140, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFillColor(prussian_blue)
-        c.drawCentredString(410,high-240, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'APROBADA')
     else:
+        c.drawCentredString(410,140, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFillColor(rojo)
-        c.drawCentredString(410,high-240, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'NO AUTORIZADA AÚN')
     c.setFillColor(black)
-    c.setFont('Helvetica',12)
-    c.line(360,high-241,460,high-241)
-    c.drawCentredString(410,high-250,'Supervisor')
+    c.setFont('Helvetica',9)
+    c.line(360,139,460,139)
+    c.drawCentredString(410,130,'Supervisor')
 
     #table = Table(data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
     table_style = TableStyle([ #estilos de la tabla
@@ -1376,25 +1393,37 @@ def render_pdf_view(request, pk):
         ('FONTSIZE',(0,1),(-1,-1), 6),
         ])
     #table.setStyle(table_style)
-    rows_per_page = 15
+    # Configuración inicial
+    rows_first_page = 10  # Filas para la primera página
+    rows_other_pages = 17  # Filas para las demás páginas
     data_len = len(data) 
-    for page_start in range(0, data_len, rows_per_page):
-        page_end = min(page_start + rows_per_page, data_len)
-        #page_data = data[page_start:page_end + 1]  # +1 para incluir el encabezado en cada página
-        page_data = encabezado + data[page_start:page_end] 
-        table = Table(page_data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm])
-        table.setStyle(table_style)
-         # Calcular el alto de la tabla para la página actual
-        table_height = data_len * 18 #espacio_por_fila
-        # Calcular la posición 'y' inicial para la tabla basada en el alto de la tabla
-        table_y_position = height - table_height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
-        #table_y_position = height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
-        
 
+    page_start = 0
+    first_page = True  # Bandera para determinar si es la primera página
+
+    while page_start < data_len:
+        # Determinar el número de filas en esta página
+        rows_per_page = rows_first_page if first_page else rows_other_pages
+        
+        page_end = min(page_start + rows_per_page, data_len)  # Fin de la página actual
+        page_data = encabezado + data[page_start:page_end]  # Datos para esta página
+        table = Table(page_data, colWidths=[1.2 * cm, 10 * cm, 1.5 * cm, 7.2 * cm])
+        table.setStyle(table_style)
+        
+        # Ajustar la posición según si es la primera página o no
+        if first_page:
+            table_y_position = high  # Posición más alta para la primera página
+        else:
+            table_y_position = height - 520  # Posición estándar para las demás páginas
+        
         table.wrapOn(c, width, height)  # Preparar la tabla
         table.drawOn(c, 20, table_y_position)  # Dibujar la tabla en la posición calculada
-
-        if page_end < data_len:  # Si hay más páginas, preparar una nueva página
+        
+        # Actualizar el inicio de la siguiente página
+        page_start = page_end
+        first_page = False  # Después de la primera iteración, cambia la bandera
+        
+        if page_start < data_len:  # Si hay más datos, agregar una nueva página
             c.showPage()
     
    
