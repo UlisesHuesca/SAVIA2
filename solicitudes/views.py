@@ -249,7 +249,7 @@ def checkout(request):
     abrev = usuario.distritos.abreviado
     folio_preview = folio_number
     #***************************************************
-    proyectos = Proyecto.objects.filter(activo=True, distrito=usuario.distritos )
+    proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito=usuario.distritos )
     subproyectos = Subproyecto.objects.all()
     activos = Activo.objects.filter(responsable__distritos = usuario.distritos)
     tipo = Tipo_Orden.objects.get(tipo ='normal')

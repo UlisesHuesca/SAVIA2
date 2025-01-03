@@ -64,7 +64,7 @@ def solicitud_viatico(request):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk_perfil)
-    proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
+    proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"), activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
     viatico, created = Solicitud_Viatico.objects.get_or_create(complete= False, staff = usuario)
     colaboradores = colaborador.filter(distritos = usuario.distritos)
