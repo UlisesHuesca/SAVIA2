@@ -1860,7 +1860,10 @@ def convert_excel_matriz_pagos(pagos):
             else:
                 tipo_de_cambio = ''  # default si no se cumplen las condiciones anteriores
         elif pago.gasto:
-            proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
+            if pago.gasto.colaborador:
+                proveedor = pago.gasto.colaborador.staff.staff.first_name + ' ' + pago.gasto.colaborador.staff.staff.last_name
+            else:
+                proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             facturas_completas = pago.gasto.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para gastos
             if pago.gasto.facturas.exists():
@@ -1870,7 +1873,10 @@ def convert_excel_matriz_pagos(pagos):
                 tiene_facturas = 'No'
             
         elif pago.viatico:
-            proveedor = pago.viatico.staff.staff.staff.first_name
+            if pago.viatico.colaborador:
+                proveedor = pago.viatico.colaborador.staff.staff.first_name + ' ' + pago.gasto.colaborador.staff.staff.last_name
+            else:
+                proveedor = pago.viatico.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             facturas_completas = pago.viatico.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para viáticos
             if pago.viatico.facturas.exists():
