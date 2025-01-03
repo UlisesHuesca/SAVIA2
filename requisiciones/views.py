@@ -999,7 +999,7 @@ def requisicion_detalle(request, pk):
                 error_messages[field] = errors.as_text()
             
 
-
+    #print(orden)
     context = {
         'error_messages':error_messages,
         'productos': productos,

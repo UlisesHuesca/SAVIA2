@@ -56,7 +56,7 @@
                 </div>
                 {% endif %}
                 <div class="alert alert-primary" role="alert">
-                    {%if orden.comentario %} Comentario Solicitud: {{orden.comentario}} {%else%} No hay comentario de la solicitud {% endif %}
+                    {% if orden.comentario %} Comentario Solicitud: {{orden.comentario}} {%else%} No hay comentario de la solicitud {% endif %}
                 </div>
                 <div class="form-check form-switch col-auto mx-4" id="c_super" valor = "{{tag}}">
                     <input class="form-check-input" type="checkbox" role="switch" id="Comment_Super">
