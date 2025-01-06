@@ -1032,10 +1032,12 @@ def requisicion_autorizar(request, pk):
         costo_aprox = costo_aprox + producto.cantidad * producto.producto.articulos.producto.price
 
     try:
-        porcentaje = "{0:.2f}%".format((costo_aprox/requi.orden.subproyecto.presupuesto)*100)
+        presupuesto = requi.orden.subproyecto.presupuesto or 0  # Default to 0 if None
+        gastado = requi.orden.subproyecto.gastado or 0  # Default to 0 if None
+        porcentaje = "{0:.2f}%".format((gastado/presupuesto)*100)
     except ZeroDivisionError:
         porcentaje = " 0%"
-    resta = requi.orden.subproyecto.presupuesto - requi.orden.subproyecto.gastado - costo_aprox
+    resta = presupuesto - gastado - costo_aprox
 
     if request.method == 'POST':
         requi.requi_autorizada_por = perfil
