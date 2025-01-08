@@ -1815,7 +1815,7 @@ def autorizar_oc2(request, pk):
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
     
-    presupuesto = compra.rega.orden.subproyecto.presupuesto or 0 
+    presupuesto = compra.req.orden.subproyecto.presupuesto or 0 
     
     if presupuesto > 0:
         porcentaje = "{0:.2f}%".format((costo_oc / presupuesto) * 100)
