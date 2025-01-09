@@ -1424,8 +1424,10 @@ def mis_comprobaciones_gasto(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     año_actual = datetime.now().year
-    gastos = Solicitud_Gasto.objects.filter(Q(staff = usuario) |Q(colaborador = usuario),autorizar2=True, created_at__year=año_actual, complete=True).annotate(
-                total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
+    año_anterior = año_actual - 1
+
+    gastos = Solicitud_Gasto.objects.filter(Q(staff=usuario) | Q(colaborador=usuario),autorizar2=True,created_at__year__in=[año_anterior, año_actual],complete=True
+                ).annotate(total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
                 ).order_by('-folio')
 
     #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
@@ -1448,6 +1450,7 @@ def mis_comprobaciones_gasto(request):
         'total_todas_facturas':total_todas_facturas,
         'total_monto_gastos':total_monto_gastos,
         'año_actual':str(año_actual),
+        'año_anterior':str(año_anterior),
         #'myfilter':myfilter,
         }
 
@@ -1458,9 +1461,11 @@ def mis_comprobaciones_viaticos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     año_actual = datetime.now().year
-    viaticos = Solicitud_Viatico.objects.filter(Q(staff = usuario) |Q(colaborador = usuario),autorizar2=True, created_at__year=año_actual, complete=True).annotate(
-                total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
-                ).order_by('-folio')
+    año_anterior = año_actual - 1
+
+    viaticos = Solicitud_Viatico.objects.filter(Q(staff=usuario) | Q(colaborador=usuario),autorizar2=True,created_at__year__in=[año_anterior, año_actual],complete=True
+                    ).annotate(total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+                    ).order_by('-folio')
 
     #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     #viaticos = myfilter.qs
@@ -1485,6 +1490,7 @@ def mis_comprobaciones_viaticos(request):
         'total_todas_facturas':total_todas_facturas,
         'total_monto_viaticos':total_monto_viaticos,
         'año_actual':str(año_actual),
+        'año_anterior':str(año_anterior),
         #'myfilter':myfilter,
         }
 
