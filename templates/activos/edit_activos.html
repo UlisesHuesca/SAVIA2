@@ -354,27 +354,7 @@ $(document).ready(function () {
         }
     });
 
-    // Validar formulario antes de enviarlo
-    form.on('submit', function (e) {
-        var cantidad = parseInt(cantidadEtiqueta.text(), 10); // Obtén la cantidad como número
-        var selectedId = ProductoSelect.val(); // ID del producto seleccionado
-        console.log(productoActivoId)
-        console.log(cantidad)
-        console.log(selectedId)
-        // Condición 1: Verificar si el producto seleccionado es diferente
-        if (selectedId != productoActivoId) {
-            // Condición 2: Verificar si la cantidad es 0
-            if (cantidad === 0) {
-                e.preventDefault(); // Detén el envío del formulario
-                Swal.fire({
-                    title: "Error",
-                    text: "Debe seleccionar un producto con inventario disponible.",
-                    icon: "error",
-                    confirmButtonText: "Aceptar"
-                });
-            }
-        }
-    });
+
 
     // Inicializar la cantidad al cargar la página
     ProductoSelect.trigger('change');
