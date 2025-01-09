@@ -83,6 +83,7 @@
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Subproyecto</th>
+                    <th>Status</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Monto</th>
                     <th scope="col">Fecha</th>
@@ -94,6 +95,7 @@
                 <tr>
                     <th scope="row">{{subproyecto.id}}</th>
                     <td>{{subproyecto.nombre}}</td>
+                    <td>{{subproyecto.status.nombre}}</td>
                     <td>{{subproyecto.proyecto.nombre}}</td>
                     <td id='monto'>${{subproyecto.presupuesto}}</td>
                     <td>{{subproyecto.created_at}}</td>
