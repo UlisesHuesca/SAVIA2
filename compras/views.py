@@ -1374,7 +1374,12 @@ def back_oc(request, pk):
             costo_fletes = compra.costo_fletes
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_total - compra.req.orden.subproyecto.gastado
-    porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+   
+    presupuesto = compra.req.orden.subproyecto.presupuesto or 0  # Default to 0 if None
+    if presupuesto > 0:
+        porcentaje = "{0:.2f}%".format((costo_oc / presupuesto) * 100)
+    else:
+        porcentaje = "0%"  # Default value when presupuesto is 0 or invalid
 
     form = Compra_ComentarioForm()
 
@@ -1814,7 +1819,13 @@ def autorizar_oc2(request, pk):
 
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
-    porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+    
+    presupuesto = compra.req.orden.subproyecto.presupuesto or 0 
+    
+    if presupuesto > 0:
+        porcentaje = "{0:.2f}%".format((costo_oc / presupuesto) * 100)
+    else:
+        porcentaje = "0%"  # Default value when presupuesto is 0 or invalid
 
     form = Compra_ComentarioGerForm()
 

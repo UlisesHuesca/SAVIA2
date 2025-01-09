@@ -655,7 +655,7 @@ def update_salida(request):
             entrada_res = None
         else:
             entrada_res = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False).order_by('id')
-        print('2',entrada_res)
+        print('2--->',entrada_res)
         if entradas_dir.exists():
             entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden)
             for entrada in entradas:
@@ -701,6 +701,7 @@ def update_salida(request):
                     #L4 se vacía la entrada y por lo tanto se marca como agotada.
                     # Y si no la cantidad de la salida es igual a la cantidad(puede ser modificada por el bucle anterior o no) y 
                     # entrada por surtir es igual a la cantidad por surtir menos la cantidad de la salida y la cantidad se agota 04/12/2024 
+                    print('entrada_res',cantidad)
                     if cantidad >= entrada.cantidad_por_surtir:
                         cantidad_ant = cantidad
                         cantidad = cantidad - entrada.cantidad_por_surtir
