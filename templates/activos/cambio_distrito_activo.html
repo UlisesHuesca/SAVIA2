@@ -1,0 +1,177 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+<html>
+<head>
+{% block title %} Activo Distrito {% endblock %}
+<!-- Incluir Bootstrap Datepicker CSS y JS -->
+<link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
+
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+<hr>
+<hr>
+<hr>
+<hr>
+<div class="container">
+<div class="card"  id="document" role="document">
+    <form method="POST" class="post-form" enctype="multipart/form-data">
+        <div class="card-header">
+            <h4 class="card-title">Cambio de Distrito Activo</h4>
+        </div>
+        <div class="card-body" style="color:white">
+            {% csrf_token %}
+                {% if error_messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{error_messages}}
+                </div>
+                {% endif %}
+            <div class="col-12">
+                <div class="alert alert-secondary" role="alert">
+                    {% if activo.activo %}
+                        <h4 style="color: #121212;">&nbsp;Producto en inventario:&nbsp;{{activo.activo.producto.nombre}}</h4> 
+                    {% else %}
+                        <h4 style="color: #121212;">&nbsp;Producto en inventario:&nbsp;No asignado</h4> 
+                    {% endif %}
+                    <h6 style="color: #121212;">&nbsp;Distrito:&nbsp;{{activo.activo.distrito.nombre}}</h6>   
+                    <h6 style="color: #121212;">&nbsp;Activo:&nbsp;{{activo.eco_unidad}}</h6>   
+                    <h6 style="color: #121212;">&nbsp;Familia:&nbsp;{{familia}}</h6>  
+                    <h6 style="color: #121212;">&nbsp;Subfamilia:&nbsp;{{subfamilia}}</h6>  
+                </div>
+            </div>
+            <select id="id_distrito" class="form-control" name="distrito">
+                <!-- Placeholder vacío, las opciones las agrega Select2 -->
+                <option></option>
+            </select>
+            <br>
+            <br>
+            <select id="id_producto" class="form-control" name="producto">
+                <!-- Placeholder vacío, las opciones las agrega Select2 -->
+                <option></option>
+            </select>
+            
+        </div>
+        <div class="card-footer">
+            <button class="btn btn-success" id="crear" type="submit">Guardar</button>
+            <a type="button" class="btn btn-secondary" id="cerrar" href="{% url 'activos' %}">Cerrar</a>
+        </div>
+    </form>
+</div>
+</div>
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="https://code.jquery.com/ui/1.14.0/jquery-ui.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+    var datosDistritos = {{ distritos_para_select2|safe }};
+
+    $(document).ready(function() {
+        // Inicializa el Select2 para distritos
+        $('#id_distrito').select2({
+            allowClear: true,
+            width: '100%',
+            data: datosDistritos,
+            placeholder: 'Seleccionar Distrito',
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        // Inicializa el Select2 para productos (vacío inicialmente)
+        $('#id_producto').select2({
+            allowClear: true,
+            width: '100%',
+            placeholder: 'Seleccionar Producto',
+            templateResult: formatRepo,
+            templateSelection: formatRepoSelection
+        });
+
+        // Evento: Cambiar distrito
+        $('#id_distrito').on('change', function() {
+            var distritoId = $(this).val();
+
+            // Vaciar el select de productos
+            $('#id_producto').empty().trigger('change');
+
+            if (distritoId) {
+                // Llamada AJAX para obtener los productos filtrados
+                $.ajax({
+                    url: "{% url 'filtrar_productos_activo' %}",
+                    data: { distrito_id: distritoId },
+                    success: function(data) {
+                        // Actualiza el select de productos con los datos recibidos
+                        $('#id_producto').select2({
+                            data: data,
+                            allowClear: true,
+                            width: '100%',
+                            placeholder: 'Seleccionar Producto',
+                            templateResult: formatRepo,
+                            templateSelection: formatRepoSelection
+                        });
+                    },
+                    error: function() {
+                        console.error("Error al cargar los productos.");
+                    }
+                });
+            }
+        });
+    });
+
+    function formatRepo(repo) {
+        if (repo.loading) {
+            return repo.text;
+        }
+
+        var $container = $("<div class='select2-result-repository clearfix'>" +
+            "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+            "</div>");
+
+        $container.find(".select2-result-repository__title").text(repo.text);
+        
+        return $container;
+    }
+
+    function formatRepoSelection(repo) {
+        return repo.text || repo.id;
+    }
+</script>
+{% endblock %}
+
+</body>
+</html>
