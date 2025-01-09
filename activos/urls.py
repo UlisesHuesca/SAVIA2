@@ -7,6 +7,9 @@ urlpatterns = [
     path('activos/agregar', views.add_activo, name='add-activo'),
     path('activos/agregar/<int:pk>', views.add_activo2, name='add-activo2'),
     path('activos/edit/<int:pk>', views.edit_activo, name='edit-activo'),
+    path('cambio_distrito_activo//<int:pk>', views.cambio_distrito_activo, name='cambio_distrito_activo'),
+    path('filtrar_productos_activo/', views.filtrar_productos_activo_distrito, name='filtrar_productos_activo'),
+
     path('activos/qr/<int:pk>', views.generate_qr, name='generate-qr'),
     path('activos/asignar_activo/<int:pk>', views.asignar_activo, name='asignar-activo'),
     path('activos/render_pdf_responsiva_activos/<int:pk>/', views.render_pdf_responsiva_activos, name='render-pdf-responsiva-activos'),

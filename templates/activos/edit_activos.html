@@ -2,6 +2,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %} Agregar Activos {% endblock %}
@@ -78,14 +79,21 @@
             </div>
             {% endif %}
             <div class="col-12">
-                <div class="col-sm-12 col-lg-6">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.activo}}
+                <div class="row">
+                    <div class="col-lg-8 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{form.activo}}
+                            </div>
                         </div>
                     </div>
-                </div> 
+                    <div id="etiqueta_cantidad" class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                            <h6>Disponible:</h6><h6 style="color: #121212;" id="cantidad"></h6>   
+                        </div>
+                    </div>
+                </div>
             </div>
             <div class="col-12">
                 <div class="input-group mb-3">
@@ -315,12 +323,16 @@ $(document).ready(function() {
     }
 });
 
-var datosProductos= {{ productos_para_select2|safe }};
+var datosProductos = {{ productos_para_select2|safe }};
 var productoPredeterminado = {{ producto_predeterminado|default:"null" |safe }};
 
-$(document).ready(function() {
+$(document).ready(function () {
     var ProductoSelect = $('#id_activo');
-    // Inicializar select2 con datos predefinidos
+    var cantidadEtiqueta = $('#cantidad');
+    var form = $('.post-form'); // Selecciona el formulario
+    var productoActivoId = {{ id_actual|default:"null"|unlocalize }};
+    
+    // Inicializar select2
     ProductoSelect.select2({
         allowClear: true,
         width: '100%',
@@ -329,10 +341,45 @@ $(document).ready(function() {
         templateResult: formatRepo,
         templateSelection: formatRepoSelection
     });
-    if (productoPredeterminado != null){
-        ProductoSelect.val(productoPredeterminado.id).trigger('change');
-    }
+
+    // Evento para actualizar la cantidad
+    ProductoSelect.on('change', function () {
+        var selectedId = $(this).val(); // ID del producto seleccionado
+        var productoSeleccionado = datosProductos.find(producto => producto.id == selectedId);
+
+        if (productoSeleccionado) {
+            cantidadEtiqueta.text(productoSeleccionado.cantidad || 0);
+        } else {
+            cantidadEtiqueta.text(0);
+        }
+    });
+
+    // Validar formulario antes de enviarlo
+    form.on('submit', function (e) {
+        var cantidad = parseInt(cantidadEtiqueta.text(), 10); // Obtén la cantidad como número
+        var selectedId = ProductoSelect.val(); // ID del producto seleccionado
+        console.log(productoActivoId)
+        console.log(cantidad)
+        console.log(selectedId)
+        // Condición 1: Verificar si el producto seleccionado es diferente
+        if (selectedId != productoActivoId) {
+            // Condición 2: Verificar si la cantidad es 0
+            if (cantidad === 0) {
+                e.preventDefault(); // Detén el envío del formulario
+                Swal.fire({
+                    title: "Error",
+                    text: "Debe seleccionar un producto con inventario disponible.",
+                    icon: "error",
+                    confirmButtonText: "Aceptar"
+                });
+            }
+        }
+    });
+
+    // Inicializar la cantidad al cargar la página
+    ProductoSelect.trigger('change');
 });
+
 
 var datosResponsable= {{ responsables_para_select2|safe }};
 var responsablePredeterminado = {{ responsable_predeterminado|default:"null" |safe }};

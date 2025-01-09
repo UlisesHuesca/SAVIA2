@@ -4,7 +4,7 @@ from dashboard.models import Inventario, Profile, Marca
 from django.core import serializers
 from django.db.models import Value, F, Q
 from django.db.models.functions import Concat
-from dashboard.models import Activo, Marca, Tipo_Activo
+from dashboard.models import Activo, Marca, Tipo_Activo, Distrito
 from requisiciones.models import Salidas 
 from .forms import Activo_Form, Edit_Activo_Form, UpdateResponsableForm, SalidasActivoForm, MarcaForm, Tipo_ActivoForm
 from django.contrib import messages
@@ -48,15 +48,19 @@ from user.decorators import perfil_seleccionado_required
 def activos(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
-    if usuario.tipo.nombre == "ADMIN_ACTIVOS":
+    if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
         activos = Activo.objects.filter(completo=True).exclude(responsable__distritos__id__in=[7, 8])
     else:    
         activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
     myfilter = ActivoFilter(request.GET, queryset=activos)
     activos = myfilter.qs 
-
     if request.method == "POST" and 'btnExcel' in request.POST:
         return convert_activos_to_xls(activos)
+
+    #Set up pagination
+    p = Paginator(activos, 50)
+    page = request.GET.get('page')
+    activos = p.get_page(page)
 
     context = {
         'activos':activos,
@@ -291,6 +295,10 @@ def edit_activo(request, pk):
 
     #producto = Salidas.objects.get(id=pk)
     activo = Activo.objects.get(id=pk)
+    if activo.activo:
+        id_actual = activo.activo.id
+    else:
+        id_actual = None
     if activo.activo is None:
         familia = 'Sin producto asociado'
         subfamilia = ''
@@ -315,12 +323,13 @@ def edit_activo(request, pk):
 
     productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
     form = Edit_Activo_Form(instance = activo)
-    form.fields['activo'].queryset = productos_activos
+    form.fields['activo'].queryset = productos
 
     productos_para_select2 = [
         {
             'id': producto.id, 
-            'text': str(producto.producto.nombre)
+            'text': str(producto.producto.nombre),
+            'cantidad':str(producto.cantidad),
         } for producto in productos_activos
     ]
     if activo.activo:
@@ -394,9 +403,10 @@ def edit_activo(request, pk):
                 error_messages[field] = errors.as_text()
 
 
-
+    
     context = {
         'error_messages': error_messages,
+        'id_actual':id_actual,
         'responsable_predeterminado':responsable_predeterminado,
         'responsables_para_select2':responsables_para_select2,
         'productos_para_select2':productos_para_select2,
@@ -414,6 +424,97 @@ def edit_activo(request, pk):
     }
 
     return render(request,'activos/edit_activos.html', context)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def filtrar_productos_activo_distrito(request):
+    distrito_id = request.GET.get('distrito_id')
+    if distrito_id:
+        productos = Inventario.objects.filter(distrito_id=distrito_id, producto__activo=True)
+        productos_para_select2 = [
+            {
+                'id': producto.id,
+                'text': str(producto.producto.nombre),
+                'codigo': str(producto.producto.codigo),
+            } for producto in productos
+        ]
+        return JsonResponse(productos_para_select2, safe=False)
+    return JsonResponse([], safe=False)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def cambio_distrito_activo(request, pk):
+    pk_perfil = request.session.get('selected_profile_id') 
+    perfil = Profile.objects.get(id = pk_perfil)
+    if perfil.tipo.nombre == 'Admin' or perfil.tipo.nombre == 'ADMIN_ACTIVOS':
+        activo = Activo.objects.get(id=pk)
+        productos = Inventario.objects.filter(producto__activo=True)
+        if activo.activo:
+            distritos = Distrito.objects.all().exclude(id=activo.activo.distrito.id)
+        else:
+            distritos = Distrito.objects.all()
+        distritos_para_select2 = [
+            {
+                'id': distrito.id, 
+                'text': str(distrito.nombre),
+            } for distrito in distritos
+        ]
+
+        productos_para_select2 = [
+            {
+                'id': producto.id, 
+                'text': str(producto.producto.nombre),
+                'codigo': str(producto.producto.codigo),
+            } for producto in productos
+        ]
+
+        error_messages = {}    
+        if activo.activo:
+            id_actual = activo.activo.id
+        else:
+            id_actual = None
+        if activo.activo is None:
+            familia = 'Sin producto asociado'
+            subfamilia = ''
+        else:
+            familia = activo.activo.producto.familia.nombre
+            if activo.activo.producto.subfamilia:
+                subfamilia = activo.activo.producto.subfamilia.nombre
+            else:
+                subfamilia = ''
+        if request.method == 'POST':
+            producto_id = request.POST.get('producto') 
+
+            # Validar que los valores no estén vacíos
+            if not producto_id:
+                messages.error(request,f'Debes seleccionar un producto')
+            else:
+                try:
+                    # Buscar los objetos correspondientes en la base de datos
+                    producto = Inventario.objects.get(id=producto_id)
+                    # Realiza la lógica que necesites con estos datos
+                    activo.activo = producto  # Asocia el producto al activo
+                    activo.save()
+
+                    # Mensaje de éxito (puedes redirigir o mostrar un mensaje)
+                    return redirect('activos')  # Redirige a la vista de activos
+                except (Inventario.DoesNotExist) as e:
+                    messages.error(request,f'Ha ocurrido un problema, parece que no existe el producto')
+
+        context = {
+            'error_messages': error_messages,
+            'perfil':perfil,
+            'id_actual':id_actual,
+            'activo':activo,
+            'familia':familia,
+            'subfamilia':subfamilia,
+            'productos_para_select2':productos_para_select2,
+            'distritos_para_select2':distritos_para_select2,
+        }
+
+        return render(request,'activos/cambio_distrito_activo.html', context)
+    else:
+        raise Http404("No tienes permiso para agregar activos.")
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
