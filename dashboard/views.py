@@ -31,6 +31,8 @@ from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
 
+import csv
+from charset_normalizer import detect
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -965,57 +967,89 @@ def upload_batch_proveedores_direcciones(request):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def upload_batch_products(request):
-
     form = Products_BatchForm(request.POST or None, request.FILES or None)
-
 
     if form.is_valid():
         form.save()
         form = Products_BatchForm()
-        product_list = Products_Batch.objects.get(activated = False)
+        product_list = Products_Batch.objects.get(activated=False)
 
-        f = open(product_list.file_name.path, 'r', encoding='utf-8')
-        reader = csv.reader(f)
-        next(reader)
+        try:
+            # Detectar la codificación del archivo
+            with open(product_list.file_name.path, 'rb') as raw_file:
+                result = detect(raw_file.read())
+                encoding = result['encoding']
 
-        for row in reader:
-            if not Product.objects.filter(codigo=row[0]):
-                if Unidad.objects.filter(nombre = row[2]):
-                    unidad = Unidad.objects.get(nombre = row[2])
-                    if Familia.objects.filter(nombre = row[3]):
-                        familia = Familia.objects.get(nombre = row[3])
-                        critico = True if row[5] == 'SI' else False
-                        iva = True if row[6] == 'SI' else False
-                        activo = True if row[7] == 'SI' else False
-                        servicio = True if row[8] == 'SI' else False
-                        if Subfamilia.objects.filter(nombre = row[4], familia = familia):
-                            subfamilia = Subfamilia.objects.get(nombre = row[4], familia = familia)
-                            
-                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia, subfamilia=subfamilia,critico=critico,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
-                            producto.save()
+            # Abrir el archivo con la codificación detectada
+            with open(product_list.file_name.path, 'r', encoding=encoding) as f:
+                reader = csv.reader(f)
+                next(reader)  # Omitir la primera fila (cabecera)
+
+                for row in reader:
+                    if not Product.objects.filter(codigo=row[0]):
+                        if Unidad.objects.filter(nombre=row[2]):
+                            unidad = Unidad.objects.get(nombre=row[2])
+                            if Familia.objects.filter(nombre=row[3]):
+                                familia = Familia.objects.get(nombre=row[3])
+                                critico = row[5].strip().upper() == 'SI'
+                                iva = row[6].strip().upper() == 'SI'
+                                activo = row[7].strip().upper() == 'SI'
+                                servicio = row[8].strip().upper() == 'SI'
+
+                                if Subfamilia.objects.filter(nombre=row[4], familia=familia):
+                                    subfamilia = Subfamilia.objects.get(nombre=row[4], familia=familia)
+                                    producto = Product(
+                                        codigo=row[0],
+                                        nombre=row[1],
+                                        unidad=unidad,
+                                        familia=familia,
+                                        subfamilia=subfamilia,
+                                        critico=critico,
+                                        iva=iva,
+                                        activo=activo,
+                                        servicio=servicio,
+                                        baja_item=False,
+                                        completado=True
+                                    )
+                                    producto.save()
+                                else:
+                                    producto = Product(
+                                        codigo=row[0],
+                                        nombre=row[1],
+                                        unidad=unidad,
+                                        familia=familia,
+                                        critico=critico,
+                                        iva=iva,
+                                        activo=activo,
+                                        servicio=servicio,
+                                        baja_item=False,
+                                        completado=True
+                                    )
+                                    producto.save()
+                            else:
+                                messages.error(request, f'La familia no existe dentro de la base de datos, producto:{row[0]}')
                         else:
-                            producto = Product(codigo=row[0],nombre=row[1], unidad=unidad, familia=familia,critico=critico,iva=iva,activo=activo,servicio=servicio,baja_item=False,completado=True)
-                            producto.save()
+                            messages.error(request, f'La unidad no existe dentro de la base de datos, producto:{row[0]}')
                     else:
-                        messages.error(request,f'La familia no existe dentro de la base de datos, producto:{row[0]}')
-                else:
-                    messages.error(request,f'La unidad no existe dentro de la base de datos, producto:{row[0]}')
-            else:
-                messages.error(request,f'El producto código:{row[0]} ya existe dentro de la base de datos')
+                        messages.error(request, f'El producto código:{row[0]} ya existe dentro de la base de datos')
 
-        product_list.activated = True
-        product_list.save()
+            product_list.activated = True
+            product_list.save()
+
+        except UnicodeDecodeError as e:
+            messages.error(request, f'Error de codificación: {str(e)}')
+        except Exception as e:
+            messages.error(request, f'Error al procesar el archivo: {str(e)}')
+
     elif request.FILES:
-        messages.error(request,'El formato no es CSV')
-
-
-
+        messages.error(request, 'El formato no es CSV')
 
     context = {
         'form': form,
-        }
+    }
 
-    return render(request,'dashboard/upload_batch_products.html', context)
+    return render(request, 'dashboard/upload_batch_products.html', context)
+
 
 #@login_required(login_url='user-login')
 #def product_delete(request, pk):
