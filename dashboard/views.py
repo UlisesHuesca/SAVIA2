@@ -506,6 +506,17 @@ def proveedores(request):
     p = Paginator(proveedores, 50)
     page = request.GET.get('page')
     proveedores_list = p.get_page(page)
+    # Añadir datos de proveedor_direcciones
+    for proveedor in proveedores_list:
+        direccion = Proveedor_direcciones.objects.filter(
+            nombre=proveedor,
+            distrito=usuario.distritos
+        ).last()  # Obtener la ultima dirección que coincida (más actual)
+        if direccion:
+            proveedor.telefono = direccion.telefono
+            proveedor.contacto = direccion.contacto
+            proveedor.distrito = direccion.distrito
+            proveedor.domicilio = direccion.domicilio
 
     context = {
         'usuario':usuario,

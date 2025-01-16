@@ -130,6 +130,10 @@
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Razón Social</th>
+                    <th scope="col">Contacto</th>
+                    <th scope="col">Telefono</th>
+                    <th scope="col">Distrito</th>
+                    <th scope="col">Domicilio</th>
                     <th scope="col">Nombre Comercial</th>
                     <th scope="col">RFC</th>
                     {% if usuario.tipo.proveedores %}
@@ -143,6 +147,10 @@
                 <tr>
                     <td>{{proveedor.id}}</td>
                     <td>{{proveedor.razon_social}}</th>
+                    <td>{{proveedor.contacto}}</th>
+                    <td>{{proveedor.telefono}}</th>
+                    <td>{{proveedor.distrito}}</th>
+                    <td>{{proveedor.domicilio}}</th>
                     {% if not proveedor.nombre_comercial %}
                     <td></td>
                     {% else %}
