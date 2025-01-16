@@ -1880,9 +1880,9 @@ def convert_excel_matriz_pagos(pagos):
             
         elif pago.viatico:
             if pago.viatico.colaborador:
-                proveedor = pago.viatico.colaborador.staff.staff.first_name + ' ' + pago.gasto.colaborador.staff.staff.last_name
+                proveedor = pago.viatico.colaborador.staff.staff.first_name + ' ' + pago.viatico.colaborador.staff.staff.last_name
             else:
-                proveedor = pago.viatico.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
+                proveedor = pago.viatico.staff.staff.staff.first_name + ' ' + pago.viatico.staff.staff.staff.last_name
             facturas_completas = pago.viatico.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para viáticos
             if pago.viatico.facturas.exists():
