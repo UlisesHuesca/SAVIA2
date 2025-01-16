@@ -1451,7 +1451,6 @@ def autorizada_sol(request, pk):
             elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
-                #order.requisitar = True
                 if producto.producto.producto.servicio == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                     requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
@@ -1465,6 +1464,8 @@ def autorizada_sol(request, pk):
                     ordensurtir.requisitar = False
                     requi.save()
                     requitem.save()
+                else:
+                    order.requisitar = True
                 ordensurtir.save()
                 order.save()
         order.autorizar = True
