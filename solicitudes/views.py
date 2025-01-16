@@ -207,7 +207,10 @@ def product_selection(request):
     #order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo = tipo)
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
     #Traer todos los productos no criticos y solo los criticos con rev_Calidad
-    productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
+    if usuario.tipo.activos == True: #Solo el personal de activos puede solicitar activos
+        productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
+    else:
+        productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,producto__activo=False).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
     cartItems = order.get_cart_quantity
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
@@ -269,9 +272,9 @@ def checkout(request):
     #print(usuario.distritos)
     if usuario.distritos.nombre == "MATRIZ":
         #print("Quev")
-        superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True)
+        superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos)
     elif usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
-        superintendentes = usuarios.filter(staff=usuario.staff, distritos=usuario.distritos)
+        superintendentes = usuarios.filter(staff=usuario.staff)
         order.superintendente = usuario
         #print("Ques")
     else:
@@ -1451,7 +1454,7 @@ def autorizada_sol(request, pk):
             elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
-                if producto.producto.producto.servicio == True:
+                if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                     requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
                     requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True)
@@ -1464,8 +1467,6 @@ def autorizada_sol(request, pk):
                     ordensurtir.requisitar = False
                     requi.save()
                     requitem.save()
-                else:
-                    order.requisitar = True
                 ordensurtir.save()
                 order.save()
         order.autorizar = True
