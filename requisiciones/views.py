@@ -869,7 +869,7 @@ def requisicion_autorizacion(request):
     if perfil.distritos.nombre == "MATRIZ" or perfil.distritos.nombre == "BRASIL" and perfil.tipo.supervisor:   
         requis = Requis.objects.filter(autorizar=None, orden__supervisor = perfil, complete =True)
     elif perfil.tipo.superintendente == True and perfil.tipo.nombre != "Admin":
-        requis = Requis.objects.filter(autorizar=None, orden__superintendente=perfil, complete =True)
+        requis = Requis.objects.filter(autorizar=None, orden__superintendente=perfil, complete =True, orden__distrito = perfil.distritos)
     elif perfil.tipo.nombre == "Admin":
         requis = Requis.objects.filter(autorizar=None, complete = True, orden__distrito = perfil.distritos)
     #else:
