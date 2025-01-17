@@ -774,6 +774,7 @@ def update_salida(request):
         producto.salida= False
         producto.cantidad = producto.cantidad + item.cantidad
         producto.surtir = True
+        producto.seleccionado_por = None 
         #producto.cantidad_requisitar = producto.cantidad_requisitar + producto.cantidad
         producto._change_reason = f'Esto es una eliminación de un artículo en una salida'
         inv_del_producto._change_reason = f'Esta es una eliminación de un artìculo en una salida {item.id}'
