@@ -186,7 +186,12 @@ def solicitud_autorizada(request):
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True)
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal")
         #productos= ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal", articulos__orden__distrito = usuario.distritos, articulos__orden__complete = True).order_by('-articulos__orden__id')
-        productos = ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar=True, articulos__orden__tipo__tipo="normal", articulos__orden__distrito=usuario.distritos, articulos__orden__complete=True).order_by('-id')
+        productos = ArticulosparaSurtir.objects.filter(
+            Q(surtir=True) | Q(seleccionado_por = usuario), 
+            articulos__orden__autorizar=True, 
+            articulos__orden__tipo__tipo="normal", 
+            articulos__orden__distrito=usuario.distritos, 
+            articulos__orden__complete=True).order_by('-id')
 
     #else:
         #productos = Requis.objects.filter(complete=None)
@@ -646,8 +651,8 @@ def update_salida(request):
         #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
         producto.seleccionado_salida = True
+        producto.seleccionado_por = Profile.objects.get(id = request.session.get('selected_profile_id'))
         entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal').order_by('id')
-
         try:
             EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False)
             
@@ -769,6 +774,7 @@ def update_salida(request):
         producto.salida= False
         producto.cantidad = producto.cantidad + item.cantidad
         producto.surtir = True
+        producto.seleccionado_por = None 
         #producto.cantidad_requisitar = producto.cantidad_requisitar + producto.cantidad
         producto._change_reason = f'Esto es una eliminación de un artículo en una salida'
         inv_del_producto._change_reason = f'Esta es una eliminación de un artìculo en una salida {item.id}'

@@ -426,6 +426,7 @@ class ArticulosparaSurtir(models.Model):
     #created_at_time = models.TimeField(auto_now_add=True)
     modified_at = models.DateField(auto_now=True)
     seleccionado_salida = models.BooleanField(default=False)
+    seleccionado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Seleccionado_por')
     procesado = models.BooleanField(default = False)
 
     @property
