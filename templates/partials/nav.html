@@ -109,7 +109,7 @@
                                 </div>   
                         </div>
                         <div class="dropdown-divider"></div>
-                
+                    {% if usuario.tipo.proveedores_externos == False  %}
                     <h6 class="dropdown-header">Mis Comprobaciones</h6>
                     <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'mis-gastos' %}">Mis Gastos</a>
@@ -121,6 +121,7 @@
                             <span class="badge bg-danger">({{conteo_servicios}})</span>
                              {% endif %}
                         </a>
+                    {% endif %}
                     <div class="dropdown-divider"></div>
                     {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Superintendente" %}
                     <div>

@@ -70,6 +70,7 @@ class Tipo_perfil(models.Model):
     subdirector = models.BooleanField(default = False)
     dg = models.BooleanField(default=False)
     rh = models.BooleanField(default = False)
+    provevedor_externo = models.BooleanField(default = False)
     def __str__(self):
         return f'{self.nombre}'
 
