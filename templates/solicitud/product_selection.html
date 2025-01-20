@@ -64,6 +64,15 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-lg-4 col-md-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    {{ myfilter.form.activo_producto|add_class:"form-select" }}
+                                    <label style="color: #121212;" for="activo_producto">Productos:</label>
+                                </div>
+                            </div>
+                        </div>
                         <div class="col-2 mt-3">
                         <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                         </div>
@@ -80,7 +89,10 @@
                 <div class='box-element product'>
                     <h6><strong>{{producto.producto}}</strong></h6>
                     <h8>Disponible: {{producto.cantidad}}</h8>
-
+                    {% if producto.producto.activo == True %}
+                    <br>
+                    <h8>Producto tipo activo</h8>
+                    {% endif %}
                     <hr>
                     <button data-product={{producto.id|unlocalize}} data-action="add" data-type="{{orden.tipo.id}}"  class="btn btn-outline-secondary add-btn update-cart">Agregar a Solicitud</button>
                     <!--<a class='btn btn-outline-info' href="#">Ver</a>-->
