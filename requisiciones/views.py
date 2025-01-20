@@ -459,6 +459,7 @@ def salida_material(request, pk):
          #'distrito': proveedor.
         } for user in users]
 
+    print(productos)
     if request.method == 'POST':
         formVale = ValeSalidasForm(request.POST, instance=vale_salida)
         
@@ -467,14 +468,20 @@ def salida_material(request, pk):
             vale = formVale.save(commit=False)
             cantidad_salidas = 0
             cantidad_productos = productos.count()
-            for producto in productos:
+
+            productos_vale = ArticulosparaSurtir.objects.filter(articulos__orden = orden)
+            for producto in productos_vale:
                 producto.seleccionado_salida = False
+                producto.seleccionado_por = None
                 print(producto,"cantidad:", producto.cantidad)
                 if producto.cantidad <= 0:
                     producto.salida=True
                     producto.surtir=False
                     cantidad_salidas = cantidad_salidas + 1
                     print(producto)
+                else:
+                    producto.surtir = True
+                   
                 producto.save()
             if cantidad_productos == cantidad_salidas:
                 orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
