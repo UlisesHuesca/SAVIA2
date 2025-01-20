@@ -25,7 +25,6 @@
                     </strong>
                 </div>
                 <div class="card-body">
-                    {% if usuario.tipo.proveedores_externos == False %}
                     {% if usuario.tipo.comprador == True %}
                     <div class="row mt-1">
                         <div class="col-md-4">
@@ -54,6 +53,7 @@
                         </div>
                     </div>
                     {%else%}
+                    {% if usuario.tipo.proveedor_externo == False %}
                     <div class="row mt-1">
                         <div class="col-md-4">
                             <a class="text-decoration-none text-dark" href="#">
@@ -82,6 +82,8 @@
                         
                     </div>
                     {% endif %}
+                    {% endif %}
+                    {% if usuario.tipo.proveedor_externo == False %}
                     <div class="row mt-2">
                         <div class="col-md-4">
                             <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
@@ -106,15 +108,23 @@
                                     <h3></h3>
                                 </div>
                             </a>
-                        </div>
-                       
+                        </div>   
                     </div>
-                    {% else %}
+                    {% endif %} 
+                    {% if usuario.tipo.proveedor_externo %}
                     <div class="row mt-2">
                         <div class="col-md-4">
                             <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}">
                                 <div class="card my-card shadow text-center p-3">
                                     <h4>Compras <i class="fa-solid fa-user"></i></h4>
+                                    <h3></h3>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}">
+                                <div class="card my-card shadow text-center p-3">
+                                    <h4>Información <i class="fa-solid fa-user"></i></h4>
                                     <h3></h3>
                                 </div>
                             </a>
