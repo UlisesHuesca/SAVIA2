@@ -21,6 +21,7 @@
                     <strong>
                         <img class="rounded-circle" src="{% static 'images/SAVIA_navideño.jpg' %}" id="logo" alt="SAVIA">
                         <h1 style="color: #122D45">SAVIA 2.0</h1>
+                        {% if usuario.tipo.proveedor_externo %}<h4>Portal de Proveedor de Grupo Vordcab</h4>{% endif %}
                     </strong>
                 </div>
                 <div class="card-body">
@@ -111,7 +112,7 @@
                     {% else %}
                     <div class="row mt-2">
                         <div class="col-md-4">
-                            <a class="text-decoration-none text-dark"  href="{% url '' %}">
+                            <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}">
                                 <div class="card my-card shadow text-center p-3">
                                     <h4>Compras <i class="fa-solid fa-user"></i></h4>
                                     <h3></h3>

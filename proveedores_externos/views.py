@@ -2,11 +2,12 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.core.paginator import Paginator
-from compras.models import Compra
+from compras.models import Compra, Proveedor
 from user.models import Profile
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from user.decorators import perfil_seleccionado_required
+from datetime import date, datetime, timedelta
 
 # Create your views here.
 
@@ -15,16 +16,23 @@ def matriz_oc_proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
-    if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
-        compras = Compra.objects.filter(complete = True).annotate(
+    print(usuario)
+    try:
+        proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
+        print('que')
+    except Proveedor.DoesNotExist:
+        proveedor = None
+    print(proveedor)
+    if usuario.tipo.proveedor_externo == True and proveedor is not None:
+        compras = Compra.objects.filter(
+            complete = True, 
+            proveedor__nombre = proveedor, 
+            autorizado2 = True).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
             autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
             ).order_by('-folio')
     else:
-        compras = Compra.objects.filter(complete=True, req__orden__distrito = usuario.distritos).annotate(
-            total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
-            autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
-            ).order_by('-folio')
+        compras = Compra.objects.none()
     
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
@@ -97,7 +105,7 @@ def matriz_oc_proveedores(request):
         
     context= {
         'usuario':usuario,
-        #'num_approved_requis': num_approved_requis,
+        'proveedor': proveedor,
         'compras_list':compras_list,
         'compras':compras,
         'myfilter':myfilter,
@@ -124,4 +132,4 @@ def matriz_oc_proveedores(request):
 
     
 
-    return render(request, 'compras/matriz_compras.html',context)
+    return render(request, 'proveedores_externos/matriz_oc_proveedores.html',context)
