@@ -2070,10 +2070,10 @@ def convert_excel_control_bancos(pagos):
     worksheet.write('H3', 'Fecha de emisión', header_format)
     
     worksheet.merge_range('A5:J8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
-    if cuenta.banco:
-        worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
-    else: 
-        worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: NA', header_format)
+    cuenta =  pagos.first().cuenta.cuenta if pagos.exists() else None
+    worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
+   
+    
     worksheet.merge_range('A10:B10', 'CUENTA BANCARIA: '+ str(cuenta.cuenta), header_format)
     worksheet.merge_range('A11:B11', 'DISTRITO: ' + str(cuenta.encargado.distritos), header_format)
     worksheet.merge_range('A12:B12', 'RESPONSABLE DE CUENTA: ' + str(cuenta.encargado.staff.staff.first_name)+ ' '+ str(cuenta.encargado.staff.staff.last_name), header_format)
