@@ -2084,7 +2084,7 @@ def convert_excel_control_bancos(pagos):
    
     
     worksheet.write('I10', 'SALDO INICIAL' , header_format)
-    worksheet.write('J10', saldo_inicial, h_money_style)
+    #worksheet.write('J10', saldo_inicial, h_money_style)
     worksheet.write('I11', 'SALDO FINAL', header_format)
     
     worksheet.write('J12', '', header_format)
