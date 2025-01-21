@@ -545,7 +545,7 @@ def oc_modal(request, pk):
 
     #Traigo el folio de la ultima compra con el folio más grande, no importa este complete o no  
     last_oc = compras.filter(req__orden__distrito = req.orden.distrito).order_by('-folio').first()
-    new_folio = last_oc.folio + 1
+    new_folio = last_oc.folio + 1 if last_oc is not None else 1
     #Hago un get or create para traer el ultimo dato a llenar y si este es un create entonces se le asigna el nuevo valor para el folio 
     oc, created = compras.get_or_create(complete = False, req = req, creada_por = usuario, regresar_oc = False, defaults={'folio': new_folio})
     # Esta lógica es para aquellos que ya se crearon pero no tienen folio, se les asigna el nuevo folio
@@ -2724,12 +2724,18 @@ def generar_pdf(compra):
     c.setFillColor(prussian_blue)
     c.setFont('Helvetica', 9)
     
-   
+    def convertir_a_reales(valor):
+        partes = f"{valor:.2f}".split(".")
+        reales = num2words(int(partes[0]), lang='pt_BR')
+        centavos = num2words(int(partes[1]), lang='pt_BR')
+        return f"{reales} reais e {centavos} centavos"
 
     if compra.moneda.nombre == "PESOS":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN'))
     if compra.moneda.nombre == "DOLARES":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
+    if compra.moneda.nombre == "REAIS":
+        c.drawString(80,140, convertir_a_reales(compra.costo_plus_adicionales))
 
     c.setFillColor(black)
     width, height = letter

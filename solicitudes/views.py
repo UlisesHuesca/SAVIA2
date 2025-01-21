@@ -245,7 +245,7 @@ def checkout(request):
     orders = ordenes.filter(staff__distritos = usuario.distritos)
     #Se genera el folio trayendo primero el ultimo folio del distrito
     last_order = ordenes.filter(distrito=usuario.distritos).order_by('-folio').first()
-    if last_order:
+    if last_order.folio is not None:
         #folio = last_order.folio
         folio_number = last_order.folio + 1
     else:
@@ -272,7 +272,7 @@ def checkout(request):
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True)
 
     #print(usuario.distritos)
-    if usuario.distritos.nombre == "MATRIZ":
+    if usuario.distritos.nombre == "MATRIZ" or usuario.distritos.nombre == "BRASIL":
         #print("Quev")
         superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos)
     elif usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":

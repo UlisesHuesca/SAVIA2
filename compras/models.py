@@ -78,7 +78,7 @@ class Proveedor_direcciones(models.Model):
     created_at = models.DateTimeField(null=True)
     modified = models.DateField(auto_now=True)
     actualizado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Des_proveedores' )
-    modificado_fecha = models.DateField(null=True)
+    modificado_fecha = models.DateField(null=True, blank=True)
     enviado_fecha = models.DateField(null=True)
     servicio = models.BooleanField(default=False)
     producto = models.BooleanField(default=False)

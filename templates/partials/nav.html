@@ -354,7 +354,9 @@
                                 <div>
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'autorizacion-oc1' %}">
-                                {% if usuario.tipo.subdirector %}
+                                {% if usuario.tipo.nombre == "Gerente Br" %}
+                                OC Gerente Brasil
+                                {% elif usuario.tipo.subdirector %}
                                 OC Subdirector
                                 {% else %}
                                 OC Superintendencia
@@ -381,7 +383,7 @@
                                 <div>
                             {% endif %}
 
-                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar' %}">{% if usuario.tipo.subdirector %}Gasto Subdirector {% else %} Revisión Gasto {% endif %}
+                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar' %}">{% if usuario.tipo.nombre == "Gerente Br" %}Gasto Gerente Brasil {% elif usuario.tipo.subdirector %}Gasto Subdirector {% else %} Revisión Gasto {% endif %}
                                 {% if conteo_gastos_pendientes > 0 %}
                                 <span class="badge bg-danger">({{conteo_gastos_pendientes}})</span>
                                 {% endif %}
