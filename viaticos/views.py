@@ -1536,7 +1536,7 @@ def convert_excel_viatico(viaticos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para',
+    columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para','Proyecto','Subproyecto',
                'Importe','Fecha Creación','Status','Autorizado por','Facturas','Status de Pago']
 
     for col_num in range(len(columns)):
@@ -1556,12 +1556,12 @@ def convert_excel_viatico(viaticos):
 
     # Agregar los encabezados de las nuevas columnas debajo de los mensajes
     ws.cell(row=3, column = columna_max, value="Total de viaticos").style = head_style
-    ws.cell(row=4, column = columna_max, value="Sumatoria de Pagos Pendientes").style = head_style
+    ws.cell(row=4, column = columna_max, value="Sumatoria de Viáticos").style = head_style
    
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(F:F)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(H:H)").style = money_resumen_style
   
 
    
@@ -1635,6 +1635,8 @@ def convert_excel_viatico(viaticos):
             viatico.distrito.nombre,
             viatico.staff.staff.staff.first_name + ' ' + viatico.staff.staff.staff.last_name,
             viatico.colaborador.staff.staff.first_name + ' '  + viatico.colaborador.staff.staff.last_name if viatico.colaborador else '',
+            viatico.proyecto.nombre,
+            viatico.subproyecto.nombre,
             viatico.get_total,
             created_at_naive,
             status,
@@ -1648,9 +1650,9 @@ def convert_excel_viatico(viaticos):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num ==1 or col_num == 6:
+            if col_num ==1 or col_num == 8:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 5:
+            if col_num == 7:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
