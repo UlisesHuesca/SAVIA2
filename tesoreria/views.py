@@ -2070,7 +2070,7 @@ def convert_excel_control_bancos(pagos):
     worksheet.write('H3', 'Fecha de emisión', header_format)
     
     worksheet.merge_range('A5:J8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
-    cuenta =  pagos.first().cuenta.cuenta if pagos.exists() else None
+    cuenta =  pagos.first().cuenta if pagos.exists() else None
     worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
    
     
