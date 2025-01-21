@@ -207,11 +207,13 @@ def product_selection(request):
     #order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo = tipo)
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
     #Traer todos los productos no criticos y solo los criticos con rev_Calidad
-    if usuario.tipo.activos == True: #Solo el personal de activos puede solicitar activos
-        productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
-    else:
-        productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,producto__activo=False).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
+    #if usuario.tipo.activos == True: #Solo el personal de activos puede solicitar activos
+    productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
+    #else:
+        #productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,producto__activo=False).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
+    
     cartItems = order.get_cart_quantity
+
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
 
