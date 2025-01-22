@@ -2070,7 +2070,10 @@ def convert_excel_control_bancos(pagos):
     worksheet.write('H3', 'Fecha de emisión', header_format)
     
     worksheet.merge_range('A5:J8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
+    cuenta =  pagos.first().cuenta if pagos.exists() else None
     worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
+   
+    
     worksheet.merge_range('A10:B10', 'CUENTA BANCARIA: '+ str(cuenta.cuenta), header_format)
     worksheet.merge_range('A11:B11', 'DISTRITO: ' + str(cuenta.encargado.distritos), header_format)
     worksheet.merge_range('A12:B12', 'RESPONSABLE DE CUENTA: ' + str(cuenta.encargado.staff.staff.first_name)+ ' '+ str(cuenta.encargado.staff.staff.last_name), header_format)
@@ -2081,13 +2084,13 @@ def convert_excel_control_bancos(pagos):
    
     
     worksheet.write('I10', 'SALDO INICIAL' , header_format)
-    worksheet.write('J10', saldo_inicial, h_money_style)
+    #worksheet.write('J10', saldo_inicial, h_money_style)
     worksheet.write('I11', 'SALDO FINAL', header_format)
     
     worksheet.write('J12', '', header_format)
     
 
-    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo']
+    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Comentarios','Saldo']
 
     columna_max = len(columns)+2
 
@@ -2138,11 +2141,14 @@ def convert_excel_control_bancos(pagos):
         if hasattr(pago, 'oc') and pago.oc:
             contrato = pago.oc.req.orden.proyecto.nombre
             sector = pago.oc.req.orden.subproyecto.nombre
+            comentarios = pago.oc.req.orden.comentario
         elif hasattr(pago, 'viatico') and pago.viatico:
             contrato = pago.viatico.proyecto.nombre
             sector = pago.viatico.subproyecto.nombre
+            comentarios = pago.viatico.comentario_general
         elif hasattr(pago, 'gasto') and pago.gasto:
             articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
+            comentarios = pago.gasto.comentario
             proyectos = set()
             subproyectos = set()
             for articulo in articulos_gasto:
@@ -2176,13 +2182,14 @@ def convert_excel_control_bancos(pagos):
         worksheet.write(row_num, 6, distrito)
         worksheet.write(row_num, 7, cargo, money_style)
         worksheet.write(row_num, 8, abono, money_style)
-        if row_num == 13:
-            worksheet.write(row_num, 9, saldo_acumulado, money_style)
-        else:
-            if row_num > 13:
+        worksheet.write(row_num, 8, comentarios)
+        #if row_num == 13:
+        #    worksheet.write(row_num, 9, saldo_acumulado, money_style)
+        #else:
+        #    if row_num > 13:
                 # Restar la celda (row_num - 1, 10) - (row_num, 8)
-                formula = f'=IF(H{row_num + 1}>0,  J{row_num} - H{row_num + 1}, J{row_num} + I{row_num + 1} )'
-                worksheet.write_formula(row_num, 9, formula, money_style)
+        #        formula = f'=IF(H{row_num + 1}>0,  J{row_num} - H{row_num + 1}, J{row_num} + I{row_num + 1} )'
+        #        worksheet.write_formula(row_num, 9, formula, money_style)
 
         last_filled_row = row_num
         row_num += 1

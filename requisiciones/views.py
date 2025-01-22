@@ -187,8 +187,7 @@ def solicitud_autorizada(request):
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal")
         #productos= ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal", articulos__orden__distrito = usuario.distritos, articulos__orden__complete = True).order_by('-articulos__orden__id')
         productos = ArticulosparaSurtir.objects.filter(
-            Q(surtir=True) | Q(seleccionado_por = usuario), 
-            salida = False,
+            Q(surtir=True) | Q(seleccionado_por = usuario) & Q(seleccionado_salida = True),
             articulos__orden__autorizar=True, 
             articulos__orden__tipo__tipo="normal", 
             articulos__orden__distrito=usuario.distritos, 
