@@ -316,15 +316,23 @@ def compras_devueltas(request):
     compras = Compra.objects.filter(regresar_oc = True, req__orden__distrito = usuario.distritos)
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
-
+    productos_comp = ArticuloComprado.objects.filter(oc=oc)
     #form_product = ArticuloCompradoForm()
     #form = CompraForm(instance=oc)
-
+    productos_comp_to_function = [
+            {
+                'id': producto.id,
+                'precio': str(producto.precio_unitario),
+                'precio_ref': str(producto.producto.producto.articulos.producto.producto.precioref),
+                'porcentaje': str(producto.producto.producto.articulos.producto.producto.porcentaje)
+            } for producto in productos_comp
+        ] 
 
 
     context= {
         'myfilter':myfilter,
         'compras_list':compras,
+        'productos_comp_to_function': productos_comp_to_function,
         }
 
     return render(request, 'compras/compras_devueltas.html',context)
