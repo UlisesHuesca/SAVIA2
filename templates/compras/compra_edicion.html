@@ -685,6 +685,7 @@ updateBtn.addEventListener('click',function(){
 //ActualizarArticulos(array_id_prod)
 
 function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
+   
     console.log('User is logged in, sending data...' )
 
     var url = '/compras/update_oc/'
@@ -726,6 +727,10 @@ function deleteRow(elemento) {
 
     var rows = document.getElementById("mytbl").rows.length;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    precio_ref();
+})
 
 var checkFlete = document.getElementById("SwitchFlete")
 //This is the part off code that when flete swicth button change
@@ -1000,9 +1005,9 @@ function calcular_total(){
     total_element.innerHTML = '$' + total.toFixed(2);
 };
 
-document.addEventListener('DOMContentLoaded', function() {
-    precio_ref()
-});
+//document.addEventListener('DOMContentLoaded', function() {
+//    precio_ref()
+//});
 
 document.getElementById("id_formulario").addEventListener('change', function() {
     var oc = document.getElementById("oc").getAttribute("target");
@@ -1078,7 +1083,7 @@ $(document).ready(function() {
     // Evento cuando se selecciona un proveedor
     $('#id_proveedor').on('select2:select', function(e) {
         var data = e.params.data; // Datos del proveedor seleccionado
-        
+        precio_ref()
         // Actualizar las etiquetas con los datos seleccionados
         $('#lbl_distrito').text(data.distrito || 'N/A');
         $('#lbl_domicilio').text(data.domicilio || 'N/A');
@@ -1168,6 +1173,7 @@ var datosProductos_comp = {{ productos_comp_to_function|safe }};
 
 function precio_ref() {
     console.log("Función precio_ref llamada");
+    
     var lbl_status = document.getElementById('lbl_status');
     var status = lbl_status.innerHTML
     console.log(status)
