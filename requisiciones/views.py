@@ -2365,7 +2365,7 @@ def convert_excel_matriz_requis_productos(requis):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto','Código', 'Producto','Unidad', 'Cantidad','Autorización','Status']
+    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto','Código', 'Producto','Comentario usuario','Unidad', 'Cantidad','Autorización','REQ Status','Product Status']
 
     columna_max = len(columns)+2
 
@@ -2389,6 +2389,11 @@ def convert_excel_matriz_requis_productos(requis):
             status= 'Cancelada'
         else:
             status= 'No Autorizado Aún'
+        if req.cantidad_comprada == req.cantidad:
+            status_prod = 'Colocado'
+        else:
+            status_prod = 'Pendiente'
+
 
         row = [
             req.req.folio,
@@ -2398,11 +2403,13 @@ def convert_excel_matriz_requis_productos(requis):
             req.req.orden.subproyecto.nombre if req.req.orden.subproyecto else '',
             req.producto.articulos.producto.producto.codigo if req.producto.articulos.producto else '',
             str(req.producto.articulos.producto.producto.nombre) if req.producto.articulos.producto else '',
+            str(req.producto.articulos.comentario) if req.producto.articulos.comentario else '',
             str(req.producto.articulos.producto.producto.unidad) if req.producto.articulos.producto else '',
 
             req.cantidad,
             (str(req.req.approved_at) + str(req.req.approved_at_time)) if req.req.autorizar else '',
             status,
+            status_prod,
         ]
         
         for col_num, cell_value in enumerate(row):
