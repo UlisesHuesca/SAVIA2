@@ -1,0 +1,507 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Matriz de compras{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+    <div class = "card">
+        
+            <div class="card-header">
+                <h5>Portal de Proveedor: {{proveedor}} </h5>
+                <h6>Filtro de Compras</h6>
+            </div>
+            <div class="card-body">
+               
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                                <label style="color: #121212;" for="id_id">Folio</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                                <label style="color: #121212;" for="id_id">Proveedor</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.req|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
+                                <label style="color: #121212;" for="id_id">Requisición</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-12">
+                   
+
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.moneda|add_class:"form-control"|append_attr:"placeholder= Moneda"}}
+                                <label style="color: #121212;" for="id_id">Moneda</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-2">
+                        <!--onclick="regenerar()"-->
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                <form method=POST onsubmit="mostrarIndicadorCarga();">
+                    {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        <li class="nav-item m-1">
+                            <button type="submit" id="reporte_compras" class="btn btn-outline-success d-none" value='Reporte Excel' >
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item m-1">
+                            <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success d-none">
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <!-- Mensaje de estado (opcional) -->
+                        <div id="statusMessage_tag" class="alert alert-primary d-none" role="alert">Reporte en proceso...</div>
+                        <!-- Botón de descarga (inicialmente oculto) -->
+                        <a type="button" href="#" id="downloadButton" onclick="downloadLimpiar(this)" class="btn btn-outline-success d-none m-1">
+                            <i class="fa-solid fa-cloud-arrow-down"></i>
+                        </a>
+                        <!--<li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                        <li class="nav-item m-1 d-lg-none">
+                        </li>
+                    </ul>
+                    <!--<div class="col-sm-2 col-md-3 col-lg-2 mt-3">
+                        <div class="card text-white" style="background-color:#3E92CC">
+                            <div class="card-body">
+                                <h5 class="card-title">Indicador de Cumplimiento</h5>
+                                <p class="card-text display-4">{{ cumplimiento|floatformat:2 }}%</p>
+                            </div>
+                        </div>
+                    </div>-->
+                </form>
+            </div>
+        </div>
+</div>
+<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+    </div>
+</div>
+
+
+    
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "card">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Compra</th>
+                    <th class="d-none d-lg-table-cell">Distrito</th>
+                    <th class="d-none d-lg-table-cell">Creada</th>
+                    <th scope="col">Costo</th>
+                    <th scope="col">Moneda</th>
+                    <th class="d-none d-lg-table-cell">T.C.</th>
+                    <th class="d-none d-lg-table-cell">Status Pago</th>
+                    <th class="d-none d-lg-table-cell">Status Autorización</th>
+                    <th class="d-none d-lg-table-cell">Status Entrega</th>
+                    <th class="d-none d-lg-table-cell">Días de Entrega</th>
+                    <th scope="col">Detalle</th>
+                    <th>Documentos</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for compra in compras_list %}
+                <tr>
+                    <th >{{compra.folio}}</th>
+                    <td>{{compra.req.orden.distrito.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.created_at|date:"d/M/Y"}} </td>
+                    
+                    <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
+                    <td>{{compra.moneda.nombre}}</td>
+                    <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
+                    {% if compra.pagada %}
+                    <td class="d-none d-lg-table-cell">Pagada</td>
+                    {% else %}
+                    <td class="d-none d-lg-table-cell">No Pagada</td>
+                    {% endif %}
+                    <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 == False or compra.autorizado2 == False %}<span class="badge bg-danger">Cancelado</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
+                    <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
+                    <td>
+                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
+                    </td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li class="nav-item m-1">
+                                <ul class="nav nav-pills">
+                                    <li class="nav-item mx-1">
+                                        {% if compra.estado_facturas == "sin_facturas" %}
+                                            <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                                <i class="fa-solid fa-file-circle-xmark"></i>
+                                            </a>
+                                        {% elif compra.estado_facturas == "todas_autorizadas" %}
+                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
+                                                <i class="fa-solid fa-file-circle-check"></i>
+                                            </a>
+                                        {% elif compra.estado_facturas == "pendientes" %}
+                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
+                                                <i class="fa-solid fa-file-circle-exclamation"></i>
+                                            </a>
+                                        {% endif %}
+                                    </li>
+                                </ul>
+                            </li>
+                            <li class="nav-item m-1">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                            </li>
+                        </ul>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if compras_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in compras_list.paginator.page_range %}
+                    {% if compras_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if compras_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+;(function() {
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap', (e) => {
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+            modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+myModal.addEventListener('hidden.bs.modal', function (event) {
+      location.reload();
+    })
+    
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+})
+
+// Función para obtener el valor de una cookie por su nombre
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function mostrarIndicadorCarga() {
+    var btn = document.getElementById('btnExcel')
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    verificarDescargaIniciada();
+    btn.classList.add('d-none')
+}
+
+function verificarDescargaIniciada(){
+    const checkDescarga = setInterval(() => {
+        const descargaIniciada = getCookie('descarga_iniciada');
+        if (descargaIniciada === 'true') {
+            // Ocultar el indicador de carga
+            document.getElementById('loadingIndicator').style.display = 'none';
+            
+            // Opcional: Borrar la cookie si es necesario
+            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
+            
+            clearInterval(checkDescarga);
+
+        }
+    }, 1000); // Revisar cada segundo
+}
+
+function guardar_variable(){
+    localStorage.setItem('mostrarBotonExcel', 'true');
+}
+
+function aparecer_excel(){
+    var btn = document.getElementById('btnExcel')
+    btn.classList.remove('d-none')
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    var mostrarBotonExcel = localStorage.getItem('mostrarBotonExcel');
+    if (mostrarBotonExcel === 'true') {
+        var btn = document.getElementById('btnExcel');
+        btn.classList.remove('d-none');
+
+        // Opcional: resetear el valor en el almacenamiento local si solo quieres mostrar el botón una vez
+        localStorage.removeItem('mostrarBotonExcel');
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    var task_id = '{{task_id}}'
+    var cantidad = '{{cantidad| unlocalize}}'
+    if (task_id){
+        localStorage.setItem('task_id', task_id)
+    }
+    
+    var task= localStorage.getItem('task_id')
+    console.log(task_id)
+    console.log(task)
+    var fileDownloadUrl = localStorage.getItem('fileDownloadUrl');
+    var downloadButton = document.getElementById('downloadButton');
+    var btn_reporte = document.getElementById('reporte_compras');
+    var reporte = localStorage.getItem('reporte_compras') 
+    if (task){
+        intentos(cantidad)
+        localStorage.removeItem('reporte_compras')
+        var reporte = false 
+        btn_reporte.classList.add('d-none');
+    }
+    
+    if (reporte){
+        btn_reporte.classList.remove('d-none');
+    }
+    if (fileDownloadUrl) {
+        downloadButton.href = fileDownloadUrl;
+        downloadButton.classList.remove('d-none');
+    }
+    
+});
+
+function regenerar(){
+    var buscar = document.getElementById('btnBuscar');
+    var reporte_compras = document.getElementById('reporte_compras');
+    reporte_compras.classList.remove('d-none');
+    localStorage.removeItem('fileDownloadUrl')
+    localStorage.setItem('reporte_compras', true)
+    limpiarBack()  
+}
+
+function downloadLimpiar(){
+    limpiarBack()
+    localStorage.removeItem('fileDownloadUrl')
+    var downloadButton = document.getElementById('downloadButton');
+    downloadButton.classList.add('d-none');
+   
+}
+
+function limpiarBack(){
+    localStorage.removeItem('task_id')
+    const url = '/compras/clear_task_id/';
+    fetch( url, {  // Reemplaza con la URL correcta
+        method: 'GET', // o 'POST', dependiendo de cómo esté configurada tu vista
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        credentials: 'same-origin' // Necesario para incluir cookies de sesión
+    })
+    .then(response => {
+        if (!response.ok) {
+            throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        return response.json();
+    })
+    .then(data => {
+        console.log('Task ID cleared:', data);
+        // Aquí puedes agregar más lógica si es necesario después de borrar el task_id
+    })
+    .catch(error => {
+        console.error('Error al borrar task_id:', error);
+    });
+}
+
+
+
+
+function intentos(cantidad){
+var intentos = 0;
+    var maxIntentos
+    var intervalo
+    console.log(cantidad)
+    if (cantidad >= 20000){
+        maxintentos = 150;
+        intervalo = 10000;
+    } else if (cantidad >= 15000){
+        maxintentos = 120;
+        intervalo = 8000;
+    } else if (cantidad >= 10000){
+        maxIntentos = 100;
+        intervalo = 8000;
+    } else if (cantidad >= 5000){
+            maxIntentos = 80;
+            intervalo = 5000;
+    } else{
+            maxIntentos = 50
+            intervalo = 2500;
+    }
+const statusEndpoint = '/compras/verificar_estado/'; // Asegúrate de cambiar esto por tu endpoint real
+esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint)
+}
+
+function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
+    setTimeout(async () => {
+        try {
+            const response = await fetch(statusEndpoint);
+            if (!response.ok) {
+                throw new Error(`HTTP error! status: ${response.status}`);
+            }
+            const data = await response.json();
+            console.log(data)
+            if (data.status === 'SUCCESS') {
+                var url = data.result.file_url
+                console.log(url)
+                var downloadButton = document.getElementById('downloadButton');
+                localStorage.setItem('fileDownloadUrl', data.result.file_url);
+                downloadButton.classList.remove('d-none');
+                document.getElementById('statusMessage_tag').classList.add('d-none');
+                downloadButton.href = url;
+                localStorage.removeItem('task_id');
+
+            } else if (data.status === 'FAILURE') {
+                console.error('La tarea ha fallado.');
+            } else {
+                console.log('La tarea todavía está pendiente...');
+                document.getElementById('statusMessage_tag').classList.remove('d-none');
+                intentos++;
+                if (intentos < maxIntentos) {
+                    esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint); // Vuelve a intentar
+                } else {
+                    console.log('Número máximo de intentos alcanzado.');
+                }
+            }
+        } catch (error) {
+            console.error('Error al verificar el estado de la tarea:', error);
+        }
+    }, intervalo);
+}
+
+
+
+
+</script>
+{% endblock %}
+</body>
+</html>

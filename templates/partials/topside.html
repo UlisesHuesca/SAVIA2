@@ -21,10 +21,10 @@
                     <strong>
                         <img class="rounded-circle" src="{% static 'images/SAVIA_Logo.png' %}" id="logo" alt="SAVIA" style="width: 220px; height: 220px;">
                         <h1 style="color: #122D45">SAVIA 2.0</h1>
+                        {% if usuario.tipo.proveedor_externo %}<h4>Portal de Proveedor de Grupo Vordcab</h4>{% endif %}
                     </strong>
                 </div>
                 <div class="card-body">
-                    
                     {% if usuario.tipo.comprador == True %}
                     <div class="row mt-1">
                         <div class="col-md-4">
@@ -53,6 +53,7 @@
                         </div>
                     </div>
                     {%else%}
+                    {% if usuario.tipo.proveedor_externo == False %}
                     <div class="row mt-1">
                         <div class="col-md-4">
                             <a class="text-decoration-none text-dark" href="#">
@@ -81,6 +82,8 @@
                         
                     </div>
                     {% endif %}
+                    {% endif %}
+                    {% if usuario.tipo.proveedor_externo == False %}
                     <div class="row mt-2">
                         <div class="col-md-4">
                             <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
@@ -105,9 +108,29 @@
                                     <h3></h3>
                                 </div>
                             </a>
-                        </div>
-                       
+                        </div>   
                     </div>
+                    {% endif %} 
+                    {% if usuario.tipo.proveedor_externo %}
+                    <div class="row mt-2">
+                        <div class="col-md-4">
+                            <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}">
+                                <div class="card my-card shadow text-center p-3">
+                                    <h4>Compras <i class="fa-solid fa-user"></i></h4>
+                                    <h3></h3>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="col-md-4">
+                            <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}">
+                                <div class="card my-card shadow text-center p-3">
+                                    <h4>Información <i class="fa-solid fa-user"></i></h4>
+                                    <h3></h3>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                    {% endif %}
                 </div>
             </div>
         </div>

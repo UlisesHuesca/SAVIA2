@@ -61,11 +61,20 @@
 
                 <!-- Pagos Section -->
                 <table class='table table-striped'>
+                    <thead>
+                        <th>
+                            Fecha
+                        </th>
+                        <th>
+                            Pago
+                        </th>
+                    </thead>
                     <tbody>
+
                         {% for pago in pagos %}
                         <tr>
                             {% if pago.comprobante_pago %}
-                            <th scope="col">Pago:</th>
+                            <th scope="col">{{pago.pagado_date}} </th>
                             <th scope="col">
                                 <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
@@ -105,8 +114,8 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Fecha</th>
-                            <th>Hora</th>
+                            <th>Fecha Timbrado</th>
+                            <th>Método de Pago</th>
                             <th>Comentario</th>
                             <th>PDF</th>
                             <th>XML</th>
@@ -121,9 +130,9 @@
                         {% for p in facturas %}
                         <tr>
                             <th scope="row">{{p.id}}</th>
-                            <td>{{p.fecha_subido}}</td>
-                            <td>{{p.hora_subido}}</td>
-                            <td>{{p.comentario}}</td>
+                            <td>{{p.emisor.fecha_timbrado}}</td>
+                            <td>{{p.emisor.metodo_pago}}</td>
+                            <td>{% if p.comentario %} {{p.comentario}} {% else %} S/C {% endif %}</td>
                             <td>
                                 {% if p.factura_pdf %}
                                 <a href="{{p.factura_pdf.url}}" download class="btn btn-outline-danger">

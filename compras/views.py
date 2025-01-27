@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
-from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField
+from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.db.models.functions import Concat, Coalesce
 from django.utils import timezone
 from django.contrib import messages
@@ -12,7 +12,6 @@ from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.conf import settings
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
-from django.db.models import Count, Q, Case, When, Value, DecimalField
 from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
