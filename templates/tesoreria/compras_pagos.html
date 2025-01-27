@@ -211,7 +211,7 @@
                 </div>
         </div>
         <div>
-        <form id="myForm" method="post" enctype="multipart/form-data" onsubmit="mostrarIndicadorCarga();">
+        <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="col">
                 {% csrf_token %}
                 <div class="row my-2">
@@ -336,13 +336,41 @@ var monto_moneda = document.getElementById("id_monto");
 //    tipo_cambio.setAttribute("class","form-control d-none");
 
 //}
-document.getElementById('myForm').addEventListener('submit', function() {
+//document.getElementById('myForm').addEventListener('submit', function() {
     // Espera 150 milisegundos antes de deshabilitar el botón de envío
-    setTimeout(function() {
-        document.getElementById('myBtn').disabled = true;
-    }, 50);
-});
+//    setTimeout(function() {
+//        document.getElementById('myBtn').disabled = true;
+//    }, 50);
+//});
+document.getElementById('myForm').addEventListener('submit', function(event) { 
+    // Obtiene los valores de los campos
+    const monto = parseFloat(document.getElementById('id_monto').value) || 0;
+    const remanente_field = document.getElementById('remanente');
+    remanente = remanente_field.getAttribute('remanente');
+    console.log(monto)
+    console.log(remanente)
+    // Verifica si el monto es mayor que el remanente
+    if (monto > remanente) {
+        // Muestra una alerta y previene el envío del formulario
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de validación',
+            text: 'El monto debe ser menor o igual al remanente. Favor de modificar el monto',
+            confirmButtonText: 'Entendido'
+        });
+        event.preventDefault(); // Detiene el envío del formulario
+        return;
+    }
 
+    // Espera 50 milisegundos antes de deshabilitar el botón de envío
+    else {
+        mostrarIndicadorCarga();
+        return true; // Permite
+        //setTimeout(function() {
+        //    document.getElementById('myBtn').disabled = true;
+        //}, 50);
+    }
+});
 /* *******************NO BORRAR EL CODIGO**********************
 este era para evitar el envío doble cuando era un modal
 htmx.defineExtension('disable-on-submit', {
