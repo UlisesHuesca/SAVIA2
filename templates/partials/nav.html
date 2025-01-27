@@ -12,7 +12,7 @@
     {% if user.is_authenticated %}
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'dashboard-index' %}">
-                <img src="{% static 'images/SAVIA_navideño.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
+                <img src="{% static 'images/SAVIA_Logo.png' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
             </a>
             <ul class="nav nav-pills" >
                 <li class="nav-item d-none d-md-table-cell">
@@ -355,7 +355,9 @@
                                 <div>
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'autorizacion-oc1' %}">
-                                {% if usuario.tipo.subdirector %}
+                                {% if usuario.tipo.nombre == "Gerente Br" %}
+                                OC Gerente Brasil
+                                {% elif usuario.tipo.subdirector %}
                                 OC Subdirector
                                 {% else %}
                                 OC Superintendencia
@@ -382,7 +384,7 @@
                                 <div>
                             {% endif %}
 
-                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar' %}">{% if usuario.tipo.subdirector %}Gasto Subdirector {% else %} Revisión Gasto {% endif %}
+                                <a class="dropdown-item" href="{% url 'gastos-pendientes-autorizar' %}">{% if usuario.tipo.nombre == "Gerente Br" %}Gasto Gerente Brasil {% elif usuario.tipo.subdirector %}Gasto Subdirector {% else %} Revisión Gasto {% endif %}
                                 {% if conteo_gastos_pendientes > 0 %}
                                 <span class="badge bg-danger">({{conteo_gastos_pendientes}})</span>
                                 {% endif %}
@@ -528,7 +530,7 @@
     {% else %}
             <div class="collapse navbar-collapse" id="navbarSupportedContent">
                 <a class="navbar-brand text-white" href="#">
-                    <img src="{% static 'images/SAVIA_navideño.jpg' %}" alt="SAVIA" width="36" height="30">
+                    <img src="{% static 'images/SAVIA_Logo.jpg' %}" alt="SAVIA" width="36" height="30">
                 </a>
                 <ul class="navbar-nav">
                     <li class="nav-item">

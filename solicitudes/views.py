@@ -207,8 +207,13 @@ def product_selection(request):
     #order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo = tipo)
     order, created = Order.objects.get_or_create(staff = usuario, complete = False, tipo=tipo, distrito = usuario.distritos)
     #Traer todos los productos no criticos y solo los criticos con rev_Calidad
+    #if usuario.tipo.activos == True: #Solo el personal de activos puede solicitar activos
     productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
+    #else:
+        #productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos,producto__activo=False).filter(Q(producto__critico=False) | Q(producto__critico=True, producto__rev_calidad=True))
+    
     cartItems = order.get_cart_quantity
+
     myfilter=InventoryFilter(request.GET, queryset=productos)
     productos = myfilter.qs
 
@@ -240,7 +245,7 @@ def checkout(request):
     orders = ordenes.filter(staff__distritos = usuario.distritos)
     #Se genera el folio trayendo primero el ultimo folio del distrito
     last_order = ordenes.filter(distrito=usuario.distritos).order_by('-folio').first()
-    if last_order:
+    if last_order.folio is not None:
         #folio = last_order.folio
         folio_number = last_order.folio + 1
     else:
@@ -249,7 +254,7 @@ def checkout(request):
     abrev = usuario.distritos.abreviado
     folio_preview = folio_number
     #***************************************************
-    proyectos = Proyecto.objects.filter(activo=True, distrito=usuario.distritos )
+    proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito=usuario.distritos )
     subproyectos = Subproyecto.objects.all()
     activos = Activo.objects.filter(responsable__distritos = usuario.distritos)
     tipo = Tipo_Orden.objects.get(tipo ='normal')
@@ -267,9 +272,9 @@ def checkout(request):
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True)
 
     #print(usuario.distritos)
-    if usuario.distritos.nombre == "MATRIZ":
+    if usuario.distritos.nombre == "MATRIZ" or usuario.distritos.nombre == "BRASIL":
         #print("Quev")
-        superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True)
+        superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos)
     elif usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
         superintendentes = usuarios.filter(staff=usuario.staff)
         order.superintendente = usuario
@@ -1451,8 +1456,7 @@ def autorizada_sol(request, pk):
             elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
-                #order.requisitar = True
-                if producto.producto.producto.servicio == True:
+                if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
                     requi, created = Requis.objects.get_or_create(complete = True, orden = order)
                     requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
                     requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True)

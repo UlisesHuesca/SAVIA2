@@ -49,8 +49,9 @@ class SubproyectoFilter(django_filters.FilterSet):
 
 
 class ProveedorFilter(django_filters.FilterSet):
-    razon_social = CharFilter(field_name='razon_social', lookup_expr='icontains')
+    #razon_social = CharFilter(field_name='razon_social', lookup_expr='icontains') #Ya no existe este campo
     rfc = CharFilter(field_name='rfc', lookup_expr='icontains')
+    razon_social = CharFilter(field_name='razon_social', lookup_expr='icontains')
     nombre_comercial = CharFilter(field_name='nombre_comercial', lookup_expr='icontains')
 
 

@@ -2,6 +2,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %} Agregar Activos {% endblock %}
@@ -77,6 +78,23 @@
                 </div>
             </div>
             {% endif %}
+            <div class="col-12">
+                <div class="row">
+                    <div class="col-lg-8 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{form.activo}}
+                            </div>
+                        </div>
+                    </div>
+                    <div id="etiqueta_cantidad" class="col-lg-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                            <h6>Disponible:</h6><h6 style="color: #121212;" id="cantidad"></h6>   
+                        </div>
+                    </div>
+                </div>
+            </div>
             <div class="col-12">
                 <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
@@ -304,6 +322,44 @@ $(document).ready(function() {
         $('#id_tipo_activo').val(tipoActivoSeleccionado.id).trigger('change');
     }
 });
+
+var datosProductos = {{ productos_para_select2|safe }};
+var productoPredeterminado = {{ producto_predeterminado|default:"null" |safe }};
+
+$(document).ready(function () {
+    var ProductoSelect = $('#id_activo');
+    var cantidadEtiqueta = $('#cantidad');
+    var form = $('.post-form'); // Selecciona el formulario
+    var productoActivoId = {{ id_actual|default:"null"|unlocalize }};
+    
+    // Inicializar select2
+    ProductoSelect.select2({
+        allowClear: true,
+        width: '100%',
+        data: datosProductos,
+        placeholder: 'Producto',
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    // Evento para actualizar la cantidad
+    ProductoSelect.on('change', function () {
+        var selectedId = $(this).val(); // ID del producto seleccionado
+        var productoSeleccionado = datosProductos.find(producto => producto.id == selectedId);
+
+        if (productoSeleccionado) {
+            cantidadEtiqueta.text(productoSeleccionado.cantidad || 0);
+        } else {
+            cantidadEtiqueta.text(0);
+        }
+    });
+
+
+
+    // Inicializar la cantidad al cargar la página
+    ProductoSelect.trigger('change');
+});
+
 
 var datosResponsable= {{ responsables_para_select2|safe }};
 var responsablePredeterminado = {{ responsable_predeterminado|default:"null" |safe }};

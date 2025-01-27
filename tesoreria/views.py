@@ -1424,8 +1424,10 @@ def mis_comprobaciones_gasto(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     año_actual = datetime.now().year
-    gastos = Solicitud_Gasto.objects.filter(Q(staff = usuario) |Q(colaborador = usuario),autorizar2=True, created_at__year=año_actual, complete=True).annotate(
-                total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
+    año_anterior = año_actual - 1
+
+    gastos = Solicitud_Gasto.objects.filter(Q(staff=usuario) | Q(colaborador=usuario),autorizar2=True,created_at__year__in=[año_anterior, año_actual],complete=True
+                ).annotate(total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
                 ).order_by('-folio')
 
     #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
@@ -1448,6 +1450,7 @@ def mis_comprobaciones_gasto(request):
         'total_todas_facturas':total_todas_facturas,
         'total_monto_gastos':total_monto_gastos,
         'año_actual':str(año_actual),
+        'año_anterior':str(año_anterior),
         #'myfilter':myfilter,
         }
 
@@ -1458,9 +1461,11 @@ def mis_comprobaciones_viaticos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     año_actual = datetime.now().year
-    viaticos = Solicitud_Viatico.objects.filter(Q(staff = usuario) |Q(colaborador = usuario),autorizar2=True, created_at__year=año_actual, complete=True).annotate(
-                total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
-                ).order_by('-folio')
+    año_anterior = año_actual - 1
+
+    viaticos = Solicitud_Viatico.objects.filter(Q(staff=usuario) | Q(colaborador=usuario),autorizar2=True,created_at__year__in=[año_anterior, año_actual],complete=True
+                    ).annotate(total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+                    ).order_by('-folio')
 
     #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     #viaticos = myfilter.qs
@@ -1485,6 +1490,7 @@ def mis_comprobaciones_viaticos(request):
         'total_todas_facturas':total_todas_facturas,
         'total_monto_viaticos':total_monto_viaticos,
         'año_actual':str(año_actual),
+        'año_anterior':str(año_anterior),
         #'myfilter':myfilter,
         }
 
@@ -1860,7 +1866,10 @@ def convert_excel_matriz_pagos(pagos):
             else:
                 tipo_de_cambio = ''  # default si no se cumplen las condiciones anteriores
         elif pago.gasto:
-            proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
+            if pago.gasto.colaborador:
+                proveedor = pago.gasto.colaborador.staff.staff.first_name + ' ' + pago.gasto.colaborador.staff.staff.last_name
+            else:
+                proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             facturas_completas = pago.gasto.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para gastos
             if pago.gasto.facturas.exists():
@@ -1870,7 +1879,10 @@ def convert_excel_matriz_pagos(pagos):
                 tiene_facturas = 'No'
             
         elif pago.viatico:
-            proveedor = pago.viatico.staff.staff.staff.first_name
+            if pago.viatico.colaborador:
+                proveedor = pago.viatico.colaborador.staff.staff.first_name + ' ' + pago.viatico.colaborador.staff.staff.last_name
+            else:
+                proveedor = pago.viatico.staff.staff.staff.first_name + ' ' + pago.viatico.staff.staff.staff.last_name
             facturas_completas = pago.viatico.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para viáticos
             if pago.viatico.facturas.exists():
@@ -2058,7 +2070,10 @@ def convert_excel_control_bancos(pagos):
     worksheet.write('H3', 'Fecha de emisión', header_format)
     
     worksheet.merge_range('A5:J8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
+    cuenta =  pagos.first().cuenta if pagos.exists() else None
     worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
+   
+    
     worksheet.merge_range('A10:B10', 'CUENTA BANCARIA: '+ str(cuenta.cuenta), header_format)
     worksheet.merge_range('A11:B11', 'DISTRITO: ' + str(cuenta.encargado.distritos), header_format)
     worksheet.merge_range('A12:B12', 'RESPONSABLE DE CUENTA: ' + str(cuenta.encargado.staff.staff.first_name)+ ' '+ str(cuenta.encargado.staff.staff.last_name), header_format)
@@ -2069,13 +2084,13 @@ def convert_excel_control_bancos(pagos):
    
     
     worksheet.write('I10', 'SALDO INICIAL' , header_format)
-    worksheet.write('J10', saldo_inicial, h_money_style)
+    #worksheet.write('J10', saldo_inicial, h_money_style)
     worksheet.write('I11', 'SALDO FINAL', header_format)
     
     worksheet.write('J12', '', header_format)
     
 
-    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo']
+    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Comentarios','Saldo']
 
     columna_max = len(columns)+2
 
@@ -2126,11 +2141,14 @@ def convert_excel_control_bancos(pagos):
         if hasattr(pago, 'oc') and pago.oc:
             contrato = pago.oc.req.orden.proyecto.nombre
             sector = pago.oc.req.orden.subproyecto.nombre
+            comentarios = pago.oc.req.orden.comentario
         elif hasattr(pago, 'viatico') and pago.viatico:
             contrato = pago.viatico.proyecto.nombre
             sector = pago.viatico.subproyecto.nombre
+            comentarios = pago.viatico.comentario_general
         elif hasattr(pago, 'gasto') and pago.gasto:
             articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
+            comentarios = pago.gasto.comentario
             proyectos = set()
             subproyectos = set()
             for articulo in articulos_gasto:
@@ -2164,13 +2182,14 @@ def convert_excel_control_bancos(pagos):
         worksheet.write(row_num, 6, distrito)
         worksheet.write(row_num, 7, cargo, money_style)
         worksheet.write(row_num, 8, abono, money_style)
-        if row_num == 13:
-            worksheet.write(row_num, 9, saldo_acumulado, money_style)
-        else:
-            if row_num > 13:
+        worksheet.write(row_num, 8, comentarios)
+        #if row_num == 13:
+        #    worksheet.write(row_num, 9, saldo_acumulado, money_style)
+        #else:
+        #    if row_num > 13:
                 # Restar la celda (row_num - 1, 10) - (row_num, 8)
-                formula = f'=IF(H{row_num + 1}>0,  J{row_num} - H{row_num + 1}, J{row_num} + I{row_num + 1} )'
-                worksheet.write_formula(row_num, 9, formula, money_style)
+        #        formula = f'=IF(H{row_num + 1}>0,  J{row_num} - H{row_num + 1}, J{row_num} + I{row_num + 1} )'
+        #        worksheet.write_formula(row_num, 9, formula, money_style)
 
         last_filled_row = row_num
         row_num += 1

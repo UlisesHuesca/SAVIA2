@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load static %}
 {% load widget_tweaks %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Activos{% endblock %}
@@ -186,6 +187,9 @@
                     {% endif %}
                     <th scope="col">QR</th>
                     <th scope="col">Editar</th>
+                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin" %}
+                    <th scope="col">Cambio Distrito</th>
+                    {% endif %}
                     <th>Responsiva</th>
                 </tr>
             </thead>
@@ -214,6 +218,13 @@
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
                     </td>
+                    {% if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin" %}
+                    <td>
+                        <a type="button" class="btn btn-outline-info" title="Cambiar distrito" href="{% url 'cambio_distrito_activo' item.id %}">
+                            <i class="fa-solid fa-arrow-right-arrow-left"></i>
+                        </a>
+                    </td>
+                    {% endif %}
                     <td>
                         <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-responsiva-activos' item.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Responsiva"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                     </td>
@@ -221,6 +232,33 @@
                 {% endfor %}
             </tbody>
         </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if activos.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url activos.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in activos.paginator.page_range %}
+                    {% if activos.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > activos.number|add:'-2' and item < activos.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if activos.paginator.num_pages > activos.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{activos.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url activos.paginator.num_pages 'page' request.GET.urlencode %}">{{activos.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if activos.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url activos.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url activos.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
     </div>
 </div>
 

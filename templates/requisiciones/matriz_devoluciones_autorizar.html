@@ -55,6 +55,12 @@
         {% endif %}
     </div>
 </div>
+<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+    </div>
+</div>
 
 <div class = "row">
     <div class = "card">
@@ -72,6 +78,7 @@
                     <th class="d-none d-lg-table-cell">Subproyecto</th>
                     <th class="d-none d-lg-table-cell">Operación</th>
                     <th scope="col">Creado</th>
+                    <th>Detalles</th>
                     <th scope="col">Acción</th>
                 </tr>
             </thead>
@@ -84,16 +91,26 @@
                     <td >{{item.solicitud.proyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell" >{{item.solicitud.subproyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{item.solicitud.operacion}}</td>
-                    <td >{{item.created_at}} </td>
-                    <td >
+                    <td>{{item.created_at}} </td>
+                    <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-devolucion' item.id %}"><i class="fa-solid fa-xmark"></i></a>
-                            </li>
-                            <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'autorizar-devolucion' item.id %}"><i class="fa-solid fa-check"></i></a>
+                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'cancelar-devolucion' item.id %}">Productos</a>
                             </li>
                         </ul>
+                    </td>
+                    <td >
+                        <form method="post" action="{% url 'autorizar-devolucion' item.id %}" onsubmit="mostrarIndicadorCarga();">
+                            {% csrf_token %}
+                            <ul class="nav nav-pills">
+                                <li class="nav-item m-1">
+                                    <button type="submit" name="btnCancelar" class="btn btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
+                                </li>
+                                <li class="nav-item m-1">
+                                    <button type="submit" name="btnAutorizar" class="btn btn-outline-success"><i class="fa-solid fa-check"></i></button>
+                                </li>
+                            </ul>
+                        </form>
                     </td>
                 </tr>
                 {% endfor %}
@@ -144,12 +161,52 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
+// Función para obtener el valor de una cookie por su nombre
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function mostrarIndicadorCarga() {
+    var btn = document.getElementById('btnExcel')
+    document.getElementById('loadingIndicator').style.display = 'block';
+    
+    verificarDescargaIniciada();
+    btn.classList.add('d-none')
+}
+
+function verificarDescargaIniciada(){
+    const checkDescarga = setInterval(() => {
+        const descargaIniciada = getCookie('descarga_iniciada');
+        if (descargaIniciada === 'true') {
+            // Ocultar el indicador de carga
+            document.getElementById('loadingIndicator').style.display = 'none';
+            
+            // Opcional: Borrar la cookie si es necesario
+            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
+            
+            clearInterval(checkDescarga);
+
+        }
+    }, 1000); // Revisar cada segundo
+}
+
+
 var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
 dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
-})
-
+}) 
 </script>
 {% endblock %}
 </body>

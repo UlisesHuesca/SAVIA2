@@ -315,10 +315,10 @@ def compras_devueltas(request):
     compras = Compra.objects.filter(regresar_oc = True, req__orden__distrito = usuario.distritos)
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
-
+    
     #form_product = ArticuloCompradoForm()
     #form = CompraForm(instance=oc)
-
+   
 
 
     context= {
@@ -544,7 +544,7 @@ def oc_modal(request, pk):
 
     #Traigo el folio de la ultima compra con el folio más grande, no importa este complete o no  
     last_oc = compras.filter(req__orden__distrito = req.orden.distrito).order_by('-folio').first()
-    new_folio = last_oc.folio + 1
+    new_folio = last_oc.folio + 1 if last_oc is not None else 1
     #Hago un get or create para traer el ultimo dato a llenar y si este es un create entonces se le asigna el nuevo valor para el folio 
     oc, created = compras.get_or_create(complete = False, req = req, creada_por = usuario, regresar_oc = False, defaults={'folio': new_folio})
     # Esta lógica es para aquellos que ya se crearon pero no tienen folio, se les asigna el nuevo folio
@@ -1373,7 +1373,12 @@ def back_oc(request, pk):
             costo_fletes = compra.costo_fletes
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_total - compra.req.orden.subproyecto.gastado
-    porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+   
+    presupuesto = compra.req.orden.subproyecto.presupuesto or 0  # Default to 0 if None
+    if presupuesto > 0:
+        porcentaje = "{0:.2f}%".format((costo_oc / presupuesto) * 100)
+    else:
+        porcentaje = "0%"  # Default value when presupuesto is 0 or invalid
 
     form = Compra_ComentarioForm()
 
@@ -1813,7 +1818,13 @@ def autorizar_oc2(request, pk):
 
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_oc - costo_fletes - compra.req.orden.subproyecto.gastado
-    porcentaje = "{0:.2f}%".format((costo_oc/compra.req.orden.subproyecto.presupuesto)*100)
+    
+    presupuesto = compra.req.orden.subproyecto.presupuesto or 0 
+    
+    if presupuesto > 0:
+        porcentaje = "{0:.2f}%".format((costo_oc / presupuesto) * 100)
+    else:
+        porcentaje = "0%"  # Default value when presupuesto is 0 or invalid
 
     form = Compra_ComentarioGerForm()
 
@@ -2712,12 +2723,18 @@ def generar_pdf(compra):
     c.setFillColor(prussian_blue)
     c.setFont('Helvetica', 9)
     
-   
+    def convertir_a_reales(valor):
+        partes = f"{valor:.2f}".split(".")
+        reales = num2words(int(partes[0]), lang='pt_BR')
+        centavos = num2words(int(partes[1]), lang='pt_BR')
+        return f"{reales} reais e {centavos} centavos"
 
     if compra.moneda.nombre == "PESOS":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN'))
     if compra.moneda.nombre == "DOLARES":
         c.drawString(80,140, num2words(compra.costo_plus_adicionales, lang='es', to='currency',currency='USD'))
+    if compra.moneda.nombre == "REAIS":
+        c.drawString(80,140, convertir_a_reales(compra.costo_plus_adicionales))
 
     c.setFillColor(black)
     width, height = letter

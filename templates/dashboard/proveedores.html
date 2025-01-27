@@ -64,15 +64,6 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.nombre_comercial|add_class:"form-control"|append_attr:"placeholder= Nombre Comercial"}}
-                                <label style="color: #121212;" for="id_rfc">Nombre Comercial</label>
-                            </div>
-                        </div>
-                    </div>
                     <div class="col-2">
                         <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
@@ -139,6 +130,10 @@
                 <tr>
                     <th scope="col">ID</th>
                     <th scope="col">Razón Social</th>
+                    <th scope="col">Contacto</th>
+                    <th scope="col">Telefono</th>
+                    <th scope="col">Distrito</th>
+                    <th scope="col">Domicilio</th>
                     <th scope="col">Nombre Comercial</th>
                     <th scope="col">RFC</th>
                     {% if usuario.tipo.proveedores %}
@@ -152,6 +147,10 @@
                 <tr>
                     <td>{{proveedor.id}}</td>
                     <td>{{proveedor.razon_social}}</th>
+                    <td>{{proveedor.contacto}}</th>
+                    <td>{{proveedor.telefono}}</th>
+                    <td>{{proveedor.distrito}}</th>
+                    <td>{{proveedor.domicilio}}</th>
                     {% if not proveedor.nombre_comercial %}
                     <td></td>
                     {% else %}

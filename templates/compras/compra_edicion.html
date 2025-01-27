@@ -647,6 +647,7 @@ updateBtn.addEventListener('click',function(){
         console.log('val_precio',val_precio)
         var action = "add";
 
+
         if (!value) {
             Swal.fire({
                     "title":"Error",
@@ -684,6 +685,7 @@ updateBtn.addEventListener('click',function(){
 //ActualizarArticulos(array_id_prod)
 
 function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
+   
     console.log('User is logged in, sending data...' )
 
     var url = '/compras/update_oc/'
@@ -725,6 +727,10 @@ function deleteRow(elemento) {
 
     var rows = document.getElementById("mytbl").rows.length;
 }
+
+document.addEventListener('DOMContentLoaded', function() {
+    precio_ref();
+})
 
 var checkFlete = document.getElementById("SwitchFlete")
 //This is the part off code that when flete swicth button change
@@ -999,6 +1005,10 @@ function calcular_total(){
     total_element.innerHTML = '$' + total.toFixed(2);
 };
 
+//document.addEventListener('DOMContentLoaded', function() {
+//    precio_ref()
+//});
+
 document.getElementById("id_formulario").addEventListener('change', function() {
     var oc = document.getElementById("oc").getAttribute("target");
     var datosGuardados = JSON.parse(localStorage.getItem("id_formulario_" + oc)) || {};
@@ -1073,7 +1083,7 @@ $(document).ready(function() {
     // Evento cuando se selecciona un proveedor
     $('#id_proveedor').on('select2:select', function(e) {
         var data = e.params.data; // Datos del proveedor seleccionado
-
+        precio_ref()
         // Actualizar las etiquetas con los datos seleccionados
         $('#lbl_distrito').text(data.distrito || 'N/A');
         $('#lbl_domicilio').text(data.domicilio || 'N/A');
@@ -1123,7 +1133,7 @@ $('#id_proveedor').on('select2:unselect', function(e) {
     // Evento cuando se selecciona un proveedor
     $('#id_proveedor').on('select2:select', function(e) {
         var data = e.params.data; // Datos del proveedor seleccionado
-
+        precio_ref()
         // Actualizar los valores en las etiquetas correspondientes
         $('#lbl_distrito').text(data.distrito || 'N/A');
         $('#lbl_domicilio').text(data.domicilio || 'N/A');
@@ -1157,6 +1167,43 @@ function formatRepo (repo) {
 }
 function formatRepoSelection (repo) {
     return repo.text || repo.id;
+}
+
+var datosProductos_comp = {{ productos_comp_to_function|safe }};
+
+function precio_ref() {
+    console.log("Función precio_ref llamada");
+    
+    var lbl_status = document.getElementById('lbl_status');
+    var status = lbl_status.innerHTML
+    console.log(status)
+    var comparativo = document.getElementById('comparativo')
+
+    if (status == "NUEVO"){
+        for (data in datosProductos_comp){
+            
+            var precio_unitario = Number(datosProductos_comp[data].precio) || 0;
+            console.log('precio_unitario',precio_unitario)
+            var precio_ref = Number(datosProductos_comp[data].precio_ref) || 0;
+            console.log('precio_referencia', precio_ref)
+           
+            var porcentaje = Number(datosProductos_comp[data].porcentaje) || 0;
+            precio_ref_max = precio_ref * (1 + (porcentaje));
+            console.log('precio_ref_limite',precio_ref_max)
+            console.log(precio_ref_max >= precio_unitario)
+            if ((precio_ref_max >0) && (precio_unitario <= precio_ref_max )){
+                //Se cumplen todas las condiciones por tanto no es necesario el cuadro de comparativo
+                comparativo.classList.add('d-none')
+            } else {
+                //No se cumple las condiones en al menos uno de los casos
+                comparativo.classList.remove('d-none')             
+                break;
+            }
+        }
+    } else {
+        comparativo.classList.add('d-none');
+    }
+
 }
 
 

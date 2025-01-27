@@ -180,6 +180,7 @@
                     <th scope="col">Empresa/Proveedor</th>
                     <th>Cuenta</th>
                     <th scope="col">Concepto/Servicio</th>
+                    <th>Comentarios</th>
                     <th>Proyecto</th>
                     <th>Subproyecto</th>
                     <th>Distrito</th>
@@ -208,6 +209,11 @@
                         {% else %} {{pago.tipo}}
                         {% endif %}
                         {% if pago.comentario %} {{pago.comentario}} {% endif %}
+                    </td>
+                    <td>{% if pago.oc %}{{pago.oc.req.orden.comentario}}
+                        {% elif pago.gasto %}{{pago.gasto.comentario}}
+                        {% elif pago.viatico %}{{pago.viatico.comentario_general}}{% endif %}
+
                     </td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.proyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.proyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.subproyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>

@@ -1,6 +1,6 @@
 import django_filters
 from dashboard.models import Inventario, Order, ArticulosOrdenados, Product, Distrito, Familia
-from django_filters import CharFilter, DateFilter
+from django_filters import CharFilter, DateFilter, ChoiceFilter
 from django.db.models import Q
 
 
@@ -9,11 +9,18 @@ class InventoryFilter(django_filters.FilterSet):
     codigo = CharFilter(field_name='producto__codigo', lookup_expr='icontains')
     familia = CharFilter(field_name='producto__familia__nombre', lookup_expr='icontains')
     subfamilia = CharFilter(field_name='producto__familia__nombre', lookup_expr='icontains')
+    # Cambiar el BooleanFilter por un ChoiceFilter
+    ACTIVO_CHOICES = (
+        (True, 'Tipo activo'),
+        (False, 'Productos generales'),
+    )
 
+    # Usamos ChoiceFilter, con field_name apuntando al campo activo de Product
+    activo_producto = ChoiceFilter(choices=ACTIVO_CHOICES, field_name='producto__activo', label='Activo', empty_label='Todos los productos')
 
     class Meta:
         model = Inventario
-        fields = ['producto','codigo','familia','subfamilia']
+        fields = ['producto', 'codigo', 'familia', 'subfamilia', 'activo_producto']
 
 
 class InventarioFilter(django_filters.FilterSet):

@@ -59,6 +59,7 @@ from reportlab.lib.pagesizes import letter, portrait
 from reportlab.rl_config import defaultPageSize 
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER
+from reportlab.lib.styles import ParagraphStyle
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
 from bs4 import BeautifulSoup
 
@@ -185,7 +186,12 @@ def solicitud_autorizada(request):
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True)
         #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(surtir=True), articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal")
         #productos= ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar = True, articulos__orden__tipo__tipo = "normal", articulos__orden__distrito = usuario.distritos, articulos__orden__complete = True).order_by('-articulos__orden__id')
-        productos = ArticulosparaSurtir.objects.filter(surtir=True, articulos__orden__autorizar=True, articulos__orden__tipo__tipo="normal", articulos__orden__distrito=usuario.distritos, articulos__orden__complete=True).order_by('-id')
+        productos = ArticulosparaSurtir.objects.filter(
+            Q(surtir=True) | Q(seleccionado_por = usuario) & Q(seleccionado_salida = True),
+            articulos__orden__autorizar=True, 
+            articulos__orden__tipo__tipo="normal", 
+            articulos__orden__distrito=usuario.distritos, 
+            articulos__orden__complete=True).order_by('-id')
 
     #else:
         #productos = Requis.objects.filter(complete=None)
@@ -300,6 +306,7 @@ def update_devolucion(request):
 
 @perfil_seleccionado_required
 def autorizar_devolucion(request, pk):
+    print("Estoy en autorizar_devolucion")
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     devolucion= Devolucion.objects.get(id=pk)
@@ -345,7 +352,21 @@ def autorizar_devolucion(request, pk):
             salida.save()
         devolucion.save()
         return redirect('matriz-autorizar-devolucion')
-
+    elif request.method == 'POST' and 'btnCancelar' in request.POST:
+        for producto in productos:
+            if devolucion.tipo.nombre == "SALIDA":
+                producto_surtir = Salidas.objects.get(id=devolucion.salida.id)
+            else:
+                producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto.producto.articulos)
+            producto_surtir.cantidad = producto_surtir.cantidad + producto.cantidad
+            producto_surtir.surtir = True
+            producto_surtir.save()
+            #inv_del_producto.save()
+        devolucion.autorizada = False
+        devolucion.save()
+        return redirect('matriz-autorizar-devolucion')
+    
+    
     context= {
         'productos':productos,
         'devolucion':devolucion,
@@ -437,6 +458,7 @@ def salida_material(request, pk):
          #'distrito': proveedor.
         } for user in users]
 
+    print(productos)
     if request.method == 'POST':
         formVale = ValeSalidasForm(request.POST, instance=vale_salida)
         
@@ -445,14 +467,20 @@ def salida_material(request, pk):
             vale = formVale.save(commit=False)
             cantidad_salidas = 0
             cantidad_productos = productos.count()
-            for producto in productos:
+
+            productos_vale = ArticulosparaSurtir.objects.filter(articulos__orden = orden)
+            for producto in productos_vale:
                 producto.seleccionado_salida = False
+                producto.seleccionado_por = None
                 print(producto,"cantidad:", producto.cantidad)
                 if producto.cantidad <= 0:
                     producto.salida=True
                     producto.surtir=False
                     cantidad_salidas = cantidad_salidas + 1
                     print(producto)
+                else:
+                    producto.surtir = True
+                   
                 producto.save()
             if cantidad_productos == cantidad_salidas:
                 orden.requisitado == True #Esta variable creo que podría ser una variable estúpida
@@ -542,7 +570,9 @@ def devolucion_material_salida(request, pk):
     orden = Order.objects.get(id = vale_salida.solicitud.id)
     #Esta es la parte que varía de devolución de material, aquí los productos deben ser salida = True
     #productos_sel = ArticulosparaSurtir.objects.filter(articulos__orden = orden, salida=True)
-    productos_sel = salidas.get(id=pk)
+    productos_sel = salida
+    #print(productos_sel)
+   
     tipo = Tipo_Devolucion.objects.get(nombre ="SALIDA" )
     devolucion, created = Devolucion.objects.get_or_create(almacenista = usuario,complete = False,solicitud=orden,tipo =tipo, salida =salida)
     productos = Devolucion_Articulos.objects.filter(vale_devolucion = devolucion)
@@ -560,13 +590,13 @@ def devolucion_material_salida(request, pk):
                 devolucion.hora = datetime.now().time()
                 devolucion.fecha = date.today()
                 devolucion.save()
-                for producto in productos_sel:
-                    producto.seleccionado = False
-                    producto.save()
+                #for producto in productos_sel:
+                productos_sel.seleccionado = False
+                productos_sel.save()
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has hecho la devolución de manera exitosa')
                 email = EmailMessage(
                     f'Cancelación de solicitud: {orden.folio}',
-                    f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.first_name} {usuario.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
+                    f'Estimado {orden.staff.staff.staff.first_name} {orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {orden.folio} ha sido devuelta al almacén por {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}, con el siguiente comentario {devolucion.comentario} para más información comunicarse al almacén.\n\n Este mensaje ha sido automáticamente generado por SAVIA VORDTEC',
                     settings.DEFAULT_FROM_EMAIL,
                     ['ulises_huesc@hotmail.com'],#orden.staff.staff.email],
                     )
@@ -628,8 +658,8 @@ def update_salida(request):
         #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
         producto.seleccionado_salida = True
+        producto.seleccionado_por = Profile.objects.get(id = request.session.get('selected_profile_id'))
         entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal').order_by('id')
-
         try:
             EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False)
             
@@ -637,7 +667,7 @@ def update_salida(request):
             entrada_res = None
         else:
             entrada_res = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False).order_by('id')
-        print('2',entrada_res)
+        print('2--->',entrada_res)
         if entradas_dir.exists():
             entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden)
             for entrada in entradas:
@@ -683,6 +713,7 @@ def update_salida(request):
                     #L4 se vacía la entrada y por lo tanto se marca como agotada.
                     # Y si no la cantidad de la salida es igual a la cantidad(puede ser modificada por el bucle anterior o no) y 
                     # entrada por surtir es igual a la cantidad por surtir menos la cantidad de la salida y la cantidad se agota 04/12/2024 
+                    print('entrada_res',cantidad)
                     if cantidad >= entrada.cantidad_por_surtir:
                         cantidad_ant = cantidad
                         cantidad = cantidad - entrada.cantidad_por_surtir
@@ -750,6 +781,7 @@ def update_salida(request):
         producto.salida= False
         producto.cantidad = producto.cantidad + item.cantidad
         producto.surtir = True
+        producto.seleccionado_por = None 
         #producto.cantidad_requisitar = producto.cantidad_requisitar + producto.cantidad
         producto._change_reason = f'Esto es una eliminación de un artículo en una salida'
         inv_del_producto._change_reason = f'Esta es una eliminación de un artìculo en una salida {item.id}'
@@ -847,7 +879,9 @@ def requisicion_autorizacion(request):
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     
     #ordenes = Order.objects.filter(complete=True, autorizar=True, staff__distrito=perfil.distrito)
-    if perfil.distritos.nombre == "MATRIZ" or perfil.distritos.nombre == "BRASIL" and perfil.tipo.supervisor:   
+    if perfil.distritos.nombre == "MATRIZ" and perfil.staff.staff.first_name == "Heriberto":
+         requis = Requis.objects.filter(autorizar=None, orden__superintendente = perfil, complete =True)
+    elif perfil.distritos.nombre == "MATRIZ" or perfil.distritos.nombre == "BRASIL" and perfil.tipo.supervisor:   
         requis = Requis.objects.filter(autorizar=None, orden__supervisor = perfil, complete =True)
     elif perfil.tipo.superintendente == True and perfil.tipo.nombre != "Admin":
         requis = Requis.objects.filter(autorizar=None, orden__superintendente=perfil, complete =True)
@@ -981,7 +1015,7 @@ def requisicion_detalle(request, pk):
                 error_messages[field] = errors.as_text()
             
 
-
+    #print(orden)
     context = {
         'error_messages':error_messages,
         'productos': productos,
@@ -1014,10 +1048,12 @@ def requisicion_autorizar(request, pk):
         costo_aprox = costo_aprox + producto.cantidad * producto.producto.articulos.producto.price
 
     try:
-        porcentaje = "{0:.2f}%".format((costo_aprox/requi.orden.subproyecto.presupuesto)*100)
+        presupuesto = requi.orden.subproyecto.presupuesto or 0  # Default to 0 if None
+        gastado = requi.orden.subproyecto.gastado or 0  # Default to 0 if None
+        porcentaje = "{0:.2f}%".format((gastado/presupuesto)*100)
     except ZeroDivisionError:
         porcentaje = " 0%"
-    resta = requi.orden.subproyecto.presupuesto - requi.orden.subproyecto.gastado - costo_aprox
+    resta = presupuesto - gastado - costo_aprox
 
     if request.method == 'POST':
         requi.requi_autorizada_por = perfil
@@ -1270,15 +1306,32 @@ def render_pdf_view(request, pk):
         c.drawString(130,caja_proveedor-100, "No Aprobado aún")
     #Create blank list
     data =[]
-
+    styles = getSampleStyleSheet()
+    paragraph_style = styles["BodyText"]
+    compact_style = ParagraphStyle(
+        name="CompactStyle",
+        fontName="Helvetica",
+        fontSize=6,  # Tamaño de fuente más pequeño
+        leading=7,  # Espaciado entre líneas
+        textColor=colors.black,
+        alignment=0,  # Alineación a la izquierda (puedes cambiar a 1=centrado o 2=derecha si es necesario)
+        spaceBefore=0,  # Sin espacio antes del párrafo
+        spaceAfter=0,   # Sin espacio después del párrafo
+    )
     encabezado = [['''Código''', '''Nombre''', '''Cantidad''','''Comentario''']]
 
 
-    high = 540
-    for producto in productos:
-        data.append([producto.producto.producto.codigo, producto.producto.producto.nombre,producto.cantidad, producto.comentario])
-        high = high - 18
-
+    high = 480
+    for i in range(1):
+        for producto in productos:
+            if producto.comentario:
+                comentario = Paragraph(producto.comentario, compact_style)
+            else:
+                comentario = ''
+            data.append([producto.producto.producto.codigo, producto.producto.producto.nombre,producto.cantidad,comentario])
+            high = high - 15
+    if high <= 480-(15*15):
+        high= 480-(15*15)
 
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
@@ -1314,36 +1367,35 @@ def render_pdf_view(request, pk):
     c.drawCentredString(320,235,'Observaciones')
     options_conditions_paragraph = Paragraph(comentario, styleN)
     # Crear un marco (frame) en la posición específica
-    frame = Frame(20, -110, width-40, high-50, id='normal')
+    frame = Frame(20, 30, 570, 200, id='normal')
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
     c.setFillColor(prussian_blue)
     c.rect(20,30,565,30, fill=True, stroke=False)
-    c.setFillColor(white)
 
     c.setFillColor(black)
-    c.drawCentredString(180,high-240, orden.staff.staff.staff.first_name +' '+ orden.staff.staff.staff.last_name)
-    c.line(140,high-241,220,high-241)
-    c.drawCentredString(180,high-250, 'Solicitado')
+    c.drawCentredString(180,140, orden.staff.staff.staff.first_name +' '+ orden.staff.staff.staff.last_name)
+    c.line(140,139,220,139)
+    c.drawCentredString(180,130, 'Solicitado')
     if orden.autorizar == False:
         c.setFillColor(rojo)
-        c.drawCentredString(410, high-240, '{Esta orden ha sido Cancelada}')
+        c.drawCentredString(410,140, '{Esta orden ha sido Cancelada}')
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'CANCELADA')
     elif orden.autorizar:
+        c.drawCentredString(410,140, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFillColor(prussian_blue)
-        c.drawCentredString(410,high-240, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'APROBADA')
     else:
+        c.drawCentredString(410,140, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFillColor(rojo)
-        c.drawCentredString(410,high-240, orden.supervisor.staff.staff.first_name+' '+ orden.supervisor.staff.staff.last_name)
         c.setFont('Helvetica-Bold',14)
         c.drawString(370,670, 'NO AUTORIZADA AÚN')
     c.setFillColor(black)
-    c.setFont('Helvetica',12)
-    c.line(360,high-241,460,high-241)
-    c.drawCentredString(410,high-250,'Supervisor')
+    c.setFont('Helvetica',9)
+    c.line(360,139,460,139)
+    c.drawCentredString(410,130,'Supervisor')
 
     #table = Table(data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm,])
     table_style = TableStyle([ #estilos de la tabla
@@ -1359,25 +1411,37 @@ def render_pdf_view(request, pk):
         ('FONTSIZE',(0,1),(-1,-1), 6),
         ])
     #table.setStyle(table_style)
-    rows_per_page = 15
+    # Configuración inicial
+    rows_first_page = 10  # Filas para la primera página
+    rows_other_pages = 17  # Filas para las demás páginas
     data_len = len(data) 
-    for page_start in range(0, data_len, rows_per_page):
-        page_end = min(page_start + rows_per_page, data_len)
-        #page_data = data[page_start:page_end + 1]  # +1 para incluir el encabezado en cada página
-        page_data = encabezado + data[page_start:page_end] 
-        table = Table(page_data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 5.2 * cm])
-        table.setStyle(table_style)
-         # Calcular el alto de la tabla para la página actual
-        table_height = data_len * 18 #espacio_por_fila
-        # Calcular la posición 'y' inicial para la tabla basada en el alto de la tabla
-        table_y_position = height - table_height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
-        #table_y_position = height - 30 - (210 if page_start == 0 else 0)  # Ajustar el margen superior
-        
 
+    page_start = 0
+    first_page = True  # Bandera para determinar si es la primera página
+
+    while page_start < data_len:
+        # Determinar el número de filas en esta página
+        rows_per_page = rows_first_page if first_page else rows_other_pages
+        
+        page_end = min(page_start + rows_per_page, data_len)  # Fin de la página actual
+        page_data = encabezado + data[page_start:page_end]  # Datos para esta página
+        table = Table(page_data, colWidths=[1.2 * cm, 10 * cm, 1.5 * cm, 7.2 * cm])
+        table.setStyle(table_style)
+        
+        # Ajustar la posición según si es la primera página o no
+        if first_page:
+            table_y_position = high  # Posición más alta para la primera página
+        else:
+            table_y_position = height - 520  # Posición estándar para las demás páginas
+        
         table.wrapOn(c, width, height)  # Preparar la tabla
         table.drawOn(c, 20, table_y_position)  # Dibujar la tabla en la posición calculada
-
-        if page_end < data_len:  # Si hay más páginas, preparar una nueva página
+        
+        # Actualizar el inicio de la siguiente página
+        page_start = page_end
+        first_page = False  # Después de la primera iteración, cambia la bandera
+        
+        if page_start < data_len:  # Si hay más datos, agregar una nueva página
             c.showPage()
     
    
@@ -2301,7 +2365,7 @@ def convert_excel_matriz_requis_productos(requis):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto','Código', 'Producto','Unidad', 'Cantidad','Autorización','Status']
+    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto','Código', 'Producto','Comentario usuario','Unidad', 'Cantidad','Autorización','REQ Status','Product Status']
 
     columna_max = len(columns)+2
 
@@ -2325,6 +2389,11 @@ def convert_excel_matriz_requis_productos(requis):
             status= 'Cancelada'
         else:
             status= 'No Autorizado Aún'
+        if req.cantidad_comprada == req.cantidad:
+            status_prod = 'Colocado'
+        else:
+            status_prod = 'Pendiente'
+
 
         row = [
             req.req.folio,
@@ -2334,11 +2403,13 @@ def convert_excel_matriz_requis_productos(requis):
             req.req.orden.subproyecto.nombre if req.req.orden.subproyecto else '',
             req.producto.articulos.producto.producto.codigo if req.producto.articulos.producto else '',
             str(req.producto.articulos.producto.producto.nombre) if req.producto.articulos.producto else '',
+            str(req.producto.articulos.comentario) if req.producto.articulos.comentario else '',
             str(req.producto.articulos.producto.producto.unidad) if req.producto.articulos.producto else '',
 
             req.cantidad,
             (str(req.req.approved_at) + str(req.req.approved_at_time)) if req.req.autorizar else '',
             status,
+            status_prod,
         ]
         
         for col_num, cell_value in enumerate(row):

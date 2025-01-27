@@ -81,7 +81,7 @@ def crear_gasto(request):
     else:
         superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
 
-    proyectos = Proyecto.objects.filter(activo=True, distrito = usuario.distritos)
+    proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
     tipos = Tipo_Gasto.objects.filter()

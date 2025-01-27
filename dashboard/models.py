@@ -62,7 +62,7 @@ class Product(models.Model):
 
 
     def __str__(self):
-        return f'{self.codigo}|{self.id}|{self.nombre}'
+        return f'{self.codigo}|{self.nombre}'
 
 
     @property
@@ -426,6 +426,7 @@ class ArticulosparaSurtir(models.Model):
     #created_at_time = models.TimeField(auto_now_add=True)
     modified_at = models.DateField(auto_now=True)
     seleccionado_salida = models.BooleanField(default=False)
+    seleccionado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Seleccionado_por')
     procesado = models.BooleanField(default = False)
 
     @property
