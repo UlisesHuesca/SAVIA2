@@ -55,25 +55,8 @@
                     </div>
                 </div>
                 <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                                <label style="color: #121212;" for="id_id">Proyecto</label>
-                            </div>
-                        </div>
-                    </div>
-                
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto"}}
-                                <label style="color: #121212;" for="id_id">Subproyecto</label>
-                            </div>
-                        </div>
-                    </div>
+                   
+
                     <div class="col-lg-4 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
@@ -133,22 +116,6 @@
                             </button>
                         </li>-->
                         <li class="nav-item m-1 d-lg-none">
-                            <div class="btn-group btn-group-sm" role="group" aria-label="Large button group">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>
-                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>
-                                <a type="button" class="btn btn-outline-info"  href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">OC Devueltas</a>
-                              </div>
-                        </li>
-                        <li class="nav-item m-1 d-none d-lg-block">
-                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'requisicion-autorizada' %}">Requis</a>
-                                <!--<a type="button" class="btn btn-outline-info" href="{% url 'productos-pendientes' %}">Productos RQ</a>-->
-                                <!--<a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'matriz-compras' %}">Matriz</a>-->
-                                <a type="button" class="btn btn-outline-info"  href="{% url 'matriz-oc-productos' %}">Productos OC</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-devueltas' %}">Devueltas</a>
-                              </div>
                         </li>
                     </ul>
                     <!--<div class="col-sm-2 col-md-3 col-lg-2 mt-3">
@@ -209,8 +176,6 @@
                     <th scope="col">Compra</th>
                     <th class="d-none d-lg-table-cell">Distrito</th>
                     <th class="d-none d-lg-table-cell">Creada</th>
-                    <th class="d-none d-lg-table-cell">A.F.</th>
-                    <th class="d-none d-lg-table-cell">Status Prov</th>
                     <th scope="col">Costo</th>
                     <th scope="col">Moneda</th>
                     <th class="d-none d-lg-table-cell">T.C.</th>
@@ -228,8 +193,7 @@
                     <th >{{compra.folio}}</th>
                     <td>{{compra.req.orden.distrito.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.created_at|date:"d/M/Y"}} </td>
-                    <td class="d-none d-lg-table-cell">{% if compra.req.orden.activo == Null %} NA {% else %}{{compra.req.orden.activo}}{% endif %}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.proveedor.estatus}}</td>
+                    
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>{{compra.moneda.nombre}}</td>
                     <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
