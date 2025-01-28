@@ -134,7 +134,7 @@
                     <td>
                         {% if direccion.nombre.csf %}
                         <a type="button" class="btn btn-outline-info" href="{{direccion.proveedor.csf.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
-                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                            <i class="fa-sharp-duotone fa-regular fa-file-pdf"></i>
                         </a>
                         {% endif %}
                         <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-csf' direccion.nombre.id %}">
