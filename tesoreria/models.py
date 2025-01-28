@@ -89,7 +89,7 @@ class Facturas(models.Model):
     @property   
     def emisor(self):
         if not self.factura_xml:
-            print(f"Error: {self.factura_xml.path} no tiene un archivo asociado.")
+            print(f"Error: {self.id} no tiene un archivo asociado.")
             return None
         
         try:
