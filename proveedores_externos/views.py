@@ -1,14 +1,14 @@
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import Http404, HttpResponse
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.core.paginator import Paginator
-from compras.models import Compra, Proveedor
+from compras.models import Compra, Proveedor, Proveedor_direcciones
 from user.models import Profile
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
-
+from .forms import CSFForm
 # Create your views here.
 
 @perfil_seleccionado_required
@@ -76,11 +76,6 @@ def matriz_oc_proveedores(request):
     compras_con_criterio = compras.annotate(time_difference=time_difference).filter(time_difference__lte=timedelta(days=3))
     oc_cumplen = compras_con_criterio.count()
 
-     # Calcular el indicador de cumplimiento (oc_cumplen / total_de_oc)
-    #if total_de_oc > 0:
-    #    cumplimiento = (oc_cumplen / total_de_oc)*100
-    #else:
-    #    cumplimiento = 0
 
      #Set up pagination
     p = Paginator(compras, 50)
@@ -128,8 +123,42 @@ def matriz_oc_proveedores(request):
         #else:
         return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date)
         
-        
-
-    
 
     return render(request, 'proveedores_externos/matriz_oc_proveedores.html',context)
+
+
+@perfil_seleccionado_required
+def matriz_direcciones(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    
+    if usuario.tipo.proveedor_externo:
+        proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
+        direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
+      
+    else:
+        raise Http404("No tienes permiso para ver esta vista")
+    context = {
+        'proveedor':proveedor,
+        'direcciones':direcciones,
+        }
+    return render(request,'proveedores_externos/informacion_proveedores.html', context)
+
+@perfil_seleccionado_required
+def edit_csf(request, pk):
+    proveedor = Proveedor.objects.get(id = pk)
+    print(proveedor.id)
+    form = CSFForm(instance = proveedor)
+
+    if request.method == 'POST':
+        form = CSFForm(request.POST, request.FILES, instance=proveedor)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    
+    context = {
+        'proveedor':proveedor,
+        'form':form, 
+    }
+    
+    return render(request, 'proveedores_externos/edit_csf.html',context)
