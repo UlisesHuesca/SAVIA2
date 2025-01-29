@@ -345,8 +345,8 @@ var monto_moneda = document.getElementById("id_monto");
 document.getElementById('myForm').addEventListener('submit', function(event) { 
     // Obtiene los valores de los campos
     const monto = parseFloat(document.getElementById('id_monto').value) || 0;
-    const remanente_field = document.getElementById('remanente');
-    remanente = remanente_field.getAttribute('remanente');
+    const remanente_field = document.getElementById('remanente').toFixed(1);
+    remanente = parseFloat(remanente_field.getAttribute('remanente')).toFixed(1);
     console.log(monto)
     console.log(remanente)
     // Verifica si el monto es mayor que el remanente
