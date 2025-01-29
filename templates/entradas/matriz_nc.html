@@ -78,6 +78,9 @@
                     <th scope="col">Proveedor</th>
                     <th scope="col">Tipo</th>
                     <th scope="col">Generada por:</th>
+                    {% if perfil.tipo.nombre == "VIS_ADQ" %}
+                    <th>Distrito</th>
+                    {% endif %}
                     <th scope="col">Comentario</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Productos</th>
@@ -91,7 +94,11 @@
                     <td scope="col">{{nc.oc.folio}}</th>
                     <td scope="col">{{nc.oc.proveedor}}</td>
                     <td scope="col">{{nc.tipo_nc.nombre}}</td>
+                    
                     <td>{{nc.almacenista.staff.staff.first_name}} {{nc.almacenista.staff.staff.last_name}}</td>
+                    {% if perfil.tipo.nombre == "VIS_ADQ" %}
+                    <td>{{nc.oc.req.orden.distrito.nombre}}</td>
+                    {% endif %}
                     <td>{{nc.comentario}}</td>
                     <td>{{nc.nc_date}} </td>
                     <td>

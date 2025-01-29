@@ -850,13 +850,16 @@ def reporte_calidad(request, pk):
 def matriz_nc(request):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
-    ncs= No_Conformidad.objects.filter(completo = True, oc__req__orden__distrito = perfil.distritos)
+    if perfil.tipo.nombre == "VIS_ADQ":
+        ncs= No_Conformidad.objects.filter(completo = True)
+    else:
+        ncs= No_Conformidad.objects.filter(completo = True, oc__req__orden__distrito = perfil.distritos)
     
 
     context = {
         #'form': form,
         'ncs': ncs,
-        #'restantes_liberacion': restantes_liberacion,
+        'perfil': perfil,
         }
 
     return render(request,'entradas/matriz_nc.html',context)
