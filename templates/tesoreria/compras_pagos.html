@@ -347,10 +347,10 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
     const monto = document.getElementById('id_monto').value || 0;
     const remanente_field = document.getElementById('remanente');
     remanente = remanente_field.getAttribute('remanente');
-    console.log(parseFloat(monto).toFixed(1))
-    console.log(parseFloat(remanente).toFixed(1))
+    console.log(parseFloat(monto))
+    console.log(parseFloat(remanente))
     // Verifica si el monto es mayor que el remanente
-    if (parseFloat(monto).toFixed(1) > parseFloat(remanente).toFixed(1)) {
+    if (parseFloat(monto) > parseFloat(remanente)) {
         // Muestra una alerta y previene el envío del formulario
         Swal.fire({
             icon: 'error',
