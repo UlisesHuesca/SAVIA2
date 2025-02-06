@@ -305,8 +305,6 @@ def saldo_inicial(request):
     return render(request, 'tesoreria/saldo_inicial.html',context)
 
 from django.http import JsonResponse
-
-from django.http import JsonResponse
 from datetime import datetime
 from .models import Cuenta  # Asegúrate de que la importación de tu modelo sea correcta
 
@@ -319,9 +317,12 @@ def prellenar_formulario(request):
         
         pdf_content = pdf_content.read()
         texto_extraido = extraer_texto_de_pdf(pdf_content)
+        print("Texto extraído:", texto_extraido)
         datos_extraidos = encontrar_variables(texto_extraido)
+        print("Datos extraídos:", datos_extraidos)
         
         fecha_str = datos_extraidos.get('fecha', '').strip()
+
         fecha_formato_correcto = None  # Valor por defecto en caso de que no se pueda procesar la fecha
         
         if fecha_str:
@@ -330,6 +331,7 @@ def prellenar_formulario(request):
                 fecha_formato_correcto = fecha_obj.strftime('%Y-%m-%d')
             except ValueError:
                 # Opcional: Agregar alguna forma de logging o notificación de que la fecha no es válida
+                print('Se lo llevó madres')
                 pass
         
         numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip()
