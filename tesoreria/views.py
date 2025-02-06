@@ -435,10 +435,10 @@ def compras_pagos(request, pk):
             monto_parcial = compra.parcial + suma_pago
             if monto_actual <= 0:
                 messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
-            elif round(monto_total_pagado,2) <= round(costo_oc,2):
-                if round(monto_total_pagado,2) == round(monto_parcial,2):
+            elif round(monto_total_pagado,1) <= round(costo_oc,1):
+                if round(monto_total_pagado,1) == round(monto_parcial,1):
                     compra.para_pago = False
-                if round(monto_total_pagado,2) == round(costo_oc,2):
+                if round(monto_total_pagado,1) == round(costo_oc,1):
                     compra.pagada= True
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
