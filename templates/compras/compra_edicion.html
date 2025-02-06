@@ -479,7 +479,7 @@ function verificar() {
                     "icon":"error",
                 })
                 return false
-    } else if ((status_comparativo == "NUEVO") && (comparativo.value ==='')){
+    } else if((isHidden == false ) && (status_comparativo == "NUEVO") && (comparativo.value ==='')){
         Swal.fire({
                 "title":"Error",
                 "text":"Debes elegir una opción en comparativo",
@@ -1180,6 +1180,7 @@ function precio_ref() {
     var comparativo = document.getElementById('comparativo')
 
     if (status == "NUEVO"){
+        
         for (data in datosProductos_comp){
             
             var precio_unitario = Number(datosProductos_comp[data].precio) || 0;
