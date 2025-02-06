@@ -879,10 +879,8 @@ def requisicion_autorizacion(request):
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     
     #ordenes = Order.objects.filter(complete=True, autorizar=True, staff__distrito=perfil.distrito)
-    if perfil.distritos.nombre == "MATRIZ" and perfil.staff.staff.first_name == "Heriberto":
-         requis = Requis.objects.filter(autorizar=None, orden__superintendente = perfil, complete =True)
-    elif perfil.distritos.nombre == "MATRIZ" or perfil.distritos.nombre == "BRASIL" and perfil.tipo.supervisor:   
-        requis = Requis.objects.filter(autorizar=None, orden__supervisor = perfil, complete =True)
+    if perfil.distritos.nombre == "MATRIZ" or perfil.distritos.nombre == "BRASIL" and perfil.tipo.supervisor:   
+        requis = Requis.objects.filter(autorizar=None, complete =True).filter(Q(orden__supervisor=perfil) | Q(orden__superintendente=perfil) & Q(orden__tipo__tipo = 'resurtimiento'))
     elif perfil.tipo.superintendente == True and perfil.tipo.nombre != "Admin":
         requis = Requis.objects.filter(autorizar=None, orden__superintendente=perfil, complete =True)
     elif perfil.tipo.nombre == "Admin":
