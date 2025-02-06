@@ -356,7 +356,7 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
     }
     console.log(parseFloat(monto))
     // Verifica si el monto es mayor que el remanente
-    if (parseFloat(monto) > parseFloat(remanente)) {
+    if (parseFloat(monto).toFixed(1) > parseFloat(remanente).toFixed(1)) {
         // Muestra una alerta y previene el envío del formulario
         Swal.fire({
             icon: 'error',
