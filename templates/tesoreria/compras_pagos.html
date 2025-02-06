@@ -354,10 +354,9 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
         console.log(parseFloat(tipo_cambio))
         monto = monto / tipo_cambio
     }
-    console.log(parseFloat(monto).toFixed(1))
-    console.log(parseFloat(remanente).toFixed(1))
+    console.log(parseFloat(monto))
     // Verifica si el monto es mayor que el remanente
-    if (parseFloat(monto).toFixed(1) > parseFloat(remanente).toFixed(1)) {
+    if (parseFloat(monto) > parseFloat(remanente)) {
         // Muestra una alerta y previene el envío del formulario
         Swal.fire({
             icon: 'error',
