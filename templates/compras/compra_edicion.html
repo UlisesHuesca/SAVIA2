@@ -467,6 +467,7 @@ function verificar() {
     var status_comparativo = status_txt.innerText;
     let comparativo = document.getElementById('id_comparativo_model');
     let rows = document.getElementById("mytbl").rows.length;
+    var isHidden = comparativoElement.classList.contains('d-none');
     console.log(comparativo.value)
    
     val_moneda = moneda.value;
