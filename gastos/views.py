@@ -77,7 +77,7 @@ def crear_gasto(request):
         else:    
             superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin" and not usuario.tipo.nombre == "GERENCIA":
-        superintendentes = colaborador.filter(staff =  usuario.staff)  
+        superintendentes = colaborador.filter(staff =  usuario.staff, distritos = usuario.distritos )  
     else:
         superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
 
