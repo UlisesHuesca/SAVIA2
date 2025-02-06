@@ -304,7 +304,6 @@ def saldo_inicial(request):
 
     return render(request, 'tesoreria/saldo_inicial.html',context)
 
-from django.http import JsonResponse
 
 from django.http import JsonResponse
 from datetime import datetime
