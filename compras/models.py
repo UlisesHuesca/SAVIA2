@@ -264,6 +264,16 @@ class Compra(models.Model):
     @property
     def get_folio(self):
         return f'OC{self.id}'
+    
+    @property
+    def estatus_original(self):
+        primer_historico = self.history.first()  # Obtiene el primer registro histórico
+
+        if primer_historico and primer_historico.proveedor and primer_historico.proveedor.estatus:
+            return primer_historico.proveedor.estatus.nombre  # Retorna el estatus del primer historial
+        
+        # Si no hay historial, marca el estatus actual con "*"
+        return f"{self.proveedor.estatus.nombre}*"
 
     def __str__(self):
         return f'oc:{self.folio} - {self.id}'

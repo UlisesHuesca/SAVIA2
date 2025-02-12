@@ -10,6 +10,8 @@ from compras.models import Compra
 from viaticos.models import Solicitud_Viatico
 from user.models import Profile, Tipo_perfil
 from django.db.models import Q
+from django.conf import settings
+from django.utils import translation
 
 def contadores_processor(request):
     #Por si aun no se ingresa a un perfil para que no se trabe en el login
@@ -19,6 +21,10 @@ def contadores_processor(request):
         usuario = Profile.objects.get(id=pk)
     except Profile.DoesNotExist:
         usuario = None
+
+    print("Idioma en sesión al cargar la página:", request.session.get(settings.LANGUAGE_SESSION_KEY))
+    language = request.session.get(settings.LANGUAGE_SESSION_KEY, settings.LANGUAGE_CODE)
+    translation.activate(language)
 
     conteo_requis = 0
     conteo_oc = 0

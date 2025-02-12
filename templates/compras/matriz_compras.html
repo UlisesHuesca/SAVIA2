@@ -220,6 +220,7 @@
                     <th scope="col">Req. Autorizada</th>
                     <th scope="col">Proveedor</th>
                     <th class="d-none d-lg-table-cell">Status Prov</th>
+                    <th class="d-none d-lg-table-cell">Status Orig</th>
                     <th scope="col">Costo</th>
                     <th scope="col">Moneda</th>
                     <th class="d-none d-lg-table-cell">T.C.</th>
@@ -252,6 +253,7 @@
                     <td>{{compra.req.approved_at}} {{compra.req.approved_at_time}}</td>
                     <td>{{compra.proveedor}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.proveedor.estatus}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.estatus_original}}</td>
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>{{compra.moneda.nombre}}</td>
                     <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>

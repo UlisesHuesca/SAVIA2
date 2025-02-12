@@ -1,5 +1,5 @@
 {% load static %}
-
+{% load i18n %}
 <head>
     <!-- Vincular CSS -->
     <link rel="stylesheet" type="text/css" href="{% static 'css/style.css' %}">
@@ -90,7 +90,7 @@
                             {% else %}
                                 <div class="d-none">
                             {% endif %}
-                                    <a class="dropdown-item" href="{% url 'dashboard-product' %}">Productos/Servicios</a>
+                                    <a class="dropdown-item" href="{% url 'dashboard-product' %}">{% trans "Productos/Servicios" %}</a>
                                 </div>
                             {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Gerente"  or usuario.tipo.subdirector == True %}
                                 <div>
@@ -110,13 +110,13 @@
                         </div>
                         <div class="dropdown-divider"></div>
                     {% if usuario.tipo.proveedor_externo == False  %}
-                    <h6 class="dropdown-header">Mis Comprobaciones</h6>
+                    <h6 class="dropdown-header">{% trans "Mis Comprobaciones" %}</h6>
                     <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="{% url 'mis-gastos' %}">Mis Gastos</a>
-                        <a class="dropdown-item" href="{% url 'mis-viaticos' %}">Mis Viáticos</a>
-                        <a class="dropdown-item" href="{% url 'mis_comprobaciones_gasto' %}">Resumen Gastos | Viáticos</a>
+                        <a class="dropdown-item" href="{% url 'mis-gastos' %}">{% trans "Mis Gastos" %}</a>
+                        <a class="dropdown-item" href="{% url 'mis-viaticos' %}">{% trans "Mis Viáticos" %}</a>
+                        <a class="dropdown-item" href="{% url 'mis_comprobaciones_gasto' %}">{% trans "Resumen Gastos | Viáticos" %}</a>
                         <a class="dropdown-item" href="{% url 'entrada-servicios' %}">
-                            Servicios pendientes
+                            {% trans "Servicios pendientes" %}
                             {% if conteo_servicios > 0 %}
                             <span class="badge bg-danger">({{conteo_servicios}})</span>
                              {% endif %}
@@ -181,20 +181,20 @@
                     {% else %}
                         <div>
                     {% endif %}
-                            <h6 class="dropdown-header">Solicitudes</h6>
+                            <h6 class="dropdown-header">{% trans "Solicitudes" %}</h6>
                             <div class="dropdown-divider"></div>
                                 <!--<a class="dropdown-item" href="{% url 'crear-plantilla' %}">Crear Plantilla</a>
                                 <a class="dropdown-item" href="{% url 'matriz-plantillas' %}">Matriz Plantillas</a>-->
-                                <a class="dropdown-item" href="{% url 'solicitud-product-selection' %}">Crear Solicitud</a>
-                                <a class="dropdown-item" href="{% url 'solicitud-matriz-productos' %}">Solicitudes por producto</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-pendientes' %}">Matriz Solicitudes</a>
+                                <a class="dropdown-item" href="{% url 'solicitud-product-selection' %}">{% trans "Crear Solicitud" %}</a>
+                                <a class="dropdown-item" href="{% url 'solicitud-matriz-productos' %}">{% trans "Solicitudes por producto" %}</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-pendientes' %}">{% trans "Matriz Solicitudes" %}</a>
                             <div class="dropdown-divider"></div>
                         <div>
-                            <h6 class="dropdown-header">Gastos y viáticos</h6>
+                            <h6 class="dropdown-header">{% trans "Gastos y viáticos" %}</h6>
                             <div class="dropdown-divider"></div>
-                                <a class="dropdown-item" href="{% url 'crear-gasto' %}">Crear Solicitud de Gasto/Reembolso</a>
-                                <a class="dropdown-item" href="{% url 'solicitud-viatico' %}">Crear Viático</a>
-                                <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">Matriz Viáticos</a>
+                                <a class="dropdown-item" href="{% url 'crear-gasto' %}">{% trans "Crear Solicitud de Gasto/Reembolso" %}</a>
+                                <a class="dropdown-item" href="{% url 'solicitud-viatico' %}">{% trans "Crear Viático" %}</a>
+                                <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">{% trans "Matriz Viáticos" %}</a>
                             <div class="dropdown-divider"></div>
                         </div>
                     </div>
@@ -213,10 +213,10 @@
                     {% else %}
                     <div>
                     {% endif %}
-                        <h6 class="dropdown-header">Compras</h6>
+                        <h6 class="dropdown-header">{% trans "Compras" %}</h6>
                         <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{% url 'requisicion-autorizada' %}">
-                                Requisiciones autorizadas
+                                {% trans "Requisiciones autorizadas" %}
                                 {% if conteo_requis > 0 %}
                                 <span class="badge bg-danger">({{conteo_requis}})</span>
                                 {% endif %}
@@ -227,16 +227,16 @@
                             <div class="d-none"> 
                             {% endif %}
                             <a class="dropdown-item" href="{% url 'comparativos' %}">
-                                Comparativos
+                                {% trans "Comparativos" %}
                             </a>
                             <a class="dropdown-item" href="{% url 'compras-devueltas' %}">
-                                Compras Devueltas
+                                {% trans "Compras Devueltas" %}
                             </a>
                             <!--<a class="dropdown-item" href="{% url 'add_proveedores2' %}">
                                 Solicitud alta de proveedor
                             </a>-->
                             <a class="dropdown-item" href="{% url 'add_proveedores_comparativo' %}">
-                                Agregar Proveedor Comparativo
+                                {% trans "Agregar Proveedor Comparativo" %}
                             </a>
                             <a class="dropdown-item" href="{% url 'matriz-nc' %}">Matriz NC's</a>
                             </div>
@@ -247,9 +247,9 @@
                     {% else %}
                     <div>
                     {% endif %}
-                        <h6 class="dropdown-header">Proveedores</h6>
+                        <h6 class="dropdown-header">{% trans "Proveedores" %}</h6>
                         <div class="dropdown-divider"></div>
-                        <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">Proveedores</a>
+                        <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">{% trans "Proveedores" %}</a>
                         {% if usuario.tipo.nombre != "ADQUISICIONES" %}
                             <a class="dropdown-item" href="{% url 'matriz-revision-proveedor' %}">Matriz Revision Proveedores</a>
                         {% endif %}
@@ -474,7 +474,7 @@
                         {% else %}
                             <div class="d-none">
                         {% endif %}
-                            <a class="dropdown-item" href="{% url 'matriz-compras' %}">Matriz Compras</a>
+                            <a class="dropdown-item" href="{% url 'matriz-compras' %}">{% trans "Matriz Compras" %}</a>
                             </div>
                         <!--    or usuario.tipo.comprador == True --> 
                         {% if usuario.tipo.tesoreria or usuario.tipo.gerente or usuario.tipo.comprador or usuario.tipo.subdirector %}

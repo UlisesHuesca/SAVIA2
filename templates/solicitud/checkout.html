@@ -3,10 +3,11 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load l10n %}
+{% load i18n %}
 <html>
 <head>
 
-{% block title %}Crear Solicitud{% endblock %}
+{% block title %}{% trans "Crear Solicitud" %}{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -50,7 +51,7 @@
     <div class="col-lg-4 col-md-12"> 
             <div class="card" id="Solicitud-info">
                 <div class="card-header">
-					<h2 id="order" tipo="{{orden.tipo}}" orden="{{orden.id|unlocalize}}">Información de Solicitud|Folio: {{folio_preview}}</h2>
+					<h2 id="order" tipo="{{orden.tipo}}" orden="{{orden.id|unlocalize}}">{% trans "Información de Solicitud|Folio:" %} {{folio_preview}}</h2>
                 </div>
                 {% if error_messages %}
                 <div class="alert alert-danger" role="alert">
@@ -144,7 +145,7 @@
                                 </div>
                                 <div class="form-check form-switch col-auto mx-4" id="Soporte">
                                     <input class="form-check-input" type="checkbox" role="switch" id="SwitchSoporte">
-                                    <label class="form-check-label" for="SwitchSoporte">Subir Soporte/Factura/Cotización</label>
+                                    <label class="form-check-label" for="SwitchSoporte">{% trans "Subir Soporte/Factura/Cotización" %}</label>
                                 </div>     
                                 <div id="subir_pdf" class="row d-none">
                                         <div class="input-group mb-3" style="height:60px" >
@@ -163,7 +164,7 @@
     <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
             <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-            <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+            <p style="color: white; margin: 0;">{% trans "Generando reporte, por favor espera..." %}&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
         </div>
     </div>
     <div class="col-lg-8 col-md-12">
@@ -195,7 +196,7 @@
     {% else %}
     Swal.fire({
                     "title":"Error",
-                    "text":"No tienes productos seleccionados",
+                    "text":'{% trans "No tienes productos seleccionados" %}',
                     "icon":"error",
              })
     {% endif %}

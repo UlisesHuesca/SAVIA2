@@ -3,9 +3,10 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load l10n %}
+{% load i18n %}
 <html>
 <head>
-{% block title %}Selección{% endblock %}
+{% block title %}{% trans "Selección" %}{% endblock %}
 </head>
 <body>
     {% block content %}
@@ -23,7 +24,7 @@
         <div class ="card bg-white">
             
                <div class="card-header">
-                    <h5>Filtro de productos</h5>
+                    <h5>{% trans "Filtro de productos" %}</h5>
                 </div>
                 <div class="card-body">
                     {% csrf_token %}
@@ -33,7 +34,7 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
-                                    <label style="color: #121212;" for="id_codigo">Código*</label>
+                                    <label style="color: #121212;" for="id_codigo">{% trans "Código" %}</label>
                                 </div>
                             </div>
                         </div>
@@ -42,7 +43,7 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                                    <label style="color: #121212;" for="id_codigo">Producto*</label>
+                                    <label style="color: #121212;" for="id_codigo">{% trans "Producto" %}</label>
                                 </div>
                             </div>
                         </div>
@@ -51,7 +52,7 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{myfilter.form.familia|add_class:"form-control"|append_attr:"placeholder= Familia"}}
-                                    <label style="color: #121212;" for="id_codigo">Familia*</label>
+                                    <label style="color: #121212;" for="id_codigo">{% trans "Familia" %}</label>
                                 </div>
                             </div>
                         </div>
@@ -60,7 +61,7 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{myfilter.form.subfamilia|add_class:"form-control"|append_attr:"placeholder= Subfamilia"}}
-                                    <label style="color: #121212;" for="id_codigo">Subfamilia*</label>
+                                    <label style="color: #121212;" for="id_codigo">{% trans "Subfamilia" %}</label>
                                 </div>
                             </div>
                         </div>
@@ -69,7 +70,7 @@
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">
                                     {{ myfilter.form.activo_producto|add_class:"form-select" }}
-                                    <label style="color: #121212;" for="activo_producto">Productos:</label>
+                                    <label style="color: #121212;" for="activo_producto">{% trans "Productos" %}</label>
                                 </div>
                             </div>
                         </div>
@@ -88,13 +89,13 @@
                 <img class="thumbnail" src="{{producto.producto.imageURL}}">
                 <div class='box-element product'>
                     <h6><strong>{{producto.producto}}</strong></h6>
-                    <h8>Disponible: {{producto.cantidad}}</h8>
+                    <h8>{% trans "Disponible" %}: {{producto.cantidad}}</h8>
                     {% if producto.producto.activo == True %}
                     <br>
-                    <h8>Producto tipo activo</h8>
+                    <h8>{% trans "Producto tipo activo" %}</h8>
                     {% endif %}
                     <hr>
-                    <button data-product={{producto.id|unlocalize}} data-action="add" data-type="{{orden.tipo.id}}"  class="btn btn-outline-secondary add-btn update-cart">Agregar a Solicitud</button>
+                    <button data-product={{producto.id|unlocalize}} data-action="add" data-type="{{orden.tipo.id}}"  class="btn btn-outline-secondary add-btn update-cart">{% trans "Agregar a Solicitud" %}</button>
                     <!--<a class='btn btn-outline-info' href="#">Ver</a>-->
                 </div>
             </div>

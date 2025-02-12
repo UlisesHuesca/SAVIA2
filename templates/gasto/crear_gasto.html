@@ -3,9 +3,10 @@
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
 {% load l10n %}
+{% load i18n %}
 <html>
 <head>
-{% block title %} Gasto {% endblock %}
+{% block title %}{% trans "Gasto" %}{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -119,17 +120,17 @@
         </div>
         <div class="card mt-2"> 
             <div class="card-header">
-					<h2>Subir Facturas</h2>
+					<h2>{% trans "Subir Facturas" %}</h2>
             </div>
             <div class="card-body">  
                 <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>Factura PDF:</strong></label>
+                        <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>{% trans "Factura PDF" %}:</strong></label>
                         <input type="file" name="archivo_pdf" class="form-control" multiple>
-                        <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>Factura XML:</strong></label>
+                        <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>{% trans "Factura XML" %}:</strong></label>
                         <input type="file" name="archivo_xml" class="form-control" multiple>   
                         <div class="container-fluid text-end">
-                            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">Subir Facturas</button>
+                            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">{% trans "Subir Facturas" %}</button>
                         </div>
                 </form>
                 <div class ="table-responsive-sm">
@@ -137,12 +138,12 @@
                         <thead>
                             <tr>
                                 <th>#</th>
-                                <th>Archivo PDF</th>
-                                <th>Archivo XML</th>
-                                <th>Fecha de Subida</th>
-                                <th>Concepto</th>
-                                <th>Total</th>
-                                <th>Eliminar</th>
+                                <th>{% trans "Archivo PDF" %}</th>
+                                <th>{% trans "Archivo XML" %}</th>
+                                <th>{% trans "Fecha de Subida" %}</th>
+                                <th>{% trans "Concepto" %}</th>
+                                <th>{% trans "Total" %}</th>
+                                <th>{% trans "Eliminar" %}</th>
                                 <!-- Agrega más columnas si lo necesitas -->
                             </tr>
                         </thead>
@@ -191,11 +192,11 @@
     <div class="col-lg-7">
         <div class="card">
             <div class="card-header">
-                <h2 id="linea_gasto">Líneas de Gasto</h2>
+                <h2 id="linea_gasto">{% trans "Líneas de Gasto" %}</h2>
             </div>
             <div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
                 <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
-                <label class="form-check-label" for="SwitchUsarXML">Usar XML</label>
+                <label class="form-check-label" for="SwitchUsarXML">{% trans "Usar XML" %}</label>
             </div>            
             <div>
                 <form id="form_product" method="post" enctype="multipart/form-data">
@@ -244,7 +245,7 @@
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.comentario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Comentario"}}
-                            <label style="color: #121212;" for="id_comentario">Comentario*</label>
+                            <label style="color: #121212;" for="id_comentario">{% trans "Comentario" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -255,7 +256,7 @@
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
-                            <label style="color: #121212;" for="id_precio_unitario">Precio Unitario*</label>
+                            <label style="color: #121212;" for="id_precio_unitario">{% trans "Precio Unitario" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -264,7 +265,7 @@
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.cantidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cantidad"}}
-                            <label style="color: #121212;" for="id_cantidad">Cantidad*</label>
+                            <label style="color: #121212;" for="id_cantidad">{% trans "Cantidad" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -280,7 +281,7 @@
                 </div>
                 <div id='etiqueta_responsable' class="col-lg-4 col-sm-12">
                     <div class="alert alert-primary" role="alert">
-                        <h6 style="color: #121212;">&nbsp;Cálculo Previo:&nbsp;<div id="calculo_previo"> </div></h6>   
+                        <h6 style="color: #121212;">&nbsp;{% trans "Cálculo Previo" %}:&nbsp;<div id="calculo_previo"> </div></h6>   
                     </div>
                 </div>
             </div>
@@ -288,14 +289,14 @@
             <div  class="row">
                 <div class="form-check form-switch col-auto mx-4 mt-3" id="Otros_impuestos">
                         <input class="form-check-input" type="checkbox" role="switch" id="Switch_Otros_impuestos">
-                        <label class="form-check-label" for="Switch_Otros_impuestos" id="LabelOtros_Impuestos">Otros Impuestos</label>
+                        <label class="form-check-label" for="Switch_Otros_impuestos" id="LabelOtros_Impuestos">{% trans "Otros Impuestos" %}</label>
                 </div>
                 <div class="col-4">
                     <div id="otros_impuestos" class="input-group mb-3 mt-3 d-none">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-plus"></i>&nbsp;$</span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.otros_impuestos|add_class:"form-control"|append_attr:"placeholder= Otros Impuestos"}}
-                            <label style="color: #121212;" for="id_otros_impuestos">Otros Impuestos*</label>
+                            <label style="color: #121212;" for="id_otros_impuestos">{% trans "Otros Impuestos" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -311,7 +312,7 @@
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-minus"></i>&nbsp;$</span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                         {{form_product.impuestos_retenidos|add_class:"form-control form1"|append_attr:"placeholder= Impuestos Retenidos"}}
-                        <label style="color: #121212;" for="id_impuestos_retenidos">Impuestos Retenidos*</label>
+                        <label style="color: #121212;" for="id_impuestos_retenidos">{% trans "Impuestos Retenidos" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -332,16 +333,16 @@
             <thead>
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Descripción/Comentario</th>
-                    <th>Proyecto</th>
-                    <th>Subproyecto</th>
-                    <th scope="col">Cantidad</th>
-                    <th scope="col">P.U.</th>
-                    <th scope="col">Subtotal</th>
-                    <th scope="col">Total</th>
+                    <th scope="col">{% trans "Producto" %}</th>
+                    <th scope="col">{% trans "Descripción/Comentario" %}</th>
+                    <th>{% trans "Proyecto" %}</th>
+                    <th>{% trans "Subproyecto" %}</th>
+                    <th scope="col">{% trans "Cantidad" %}</th>
+                    <th scope="col">{% trans "P.U." %}</th>
+                    <th scope="col">{% trans "Subtotal" %}</th>
+                    <th scope="col">{% trans "Total" %}</th>
                     <!--<th scope="col">Facturas</th>-->
-                    <th scope="col" class="col-sm-2">Acción</th>
+                    <th scope="col" class="col-sm-2">{% trans "Acción" %}</th>
                 </tr>
             </thead>
             <tbody id="mytbl">
@@ -368,17 +369,17 @@
             <table class="table table-light table-striped">
             <thead>
                 <tr>
-                    <th scope="col">Subtotal</th>
+                    <th scope="col">{% trans "Subtotal" %}</th>
                     <td scope="col" id="subtotal">${{gasto.get_subtotal_solicitud}}</td>
                 </tr>
                 </thead>
             <tbody>
                 <tr>
-                    <th scope="col">Impuestos</th>
+                    <th scope="col">{% trans "Impuestos" %}</th>
                     <td scope="col" id="iva">${{gasto.get_total_impuesto}}</td>
                 </tr>
                 <tr>
-                    <th scope="col">Total</th>
+                    <th scope="col">{% trans "Total" %}</th>
                     <td scope="col" id="total">${{gasto.get_total_solicitud|floatformat:2}}</td>
                 </tr>
                 

@@ -235,15 +235,26 @@ REST_FRAMEWORK = {
 # Internationalization
 # https://docs.djangoproject.com/en/3.2/topics/i18n/
 
-LANGUAGE_CODE = 'es'
+LANGUAGE_CODE = 'es-MX'
 
 TIME_ZONE = 'America/Mexico_City'
-
+# Activando la internacionalización y localización
 USE_I18N = True
 
 USE_L10N = True
 
 USE_TZ = True
+
+# Configurando los idiomas soportados
+LANGUAGES = [
+    ('es-MX', 'Español (México)'),
+    ('pt', 'Português'),
+]
+# Define la ruta donde estarán los archivos de traducción
+LOCALE_PATHS = [
+    os.path.join(BASE_DIR, 'locale'),
+]
+
 
 #Esta etiqueta es necesaria para agregar crispy
 CRISPY_TEMPLATE_PACK = 'bootstrap4'
@@ -311,3 +322,24 @@ CELERY_RESULT_BACKEND = 'rpc://'
 
 DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB, ajusta el valor según lo que necesites
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+
+LANGUAGE_SESSION_KEY = 'django_language'
+
+# Utilizar el backend por defecto que almacena las sesiones en la base de datos
+SESSION_ENGINE = 'django.contrib.sessions.backends.db'
+
+# Nombre de la cookie de sesión
+SESSION_COOKIE_NAME = 'sessionid'
+
+# Duración de la cookie de sesión en segundos (2 semanas)
+SESSION_COOKIE_AGE = 1209600  # 2 semanas
+
+# Guardar la sesión en cada solicitud (asegura que se persista cualquier cambio)
+SESSION_SAVE_EVERY_REQUEST = True
+
+# Si quieres que la sesión expire al cerrar el navegador, cambia esto a True
+SESSION_EXPIRE_AT_BROWSER_CLOSE = False
+
+# Opcional: Cookies seguras (recomendado para producción con HTTPS)
+SESSION_COOKIE_SECURE = False  # Cambia a True si usas HTTPS
+

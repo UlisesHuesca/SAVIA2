@@ -1,22 +1,23 @@
 {% load l10n %}
 {% load widget_tweaks %}
+{% load i18n %}
 <html>
 <body>
 <div class = "card bg-white">
     
         <div class="card-header">
-            <h3>Resumen de solicitud</h3>
+            <h3>{% trans "Resumen de solicitud" %}</h3>
         </div>
     {% if orden.tipo.id == 2 %}
     <div class="col-3 my-2">
         <a class="btn btn-outline-info" href="{% url 'product_selection_resurtimiento' %}">
-            <i class="fa-solid fa-arrow-left">&nbsp;Agregar productos</i>
+            <i class="fa-solid fa-arrow-left">&nbsp;{% trans "Agregar productos" %}</i>
         </a>
     </div>
     {% else %}
     <div class="col-3 my-2">
         <a class="btn btn-outline-info" href="{% url 'solicitud-product-selection' %}">
-            <i class="fa-solid fa-arrow-left">&nbsp;Agregar productos</i>
+            <i class="fa-solid fa-arrow-left">&nbsp;{% trans "Agregar productos" %}</i>
         </a>
     </div>
     {% endif %}
@@ -29,13 +30,13 @@
             <thead>
                 <tr>
                     <th scope="col">#</th>
-                    <th scope="col">Código</th>
-                    <th scope="col">Producto</th>
-                    <th>Cantidad</th>
-                    <th>Editar</th>
-                    <th scope="col">Unidad</th>
-                    <th scope="col">Comentario</th>
-                    <th>Editar</th>
+                    <th scope="col">{% trans "Código" %}</th>
+                    <th scope="col">{% trans "Producto" %}</th>
+                    <th>{% trans "Cantidad" %}</th>
+                    <th>{% trans "Editar" %}</th>
+                    <th scope="col">{% trans "Unidad" %}</th>
+                    <th scope="col">{% trans "Comentario" %}</th>
+                    <th>{% trans "Editar" %}</th>
                     <th scope="col"></th>
                 </tr>
             </thead>
@@ -91,7 +92,7 @@
         </table>
     </div>
     <div class=card-footer>
-        <h5>Artículos: {{productos.count}}</h5>
+        <h5>{% trans "Artículos" %}: {{productos.count}}</h5>
     </div>
 </div>
 </body>

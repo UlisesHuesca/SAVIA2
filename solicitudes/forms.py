@@ -2,6 +2,7 @@ from django import forms
 from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
 from dashboard.models import Inventario, Order, Product, ArticulosOrdenados, Plantilla, ArticuloPlantilla, Activo
 from gastos.models import Entrada_Gasto_Ajuste, Conceptos_Entradas 
+from django.utils.translation import gettext_lazy as _
 from user.models import Profile
 
 class InventarioForm(forms.ModelForm):
@@ -39,6 +40,16 @@ class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
         fields = ['proyecto','subproyecto', 'operacion','sector','activo','superintendente','supervisor','comentario','soporte']
+        labels = {
+            'proyecto': _("Proyecto*"),
+            'subproyecto': _("Subproyecto*"),
+            'operacion': _("Operación*"),
+            'sector': _("Sector"),
+            'activo': _("Activo"),
+            'superintendente': _("Superintendente*"),
+            'supervisor': _("Supervisor*"),
+            'comentario': _("Comentario"),
+        }
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)

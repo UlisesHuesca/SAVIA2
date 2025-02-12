@@ -18,12 +18,13 @@ from user.filters import ProfileFilter
 import csv
 from django.core.paginator import Paginator
 from datetime import date, datetime
-from django.http import Http404
+from django.http import Http404, JsonResponse
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
-from django.http import JsonResponse
+from django.utils import translation
+from django.conf import settings
 
 #import decimal
 from openpyxl import Workbook
@@ -42,6 +43,7 @@ def index(request):
     usuario = Profile.objects.get(id = pk)
     inventarios = Inventario.objects.all()
     proyectos = Proyecto.objects.all()
+    
 
     # Obtener los proyectos y calcular el total
     #proyectos_total = [(proyecto, proyecto.get_projects_gastado) for proyecto in proyectos]
@@ -107,7 +109,15 @@ def select_profile(request):
         try:
             profile = Profile.objects.get(id=profile_id)
             request.session['selected_profile_id'] = profile.id
-            #messages.success(request, 'Está entrando')
+            # **Cambiar idioma según el perfil seleccionado**
+            if profile.distritos.nombre == "BRASIL":
+               
+                translation.activate('pt')
+                request.session[settings.LANGUAGE_SESSION_KEY] = 'pt'
+                print(request.session[settings.LANGUAGE_SESSION_KEY])
+            else:
+                translation.activate('es')
+                request.session[settings.LANGUAGE_SESSION_KEY] = 'es-MX'
             return redirect('dashboard-index')   
         except Profile.DoesNotExist:
             messages.error(request, 'El perfil seleccionado no es válido')
@@ -116,6 +126,8 @@ def select_profile(request):
         form = Profile_Form()
         form.fields['profile'].queryset = profiles
 
+    request.LANGUAGE_CODE = translation.get_language()  # 🔹 Forzar el idioma actual
+    print(f"Idioma activado: {request.LANGUAGE_CODE}")  # Verificar en la consola
         
     context = {
         'form': form,
