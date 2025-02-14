@@ -113,7 +113,7 @@ def select_profile(request):
             if profile.distritos.nombre == "BRASIL":
                
                 translation.activate('pt')
-                request.session[settings.LANGUAGE_SESSION_KEY] = 'pt'
+                request.session[settings.LANGUAGE_SESSION_KEY] = 'pt-br'
                 print(request.session[settings.LANGUAGE_SESSION_KEY])
             else:
                 translation.activate('es')

@@ -248,7 +248,7 @@ USE_TZ = True
 # Configurando los idiomas soportados
 LANGUAGES = [
     ('es-MX', 'Español (México)'),
-    ('pt', 'Português'),
+    ('pt-br', 'Português'),
 ]
 # Define la ruta donde estarán los archivos de traducción
 LOCALE_PATHS = [

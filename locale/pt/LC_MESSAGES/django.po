@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: PACKAGE VERSION\n"
 "Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-02-10 12:01-0600\n"
+"POT-Creation-Date: 2025-02-14 13:43-0600\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
@@ -46,9 +46,135 @@ msgstr "Superintendente"
 msgid "Supervisor*"
 msgstr "Supervisor"
 
-#: .\solicitudes\forms.py:51 .\templates\solicitud\product_edit.html:38
+#: .\solicitudes\forms.py:51 .\templates\gasto\crear_gasto.html:248
+#: .\templates\solicitud\product_edit.html:38
+#: .\templates\viaticos\crear_viaticos.html:321
+#: .\templates\viaticos\crear_viaticos.html:338
 msgid "Comentario"
 msgstr "Comentário"
+
+#: .\templates\gasto\crear_gasto.html:9
+msgid "Gasto"
+msgstr "Despesa"
+
+#: .\templates\gasto\crear_gasto.html:55
+msgid "Encabezado Gasto"
+msgstr "Cabeçalho de Despesa"
+
+#: .\templates\gasto\crear_gasto.html:77
+msgid "Otro Colaborador"
+msgstr "Outro Colaborador"
+
+#: .\templates\gasto\crear_gasto.html:114 .\templates\partials\nav.html:188
+#: .\templates\partials\topside.html:100 .\templates\solicitud\checkout.html:10
+msgid "Crear Solicitud"
+msgstr "Criar Solicitação"
+
+#: .\templates\gasto\crear_gasto.html:123
+#: .\templates\gasto\crear_gasto.html:133
+msgid "Subir Facturas"
+msgstr "Carregar Faturas"
+
+#: .\templates\gasto\crear_gasto.html:128
+msgid "Factura PDF"
+msgstr "Fatura PDF"
+
+#: .\templates\gasto\crear_gasto.html:130
+msgid "Factura XML"
+msgstr "Fatura XML"
+
+#: .\templates\gasto\crear_gasto.html:141
+msgid "Archivo PDF"
+msgstr "Arquivo PDF"
+
+#: .\templates\gasto\crear_gasto.html:142
+msgid "Archivo XML"
+msgstr "Arquivo XML"
+
+#: .\templates\gasto\crear_gasto.html:143
+msgid "Fecha de Subida"
+msgstr "Data de upload"
+
+#: .\templates\gasto\crear_gasto.html:144
+msgid "Concepto"
+msgstr "Conceito"
+
+#: .\templates\gasto\crear_gasto.html:145
+#: .\templates\gasto\crear_gasto.html:343
+#: .\templates\gasto\crear_gasto.html:382
+msgid "Total"
+msgstr "Total"
+
+#: .\templates\gasto\crear_gasto.html:146
+#: .\templates\viaticos\crear_viaticos.html:339
+msgid "Eliminar"
+msgstr "Excluir"
+
+#: .\templates\gasto\crear_gasto.html:195
+msgid "Líneas de Gasto"
+msgstr "Linhas de Despesa"
+
+#: .\templates\gasto\crear_gasto.html:199
+msgid "Usar XML"
+msgstr "Usar XML"
+
+#: .\templates\gasto\crear_gasto.html:259
+msgid "Precio Unitario"
+msgstr "Preço Unitário"
+
+#: .\templates\gasto\crear_gasto.html:268
+#: .\templates\gasto\crear_gasto.html:340
+#: .\templates\solicitud\product_edit.html:35
+msgid "Cantidad"
+msgstr "Quantidade"
+
+#: .\templates\gasto\crear_gasto.html:284
+msgid "Cálculo Previo"
+msgstr "Cálculo Prévio"
+
+#: .\templates\gasto\crear_gasto.html:292
+#: .\templates\gasto\crear_gasto.html:299
+msgid "Otros Impuestos"
+msgstr "Outros Impostos"
+
+#: .\templates\gasto\crear_gasto.html:315
+msgid "Impuestos Retenidos"
+msgstr "Impostos Retidos"
+
+#: .\templates\gasto\crear_gasto.html:336
+#: .\templates\solicitud\product_edit.html:34
+#: .\templates\solicitud\product_selection.html:46
+msgid "Producto"
+msgstr "Produto"
+
+#: .\templates\gasto\crear_gasto.html:337
+msgid "Descripción/Comentario"
+msgstr "Descrição/Comentário"
+
+#: .\templates\gasto\crear_gasto.html:338
+msgid "Proyecto"
+msgstr "Projeto"
+
+#: .\templates\gasto\crear_gasto.html:339
+msgid "Subproyecto"
+msgstr "Subprojeto"
+
+#: .\templates\gasto\crear_gasto.html:341
+msgid "P.U."
+msgstr "P.U."
+
+#: .\templates\gasto\crear_gasto.html:342
+#: .\templates\gasto\crear_gasto.html:372
+msgid "Subtotal"
+msgstr "Subtotal"
+
+#: .\templates\gasto\crear_gasto.html:345
+msgid "Acción"
+msgstr "Ação"
+
+#: .\templates\gasto\crear_gasto.html:378
+msgid "Impuestos"
+msgstr "Impostos"
 
 #: .\templates\partials\nav.html:93
 msgid "Productos/Servicios"
@@ -74,13 +200,9 @@ msgstr "Resumo de Despesas | Despesas de Viagem"
 msgid "Servicios pendientes"
 msgstr "Serviços Pendentes"
 
-#: .\templates\partials\nav.html:184
+#: .\templates\partials\nav.html:184 .\templates\partials\topside.html:78
 msgid "Solicitudes"
 msgstr "Solicitações"
-
-#: .\templates\partials\nav.html:188 .\templates\solicitud\checkout.html:10
-msgid "Crear Solicitud"
-msgstr "Criar Solicitação"
 
 #: .\templates\partials\nav.html:189
 msgid "Solicitudes por producto"
@@ -96,7 +218,7 @@ msgstr "Resumo de Despesas | Despesas de Viagem"
 
 #: .\templates\partials\nav.html:195
 msgid "Crear Solicitud de Gasto/Reembolso"
-msgstr "Criar Solicitação"
+msgstr "Criar Solicitação de Despesa/Reembolso"
 
 #: .\templates\partials\nav.html:196
 msgid "Crear Viático"
@@ -134,6 +256,15 @@ msgstr "Fornecedores"
 msgid "Matriz Compras"
 msgstr "Matriz Compras"
 
+#: .\templates\partials\topside.html:70
+#: .\templates\solicitud\product_selection.html:73
+msgid "Productos"
+msgstr "Produtos"
+
+#: .\templates\partials\topside.html:108
+msgid "Solicitud Status"
+msgstr "Status da Solicitação"
+
 #: .\templates\solicitud\checkout.html:54
 msgid "Información de Solicitud|Folio:"
 msgstr "Informações da Solicitação | Folha:"
@@ -148,7 +279,7 @@ msgstr "Gerando relatório, por favor aguarde..."
 
 #: .\templates\solicitud\checkout.html:199
 msgid "No tienes productos seleccionados"
-msgstr ""
+msgstr "Você não tem produtos selecionados"
 
 #: .\templates\solicitud\product_edit.html:9
 msgid "Resumen de solicitud"
@@ -163,15 +294,6 @@ msgstr "Adicionar Produtos"
 #: .\templates\solicitud\product_selection.html:37
 msgid "Código"
 msgstr "Código"
-
-#: .\templates\solicitud\product_edit.html:34
-#: .\templates\solicitud\product_selection.html:46
-msgid "Producto"
-msgstr "Produto"
-
-#: .\templates\solicitud\product_edit.html:35
-msgid "Cantidad"
-msgstr "Quantidade"
 
 #: .\templates\solicitud\product_edit.html:36
 #: .\templates\solicitud\product_edit.html:39
@@ -192,7 +314,7 @@ msgstr "Seleção"
 
 #: .\templates\solicitud\product_selection.html:27
 msgid "Filtro de productos"
-msgstr "Filtro de produto"
+msgstr "Filtro de produtos"
 
 #: .\templates\solicitud\product_selection.html:55
 msgid "Familia"
@@ -201,10 +323,6 @@ msgstr "Família"
 #: .\templates\solicitud\product_selection.html:64
 msgid "Subfamilia"
 msgstr "Subfamília"
-
-#: .\templates\solicitud\product_selection.html:73
-msgid "Productos"
-msgstr "Produtos"
 
 #: .\templates\solicitud\product_selection.html:92
 msgid "Disponible"
@@ -217,6 +335,126 @@ msgstr "Produtos tipo ativo"
 #: .\templates\solicitud\product_selection.html:98
 msgid "Agregar a Solicitud"
 msgstr "Adicionar Solicitação"
+
+#: .\templates\viaticos\crear_viaticos.html:8
+msgid "Viáticos"
+msgstr "Despesa de Viagem"
+
+#: .\templates\viaticos\crear_viaticos.html:46
+msgid "Solicitud de Viáticos"
+msgstr "Solicitações"
+
+#: .\templates\viaticos\crear_viaticos.html:129
+#: .\templates\viaticos\crear_viaticos.html:303
+msgid "Desde"
+msgstr "De"
+
+#: .\templates\viaticos\crear_viaticos.html:138
+#: .\templates\viaticos\crear_viaticos.html:312
+msgid "Hasta"
+msgstr "Até"
+
+#: .\templates\viaticos\crear_viaticos.html:149
+msgid "Seleccione su transporte"
+msgstr "Selecione seu transporte"
+
+#: .\templates\viaticos\crear_viaticos.html:150
+msgid "Vehículo propio"
+msgstr "Veículo próprio"
+
+#: .\templates\viaticos\crear_viaticos.html:151
+msgid "Vehículo empresa"
+msgstr "Veículo da empresa"
+
+#: .\templates\viaticos\crear_viaticos.html:152
+msgid "Autobús"
+msgstr "Ônibus"
+
+#: .\templates\viaticos\crear_viaticos.html:153
+msgid "Avión"
+msgstr "Avião"
+
+#: .\templates\viaticos\crear_viaticos.html:154
+msgid "Vehículo de compañero"
+msgstr "Veículo de colega"
+
+#: .\templates\viaticos\crear_viaticos.html:155
+msgid "Otros"
+msgstr "Outros"
+
+#: .\templates\viaticos\crear_viaticos.html:157
+msgid "Tipo de transporte"
+msgstr "Tipo de transporte"
+
+#: .\templates\viaticos\crear_viaticos.html:169
+msgid "Seleccione primero el tipo de transporte"
+msgstr "Selecione primeiro o tipo de transporte"
+
+#: .\templates\viaticos\crear_viaticos.html:180
+msgid "Lugar de partida"
+msgstr "Local de partida"
+
+#: .\templates\viaticos\crear_viaticos.html:189
+msgid "Lugar de comisión"
+msgstr "Local da missão"
+
+#: .\templates\viaticos\crear_viaticos.html:196
+#: .\templates\viaticos\crear_viaticos.html:285
+msgid "Puntos Intermedios"
+msgstr "Pontos intermediários"
+
+#: .\templates\viaticos\crear_viaticos.html:206
+msgid "Comentario para Jefe Inmediato"
+msgstr "Comentário para o Chefe Imediato"
+
+#: .\templates\viaticos\crear_viaticos.html:211
+msgid "Hospedaje"
+msgstr "Hospedagem"
+
+#: .\templates\viaticos\crear_viaticos.html:215
+msgid "Comidas c/factura"
+msgstr "Refeições C/Nota Fiscal"
+
+#: .\templates\viaticos\crear_viaticos.html:225
+msgid "Comentario General"
+msgstr "Comentário Geral"
+
+#: .\templates\viaticos\crear_viaticos.html:231
+msgid "Cuenta Alterna"
+msgstr "Conta Alternativa"
+
+#: .\templates\viaticos\crear_viaticos.html:235
+msgid "Número de Emergencia"
+msgstr "Número de emergência"
+
+#: .\templates\viaticos\crear_viaticos.html:244
+msgid "Número de emergencia"
+msgstr "Número de emergência"
+
+#: .\templates\viaticos\crear_viaticos.html:255
+msgid "Cuenta bancaria"
+msgstr "Conta bancária"
+
+#: .\templates\viaticos\crear_viaticos.html:264
+msgid "CLABE interbancaria"
+msgstr "CLABE interbancária"
+
+#: .\templates\viaticos\crear_viaticos.html:273
+msgid "Banco"
+msgstr "Banco"
+
+#: .\templates\viaticos\crear_viaticos.html:294
+#: .\templates\viaticos\crear_viaticos.html:335
+msgid "Punto Intermedio"
+msgstr "Ponto intermediário"
+
+#: .\templates\viaticos\crear_viaticos.html:336
+msgid "Fecha Llegada"
+msgstr "Data de chegada"
+
+#: .\templates\viaticos\crear_viaticos.html:337
+msgid "Fecha Salida"
+msgstr "Data de saída"
 
 #: .\venv\Lib\site-packages\click\_termui_impl.py:518
 #, python-brace-format

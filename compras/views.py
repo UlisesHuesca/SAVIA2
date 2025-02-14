@@ -2544,7 +2544,7 @@ def generar_pdf(compra):
     c.drawString(100,caja_proveedor-60, compra.uso_del_cfdi.descripcion)
     c.drawString(100,caja_proveedor-80, compra.req.orden.staff.staff.staff.first_name +' '+ compra.req.orden.staff.staff.staff.last_name)
     c.drawString(100,caja_proveedor-100, compra.created_at.strftime("%d/%m/%Y"))
-    c.drawString(100,caja_proveedor-120, compra.proveedor.estatus.nombre)
+    c.drawString(100,caja_proveedor-120, compra.estatus_original)
     if compra.dias_de_entrega:
         c.drawString(110,caja_proveedor-140, str(compra.dias_de_entrega)+' '+'días hábiles')
     
@@ -3520,7 +3520,7 @@ def convert_excel_solicitud_matriz_productos(productos):
             iva_parcial,
             total,
             articulo.oc.proveedor.nombre.razon_social,
-            articulo.oc.proveedor.estatus.nombre,
+            articulo.oc.estatus_original,
             fecha_creacion,
             #nombre_completo,
             proyecto_nombre,

@@ -2,9 +2,10 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load i18n %}
 <html>
 <head>
-{% block title %} Viaticos {% endblock %}
+{% block title %}{% trans "Viáticos" %}{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -42,7 +43,7 @@
 <div class="col-lg-8 offset-lg-2 col-sm-12">
     <div class="card">
         <div class="card-header">
-		    <h2 id="viatico" viatico_id = "{{viatico.id}}">Solicitud de Viáticos {{folio_probable}}</h2>
+		    <h2 id="viatico" viatico_id = "{{viatico.id}}">{% trans "Solicitud de Viáticos" %}: {{folio_probable}}</h2>
 	    </div>
         <div class="card-body">
 					<form method="POST" id='SolicitudForm'>
@@ -125,7 +126,7 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {% render_field form.fecha_partida type="date" class="form-control" %}
-                                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                        <label style="color: #121212;" for="id_subproyecto">{% trans "Desde" %}:</label>
                                     </div>
                                 </div>
                             </div>
@@ -134,7 +135,7 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {% render_field form.fecha_retorno type="date" class="form-control" %}
-                                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                        <label style="color: #121212;" for="id_subproyecto">{% trans "Hasta" %}:</label>
                                     </div>
                                 </div>
                             </div>
@@ -145,15 +146,15 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-car"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         <select id="transporte" name="tipo" class="form-control" required onchange="actualizarEtiqueta()">
-                                            <option value="" disabled selected>Seleccione su transporte</option>
-                                            <option value="vehiculo_propio">Vehículo propio</option>
-                                            <option value="vehiculo_empresa">Vehículo empresa</option>
-                                            <option value="autobus">Autobús</option>
-                                            <option value="avion">Avión</option>
-                                            <option value="tercero">Vehículo de compañero</option>
-                                            <option value="otros">Otros</option>
+                                            <option value="" disabled selected>{% trans "Seleccione su transporte" %}</option>
+                                            <option value="vehiculo_propio">{% trans "Vehículo propio" %}</option>
+                                            <option value="vehiculo_empresa">{% trans "Vehículo empresa" %}</option>
+                                            <option value="autobus">{% trans "Autobús" %}</option>
+                                            <option value="avion">{% trans "Avión" %}</option>
+                                            <option value="tercero">{% trans "Vehículo de compañero" %}</option>
+                                            <option value="otros">{% trans "Otros" %}</option>
                                         </select>
-                                        <label for="labeltransporte" id="etiquetaTransporte" class="form-label small">Tipo de transporte*</label>
+                                        <label for="labeltransporte" id="etiquetaTransporte" class="form-label small">{% trans "Tipo de transporte" %}*</label>
                                     </div>
                                 </div>
                             </div>
@@ -165,7 +166,7 @@
                                     </span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.transporte|add_class:"form-control"|append_attr:"maxlength=120" }}
-                                        <label for="id_transporte" id="id_etiquetaTransporte" class="form-label small">Seleccione primero el tipo de transporte*</label>
+                                        <label for="id_transporte" id="id_etiquetaTransporte" class="form-label small">{% trans "Seleccione primero el tipo de transporte" %}*</label>
                                     </div>
                                 </div>
                             </div>
@@ -175,8 +176,8 @@
                                 <div class="input-group mb-3">
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.lugar_partida|add_class:"form-control"|append_attr:"placeholder=Lugar de partida*"}}
-                                        <label for="id_lugar_partida">Lugar de partida*</label>
+                                        {{form.lugar_partida|add_class:"form-control"|append_attr:"placeholder:Lugar de partida*"}}
+                                        <label for="id_lugar_partida">{% trans "Lugar de partida" %}*</label>
                                     </div>
                                 </div>
                             </div>
@@ -185,14 +186,14 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.lugar_comision|add_class:"form-control"|append_attr:"placeholder=Lugar de comision*"}}
-                                        <label for="id_lugar_comision">Lugar de comisión*</label> 
+                                        <label for="id_lugar_comision">{% trans "Lugar de comisión" %}*</label> 
                                     </div>
                                 </div>
                             </div>
                             <div class="col-lg-2 col-sm-12">
                                 <div class="form-check form-switch">
                                     <input class="form-check-input" type="checkbox" role="switch" id="SwitchPuntos">
-                                    <label class="form-check-label mx-auto" for="SwitchPuntos">Puntos Intermedios</label>
+                                    <label class="form-check-label mx-auto" for="SwitchPuntos">{% trans "Puntos Intermedios" %}</label>
                                 </div>
                             </div>
                         </div>
@@ -202,16 +203,16 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">  
                                     {{form.comentario_jefe_inmediato|add_class:"form-control"|append_attr:"placeholder=Comentario para Jefe Inmediato"}}
-                                    <label for="id_comentario">Comentario para Jefe Inmediato</label>
+                                    <label for="id_comentario">{% trans "Comentario para Jefe Inmediato" %}</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-check form-switch col-sm-3">
-                                <label for="form.lugar_comision" class="col-auto col-form-label"><strong>Hospedaje*</strong></label>
+                                <label for="form.lugar_comision" class="col-auto col-form-label"><strong>{% trans "Hospedaje" %}*</strong></label>
                                 {{form.hospedaje|add_class:"form-check-input mt-3"}}
                             </div>
                             <div class="form-check form-switch col-sm-3">
-                                <label for="form.lugar_comision" class="col-auto col-form-label"><strong>Comidas c/factura*</strong></label>
+                                <label for="form.lugar_comision" class="col-auto col-form-label"><strong>{% trans "Comidas c/factura" %}*</strong></label>
                                 {{form.comidas_facturas|add_class:"form-check-input mt-3"}}
                             </div>
                         </div>
@@ -221,17 +222,17 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">  
                                     {{form.comentario_general|add_class:"form-control"|append_attr:"placeholder=Comentario General"}}
-                                    <label for="id_comentario">Comentario General</label>
+                                    <label for="id_comentario">{% trans "Comentario General" %}</label>
                                     </div>
                                 </div>
                             </div>
                             <div class="form-check form-switch col-auto mx-4">
                                 <input class="form-check-input" type="checkbox" id="toggleBankFields" name="toggleBankFields" value="true">
-                                <label class="form-check-label" for="toggleBankFields">Cuenta Alterna</label>
+                                <label class="form-check-label" for="toggleBankFields">{% trans "Cuenta Alterna" %}</label>
                             </div>
                             <div class="form-check form-switch col-auto mx-4">
                                 <input class="form-check-input" type="checkbox" id="toggleEmergencyPhone" name="toggleEmergencyPhone" value="true">
-                                <label class="form-check-label" for="toggleEmergencyPhone">Número de Emergencia</label>
+                                <label class="form-check-label" for="toggleEmergencyPhone">{% trans "Número de Emergencia" %}</label>
                             </div>
                         </div>
                         <div id="emergencyPhoneField" class="row my-2 d-none">
@@ -240,7 +241,7 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.phone|add_class:"form-control"|append_attr:"placeholder=Número de emergencia" }}
-                                        <label for="id_phone">Número de emergencia</label>
+                                        <label for="id_phone">{% trans "Número de emergencia" %}</label>
                                     </div>
                                 </div>
                             </div>
@@ -251,7 +252,7 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-credit-card"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.cuenta_bancaria|add_class:"form-control"|append_attr:"placeholder=Cuenta bancaria" }}
-                                        <label for="id_cuenta_bancaria">Cuenta bancaria*</label>
+                                        <label for="id_cuenta_bancaria">{% trans "Cuenta bancaria" %}*</label>
                                     </div>
                                 </div>
                             </div>
@@ -260,7 +261,7 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-key"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.clabe|add_class:"form-control"|append_attr:"placeholder=CLABE interbancaria" }}
-                                        <label for="id_clabe">CLABE interbancaria*</label>
+                                        <label for="id_clabe">{% trans "CLABE interbancaria" %}*</label>
                                     </div>
                                 </div>
                             </div>
@@ -269,7 +270,7 @@
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
                                         {{ form.banco|add_class:"form-control"|append_attr:"placeholder=Seleccione su banco" }}
-                                        <label for="id_banco">Banco*</label>
+                                        <label for="id_banco">{% trans "Banco" %}*</label>
                                     </div>
                                 </div>
                             </div>
@@ -281,7 +282,7 @@
                     <form method="POST" id='Lugar_Intermedio' class="d-none">
                         {% csrf_token %}
                           <div class="alert alert-secondary" role="alert">
-                            <h4>Puntos Intermedios</h4>
+                            <h4>{% trans "Puntos Intermedios" %}</h4>
                           </div>
                          
                             <div class="row">
@@ -290,7 +291,7 @@
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {{form2.nombre|add_class:"form-control"|append_attr:"placeholder=Punto Intermedio*"}}
-                                            <label for="id_lugar_partida">Punto Intermedio*</label>
+                                            <label for="id_lugar_partida">{% trans "Punto Intermedio" %}*</label>
                                         </div>
                                     </div>
                                 </div>
@@ -299,7 +300,7 @@
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {% render_field form2.fecha_inicio type="date" class="form-control" %}
-                                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                                            <label style="color: #121212;" for="id_subproyecto">{% trans "Desde" %}:</label>
                                         </div>
                                     </div>
                                 </div>
@@ -308,7 +309,7 @@
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                             {% render_field form2.fecha_fin type="date" class="form-control" %}
-                                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                                            <label style="color: #121212;" for="id_subproyecto">{% trans "Hasta" %}:</label>
                                         </div>
                                     </div>
                                 </div>
@@ -317,7 +318,7 @@
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">  
                                             {{form2.comentario_hospedaje|add_class:"form-control"|append_attr:"placeholder=Comentario"}}
-                                            <label for="id_comentario">Comentario*</label>
+                                            <label for="id_comentario">{% trans "Comentario" %}*</label>
                                         </div>
                                     </div>
                                 </div>
@@ -331,11 +332,11 @@
                                 <table class="table table-light table-striped table-hover mx-2">
                                 <thead>
                                     <tr>
-                                        <th scope="col">Punto Intermedio</th>
-                                        <th scope="col">Fecha Llegada</th>
-                                        <th scope="col">Fecha Salida</th>
-                                        <th scope="col">Comentario</th>
-                                        <th>Eliminar</th>
+                                        <th scope="col">{% trans "Punto Intermedio" %}</th>
+                                        <th scope="col">{% trans "Fecha Llegada" %}</th>
+                                        <th scope="col">{% trans "Fecha Salida" %}</th>
+                                        <th scope="col">{% trans "Comentario" %}</th>
+                                        <th>{% trans "Eliminar" %}</th>
                                     </tr>
                                 </thead>
                                 <tbody id="mytbl">
