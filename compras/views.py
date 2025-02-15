@@ -1185,7 +1185,7 @@ def cancelar_oc1(request, pk):
                                             <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
                                         </p>
                                         <p style="font-size: 16px; text-align: justify;">
-                                            Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> ha sido cancelada.</p>
+                                            Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> solicitud folio: <strong>{compra.req.orden.folio}</strong> ha sido cancelada.</p>
                                         </p>
                                     <p style="font-size: 16px; text-align: justify;">
                                         Att: {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}
@@ -1297,7 +1297,7 @@ def cancelar_oc2(request, pk):
                                                 <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
                                             </p>
                                             <p style="font-size: 16px; text-align: justify;">
-                                                Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> ha sido cancelada.</p>
+                                                Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> solicitud con folio: <strong>{compra.req.orden.folio} ha sido cancelada.</p>
                                             </p>
                                         <p style="font-size: 16px; text-align: justify;">
                                             Att: {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}
@@ -3364,7 +3364,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             created_at,
             approved_at,
             compra_list.proveedor.nombre.razon_social,
-            compra_list.proveedor.estatus.nombre,
+            compra_list.estatus_original,
             compra_list.cond_de_pago.nombre,
             compra_list.costo_oc,
             compra_list.monto_pagado,

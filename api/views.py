@@ -24,7 +24,12 @@ from user.decorators import perfil_seleccionado_required
 from api.models import TablaFestivos
 from datetime import datetime
 from django.contrib import messages
+import logging
+from django.utils import timezone
+logger = logging.getLogger("user.middleware")
+
 #import openai
+
 from openai import OpenAI
 #import os
 from django.conf import settings
@@ -150,6 +155,10 @@ def getData(request):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def CompraAPI(request):
+    user = request.user
+    ip_address = request.META.get('REMOTE_ADDR')
+    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+
     compras = Compra.objects.filter(complete = True)
     page = request.query_params.get('page', 1)
     per_page = request.query_params.get('per_page', 20)
@@ -173,6 +182,12 @@ def CompraAPI(request):
 @authentication_classes([SessionAuthentication,TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def proveedores_api(request):
+    #registra el acceso a la api
+    #print(f"Usuario autenticado: {request.user}")
+    user = request.user
+    ip_address = request.META.get('REMOTE_ADDR')
+    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+    
     proveedores = Proveedor_direcciones.objects.filter(completo = True)
     page = request.query_params.get('page', 1)
     per_page = request.query_params.get('per_page', 20)
@@ -289,6 +304,11 @@ def obtener_perfiles(request):
 @authentication_classes([TokenAuthentication]) #Si quieres decargar el pdf desde el nodo desabilita este decorador de token
 @permission_classes([IsAuthenticated])
 def descargar_pdf_oc(request, pk):
+    user = request.user
+    ip_address = request.META.get('REMOTE_ADDR')
+    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+
+
     try:
         # Intentar obtener la orden de compra por su id
         compra = Compra.objects.get(id=pk)

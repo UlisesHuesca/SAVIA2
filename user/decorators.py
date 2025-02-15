@@ -1,5 +1,6 @@
 from django.shortcuts import redirect
 from django.contrib.auth.decorators import login_required
+from django.urls import resolve
 import logging
 import os
 from django.shortcuts import render, redirect
@@ -7,6 +8,7 @@ from functools import wraps
 from .models import Profile
 from django.http import HttpResponseForbidden
 from user.logger_config import get_custom_logger
+from django.core.exceptions import PermissionDenied
 
 logger = get_custom_logger(__name__)
 
@@ -19,6 +21,17 @@ def perfil_seleccionado_required(view_func):
             return redirect('user-login')
         
         selected_profile_id = request.session.get('selected_profile_id')
+        selected_profile = Profile.objects.get(id=selected_profile_id)
+
+        print(selected_profile.tipo.nombre)
+
+        if selected_profile.tipo.nombre == "PROVEEDOR_EXTERNO":
+            vistas_permitidas = ['dashboard-index', 'matriz-oc-proveedores','matriz-direcciones']  # Cambia por los nombres reales de las vistas
+
+            vista_actual = resolve(request.path_info).url_name
+            if vista_actual not in vistas_permitidas:
+                logger.warning(f"Intento acceso no autorizado a compras autorización por usuario {request.user.first_name} {request.user.last_name}")
+                return render(request,'partials/acceso_denegado.html')
         if not selected_profile_id:
             return redirect('select-profile')  # Redirige al usuario a la selección de perfil si no lo ha seleccionado
         
