@@ -192,12 +192,12 @@
                 </td>
                 <td>
                     {% if factura.factura_xml %}
-                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}">
+                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfM{{ factura.id|unlocalize }}">
                         <i class="fa-solid fa-file-pdf fa-2xl"></i>
                     </button>
                     
                     <!-- Modal con visor de PDF -->
-                    <div class="modal fade" id="pdfModal{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ factura.id|unlocalize }}" aria-hidden="true">
+                    <div class="modal fade" id="pdfM{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfLabel{{ factura.id|unlocalize }}" aria-hidden="true">
                         <div class="modal-dialog modal-xl">
                             <div class="modal-content">
                                 <div class="modal-header">
