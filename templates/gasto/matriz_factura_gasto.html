@@ -150,7 +150,10 @@
                         {% for factura in facturas %}
                         <tr>
                             <td>{% if factura.archivo_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
-                            <td>{% if factura.archivo_xml %} {{ factura.emisor.nombre }} {% endif %}</td>
+                            <td>{% if factura.archivo_xml %}
+                                 {{ factura.emisor.nombre }} 
+                                {% endif %}
+                            </td>
                             {% if factura.archivo_xml %}
                             <td class="total-xml" total="{{ factura.emisor.total }}">${{ factura.emisor.total }}</td>
                             {% else %}
@@ -162,10 +165,24 @@
                                 <ul class="nav nav-pills">
                                     {% if factura.archivo_pdf %}
                                     <li class="nav-item mx-1">
-                                        <a href="{{ factura.archivo_pdf.url }}" download class="btn btn-outline-danger">
+                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}" title="Ver comprobante de pago">
                                             <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                                        </a>
+                                        </button>
                                     </li>
+                                    <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfModal{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ factura.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfModalLabel{{ factura.id|unlocalize }}">Comprobante de Pago</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ factura.archivo_pdf.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
                                     {% endif %}
                                     {% if factura.archivo_xml %}
                                     <li class="nav-item mx-1">
