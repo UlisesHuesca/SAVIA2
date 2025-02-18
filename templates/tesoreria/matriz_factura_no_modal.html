@@ -150,11 +150,13 @@
                             <td>{% if p.comentario %} {{p.comentario}} {% else %} S/C {% endif %}</td>
                             <td>
                                 {% if p.factura_pdf %}
-                                <li class="nav-item mx-1">
-                                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.id|unlocalize }}" title="Ver comprobante de pago">
-                                        <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                                    </button>
-                                </li>
+                                <ul class="nav nav-pills">
+                                    <li class="nav-item mx-1">
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.id|unlocalize }}" title="Ver factura">
+                                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                        </button>
+                                    </li>
+                                </ul>
                                 <!-- Modal con visor de PDF -->
                                 <div class="modal fade" id="pdfModal{{ p.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ p.id|unlocalize }}" aria-hidden="true">
                                     <div class="modal-dialog modal-xl">
