@@ -192,27 +192,10 @@
                 </td>
                 <td>
                     {% if factura.factura_xml %}
-                    <!-- Botón para abrir la vista previa en un modal -->
-                    <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}">
-                        <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                    </button>
-
-                    <!-- Modal con visor de PDF -->
-                    <div class="modal fade" id="pdfModal{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ factura.id|unlocalize }}" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="pdfModalLabel{{ factura.id|unlocalize }}">Vista Previa del CFDI</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <iframe src="{% url 'generar_cfdi_gasto' factura.id %}?t={{ factura.id|unlocalize }}#zoom=80" width="100%" height="750px"></iframe>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                        <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
+                            <i class="fa-solid fa-file-invoice-dollar"></i>
+                        </a>
                     {% endif %}
-
                 </td>
                 {% if usuario.tipo.tesoreria %}
                 <td>
