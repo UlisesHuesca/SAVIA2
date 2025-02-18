@@ -113,18 +113,32 @@ def contadores_processor(request):
         if usuario.tipo.supervisor == True:
             solicitudes_pendientes = Order.objects.filter(autorizar = None, complete = True, supervisor=usuario)
             conteo_solicitudes = solicitudes_pendientes.count()
-        if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ":
-            requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__supervisor = usuario)
-            conteo_requis_pendientes = requisiciones_pendientes.count()
-        elif usuario.tipo.superintendente == True:
-            requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__superintendente = usuario)
-            gastos = Solicitud_Gasto.objects.filter(complete=True, autorizar=None, superintendente = usuario, distrito = usuario.distritos)
-            ids_gastos_validados = [gasto.id for gasto in gastos if gasto.get_validado]
-            gastos_pendientes = Solicitud_Gasto.objects.filter(id__in=ids_gastos_validados)
-            viaticos_pendientes = Solicitud_Viatico.objects.filter(complete =True, autorizar = None, superintendente = usuario, distrito = usuario.distritos)
-            conteo_requis_pendientes = requisiciones_pendientes.count()
-            conteo_gastos_pendientes = gastos_pendientes.count()
-            conteo_viaticos = viaticos_pendientes.count()
+
+        if usuario.distritos.nombre == "MATRIZ" or usuario.distritos.nombre == "BRASIL" and usuario.tipo.supervisor:   
+           requis = Requis.objects.filter(autorizar=None, complete =True).filter(Q(orden__supervisor=usuario) & Q(orden__tipo__tipo = 'normal') | Q(orden__superintendente=usuario) & Q(orden__tipo__tipo = 'resurtimiento'))
+        elif usuario.tipo.superintendente == True and usuario.tipo.nombre != "Admin":
+            requis = Requis.objects.filter(autorizar=None, orden__superintendente=usuario, complete =True)
+            #requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__superintendente = usuario)
+            
+        
+        elif usuario.tipo.nombre == "Admin":
+            requis = Requis.objects.filter(autorizar=None, complete = True, orden__distrito = usuario.distritos)
+
+
+        gastos = Solicitud_Gasto.objects.filter(complete=True, autorizar=None, superintendente = usuario, distrito = usuario.distritos)
+        ids_gastos_validados = [gasto.id for gasto in gastos if gasto.get_validado]
+        gastos_pendientes = Solicitud_Gasto.objects.filter(id__in=ids_gastos_validados)
+        viaticos_pendientes = Solicitud_Viatico.objects.filter(complete =True, autorizar = None, superintendente = usuario, distrito = usuario.distritos)
+        
+        conteo_requis_pendientes = requis.count()
+        conteo_gastos_pendientes = gastos_pendientes.count()
+        conteo_viaticos = viaticos_pendientes.count()
+        #if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ":
+
+        #    requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__supervisor = usuario)
+        #    conteo_requis_pendientes = requisiciones_pendientes.count()
+        #elif usuario.tipo.superintendente == True:
+           
         #if usuario.tipo.almacen == True:
         #    entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), req__orden__distrito = usuario.distritos, solo_servicios= False, entrada_completa = False, autorizado2= True).order_by('-folio')
         #    conteo_entradas = entradas.count()
