@@ -143,7 +143,7 @@
                     {% endif %}
                 </td>
                 <td>{% if factura.factura_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
-                <td>{% if factura.factura_xml %} {{ factura.emisor.nombre }} {% endif %}</td>
+                <td>{% if factura.factura_xml %} {{ factura.emisor.nombre_emisor }} {% endif %}</td>
                 <td>
                     {% if factura.factura_xml %}
                     <span class="total-xml" total="{{ factura.emisor.total }}"> ${{ factura.emisor.total }} </span>
