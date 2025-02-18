@@ -191,9 +191,6 @@
                     </ul>
                 </td>
                 <td>
-                    <!--<a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
-                        <i class="fa-solid fa-file-invoice-dollar"></i>
-                    </a>-->
                     {% if factura.factura_xml %}
                     <!-- Botón para abrir la vista previa en un modal -->
                     <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}">
