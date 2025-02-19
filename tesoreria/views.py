@@ -902,7 +902,7 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.archivo_xml.path)
                         zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
                     if factura.solicitud_gasto.id not in processed_gastos:
-                        buf = render_pdf_gasto(factura.solicitud_gasto)
+                        buf = render_pdf_gasto(factura.solicitud_gasto.id)
                         gasto_file_name = f'GASTO_{factura.solicitud_gasto.folio}.pdf'
                         zip_file.writestr(os.path.join(folder_name, gasto_file_name), buf.getvalue())
                         processed_gastos.add(factura.solicitud_gasto.id)
@@ -942,7 +942,7 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
                     if factura.solicitud_viatico.id not in processed_viaticos:
-                        buf = render_pdf_viatico(factura.solicitud_viatico)
+                        buf = render_pdf_viatico(factura.solicitud_viatico.id)
                         viatico_file_name = f'VIATICO_{factura.solicitud_viatico.folio}.pdf'
                         zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
                         processed_viaticos.add(factura.solicitud_viatico.id)
