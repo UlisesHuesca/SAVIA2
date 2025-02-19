@@ -200,7 +200,7 @@ def articulos_entrada(request, pk):
     
     vale_entrada = Entrada.objects.filter(oc__req__orden__distrito = usuario.distritos)
     if usuario.tipo.almacen == True: #and compra.req.orden.staff == usuario:
-        articulos = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False, producto__producto__articulos__producto__producto__servicio = False)
+        articulos = ArticuloComprado.objects.filter(oc=compra, entrada_completa=False, producto__producto__articulos__producto__producto__servicio = False, seleccionado = False)
     else:
         articulos = ArticuloComprado.objects.none()
 

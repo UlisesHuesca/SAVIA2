@@ -290,6 +290,13 @@ dataSpyList.forEach(function (dataSpyEl) {
         modal.hide()
     })
 })()
+
+function preventDoubleClick(button) {
+    setTimeout(function() {
+        button.disabled = true;
+    }, 50);
+}
+
 //var myModal = document.getElementById('dialog')
 
 //myModal.addEventListener('hidden.bs.modal', function (event) {
