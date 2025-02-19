@@ -206,7 +206,23 @@ htmx.defineExtension('disable-on-submit', {
 });
 
 
+document.addEventListener("DOMContentLoaded", function () {
+        let modalPrincipal = document.getElementById("modalPrincipal");
+        let modalPDF = document.getElementById("pdfModal{{ comparativo.id|unlocalize }}");
 
+        document.querySelector("[data-bs-target='#pdfModal{{ comparativo.id|unlocalize }}']").addEventListener("click", function () {
+            let bootstrapModalPrincipal = bootstrap.Modal.getInstance(modalPrincipal);
+            let bootstrapModalPDF = new bootstrap.Modal(modalPDF);
+
+            // Cierra el modal principal antes de abrir el secundario
+            if (bootstrapModalPrincipal) {
+                bootstrapModalPrincipal.hide();
+                setTimeout(() => {
+                    bootstrapModalPDF.show();
+                }, 500); // Espera medio segundo antes de abrir el otro modal
+            }
+        });
+    });
    
 
 
