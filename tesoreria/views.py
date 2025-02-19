@@ -907,7 +907,7 @@ def matriz_pagos(request):
                         zip_file.writestr(os.path.join(folder_name, gasto_file_name), buf.getvalue())
                         processed_gastos.add(factura.solicitud_gasto.id)
 
-                    pagos = Pago.objects.filter(oc=factura.solicitud_gasto)
+                    pagos = Pago.objects.filter(gasto=factura.solicitud_gasto)
                     for pago in pagos:
                         if pago.comprobante_pago and pago.id not in processed_pagos:
                             pago_file_name = os.path.basename(pago.comprobante_pago.path)
@@ -954,7 +954,7 @@ def matriz_pagos(request):
                         zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
                         processed_viaticos.add(factura.solicitud_viatico.id)
                     
-                    pagos = Pago.objects.filter(oc=factura.solicitud_viatico)
+                    pagos = Pago.objects.filter(viatico=factura.solicitud_viatico)
                     for pago in pagos:
                         if pago.comprobante_pago and pago.id not in processed_pagos:
                             pago_file_name = os.path.basename(pago.comprobante_pago.path)
