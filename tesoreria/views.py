@@ -19,7 +19,7 @@ from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto
-from viaticos.views import render_pdf_viatico
+from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm
@@ -942,7 +942,7 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
                     if factura.solicitud_viatico.id not in processed_viaticos:
-                        buf = render_pdf_viatico(factura.solicitud_viatico.id)
+                        buf = generar_pdf_viatico(factura.solicitud_viatico.id)
                         viatico_file_name = f'VIATICO_{factura.solicitud_viatico.folio}.pdf'
                         zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
                         processed_viaticos.add(factura.solicitud_viatico.id)
