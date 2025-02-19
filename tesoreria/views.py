@@ -906,6 +906,13 @@ def matriz_pagos(request):
                         gasto_file_name = f'GASTO_{factura.solicitud_gasto.folio}.pdf'
                         zip_file.writestr(os.path.join(folder_name, gasto_file_name), buf.getvalue())
                         processed_gastos.add(factura.solicitud_gasto.id)
+
+                    pagos = Pago.objects.filter(oc=factura.solicitud_gasto)
+                    for pago in pagos:
+                        if pago.comprobante_pago and pago.id not in processed_pagos:
+                            pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
+                            processed_pagos.add(pago.id)
                    
                 for factura in facturas_compras:
                     folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
@@ -946,6 +953,13 @@ def matriz_pagos(request):
                         viatico_file_name = f'VIATICO_{factura.solicitud_viatico.folio}.pdf'
                         zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
                         processed_viaticos.add(factura.solicitud_viatico.id)
+                    
+                    pagos = Pago.objects.filter(oc=factura.solicitud_viatico)
+                    for pago in pagos:
+                        if pago.comprobante_pago and pago.id not in processed_pagos:
+                            pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
+                            processed_pagos.add(pago.id)
 
             zip_buffer.seek(0)
             response = HttpResponse(zip_buffer, content_type='application/zip')
