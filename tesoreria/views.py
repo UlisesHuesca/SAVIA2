@@ -18,6 +18,8 @@ from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_cod
 from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
+from gastos.views import render_pdf_gasto
+from viaticos.views import render_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm
@@ -887,6 +889,8 @@ def matriz_pagos(request):
 
             zip_buffer = BytesIO()
             processed_ocs = set()  # Mantén un conjunto de OCs procesadas
+            processed_gastos = set()  # Mantén un conjunto de gastos procesados
+            processed_viaticos = set()  # Mantén un conjunto de viáticos procesados
             processed_pagos = set()  # Mantén un conjunto de pagos procesados
             with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
                 for factura in facturas_gastos:
@@ -921,6 +925,16 @@ def matriz_pagos(request):
                         oc_file_name = f'OC_{factura.oc.folio}.pdf'
                         zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
                         processed_ocs.add(factura.oc.id)
+                    if factura.gasto.id not in processed_gastos:
+                        buf = render_pdf_gasto(factura.gasto)
+                        gasto_file_name = f'GASTO_{factura.gasto.folio}.pdf'
+                        zip_file.writestr(os.path.join(folder_name, gasto_file_name), buf.getvalue())
+                        processed_gastos.add(factura.gasto.id)
+                    if factura.viatico.id not in processed_viaticos:
+                        buf = render_pdf_viatico(factura.viatico)
+                        viatico_file_name = f'VIATICO_{factura.viatico.folio}.pdf'
+                        zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
+                        processed_viaticos.add(factura.viatico.id)
 
                 for factura in facturas_viaticos:
                     folder_name = f'VIATICO_{factura.solicitud_viatico.folio}_{factura.solicitud_viatico.distrito.nombre}'

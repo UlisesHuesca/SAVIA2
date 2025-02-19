@@ -147,7 +147,7 @@
                     <th scope="col">Producto</th>
                     <th scope="col">Cantidad</th>
                     <th>Comentario</th>
-                    <th scope="col" class="col-sm-2">Acción</th>
+                    <th scope="col" class="col-sm-2">Eliminar</th>
                 </tr>
             </thead>
             <tbody id="mytbl">
@@ -176,7 +176,7 @@
 <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
         <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+        <p style="color: white; margin: 0;">Por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
     </div>
 </div>
 
@@ -200,6 +200,11 @@ var format = new Intl.NumberFormat('en-US', {
   style: 'currency',
   currency: 'USD',
 });
+
+function mostrarLoading() {
+        document.getElementById("loadingIndicator").style.display = "block";
+    }
+
 
 
 var crear = document.getElementById("crear")
@@ -251,6 +256,7 @@ let suma = 0;
 let suma_iva = 0;
 
 updateBtn.addEventListener('click',function(){
+        console.log('algo')
         let requi_tag = document.getElementById('requi');
         let requi = requi_tag.getAttribute('target');
         let orden = requi_tag.getAttribute('orden')
@@ -284,20 +290,17 @@ updateBtn.addEventListener('click',function(){
                     "icon":"error",
                 })
         } else {
+            mostrarLoading();
             ActualizarArticulos(requi,id,cantidad,action);
             
             
         }
 })
-function preventDoubleClick(button) {
-    setTimeout(function() {
-        button.disabled = true;
-    }, 50);
-} 
+
 //ActualizarArticulos(array_id_prod)
 
 function ActualizarArticulos(requi,id,cantidad,action){
-    preventDoubleClick(updateBtn);
+    
     console.log('User is logged in, sending data...' )
 
     var url = '/requisiciones/update_requi/'

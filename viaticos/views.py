@@ -16,9 +16,9 @@ from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form
 from tesoreria.forms import Facturas_Viaticos_Form
-from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
+#from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
 from gastos.models import Factura
-from tesoreria.views import generar_cfdi
+#from tesoreria.views import generar_cfdi
 from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
@@ -56,6 +56,80 @@ from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import xlsxwriter
 from io import BytesIO
+import xml.etree.ElementTree as ET
+
+#Se duplican funciones porque me arroja una referencia circular
+#######################################################################
+# Create your views here.
+def eliminar_caracteres_invalidos(archivo_xml):
+    # Definir la expresión regular para encontrar caracteres inválidos
+    regex = re.compile(r'[^\x09\x0A\x0D\x20-\uD7FF\uE000-\uFFFD\u10000-\u10FFFF]')
+
+    # Leer el contenido del archivo XML
+    xml_content = archivo_xml.read().decode('utf-8')
+
+    if xml_content.startswith("o;?"):
+        print('Detectado "o;?" en el inicio del XML')
+        xml_content = xml_content[3:]
+
+    # Eliminar caracteres inválidos según la expresión regular
+    xml_content = regex.sub('', xml_content)
+
+    # Volver a posicionar el puntero del archivo al principio
+    archivo_xml.seek(0)
+
+    # Guardar el contenido modificado en el archivo original
+    archivo_xml.write(xml_content.encode('utf-8'))
+    archivo_xml.truncate()  # Asegurarse de que no quede contenido sobrante
+
+    print('Contenido corregido guardado exitosamente.')
+
+    # Retornar el archivo con el contenido modificado
+    return archivo_xml
+
+def extraer_datos_del_xml(ruta_xml):
+    try:
+        # Parsear el archivo XML
+        tree = ET.parse(ruta_xml)
+        root = tree.getroot()
+    except (ET.ParseError, FileNotFoundError) as e:
+        print(f"Error al parsear el archivo XML: {e}")
+        return None, None  # Si ocurre un error, devuelve None
+    
+    # Identificar la versión del XML y el espacio de nombres
+    version = root.tag
+    ns = {}
+    if 'http://www.sat.gob.mx/cfd/3' in version:
+        ns = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/3',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+            'if': 'https://www.interfactura.com/Schemas/Documentos',
+        }
+    elif 'http://www.sat.gob.mx/cfd/4' in version:
+        ns = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/4',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+            'if': 'https://www.interfactura.com/Schemas/Documentos',
+        }
+    else:
+        print(f"Versión del documento XML no reconocida")
+        return None, None
+    
+    # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
+    complemento = root.find('cfdi:Complemento', ns)
+    if complemento is not None:
+        timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
+        if timbre_fiscal is not None:
+            uuid = timbre_fiscal.get('UUID')
+            fecha_timbrado = timbre_fiscal.get('FechaTimbrado') or root.get('Fecha')
+            return uuid, fecha_timbrado  # Devolver UUID y fecha de timbrado
+        else:
+            print("Timbre Fiscal Digital no encontrado")
+            return None, None
+    else:
+        print("Complemento no encontrado")
+        return None, None
+################################################################################################################################
 
 
 # Create your views here.

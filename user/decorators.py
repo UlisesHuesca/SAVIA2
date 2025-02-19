@@ -8,6 +8,7 @@ from functools import wraps
 from .models import Profile
 from django.http import HttpResponseForbidden
 from user.logger_config import get_custom_logger
+from django.core.exceptions import ObjectDoesNotExist
 from django.core.exceptions import PermissionDenied
 
 logger = get_custom_logger(__name__)
@@ -20,9 +21,17 @@ def perfil_seleccionado_required(view_func):
         if not request.user.is_authenticated:
             return redirect('user-login')
         
+        
         selected_profile_id = request.session.get('selected_profile_id')
-        selected_profile = Profile.objects.get(id=selected_profile_id)
-
+        if not selected_profile_id:
+            return redirect('select-profile')  # Redirige si no hay perfil seleccionado
+        
+        try:
+            selected_profile = Profile.objects.get(id=selected_profile_id)
+        except ObjectDoesNotExist:
+            logger.warning(f"Perfil con ID {selected_profile_id} no encontrado. Redirigiendo a selección de perfil.")
+            return redirect('select-profile')  # Redirige si el perfil no existe
+       
         print(selected_profile.tipo.nombre)
 
         if selected_profile.tipo.nombre == "PROVEEDOR_EXTERNO":
@@ -32,8 +41,7 @@ def perfil_seleccionado_required(view_func):
             if vista_actual not in vistas_permitidas:
                 logger.warning(f"Intento acceso no autorizado a compras autorización por usuario {request.user.first_name} {request.user.last_name}")
                 return render(request,'partials/acceso_denegado.html')
-        if not selected_profile_id:
-            return redirect('select-profile')  # Redirige al usuario a la selección de perfil si no lo ha seleccionado
+       
         
         return view_func(request, *args, **kwargs)
     
