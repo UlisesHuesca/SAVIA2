@@ -216,15 +216,15 @@
                     </td>
                     <td>  
                         {% if item.cotizacion2 %}
-                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#2pdfModal{{ item.id|unlocalize }}" title="Ver cotizacion 2">
+                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModalDos{{ item.id|unlocalize }}" title="Ver cotizacion 2">
                             <i class="fa-solid fa-file-invoice-dollar"></i>
                         </button>
                          <!-- Modal con visor de PDF -->
-                         <div class="modal fade" id="2pdfModal{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="2pdfModalLabel{{ item.id|unlocalize }}" aria-hidden="true">
+                         <div class="modal fade" id="pdfModalDos{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabelDos{{ item.id|unlocalize }}" aria-hidden="true">
                             <div class="modal-dialog modal-xl">
                                 <div class="modal-content">
                                     <div class="modal-header">
-                                        <h5 class="modal-title" id="2pdfModalLabel{{ item.id|unlocalize }}">Cotización 2</h5>
+                                        <h5 class="modal-title" id="pdfModalLabelDos{{ item.id|unlocalize }}">Cotización 2</h5>
                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                     </div>
                                     <div class="modal-body">
