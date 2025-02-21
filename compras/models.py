@@ -27,7 +27,7 @@ class Proveedor(models.Model):
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     perfil_proveedor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='prov_perfil')
-    csf = models.FileField(upload_to='csf', null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    csf = models.FileField(upload_to='csf', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
 
     def __str__(self):
         return f'{self.razon_social}'
