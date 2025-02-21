@@ -906,21 +906,23 @@ def upload_batch_proveedores(request):
 
         for row in reader:
             razon_social = row[0].strip()
+            
             rfc = row[1].strip()
+            print(rfc)
             creado_por_id = row[2].strip()
             familia_nombre = row[3].strip()
-            extranjero = row[5].strip().upper() == 'SI' if len(row) > 5 else False
-            visita = row[6].strip().upper() == 'SI' if len(row) > 6 else False
+            extranjero = True if row[4].strip().upper() == 'SI' else False
+            visita = True if row[5].strip().upper() == 'SI' else False
 
             proveedor = Proveedor.objects.filter(razon_social=razon_social).first()
 
             
             if not proveedor:
-                
+                print(2)
                 creado_por = Profile.objects.filter(id=creado_por_id).first() if creado_por_id else None
                 familia = Familia.objects.filter(nombre=familia_nombre).first() if familia_nombre else None
                 if not creado_por:
-                        messages.error(request, f'El banco "{creado_por}" no existe en la base de datos.')
+                    messages.error(request, f'El perfil "{creado_por}" no existe en la base de datos.')
                
                 # Crear y guardar la dirección del proveedor
                 proveedor = Proveedor(
@@ -932,6 +934,7 @@ def upload_batch_proveedores(request):
                     visita=visita,
                 )
                 proveedor.save()
+                print(proveedor)
 
         proveedores_list.activated = True
         proveedores_list.save()
