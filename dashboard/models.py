@@ -52,6 +52,7 @@ class Product(models.Model):
     completado = models.BooleanField(default = False)
     precioref = models.DecimalField(max_digits=14, decimal_places=2, null=True)
     porcentaje = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    pais = models.ForeignKey(Pais, on_delete = models.CASCADE, null=True)
     #Para calidad
     critico = models.BooleanField(default = False)
     rev_calidad = models.BooleanField(default = False)
