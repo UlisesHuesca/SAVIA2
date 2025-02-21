@@ -1,7 +1,7 @@
 from django.db import models
 from dashboard.models import Order, Inventario, ArticulosparaSurtir, Familia
 from requisiciones.models import Requis, ArticulosRequisitados
-from user.models import Profile, Distrito, Banco
+from user.models import Profile, Distrito, Banco, Pais
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 import decimal
@@ -19,7 +19,7 @@ class Estatus_proveedor(models.Model):
 
 class Proveedor(models.Model):
     razon_social = models.CharField(max_length=150, null=True, unique=True)
-    rfc = models.CharField(max_length=13, null=True, unique=True)
+    rfc = models.CharField(max_length=14, null=True, unique=True)
     creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     completo = models.BooleanField(default=False)
     extranjero = models.BooleanField(default=False)
@@ -41,8 +41,12 @@ class Proveedor_Batch(models.Model):
     def __str__(self):
         return f'File id:{self.id}'
 
+
+
+
 class Estado(models.Model):
     nombre = models.CharField(max_length=30, null=True)
+    pais = models.ForeignKey(Pais, on_delete=models.CASCADE, null=True, blank=True)
 
     def __str__(self):
         return f'{self.nombre}'

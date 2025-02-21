@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Profile, Distrito, Tipo_perfil, Banco, Almacen, CustomUser, Empresa
+from .models import Profile, Distrito, Tipo_perfil, Banco, Almacen, CustomUser, Empresa, Pais
 from django.contrib.auth.admin import UserAdmin
 from django.contrib.auth.models import User
 # Register your classes here
@@ -36,6 +36,8 @@ admin.site.register(Banco)
 admin.site.register(Almacen)
 
 admin.site.register(Empresa)
+
+admin.site.register(Pais)
 
 # Desregistra el modelo User original y registra el nuevo con la personalización
 #admin.site.unregister(User)

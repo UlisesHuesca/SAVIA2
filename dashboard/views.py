@@ -889,7 +889,6 @@ def edit_proveedor_direccion(request, pk):
     return render(request,'dashboard/edit_direcciones_proveedores.html', context)
 
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def upload_batch_proveedores(request):
 
@@ -900,20 +899,43 @@ def upload_batch_proveedores(request):
         form.save()
         form = Proveedores_BatchForm()
         proveedores_list = Proveedor_Batch.objects.get(activated = False)
-
+        print(0)
         f = open(proveedores_list.file_name.path, 'r')
         reader = csv.reader(f)
         next(reader)
 
         for row in reader:
-            if not Proveedor.objects.filter(razon_social=row[0]):
-                proveedor = Proveedor(razon_social=row[0], rfc=row[1])
+            razon_social = row[0].strip()
+            rfc = row[1].strip()
+            creado_por_id = row[2].strip()
+            familia_nombre = row[3].strip()
+            extranjero = row[5].strip().upper() == 'SI' if len(row) > 5 else False
+            visita = row[6].strip().upper() == 'SI' if len(row) > 6 else False
+
+            proveedor = Proveedor.objects.filter(razon_social=razon_social).first()
+
+            
+            if not proveedor:
+                
+                creado_por = Profile.objects.filter(id=creado_por_id).first() if creado_por_id else None
+                familia = Familia.objects.filter(nombre=familia_nombre).first() if familia_nombre else None
+                if not creado_por:
+                        messages.error(request, f'El banco "{creado_por}" no existe en la base de datos.')
+               
+                # Crear y guardar la dirección del proveedor
+                proveedor = Proveedor(
+                    razon_social=razon_social,
+                    rfc = rfc,
+                    creado_por=creado_por,
+                    familia=familia,
+                    extranjero= extranjero,
+                    visita=visita,
+                )
                 proveedor.save()
-            else:
-                messages.error(request,f'El proveedor código:{row[0]} ya existe dentro de la base de datos')
 
         proveedores_list.activated = True
         proveedores_list.save()
+      
     elif request.FILES:
         messages.error(request,'El formato no es CSV')
 
@@ -944,20 +966,21 @@ def upload_batch_proveedores_direcciones(request):
                 nombre = Proveedor.objects.get(razon_social=row[0])
                 if Distrito.objects.filter(nombre = row[1]):
                     distrito = Distrito.objects.get(nombre = row[1])
-                    if Banco.objects.filter(nombre= row[6]):
-                        banco = Banco.objects.get(nombre = row[6])
-                        if Estatus_proveedor.objects.filter(nombre = row[11]):
-                            estatus = Estatus_proveedor.objects.get(nombre = row[11])
+                    if Banco.objects.filter(nombre= row[7]):
+                        banco = Banco.objects.get(nombre = row[7])
+                        if Estatus_proveedor.objects.filter(nombre = row[12]):
+                            estatus = Estatus_proveedor.objects.get(nombre = row[12])
                             if Estado.objects.filter(nombre = row[3]):
+                                financiamiento = row[10].strip().upper() == 'SI' if len(row) > 1 else False
                                 estado = Estado.objects.get(nombre = row[3])
-                                proveedor_direccion = Proveedor_direcciones(nombre=nombre, distrito=distrito,domicilio=row[2],estado=estado,contacto=row[4],email=row[5], banco=banco, clabe=row[7], cuenta=row[8], financiamiento=row[9],dias_credito=row[10],estatus=estatus)
+                                proveedor_direccion = Proveedor_direcciones(nombre=nombre, distrito=distrito,domicilio=row[2],estado=estado,contacto=row[4],email=row[5], telefono= row[6], banco=banco, clabe=row[8], cuenta=row[9], financiamiento=financiamiento,dias_credito=row[11],estatus=estatus)
                                 proveedor_direccion.save()
                             else:
                                 messages.error(request,f'El estado:{row[3]} no existe dentro de la base de datos')
                         else:
                              messages.error(request,f'El estatus:{row[11]} no existe dentro de la base de datos')
                     else:
-                         messages.error(request,f'El banco:{row[6]} no existe dentro de la base de datos')
+                         messages.error(request,f'El banco:{row[7]} no existe dentro de la base de datos')
                 else:
                     messages.error(request,f'El distrito:{row[1]} no existe dentro de la base de datos')
             else:
@@ -998,7 +1021,7 @@ def upload_batch_products(request):
                 next(reader)  # Omitir la primera fila (cabecera)
 
                 for row in reader:
-                    if not Product.objects.filter(codigo=row[0]):
+                    if not Product.objects.filter(codigo=row[0]).exists():
                         if Unidad.objects.filter(nombre=row[2]):
                             unidad = Unidad.objects.get(nombre=row[2])
                             if Familia.objects.filter(nombre=row[3]):

@@ -1,6 +1,6 @@
 from django.db import models
 # De django.contrib.auth.models estamos importando el modelo de usuarios de la administration
-from user.models import Distrito, Profile, Almacen
+from user.models import Distrito, Profile, Almacen, Pais
 from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector
 #from djmoney.models.fields import MoneyField
 from simple_history.models import HistoricalRecords
