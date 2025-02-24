@@ -79,9 +79,11 @@
                                 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
                                     <i class="fa-solid fa-file-invoice-dollar"></i>
                                 </button>
+                                {% if usuario.tipo.tesoreria %}
                                 <a class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                 </a>
+                                {% endif %}
                                 <!-- Modal con visor de PDF -->
                                 <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
                                     <div class="modal-dialog modal-xl">
@@ -96,11 +98,6 @@
                                         </div>
                                     </div>
                                 </div>
-                                {% if usuario.tipo.tesoreria %}
-                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
-                                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                                </a>
-                                {% endif %}
                             </th>
                             {% endif %}
                         </tr>
