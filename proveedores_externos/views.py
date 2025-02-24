@@ -13,7 +13,7 @@ from io import BytesIO
 from django.db.models.functions import Concat, Coalesce
 from tesoreria.models import Pago, Facturas
 import datetime as dt
-
+import decimal
 # Import Excel Stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
