@@ -135,7 +135,7 @@
                             <td>{% if p.comentario %} {{p.comentario}} {% else %} S/C {% endif %}</td>
                             <td>
                                 {% if p.factura_pdf %}
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.factura_pdf.id|unlocalize }}" title="Ver comprobante de pago">
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.factura_pdf.id|unlocalize }}" title="Ver factura">
                                     <i class="fa-solid fa-file-pdf fa-2xl"></i>
                                 </button>
                                
@@ -144,7 +144,7 @@
                                     <div class="modal-dialog modal-xl">
                                         <div class="modal-content">
                                             <div class="modal-header">
-                                                <h5 class="modal-title" id="pdfModalLabel{{p.factura_pdf.id|unlocalize }}">Comprobante de Pago</h5>
+                                                <h5 class="modal-title" id="pdfModalLabel{{p.factura_pdf.id|unlocalize }}">Ver factura</h5>
                                                 <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                             </div>
                                             <div class="modal-body">
