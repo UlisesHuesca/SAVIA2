@@ -299,12 +299,12 @@
         {% endif %}
         <hr>
         <ul class="nav">
-            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
+            <!--{% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
             <li class="nav-item">
                 <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
             </li>
             {% elif fuera_de_tiempo == False %}
-            {% endif %}
+            {% endif %}-->
             <li class="nav-item">
                 <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
             </li>

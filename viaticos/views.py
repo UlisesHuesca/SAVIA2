@@ -32,6 +32,7 @@ import os
 import datetime as dt
 import pytz
 import qrcode
+import re
 from num2words import num2words
 import tempfile
 from datetime import date, datetime, timedelta
@@ -888,7 +889,7 @@ def factura_nueva_viatico(request, pk):
                         # Guardar temporalmente para extraer datos
                         factura_temp = Viaticos_Factura(factura_xml=archivo_xml)
                         factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
-
+                        print(factura_temp)
                         uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
 
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
