@@ -266,7 +266,7 @@ def checkout(request):
         order.inicio_form = timezone.now()  # Asigna la fecha y hora con zona horaria
         order.save()
     if usuario.tipo.supervisor:
-        supervisores = usuarios.filter(id = pk)
+        supervisores = usuarios.filter(id = pk).exclude(tipo__nombre="Admin")
         order.supervisor = usuario
     else:
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True)
