@@ -345,7 +345,7 @@ def checkout(request):
             lineas_productos = []
             order.folio = folio_number
             productos_html = '<ul>'
-            if usuario.tipo.supervisor == True: #Si el usuario es supervisor
+            if usuario.tipo.supervisor == True or usuario.distritos.nombre == "BRASIL": #Si el usuario es supervisor
                
                 for producto in productos:
                     productos_html += f'<li>{producto.producto.producto.nombre}: {producto.cantidad}.</li>'
