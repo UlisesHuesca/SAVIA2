@@ -39,46 +39,84 @@
         {% endif %}
     </div>
 </div>
-<div class = "row mt-2 bg-white">
-        <div class="col-12">
-            <div class="card card-body">
+<div class = "card mt-2 bg-white col-5">
+     
+            <div class="card-header">
                 <h5>Direcciones del Proveedor: {{proveedor.razon_social}}</h5>
-                <hr>
-                <!--{% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Razón Social:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.razon_social|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>RFC:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.rfc|add_class:'form-control'}}
-                    </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    </div>
-                </div>
-                <hr>
-                </form>
-                -->
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-index' %}">
-                                <i class="fa-solid fa-backward"></i>
-                            </a>
-                            {% if usuario.tipo.proveedores %}
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-proveedor-direccion' proveedor.id %}">
-                                <i class="fa-solid fa-plus"> Agregar Direccion</i>
-                            </a>
-                            {% endif %}
-                        </li>
-                    </ul>
             </div>
-        </div>
+            <div class="card-body">
+                <ul class="nav nav-pills">
+                    <li class="nav-item mx-2">
+                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-index' %}">
+                            <i class="fa-solid fa-backward"></i>
+                        </a>
+                        {% if usuario.tipo.proveedores %}
+                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-proveedor-direccion' proveedor.id %}">
+                            <i class="fa-solid fa-plus"> Agregar Direccion</i>
+                        </a>
+                        {% endif %}
+                    </li>
+                </ul>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Documento</th>
+                            <th>Documento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            
+                            <td>Constancia de Situación Fiscal</td>
+                           
+                            <td> 
+                                {% if proveedor.csf %}
+                       
+                     
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{proveedor.id|unlocalize }}" title="Ver Constancia de Situación Fiscal">
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </button>
+                               
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfModal{{ proveedor.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{proveedor.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfModalLabel{{proveedor.id|unlocalize }}">Constancia de Situación Fiscal</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ proveedor.csf.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-csf' proveedor.id %}">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Acta Constitutiva</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Comprobante de Domicilio</td>
+                            <td></td>
+                        </tr>
+                        <tr>
+                            <td>Opinión de Cumplimiento 32D</td>
+                            <td></td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        
 </div>
 
-    <div class="col-md-12 my-2">
+    <div class="card col-md-12 my-2">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -90,16 +128,12 @@
                     <th scope="col">Clabe</th>
                     <th scope="col">Cuenta</th>
                     <th scope="col">Financiamiento</th>
-                    
                     <th scope="col">Dias de Crédito</th>
                     <th scope="col">Status</th>
-                    
                     {% if usuario.tipo.proveedores %}
                     <th scope="col">Edición</th>
                     {% endif %}
                     <th>Registro</th>
-                    <th>Info</th>
-                    <th>CSF</th>
                 </tr>
             </thead>
             <tbody>
@@ -128,37 +162,6 @@
                       
                         <a type="button" class="btn btn-outline-info" href="{% url 'generar-pdf-proveedor' direccion.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Registro"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                       
-                    </td>
-                    <td>
-
-                    </td>
-                    <td>
-                        {% if direccion.nombre.csf %}
-                       
-                     
-                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{direccion.id|unlocalize }}" title="Ver Constancia de Situación Fiscal">
-                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                        </button>
-                       
-                        <!-- Modal con visor de PDF -->
-                        <div class="modal fade" id="pdfModal{{ direccion.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{direccion.id|unlocalize }}" aria-hidden="true">
-                            <div class="modal-dialog modal-xl">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="pdfModalLabel{{direccion.id|unlocalize }}">Constancia de Situación Fiscal</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <iframe src="{{ direccion.nombre.csf.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                        <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-csf' direccion.nombre.id %}">
-                            <i class="fa-solid fa-cloud-arrow-up"></i>
-                        </a>
-                       
                     </td>
                 </tr>
                 {% endfor %}
