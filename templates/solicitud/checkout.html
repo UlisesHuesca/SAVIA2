@@ -679,9 +679,9 @@ $(document).ready(function() {
     if (usuarioDistrito === 'MATRIZ') {
         placeholderText = 'Subdirector';
     }
-    else if (usuarioDistrito === 'BRASIL') {
-        placeholderText = 'Gerente';
-    }
+    //else if (usuarioDistrito === 'BRASIL') {
+    //    placeholderText = 'Gerente';
+    //}
     $('#id_superintendente').select2({
         allowClear: true,
         width: '100%',
@@ -718,8 +718,6 @@ $(document).ready(function() {
     var orden_id = orden.getAttribute('orden');
     var usuarioDistrito = '{{ usuario_distrito }}';
     var placeholderText = 'Supervisor';
-    if (usuarioDistrito === 'BRASIL') {
-        placeholderText = 'Superintendente';
     }
     $('#id_supervisor').select2({
         allowClear: true,
