@@ -8,7 +8,7 @@ from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
-from .forms import CSFForm
+from .forms import CSFForm, ActaForm, ComprobanteForm, OpinionForm
 from io import BytesIO
 from django.db.models.functions import Concat, Coalesce
 from tesoreria.models import Pago, Facturas
@@ -160,6 +160,63 @@ def edit_csf(request, pk):
     }
     
     return render(request, 'proveedores_externos/edit_csf.html',context)
+
+@perfil_seleccionado_required
+def edit_acta_credencial(request, pk):
+    proveedor = Proveedor.objects.get(id = pk)
+    print(proveedor.id)
+    form = ActaForm(instance = proveedor)
+
+    if request.method == 'POST':
+        form = ActaForm(request.POST, request.FILES, instance=proveedor)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    
+    context = {
+        'proveedor':proveedor,
+        'form':form, 
+    }
+    
+    return render(request, 'proveedores_externos/edit_acta_credencial.html',context)
+
+@perfil_seleccionado_required
+def edit_comprobante_domicilio(request, pk):
+    proveedor = Proveedor.objects.get(id = pk)
+    print(proveedor.id)
+    form = ComprobanteForm(instance = proveedor)
+
+    if request.method == 'POST':
+        form = ComprobanteForm(request.POST, request.FILES, instance=proveedor)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    
+    context = {
+        'proveedor':proveedor,
+        'form':form, 
+    }
+    
+    return render(request, 'proveedores_externos/edit_comprobante_domicilio.html',context)
+
+@perfil_seleccionado_required
+def edit_opinion_cumplimiento(request, pk):
+    proveedor = Proveedor.objects.get(id = pk)
+    print(proveedor.id)
+    form = OpinionForm(instance = proveedor)
+
+    if request.method == 'POST':
+        form = OpinionForm(request.POST, request.FILES, instance=proveedor)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    
+    context = {
+        'proveedor':proveedor,
+        'form':form, 
+    }
+    
+    return render(request, 'proveedores_externos/edit_opinion_cumplimiento.html',context)
 
 
 def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):

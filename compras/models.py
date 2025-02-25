@@ -28,6 +28,9 @@ class Proveedor(models.Model):
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     perfil_proveedor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='prov_perfil')
     csf = models.FileField(upload_to='csf', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    comprobante_domicilio = models.FileField(upload_to='comprobante_domicilio', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    opinion_cumplimiento = models.FileField(upload_to='opinion_cumplimiento', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    credencial_acta_constitutiva = models.FileField(upload_to='credencial_acta', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
 
     def __str__(self):
         return f'{self.razon_social}'

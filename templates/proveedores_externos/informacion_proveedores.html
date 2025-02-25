@@ -98,16 +98,98 @@
                             </td>
                         </tr>
                         <tr>
-                            <td>Acta Constitutiva</td>
-                            <td></td>
+                            <td>Credencial Elector/Acta Constitutiva</td>
+                            <td>
+                                {% if proveedor.credencial_acta_constitutiva %}
+                       
+                     
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfActa{{proveedor.id|unlocalize }}" title="Ver Credencial/Acta">
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </button>
+                               
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfActa{{ proveedor.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfActaLabel{{proveedor.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfActaLabel{{proveedor.id|unlocalize }}">Credencial/Acta Constitutiva</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ proveedor.credencial_acta_constitutiva.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'edit-csf' proveedor.id %}">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>
+
+                            </td>
                         </tr>
                         <tr>
                             <td>Comprobante de Domicilio</td>
-                            <td></td>
+                            <td>
+                                {% if proveedor.comprobante_domicilio %}
+                       
+                     
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfDomicilio{{proveedor.id|unlocalize }}" title="Ver Comprobante de Domicilio">
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </button>
+                               
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfDomicilio{{ proveedor.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfDomicilioLabel{{proveedor.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfDomicilioLabel{{proveedor.id|unlocalize }}">Comprobante de Domicilio</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ proveedor.comprobante_domicilio.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'edit-csf' proveedor.id %}">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>
+
+
+                            </td>
                         </tr>
                         <tr>
                             <td>Opinión de Cumplimiento 32D</td>
-                            <td></td>
+                            <td>
+                                {% if proveedor.opinion_cumplimiento %}
+                       
+                     
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfOpinion{{proveedor.id|unlocalize }}" title="Ver Opinión de Cumplimiento">
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </button>
+                               
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfOpinion{{ proveedor.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfOpinionLabel{{proveedor.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfOpinionLabel{{proveedor.id|unlocalize }}">Opinión de Cumplimiento</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ proveedor.opinion_cumplimiento.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'edit-csf' proveedor.id %}">
+                                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                                </a>
+
+                            </td>
                         </tr>
                     </tbody>
                 </table>
