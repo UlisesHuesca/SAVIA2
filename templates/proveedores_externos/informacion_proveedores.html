@@ -313,13 +313,16 @@
         })
     })()
 
-    var myModal = document.getElementById('dialog')
+    //var myModal = document.getElementById('dialog')
 
-    myModal.addEventListener('hidden.bs.modal', function (event) {
-       setTimeout(function(){
+    document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function () {
+        setTimeout(function(){
             location.reload();
-        },3000);
-    })
+        }, 3000);
+    });
+});
+
   </script>
 {% endblock %}
 
