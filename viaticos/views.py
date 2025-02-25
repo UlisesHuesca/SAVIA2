@@ -886,8 +886,8 @@ def factura_nueva_viatico(request, pk):
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
 
                         # Guardar temporalmente para extraer datos
-                        factura_temp = Factura(archivo_xml=archivo_xml)
-                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                        factura_temp = Viaticos_Factura(factura_xml=archivo_xml)
+                        factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
                         uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
 
