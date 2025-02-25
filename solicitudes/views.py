@@ -272,9 +272,11 @@ def checkout(request):
         supervisores = usuarios.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True)
 
     #print(usuario.distritos)
-    if usuario.distritos.nombre == "MATRIZ" or usuario.distritos.nombre == "BRASIL":
+    if usuario.distritos.nombre == "MATRIZ": 
         #print("Quev")
         superintendentes = usuarios.filter(tipo__subdirector = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos)
+    elif usuario.distritos.nombre == "BRASIL":
+        superintendentes = usuarios.filter(tipo__oc_gerencia = True, sustituto__isnull = True, st_activo =True,distritos=usuario.distritos).exclude(tipo__nombre="Admin")
     elif usuario.tipo.autorizacion == True and usuario.tipo.requisiciones == True and usuario.tipo.nombre != "Admin":
         superintendentes = usuarios.filter(staff=usuario.staff, distritos=usuario.distritos)
         #order.superintendente = superintendentes
