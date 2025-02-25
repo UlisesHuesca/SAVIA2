@@ -52,7 +52,14 @@ class OrderForm(forms.ModelForm):
         }
 
     def __init__(self,*args, **kwargs):
+        
         super().__init__(*args, **kwargs)
+        #usuario_distrito = getattr(self.instance, 'distrito', None)
+         # Modificar la etiqueta de "Superintendente" a "Gerente" si el distrito es BRASIL
+        #if usuario_distrito == "BRASIL":
+        #    self.fields['superintendente'].label = _("Gerente*")
+
+
         self.fields['proyecto'].queryset = Proyecto.objects.none()
         self.fields['subproyecto'].queryset = Subproyecto.objects.none()
         self.fields['sector'].queryset = Sector.objects.none()

@@ -118,9 +118,6 @@
                                     <div class="input-group mb-3">
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {% if usuario_distrito == 'BRASIL' %}  
-                                            <label for="{{ form.superintendente.id_for_label }}">Gerente</label>
-                                        {% endif %}
                                         {{form.superintendente}}    
                                         </div>
                                     </div>  
@@ -288,6 +285,8 @@ document.addEventListener('DOMContentLoaded', function() {
         inputSwitch.checked = true;
         soporte.classList.remove('d-none')
     }
+
+
     
 });
    
@@ -680,6 +679,9 @@ $(document).ready(function() {
     if (usuarioDistrito === 'MATRIZ') {
         placeholderText = 'Subdirector';
     }
+    else if (usuarioDistrito === 'BRASIL') {
+        placeholderText = 'Gerente';
+    }
     $('#id_superintendente').select2({
         allowClear: true,
         width: '100%',
@@ -714,10 +716,15 @@ $(document).ready(function() {
 $(document).ready(function() {
     var orden = document.getElementById('order');
     var orden_id = orden.getAttribute('orden');
+    var usuarioDistrito = '{{ usuario_distrito }}';
+    var placeholderText = 'Supervisor';
+    if (usuarioDistrito === 'BRASIL') {
+        placeholderText = 'Superintendente';
+    }
     $('#id_supervisor').select2({
         allowClear: true,
         width: '100%',
-        placeholder: 'Supervisor',
+        placeholder: placeholderText,
         data: datosSupervisores,
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección
