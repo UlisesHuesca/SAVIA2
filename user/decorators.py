@@ -36,7 +36,8 @@ def perfil_seleccionado_required(view_func):
 
         if selected_profile.tipo.nombre == "PROVEEDOR_EXTERNO":
             vistas_permitidas = ['dashboard-index', 'matriz-oc-proveedores','matriz-direcciones','matriz', 'matriz-facturas-nomodal',
-                                  'productos-oc', 'factura-nueva', 'edit-csf']  # Cambia por los nombres reales de las vistas
+                                  'productos-oc', 'factura-nueva', 'edit-csf','edit-acta-credencial', 'edit-comprobante-domicilio',
+                                  'edit-opinion-cumplimiento']  # Cambia por los nombres reales de las vistas
 
             vista_actual = resolve(request.path_info).url_name
             if vista_actual not in vistas_permitidas:
