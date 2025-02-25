@@ -133,9 +133,26 @@
                     </td>
                     <td>
                         {% if direccion.nombre.csf %}
-                        <a type="button" class="btn btn-outline-info" href="{{direccion.nombre.csf.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago">
-                            <i class="fa-sharp-duotone fa-regular fa-file-pdf"></i>
-                        </a>
+                       
+                     
+                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{direccion.id|unlocalize }}" title="Ver Constancia de Situación Fiscal">
+                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                        </button>
+                       
+                        <!-- Modal con visor de PDF -->
+                        <div class="modal fade" id="pdfModal{{ direccion.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{direccion.id|unlocalize }}" aria-hidden="true">
+                            <div class="modal-dialog modal-xl">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="pdfModalLabel{{direccion.id|unlocalize }}">Constancia de Situación Fiscal</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                    </div>
+                                    <div class="modal-body">
+                                        <iframe src="{{ direccion.nombre.csf.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {% endif %}
                         <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-csf' direccion.nombre.id %}">
                             <i class="fa-solid fa-cloud-arrow-up"></i>
