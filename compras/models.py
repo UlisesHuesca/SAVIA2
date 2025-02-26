@@ -119,8 +119,6 @@ class Cond_pago(models.Model):
 class Formas_pago(models.Model):
     codigo = models.PositiveSmallIntegerField(null=True)
     nombre = models.CharField(max_length=30)
-
-
     
 class Comparativo(models.Model):
     nombre = models.CharField(max_length=100, null=True)
@@ -327,3 +325,10 @@ class ArticuloComprado(models.Model):
     def __str__(self):
         return f'{self.id} - {self.producto.producto.articulos.producto.producto} - {self.oc.id} - {self.cantidad} - {self.precio_unitario}'
 
+class Evidencia(models.Model):
+    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, related_name='evidencias')
+    file = models.FileField(upload_to='evidencias', validators = [FileExtensionValidator(allowed_extensions=('pdf','png','jpg','jpeg'))])
+    uploaded = models.DateField()
+    comentario = models.CharField(max_length=200, null=True, blank=True)
+    hecho = models.BooleanField(default=False)
+    subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)

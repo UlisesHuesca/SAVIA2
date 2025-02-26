@@ -2,13 +2,14 @@ from django.shortcuts import render
 from django.http import Http404, HttpResponse
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.core.paginator import Paginator
-from compras.models import Compra, Proveedor, Proveedor_direcciones
+from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia
 from user.models import Profile
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
-from .forms import CSFForm, ActaForm, ComprobanteForm, OpinionForm
+from .forms import CSFForm, ActaForm, ComprobanteForm, OpinionForm, UploadFileForm
+from django.contrib import messages
 from io import BytesIO
 from django.db.models.functions import Concat, Coalesce
 from tesoreria.models import Pago, Facturas
@@ -218,6 +219,98 @@ def edit_opinion_cumplimiento(request, pk):
     
     return render(request, 'proveedores_externos/edit_opinion_cumplimiento.html',context)
 
+@perfil_seleccionado_required
+def evidencias_proveedor(request, pk):
+    pk_usuario = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_usuario)
+    compra = Compra.objects.get(id = pk)
+    evidencias = Evidencia.objects.filter(oc = compra, hecho=True)
+    
+    
+    next_url = request.GET.get('next',)
+
+    #evidencia_form = EvidenciaForm()
+    #next_url = request.GET.get('next', 'mis-gastos') 
+    #print(next_url)
+
+    #if request.method == 'POST':
+     #   if "btn_enviar_evidencia" in request.POST:
+      #      fecha_hora = datetime.today()
+      #      for evidencia in evidencias:
+                #checkbox_name = f'autorizar_factura_{factura.id}'
+                #print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
+                #if checkbox_name in request.POST:
+                #    print('PASO 1')
+                #    factura.autorizada = True
+                #    factura.autorizada_por = usuario
+                #    factura.autorizada_el = fecha_hora
+      #          else:
+      #              print('No paso')
+      #              factura.autorizada = False
+      #          factura.save()
+      #      if form.is_valid():
+      #          gasto = form.save(commit=False)
+      #          gasto.verificacion_facturas = usuario
+      #          gasto.save()
+      #         messages.success(request,'Haz cambiado el status de facturas completas')
+      #          return redirect(next_url) 
+      #      else:
+      #          messages.error(request,'No está validando')
+      #  elif "btn_descargar_todo" in request.POST:
+      #      in_memory_zip, zip_filename = generar_archivo_zip(facturas, gasto)
+      #      response = HttpResponse(in_memory_zip, content_type='application/zip')
+      #      response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+      #      return response
+      #  elif 'salir' in request.POST:
+      #      return redirect(next_url)
+    
+    context={
+        'next_url':next_url,
+        #'form':form,
+        'compra':compra,
+        'evidencias':evidencias,
+        'usuario':usuario,
+        }
+
+    return render(request, 'proveedores_externos/evidencias_proveedor.html', context)
+
+
+@perfil_seleccionado_required
+def subir_evidencias(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    compra = Compra.objects.get(id = pk)
+    form = UploadFileForm()
+
+    if request.method == 'POST':
+        if 'btn_registrar' in request.POST:
+            form = UploadFileForm(request.POST, request.FILES or None)
+            if form.is_valid():
+                files_evidencia = request.FILES.getlist('evidencia_file')
+                if not files_evidencia:
+                    messages.error(request, 'Debes subir al menos un archivo.')
+                    return HttpResponse(status=204)
+                for archivo_evidencia in files_evidencia:
+                    evidencia = Evidencia.objects.create(
+                        oc=compra,
+                        file = archivo_evidencia,
+                        hecho = True,
+                        uploaded = datetime.now(),
+                        subido_por = usuario
+                    )
+                    evidencia.save()
+                messages.success(request, 'Las evidencias se registraron de manera exitosa')
+
+            else:
+                messages.error(request,'No se pudo subir tu documento')
+
+
+    context={
+        'form': form, 
+        'compra': compra,
+    }
+
+    return render(request, 'proveedores_externos/subir_evidencias.html', context)
 
 def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):
     print('conteo compras:', compras.count())

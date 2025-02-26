@@ -9,4 +9,6 @@ urlpatterns = [
     path('edit_acta_credencial/<int:pk>', views.edit_acta_credencial, name='edit-acta-credencial'),
     path('edit_comprobante_domicilio/<int:pk>', views.edit_comprobante_domicilio, name='edit-comprobante-domicilio'),
     path('edit_opinion_cumplimiento/<int:pk>', views.edit_opinion_cumplimiento, name='edit-opinion-cumplimiento'),
+    path('evidencias_proveedor/<int:pk>', views.evidencias_proveedor, name='evidencias-proveedor'),
+    path('subir_evidencias/<int:pk>', views.subir_evidencias, name='subir-evidencias'),
 ]

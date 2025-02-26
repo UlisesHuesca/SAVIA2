@@ -1,0 +1,261 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Evidencia proveedor{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+
+
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<div class="container">
+    <div class="card">
+        <div class="card-header" ver="{{ next_url }}">
+            <h5>Evidencia de OC: {{oc.folio}}</h5>
+        </div>
+        <div class="card-body">
+            <!-- Formulario único para envío de toda la información -->
+            <form method="POST">
+                {% csrf_token %}
+                <!-- Botón para descargar todas las facturas -->
+                <div class="nav-item ms-auto">
+                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                        <i class="fas fa-file-archive"></i> Descargar Archivos
+                    </button>
+                </div>
+                <h6>&nbsp;</h6>
+                <!-- Tabla de datos XML y autorización -->
+                <table class="table bg-white">
+                    <thead class="text-black" style="background-color: #F5F5F5;">
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Comentario</th>
+                            <th scope="col">Archivo</th>
+                            <th>Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for evidencia in evidencias %}
+                        <tr>
+                            <td>{{evidencia.id}}</td>
+                            <td>{{evidencia.comentario}}</td>
+                            <!-- Archivos PDF y XML -->
+                            <td>
+                                <ul class="nav nav-pills">
+                                    {% if evidencia.file %}
+                                    <li class="nav-item mx-1">
+                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{evidencia.id|unlocalize }}" title="Ver comprobante de pago">
+                                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                        </button>
+                                    </li>
+                                    <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfModal{{evidencia.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{evidencia.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfModalLabel{{evidencia.id|unlocalize }}">Comprobante de Pago</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{evidencia.file.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                </ul>
+                            </td>
+
+                            <!-- Botón de eliminación -->
+                            <td>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ evidencia.id | unlocalize }})">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+
+                <!-- Botón para subir nueva factura -->
+                <ul class="nav">
+                    <li class="nav-item">
+                        <a class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'subir-evidencias' compra.id %}">
+                            <i class="fa-duotone fa-regular fa-cloud-arrow-up"></i>
+                        </a>
+                    </li>
+                </ul>
+
+                <!-- Cierre del formulario y botón de cierre de facturas -->
+                {% if usuario.tipo.tesoreria %}
+                <div class="row ms-3 my-2">
+                    <div class="form-check form-switch col-sm">
+                        <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas | Validado por: {{ gasto.verificacion_facturas.staff.staff.first_name }} {{ gasto.verificacion_facturas.staff.staff.last_name }}</strong></label>
+                        {{ form.facturas_completas|add_class:"form-check-input" }}
+                    </div>
+                </div>
+                {% endif %}
+
+                <!-- Botón de cierre -->
+                <hr>
+                <ul class="nav ms-auto">
+                    <li class="nav-item">      
+                        <button type="submit" name="salir" class="btn btn-secondary">
+                            <i class="fa-duotone fa-solid fa-xmark-large"></i>
+                        </button>
+                    </li>
+                </ul>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+<!-- Modal de Confirmación eliminación-->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Eliminar Evidencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">Comentario</label>
+                        <input type="text" class="form-control" id="comentario" name="comentario" placeholder="Escribe un comentario" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="enviarFormulario()">Eliminar</button>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+      location.reload();
+    })
+
+var elementos = document.getElementsByClassName('subtotal-linea');
+var xml = document.getElementsByClassName('total-xml');
+var elementos_t = document.getElementsByClassName('total-linea');
+
+function total(elementos,id){
+    console.log(elementos)
+    var lbltotal = document.getElementById(id)
+    var total = 0;
+
+    for (var i = 0 ; i < elementos.length; i++){
+        total += Number(elementos[i].getAttribute('total'));
+        console.log(elementos[i].getAttribute('total'))
+    };
+    console.log(total)
+    lbltotal.innerText = `$${total.toFixed(2)}`
+
+};
+
+total(elementos,'subtotal');
+total(elementos_t,'total')
+total(xml, 'total2');
+//Parte del modal factura eliminar
+function setDeleteUrl(facturaId) {
+    const deleteForm = document.getElementById('deleteForm');
+    const baseUrl = "{% url 'eliminar-factura-gasto' 0 %}"; // URL base con un placeholder
+
+    // Obtener el parámetro 'next' de la URL actual
+    const urlParams = new URLSearchParams(window.location.search);
+    const nextParam = urlParams.get('next');  // Captura el valor de 'next' si está presente
+
+    // Construir la URL de eliminación con el ID de la factura
+    let deleteUrl = baseUrl.replace('0', facturaId);
+    
+    // Agregar el parámetro 'next' si existe
+    if (nextParam) {
+        deleteUrl += `?next=${encodeURIComponent(nextParam)}`;
+    }
+
+    // Establecer la acción del formulario
+    deleteForm.action = deleteUrl;
+}
+
+function enviarFormulario() {
+    const comentario = document.getElementById('comentario').value;
+    if (!comentario) {
+        alert("Por favor, escribe un comentario antes de continuar.");
+    } else {
+        document.getElementById('deleteForm').submit();  
+    }
+}
+;(function() {
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap', (e) => {
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+            modal.hide()
+    })
+})()
+
+// Recargar la página cuando se cierre el modal de confirmación
+var confirmModal = document.getElementById('confirmModal');
+confirmModal.addEventListener('hidden.bs.modal', function (event) {
+    location.reload();  
+});
+</script>
+{% endblock %}
+</body>
+</html>
