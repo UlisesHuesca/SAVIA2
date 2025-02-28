@@ -1,5 +1,7 @@
-from django.shortcuts import render
-from django.http import Http404, HttpResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import Http404, HttpResponse, JsonResponse
+from django.core.mail import EmailMessage
+from django.conf import settings
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.core.paginator import Paginator
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia
@@ -15,6 +17,7 @@ from django.db.models.functions import Concat, Coalesce
 from tesoreria.models import Pago, Facturas
 import datetime as dt
 import decimal
+from django.views.decorators.csrf import csrf_exempt
 # Import Excel Stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -234,7 +237,7 @@ def evidencias_proveedor(request, pk):
     #print(next_url)
 
     #if request.method == 'POST':
-     #   if "btn_enviar_evidencia" in request.POST:
+    #   if "btn_enviar_evidencia" in request.POST:
       #      fecha_hora = datetime.today()
       #      for evidencia in evidencias:
                 #checkbox_name = f'autorizar_factura_{factura.id}'
@@ -284,9 +287,11 @@ def subir_evidencias(request, pk):
 
     if request.method == 'POST':
         if 'btn_registrar' in request.POST:
-            form = UploadFileForm(request.POST, request.FILES or None)
+            form = UploadFileForm(request.POST, request.FILES)
             if form.is_valid():
+                
                 files_evidencia = request.FILES.getlist('evidencia_file')
+                print(request.FILES)
                 if not files_evidencia:
                     messages.error(request, 'Debes subir al menos un archivo.')
                     return HttpResponse(status=204)
@@ -311,6 +316,38 @@ def subir_evidencias(request, pk):
     }
 
     return render(request, 'proveedores_externos/subir_evidencias.html', context)
+
+
+@perfil_seleccionado_required
+@csrf_exempt  # Permite evitar problemas con CSRF si se maneja en el frontend
+def eliminar_evidencia(request, pk):
+    if request.method != 'POST':  
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = get_object_or_404(Profile, id=pk_perfil)
+    evidencia = get_object_or_404(Evidencia, id=pk)
+    compra = evidencia.oc
+    comentario = request.POST.get('comentario')
+
+    try:
+        # Enviar correo
+        email = EmailMessage(
+            f'Factura eliminada',
+            body=f'Se ha eliminado de la compra {compra.folio} la evidencia con ID {evidencia.id}. Comentario: {comentario}',
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[compra.staff.staff.staff.email]
+        )
+        email.content_subtype = "html"
+        email.send()
+        
+        # Eliminar la factura
+        evidencia.delete()
+
+        return JsonResponse({'success': True, 'factura_id': pk})
+    
+    except Exception as e:
+        return JsonResponse({'error': f'Error eliminando la factura: {str(e)}'}, status=500)
 
 def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):
     print('conteo compras:', compras.count())

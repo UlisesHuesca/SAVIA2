@@ -53,7 +53,7 @@
             <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
                 {% csrf_token %}
                 <label for="file" class="col-auto col-form-label my-1"><strong>Evidencias:</strong></label>
-                <input type="file" name="archivo_pdf" class="form-control" multiple>
+                <input type="file" name="evidencia_file" class="form-control" multiple>
                 <div class="row">
                     <div class="col-auto my-2">
                         <button type="submit" name="btn_registrar" class="btn btn-light" style="background-color:#980f0f" data-bs-dismiss="modal"><i class="fa-solid fa-cloud-arrow-up"></i></button>

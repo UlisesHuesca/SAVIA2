@@ -11,4 +11,5 @@ urlpatterns = [
     path('edit_opinion_cumplimiento/<int:pk>', views.edit_opinion_cumplimiento, name='edit-opinion-cumplimiento'),
     path('evidencias_proveedor/<int:pk>', views.evidencias_proveedor, name='evidencias-proveedor'),
     path('subir_evidencias/<int:pk>', views.subir_evidencias, name='subir-evidencias'),
+    path('eliminar_evidencia/<int:pk>/', views.eliminar_evidencia, name='eliminar-evidencia'),
 ]

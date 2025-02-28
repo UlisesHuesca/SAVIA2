@@ -102,10 +102,10 @@
 
                             <!-- Botón de eliminación -->
                             <td>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ evidencia.id | unlocalize }})">
-                                    <i class="fa-regular fa-trash-can"></i>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="eliminarEvidencia({{ evidencia.id | unlocalize }})">
+                                    <i class="fa-duotone fa-solid fa-trash-can"></i>
                                 </button>
-                            </td>
+                            </td> 
                         </tr>
                         {% endfor %}
                     </tbody>
@@ -176,6 +176,7 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
 <script>
 ;(function(){
     const modal = new bootstrap.Modal(document.getElementById('dialog'))
@@ -191,47 +192,45 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
       location.reload();
     })
 
-var elementos = document.getElementsByClassName('subtotal-linea');
-var xml = document.getElementsByClassName('total-xml');
-var elementos_t = document.getElementsByClassName('total-linea');
+let evidenciaIdEliminar = null;
 
-function total(elementos,id){
-    console.log(elementos)
-    var lbltotal = document.getElementById(id)
-    var total = 0;
-
-    for (var i = 0 ; i < elementos.length; i++){
-        total += Number(elementos[i].getAttribute('total'));
-        console.log(elementos[i].getAttribute('total'))
-    };
-    console.log(total)
-    lbltotal.innerText = `$${total.toFixed(2)}`
-
-};
-
-total(elementos,'subtotal');
-total(elementos_t,'total')
-total(xml, 'total2');
-//Parte del modal factura eliminar
-function setDeleteUrl(facturaId) {
-    const deleteForm = document.getElementById('deleteForm');
-    const baseUrl = "{% url 'eliminar-factura-gasto' 0 %}"; // URL base con un placeholder
-
-    // Obtener el parámetro 'next' de la URL actual
-    const urlParams = new URLSearchParams(window.location.search);
-    const nextParam = urlParams.get('next');  // Captura el valor de 'next' si está presente
-
-    // Construir la URL de eliminación con el ID de la factura
-    let deleteUrl = baseUrl.replace('0', facturaId);
-    
-    // Agregar el parámetro 'next' si existe
-    if (nextParam) {
-        deleteUrl += `?next=${encodeURIComponent(nextParam)}`;
-    }
-
-    // Establecer la acción del formulario
-    deleteForm.action = deleteUrl;
+function abrirModalEliminar(evidenciaId) {
+    evidenciaIdEliminar = evidenciaId;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
 }
+
+//Parte del modal factura eliminar
+function eliminarEvidencia(evidenciaId) {
+        console.log(evidenciaId)
+        /*if (!evidenciaIdEliminar) {
+            alert("No se ha seleccionado ninguna evidencia para eliminar");
+            return;
+        }*/
+        // Obtener token CSRF desde el template
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(`eliminar_evidencia/${evidenciaId}/`, {  // Ajusta la URL según tu configuración
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken  // Django requiere este token para seguridad
+            },
+            body: JSON.stringify({ comentario: "Evidencia eliminada desde AJAX" })  // Agrega datos adicionales si es necesario
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert("Evidencia eliminada con éxito");
+
+                // Ocultar la fila eliminada en la tabla
+                document.getElementById(`evidencia-${evidenciaId}`).remove();
+            } else {
+                alert("Error: " + data.error);
+            }
+        })
+        .catch(error => console.error("Error en la solicitud:", error));
+    }
 
 function enviarFormulario() {
     const comentario = document.getElementById('comentario').value;
