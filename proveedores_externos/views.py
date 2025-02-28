@@ -21,6 +21,7 @@ from django.views.decorators.csrf import csrf_exempt
 # Import Excel Stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
+import json
 # Create your views here.
 
 @perfil_seleccionado_required
@@ -232,41 +233,6 @@ def evidencias_proveedor(request, pk):
     
     next_url = request.GET.get('next',)
 
-    #evidencia_form = EvidenciaForm()
-    #next_url = request.GET.get('next', 'mis-gastos') 
-    #print(next_url)
-
-    #if request.method == 'POST':
-    #   if "btn_enviar_evidencia" in request.POST:
-      #      fecha_hora = datetime.today()
-      #      for evidencia in evidencias:
-                #checkbox_name = f'autorizar_factura_{factura.id}'
-                #print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
-                #if checkbox_name in request.POST:
-                #    print('PASO 1')
-                #    factura.autorizada = True
-                #    factura.autorizada_por = usuario
-                #    factura.autorizada_el = fecha_hora
-      #          else:
-      #              print('No paso')
-      #              factura.autorizada = False
-      #          factura.save()
-      #      if form.is_valid():
-      #          gasto = form.save(commit=False)
-      #          gasto.verificacion_facturas = usuario
-      #          gasto.save()
-      #         messages.success(request,'Haz cambiado el status de facturas completas')
-      #          return redirect(next_url) 
-      #      else:
-      #          messages.error(request,'No está validando')
-      #  elif "btn_descargar_todo" in request.POST:
-      #      in_memory_zip, zip_filename = generar_archivo_zip(facturas, gasto)
-      #      response = HttpResponse(in_memory_zip, content_type='application/zip')
-      #      response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
-      #      return response
-      #  elif 'salir' in request.POST:
-      #      return redirect(next_url)
-    
     context={
         'next_url':next_url,
         #'form':form,
@@ -324,19 +290,25 @@ def eliminar_evidencia(request, pk):
     if request.method != 'POST':  
         return JsonResponse({'error': 'Método no permitido'}, status=405)
 
+    
     pk_perfil = request.session.get('selected_profile_id')
     perfil = get_object_or_404(Profile, id=pk_perfil)
     evidencia = get_object_or_404(Evidencia, id=pk)
     compra = evidencia.oc
-    comentario = request.POST.get('comentario')
-
+    
     try:
+        data = json.loads(request.body)
+        comentario = data.get('comentario', '')
+        print("Comentario recibido", comentario)
         # Enviar correo
         email = EmailMessage(
-            f'Factura eliminada',
+            f'Evidencia eliminada',
             body=f'Se ha eliminado de la compra {compra.folio} la evidencia con ID {evidencia.id}. Comentario: {comentario}',
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[compra.staff.staff.staff.email]
+            to=[
+                compra.creada_por.staff.staff.email,
+                'ulises_huesc@hotmail.com'    
+            ]
         )
         email.content_subtype = "html"
         email.send()
@@ -344,10 +316,30 @@ def eliminar_evidencia(request, pk):
         # Eliminar la factura
         evidencia.delete()
 
-        return JsonResponse({'success': True, 'factura_id': pk})
+        return JsonResponse({'success': True, 'evidencia_id': pk})
     
     except Exception as e:
-        return JsonResponse({'error': f'Error eliminando la factura: {str(e)}'}, status=500)
+        return JsonResponse({'error': f'Error eliminando la evidencia: {str(e)}'}, status=500)
+    
+def update_comentario(request):
+    data = json.loads(request.body)
+    pk = data["evidencia_id"]
+    dato = data["dato"]
+    tipo = data["tipo"]
+    evidencia = Evidencia.objects.get(id=pk)
+    print(evidencia.comentario)
+    if tipo == "comentario": 
+        evidencia.comentario = dato
+    if tipo == "cantidad":
+        evidencia.cantidad = dato
+    evidencia.save()
+    # Construye un objeto de respuesta que incluya el dato y el tipo.
+    response_data = {
+        'dato': dato,
+        'tipo': tipo
+    }
+
+    return JsonResponse(response_data, safe=False)
 
 def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):
     print('conteo compras:', compras.count())

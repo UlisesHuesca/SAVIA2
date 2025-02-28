@@ -44,8 +44,15 @@
 </div>
 <div class="container">
     <div class="card">
-        <div class="card-header" ver="{{ next_url }}">
-            <h5>Evidencia de OC: {{oc.folio}}</h5>
+        <div class="card-header d-flex align-items-center">
+            <h5>Evidencia de OC: {{compra.folio}}</h5>
+            <ul class="nav ms-auto">
+                <li class="nav-item">
+                    <a href="{% url 'matriz-oc-proveedores' %}" class="btn btn-secondary">
+                        <i class="fa-duotone fa-solid fa-xmark-large"></i>
+                    </a>
+                </li>
+            </ul>
         </div>
         <div class="card-body">
             <!-- Formulario único para envío de toda la información -->
@@ -64,15 +71,34 @@
                         <tr>
                             <th scope="col">#</th>
                             <th scope="col">Comentario</th>
+                            <th>Editar</th>
                             <th scope="col">Archivo</th>
                             <th>Eliminar</th>
                         </tr>
                     </thead>
                     <tbody>
                         {% for evidencia in evidencias %}
-                        <tr>
+                        <tr id="evidencia-{{ evidencia.id }}">
                             <td>{{evidencia.id}}</td>
-                            <td>{{evidencia.comentario}}</td>
+                            
+                            <td class="d-none" id="form_comentario_{{evidencia.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_{{ evidencia.id|unlocalize }}" value="{{ evidencia.comentario }}">
+                            </td>
+                            <td class="" id="comentario_{{evidencia.id|unlocalize}}">
+                                {% if evidencia.comentario %} {{evidencia.comentario}} {% else %} No hay comentario {% endif %}
+                            </td>
+                            <td>
+                            <a id="modificar_comentario_{{evidencia.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{evidencia.id|unlocalize}}')">
+                                <i class="fa-regular fa-comment"></i>
+                            </a>
+
+                            <button type="button" id="save_comment_{{evidencia.id|unlocalize}}" onclick="aceptar_edicion('{{evidencia.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
+                                <i class="fa-regular fa-circle-check"></i>
+                            </button>
+                            <button id="cancel_edit_{{evidencia.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{evidencia.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </button>
+                            </td>
                             <!-- Archivos PDF y XML -->
                             <td>
                                 <ul class="nav nav-pills">
@@ -102,7 +128,7 @@
 
                             <!-- Botón de eliminación -->
                             <td>
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="eliminarEvidencia({{ evidencia.id | unlocalize }})">
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="abrirModalEliminar({{ evidencia.id | unlocalize }})">
                                     <i class="fa-duotone fa-solid fa-trash-can"></i>
                                 </button>
                             </td> 
@@ -131,14 +157,6 @@
                 {% endif %}
 
                 <!-- Botón de cierre -->
-                <hr>
-                <ul class="nav ms-auto">
-                    <li class="nav-item">      
-                        <button type="submit" name="salir" class="btn btn-secondary">
-                            <i class="fa-duotone fa-solid fa-xmark-large"></i>
-                        </button>
-                    </li>
-                </ul>
             </form>
         </div>
     </div>
@@ -169,7 +187,7 @@
             </div>
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
-                <button type="button" class="btn btn-danger" onclick="enviarFormulario()">Eliminar</button>
+                <button type="button" class="btn btn-danger" onclick="eliminarEvidencia()">Eliminar</button>
             </div>
         </div>
     </div>
@@ -201,30 +219,40 @@ function abrirModalEliminar(evidenciaId) {
 }
 
 //Parte del modal factura eliminar
-function eliminarEvidencia(evidenciaId) {
-        console.log(evidenciaId)
-        /*if (!evidenciaIdEliminar) {
+function eliminarEvidencia() {
+        console.log("Eliminar evidencia", evidenciaIdEliminar);
+        
+        if (!evidenciaIdEliminar) {
             alert("No se ha seleccionado ninguna evidencia para eliminar");
             return;
-        }*/
+        }
+        const comentario = document.getElementById('comentario').value;
+        console.log(comentario);
+        if (!comentario) {
+            alert("Por favor, escribe un comentario antes de continuar.");
+            return;
+        }
         // Obtener token CSRF desde el template
         const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
 
-        fetch(`eliminar_evidencia/${evidenciaId}/`, {  // Ajusta la URL según tu configuración
+        fetch(`/proveedores_externos/eliminar_evidencia/${evidenciaIdEliminar}/`, {  // Ajusta la URL según tu configuración
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-CSRFToken": csrftoken  // Django requiere este token para seguridad
             },
-            body: JSON.stringify({ comentario: "Evidencia eliminada desde AJAX" })  // Agrega datos adicionales si es necesario
+            body: JSON.stringify({ comentario: comentario })  // Agrega datos adicionales si es necesario
         })
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert("Evidencia eliminada con éxito");
-
                 // Ocultar la fila eliminada en la tabla
-                document.getElementById(`evidencia-${evidenciaId}`).remove();
+                document.getElementById(`evidencia-${evidenciaIdEliminar}`).remove();
+                const modalElement = document.getElementById('confirmModal');
+                const modalInstance = bootstrap.Modal.getInstance(modalElement);
+                if (modalInstance) {
+                    modalInstance.hide();
+                }
             } else {
                 alert("Error: " + data.error);
             }
@@ -232,14 +260,14 @@ function eliminarEvidencia(evidenciaId) {
         .catch(error => console.error("Error en la solicitud:", error));
     }
 
-function enviarFormulario() {
+/*function enviarFormulario() {
     const comentario = document.getElementById('comentario').value;
     if (!comentario) {
         alert("Por favor, escribe un comentario antes de continuar.");
     } else {
         document.getElementById('deleteForm').submit();  
     }
-}
+}*/
 ;(function() {
     const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
@@ -254,6 +282,83 @@ var confirmModal = document.getElementById('confirmModal');
 confirmModal.addEventListener('hidden.bs.modal', function (event) {
     location.reload();  
 });
+
+
+function modificar_comentario(evidenciaId){
+    var form_comentario = document.getElementById("form_comentario_"+evidenciaId);
+    var comentario = document.getElementById("comentario_"+evidenciaId);
+    //var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+evidenciaId);
+    var cancel_edit = document.getElementById("cancel_edit_"+evidenciaId);
+    var save_comment = document.getElementById("save_comment_"+evidenciaId);
+    
+    form_comentario.classList.remove("d-none");
+    comentario.classList.add("d-none");
+    //edit_quantity.classList.add("d-none");
+    modificar_comentario.classList.add("d-none");
+    cancel_edit.classList.remove("d-none");
+    save_comment.classList.remove("d-none");
+};
+
+function aceptar_edicion(EvidenciaId){
+    var form_tag = document.getElementById("form_comentario_"+EvidenciaId);
+    var comentario = document.getElementById("comentario_"+ EvidenciaId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+ EvidenciaId);
+    var cancel_edit = document.getElementById("cancel_edit_"+ EvidenciaId);
+    var save_comment = document.getElementById("save_comment_"+ EvidenciaId);
+    var pk = EvidenciaId;
+    var inputElement = document.getElementById('comentario-input_' + EvidenciaId).value;
+    //var form_comentario = document.getElementById('id_form_comentario-comentario').value
+    
+    console.log(inputElement)
+    ActualizarComentario(pk,inputElement,"comentario")
+    form_tag.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    //edit_quantity.classList.remove("d-none");
+    //delete_row.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function cancelar_edicion(EvidenciaId){
+    var form_comentario = document.getElementById("form_comentario_"+ EvidenciaId);
+    var comentario = document.getElementById("comentario_"+ EvidenciaId);
+    //var edit_quantity = document.getElementById("edit_quantity_"+productoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+ EvidenciaId);
+    //var delete_row = document.getElementById("delete_row_"+ EvidenciaId);
+    var cancel_edit = document.getElementById("cancel_edit_"+ EvidenciaId);
+    var save_comment = document.getElementById("save_comment_"+ EvidenciaId);
+    form_comentario.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    //edit_quantity.classList.remove("d-none");
+    //delete_row.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function ActualizarComentario(evidencia_id, dato , tipo){
+    console.log('User is logged in, sending data...' )
+    var url = '/proveedores_externos/update_comentario/'
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'evidencia_id':evidencia_id, 'dato':dato, 'tipo':tipo})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        if (data.tipo == "comentario"){
+            document.getElementById('comentario_'+ evidencia_id).innerHTML = data.dato;
+        }
+    })
+}
 </script>
 {% endblock %}
 </body>
