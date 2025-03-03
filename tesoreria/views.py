@@ -1237,7 +1237,7 @@ def matriz_complementos(request, pk):
         'complementos':complementos,
         }
 
-    return render(request, 'tesoreria/matriz_factura_no_modal.html', context)
+    return render(request, 'tesoreria/matriz_complementos.html', context)
 
 
 
