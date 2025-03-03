@@ -192,7 +192,7 @@
                 {% for compra in compras_list %}
                 <tr>
                     <th >{{compra.folio}}</th>
-                    <td>{{compra.req.orden.distrito.nombre}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.req.orden.distrito.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{compra.created_at|date:"d/M/Y"}} </td>
                     
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>

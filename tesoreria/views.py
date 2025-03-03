@@ -1,5 +1,5 @@
-from django.shortcuts import render, redirect
-from django.http import HttpResponse, FileResponse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.http import HttpResponse, FileResponse, Http404
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
@@ -1127,9 +1127,19 @@ def generar_archivo_zip(facturas, compra):
 
 @perfil_seleccionado_required
 def matriz_facturas_nomodal(request, pk):
+    print('estoy en matriz_facturas_nomodal')
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
-    compra = Compra.objects.get(id = pk)
+
+    try:
+        if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
+            next_url = 'matriz-oc-proveedores'
+            compra = get_object_or_404(Compra, id=pk, proveedor__nombre__perfil_proveedor = perfil)
+        else:
+            compra = get_object_or_404(Compra, id=pk)
+    except Http404:
+        messages.error(request, "No tienes acceso a esta orden de compra.")
+        return redirect(next_url)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
     form = Facturas_Completas_Form(instance=compra)

@@ -32,7 +32,6 @@ def matriz_oc_proveedores(request):
     print(usuario)
     try:
         proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
-        print('que')
     except Proveedor.DoesNotExist:
         proveedor = None
     print(proveedor)
@@ -169,7 +168,7 @@ def edit_csf(request, pk):
 @perfil_seleccionado_required
 def edit_acta_credencial(request, pk):
     proveedor = Proveedor.objects.get(id = pk)
-    print(proveedor.id)
+    #print(proveedor.id)
     form = ActaForm(instance = proveedor)
 
     if request.method == 'POST':

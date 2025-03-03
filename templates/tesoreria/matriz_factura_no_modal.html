@@ -42,21 +42,35 @@
 <hr>
 <div class="container">
     <div class="card">
-        <div class="card-header">
+        <form method="POST">
+        <div class="card-header d-flex align-items-center">
             <h5 class="card-title" id="compra" value="{{compra.id}}" compra_pagos="{{compra_pagos}}">Facturas de Compra: {{compra.folio}}</h5>
+            <ul class="nav ms-auto">
+                <li class="nav-item ms-4">      
+                    <button type="submit" name="salir" class="btn btn-outline-secondary">
+                        <i class="fa-duotone fa-solid fa-xmark-large"></i>
+                    </button>
+                </li>
+            </ul>
         </div>
 
-        <form method="POST">
+        
             {% csrf_token %}
             <div class="card-body">
                 <!-- Proveedor Info -->
-                <table class='table table-striped'>
-                    <thead>
+                <table class="table table-striped">
+                    <tbody>
                         <tr>
-                            <th scope="col">Proveedor:</th>
-                            <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
+                            <th>Proveedor:</th>
+                            <th>{{compra.proveedor.nombre.razon_social}}</th>
                         </tr>
                     </thead>
+                   
+                        <tr>
+                            <th >Importe Compra</th>
+                            <th id="importe" value="{{compra.costo_oc}}" moneda="{{compra.moneda.nombre}}">${{compra.costo_oc|floatformat:2}}</th>
+                        </tr>
+                    </tbody>
                 </table>
 
                 <!-- Pagos Section -->
@@ -77,7 +91,7 @@
                             <th scope="col">{{pago.pagado_date}} </th>
                             <th scope="col">
                                 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    <i class="fa-duotone fa-solid fa-file-invoice-dollar fa-xl"></i>
                                 </button>
                                 {% if usuario.tipo.tesoreria %}
                                 <a class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
@@ -107,14 +121,7 @@
 
                 <!-- Importe Compra Section -->
                 <hr>
-                <table class='table table-striped'>
-                    <thead>
-                        <tr>
-                            <th scope="col">Importe Compra</th>
-                            <th id="importe" value="{{compra.costo_oc}}" moneda="{{compra.moneda.nombre}}">${{compra.costo_oc|floatformat:2}}</th>
-                        </tr>
-                    </thead>
-                </table>
+                
 
                 <!-- Descargar Facturas Button -->
                 <div class="nav-item ms-auto">
@@ -133,10 +140,11 @@
                             <th>Comentario</th>
                             <th>PDF</th>
                             <th>XML</th>
-                            <th>PDF-Render</th>
+                            <th>PDF-S2</th>
                             {% if usuario.tipo.tesoreria %}
                             <th>Validar</th>
                             {% endif %}
+                            <th>Complementos</th>
                             <th>Eliminar</th>
                         </tr>
                     </thead>
@@ -149,8 +157,8 @@
                             <td>{% if p.comentario %} {{p.comentario}} {% else %} S/C {% endif %}</td>
                             <td>
                                 {% if p.factura_pdf %}
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.factura_pdf.id|unlocalize }}" title="Ver factura">
-                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ p.factura_pdf.id|unlocalize }}" title="Ver representación impresa Factura">
+                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                                 </button>
                                
                                 <!-- Modal con visor de PDF -->
@@ -172,14 +180,14 @@
                             </td>
                             <td>
                                 {% if p.factura_xml %}
-                                <a href="{{p.factura_xml.url}}" download class="btn btn-outline-info">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <a href="{{p.factura_xml.url}}" download class="btn btn-outline-info" title="Descargar XML Factura">
+                                    <i class="fa-duotone fa-solid fa-file-xml fa-xl"></i>
                                 </a>
                                 {% endif %}
                             </td>
                             <td>
-                                <a href="{% url 'generar_cfdi' p.id %}" download class="btn btn-outline-info">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                <a href="{% url 'generar_cfdi' p.id %}" download class="btn btn-outline-info" title="Descargar representación impresa S2 Factura">
+                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                                 </a>
                             </td>
                             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
@@ -187,9 +195,17 @@
                                 <input type="checkbox" name="autorizar_factura_{{ p.id | unlocalize }}" {% if p.autorizada %}checked{% endif %}>
                             </td>
                             {% endif %}
+                           
+                            <td>
+                                {% if p.emisor.metodo_pago == "PPD" %}
+                                <a href="{% url 'generar_cfdi' p.id %}" download class="btn btn-outline-info" title="Complementos de pago">
+                                    <i class="fa-duotone fa-solid fa-file-invoice fa-xl"></i>
+                                </a>
+                                {% endif %}
+                            </td>
                             <td>
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ p.id | unlocalize }})">
-                                    <i class="fa-regular fa-trash-can"></i>
+                                    <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>
                                 </button>
                             </td>
                         </tr>
@@ -208,11 +224,10 @@
                 {% endif %}
                 <!-- Subir Nueva Factura and Cerrar Buttons -->
                 <hr>
-                <h6>Subir Nueva factura</h6>
                 <ul class="nav">
                     <li class="nav-item">
-                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' compra.id %}">
-                            Facturas <i class="fa-solid fa-file-arrow-up"></i>
+                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' compra.id %}" title="Subir nueva factura">
+                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
                         </a>
                     </li>
                     {% if usuario.tipo.tesoreria %}
@@ -220,9 +235,7 @@
                             <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
                         </li>
                     {% endif %}
-                    <li class="nav-item ms-4">      
-                        <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
-                    </li>
+                   
                 </ul>
             </div>
         </form>

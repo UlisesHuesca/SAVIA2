@@ -327,3 +327,19 @@ class Saldo_Cuenta(models.Model):
 
     def __str__(self):
         return f'id:{self.cuenta}'
+    
+
+class Complemento_Pago(models.Model):
+    factura = models.ForeignKey(Facturas, on_delete = models.CASCADE, null=True, related_name='complemento')
+    subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='complemento_subido_por')
+    fecha_subido = models.DateField(null=True, blank=True)
+    hora_subido = models.TimeField(null=True, blank=True)
+    comentario = models.CharField(max_length=100, null=True, blank=True)
+    hecho = models.BooleanField(default=False)
+    complemento_pdf = models.FileField(blank=True, null=True, upload_to='complementos_pdf',validators=[FileExtensionValidator(['pdf'])])
+    cmplemento_xml = models.FileField(blank=True, null=True, upload_to='complementos_xml', validators=[FileExtensionValidator(['xml'])])
+    uuid = models.CharField(max_length=36, blank=True, null=True, unique = True, db_index=True) #unique = True
+    fecha_timbrado = models.DateTimeField(null=True,blank=True)
+    validado = models.BooleanField(null=True, default=None)
+    validado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='validado_complemento')
+    validado_fecha = models.DateTimeField(null=True)
