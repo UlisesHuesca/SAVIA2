@@ -16,7 +16,7 @@ from compras.forms import CompraForm
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, generar_pdf #convert_excel_matriz_compras
 from dashboard.models import Subproyecto
-from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago
+from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto
 from viaticos.views import generar_pdf_viatico
@@ -1181,6 +1181,64 @@ def matriz_facturas_nomodal(request, pk):
         }
 
     return render(request, 'tesoreria/matriz_factura_no_modal.html', context)
+
+@perfil_seleccionado_required
+def matriz_complementos(request, pk):
+    print('estoy en matriz_facturas_nomodal')
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
+
+    try:
+        if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
+            next_url = 'matriz-oc-proveedores'
+            factura = get_object_or_404(Facturas, id=pk, oc__proveedor__nombre__perfil_proveedor = perfil)
+        else:
+            factura = get_object_or_404(Facturas, id=pk)
+    except Http404:
+        messages.error(request, "No tienes acceso a esta orden de compra.")
+        return redirect(next_url)
+    complementos = Complemento_Pago.objects.filter(factura = factura, hecho=True)
+    #pagos = Factura.objects.filter(oc = compra)
+    #form = Facturas_Completas_Form(instance=compra)
+    next_url = request.GET.get('next','matriz-compras')
+
+    if request.method == 'POST':
+        #form = Facturas_Completas_Form(request.POST, instance=compra)
+        #if "btn_factura_completa" in request.POST:
+        #    fecha_hora = datetime.today()
+        #    for factura in facturas:
+        #        checkbox_name = f'autorizar_factura_{factura.id}'
+                #print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
+        #        if checkbox_name in request.POST:
+        #            factura.autorizada = True
+        #            factura.autorizada_por = perfil
+        #            factura.autorizada_el = fecha_hora
+        #        else:
+        #            factura.autorizada = False
+        #        factura.save()
+        #    if form.is_valid():
+        #        form.save()
+        #        messages.success(request,'Haz cambiado el status de facturas completas')
+        #        return redirect(next_url)
+        #    else:
+        #        messages.error(request,'No está validando')
+        #elif "btn_descargar_todo" in request.POST:
+        #    in_memory_zip, zip_filename = generar_archivo_zip(facturas, compra)
+        #    response = HttpResponse(in_memory_zip, content_type='application/zip')
+        #    response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
+        #    return response
+        if 'salir' in request.POST:
+            return redirect(next_url)
+
+    context={
+        #'pagos':pagos,
+        #'form':form,
+        'factura':factura,
+        'complementos':complementos,
+        }
+
+    return render(request, 'tesoreria/matriz_factura_no_modal.html', context)
+
 
 
 def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario):
