@@ -94,7 +94,7 @@
                                     <i class="fa-duotone fa-solid fa-file-invoice-dollar fa-xl"></i>
                                 </button>
                                 {% if usuario.tipo.tesoreria %}
-                                <a class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-comprobante-pago' pago.id %}">
+                                <a class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="#">
                                     <i class="fa-solid fa-cloud-arrow-up"></i>
                                 </a>
                                 {% endif %}
@@ -226,7 +226,7 @@
                 <hr>
                 <ul class="nav">
                     <li class="nav-item">
-                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva' compra.id %}" title="Subir nueva factura">
+                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="#" title="Subir nueva factura">
                             <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
                         </a>
                     </li>
