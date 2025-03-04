@@ -1394,77 +1394,93 @@ def complemento_nuevo(request, pk):
 
     form = UploadComplementoForm()
 
-    if request.method == 'POST':
-        if 'btn_registrar' in request.POST:
-            form = UploadComplementoForm(request.POST, request.FILES or None)
-            if form.is_valid():
-                archivos_pdf = request.FILES.getlist('complemento_pdf')
-                archivos_xml = request.FILES.getlist('complemento_xml')
-                if not archivos_pdf and not archivos_xml:
-                    messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
-                    return HttpResponse(status=204)
-                
-                # Iterar sobre el número máximo de archivos en cualquiera de las listas
-                max_len = max(len(archivos_pdf), len(archivos_xml))
-                complementos_invalidos = []
-                complementos_duplicados = []
-                complementos_registrados = []
-                comentario = request.POST.get('comentario', '')  # Extraer el comentario
-                print(comentario)
-                for i in range(max_len):
-                    archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
-                    archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-                    complemento, created = Complemento_Pago.objects.get_or_create(factura=factura, hecho=False)
-                    if archivo_xml:
-                        try:
-                            archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+    if request.method == 'POST' and 'btn_registrar' in request.POST:
+        form = UploadComplementoForm(request.POST, request.FILES or None)
+        if form.is_valid():
+            archivos_pdf = request.FILES.getlist('complemento_pdf')
+            archivos_xml = request.FILES.getlist('complemento_xml')
 
-                            # Guardar temporalmente para extraer datos
-                            complemento_temp = Complemento_Pago(complemento_xml=archivo_xml)
-                            complemento.complemento_xml.save(archivo_xml.name, archivo_procesado, save=False)
+            if not archivos_pdf and not archivos_xml:
+                messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
+                return HttpResponse(status=204)
 
-                            uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(complemento_temp.archivo_xml.path)
+            # Listas de seguimiento
+            complementos_invalidos = []
+            complementos_duplicados = []
+            complementos_registrados = []
+            pdf_sin_complemento = []
+            comentario = request.POST.get('comentario', '')
 
-                            # Validaciones
-                            if not uuid_complemento or not docto_relacionado_id:
-                                complementos_invalidos.append(archivo_xml.name)
-                                continue
+            # Determinar el número máximo de archivos a procesar
+            max_len = max(len(archivos_pdf), len(archivos_xml))
 
-                            complemento_existente = Complemento_Pago.objects.filter(uuid=uuid_complemento).exists()
-                            if complemento_existente:
-                                complementos_duplicados.append(uuid_complemento)
-                                continue
-                            factura_relacionada = Facturas.objects.filter(uuid=docto_relacionado_id).first()
+            for i in range(max_len):
+                archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
+                archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
+                complemento_final = None  # Variable para almacenar el complemento en el que se trabajará
+
+                # Procesar XML si está presente
+                if archivo_xml:
+                    try:
+                        archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+
+                        # Guardar temporalmente el XML para extraer datos
+                        complemento_temp = Complemento_Pago(complemento_xml=archivo_xml)
+                        complemento_temp.complemento_xml.save(archivo_xml.name, archivo_procesado, save=False)
+
+                        # Extraer UUID y ID del documento relacionado
+                        uuid_complemento, docto_relacionado_id = extraer_datos_del_xml(complemento_temp.complemento_xml.path)
+
+                        # Validaciones de UUID y relación con factura
+                        if not uuid_complemento or not docto_relacionado_id:
+                            complementos_invalidos.append(archivo_xml.name)
+                            continue
+
+                        complemento_existente = Complemento_Pago.objects.filter(uuid=uuid_complemento).first()
+                        if complemento_existente:
+                            complementos_duplicados.append(uuid_complemento)
+                            complemento_final = complemento_existente  # Reusar complemento existente
+                        else:
+                            factura_relacionada = Factura.objects.filter(uuid=docto_relacionado_id).first()
                             if not factura_relacionada:
                                 complementos_invalidos.append(archivo_xml.name)
                                 continue
 
-                            # Si no existe ninguna factura, guardar la nueva
+                            # Guardar complemento de pago si es válido
                             complemento_final = Complemento_Pago(
                                 complemento_xml=archivo_xml,
-                                uuid = uuid_complemento
-                                factura = factura_relacionada,
-                                subido_por = usuario
+                                uuid=uuid_complemento,
+                                factura=factura_relacionada,
+                                subido_por=request.user
                             )
                             complemento_final.save()
-                        except Exception as e:
-                            messages.error(request, f'Error al procesar el complemento: {archivo_xml.name}:{e}')
-                            continue
+                            complementos_registrados.append(uuid_complemento)
 
-                    if archivo_pdf and complemento_final:
+                    except Exception as e:
+                        messages.error(request, f"Error al procesar {archivo_xml.name}: {e}")
+                        continue
+
+                # Procesar PDF y asociarlo con el mismo complemento
+                if archivo_pdf:
+                    if complemento_final:
                         complemento_final.complemento_pdf = archivo_pdf  # ✅ ADHERIR PDF AL COMPLEMENTO EXISTENTE
                         complemento_final.save()
                         complementos_registrados.append(f"PDF: {archivo_pdf.name}")
-                    # Generar mensajes para el usuario
-                if complementos_registrados:
-                    messages.success(request, f'Se han registrado los siguientes complementos: {", ".join(complementos_registrados)}')
-                if complementos_duplicados:
-                    messages.warning(request, f'Los siguientes complementos ya estaban registrados y no se duplicaron: {", ".join(complementos_duplicados)}')
-                if complementos_invalidos:
-                    messages.error(request, f'Los siguientes archivos no tienen factura relacionada o están mal estructurados: {", ".join(complementos_invalidos)}')
+                    else:
+                        pdf_sin_complemento.append(archivo_pdf.name)  # 📌 Registrar PDFs sin complemento
 
-            else:
-                messages.error(request,'No se pudo subir tu documento')
+            # Generar mensajes para el usuario
+            if complementos_registrados:
+                messages.success(request, f'Se han registrado los siguientes complementos: {", ".join(complementos_registrados)}')
+            if complementos_duplicados:
+                messages.warning(request, f'Los siguientes complementos ya estaban registrados y no se duplicaron: {", ".join(complementos_duplicados)}')
+            if complementos_invalidos:
+                messages.error(request, f'Los siguientes archivos no tienen factura relacionada o están mal estructurados: {", ".join(complementos_invalidos)}')
+            if pdf_sin_complemento:
+                messages.error(request, f'Los siguientes archivos PDF no tienen un complemento de pago asociado y no se guardaron: {", ".join(pdf_sin_complemento)}')
+
+        else:
+            messages.error(request, 'No se pudo subir tu documento.')
 
     context={
         'form':form,
