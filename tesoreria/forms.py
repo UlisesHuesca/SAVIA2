@@ -94,3 +94,7 @@ class Transferencia_Form(forms.ModelForm):
 class UploadFileForm(forms.Form):
     factura_pdf = forms.FileField(required=False)
     factura_xml = forms.FileField(required=False)
+
+class UploadComplementoForm(forms.Form):
+    complemento_pdf = forms.FileField(required=False)
+    complemento_xml = forms.FileField(required=False)

@@ -22,7 +22,7 @@ from gastos.views import render_pdf_gasto
 from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -1096,6 +1096,45 @@ def extraer_datos_del_xml(ruta_xml):
     else:
         print("Complemento no encontrado")
         return None, None
+    
+import xml.etree.ElementTree as ET
+
+def extraer_datos_del_complemento(ruta_xml):
+    try:
+        # Parsear el archivo XML
+        tree = ET.parse(ruta_xml)
+        root = tree.getroot()
+    except (ET.ParseError, FileNotFoundError) as e:
+        print(f"Error al parsear el archivo XML: {e}")
+        return None, None  # Si ocurre un error, devolver None
+    
+    # Definir espacios de nombres
+    ns = {
+        'cfdi': 'http://www.sat.gob.mx/cfd/4',
+        'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+        'pago20': 'http://www.sat.gob.mx/Pagos20'
+    }
+    
+    # Buscar el UUID en TimbreFiscalDigital
+    uuid = None
+    complemento = root.find('cfdi:Complemento', ns)
+    if complemento is not None:
+        timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
+        if timbre_fiscal is not None:
+            uuid = timbre_fiscal.get('UUID', '')
+
+    # Buscar el IdDocumento dentro de DoctoRelacionado
+    docto_relacionado_id = None
+    pagos = complemento.find('pago20:Pagos', ns) if complemento is not None else None
+    if pagos is not None:
+        pago = pagos.find('pago20:Pago', ns)
+        if pago is not None:
+            docto_relacionado = pago.find('pago20:DoctoRelacionado', ns)
+            if docto_relacionado is not None:
+                docto_relacionado_id = docto_relacionado.get('IdDocumento', '')
+
+    return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
+
 
 def generar_archivo_zip(facturas, compra):
     nombre = compra.folio if compra.folio else ''
@@ -1344,6 +1383,95 @@ def factura_nueva(request, pk):
         }
 
     return render(request, 'tesoreria/registrar_nueva_factura.html', context)
+
+
+@perfil_seleccionado_required
+def complemento_nuevo(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    factura = Facturas.objects.get(id = pk)
+    #facturas = Facturas.objects.filter(pago = pago, hecho=True)
+
+    form = UploadComplementoForm()
+
+    if request.method == 'POST':
+        if 'btn_registrar' in request.POST:
+            form = UploadComplementoForm(request.POST, request.FILES or None)
+            if form.is_valid():
+                archivos_pdf = request.FILES.getlist('complemento_pdf')
+                archivos_xml = request.FILES.getlist('complemento_xml')
+                if not archivos_pdf and not archivos_xml:
+                    messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
+                    return HttpResponse(status=204)
+                
+                # Iterar sobre el número máximo de archivos en cualquiera de las listas
+                max_len = max(len(archivos_pdf), len(archivos_xml))
+                complementos_invalidos = []
+                complementos_duplicados = []
+                complementos_registrados = []
+                comentario = request.POST.get('comentario', '')  # Extraer el comentario
+                print(comentario)
+                for i in range(max_len):
+                    archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
+                    archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
+                    complemento, created = Complemento_Pago.objects.get_or_create(factura=factura, hecho=False)
+                    if archivo_xml:
+                        try:
+                            archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
+
+                            # Guardar temporalmente para extraer datos
+                            complemento_temp = Complemento_Pago(complemento_xml=archivo_xml)
+                            complemento.complemento_xml.save(archivo_xml.name, archivo_procesado, save=False)
+
+                            uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(complemento_temp.archivo_xml.path)
+
+                            # Validaciones
+                            if not uuid_complemento or not docto_relacionado_id:
+                                complementos_invalidos.append(archivo_xml.name)
+                                continue
+
+                            complemento_existente = Complemento_Pago.objects.filter(uuid=uuid_complemento).exists()
+                            if complemento_existente:
+                                complementos_duplicados.append(uuid_complemento)
+                                continue
+                            factura_relacionada = Facturas.objects.filter(uuid=docto_relacionado_id).first()
+                            if not factura_relacionada:
+                                complementos_invalidos.append(archivo_xml.name)
+                                continue
+
+                            # Si no existe ninguna factura, guardar la nueva
+                            complemento_final = Complemento_Pago(
+                                complemento_xml=archivo_xml,
+                                uuid = uuid_complemento
+                                factura = factura_relacionada,
+                                subido_por = usuario
+                            )
+                            complemento_final.save()
+                        except Exception as e:
+                            messages.error(request, f'Error al procesar el complemento: {archivo_xml.name}:{e}')
+                            continue
+
+                    if archivo_pdf and complemento_final:
+                        complemento_final.complemento_pdf = archivo_pdf  # ✅ ADHERIR PDF AL COMPLEMENTO EXISTENTE
+                        complemento_final.save()
+                        complementos_registrados.append(f"PDF: {archivo_pdf.name}")
+                    # Generar mensajes para el usuario
+                if complementos_registrados:
+                    messages.success(request, f'Se han registrado los siguientes complementos: {", ".join(complementos_registrados)}')
+                if complementos_duplicados:
+                    messages.warning(request, f'Los siguientes complementos ya estaban registrados y no se duplicaron: {", ".join(complementos_duplicados)}')
+                if complementos_invalidos:
+                    messages.error(request, f'Los siguientes archivos no tienen factura relacionada o están mal estructurados: {", ".join(complementos_invalidos)}')
+
+            else:
+                messages.error(request,'No se pudo subir tu documento')
+
+    context={
+        'form':form,
+        'factura':factura,
+        }
+
+    return render(request, 'tesoreria/registrar_nuevo_complemento.html', context)
 
 @perfil_seleccionado_required
 def factura_compra_edicion(request, pk):
