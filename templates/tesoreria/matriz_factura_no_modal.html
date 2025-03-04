@@ -198,9 +198,16 @@
                            
                             <td>
                                 {% if p.emisor.metodo_pago == "PPD" %}
-                                <a href="{% url 'matriz-complementos' p.id %}" class="btn btn-outline-info" title="Complementos de pago">
-                                    <i class="fa-duotone fa-solid fa-file-invoice fa-xl"></i>
-                                </a>
+                                    {% if p.complemento.exists %}
+                                        <a href="{% url 'matriz-complementos' p.id %}" class="btn btn-outline-info" title="Complementos de pago">
+                                            <i class="fa-duotone fa-solid fa-file-invoice fa-xl"></i>
+                                        </a>
+                                        {% else %}
+                                        <a href="{% url 'matriz-complementos' p.id %}" class="btn btn-outline-danger" title="No hay complementos de pago">
+                                            <i class="fa-duotone fa-solid fa-file-invoice fa-xl"></i>
+                                        </a>
+                                    {% endif %}
+
                                 {% endif %}
                             </td>
                             <td>
