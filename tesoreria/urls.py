@@ -24,6 +24,7 @@ urlpatterns = [
     path('tesoreria/factura_nueva/<int:pk>', views.factura_nueva, name='factura-nueva'),
     path('tesoreria/complemento_nuevo/<int:pk>', views.complemento_nuevo, name='complemento-nuevo'),
     path('tesoreria/factura_eliminar/<int:pk>', views.factura_eliminar, name='factura-eliminar'),
+    path('tesoreria/complemento_eliminar/<int:pk>', views.complemento_eliminar, name='complemento-eliminar'),
     path('tesoreria/matriz_mis_gastos/', views.mis_gastos, name='mis-gastos'),
     path('tesoreria/matriz_mis_viaticos/', views.mis_viaticos, name='mis-viaticos'),
     path('tesoreria/saldo_a_favor/<int:pk>', views.saldo_a_favor, name='saldo-a-favor'),

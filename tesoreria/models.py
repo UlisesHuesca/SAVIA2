@@ -337,7 +337,7 @@ class Complemento_Pago(models.Model):
     comentario = models.CharField(max_length=100, null=True, blank=True)
     hecho = models.BooleanField(default=False)
     complemento_pdf = models.FileField(blank=True, null=True, upload_to='complementos_pdf',validators=[FileExtensionValidator(['pdf'])])
-    cmplemento_xml = models.FileField(blank=True, null=True, upload_to='complementos_xml', validators=[FileExtensionValidator(['xml'])])
+    complemento_xml = models.FileField(blank=True, null=True, upload_to='complementos_xml', validators=[FileExtensionValidator(['xml'])])
     uuid = models.CharField(max_length=36, blank=True, null=True, unique = True, db_index=True) #unique = True
     fecha_timbrado = models.DateTimeField(null=True,blank=True)
     validado = models.BooleanField(null=True, default=None)
@@ -348,13 +348,13 @@ class Complemento_Pago(models.Model):
 
     @property
     def emisor(self):
-        if not self.factura_xml:
+        if not self.complemento_xml:
             print(f"Error: {self.id} no tiene un archivo asociado.")
             return None
 
         try:
             print(self.id)
-            tree = ET.parse(self.factura_xml.path)
+            tree = ET.parse(self.complemento_xml.path)
             root = tree.getroot()
         except (ET.ParseError, FileNotFoundError) as e:
             print(f"Error al parsear el archivo XML: {self.id}: {e}")
@@ -399,7 +399,10 @@ class Complemento_Pago(models.Model):
         # Extraer UUID y otros datos del Timbre Fiscal
         complemento = root.find('cfdi:Complemento', ns)
         uuid, sello_cfd, sello_sat, fecha_timbrado, no_certificadoSAT = '', '', '', '', ''
-
+        fecha_pago = None
+        monto_total_pagos = None
+        imp_saldo_ant = None 
+        imp_pagado = None
         # Extraer información del complemento de pagos
         docto_relacionado_id = None
 
@@ -409,8 +412,12 @@ class Complemento_Pago(models.Model):
                 pago = pagos.find('pago20:Pago', ns)
                 if pago is not None:
                     docto_relacionado = pago.find('pago20:DoctoRelacionado', ns)
+                    fecha_pago = pago.get('FechaPago', 'No Disponible')
+                    monto_total_pagos = pago.get('Monto', 'No Disponible')
                     if docto_relacionado is not None:
                         docto_relacionado_id = docto_relacionado.get('IdDocumento', 'ID No Disponible')
+                        imp_saldo_ant = docto_relacionado.get('ImpSaldoAnt', 'No Disponible')
+                        imp_pagado = docto_relacionado.get('ImpPagado', 'No Disponible')
 
         # Extraer conceptos
         conceptos = root.findall('cfdi:Conceptos/cfdi:Concepto', ns)
@@ -452,6 +459,10 @@ class Complemento_Pago(models.Model):
             'docto_relacionado_id': docto_relacionado_id,  # Nuevo campo
             'resultados': resultados,
             'forma_pago': forma_pago,
-            'metodo_pago': metodo_pago
+            'metodo_pago': metodo_pago,
+            'fecha_pago': fecha_pago,
+            'monto_total_pagos': monto_total_pagos,
+            'imp_saldo_ant': imp_saldo_ant, 
+            'imp_pagado': imp_pagado,
         }
 

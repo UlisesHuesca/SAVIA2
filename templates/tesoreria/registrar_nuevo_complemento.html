@@ -53,9 +53,9 @@
             <form hx-post="{{ request.path }}" class="modal-content bg-black" hx-encoding='multipart/form-data'>
                 {% csrf_token %}
                 <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>Complemento PDF:</strong></label>
-                <input type="file" name="archivo_pdf" class="form-control" multiple>
+                <input type="file" name="complemento_pdf" class="form-control" multiple>
                 <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>Complemento XML:</strong></label>
-                <input type="file" name="archivo_xml" class="form-control" multiple>
+                <input type="file" name="complemento_xml" class="form-control" multiple>
                 <label for="comentario" class="col-auto col-form-label my-1"><strong>Comentario:</strong></label>
                 <textarea name="comentario" class="form-control" maxlength="100" placeholder="Escribe tu comentario (máx. 100 caracteres)"></textarea>
                 <div class="row">

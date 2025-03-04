@@ -89,13 +89,14 @@
                     <thead>
                         <tr>
                             <th>#</th>
-                            <th>Fecha Timbrado</th>
-                            <th>Método de Pago</th>
-                            <th>Folio de Factura relacionada</th>
+                            <th>Folio Fiscal Factura</th>
+                            <th>Fecha Pago</th>
+                            <th>Importe Saldo Anterior</th>
+                            <th>Importe Pagado</th>
                             <th>Comentario</th>
                             <th>PDF</th>
                             <th>XML</th>
-                            <th>PDF-S2</th>
+                            <!--<th>PDF-S2</th>-->
                             {% if usuario.tipo.tesoreria %}
                             <th>Validar</th>
                             {% endif %}
@@ -106,9 +107,10 @@
                         {% for p in complementos %}
                         <tr>
                             <th scope="row">{{p.id}}</th>
-                            <th>{{p.emisor.docto_relaciodo_id}}</th>
-                            <td>{{p.emisor.fecha_timbrado}}</td>
-                            <td>{{p.emisor.metodo_pago}}</td>
+                            <th>{{p.emisor.docto_relacionado_id}}</th>
+                            <td>{{p.emisor.fecha_pago}}</td>
+                            <td>{{p.emisor.imp_saldo_ant}}</td>
+                            <td>{{p.emisor.imp_pagado}}</td>
                             <td>{% if p.comentario %} {{p.comentario}} {% else %} S/C {% endif %}</td>
                             <td>
                                 {% if p.complemento_pdf %}
@@ -239,7 +241,7 @@
 //Parte del modal factura eliminar
 function setDeleteUrl(facturaId) {
     const deleteForm = document.getElementById('deleteForm');
-    const baseUrl = "{% url 'factura-eliminar' 0 %}"; // URL base con un placeholder
+    const baseUrl = "{% url 'complemento-eliminar' 0 %}"; // URL base con un placeholder
 
     // Obtener el parámetro 'next' de la URL actual
     const urlParams = new URLSearchParams(window.location.search);

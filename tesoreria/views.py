@@ -1223,7 +1223,7 @@ def matriz_facturas_nomodal(request, pk):
 
 @perfil_seleccionado_required
 def matriz_complementos(request, pk):
-    print('estoy en matriz_facturas_nomodal')
+    print('estoy en matriz_complementos')
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
 
@@ -1399,7 +1399,7 @@ def complemento_nuevo(request, pk):
         if form.is_valid():
             archivos_pdf = request.FILES.getlist('complemento_pdf')
             archivos_xml = request.FILES.getlist('complemento_xml')
-
+           
             if not archivos_pdf and not archivos_xml:
                 messages.error(request, 'Debes subir al menos un archivo PDF o XML.')
                 return HttpResponse(status=204)
@@ -1410,7 +1410,8 @@ def complemento_nuevo(request, pk):
             complementos_registrados = []
             pdf_sin_complemento = []
             comentario = request.POST.get('comentario', '')
-
+            print(comentario)
+            
             # Determinar el número máximo de archivos a procesar
             max_len = max(len(archivos_pdf), len(archivos_xml))
 
@@ -1429,7 +1430,7 @@ def complemento_nuevo(request, pk):
                         complemento_temp.complemento_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
                         # Extraer UUID y ID del documento relacionado
-                        uuid_complemento, docto_relacionado_id = extraer_datos_del_xml(complemento_temp.complemento_xml.path)
+                        uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(complemento_temp.complemento_xml.path)
 
                         # Validaciones de UUID y relación con factura
                         if not uuid_complemento or not docto_relacionado_id:
@@ -1441,8 +1442,8 @@ def complemento_nuevo(request, pk):
                             complementos_duplicados.append(uuid_complemento)
                             complemento_final = complemento_existente  # Reusar complemento existente
                         else:
-                            factura_relacionada = Factura.objects.filter(uuid=docto_relacionado_id).first()
-                            if not factura_relacionada:
+                            factura_relacionada = Facturas.objects.filter(uuid=docto_relacionado_id).first()
+                            if factura_relacionada != factura:
                                 complementos_invalidos.append(archivo_xml.name)
                                 continue
 
@@ -1450,8 +1451,12 @@ def complemento_nuevo(request, pk):
                             complemento_final = Complemento_Pago(
                                 complemento_xml=archivo_xml,
                                 uuid=uuid_complemento,
-                                factura=factura_relacionada,
-                                subido_por=request.user
+                                factura=factura,
+                                subido_por= usuario,
+                                fecha_subido = date.today(),
+                                hora_subido = datetime.now().time(),
+                                comentario = comentario,
+                                hecho = True
                             )
                             complemento_final.save()
                             complementos_registrados.append(uuid_complemento)
@@ -1611,6 +1616,107 @@ def factura_eliminar(request, pk):
         error_message = f'La factura {factura.id} ha sido eliminada, pero el correo no ha sido enviado debido a un error: {e}'
         messages.success(request, error_message)
     factura.delete()
+
+    # Redirigir a 'matriz-facturas-viaticos' con el parámetro `next` si existe
+    if next_url:
+        return redirect(f'{matriz_url}?next={next_url}')
+    else:
+        return redirect(matriz_url)
+    
+
+@perfil_seleccionado_required
+def complemento_eliminar(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)
+    complemento = Complemento_Pago.objects.get(id = pk)
+    factura = complemento.factura
+    comentario = request.POST.get('comentario')
+    # Obtener el parámetro `next` de la URL
+    next_url = request.GET.get('next', None)
+
+    # Construir la URL de la matriz de facturas de viáticos
+    matriz_url = reverse('matriz-complementos', args=[factura.id])
+
+    static_path = settings.STATIC_ROOT
+    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+    img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+    image_base64 = get_image_base64(img_path)
+    logo_v_base64 = get_image_base64(img_path2)
+    # Crear el mensaje HTML
+    html_message = f"""
+    <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                            <tr>
+                                <td align="center">
+                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 20px;">
+                                    <p style="font-size: 18px; text-align: justify;">
+                                        <p>Estimado {complemento.subido_por.staff.staff.first_name} {complemento.subido_por.staff.staff.last_name},</p>
+                                    </p>
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        Estás recibiendo este correo porque tu complemento subido el: <strong>{complemento.fecha_subido}</strong> en la compra <strong>{complemento.factura.oc.folio}</strong> ha sido eliminado.</p>
+                                    <p>Comentario:</p>
+                                    {comentario}
+                                    </p>
+                                <p style="font-size: 16px; text-align: justify;">
+                                    Att: {perfil.staff.staff.first_name} {perfil.staff.staff.last_name}
+                                </p>
+                                    <p style="text-align: center; margin: 20px 0;">
+                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                    </p>
+                                    <p style="font-size: 14px; color: #999; text-align: justify;">
+                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+    """
+    try:
+        email = EmailMessage(
+            f'Complemento eliminado',
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[factura.oc.creada_por.staff.staff.email],
+            headers={'Content-Type': 'text/html'}
+            )
+        email.content_subtype = "html " # Importante para que se interprete como HTML
+        if complemento.complemento_pdf:
+            pdf_path = complemento.complemento_pdf.path
+            if os.path.exists(pdf_path):  # Verificar si el archivo realmente existe
+                with open(pdf_path, 'rb') as pdf_file:
+                    email.attach(complemento.complemento_pdf.name, pdf_file.read(), 'application/pdf')
+            else:
+                print(f"El archivo PDF no se encuentra en la ruta: {pdf_path}")
+
+        if complemento.complemento_xml:
+            xml_path = complemento.complemento_xml.path
+            if os.path.exists(xml_path):  # Verificar si el archivo realmente existe
+                with open(xml_path, 'rb') as xml_file:
+                    email.attach(complemento.complemento_xml.name, xml_file.read(), 'application/xml')
+            else:
+                print(f"El archivo XML no se encuentra en la ruta: {xml_path}")
+
+        email.send()
+        messages.success(request, f'El complemento de pago {complemento.id} ha sido eliminado exitosamente')
+    except (BadHeaderError, SMTPException) as e:
+        error_message = f'El complemento {complemento.id} ha sido eliminado, pero el correo no ha sido enviado debido a un error: {e}'
+        messages.success(request, error_message)
+    complemento.delete()
 
     # Redirigir a 'matriz-facturas-viaticos' con el parámetro `next` si existe
     if next_url:
