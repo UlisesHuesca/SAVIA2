@@ -228,6 +228,7 @@
                     <th class="d-none d-lg-table-cell">Status Autorización</th>
                     <th class="d-none d-lg-table-cell">Status Entrega</th>
                     <th class="d-none d-lg-table-cell">Días de Entrega</th>
+                    <th class="d-none d-lg-table-cell">Complemento de Pago</th>
                     <th scope="col">Detalle</th>
                     <th>Documentos</th>
                     <th>Comparativo</th>
@@ -265,6 +266,16 @@
                     <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 == False or compra.autorizado2 == False %}<span class="badge bg-danger">Cancelado</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
                     <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
                     <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
+                    <td>
+                        {% with tiene_complemento=False %}
+                            {% for factura in compra.facturas.all %}
+                                {% if not tiene_complemento and factura.complemento.exists %}
+                                    <p>Sí</p>
+                                    {% with tiene_complemento=True %}{% endwith %}
+                                {% endif %}
+                            {% endfor %}
+                        {% endwith %}
+                    </td>
                     <td>
                         <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
                     </td>
