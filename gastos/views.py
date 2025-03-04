@@ -692,12 +692,14 @@ def solicitudes_gasto(request):
 @perfil_seleccionado_required
 def detalle_gastos(request, pk):
     productos = Articulo_Gasto.objects.filter(gasto__id=pk)
-    facturas = Factura.objects.filter(solicitud_gasto__id = pk)
+    gasto = Solicitud_Gasto.objects.get(id=pk)
+    facturas = Factura.objects.filter(solicitud_gasto = gasto )
+    
 
     context= {
         'productos':productos,
         'facturas':facturas,
-        'pk':pk,
+        'gasto':gasto,
         }
 
     return render(request, 'gasto/detalle_gasto.html', context)

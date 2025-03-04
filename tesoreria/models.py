@@ -343,3 +343,115 @@ class Complemento_Pago(models.Model):
     validado = models.BooleanField(null=True, default=None)
     validado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='validado_complemento')
     validado_fecha = models.DateTimeField(null=True)
+
+    import xml.etree.ElementTree as ET
+
+    @property
+    def emisor(self):
+        if not self.factura_xml:
+            print(f"Error: {self.id} no tiene un archivo asociado.")
+            return None
+
+        try:
+            print(self.id)
+            tree = ET.parse(self.factura_xml.path)
+            root = tree.getroot()
+        except (ET.ParseError, FileNotFoundError) as e:
+            print(f"Error al parsear el archivo XML: {self.id}: {e}")
+            return None
+
+        # Definir los espacios de nombres según la versión
+        ns = {
+            'cfdi': 'http://www.sat.gob.mx/cfd/4',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+            'pago20': 'http://www.sat.gob.mx/Pagos20'
+        }
+
+        # Extraer información del emisor y receptor
+        emisor = root.find('cfdi:Emisor', ns)
+        receptor = root.find('cfdi:Receptor', ns)
+
+        if emisor is None or receptor is None:
+            print(f"Error: No se encontraron los nodos Emisor/Receptor en {self.id}")
+            return None
+
+        rfc_emisor = emisor.get('Rfc')
+        nombre_emisor = emisor.get('Nombre')
+        regimen_fiscal_emisor = emisor.get('RegimenFiscal')
+
+        rfc_receptor = receptor.get('Rfc')
+        nombre_receptor = receptor.get('Nombre')
+        regimen_fiscal_receptor = receptor.get('RegimenFiscalReceptor')
+        domicilio_fiscal_receptor = receptor.get('DomicilioFiscalReceptor')
+        uso_cfdi = receptor.get('UsoCFDI')
+
+        # Extraer información general
+        total = root.get('Total')
+        subtotal = root.get('SubTotal')
+        moneda = root.get('Moneda')
+        fecha = root.get('Fecha')
+        lugar_expedicion = root.get('LugarExpedicion')
+        folio = root.get('Folio')
+        no_certificado = root.get('NoCertificado')
+        forma_pago = root.get('FormaPago', 'Por definir')
+        metodo_pago = root.get('MetodoPago', 'Por definir')
+
+        # Extraer UUID y otros datos del Timbre Fiscal
+        complemento = root.find('cfdi:Complemento', ns)
+        uuid, sello_cfd, sello_sat, fecha_timbrado, no_certificadoSAT = '', '', '', '', ''
+
+        # Extraer información del complemento de pagos
+        docto_relacionado_id = None
+
+        if complemento is not None:
+            pagos = complemento.find('pago20:Pagos', ns)
+            if pagos is not None:
+                pago = pagos.find('pago20:Pago', ns)
+                if pago is not None:
+                    docto_relacionado = pago.find('pago20:DoctoRelacionado', ns)
+                    if docto_relacionado is not None:
+                        docto_relacionado_id = docto_relacionado.get('IdDocumento', 'ID No Disponible')
+
+        # Extraer conceptos
+        conceptos = root.findall('cfdi:Conceptos/cfdi:Concepto', ns)
+        resultados = []
+        for concepto in conceptos:
+            resultados.append({
+                'descripcion': concepto.get('Descripcion'),
+                'cantidad': concepto.get('Cantidad'),
+                'precio': concepto.get('ValorUnitario'),
+                'clave': concepto.get('ClaveProdServ'),
+                'importe': concepto.get('Importe'),
+                'unidad': concepto.get('ClaveUnidad'),
+                'impuesto': concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns).get('Importe', 'N/A') if concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns) else 'N/A',
+                'tipo_factor': concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns).get('TipoFactor', 'N/A') if concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns) else 'N/A',
+                'tasa_cuota': concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns).get('TasaOCuota', 'N/A') if concepto.find('cfdi:Impuestos/cfdi:Traslados/cfdi:Traslado', ns) else 'N/A',
+            })
+
+        return {
+            'no_certificadoSAT': no_certificadoSAT,
+            'uso_cfdi': uso_cfdi,
+            'rfc_emisor': rfc_emisor,
+            'nombre_emisor': nombre_emisor,
+            'regimen_fiscal_emisor': regimen_fiscal_emisor,
+            'rfc_receptor': rfc_receptor,
+            'nombre_receptor': nombre_receptor,
+            'regimen_fiscal_receptor': regimen_fiscal_receptor,
+            'codigo_postal': domicilio_fiscal_receptor,
+            'total': total,
+            'subtotal': subtotal,
+            'fecha': fecha,
+            'moneda': moneda,
+            'lugar_expedicion': lugar_expedicion,
+            'folio': folio,
+            'no_certificado': no_certificado,
+            'uuid': uuid,
+            'sello_cfd': sello_cfd,
+            'sello_sat': sello_sat,
+            'fecha_timbrado': fecha_timbrado,
+            'docto_relacionado_id': docto_relacionado_id,  # Nuevo campo
+            'resultados': resultados,
+            'forma_pago': forma_pago,
+            'metodo_pago': metodo_pago
+        }
+
