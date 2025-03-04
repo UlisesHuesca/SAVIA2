@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, Saldo_Cuenta
+from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, Saldo_Cuenta, Complemento_Pago
 
 class CuentaAdmin(admin.ModelAdmin):
     raw_id_fields = ('encargado',)
@@ -17,9 +17,16 @@ class FacturasAdmin(admin.ModelAdmin):
     raw_id_fields = ('oc',)
     list_display = ('id','oc','factura_pdf')
 
+class ComplementosAdmin(admin.ModelAdmin):
+    search_fields = ['factura__id','id','uuid']
+    raw_id_fields = ('factura',)
+    list_display = ('id','complemento_pdf')
+
 
 # Register your models here.
 admin.site.register(Cuenta, CuentaAdmin)
+
+admin.site.register(Complemento_Pago, ComplementosAdmin)
 
 admin.site.register(Facturas, FacturasAdmin)
 
