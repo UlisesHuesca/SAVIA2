@@ -1176,14 +1176,15 @@ def matriz_facturas_nomodal(request, pk):
             compra = get_object_or_404(Compra, id=pk, proveedor__nombre__perfil_proveedor = perfil)
         else:
             compra = get_object_or_404(Compra, id=pk)
+            next_url = request.GET.get('next','matriz-compras')
+
     except Http404:
         messages.error(request, "No tienes acceso a esta orden de compra.")
-        return redirect(next_url)
+        #return redirect(next_url)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
     form = Facturas_Completas_Form(instance=compra)
-    next_url = request.GET.get('next','matriz-compras')
-
+   
     if request.method == 'POST':
         form = Facturas_Completas_Form(request.POST, instance=compra)
         if "btn_factura_completa" in request.POST:
@@ -1230,16 +1231,18 @@ def matriz_complementos(request, pk):
     try:
         if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
             next_url = 'matriz-oc-proveedores'
+            print(next_url)
             factura = get_object_or_404(Facturas, id=pk, oc__proveedor__nombre__perfil_proveedor = perfil)
         else:
             factura = get_object_or_404(Facturas, id=pk)
+            next_url = request.GET.get('next','matriz-compras')
     except Http404:
         messages.error(request, "No tienes acceso a esta orden de compra.")
         return redirect(next_url)
     complementos = Complemento_Pago.objects.filter(factura = factura, hecho=True)
     #pagos = Factura.objects.filter(oc = compra)
     #form = Facturas_Completas_Form(instance=compra)
-    next_url = request.GET.get('next','matriz-compras')
+    
 
     if request.method == 'POST':
         #form = Facturas_Completas_Form(request.POST, instance=compra)
@@ -1266,6 +1269,7 @@ def matriz_complementos(request, pk):
         #    response = HttpResponse(in_memory_zip, content_type='application/zip')
         #    response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
         #    return response
+        print(request.POST)
         if 'salir' in request.POST:
             return redirect(next_url)
 
