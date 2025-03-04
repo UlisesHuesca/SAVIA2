@@ -173,7 +173,7 @@
                 <hr>
                 <ul class="nav">
                     <li class="nav-item">
-                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="#" title="Subir nueva factura">
+                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'complemento-nuevo' factura.id  %}" title="Subir nuevo complemento">
                             <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
                         </a>
                     </li>
