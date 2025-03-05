@@ -1,5 +1,5 @@
 from django import forms
-from compras.models import Proveedor, Evidencia
+from compras.models import Proveedor, Evidencia, DocumentosProveedor
 
 
 
@@ -20,12 +20,22 @@ class ComprobanteForm(forms.ModelForm):
         model = Proveedor
         fields = ['comprobante_domicilio']
 
+class CurriculumForm(forms.ModelForm):
+    class Meta:
+        model = Proveedor
+        fields = ['curriculum']
+
 
 class OpinionForm(forms.ModelForm):
     class Meta:
         model = Proveedor
         fields = ['opinion_cumplimiento']
 
+class SubirDocumentoForm(forms.ModelForm):
+    class Meta:
+        model = DocumentosProveedor
+        fields = ['archivo']
+        
 class EvidenciaForm(forms.ModelForm):
 
      class Meta:

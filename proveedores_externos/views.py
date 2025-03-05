@@ -4,13 +4,13 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.core.paginator import Paginator
-from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia
+from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor
 from user.models import Profile
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
-from .forms import CSFForm, ActaForm, ComprobanteForm, OpinionForm, UploadFileForm
+from .forms import CSFForm, ActaForm, ComprobanteForm, OpinionForm, UploadFileForm, CurriculumForm, SubirDocumentoForm
 from django.contrib import messages
 from io import BytesIO
 from django.db.models.functions import Concat, Coalesce
@@ -134,15 +134,20 @@ def matriz_direcciones(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     
+    
     if usuario.tipo.proveedor_externo:
         proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
         direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
+        tiene_servicio = proveedor.proveedor_direcciones_set.filter(servicio=True).exists()
+        tiene_arrendamiento = proveedor.proveedor_direcciones_set.filter(arrendamiento=True).exists()
       
     else:
         raise Http404("No tienes permiso para ver esta vista")
     context = {
         'proveedor':proveedor,
         'direcciones':direcciones,
+        'tiene_servicio': tiene_servicio,
+        'tiene_arrendamiento': tiene_arrendamiento,
         }
     return render(request,'proveedores_externos/informacion_proveedores.html', context)
 
@@ -221,6 +226,100 @@ def edit_opinion_cumplimiento(request, pk):
     }
     
     return render(request, 'proveedores_externos/edit_opinion_cumplimiento.html',context)
+
+@perfil_seleccionado_required
+def edit_curriculum(request, pk):
+    proveedor = Proveedor.objects.get(id = pk)
+    print(proveedor.id)
+    form = CurriculumForm(instance   = proveedor)
+
+    if request.method == 'POST':
+        form = CurriculumForm(request.POST, request.FILES, instance=proveedor)
+        if form.is_valid():
+            form.save()
+            return HttpResponse(status=204) #No content to render nothing and send a "signal" to javascript in order to close window
+    
+    context = {
+        'proveedor':proveedor,
+        'form':form, 
+    }
+    
+    return render(request, 'proveedores_externos/edit_curriculum.html',context)
+
+def subir_documento_competencia(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    tipo_documento = 'competencias'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Documento de Competencia subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+def subir_documento_contrato(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    tipo_documento = 'contrato'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Documento de Competencia subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+def subir_documento_factura_predial(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    tipo_documento = 'factura_predial'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Documento de Competencia subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
 
 @perfil_seleccionado_required
 def evidencias_proveedor(request, pk):

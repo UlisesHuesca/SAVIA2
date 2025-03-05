@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, FileResponse, Http404
+from django.http import HttpResponse, FileResponse, Http404, JsonResponse
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
@@ -66,9 +66,6 @@ from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
 from bs4 import BeautifulSoup
-
-
-
 from user.decorators import perfil_seleccionado_required
 
 @perfil_seleccionado_required
@@ -306,9 +303,7 @@ def saldo_inicial(request):
 
     return render(request, 'tesoreria/saldo_inicial.html',context)
 
-from django.http import JsonResponse
-from datetime import datetime
-from .models import Cuenta  # Asegúrate de que la importación de tu modelo sea correcta
+
 
 def prellenar_formulario(request):
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':

@@ -31,9 +31,32 @@ class Proveedor(models.Model):
     comprobante_domicilio = models.FileField(upload_to='comprobante_domicilio', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
     opinion_cumplimiento = models.FileField(upload_to='opinion_cumplimiento', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
     credencial_acta_constitutiva = models.FileField(upload_to='credencial_acta', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    curriculum = models.FileField(upload_to='curriculum', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
 
     def __str__(self):
         return f'{self.razon_social}'
+    
+
+class DocumentosProveedor(models.Model):
+    proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='documentos')
+    tipo_documento = models.CharField(
+        max_length=50,
+        choices=[
+            ('competencias', 'Competencias'),
+            ('contrato', 'Contrato'),
+            ('factura_predial', 'Factura del Bien/Predial')
+        ]
+    )
+    archivo = models.FileField(
+        upload_to='documentos_proveedores/', 
+        validators=[FileExtensionValidator(allowed_extensions=['pdf'])]
+    )
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+    activo = models.BooleanField(default=True)  # Permite activar/inactivar documentos
+
+    def __str__(self):
+        return f"{self.proveedor.razon_social} - {self.get_tipo_documento_display()}"
+
 
 class Proveedor_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])

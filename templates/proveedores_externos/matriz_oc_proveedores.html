@@ -86,7 +86,9 @@
                     </div>
                     <div class="col-2">
                         <!--onclick="regenerar()"-->
-                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg mt-1"  onclick="guardar_variable();" type="submit" value="Buscar">
+                            <i class="fa-duotone fa-solid fa-magnifying-glass fa-xl"></i>
+                        </button>
                     </div>
                 </div>
                 <hr>
@@ -96,12 +98,12 @@
                     <ul class="nav nav-pills">
                         <li class="nav-item m-1">
                             <button type="submit" id="reporte_compras" class="btn btn-outline-success d-none" value='Reporte Excel' >
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                                <i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
                         <li class="nav-item m-1">
                             <button type="submit" id="btnExcel" name="btnExcel" value='Reporte Excel' class="btn btn-outline-success d-none">
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                                <i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
                         <!-- Mensaje de estado (opcional) -->
@@ -242,7 +244,9 @@
                                 </ul>
                             </li>
                             <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra">
+                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                </a>
                             </li>
                         </ul>
                     </td>
