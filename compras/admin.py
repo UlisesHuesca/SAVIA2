@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Compra, ArticuloComprado, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, Estatus_proveedor, Uso_cfdi, Cond_pago, Moneda, Estado, Comparativo, Item_Comparativo
+from .models import Compra, ArticuloComprado, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, Estatus_proveedor, Uso_cfdi, Cond_pago, Moneda, Estado, Comparativo, Item_Comparativo, DocumentosProveedor 
 
 class CompraAdmin(admin.ModelAdmin):
     list_display = ('id','folio', 'req','proveedor','oc_autorizada_por2','cond_de_pago','autorizado1','autorizado2')
@@ -32,9 +32,14 @@ class Item_Comparativo_Admin(admin.ModelAdmin):
 class Moneda_Admin(admin.ModelAdmin):
     list_display = ('id','nombre')
 
+class DocumentosProveedorAdmin(admin.ModelAdmin):
+    list_display = ('id','proveedor','tipo_documento','archivo',)
+    raw_id_fields = ('proveedor',)
 
 # Register your models here.
 admin.site.register(Compra, CompraAdmin)
+
+admin.site.register(DocumentosProveedor, DocumentosProveedorAdmin)
 
 admin.site.register(ArticuloComprado, ArticuloComprado_Admin)
 
