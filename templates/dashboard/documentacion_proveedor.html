@@ -1,0 +1,489 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Proveedores{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class = "row">
+    <div class="col-sm-12">
+        <div class = "card mt-2 bg-white">
+     
+            <div class="card-header">
+                <p>Proveedor: {{proveedor.razon_social}}</p>
+            </div>
+            <div class="card-body">
+                <ul class="nav nav-pills">
+                    <li class="nav-item mx-2">
+                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores' %}">
+                            <i class="fa-solid fa-backward"></i>
+                        </a>
+                    </li>
+                </ul>
+                <div class = "col-sm-12 col-lg-3">
+                    <table class="table table-striped">
+                        <h5 class="text-center fw-bold">Tipo de Proveedor</h5>
+                        <thead>
+                            <th>
+                                Materiales
+                            </th>
+                            <th>
+                                Servicios
+                            </th>
+                            <th>
+                                Arrendamiento
+                            </th>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>
+                                    {% if tiene_producto %}
+                                        <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
+                                    {% else %}
+                                        <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if tiene_servicio %}
+                                    <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
+                                    {% else %}
+                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                    {% endif %}
+                                </td>
+                                <td>
+                                    {% if tiene_arrendamiento %}
+                                    <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
+                                    {% else %}
+                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Documento</th>
+                            <th>Documento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            
+                            <td>Constancia de Situación Fiscal</td>
+                           
+                            <td> 
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "csf" and documento.activo %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{documento.id|unlocalize }}" title="Ver Constancia de Situación Fiscal">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                    </button>
+                                    {% if documento.fecha_emision %}
+                                        <p><strong>Fecha de Emisión:</strong> {{ documento.fecha_emision }}</p>
+                                    {% else %}
+                                        <p><strong>Fecha de Emisión:</strong> No disponible</p>
+                                    {% endif %}
+                                
+                                    <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfModal{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfModalLabel{{documento.id|unlocalize }}">Constancia de Situación Fiscal</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-csf' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Credencial Elector/Acta Constitutiva</td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "credencial_acta_constitutiva" and documento.activo %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfActa{{documento.id|unlocalize }}" title="Ver Credencial/Acta">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                    </button>
+                                
+                                    <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfActa{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfActaLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfActaLabel{{documento.id|unlocalize }}">Credencial/Acta Constitutiva</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'edit-acta-credencial' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Comprobante de Domicilio</td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "Comprobante de Domicilio" and documento.activo %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfDomicilio{{documento.id|unlocalize }}" title="Ver Comprobante de Domicilio">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                    </button>
+                                
+                                    <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfDomicilio{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfDomicilioLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfDomicilioLabel{{documento.id|unlocalize }}">Comprobante de Domicilio</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de Domicilio" hx-target="#document" hx-get="{% url 'edit-comprobante-domicilio' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Opinión de Cumplimiento 32D</td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "opinion_cumplimiento" %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfOpinion{{documento.id|unlocalize }}" title="Ver Opinión de Cumplimiento">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                    </button>
+                                
+                                    <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfOpinion{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfOpinionLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfOpinionLabel{{documento.id|unlocalize }}">Opinión de Cumplimiento</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de Cumplimiento 32D" hx-target="#document" hx-get="{% url 'edit-opinion-cumplimiento' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+            </div>
+        </div>
+        
+    </div>
+{% if tiene_servicio %}
+    <div class="col-md-4">
+        <div class ="card mt-2 bg-white">
+            <div class ="card-header">
+                <h5>Servicios</h5>
+            </div>
+            <div class ="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Documento</th>
+                            <th>Documento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            
+                            <td>Curriculum Vitae</td>
+                           
+                            <td> 
+                                {% for documento in proveedor.documentos.all %}
+                                {% if documento.tipo_documento == "curriculum" %}
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfCV{{documento.id|unlocalize }}" title="Ver Curriculum Vitae">
+                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                </button>
+                                  <!-- Modal con visor de PDF -->
+                                  <div class="modal fade" id="pdfCV{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfCVLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfCVLabel{{documento.id|unlocalize }}">Curriculum Vitae</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-curriculum' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+                            </td>                            
+                        </tr>
+                        <tr>
+                            <td>Competencias</td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "competencias" %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfCompetencias{{documento.id|unlocalize }}" title="Ver Competencia">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                    </button>
+                                     <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfCompetencias{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfCompetenciasLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfCompetenciasLabel{{documento.id|unlocalize }}">Competencias</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Competencias" hx-target="#document" hx-get="{% url 'subir-documento-competencia' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                    </tbody> 
+                </table>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+    {% if tiene_arrendamiento %}
+    <div class="col-md-4">
+        <div class ="card mt-2 bg-white">
+            <div class ="card-header">
+                <h5>Arrendamiento</h5>
+            </div>
+            <div class ="card-body">
+                <table class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Nombre del Documento</th>
+                            <th>Documento</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>Contrato</td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "contrato" %}
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfContrato{{documento.id|unlocalize }}" title="Ver Contrato">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                    </button>
+                                     <!-- Modal con visor de PDF -->
+                                    <div class="modal fade" id="pdfContrato{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfContratoLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfContratoLabel{{documento.id|unlocalize }}">Contratos</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Subir Contrato" hx-target="#document" hx-get="{% url 'subir-documento-contrato' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Factura del Bien/Predial</td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                {% if documento.tipo_documento == "factura_predial" %}
+                       
+                     
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfActa{{proveedor.id|unlocalize }}" title="Ver Credencial/Acta">
+                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                </button>
+                               
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfActa{{ proveedor.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfActaLabel{{proveedor.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfActaLabel{{proveedor.id|unlocalize }}">Credencial/Acta Constitutiva</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ proveedor.credencial_acta_constitutiva.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Factura/Predial" hx-target="#document" hx-get="{% url 'subir-documento-factura-predial' proveedor.id %}">
+                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                </a>
+
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                
+            </div>
+        </div>
+    </div> 
+    {% endif %}
+</div>
+    <nav aria-label="Page navigation example">
+        <ul class="pagination justify-content-center">
+            {% if proveedores_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page=1"><i class="fa-solid fa-angles-left"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.previous_page_number}}"><i class="fa-solid fa-angle-left"></i></a></li>
+            {% endif %}
+
+            {% for item in proveedores_list.paginator.page_range %}
+                {% if proveedores_list.number == item %}
+                    <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                {% elif item > proveedores_list.number|add:'-2' and item < proveedores_list.number|add:'2' %}
+                    <li class="page-item "><a class="page-link" style="color:#3E92CC" href="?page={{item}}" class="page-link">{{item}}</a></li>
+                {% endif %}
+            {% endfor %}
+
+            {% if proveedores_list.paginator.num_pages > proveedores_list.number|add:'2' %}
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.number|add:'2'}}">&hellip;</a></li>
+            <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+            <li><a class="page-link" style="color:#3E92CC" href="?page={{ proveedores_list.paginator.num_pages}}">{{proveedores_list.paginator.num_pages}}</a></li>
+            {% endif %}
+
+            {% if proveedores_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.next_page_number}}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{proveedores_list.paginator.num_pages}}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+            {% endif %}
+        </ul>
+    </nav>
+<!--Este es el modal-->
+        <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+            <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
+            </div>
+        </div>
+</body>
+</html>
+<!--AJAX CALL-->
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+  <script>
+    $("#id_familia").change(function () {
+      const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
+      const familiaId = $(this).val();  // get the selected familia ID from the HTML input
+
+      $.ajax({                       // initialize an AJAX request
+        url: url,                    // set the url of the request (= localhost:8000/hr/ajax/load-cities/)
+        data: {
+          'familia_id': familiaId       // add the familia id to the GET parameters
+        },
+        success: function (data) {   // `data` is the return of the `load_subfamilias` view function
+          $("#id_subfamilia").html(data);  // replace the contents of the subfamilia input with the data that came from the server
+        }
+      });
+    });
+
+    ;(function(){
+        const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+        htmx.on('htmx:beforeSwap',(e)=>{
+            if (e.detail.target.id === "document" && !e.detail.xhr.response)
+                modal.hide()
+        })
+    })()
+
+    //var myModal = document.getElementById('dialog')
+
+    document.querySelectorAll('.modal').forEach(modal => {
+    modal.addEventListener('hidden.bs.modal', function () {
+        setTimeout(function(){
+            location.reload();
+        }, 500);
+    });
+});
+
+  </script>
+{% endblock %}
+
+<!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->
+<!--style="background-color: #515151; color:white;"-->
+<!--style="background-color: #711F1B; color:white;"-->

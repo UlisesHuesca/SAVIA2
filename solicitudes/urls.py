@@ -38,5 +38,6 @@ urlpatterns = [
     path('solicitud/productos_plantilla/<int:pk>', views.productos_plantilla, name='productos-plantilla'),
     path('solicitud/solicitud_plantilla/<int:pk>', views.crear_solicitud_plantilla, name='solicitud-plantilla'),
     path('editar_plantilla/<int:pk>/', views.editar_plantilla, name='editar-plantilla'),
+    
     #path('reporte_salidas/', views.reporte_salidas, name='reporte-salidas'),
 ]

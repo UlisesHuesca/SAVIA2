@@ -1000,7 +1000,27 @@ def upload_batch_proveedores_direcciones(request):
 
     return render(request,'dashboard/upload_batch_proveedor_direcciones.html', context)
 
+@perfil_seleccionado_required
+def documentacion_proveedores(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    proveedor = Proveedor.objects.get(id=pk)            
 
+    direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
+    tiene_servicio = proveedor.proveedor_direcciones_set.filter(servicio=True).exists()
+    tiene_arrendamiento = proveedor.proveedor_direcciones_set.filter(arrendamiento=True).exists()
+    tiene_producto = proveedor.proveedor_direcciones_set.filter(producto=True).exists()
+      
+    
+    context = {
+        'proveedor':proveedor,
+        'direcciones':direcciones,
+        'tiene_servicio': tiene_servicio,
+        'tiene_arrendamiento': tiene_arrendamiento,
+        'tiene_producto': tiene_producto,
+        }
+    
+    return render(request,'dashboard/documentacion_proveedor.html', context)
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
