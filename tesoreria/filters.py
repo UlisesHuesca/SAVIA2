@@ -79,4 +79,16 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
             ).distinct()
     
     def tesorero_nombre(self, queryset, name, value):
-        return queryset.filter(Q(tesorero__staff__staff__first_name__icontains = value) | Q(tesorero__staff__staff__last_name__icontains = value))
+    # Verificar si el valor ingresado contiene un espacio (nombre y apellido juntos)
+        if " " in value:
+            first_name, last_name = value.split(" ", 1)  # Dividir solo en la primera ocurrencia del espacio
+            return queryset.filter(
+                Q(tesorero__staff__staff__first_name__icontains=first_name) & 
+                Q(tesorero__staff__staff__last_name__icontains=last_name)
+            )
+        else:
+            # Si solo se ingresó una palabra, buscar en ambos campos
+            return queryset.filter(
+                Q(tesorero__staff__staff__first_name__icontains=value) | 
+                Q(tesorero__staff__staff__last_name__icontains=value)
+            )

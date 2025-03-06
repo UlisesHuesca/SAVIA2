@@ -37,7 +37,7 @@ class Tipo_Pago(models.Model):
         return f'{self.nombre}'
 
 class Pago(models.Model):
-    tesorero = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Tesorero')
+    tesorero = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Pago')
     folio = models.PositiveIntegerField(null=True)
     tipo = models.ForeignKey(Tipo_Pago, on_delete = models.CASCADE, null=True)
     oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, blank=True, related_name = 'pagos')

@@ -22,7 +22,7 @@ def contadores_processor(request):
     except Profile.DoesNotExist:
         usuario = None
 
-    print("Idioma en sesión al cargar la página:", request.session.get(settings.LANGUAGE_SESSION_KEY))
+    #print("Idioma en sesión al cargar la página:", request.session.get(settings.LANGUAGE_SESSION_KEY))
     language = request.session.get(settings.LANGUAGE_SESSION_KEY, settings.LANGUAGE_CODE)
     translation.activate(language)
 

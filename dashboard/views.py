@@ -1013,9 +1013,9 @@ def documentacion_proveedores(request, pk):
     proveedor = Proveedor.objects.get(id=pk)            
 
     direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
-    tiene_servicio = proveedor.proveedor_direcciones_set.filter(servicio=True).exists()
-    tiene_arrendamiento = proveedor.proveedor_direcciones_set.filter(arrendamiento=True).exists()
-    tiene_producto = proveedor.proveedor_direcciones_set.filter(producto=True).exists()
+    tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
+    tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
+    tiene_producto = proveedor.direcciones.filter(producto=True).exists()
       
     
     context = {
