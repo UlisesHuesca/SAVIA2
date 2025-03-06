@@ -3,33 +3,33 @@ from compras.models import Proveedor, Evidencia, DocumentosProveedor
 
 
 
-class CSFForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor
-        fields = ['csf']
+#lass CSFForm(forms.ModelForm):
+#    class Meta:
+#        model = Proveedor
+#        fields = ['csf']
 
 
-class ActaForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor
-        fields = ['credencial_acta_constitutiva']
+#class ActaForm(forms.ModelForm):
+#    class Meta:
+#        model = Proveedor
+#        fields = ['credencial_acta_constitutiva']
 
 
-class ComprobanteForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor
-        fields = ['comprobante_domicilio']
+#class ComprobanteForm(forms.ModelForm):
+#    class Meta:
+#        model = Proveedor
+#        fields = ['comprobante_domicilio']
 
-class CurriculumForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor
-        fields = ['curriculum']
+#class CurriculumForm(forms.ModelForm):
+#    class Meta:
+#        model = Proveedor
+#        fields = ['curriculum']
 
 
-class OpinionForm(forms.ModelForm):
-    class Meta:
-        model = Proveedor
-        fields = ['opinion_cumplimiento']
+#class OpinionForm(forms.ModelForm):
+#    class Meta:
+#        model = Proveedor
+#        fields = ['opinion_cumplimiento']
 
 class SubirDocumentoForm(forms.ModelForm):
     class Meta:

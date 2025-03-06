@@ -6,6 +6,8 @@ from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 import decimal
 from phone_field import PhoneField
+import re
+import PyPDF2
 # Create your models here.
 
 
@@ -27,11 +29,11 @@ class Proveedor(models.Model):
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     perfil_proveedor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='prov_perfil')
-    csf = models.FileField(upload_to='csf', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    comprobante_domicilio = models.FileField(upload_to='comprobante_domicilio', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    opinion_cumplimiento = models.FileField(upload_to='opinion_cumplimiento', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    credencial_acta_constitutiva = models.FileField(upload_to='credencial_acta', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    curriculum = models.FileField(upload_to='curriculum', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    #csf = models.FileField(upload_to='csf', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    #comprobante_domicilio = models.FileField(upload_to='comprobante_domicilio', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    #opinion_cumplimiento = models.FileField(upload_to='opinion_cumplimiento', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    #credencial_acta_constitutiva = models.FileField(upload_to='credencial_acta', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    #curriculum = models.FileField(upload_to='curriculum', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
 
     def __str__(self):
         return f'{self.razon_social}'
@@ -41,10 +43,14 @@ class DocumentosProveedor(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='documentos')
     tipo_documento = models.CharField(
         max_length=50,
-        choices=[
+        choices = [ ('csf', 'CSF'),
+            ('comprobante_domicilio', 'Comprobante de Domicilio'),
+            ('opinion_cumplimiento', 'Opinión de Cumplimiento'),
+            ('credencial_acta_constitutiva', 'Credencial/Acta Constitutiva'),
+            ('curriculum', 'Curriculum'),
             ('competencias', 'Competencias'),
             ('contrato', 'Contrato'),
-            ('factura_predial', 'Factura del Bien/Predial')
+            ('factura_predial', 'Factura del Bien/Predial'),
         ]
     )
     archivo = models.FileField(
@@ -55,8 +61,58 @@ class DocumentosProveedor(models.Model):
     activo = models.BooleanField(default=True)  # Permite activar/inactivar documentos
 
     def __str__(self):
-        return f"{self.proveedor.razon_social} - {self.get_tipo_documento_display()}"
+        return f"{self.proveedor.razon_social} - {self.get_tipo_documento_display()} (Activo: {self.activo})"
 
+
+    @property
+    def fecha_emision(self):
+        """
+        Extrae la fecha de emisión desde el archivo PDF si el documento es de tipo 'csf'.
+        Retorna la fecha en formato 'DD/MM/YYYY' o None si no se encuentra.
+        """
+        if self.tipo_documento != "csf" or not self.archivo:
+            return None
+
+        # Expresión regular para encontrar la fecha en el formato "A 05 DE MARZO DE 2025"
+        patron_fecha = r"\bA\s+(\d{1,2})\s+DE\s+([A-ZÁÉÍÓÚ]+)\s+DE\s+(\d{4})\b"
+
+        # Diccionario de conversión de meses en español a números
+        meses = {
+            "ENERO": "01", "FEBRERO": "02", "MARZO": "03", "ABRIL": "04",
+            "MAYO": "05", "JUNIO": "06", "JULIO": "07", "AGOSTO": "08",
+            "SEPTIEMBRE": "09", "OCTUBRE": "10", "NOVIEMBRE": "11", "DICIEMBRE": "12"
+        }
+
+        try:
+            with self.archivo.open("rb") as archivo_pdf:
+                lector_pdf = PyPDF2.PdfReader(archivo_pdf)
+                texto_completo = ""
+
+                for pagina in lector_pdf.pages:
+                    texto_completo += pagina.extract_text() + "\n"
+
+                # Convertir todo a mayúsculas para evitar errores de coincidencia
+                texto_completo_mayus = texto_completo.upper()
+
+                # Buscar coincidencia de la fecha
+                coincidencia = re.search(patron_fecha, texto_completo_mayus)
+
+                if coincidencia:
+                    dia = coincidencia.group(1)
+                    mes_texto = coincidencia.group(2)
+                    anio = coincidencia.group(3)
+
+                    # Convertir el mes a su número correspondiente
+                    mes_numero = meses.get(mes_texto, "00")  # "00" si no encuentra coincidencia
+
+                    # Formatear la fecha en formato DD/MM/YYYY
+                    fecha_formateada = f"{dia}/{mes_numero}/{anio}"
+                    return fecha_formateada
+
+        except Exception as e:
+            print(f"Error al leer el PDF: {e}")
+
+        return None  # Si no se encuentra ninguna fecha
 
 class Proveedor_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])

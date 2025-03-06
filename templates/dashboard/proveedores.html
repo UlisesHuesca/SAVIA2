@@ -12,7 +12,7 @@
 <hr>
 
 <!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
-<div class="row my-4">
+<div class="row">
     <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         {% if messages %}
@@ -38,12 +38,14 @@
         {% endif %}
     </div>
 </div>
-<div class = "row mt-2">
-        <div class="col-7">
-            <div class="card card-body">
+<div class = "row mt-4">
+    <div class="col-lg-6 col-sm-12">
+        <div class="card">
+            <div class="card-header">
                 <h5>Filtro de Proveedores</h5>
-                <hr>
+            </div>
                 {% csrf_token %}
+            <div class="card-body">
                 <form method="GET">
                 <div class="row g-12">
                     <div class="col-lg-4 col-sm-12">
@@ -90,12 +92,15 @@
                     </ul>
                 {% endif %}
             </div>
-        </div>
-        <div class="card col-1 me-2">
-                <div class="card-body">
-                    <h5 class="card-title">Reportes:</h5>
-                    <hr>
-                    <form method=POST>
+        </div>  
+    </div>
+    <div class="col-lg-2 col-sm-3 mt-2">
+        <div class="card">
+            <div class = "card-header">
+                <h5 class="card-title">Reportes</h5>
+            </div>
+            <div class="card-body">
+                <form method=POST>
                     {% csrf_token %}
                     <ul class="nav nav-pills my-2" >
                         <li class="nav-item mx-2 pl-5">
@@ -105,13 +110,16 @@
                         </li>
                        
                     </ul>
-                    </form>
-                </div>
+                </form>
+            </div>
         </div>
-        <div class="card col-2">
-                <div class="card-body">
-                    <h5 class="card-title">Proveedores:</h5>
-                    <hr>
+    </div>
+    <div class="col-lg-2 col-sm-3 mt-2">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title">Proveedores:</h5>
+            </div>
+            <div class="card-body">
                     <form method=POST>
                     {% csrf_token %}
                     <ul class="nav nav-pills my-2" >
@@ -120,11 +128,13 @@
                         </li>
                     </ul>
                     </form>
-                </div>
+            </div>
         </div>
+    </div>
 </div>
 
-    <div class="col-md-8 my-2">
+<div class="col-md-8 my-2">
+    <div class="card">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -140,6 +150,7 @@
                     <th scope="col">Edición</th>
                     {% endif %}
                     <th scope="col">Direcciones</th>
+                    <th>Documentación</th>
                 </tr>
             </thead>
             <tbody>
@@ -159,17 +170,27 @@
                     <td>{{proveedor.rfc}}</td>
                     {% if usuario.tipo.proveedores %}
                     <td>
-                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}">
+                            <i class="fa-duotone fa-solid fa-pen-to-square"></i>
+                        </a>
                     </td>
                     {% endif %}
                     <td>
-                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'proveedor-direcciones' proveedor.id %}"><i class="fa-solid fa-location-dot"></i></a>
+                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'proveedor-direcciones' proveedor.id %}">
+                            <i class="fa-duotone fa-solid fa-location-dot"></i>
+                        </a>
+                    </td>
+                    <td>
+                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'proveedor-direcciones' proveedor.id %}">
+                            <i class="fa-duotone fa-solid fa-file-check"></i>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}
             </tbody>
         </table>
     </div>
+</div>
     <nav aria-label="Page navigation example">
         <ul class="pagination justify-content-center">
             {% if proveedores_list.has_previous %}
