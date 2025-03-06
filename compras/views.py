@@ -793,8 +793,9 @@ def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.proveedores or usuario.tipo.nombre == "VIS_ADQ":
-        compras = Compra.objects.filter(complete = True).annotate(
+        compras = Compra.objects.filter(complete = True, req__orden__distrito__id__in = almacenes_distritos).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
             autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
             ).order_by('-folio')
@@ -976,8 +977,12 @@ def matriz_oc_productos(request):
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
     compras = Compra.objects.filter(complete=True)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.proveedores or usuario.tipo.nombre == "VIS_ADQ":
-        articulos = ArticuloComprado.objects.filter(oc__complete = True).order_by('-oc__created_at')
+        articulos = ArticuloComprado.objects.filter(
+            oc__complete = True,
+            oc__req__orden__distrito__id__in = almacenes_distritos
+            ).order_by('-oc__created_at')
     else:
         articulos = ArticuloComprado.objects.filter(oc__complete = True, oc__req__orden__distrito = usuario.distritos).order_by('-oc__created_at')
     

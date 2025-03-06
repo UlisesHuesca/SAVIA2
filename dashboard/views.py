@@ -350,12 +350,14 @@ def proyectos_edit(request, pk):
 def proveedor_direcciones(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    #print(almacenes_distritos)
     if usuario.tipo.proveedores:
         proveedor = Proveedor.objects.get(id=pk)
         if usuario.tipo.nombre == "Subdirector_Alt":
             direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True, distrito__id= 8)
         else:
-            direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True).exclude(distrito__id__in=[7, 8])
+            direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True, distrito__id__in=almacenes_distritos)
     else:
         raise Http404("No tienes permiso para ver esta vista")
     context = {
@@ -501,9 +503,13 @@ def proveedores(request):
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
     proveedores_dir = Proveedor_direcciones.objects.all()
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
-    
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.proveedores:
-        proveedores = Proveedor.objects.filter(id__in=proveedores_ids, completo=True).exclude(familia__nombre="IMPUESTOS")
+        proveedores = Proveedor.objects.filter(
+            id__in=proveedores_ids, 
+            completo=True, 
+            direcciones__distrito__in = almacenes_distritos
+            ).exclude(familia__nombre="IMPUESTOS").distinct()
     else:
         proveedores = Proveedor.objects.none()
     total_prov = proveedores.count()

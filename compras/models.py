@@ -141,7 +141,7 @@ class Moneda(models.Model):
 
 
 class Proveedor_direcciones(models.Model):
-    nombre = models.ForeignKey(Proveedor, on_delete=models.CASCADE, null=True)
+    nombre = models.ForeignKey(Proveedor, on_delete=models.CASCADE, null=True, related_name="direcciones")
     creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE, null=True)
     domicilio = models.CharField(max_length=200, null=True)

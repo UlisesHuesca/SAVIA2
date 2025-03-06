@@ -807,10 +807,11 @@ def saldo_a_favor(request, pk):
 def matriz_pagos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     pagos = Pago.objects.filter(
-        Q(oc__req__orden__distrito = usuario.distritos) & Q(oc__autorizado2=True) | 
-        Q(viatico__distrito= usuario.distritos) & Q(viatico__autorizar2=True) |
-        Q(gasto__distrito = usuario.distritos) & Q(gasto__autorizar2 = True), 
+        Q(oc__req__orden__distrito__in =almacenes_distritos) & Q(oc__autorizado2=True) | 
+        Q(viatico__distrito__in = almacenes_distritos) & Q(viatico__autorizar2=True) |
+        Q(gasto__distrito__in = almacenes_distritos) & Q(gasto__autorizar2 = True), 
         hecho=True
         ).annotate(
         # Detectar la relación que tiene facturas
