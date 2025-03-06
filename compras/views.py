@@ -1004,9 +1004,9 @@ def matriz_oc_productos(request):
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
         #if articulos.count() > 10000:
-        return convert_excel_solicitud_matriz_productos_quick(articulos)
+        #return convert_excel_solicitud_matriz_productos_quick(articulos)
         #else:
-        #return convert_excel_solicitud_matriz_productos_prov2(articulos)
+        return convert_excel_solicitud_matriz_productos_prov2(articulos)
         #    if not task_id_producto:
         #        task = convert_excel_solicitud_matriz_productos_task2.delay(articulos_data)
         #        task_id_producto = task.id
