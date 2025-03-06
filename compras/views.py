@@ -793,7 +793,7 @@ def matriz_oc(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
-    if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
+    if usuario.tipo.proveedores or usuario.tipo.nombre == "VIS_ADQ":
         compras = Compra.objects.filter(complete = True).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
             autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
@@ -820,7 +820,7 @@ def matriz_oc(request):
     if start_date is not None and end_date is not None:
     # Si las fechas no tienen información de la zona horaria, hazlas "aware"
         # Filtrar las requisiciones aprobadas dentro del rango de fechas
-        if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
+        if usuario.tipo.proveedores or usuario.tipo.nombre == "VIS_ADQ":
             approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True)
         else:
             approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True, orden__distrito = usuario.distritos)
@@ -1004,9 +1004,9 @@ def matriz_oc_productos(request):
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
         #if articulos.count() > 10000:
-        return convert_excel_solicitud_matriz_productos_quick(articulos)
+        #return convert_excel_solicitud_matriz_productos_quick(articulos)
         #else:
-        #return convert_excel_solicitud_matriz_productos_prov2(articulos)
+        return convert_excel_solicitud_matriz_productos_prov2(articulos)
         #    if not task_id_producto:
         #        task = convert_excel_solicitud_matriz_productos_task2.delay(articulos_data)
         #        task_id_producto = task.id
