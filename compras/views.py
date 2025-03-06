@@ -976,7 +976,7 @@ def matriz_oc_productos(request):
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
     compras = Compra.objects.filter(complete=True)
-    if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
+    if usuario.tipo.proveedores or usuario.tipo.nombre == "VIS_ADQ":
         articulos = ArticuloComprado.objects.filter(oc__complete = True).order_by('-oc__created_at')
     else:
         articulos = ArticuloComprado.objects.filter(oc__complete = True, oc__req__orden__distrito = usuario.distritos).order_by('-oc__created_at')
