@@ -72,8 +72,9 @@ from user.decorators import perfil_seleccionado_required
 def compras_por_pagar(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.tesoreria == True:
-        compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, req__orden__distrito = usuario.distritos).order_by('-folio')
+        compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
    
     
     #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
