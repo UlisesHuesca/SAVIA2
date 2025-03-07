@@ -78,11 +78,7 @@
                                     <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{documento.id|unlocalize }}" title="Ver Constancia de Situación Fiscal">
                                         <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                     </button>
-                                    {% if documento.fecha_emision %}
-                                        <p><strong>Fecha de Emisión:</strong> {{ documento.fecha_emision }}</p>
-                                    {% else %}
-                                        <p><strong>Fecha de Emisión:</strong> No disponible</p>
-                                    {% endif %}
+                                    
                                 
                                     <!-- Modal con visor de PDF -->
                                     <div class="modal fade" id="pdfModal{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{documento.id|unlocalize }}" aria-hidden="true">

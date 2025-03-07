@@ -8,13 +8,10 @@ from django.db.models import Q
 
 
 class Solicitud_Gasto_Filter(django_filters.FilterSet):
-    #staff = CharFilter(field_name='staff__staff', lookup_expr='icontains')
-    staff = CharFilter(method ='my_filter', label="Search")
     folio = CharFilter(method='filter_folio_custom')
-    solicitado = CharFilter(method = 'solicitado_para', label="Search")
-    #id = CharFilter(field_name='id', lookup_expr='icontains')
-    #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
-    #subproyecto = CharFilter(field_name='subproyecto__nombre', lookup_expr='icontains')
+    solicitado_por = CharFilter(method = 'filter_solicitado_por',  label = "Solicitado por")
+    solicitado_para = CharFilter(method = 'filter_solicitado_para',  label = "Solicitado para")
+    #solicitado_para = CharFilter(field_name = 'colaborador__staff__staff__first_name',  lookup_expr='icontains')
     tipo = django_filters.ModelChoiceFilter(queryset=Tipo_Gasto.objects.all(), label="Tipo Gasto")
     start_date = DateFilter(field_name ='created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at', lookup_expr='lte')
@@ -24,15 +21,35 @@ class Solicitud_Gasto_Filter(django_filters.FilterSet):
 
     class Meta:
         model = Solicitud_Gasto
-        fields = ['staff','folio','start_date','end_date','tipo','proyecto','subproyecto']
+        fields = ['staff','colaborador','folio','start_date','end_date','tipo','proyecto','subproyecto']
 
-    def my_filter(self, queryset, name, value):
-        return queryset.filter(Q(staff__staff__staff__first_name__icontains = value) | Q(staff__staff__staff__last_name__icontains = value))
     
-    def solicitado_para(self, queryset, name, value):
-        return queryset.filter(Q(colaborador__staff__staff__first_name__icontains = value) | Q(colaborador__staff__staff__last_name__icontains = value))
+    def filter_solicitado_por(self, queryset, name, value):
+        if " " in value:
+            first_name, last_name = value.split(" ", 1)
+            return queryset.filter(
+                Q(staff__staff__staff__first_name__icontains=first_name) &
+                Q(staff__staff__staff__last_name__icontains=last_name)
+            )
+        else:
+            return queryset.filter(
+                Q(staff__staff__staff__first_name__icontains=value) |
+                Q(staff__staff__staff__last_name__icontains=value)
+            )
+        
+    def filter_solicitado_para(self, queryset, name, value):
+        if " " in value:
+            first_name, last_name = value.split(" ", 1)
+            return queryset.filter(
+                Q(colaborador__staff__staff__first_name__icontains=first_name) &
+                Q(colaborador__staff__staff__last_name__icontains=last_name)
+            )
+        else:
+            return queryset.filter(
+                Q(colaborador__staff__staff__first_name__icontains=value) |
+                Q(colaborador__staff__staff__last_name__icontains=value)
+            )
     
-   
     def filter_folio_custom(self, queryset, name, value):
         if len(value) == 1:
             return queryset.filter(folio=value)
@@ -52,7 +69,7 @@ class Conceptos_EntradasFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='concepto_material__producto__nombre', lookup_expr='icontains')
     almacenista = CharFilter(method='almacenistaa', lookup_expr='icontains')
     folio = CharFilter(field_name='entrada__gasto__gasto__folio', lookup_expr='icontains')
-    solicitado = CharFilter(method='solicitadoo', lookup_expr='icontains')
+    solicitado = CharFilter(method='solicitado', lookup_expr='icontains')
 
     class Meta:
         model = Conceptos_Entradas
