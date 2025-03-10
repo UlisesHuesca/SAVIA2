@@ -681,8 +681,8 @@ def add_proveedores2(request, pk=None):
     elif usuario.tipo.proveedores == True:
         proveedor, created = Proveedor.objects.get_or_create(creado_por=usuario, completo=False)
         proveedores_dir_ids = Proveedor_direcciones.objects.filter(~Q(estatus__nombre ="REVISION"),~Q(distrito = usuario.distritos)).values_list('id', flat=True)
-        
-    proveedores = Proveedor.objects.filter(proveedor_direcciones__id__in=proveedores_dir_ids)
+    
+    proveedores = Proveedor.objects.filter(direcciones__id__in=proveedores_dir_ids)
     print('proveedores:',proveedores.count())
 
     if usuario.tipo.nombre == "Subdirector_Alt":

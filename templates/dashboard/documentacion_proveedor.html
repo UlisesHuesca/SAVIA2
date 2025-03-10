@@ -103,6 +103,7 @@
                             <th>Nombre del Documento</th>
                             <th>Documento</th>
                             <th>Información Adicional</th>
+                            <th>Validar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -134,9 +135,18 @@
                                 <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'edit-acta-credencial' proveedor.id %}">
                                     <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                 </a>
+                               
 
                             </td>
                             <td></td>
+                            
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "credencial_acta_constitutiva" and documento.activo %}
+                                        <input type="checkbox" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validado %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                         </tr>
                         <tr>
                             <td>Constancia de Situación Fiscal</td>
@@ -179,6 +189,13 @@
                                     <p><strong>Fecha de Emisión:</strong> No disponible </p>
                                 {% endif %}
                             </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "csf" and documento.activo %}
+                                        <input type="checkbox" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validado %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                         </tr>
                         <tr>
                             <td>Comprobante de Domicilio</td>
@@ -210,6 +227,13 @@
                                 </a>
                             </td>
                             <td></td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "Comprobante de Domicilio" and documento.activo %}
+                                        <input type="checkbox" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validado %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                         </tr>
                         <tr>
                             <td>Opinión de Cumplimiento 32D</td>
@@ -247,6 +271,13 @@
                                     <p><strong>Fecha de Emisión:</strong> No disponible </p>
                                 {% endif %}
                             </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "opinion_cumplimiento" and documento.activo %}
+                                        <input type="checkbox" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validado %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                         </tr>
                     </tbody>
                 </table>
@@ -267,6 +298,8 @@
                         <tr>
                             <th>Nombre del Documento</th>
                             <th>Documento</th>
+                            <td>Comentarios</td>
+                            <th>Validar</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -297,7 +330,8 @@
                                 <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar comprobante" hx-target="#document" hx-get="{% url 'edit-curriculum' proveedor.id %}">
                                     <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                 </a>
-                            </td>                            
+                            </td> 
+                            <td></td>                           
                         </tr>
                         <tr>
                             <td>Competencias</td>
@@ -327,6 +361,16 @@
                                     <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                 </a>
                             </td>
+                            <td>
+
+                            </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "competencias" %}
+                                        <input type="checkbox" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validado %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                         </tr>
                     </tbody> 
                 </table>
@@ -338,7 +382,7 @@
     <div class="col-md-12">
         <div class ="card mt-2 bg-white">
             <div class ="card-header">
-                <h5>Complementaria proveedor Arrendamiento Muebles</h5>
+                <h5>Complementaria proveedor Arrendamiento</h5>
             </div>
             <div class ="card-body">
                 <table class="table table-striped">
@@ -346,6 +390,8 @@
                         <tr>
                             <th>Nombre del Documento</th>
                             <th>Documento</th>
+                            <th>Comentarios</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -383,8 +429,6 @@
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                 {% if documento.tipo_documento == "factura_predial" %}
-                       
-                     
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfActa{{proveedor.id|unlocalize }}" title="Ver Credencial/Acta">
                                     <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                 </button>
@@ -410,6 +454,7 @@
                                 </a>
 
                             </td>
+
                         </tr>
                     </tbody>
                 </table>
