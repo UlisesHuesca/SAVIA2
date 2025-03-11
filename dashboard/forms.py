@@ -1,6 +1,6 @@
 from django import forms
 from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad
-from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch
+from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, DocumentosProveedor
 from user.models import Distrito
 from solicitudes.models import Proyecto, Subproyecto
 from user.models import Profile
@@ -167,3 +167,7 @@ class Add_Product_CriticoForm(forms.Form):
         fields = ['product']
 
 
+class Comentario_Proveedor_Doc_Form(forms.ModelForm):
+    class Meta:
+        model = DocumentosProveedor
+        fields = ['comentario']

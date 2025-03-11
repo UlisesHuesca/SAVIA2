@@ -1,37 +1,36 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse
+from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
-from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado
+from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form
+from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form
 from user.decorators import perfil_seleccionado_required
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter
 from user.filters import ProfileFilter
 import csv
 from django.core.paginator import Paginator
 from datetime import date, datetime
-from django.http import Http404, JsonResponse
 import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
 from django.utils import translation
 from django.conf import settings
-
+import os
 #import decimal
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 import datetime as dt
-
+import json
 import csv
 from charset_normalizer import detect
 
@@ -1016,17 +1015,123 @@ def documentacion_proveedores(request, pk):
     tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
     tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
     tiene_producto = proveedor.direcciones.filter(producto=True).exists()
-      
+
+    # Obtener todos los documentos del proveedor
+    documentos = DocumentosProveedor.objects.filter(proveedor=proveedor)
     
+   # Definir los tipos de documentos requeridos
+    # Lista de los 8 tipos de documentos
+    tipos_documentos = [
+        'csf',
+        'comprobante_domicilio',
+        'opinion_cumplimiento',
+        'credencial_acta_constitutiva',
+        'curriculum',
+        'competencias',
+        'contrato',
+        'factura_predial',
+    ]
+
+    documentos_count = {tipo: 0 for tipo in tipos_documentos}
+    documentos_validados_count = {tipo: 0 for tipo in tipos_documentos}
+
+    for documento in documentos:
+        tipo = documento.tipo_documento
+        documentos_count[tipo] += 1  # Contar cuántos documentos hay de cada tipo
+        if documento.validada:
+            documentos_validados_count[tipo] += 1  # Contar cuántos están validados
+
+
+    if request.method == 'POST':
+        #form =  Comentario_Proveedor_Doc_Form(request.POST, instance=proveedor)
+        if "btn_validacion" in request.POST:
+            fecha_hora = datetime.today()
+            for documento in documentos:
+                #print(request.POST)
+                checkbox_name = f'validar_documento_{documento.id}'
+                print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
+                if checkbox_name in request.POST:
+                    print('PASO 1')
+                    documento.validada = True
+                    documento.validada_por = usuario
+                    documento.validada_fecha = fecha_hora
+                else:
+                    print('No paso')
+                    documento.validada = False
+                documento.save()
+            
+        if "btn_eliminar_docto" in request.POST:
+            for documento in documentos:
+                eliminar_checkbox_name = f'eliminar_documento_{documento.id}'
+                print(documento)
+                if documento.archivo: 
+                    if checkbox_name in request.POST: # Verificar que tenga archivo
+                        print(documento.archivo)
+                        #ruta_archivo = os.path.join(settings.MEDIA_ROOT, str(documento.archivo))
+                        #if os.path.exists(ruta_archivo):
+                        #   os.remove(ruta_archivo)  # Eliminar archivo del servidor
+                        documento.delete()  # Eliminar el registro de la base de datos
+                        #documento.save()
+            messages.success(request, f"Documentos eliminados correctamente.")
+        return redirect(request.path) 
+        #else:
+        #    messages.error(request,'No está validando')
+    print(documentos_count)
+    print(documentos_validados_count)
     context = {
         'proveedor':proveedor,
         'direcciones':direcciones,
         'tiene_servicio': tiene_servicio,
         'tiene_arrendamiento': tiene_arrendamiento,
         'tiene_producto': tiene_producto,
+        'documentos_count': documentos_count,  # Dict con el total de documentos por tipo
+        'documentos_validados_count': documentos_validados_count,  # Dict con validados por tipo
+        'documentos': documentos,
         }
     
     return render(request,'dashboard/documentacion_proveedor.html', context)
+
+def update_comentario(request):
+    data= json.loads(request.body)
+    pk = data["pk"]
+    dato = data["data"]
+    tipo = data["tipo"]
+    proveedor = Proveedor.objects.get(id=pk)
+    
+    if tipo == "acta": 
+        proveedor.comentario_acta = dato
+        indice = 1
+    if tipo == "csf":
+        proveedor.comentario_csf = dato
+        indice = 2
+    if tipo == "cv":
+        proveedor.comentario_curriculum = dato
+        indice = 5
+    if tipo == "domicilio":
+        proveedor.comentario_comprobante_domicilio = dato
+        indice = 3
+    if tipo == "competencias":
+        proveedor.comentario_competencias = dato
+        indice = 6
+    if tipo == "contrato":
+        proveedor.comentario_contrato = dato
+        indice = 7
+    if tipo == "factura":
+        proveedor.comentario_factura = dato
+        indice = 8
+    if tipo == "opinion":
+        proveedor.comentario_opinion_cumplimiento = dato
+        indice = 4
+    proveedor.save()
+    # Construye un objeto de respuesta que incluya el dato y el tipo.
+    response_data = {
+        'dato': dato,
+        'tipo': tipo,
+        'proveedor_id':pk,
+        'indice': indice, 
+    }
+
+    return JsonResponse(response_data, safe=False)
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required

@@ -29,11 +29,15 @@ class Proveedor(models.Model):
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
     perfil_proveedor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='prov_perfil')
-    #csf = models.FileField(upload_to='csf', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    #comprobante_domicilio = models.FileField(upload_to='comprobante_domicilio', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    #opinion_cumplimiento = models.FileField(upload_to='opinion_cumplimiento', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    #credencial_acta_constitutiva = models.FileField(upload_to='credencial_acta', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
-    #curriculum = models.FileField(upload_to='curriculum', blank=True, null=True, validators = [FileExtensionValidator(allowed_extensions=('pdf',))])
+    comentario_csf = models.CharField(max_length=200,null=True, blank=True)
+    comentario_comprobante_domicilio = models.CharField(max_length=200,null=True, blank=True)
+    comentario_opinion_cumplimiento = models.CharField(max_length=200,null=True, blank=True)
+    comentario_acta = models.CharField(max_length=200,null=True, blank=True)
+    comentario_curriculum = models.CharField(max_length=200,null=True, blank=True)
+    comentario_competencias = models.CharField(max_length=200,null=True, blank=True)
+    comentario_contrato = models.CharField(max_length=200,null=True, blank=True)
+    comentario_factura = models.CharField(max_length=200,null=True, blank=True)
+
 
     def __str__(self):
         return f'{self.razon_social}'
@@ -59,7 +63,10 @@ class DocumentosProveedor(models.Model):
     )
     fecha_subida = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)  # Permite activar/inactivar documentos
-
+    validada = models.BooleanField(null=True, default=None)
+    validada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='validada_por')
+    validada_fecha = models.DateTimeField(null=True)
+    comentario = models.CharField(max_length=200, null=True, blank=True)
     def __str__(self):
         return f"{self.proveedor.razon_social} - {self.get_tipo_documento_display()} (Activo: {self.activo})"
 

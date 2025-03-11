@@ -138,12 +138,39 @@ def matriz_direcciones(request):
     if usuario.tipo.proveedor_externo:
         proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
         direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
-        tiene_servicio = proveedor.proveedor_direcciones_set.filter(servicio=True).exists()
-        tiene_arrendamiento = proveedor.proveedor_direcciones_set.filter(arrendamiento=True).exists()
+        tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
+        tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
+
+        # Obtener todos los documentos del proveedor
+        documentos = DocumentosProveedor.objects.filter(proveedor=proveedor)
+        
+        tipos_documentos = [
+            'csf',
+            'comprobante_domicilio',
+            'opinion_cumplimiento',
+            'credencial_acta_constitutiva',
+            'curriculum',
+            'competencias',
+            'contrato',
+            'factura_predial',
+        ]
+
+        documentos_count = {tipo: 0 for tipo in tipos_documentos}
+        documentos_validados_count = {tipo: 0 for tipo in tipos_documentos}
+
+        for documento in documentos:
+            tipo = documento.tipo_documento
+            documentos_count[tipo] += 1  # Contar cuántos documentos hay de cada tipo
+            if documento.validada:
+                documentos_validados_count[tipo] += 1  # Contar cuántos están validados
       
     else:
         raise Http404("No tienes permiso para ver esta vista")
+    
     context = {
+        'documentos_count': documentos_count,  # Dict con el total de documentos por tipo
+        'documentos_validados_count': documentos_validados_count,  # Dict con validados por tipo
+        'documentos': documentos,
         'proveedor':proveedor,
         'direcciones':direcciones,
         'tiene_servicio': tiene_servicio,
@@ -164,7 +191,7 @@ def edit_csf(request, pk):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Documento de Competencia subido exitosamente')
+            messages.success(request, 'Documento de Constancia de Situación Fiscal subido exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  
@@ -191,7 +218,7 @@ def edit_acta_credencial(request, pk):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Documento de Competencia subido exitosamente')
+            messages.success(request, 'Credencial/Acta constitutiva subida exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  
@@ -218,7 +245,7 @@ def edit_comprobante_domicilio(request, pk):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Documento de Competencia subido exitosamente')
+            messages.success(request, 'Comprobante de domicilio subido exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  
@@ -245,7 +272,7 @@ def edit_opinion_cumplimiento(request, pk):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Documento de Competencia subido exitosamente')
+            messages.success(request, 'Documento de Opinión de Cumplimiento subido exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  
@@ -272,7 +299,7 @@ def edit_curriculum(request, pk):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Documento de Competencia subido exitosamente')
+            messages.success(request, 'Curriculum Vitae subido exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  
@@ -323,7 +350,7 @@ def subir_documento_contrato(request, proveedor_id):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Documento de Competencia subido exitosamente')
+            messages.success(request, 'Documento de Contrato subido exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  
@@ -348,7 +375,7 @@ def subir_documento_factura_predial(request, proveedor_id):
             documento.proveedor = proveedor
             documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
             documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
-            messages.success(request, 'Documento de Competencia subido exitosamente')
+            messages.success(request, 'Factura de Bien o Predial subida exitosamente')
             return HttpResponse(status=204)  # 
     else:
         form = SubirDocumentoForm()  

@@ -3389,7 +3389,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             cell_format = body_style
 
             # Aplica el formato de fecha para las columnas con fechas
-            if col_num in [8, 9]:  # Asume que estas son tus columnas de fechas
+            if col_num in [9, 10, 17]:  # Asume que estas son tus columnas de fechas
                 cell_format = date_style
         
             # Aplica el formato de dinero para las columnas con valores monetarios
