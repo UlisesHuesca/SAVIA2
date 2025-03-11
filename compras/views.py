@@ -3331,7 +3331,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         if pagos.exists():
             primer_pago = pagos.first()
             primera_fecha_pago = primer_pago.pagado_real if primer_pago.pagado_real else primer_pago.pagado_date
-            primera_fecha_pago = primera_fecha_pago.strftime('%Y-%m-%d')
+            primera_fecha_pago = primera_fecha_pago.strftime('%d/%m/%Y')
         else:
             primera_fecha_pago = " "
 
