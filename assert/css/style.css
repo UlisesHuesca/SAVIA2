@@ -188,7 +188,7 @@ body {background-color: #9a9b9d;}
 }
 
 .modal-header .btn-close {
-    background-color: #990f0f; /* Cambia el fondo a rojo */
+    background-color:  #fff; /* Cambia el fondo a rojo */
     border-radius: 50%; /* Mantiene el estilo circular */
     width: 20px;
     height: 20px;
