@@ -1065,7 +1065,7 @@ def documentacion_proveedores(request, pk):
                 eliminar_checkbox_name = f'eliminar_documento_{documento.id}'
                 print(documento)
                 if documento.archivo: 
-                    if checkbox_name in request.POST: # Verificar que tenga archivo
+                    if eliminar_checkbox_name in request.POST: # Verificar que tenga archivo
                         print(documento.archivo)
                         #ruta_archivo = os.path.join(settings.MEDIA_ROOT, str(documento.archivo))
                         #if os.path.exists(ruta_archivo):
