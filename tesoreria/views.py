@@ -86,7 +86,11 @@ def compras_por_pagar(request):
     compras_list = p.get_page(page)
     
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_compras_autorizadas(compras)
+        if usuario.tipo.tesoreria:
+            return convert_excel_matriz_compras_tesoreria(compras)
+        else:
+            return convert_excel_matriz_compras_autorizadas(compras)
+       
     
     if request.method == 'POST':
         compra_ids = request.POST.getlist('compra_ids')
@@ -2072,14 +2076,17 @@ def convert_excel_matriz_compras_autorizadas(compras):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(J:J)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(K:K)").style = money_resumen_style
   
-
+    
    
     
     for compra in compras:
         row_num = row_num + 1    
-        
+        #productos = ArticuloComprado.objects.filter(oc = compra)
+
+        # Unir los nombres de los productos en una sola cadena separada por comas
+        #productos_texto = ', '.join([producto.nombre for producto in productos])
         # Manejar autorizado_at_2
         if compra.autorizado_at_2 and isinstance(compra.autorizado_at_2, datetime):
         # Si autorizado_at_2 es timezone-aware, conviértelo a timezone-naive
@@ -2118,6 +2125,138 @@ def convert_excel_matriz_compras_autorizadas(compras):
             if col_num == 1 or col_num == 11:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num == 7 or col_num == 9 or col_num == 10:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+       
+    
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    wb.save(response)
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    return(response)
+
+def convert_excel_matriz_compras_tesoreria(compras):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Pendientes_de_pago_' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Compras Autorizadas')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+    percent_style = NamedStyle(name='percent_style', number_format='0.00%')
+    percent_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(percent_style)
+
+    columns = ['Folio','Fecha Autorización','Proyecto','Subproyecto','Distrito','Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda',
+                'Tipo de cambio','Importe','Total en Pesos','Importe Pagado','Importe Restante','C. Pago', 'Días de Crédito','Fecha Creación','Recibida','Factura']
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 5: #Columna del proveedor
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 30
+        if col_num == 2:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
+
+    columna_max = len(columns)+2
+
+    # Agregar los mensajes
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 30
+
+    # Agregar los encabezados de las nuevas columnas debajo de los mensajes
+    ws.cell(row=3, column = columna_max, value="Total de OC's").style = head_style
+    ws.cell(row=4, column = columna_max, value="Sumatoria de Pagos Pendientes").style = head_style
+   
+
+    # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
+    ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(P:P)").style = money_resumen_style
+  
+    
+   
+    
+    for compra in compras:
+        row_num = row_num + 1    
+        productos = ArticuloComprado.objects.filter(oc = compra)
+
+        # Unir los nombres de los productos en una sola cadena separada por comas
+        productos_texto = ', '.join([producto.producto.producto.articulos.producto.producto.nombre for producto in productos])
+        # Manejar autorizado_at_2
+        if compra.autorizado_at_2 and isinstance(compra.autorizado_at_2, datetime):
+        # Si autorizado_at_2 es timezone-aware, conviértelo a timezone-naive
+            autorizado_at_2_naive = compra.autorizado_at_2.astimezone(pytz.utc).replace(tzinfo=None)
+        else:
+            autorizado_at_2_naive = ''
+        
+        # Manejar created_at
+        if compra.created_at and isinstance(compra.created_at, datetime):
+        # Si created_at es timezone-aware, conviértelo a timezone-naive
+            created_at_naive = compra.created_at.astimezone(pytz.utc).replace(tzinfo=None)
+        else:
+            created_at_naive = ''
+
+        if compra.facturas.filter(factura_xml__isnull=False).exists():
+            tiene_facturas = 'Sí'
+        else:
+            tiene_facturas = 'No'
+
+        recibida = "Recibida" if compra.entrada_completa else "No Recibida"
+
+        row = [
+            compra.folio,
+            autorizado_at_2_naive,
+            compra.req.orden.proyecto.nombre,
+            compra.req.orden.subproyecto.nombre,
+            compra.req.orden.distrito.nombre,
+            compra.proveedor.nombre.razon_social,
+            productos_texto,
+            compra.proveedor.banco.nombre,
+            compra.proveedor.cuenta,
+            compra.proveedor.clabe,
+            compra.moneda.nombre,
+            compra.tipo_de_cambio if compra.tipo_de_cambio else '',
+            compra.costo_plus_adicionales,
+            # Calcula total en pesos usando la fórmula de Excel
+            f'=IF(L{row_num}="",M{row_num},M{row_num}*L{row_num})', 
+            compra.monto_pagado,
+            f'=N{row_num} - O{row_num}',
+            compra.cond_de_pago.nombre,
+            compra.dias_de_credito if compra.dias_de_credito else '',
+            created_at_naive,
+            recibida,
+            tiene_facturas,
+        ]
+
+    
+        for col_num in range(len(row)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            if col_num in [1, 18]:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+            if col_num in [11, 12, 13,14, 15]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
@@ -2208,11 +2347,18 @@ def convert_excel_matriz_pagos(pagos):
             proveedor = pago.oc.proveedor
             facturas_completas = pago.oc.facturas_completas
             cuenta_moneda = pago.cuenta.moneda.nombre if pago.cuenta else None
-            if pago.oc.facturas.exists():
+            #if pago.oc.facturas.exists():
                 #print(pago.oc.facturas)
+            #    tiene_facturas = 'Sí'
+            #else:
+            #    tiene_facturas = 'No'
+
+
+            if pago.oc.facturas.filter(factura_xml__isnull=False).exists():
                 tiene_facturas = 'Sí'
             else:
                 tiene_facturas = 'No'
+
             if cuenta_moneda == 'PESOS':
                 tipo_de_cambio = ''
             elif cuenta_moneda == 'DOLARES':

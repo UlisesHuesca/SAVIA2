@@ -187,6 +187,13 @@ body {background-color: #9a9b9d;}
     color: #fff;
 }
 
+.modal-header .btn-close {
+    background-color:  #fff; /* Cambia el fondo a rojo */
+    border-radius: 50%; /* Mantiene el estilo circular */
+    width: 20px;
+    height: 20px;
+}
+
 /* ---------------------
 # DATEPICKER DE JQUERY
 ------------------------*/

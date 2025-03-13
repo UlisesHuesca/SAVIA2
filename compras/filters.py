@@ -33,6 +33,7 @@ class CompraFilter(django_filters.FilterSet):
     atrasado = django_filters.BooleanFilter(method='filtro_atrasado')
     pago = ChoiceFilter(choices=PAGO_CHOICES, method='filter_by_pago', label='Pago') # Changed filter
     moneda = ChoiceFilter(choices = MONEDA_CHOICES, method='filter_by_moneda', label ='Moneda')
+    distrito = CharFilter(field_name='req__orden__distrito__nombre', lookup_expr='icontains')
 
     class Meta:
         model = Compra
@@ -45,6 +46,8 @@ class CompraFilter(django_filters.FilterSet):
         elif value == 'CONTADO':
             return queryset.filter(cond_de_pago__nombre='CONTADO')
         return queryset
+    
+
 
     def filter_by_moneda(self, queryset, name, value):
         # Asegúrate de que 'value' coincida con las opciones 'CREDITO' o 'CONTADO'

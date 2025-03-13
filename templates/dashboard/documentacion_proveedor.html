@@ -44,7 +44,9 @@
 <div class = "row">
 <form method="POST">
     {% csrf_token %}
-    <div class="col-sm-12">
+<div class ="row">
+    <div class="col-sm-12 col-lg-6">
+        
         <div class = "card mt-2 bg-white">
      
             <div class="card-header">
@@ -59,20 +61,16 @@
                             </a>
                         </li>
                         <li class="nav-item ms-4">
-                            <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
-                                <i class="fa-duotone fa-solid fa-square-check fa-xl"></i>
-                            </button>
+                           
                         </li>
                         <li class="nav-item ms-4">
-                            <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
-                                <i class="fa-duotone fa-solid fa-trash-can"></i>  
-                            </button>
+                            
                         </li>
                     </ul>
                 </div>
                 <div class = "col-sm-12 col-lg-3">
                     <table class="table table-striped">
-                        <h5 class="text-center fw-bold">Tipo de Proveedor</h5>
+                        <p class="text-center fw-bold">Tipo de Proveedor/Status Visita</p>
                         <thead>
                             <th>
                                 Materiales
@@ -82,6 +80,9 @@
                             </th>
                             <th>
                                 Arrendamiento
+                            </th>
+                            <th>
+                                Visita
                             </th>
                         </thead>
                         <tbody>
@@ -107,10 +108,53 @@
                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                     {% endif %}
                                 </td>
+                                <td>
+                                    {% if proveedor.visita %}
+                                    <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
+                                    {% else %}
+                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                    {% endif %}
+
+                                </td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-sm-12 col-lg-6">
+        <div class = "card mt-2 bg-white">
+     
+            <div class="card-header">
+                <h5>Proveedor: {{proveedor.razon_social}}</h5>
+            </div>
+    
+            <div class="card-body">
+                <table class = "table table-striped">
+                    <thead>
+                        <tr>
+                            <th>Fecha de Evaluación</th>
+                        </tr>
+                        <tbody>
+                            {% for direccion in direcciones %}
+                            <tr>
+                                <td>{{direccion.modificado_fecha}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </thead>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>    
+<div class="col-sm-12 col-lg-12">
+    <div class = "card">
+        <div class="card-header">
+            <h5>Proveedor: {{proveedor.razon_social}}</h5>
+        </div>
+            <div class="card-body">
                 <table class="table table-striped">
                     <h5 class="text-center fw-bold">Documentación Legal y Contable</h5>
                     <thead>
@@ -120,9 +164,17 @@
                             <th>Información Adicional</th>
                             <th>Comentarios</th>
                             <th>Edit</th>
-                            <th class="text-success" title="Validación"><i class="fa-duotone fa-solid fa-square-check fa-xl"></i></th>
+                            <th class="text-success">
+                                <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
+                                <i class="fa-duotone fa-solid fa-square-check fa-xl"></i>
+                                </button>
+                            </th>
                            
-                            <th class="text-danger" title="Eliminar documento"><i class="fa-duotone fa-solid fa-trash-can fa-xl"></i></th>
+                            <th class="text-danger" title="Eliminar documento">
+                                <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
+                                    <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>  
+                                </button>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -481,9 +533,8 @@
                 </table>
 
             </div>
-        </div>
-        
-    </div>
+     </div>
+</div>
 {% if tiene_servicio %}
     <div class="col-lg-12">
         <div class ="card mt-2 bg-white">
@@ -498,9 +549,17 @@
                             <th>Documento</th>
                             <th>Comentarios</th>
                             <th>Edit</th>
-                            <th class="text-success" title="Validación"><i class="fa-duotone fa-solid fa-square-check fa-xl"></i></th>
+                            <th class="text-success">
+                                <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
+                                <i class="fa-duotone fa-solid fa-square-check fa-xl"></i>
+                                </button>
+                            </th>
                            
-                            <th class="text-danger" title="Eliminar documento"><i class="fa-duotone fa-solid fa-trash-can fa-xl"></i></th>
+                            <th class="text-danger" title="Eliminar documento">
+                                <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
+                                    <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>  
+                                </button>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
@@ -690,9 +749,17 @@
                             <th>Documento</th>
                             <th>Comentarios</th>
                             <th>Edit</th>
-                            <th class="text-success" title="Validación"><i class="fa-duotone fa-solid fa-square-check fa-xl"></i></th>
-                            <th class="text-danger" title="Eliminar documento"><i class="fa-duotone fa-solid fa-trash-can fa-xl"></i></th>
-                            <th></th>
+                            <th class="text-success">
+                                <button type="submit" name="btn_validacion" class="btn btn-outline-success" title="Guardar validación" >
+                                <i class="fa-duotone fa-solid fa-square-check fa-xl"></i>
+                                </button>
+                            </th>
+                           
+                            <th class="text-danger" title="Eliminar documento">
+                                <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
+                                    <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>  
+                                </button>
+                            </th>
                         </tr>
                     </thead>
                     <tbody>

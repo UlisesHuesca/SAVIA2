@@ -55,6 +55,8 @@ class DocumentosProveedor(models.Model):
             ('competencias', 'Competencias'),
             ('contrato', 'Contrato'),
             ('factura_predial', 'Factura del Bien/Predial'),
+            ('calidad', 'Calidad'),
+            ('otros','Otros'),
         ]
     )
     archivo = models.FileField(

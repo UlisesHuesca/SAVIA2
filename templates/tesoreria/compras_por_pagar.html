@@ -98,6 +98,17 @@
                             </div>
                         </div>
                     </div>
+                    {% if usuario.distritos.nombre == "MATRIZ" %}
+                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito"}}
+                                <label style="color: #121212;" for="id_subproyecto">Distrito:</label>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                    
                     <div class="col-2 mt-1">
                         <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
