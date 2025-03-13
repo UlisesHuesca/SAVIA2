@@ -213,6 +213,8 @@
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
+                                        {{documentos_count..credencial_acta_constitutiva }}
+                                        {{documentos_validados_count.credencial_acta_constitutiva }}
                                          <!-- Si hay al menos un documento sin validar, mostrar botón para cambiar -->
                                          {% if documentos_count.credencial_acta_constitutiva > documentos_validados_count.credencial_acta_contitutiva %}
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Actualizar Credencial" hx-target="#document" hx-get="{% url 'edit-acta-credencial' proveedor.id %}">
