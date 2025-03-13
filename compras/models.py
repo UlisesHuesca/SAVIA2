@@ -76,20 +76,26 @@ class DocumentosProveedor(models.Model):
     @property
     def fecha_emision(self):
         """
-        Extrae la fecha de emisión desde el archivo PDF si el documento es de tipo 'csf'.
+        Extrae la fecha de emisión desde el archivo PDF si el documento es de tipo 'csf' o 'opinion_cumplimiento'.
         Retorna la fecha en formato 'DD/MM/YYYY' o None si no se encuentra.
         """
-        if self.tipo_documento != "csf" or not self.archivo:
+        if self.tipo_documento not in ["csf", "opinion_cumplimiento"] or not self.archivo:
             return None
 
-        # Expresión regular para encontrar la fecha en el formato "A 05 DE MARZO DE 2025"
-        patron_fecha = r"\bA\s+(\d{1,2})\s+DE\s+([A-ZÁÉÍÓÚ]+)\s+DE\s+(\d{4})\b"
-
+        # Definir patrones de fecha según el tipo de documento
+        patrones_fecha = {
+            "csf": r"\bA\s+(\d{1,2})\s+DE\s+([A-ZÁÉÍÓÚ]+)\s+DE\s+(\d{4})\b",
+            "opinion_cumplimiento": r"(\d{1,2})\s+de\s+([a-zA-Z]+)\s+de\s+(\d{4})"
+        }
+        
         # Diccionario de conversión de meses en español a números
         meses = {
             "ENERO": "01", "FEBRERO": "02", "MARZO": "03", "ABRIL": "04",
             "MAYO": "05", "JUNIO": "06", "JULIO": "07", "AGOSTO": "08",
-            "SEPTIEMBRE": "09", "OCTUBRE": "10", "NOVIEMBRE": "11", "DICIEMBRE": "12"
+            "SEPTIEMBRE": "09", "OCTUBRE": "10", "NOVIEMBRE": "11", "DICIEMBRE": "12",
+            "enero": "01", "febrero": "02", "marzo": "03", "abril": "04",
+            "mayo": "05", "junio": "06", "julio": "07", "agosto": "08",
+            "septiembre": "09", "octubre": "10", "noviembre": "11", "diciembre": "12"
         }
 
         try:
@@ -100,11 +106,8 @@ class DocumentosProveedor(models.Model):
                 for pagina in lector_pdf.pages:
                     texto_completo += pagina.extract_text() + "\n"
 
-                # Convertir todo a mayúsculas para evitar errores de coincidencia
-                texto_completo_mayus = texto_completo.upper()
-
                 # Buscar coincidencia de la fecha
-                coincidencia = re.search(patron_fecha, texto_completo_mayus)
+                coincidencia = re.search(patrones_fecha[self.tipo_documento], texto_completo, re.IGNORECASE)
 
                 if coincidencia:
                     dia = coincidencia.group(1)
