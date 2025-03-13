@@ -1612,7 +1612,7 @@ def convert_excel_viatico(viaticos):
     wb.add_named_style(percent_style)
 
     columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para','Proyecto','Subproyecto',
-               'Importe','Fecha Creación','Status','Autorizado por','Facturas','Status de Pago']
+               'Importe','Fecha Creación','Status','Autorizado por','Tiene_Facturas','Status de Pago']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1663,11 +1663,11 @@ def convert_excel_viatico(viaticos):
             pagada = "Tiene Pago"
         else: 
             pagada ="No tiene pago"
-        
-        if viatico.facturas.exists():
-            facturas = "Con Facturas"
+
+        if viaticos.facturas.filter(factura_xml__isnull=False).exists():
+            tiene_facturas = 'Sí'
         else:
-            facturas = "Sin Facturas"
+            tiene_facturas = 'No'
         
         if viatico.autorizar2:
             status = "Autorizado"
@@ -1716,7 +1716,7 @@ def convert_excel_viatico(viaticos):
             created_at_naive,
             status,
             autorizado_por,
-            facturas,
+            tiene_facturas,
             pagada,
             #f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             #created_at_naive,
