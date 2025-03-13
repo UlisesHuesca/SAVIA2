@@ -322,7 +322,8 @@ CELERY_RESULT_BACKEND = 'rpc://'
 X_FRAME_OPTIONS = 'SAMEORIGIN'
 
 
-DATA_UPLOAD_MAX_MEMORY_SIZE = 10485760  # 10MB, ajusta el valor según lo que necesites
+DATA_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024  # 25MB, ajusta el valor según lo que necesites
+FILE_UPLOAD_MAX_MEMORY_SIZE = 25 * 1024 * 1024
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
 
 LANGUAGE_SESSION_KEY = 'django_language'
