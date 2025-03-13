@@ -4,6 +4,7 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile, Distrito, Banco, Pais
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
+from datetime import datetime
 import decimal
 from phone_field import PhoneField
 import re
@@ -126,6 +127,22 @@ class DocumentosProveedor(models.Model):
             print(f"Error al leer el PDF: {e}")
 
         return None  # Si no se encuentra ninguna fecha
+    
+    @property
+    def fecha_vencimiento(self):
+        """
+        Calcula la fecha de vencimiento sumando un año a la fecha de emisión.
+        """
+        if not self.fecha_emision:
+            return None
+
+        try:
+            fecha_dt = datetime.strptime(self.fecha_emision, "%d/%m/%Y")
+            fecha_vencimiento_dt = fecha_dt.replace(year=fecha_dt.year + 1)
+            return fecha_vencimiento_dt.strftime("%d/%m/%Y")
+        except Exception as e:
+            print(f"Error al calcular fecha de vencimiento: {e}")
+            return None
 
 class Proveedor_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])

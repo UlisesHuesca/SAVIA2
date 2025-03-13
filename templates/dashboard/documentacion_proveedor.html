@@ -310,6 +310,7 @@
                                     {% if documento.tipo_documento == "csf"%}
                                         {% if documento.fecha_emision %}
                                             <p><strong>Fecha de Emisión:</strong> {{ documento.fecha_emision }}</p>
+                                            <p><strong>Fecha de Vencimiento:</strong> {{documento.fecha_vencimiento }}</strong></p>
                                         {% else %}
                                             <p><strong>Fecha de Emisión:</strong> No disponible </p>
                                         {% endif %}
@@ -489,6 +490,7 @@
                                     {% if documento.tipo_documento == "opinion_cumplimiento"%}
                                         {% if documento.fecha_emision %}
                                             <p><strong>Fecha de Emisión:</strong> {{ documento.fecha_emision }}</p>
+                                            <p><strong>Fecha de Vencimiento:</strong> {{documento.fecha_vencimiento }}</strong></p>
                                         {% else %}
                                             <p><strong>Fecha de Emisión:</strong> No disponible </p>
                                         {% endif %}
