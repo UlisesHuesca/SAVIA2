@@ -213,7 +213,7 @@
                                                 </div>
                                             {% endif %}
                                         {% endfor %}
-                                        {{documentos_count..credencial_acta_constitutiva }}
+                                        {{documentos_count.credencial_acta_constitutiva }}
                                         {{documentos_validados_count.credencial_acta_constitutiva }}
                                          <!-- Si hay al menos un documento sin validar, mostrar botón para cambiar -->
                                          {% if documentos_count.credencial_acta_constitutiva > documentos_validados_count.credencial_acta_contitutiva %}
@@ -393,7 +393,7 @@
                                                    
                                                 {% endif %}
                                             {% endfor %}
-                                            {{documentos_count.comprobantes_domicilio}}
+                                            {{documentos_count.comprobante_domicilio}}
                                             {{documentos_validados_count.comprobante_domicilio}}
                                             {% if documentos_count.comprobante_domicilio > documentos_validados_count.comprobante_domicilio %}
                                             <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de Domicilio" hx-target="#document" hx-get="{% url 'edit-comprobante-domicilio' proveedor.id %}">
