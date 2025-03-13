@@ -485,11 +485,15 @@
                                    
                             </td>
                             <td>
-                                {% if documento.fecha_emision %}
-                                    <p><strong>Fecha de Emisión:</strong> {{ documento.fecha_emision }}</p>
-                                {% else %}
-                                    <p><strong>Fecha de Emisión:</strong> No disponible </p>
-                                {% endif %}
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "opinion_cumplimiento"%}
+                                        {% if documento.fecha_emision %}
+                                            <p><strong>Fecha de Emisión:</strong> {{ documento.fecha_emision }}</p>
+                                        {% else %}
+                                            <p><strong>Fecha de Emisión:</strong> No disponible </p>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
                             </td>
                             <td class="" id="comentario_4_{{proveedor.id|unlocalize}}" tipo ="opinion" >{% if proveedor.comentario_opinion_cumplimiento %} {{proveedor.comentario_opinion_cumplimiento}} {% endif %}</td>
                             <td class="d-none" id="form_comentario_4_{{proveedor.id|unlocalize}}">

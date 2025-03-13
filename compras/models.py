@@ -79,6 +79,7 @@ class DocumentosProveedor(models.Model):
         Extrae la fecha de emisión desde el archivo PDF si el documento es de tipo 'csf' o 'opinion_cumplimiento'.
         Retorna la fecha en formato 'DD/MM/YYYY' o None si no se encuentra.
         """
+        print('fecha_emision')
         if self.tipo_documento not in ["csf", "opinion_cumplimiento"] or not self.archivo:
             return None
 
