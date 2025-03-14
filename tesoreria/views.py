@@ -908,14 +908,14 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.archivo_pdf.path)
                         zip_file.write(factura.archivo_pdf.path, os.path.join(folder_name, file_name))
                         zip_file.write(factura.archivo_pdf.path, os.path.join(general_pdfs_folder, file_name)) #Está línea guarda en el zip general de pdf
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito))
+                       
                     
                     distrito = factura.solicitud_gasto.distrito.nombre  # Obtener distrito de la factura
                     if factura.archivo_xml:
                         file_name = os.path.basename(factura.archivo_xml.path)
                         zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
                         zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, file_name)) #Está línea guarda en el zip general de xml's
-
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito))
 
                     if factura.solicitud_gasto.id not in processed_gastos:
                         buf = render_pdf_gasto(factura.solicitud_gasto.id)
