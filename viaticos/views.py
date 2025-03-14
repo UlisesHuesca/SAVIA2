@@ -1281,6 +1281,7 @@ def generar_pdf_viatico(pk):
     c.drawString(320,caja_proveedor-100,'Nivel:')
     c.drawString(320, caja_proveedor-120,'Transporte:')
     c.drawString(320, caja_proveedor-140,'Hospedaje:')
+    c.drawString(320, caja_proveedor-160,'Empresa:')
 
     c.drawString(320,caja_proveedor-200,'Fecha de Elaboración:')
 
@@ -1345,6 +1346,10 @@ def generar_pdf_viatico(pk):
             c.drawString(380,caja_proveedor-60,viatico.colaborador.staff.clabe)
         else:
             c.drawString(380,caja_proveedor-60, "Sin registro")
+        if viatico.colaborador.staff.empresa:
+            c.drawString(380,caja_proveedor-160,viatico.colaborador.staff.empresa)
+        else:
+            c.drawString(380,caja_proveedor-160, "Sin registro")
     else:
         c.drawString(380, caja_proveedor-80,'Solicitante')
         c.drawString(380, caja_proveedor-100, viatico.staff.staff.staff.first_name+' '+viatico.staff.staff.staff.last_name)
@@ -1360,6 +1365,10 @@ def generar_pdf_viatico(pk):
             c.drawString(380,caja_proveedor-60,viatico.staff.staff.clabe)
         else:
             c.drawString(380,caja_proveedor-60, "Sin registro")
+        if viatico.staff.staff.empresa:
+            c.drawString(380,caja_proveedor-160,viatico.staff.staff.empresa)
+        else:
+            c.drawString(380,caja_proveedor-160, "Sin registro")
    
     
     #c.drawString(380, caja_proveedor-120, str(viatico.transporte))
