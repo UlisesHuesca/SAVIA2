@@ -1497,6 +1497,7 @@ def render_pdf_gasto(pk):
     c.drawString(280,caja_proveedor-60,'Depositar a:')
     c.drawString(280,caja_proveedor-20,'Cuenta:')
     c.drawString(280,caja_proveedor-40,'Clabe:')
+    c.drawString(280,caja_proveedor-60,'Empresa')
 
 
     
@@ -1530,6 +1531,11 @@ def render_pdf_gasto(pk):
             c.drawString(100,caja_proveedor-80, gasto.colaborador.staff.banco.nombre)
         else:
             c.drawString(100,caja_proveedor-80, "Sin registro")
+        if gasto.colaborador.staff.empresa:
+            c.drawString(350,caja_proveedor-60, gasto.colaborador.staff.empresa.nombre)
+        else:
+            c.drawString(350,caja_proveedor-60, "Sin registro")
+
     else:
         c.drawString(350,caja_proveedor-60,gasto.staff.staff.staff.first_name+' '+ gasto.staff.staff.staff.last_name)
         if gasto.staff.staff.cuenta_bancaria:
@@ -1544,6 +1550,10 @@ def render_pdf_gasto(pk):
             c.drawString(100,caja_proveedor-80, gasto.staff.staff.banco.nombre)
         else:
             c.drawString(100,caja_proveedor-80, "Sin registro")
+        if gasto.staff.staff.empresa:
+            c.drawString(350,caja_proveedor-60,gasto.colaborador.staff.empresa.nombre)
+        else:
+            c.drawString(350,caja_proveedor-60, "Sin registro")
 
     #Create blank list
     data =[]
