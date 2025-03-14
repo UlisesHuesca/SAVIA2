@@ -6,6 +6,7 @@ from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 from datetime import datetime
 import decimal
+from dateutil.relativedelta import relativedelta
 from phone_field import PhoneField
 import re
 import PyPDF2
@@ -134,14 +135,22 @@ class DocumentosProveedor(models.Model):
     @property
     def fecha_vencimiento(self):
         """
-        Calcula la fecha de vencimiento sumando un año a la fecha de emisión.
+        Calcula la fecha de vencimiento:
+        - Si el tipo de documento es 'csf', suma 1 año.
+        - Si el tipo de documento es 'opinion_cumplimiento', suma 6 meses.
         """
         if not self.fecha_emision:
             return None
 
         try:
             fecha_dt = datetime.strptime(self.fecha_emision, "%d/%m/%Y")
-            fecha_vencimiento_dt = fecha_dt.replace(year=fecha_dt.year + 1)
+            if self.tipo_documento == "csf":
+                fecha_vencimiento_dt = fecha_dt + relativedelta(years=1)
+            elif self.tipo_documento == "opinion_cumplimiento":
+                fecha_vencimiento_dt = fecha_dt + relativedelta(months=6)
+            else:
+                return None
+            
             return fecha_vencimiento_dt.strftime("%d/%m/%Y")
         except Exception as e:
             print(f"Error al calcular fecha de vencimiento: {e}")
