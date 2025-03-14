@@ -38,6 +38,9 @@ class Proveedor(models.Model):
     comentario_competencias = models.CharField(max_length=200,null=True, blank=True)
     comentario_contrato = models.CharField(max_length=200,null=True, blank=True)
     comentario_factura = models.CharField(max_length=200,null=True, blank=True)
+    comentario_calidad = models.CharField(max_length=200,null=True, blank=True)
+    comentario_otros = models.CharField(max_length=200,null=True, blank=True)
+
 
 
     def __str__(self):

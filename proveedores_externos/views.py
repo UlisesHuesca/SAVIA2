@@ -286,6 +286,61 @@ def edit_opinion_cumplimiento(request, pk):
    
     return render(request, 'proveedores_externos/edit_documentos.html',context)
 
+
+@perfil_seleccionado_required
+def edit_calidad(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'calidad'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Documento de calidad subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+@perfil_seleccionado_required
+def edit_otros(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'otros'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Documento subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
 @perfil_seleccionado_required
 def edit_curriculum(request, pk):
     proveedor = get_object_or_404(Proveedor, id=pk)

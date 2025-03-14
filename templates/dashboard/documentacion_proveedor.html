@@ -68,7 +68,6 @@
                         </li>
                     </ul>
                 </div>
-                <div class = "col-sm-12 col-lg-3">
                     <table class="table table-striped">
                         <p class="text-center fw-bold">Tipo de Proveedor/Status Visita</p>
                         <thead>
@@ -119,7 +118,6 @@
                             </tr>
                         </tbody>
                     </table>
-                </div>
             </div>
         </div>
     </div>
@@ -134,12 +132,26 @@
                 <table class = "table table-striped">
                     <thead>
                         <tr>
-                            <th>Fecha de Evaluación</th>
+                            <th>Distrito</th>
+                            <th>Status</th>
+                            <th>Fecha de Evaluación</th>      
                         </tr>
                         <tbody>
                             {% for direccion in direcciones %}
                             <tr>
-                                <td>{{direccion.modificado_fecha}}</td>
+                                <td>{{direccion.distrito}}</td>
+                                <td>
+                                    {% if direccion.estatus.nombre == "APROBADO" %}<span class="badge bg-primary">{{direccion.estatus}}</span>
+                                    {% elif direccion.estatus.nombre == "NUEVO" %}<span class="badge bg-warning">{{direccion.estatus}}</span>
+                                    {% elif direccion.estatus.nombre == "RECHAZADO" %}<span class="badge bg-danger">{{direccion.estatus}}</span>
+                                    {% endif %}
+                                </td>
+                                <td>{% if direccion.modificado_fecha %}
+                                        {{direccion.modificado_fecha}}
+                                    {% else %} 
+                                        <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i> 
+                                    {% endif %}
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -539,7 +551,7 @@
                             <td>
                              
                                         {% if documentos_count.calidad == 0 %}   
-                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Credencial" hx-target="#document" hx-get="{% url 'edit-opinion-cumplimiento' proveedor.id %}">
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Calidad" hx-target="#document" hx-get="{% url 'edit-calidad' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
                                         {% else %}
@@ -574,7 +586,7 @@
                                                 {% endif %}
                                             {% endfor %}
                                             {% if documentos_count.calidad > documentos_validados_count.calidad %}
-                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de Cumplimiento 32D" hx-target="#document" hx-get="{% url 'edit-opinion-cumplimiento' proveedor.id %}">
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de Cumplimiento 32D" hx-target="#document" hx-get="{% url 'edit-calidad' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
                                             {% endif %}
@@ -584,7 +596,7 @@
                             <td>
                             
                             </td>
-                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="opinion" >{% if proveedor.comentario_calidad %} {{proveedor.comentario_calidad}} {% endif %}</td>
+                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_calidad %} {{proveedor.comentario_calidad}} {% endif %}</td>
                             <td class="d-none" id="form_comentario_9_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_9_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -611,6 +623,93 @@
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "calidad" %}
+                                        {% if documento.validada %}
+                                            <i class="fa-regular fa-check"></i>
+                                        {% else %}
+                                            <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Otros</td>
+                            <td>
+                             
+                                        {% if documentos_count.otros == 0 %}   
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento" hx-target="#document" hx-get="{% url 'edit-otros' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "otros" %}
+                                                    {% if documento.validado %}
+                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfOtros{{documento.id|unlocalize }}" title="Ver Documento">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfOtros{{documento.id|unlocalize }}" title="Ver Documento">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% endif %}
+
+                                
+                                                    <!-- Modal con visor de PDF -->
+                                                    <div class="modal fade" id="pdfOtros{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfOtrosLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-xl">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="pdfOtrosLabel{{documento.id|unlocalize }}">Documento</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <iframe src="{{documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                   
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if documentos_count.otros > documentos_validados_count.otros %}
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de Cumplimiento 32D" hx-target="#document" hx-get="{% url 'edit-calidad' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                   
+                            </td>
+                            <td>
+                            
+                            </td>
+                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="otros" >{% if proveedor.comentario_otros %} {{proveedor.comentario_otros}} {% endif %}</td>
+                            <td class="d-none" id="form_comentario_10_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_10_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            </td>
+                            <td>
+                                <a id="modificar_comentario_10_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 10)">
+                                    <i class="fa-regular fa-comment"></i>
+                                </a>
+                                <button type="button" id="save_comment_10_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 10)"    class="btn btn-outline-primary d-none">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button id="cancel_edit_10_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 10)" style="color:ghostwhite; background-color:#980F0F ;">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                                
+                            </td>
+                            
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "otros" %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "otros" %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}

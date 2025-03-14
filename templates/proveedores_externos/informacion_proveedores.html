@@ -591,7 +591,8 @@
                     <td>{% if direccion.estatus.nombre == "APROBADO" %}<span class="badge bg-primary">{{direccion.estatus}}</span>
                         {% elif direccion.estatus.nombre == "NUEVO" %}<span class="badge bg-warning">{{direccion.estatus}}</span>
                         {% elif direccion.estatus.nombre == "RECHAZADO" %}<span class="badge bg-danger">{{direccion.estatus}}</span>
-                        {% endif %}</td>
+                        {% endif %}
+                    </td>
                     {% if usuario.tipo.proveedores %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'edit_proveedor_direccion' direccion.id %}"><i class="fa-solid fa-pen-to-square"></i></a>

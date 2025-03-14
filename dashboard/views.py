@@ -1030,6 +1030,8 @@ def documentacion_proveedores(request, pk):
         'competencias',
         'contrato',
         'factura_predial',
+        'calidad',
+        'otros',
     ]
 
     documentos_count = {tipo: 0 for tipo in tipos_documentos}
