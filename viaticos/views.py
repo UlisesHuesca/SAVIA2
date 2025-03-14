@@ -1347,7 +1347,7 @@ def generar_pdf_viatico(pk):
         else:
             c.drawString(380,caja_proveedor-60, "Sin registro")
         if viatico.colaborador.staff.empresa:
-            c.drawString(380,caja_proveedor-160,viatico.colaborador.staff.empresa)
+            c.drawString(380,caja_proveedor-160,viatico.colaborador.staff.empresa.nombre)
         else:
             c.drawString(380,caja_proveedor-160, "Sin registro")
     else:
@@ -1366,7 +1366,7 @@ def generar_pdf_viatico(pk):
         else:
             c.drawString(380,caja_proveedor-60, "Sin registro")
         if viatico.staff.staff.empresa:
-            c.drawString(380,caja_proveedor-160,viatico.staff.staff.empresa)
+            c.drawString(380,caja_proveedor-160,viatico.staff.staff.empresa.nombre)
         else:
             c.drawString(380,caja_proveedor-160, "Sin registro")
    
