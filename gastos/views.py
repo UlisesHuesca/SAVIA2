@@ -1497,7 +1497,7 @@ def render_pdf_gasto(pk):
     c.drawString(280,caja_proveedor-60,'Depositar a:')
     c.drawString(280,caja_proveedor-20,'Cuenta:')
     c.drawString(280,caja_proveedor-40,'Clabe:')
-    c.drawString(280,caja_proveedor-60,'Empresa')
+    c.drawString(280,caja_proveedor-80,'Empresa')
 
 
     
@@ -1518,6 +1518,7 @@ def render_pdf_gasto(pk):
         c.drawString(100,caja_proveedor-100, gasto.approved_at.strftime("%d/%m/%Y"))
     # Segunda Columna del encabezado
     if gasto.colaborador:
+        print(gasto.colaborador)
         c.drawString(350,caja_proveedor-60,gasto.colaborador.staff.staff.first_name+' '+ gasto.colaborador.staff.staff.last_name)
         if gasto.colaborador.staff.cuenta_bancaria:
             c.drawString(350,caja_proveedor-20,str(gasto.colaborador.staff.cuenta_bancaria))
@@ -1531,10 +1532,12 @@ def render_pdf_gasto(pk):
             c.drawString(100,caja_proveedor-80, gasto.colaborador.staff.banco.nombre)
         else:
             c.drawString(100,caja_proveedor-80, "Sin registro")
+        
+    
         if gasto.colaborador.staff.empresa:
-            c.drawString(350,caja_proveedor-60, gasto.colaborador.staff.empresa.nombre)
+            c.drawString(350,caja_proveedor-80, gasto.colaborador.staff.empresa.nombre)
         else:
-            c.drawString(350,caja_proveedor-60, "Sin registro")
+            c.drawString(350,caja_proveedor-80, "Sin registro")
 
     else:
         c.drawString(350,caja_proveedor-60,gasto.staff.staff.staff.first_name+' '+ gasto.staff.staff.staff.last_name)
@@ -1551,9 +1554,9 @@ def render_pdf_gasto(pk):
         else:
             c.drawString(100,caja_proveedor-80, "Sin registro")
         if gasto.staff.staff.empresa:
-            c.drawString(350,caja_proveedor-60,gasto.colaborador.staff.empresa.nombre)
+            c.drawString(350,caja_proveedor-80,gasto.staff.staff.empresa.nombre)
         else:
-            c.drawString(350,caja_proveedor-60, "Sin registro")
+            c.drawString(350,caja_proveedor-80, "Sin registro")
 
     #Create blank list
     data =[]
