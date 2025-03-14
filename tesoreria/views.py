@@ -37,6 +37,7 @@ from PIL import Image
 from django.utils import timezone
 from django.urls import reverse
 import re
+from openpyxl.styles import numbers
 
 from datetime import date, datetime
 import decimal
@@ -893,6 +894,7 @@ def matriz_pagos(request):
             processed_gastos = set()  # Mantén un conjunto de gastos procesados
             processed_viaticos = set()  # Mantén un conjunto de viáticos procesados
             processed_pagos = set()  # Mantén un conjunto de pagos procesados
+            datos_xml_lista = []  # Lista para el resumen en Excel
 
             with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
                 #Se agrgean carpetas generales
@@ -906,7 +908,8 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.archivo_pdf.path)
                         zip_file.write(factura.archivo_pdf.path, os.path.join(folder_name, file_name))
                         zip_file.write(factura.archivo_pdf.path, os.path.join(general_pdfs_folder, file_name)) #Está línea guarda en el zip general de pdf
-
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path))
+                        
                     if factura.archivo_xml:
                         file_name = os.path.basename(factura.archivo_xml.path)
                         zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
@@ -940,7 +943,7 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, file_name))
-
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path))
                     
                     # Incluir la ficha de pago
                     pagos = Pago.objects.filter(oc=factura.oc)
@@ -969,12 +972,15 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, file_name))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path))
 
                     if factura.solicitud_viatico.id not in processed_viaticos:
                         buf = generar_pdf_viatico(factura.solicitud_viatico.id)
                         viatico_file_name = f'VIATICO_{factura.solicitud_viatico.folio}.pdf'
                         zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
                         processed_viaticos.add(factura.solicitud_viatico.id)
+
+                
                     
                     pagos = Pago.objects.filter(viatico=factura.solicitud_viatico)
                     for pago in pagos:
@@ -982,6 +988,26 @@ def matriz_pagos(request):
                             pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
                             processed_pagos.add(pago.id)
+
+                 # Crear archivo Excel con los datos extraídos
+                output = BytesIO()
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Resumen XML"
+
+                columnas = ['Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago', 'Receptor (Empresa) Nombre', 'Archivo']
+                ws.append(columnas)
+
+                for dato in datos_xml_lista:
+                    ws.append([dato[col] for col in columnas])
+
+                # Formatos de Excel
+                for col in ['D']:  # Monto Total Factura
+                    for row in range(2, ws.max_row + 1):
+                        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+
+                wb.save(output)
+                zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
 
             zip_buffer.seek(0)
             response = HttpResponse(zip_buffer, content_type='application/zip')
@@ -1157,6 +1183,36 @@ def extraer_datos_del_complemento(ruta_xml):
 
     return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
 
+
+def extraer_datos_xml_carpetas(xml_file):
+    """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones"""
+    tree = ET.parse(xml_file)
+    root = tree.getroot()
+
+    # Detectar la versión del CFDI
+    version = root.get("Version", "3.3")
+
+    # Definir los espacios de nombres según la versión
+    ns = {'cfdi': f'http://www.sat.gob.mx/cfd/{version[0]}', 'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'}
+
+    emisor = root.find("cfdi:Emisor", ns)
+    receptor = root.find("cfdi:Receptor", ns)
+    complemento = root.find("cfdi:Complemento/tfd:TimbreFiscalDigital", ns)
+
+    fecha_emision = root.get('Fecha', '')
+    fecha_emision_excel = datetime.strptime(fecha_emision, "%Y-%m-%dT%H:%M:%S") if fecha_emision else None
+
+    datos = {
+        'Fecha factura': fecha_emision_excel,
+        'Razón Social': emisor.get('Nombre') if emisor is not None else '',
+        'Folio Fiscal (UUID)': complemento.get('UUID') if complemento is not None else '',
+        'Monto Total Factura': float(root.get('Total', '0')),
+        'Tipo de Moneda': root.get('Moneda', ''),
+        'Forma de pago': root.get('FormaPago', ''),
+        'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
+        'Archivo': os.path.basename(xml_file)
+    }
+    return datos
 
 def generar_archivo_zip(facturas, compra):
     nombre = compra.folio if compra.folio else ''
