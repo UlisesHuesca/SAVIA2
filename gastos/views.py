@@ -197,8 +197,9 @@ def crear_gasto(request):
         gasto.inicio_form = timezone.now()  # Asigna la fecha y hora con zona horaria
         gasto.save()
 
+    
     max_folio = Solicitud_Gasto.objects.filter(distrito = usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-
+    
     
     articulo, created = articulos_gasto.get_or_create(completo = False, staff=usuario)
 
@@ -232,6 +233,8 @@ def crear_gasto(request):
             form = Solicitud_GastoForm(request.POST, instance=gasto)
             if form.is_valid():
                 max_folio = Solicitud_Gasto.objects.filter(distrito = usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+                if max_folio == None:
+                    max_folio = 0
                 gasto = form.save(commit=False)
                 gasto.folio = max_folio + 1
                 gasto.distrito = usuario.distritos
