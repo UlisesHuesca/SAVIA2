@@ -995,7 +995,7 @@ def matriz_pagos(request):
                 ws = wb.active
                 ws.title = "Resumen XML"
 
-                columnas = ['Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago', 'Receptor (Empresa) Nombre', 'Archivo']
+                columnas = ['Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago', 'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento']
                 ws.append(columnas)
 
                 for dato in datos_xml_lista:
@@ -1185,7 +1185,7 @@ def extraer_datos_del_complemento(ruta_xml):
 
 
 def extraer_datos_xml_carpetas(xml_file):
-    """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones"""
+    """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones, incluyendo complementos de pago."""
     tree = ET.parse(xml_file)
     root = tree.getroot()
 
@@ -1193,53 +1193,57 @@ def extraer_datos_xml_carpetas(xml_file):
     version = root.get("Version", "3.3")
 
     # Definir los espacios de nombres según la versión
-    ns = {'cfdi': f'http://www.sat.gob.mx/cfd/{version[0]}', 'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'}
+    ns = {
+        'cfdi': f'http://www.sat.gob.mx/cfd/{version[0]}',
+        'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
+        'pago20': 'http://www.sat.gob.mx/Pagos20'
+    }
 
     emisor = root.find("cfdi:Emisor", ns)
     receptor = root.find("cfdi:Receptor", ns)
     complemento = root.find("cfdi:Complemento/tfd:TimbreFiscalDigital", ns)
+    pagos = root.find("cfdi:Complemento/pago20:Pagos", ns)
 
+    # Verificar si es un complemento de pago
+    es_complemento_pago = pagos is not None
+
+    # Obtener datos generales
     fecha_emision = root.get('Fecha', '')
     fecha_emision_excel = datetime.strptime(fecha_emision, "%Y-%m-%dT%H:%M:%S") if fecha_emision else None
 
+    # Datos específicos para complemento de pago
+    if es_complemento_pago:
+        pago = pagos.find("pago20:Pago", ns)
+        if pago is not None:
+            moneda = pago.get("MonedaP", "")
+            monto_total = float(pago.get("Monto", "0"))
+            forma_pago = pago.get("FormaDePagoP", "")
+        else:
+            moneda = ""
+            monto_total = 0
+            forma_pago = ""
+
+        tipo_documento = "Complemento de Pago"
+    else:
+        moneda = root.get('Moneda', '')
+        monto_total = float(root.get('Total', '0'))
+        forma_pago = root.get('FormaPago', '')
+        tipo_documento = "Factura"
+
     datos = {
+        'Tipo de Documento': tipo_documento,
         'Fecha factura': fecha_emision_excel,
         'Razón Social': emisor.get('Nombre') if emisor is not None else '',
         'Folio Fiscal (UUID)': complemento.get('UUID') if complemento is not None else '',
-        'Monto Total Factura': float(root.get('Total', '0')),
-        'Tipo de Moneda': root.get('Moneda', ''),
-        'Forma de pago': root.get('FormaPago', ''),
+        'Monto Total Factura': monto_total,
+        'Tipo de Moneda': moneda,
+        'Forma de pago': forma_pago,
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
         'Archivo': os.path.basename(xml_file)
     }
+
     return datos
 
-def generar_archivo_zip(facturas, compra):
-    nombre = compra.folio if compra.folio else ''
-    zip_filename = f'facturas_compragasto-{nombre}.zip'
-    
-    # Crear un archivo zip en memoria
-    in_memory_zip = io.BytesIO()
-
-    with zipfile.ZipFile(in_memory_zip, 'w') as zip_file:
-        for factura in facturas:
-            if factura.factura_pdf:
-                pdf_path = factura.factura_pdf.path
-                zip_file.write(pdf_path, os.path.basename(pdf_path))
-            if factura.factura_xml:
-                # Generar el PDFreader
-                response = generar_cfdi(None, factura.id)
-                pdf_filename = f"{factura.id}.pdf" if factura.id else f"factura_{factura.id}.pdf"
-                # Añadir el contenido del PDF al ZIP
-                zip_file.writestr(pdf_filename, response.content)
-                #Añadir el xml
-                xml_path = factura.factura_xml.path
-                zip_file.write(xml_path, os.path.basename(xml_path))
-
-    # Resetear el puntero del archivo en memoria
-    in_memory_zip.seek(0)
-
-    return in_memory_zip, zip_filename
 
 
 @perfil_seleccionado_required
