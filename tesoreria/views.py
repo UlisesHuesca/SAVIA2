@@ -1319,8 +1319,14 @@ def factura_nueva(request, pk):
                 max_len = max(len(archivos_pdf), len(archivos_xml))
                 facturas_registradas = []
                 facturas_duplicadas = []
+                facturas_mes_invalido = []  # Lista para facturas fuera del mes
                 comentario = request.POST.get('comentario', '')  # Extraer el comentario
-                print(comentario)
+                
+                fecha_actual = datetime.today()
+                mes_actual = fecha_actual.month
+                año_actual = fecha_actual.year
+                print(fecha_actual)
+
                 for i in range(max_len):
                     archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
                     archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
@@ -1333,7 +1339,23 @@ def factura_nueva(request, pk):
                         factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
                         uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
+                        if fecha_timbrado_extraida:
+                            try:
+                                # Si la fecha incluye la hora, parsearla correctamente
+                                fecha_timbrado_dt = datetime.strptime(fecha_timbrado_extraida, "%Y-%m-%dT%H:%M:%S")
+                            except ValueError:
+                                print(f"⚠️ Error: Formato de fecha desconocido -> {fecha_timbrado_extraida}")
+                                fecha_timbrado_dt = None
+                        else:
+                            print("⚠️ Advertencia: No se extrajo ninguna fecha de timbrado")
+                            fecha_timbrado_dt = None
+                        mes_factura = fecha_timbrado_dt.month  # Obtener el mes de la factura
+                        año_factura = fecha_timbrado_dt.year  # Obtener el año de la factura
 
+                        # Validar que el mes y el año de la factura sea el mismo que el actual
+                        if mes_factura != mes_actual or año_factura != año_actual:
+                            facturas_mes_invalido.append(uuid_extraido)
+                            continue  # Saltar la factura si no cumple la condición
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
                         facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
@@ -1374,10 +1396,12 @@ def factura_nueva(request, pk):
                     #messages.success(request, 'Los facturas se registraron de manera exitosa')
                      # Mensajes de éxito o duplicados
                 #return HttpResponse(status=204)
-                if facturas_registradas:
-                    messages.success(request, f'Se han registrado las siguientes facturas: {", ".join(facturas_registradas)}')
+                # Mensajes de éxito o advertencias
                 if facturas_duplicadas:
                     messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
+                if facturas_mes_invalido:
+                    messages.error(request, f'Las siguientes facturas no se pudieron registrar porque no corresponden al mes y año actual: {", ".join(facturas_mes_invalido)}')
+                #return HttpResponse(status=204)
 
             else:
                 messages.error(request,'No se pudo subir tu documento')
