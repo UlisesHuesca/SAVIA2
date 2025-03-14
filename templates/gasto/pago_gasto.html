@@ -55,6 +55,7 @@
                         </tr>
                     </thead>
                     <tbody>
+                        
                         <tr>
                             <th scope="col">Banco:</th>
                             <th scope="col">{{pago.gasto.proveedor.banco}}</th>
@@ -75,6 +76,10 @@
                     </thead>
                     <tbody>
                         <tr>
+                            <th>Empresa</th>
+                            <th>{{pago.gasto.colaborador.staff.empresa}}</th>
+                        </tr>
+                        <tr>
                             <th scope="col">Banco:</th>
                             <th scope="col">{{pago.gasto.colaborador.staff.banco}}</th>
                         </tr>
@@ -87,6 +92,11 @@
                             <th scope="col">{{pago.gasto.colaborador.staff.clabe}}</th>
                         </tr>
                         {% else %}
+                            
+                        <tr>
+                            <th>Empresa</th>
+                            <th>{{pago.gasto.staff.staff.empresa}}</th>
+                        </tr>
                         <tr>
                             <th scope="col">Solicitante:</th>
                             <th scope="col">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</th>

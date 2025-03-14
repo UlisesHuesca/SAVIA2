@@ -12,8 +12,8 @@
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
 
-    <div class="col">
-        <div class="card col-md-6 offset-md-3">
+    <div class="col-lg-7 offset-md-3">
+        <div class="card">
             <div class="card card-header">
                 <h3>Editar Perfil: {{custom_user.staff.first_name}} </h3>
             </div>
@@ -35,7 +35,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-6">
+                        <div class="col-lg-6 col-sm-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
@@ -44,7 +44,7 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-6">
+                        <div class="col-lg-6 col-sm-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
@@ -55,7 +55,7 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-6">
+                        <div class="col-lg-6 col-sm-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
@@ -65,7 +65,7 @@
                             </div>
                         </div>
                     
-                        <div class="col-6">
+                        <div class="col-lg-6 col-sm-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
@@ -76,7 +76,16 @@
                         </div>
                     </div>
                     <div class="row">
-                        <div class="col-6">
+                        <div class="col-lg-6 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.empresa|add_class:"form-control"|append_attr:"placeholder=Empresa"}}
+                                <label for="id_lugar_partida">Empresa*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-lg-6 col-sm-12">
                             <div class="mb-3"> 
                                 {{form.image|add_class:"form-control"|append_attr:"placeholder=image"}}
                             </div>

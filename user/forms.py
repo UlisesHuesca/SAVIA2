@@ -8,7 +8,7 @@ class CustomUser_Form(forms.ModelForm):
 
     class Meta:
         model = CustomUser
-        fields = ['banco','cuenta_bancaria','clabe','image','phone','address']
+        fields = ['banco','cuenta_bancaria','clabe','image','phone','address','empresa']
 
 
 #Esta "form" fue creada heredando (inherit) las características de la "UserCreationForm" pero agregándole el "email"
