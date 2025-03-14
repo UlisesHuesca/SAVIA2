@@ -893,15 +893,26 @@ def matriz_pagos(request):
             processed_gastos = set()  # Mantén un conjunto de gastos procesados
             processed_viaticos = set()  # Mantén un conjunto de viáticos procesados
             processed_pagos = set()  # Mantén un conjunto de pagos procesados
+
             with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                #Se agrgean carpetas generales
+                general_pdfs_folder = "GENERAL_PDFs"
+                general_xmls_folder = "GENERAL_XMLs"
+                
+                #Se procesan facturas de gastos
                 for factura in facturas_gastos:
                     folder_name = f'GASTO_{factura.solicitud_gasto.folio}_{factura.solicitud_gasto.distrito.nombre}'
                     if factura.archivo_pdf:   
                         file_name = os.path.basename(factura.archivo_pdf.path)
                         zip_file.write(factura.archivo_pdf.path, os.path.join(folder_name, file_name))
+                        zip_file.write(factura.archivo_pdf.path, os.path.join(general_pdfs_folder, file_name)) #Está línea guarda en el zip general de pdf
+
                     if factura.archivo_xml:
                         file_name = os.path.basename(factura.archivo_xml.path)
                         zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
+                        zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, file_name)) #Está línea guarda en el zip general de xml's
+
+
                     if factura.solicitud_gasto.id not in processed_gastos:
                         buf = render_pdf_gasto(factura.solicitud_gasto.id)
                         gasto_file_name = f'GASTO_{factura.solicitud_gasto.folio}.pdf'
@@ -914,16 +925,22 @@ def matriz_pagos(request):
                             pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
                             processed_pagos.add(pago.id)
-                   
+                
+                #Se procesan facturas de compras
                 for factura in facturas_compras:
                     folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
                     if factura.factura_pdf:
                         #folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
                         file_name = os.path.basename(factura.factura_pdf.path)
                         zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
+                        zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, file_name))
+
+
                     if factura.factura_xml:
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
+                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, file_name))
+
                     
                     # Incluir la ficha de pago
                     pagos = Pago.objects.filter(oc=factura.oc)
@@ -946,9 +963,13 @@ def matriz_pagos(request):
                     if factura.factura_pdf:
                         file_name = os.path.basename(factura.factura_pdf.path)
                         zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
+                        zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, file_name))
+
                     if factura.factura_xml:
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
+                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, file_name))
+
                     if factura.solicitud_viatico.id not in processed_viaticos:
                         buf = generar_pdf_viatico(factura.solicitud_viatico.id)
                         viatico_file_name = f'VIATICO_{factura.solicitud_viatico.folio}.pdf'
