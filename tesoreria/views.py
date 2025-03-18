@@ -2569,18 +2569,11 @@ def mass_payment_view(request):
 # Si necesitas pasar las IDs como parte del contexto a un nuevo template puedes hacerlo así:
 def layout_pagos(request):
     compras_ids = request.session.get('compras_ids', [])
-    #print(compras_ids)
-    # Se asegura de que los IDs sean enteros
-      
-    
-    # Se asegura de que los IDs sean enteros
     compras_ids = [int(id) for id in compras_ids if str(id).isdigit()]
-    #print(compras_ids)
     compras = Compra.objects.filter(id__in=compras_ids)
-    cuentas_disponibles = Cuenta.objects.filter()
+    cuentas_disponibles = Cuenta.objects.all()
 
     if request.method == 'POST':
-        # Crear la estructura XML
         root = ET.Element('Document', {
             'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
             'xmlns': 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03'
@@ -2588,16 +2581,16 @@ def layout_pagos(request):
 
         cstmr_cdt_trf_initn = ET.SubElement(root, 'CstmrCdtTrfInitn')
         grp_hdr = ET.SubElement(cstmr_cdt_trf_initn, 'GrpHdr')
-
-        ET.SubElement(grp_hdr, 'MsgId').text = 'AUTO' + now().strftime('%Y%m%d%H%M%S')
-        ET.SubElement(grp_hdr, 'CreDtTm').text = now().isoformat()
+        now_local = datetime.now()
+        ET.SubElement(grp_hdr, 'MsgId').text = 'AUTO' +  now_local.strftime('%Y%m%d%H%M%S')
+        ET.SubElement(grp_hdr, 'CreDtTm').text = now_local.isoformat()
         ET.SubElement(grp_hdr, 'NbOfTxs').text = str(len(compras))
 
         initg_pty = ET.SubElement(grp_hdr, 'InitgPty')
         id_ = ET.SubElement(initg_pty, 'Id')
         org_id = ET.SubElement(id_, 'OrgId')
         othr = ET.SubElement(org_id, 'Othr')
-        ET.SubElement(othr, 'Id').text = 'TUCLAVEINTERBANCARIA'  # Ajusta tu identificador
+        ET.SubElement(othr, 'Id').text = 'TUCLAVEINTERBANCARIA'
 
         for count, compra in enumerate(compras, start=1):
             cuenta_pago_id = request.POST.get(f'cuenta_{count}')
@@ -2612,19 +2605,23 @@ def layout_pagos(request):
             svc_lvl = ET.SubElement(pmt_tp_inf, 'SvcLvl')
             ET.SubElement(svc_lvl, 'Cd').text = 'URGP'
 
-            ET.SubElement(pmt_inf, 'ReqdExctnDt').text = now().strftime('%Y-%m-%d')
+            ET.SubElement(pmt_inf, 'ReqdExctnDt').text = now_local.strftime('%Y-%m-%d')
 
             dbtr = ET.SubElement(pmt_inf, 'Dbtr')
             dbtr_id = ET.SubElement(dbtr, 'Id')
             dbtr_org_id = ET.SubElement(dbtr_id, 'OrgId')
             dbtr_othr = ET.SubElement(dbtr_org_id, 'Othr')
-            ET.SubElement(dbtr_othr, 'Id').text = 'EMPRESACLIENTE'  # Ajusta tu ID
+            ET.SubElement(dbtr_othr, 'Id').text = 'EMPRESACLIENTE'
 
             dbtr_acct = ET.SubElement(pmt_inf, 'DbtrAcct')
             dbtr_acct_id = ET.SubElement(dbtr_acct, 'Id')
             dbtr_acct_othr = ET.SubElement(dbtr_acct_id, 'Othr')
             ET.SubElement(dbtr_acct_othr, 'Id').text = str(cuenta_pago.cuenta)
             ET.SubElement(dbtr_acct, 'Ccy').text = compra.moneda.nombre
+
+            dbtr_agt = ET.SubElement(pmt_inf, 'DbtrAgt')
+            fin_instn_id = ET.SubElement(dbtr_agt, 'FinInstnId')
+            ET.SubElement(fin_instn_id, 'BIC').text = 'BCMRMXMM'
 
             cdt_trf_tx_inf = ET.SubElement(pmt_inf, 'CdtTrfTxInf')
 
@@ -2638,8 +2635,18 @@ def layout_pagos(request):
 
             ET.SubElement(cdt_trf_tx_inf, 'ChrgBr').text = 'DEBT'
 
+            cdtr_agt = ET.SubElement(cdt_trf_tx_inf, 'CdtrAgt')
+            fin_instn_id_cdtr = ET.SubElement(cdtr_agt, 'FinInstnId')
+            bic_banco_receptor = compra.proveedor.banco.bic if compra.proveedor.banco.bic else 'BICDESCONOCIDO'
+            ET.SubElement(fin_instn_id_cdtr, 'BIC').text = bic_banco_receptor
+
             cdtr = ET.SubElement(cdt_trf_tx_inf, 'Cdtr')
-            ET.SubElement(cdtr, 'Nm').text = compra.proveedor.nombre.razon_social
+            ET.SubElement(cdtr, 'Nm').text = compra.proveedor.nombre.rfc
+
+            cdtr_id = ET.SubElement(cdtr, 'Id')
+            cdtr_org_id = ET.SubElement(cdtr_id, 'OrgId')
+            cdtr_othr = ET.SubElement(cdtr_org_id, 'Othr')
+            ET.SubElement(cdtr_othr, 'Id').text = compra.proveedor.nombre.rfc
 
             cdtr_acct = ET.SubElement(cdt_trf_tx_inf, 'CdtrAcct')
             cdtr_acct_id = ET.SubElement(cdtr_acct, 'Id')
@@ -2653,7 +2660,6 @@ def layout_pagos(request):
         response = HttpResponse(xml_bytes, content_type='application/xml')
         response['Content-Disposition'] = 'attachment; filename="pagos.xml"'
         return response
-       
 
     context = {
         'compras': compras,

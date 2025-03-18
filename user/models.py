@@ -10,6 +10,7 @@ class Pais(models.Model):
 
 class Banco(models.Model):
     nombre = models.CharField(max_length=50, null=True)
+    bic = models.CharField(max_length=11, null=True, blank=True, help_text="Código BIC de 8 u 11 caracteres")
 
     def __str__(self):
         return f'{self.nombre}'

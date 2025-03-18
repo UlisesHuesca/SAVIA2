@@ -17,6 +17,9 @@ class CustomUserAdmin(admin.ModelAdmin):
 class DistritoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre')
 
+
+class BancoAdmin(admin.ModelAdmin):
+    list_display = ('nombre', 'bic')
 #class UserAdmin(admin.ModelAdmin):
 #    list_display = ('id', 'username', 'email', 'first_name', 'last_name', 'is_staff', 'is_active')
 #    search_fields = ('first_name','email')
@@ -31,7 +34,7 @@ admin.site.register(Distrito, DistritoAdmin)
 
 admin.site.register(Tipo_perfil)
 
-admin.site.register(Banco)
+admin.site.register(Banco, BancoAdmin)
 
 admin.site.register(Almacen)
 

@@ -91,10 +91,12 @@ def eliminar_caracteres_invalidos(archivo_xml):
     # Retornar el archivo con el contenido modificado
     return archivo_xml
 
-def extraer_datos_del_xml(ruta_xml):
+def extraer_datos_del_xml(archivo_xml):
+    
     try:
         # Parsear el archivo XML
-        tree = ET.parse(ruta_xml)
+        archivo_xml.seek(0)
+        tree = ET.parse(archivo_xml)
         root = tree.getroot()
     except (ET.ParseError, FileNotFoundError) as e:
         print(f"Error al parsear el archivo XML: {e}")
@@ -279,10 +281,10 @@ def crear_gasto(request):
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                         
-                        factura_temp = Factura(archivo_xml=archivo_xml)
-                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                        #factura_temp = Factura(archivo_xml=archivo_xml)
+                        #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_procesado)
 
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
@@ -571,10 +573,10 @@ def factura_nueva_gasto(request, pk):
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
 
                         # Guardar temporalmente para extraer datos
-                        factura_temp = Factura(archivo_xml=archivo_xml)
-                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                        #factura_temp = Factura(archivo_xml=archivo_xml)
+                        #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_procesado)
 
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
