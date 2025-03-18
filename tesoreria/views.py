@@ -1247,7 +1247,32 @@ def extraer_datos_xml_carpetas(xml_file, distrito):
 
     return datos
 
+def generar_archivo_zip(facturas, compra):
+    nombre = compra.folio if compra.folio else ''
+    zip_filename = f'facturas_compragasto-{nombre}.zip'
+    
+    # Crear un archivo zip en memoria
+    in_memory_zip = io.BytesIO()
 
+    with zipfile.ZipFile(in_memory_zip, 'w') as zip_file:
+        for factura in facturas:
+            if factura.factura_pdf:
+                pdf_path = factura.factura_pdf.path
+                zip_file.write(pdf_path, os.path.basename(pdf_path))
+            if factura.factura_xml:
+                # Generar el PDFreader
+                response = generar_cfdi(None, factura.id)
+                pdf_filename = f"{factura.id}.pdf" if factura.id else f"factura_{factura.id}.pdf"
+                # Añadir el contenido del PDF al ZIP
+                zip_file.writestr(pdf_filename, response.content)
+                #Añadir el xml
+                xml_path = factura.factura_xml.path
+                zip_file.write(xml_path, os.path.basename(xml_path))
+
+    # Resetear el puntero del archivo en memoria
+    in_memory_zip.seek(0)
+
+    return in_memory_zip, zip_filename
 
 @perfil_seleccionado_required
 def matriz_facturas_nomodal(request, pk):
@@ -2555,49 +2580,80 @@ def layout_pagos(request):
     cuentas_disponibles = Cuenta.objects.filter()
 
     if request.method == 'POST':
-        # Asumimos que este POST es para generar el archivo TXT
-        # Puedes validar el formulario aquí si es necesario
-        
-        
-            # Construyes el contenido del archivo TXT con la información de compras y el formulario
-        if request.method == 'POST':
-            lineas = []
+        # Crear la estructura XML
+        root = ET.Element('Document', {
+            'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+            'xmlns': 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03'
+        })
 
-            for count, compra in enumerate(compras, start=1):
-                # Obtiene el ID de la cuenta de pago de la fila actual
-                cuenta_pago_id = request.POST.get(f'cuenta_{count}')
-                # Obtiene el monto de la fila actual, asegurándose de incluir el índice
-                monto_str = request.POST.get(f'monto_{count}', '0')
+        cstmr_cdt_trf_initn = ET.SubElement(root, 'CstmrCdtTrfInitn')
+        grp_hdr = ET.SubElement(cstmr_cdt_trf_initn, 'GrpHdr')
 
-                if monto_str is None or monto_str.strip() == '':
-                    # Maneja el caso de un monto vacío o ausente
-                    monto_formateado = "Valor requerido"
-                else:
-                    # Convierte el monto a float y lo formatea
-                    monto = float(monto_str)
-                    monto_formateado = "{:015.2f}".format(monto)
+        ET.SubElement(grp_hdr, 'MsgId').text = 'AUTO' + now().strftime('%Y%m%d%H%M%S')
+        ET.SubElement(grp_hdr, 'CreDtTm').text = now().isoformat()
+        ET.SubElement(grp_hdr, 'NbOfTxs').text = str(len(compras))
 
-                # Aquí, obtienes la cuenta de pago usando el ID y la formateas
-                cuenta_pago = cuentas_disponibles.get(id=cuenta_pago_id)
-                str_cuenta = str(cuenta_pago.cuenta).zfill(18)
+        initg_pty = ET.SubElement(grp_hdr, 'InitgPty')
+        id_ = ET.SubElement(initg_pty, 'Id')
+        org_id = ET.SubElement(id_, 'OrgId')
+        othr = ET.SubElement(org_id, 'Othr')
+        ET.SubElement(othr, 'Id').text = 'TUCLAVEINTERBANCARIA'  # Ajusta tu identificador
 
-                divisa = 'USD' if compra.moneda.nombre == 'DOLARES' else 'MXP'
+        for count, compra in enumerate(compras, start=1):
+            cuenta_pago_id = request.POST.get(f'cuenta_{count}')
+            monto = float(request.POST.get(f'monto_{count}', '0'))
+            cuenta_pago = cuentas_disponibles.get(id=cuenta_pago_id)
 
-                # Construye cada línea del archivo TXT
-                banco = 'PTC' if compra.proveedor.banco.nombre == "BBVA" else 'PSC'
-                cuenta = str(compra.proveedor.cuenta).zfill(18)
-                motivo_pago = '-' + str(compra.folio) + '-'
-                titular = compra.proveedor.nombre.razon_social
-                linea = f"{banco}{cuenta}{str_cuenta}{divisa}{monto_formateado}{motivo_pago}{titular}\n"
-                lineas.append(linea)
-            
-            # Genera la respuesta HTTP con el contenido del archivo TXT
-            response = HttpResponse(lineas, content_type='text/plain')
-            response['Content-Disposition'] = 'attachment; filename="pagos.txt"'
-            return response
-        else:
-            # Si el formulario no es válido, puedes manejar los errores aquí
-            pass
+            pmt_inf = ET.SubElement(cstmr_cdt_trf_initn, 'PmtInf')
+            ET.SubElement(pmt_inf, 'PmtInfId').text = f'Pmt-{compra.id}'
+            ET.SubElement(pmt_inf, 'PmtMtd').text = 'TRF'
+
+            pmt_tp_inf = ET.SubElement(pmt_inf, 'PmtTpInf')
+            svc_lvl = ET.SubElement(pmt_tp_inf, 'SvcLvl')
+            ET.SubElement(svc_lvl, 'Cd').text = 'URGP'
+
+            ET.SubElement(pmt_inf, 'ReqdExctnDt').text = now().strftime('%Y-%m-%d')
+
+            dbtr = ET.SubElement(pmt_inf, 'Dbtr')
+            dbtr_id = ET.SubElement(dbtr, 'Id')
+            dbtr_org_id = ET.SubElement(dbtr_id, 'OrgId')
+            dbtr_othr = ET.SubElement(dbtr_org_id, 'Othr')
+            ET.SubElement(dbtr_othr, 'Id').text = 'EMPRESACLIENTE'  # Ajusta tu ID
+
+            dbtr_acct = ET.SubElement(pmt_inf, 'DbtrAcct')
+            dbtr_acct_id = ET.SubElement(dbtr_acct, 'Id')
+            dbtr_acct_othr = ET.SubElement(dbtr_acct_id, 'Othr')
+            ET.SubElement(dbtr_acct_othr, 'Id').text = str(cuenta_pago.cuenta)
+            ET.SubElement(dbtr_acct, 'Ccy').text = compra.moneda.nombre
+
+            cdt_trf_tx_inf = ET.SubElement(pmt_inf, 'CdtTrfTxInf')
+
+            pmt_id = ET.SubElement(cdt_trf_tx_inf, 'PmtId')
+            instr_id = f'INST-{compra.id}'
+            ET.SubElement(pmt_id, 'InstrId').text = instr_id
+            ET.SubElement(pmt_id, 'EndToEndId').text = instr_id
+
+            amt = ET.SubElement(cdt_trf_tx_inf, 'Amt')
+            ET.SubElement(amt, 'InstdAmt', Ccy=compra.moneda.nombre).text = f"{monto:.2f}"
+
+            ET.SubElement(cdt_trf_tx_inf, 'ChrgBr').text = 'DEBT'
+
+            cdtr = ET.SubElement(cdt_trf_tx_inf, 'Cdtr')
+            ET.SubElement(cdtr, 'Nm').text = compra.proveedor.nombre.razon_social
+
+            cdtr_acct = ET.SubElement(cdt_trf_tx_inf, 'CdtrAcct')
+            cdtr_acct_id = ET.SubElement(cdtr_acct, 'Id')
+            cdtr_acct_othr = ET.SubElement(cdtr_acct_id, 'Othr')
+            ET.SubElement(cdtr_acct_othr, 'Id').text = str(compra.proveedor.cuenta)
+
+            rmt_inf = ET.SubElement(cdt_trf_tx_inf, 'RmtInf')
+            ET.SubElement(rmt_inf, 'Ustrd').text = f"F-{compra.folio}"
+
+        xml_bytes = ET.tostring(root, encoding='utf-8', method='xml')
+        response = HttpResponse(xml_bytes, content_type='application/xml')
+        response['Content-Disposition'] = 'attachment; filename="pagos.xml"'
+        return response
+       
 
     context = {
         'compras': compras,
