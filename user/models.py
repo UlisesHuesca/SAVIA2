@@ -17,6 +17,7 @@ class Banco(models.Model):
 
 class Empresa(models.Model):
     nombre = models.CharField(max_length=30, null=True, blank=True)
+    rfc = models.CharField(max_length=14, null=True, unique=True)
 
     def __str__(self):
         return f'{self.nombre}'
@@ -77,6 +78,8 @@ class Tipo_perfil(models.Model):
     dg = models.BooleanField(default=False)
     rh = models.BooleanField(default = False)
     proveedor_externo = models.BooleanField(default = False)
+    proyectos =  models.BooleanField(default = False)
+    productos = models.BooleanField(default = False)
     def __str__(self):
         return f'{self.nombre}'
 

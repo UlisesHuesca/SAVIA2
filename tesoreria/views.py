@@ -2590,12 +2590,16 @@ def layout_pagos(request):
         id_ = ET.SubElement(initg_pty, 'Id')
         org_id = ET.SubElement(id_, 'OrgId')
         othr = ET.SubElement(org_id, 'Othr')
-        ET.SubElement(othr, 'Id').text = 'TUCLAVEINTERBANCARIA'
-
+        
+        
         for count, compra in enumerate(compras, start=1):
             cuenta_pago_id = request.POST.get(f'cuenta_{count}')
-            monto = float(request.POST.get(f'monto_{count}', '0'))
             cuenta_pago = cuentas_disponibles.get(id=cuenta_pago_id)
+
+            ET.SubElement(othr, 'Id').text = cuenta_pago.clabe
+           
+            monto = float(request.POST.get(f'monto_{count}', '0'))
+            
 
             pmt_inf = ET.SubElement(cstmr_cdt_trf_initn, 'PmtInf')
             ET.SubElement(pmt_inf, 'PmtInfId').text = f'Pmt-{compra.id}'
@@ -2611,7 +2615,7 @@ def layout_pagos(request):
             dbtr_id = ET.SubElement(dbtr, 'Id')
             dbtr_org_id = ET.SubElement(dbtr_id, 'OrgId')
             dbtr_othr = ET.SubElement(dbtr_org_id, 'Othr')
-            ET.SubElement(dbtr_othr, 'Id').text = 'EMPRESACLIENTE'
+            ET.SubElement(dbtr_othr, 'Id').text = cuenta_pago.empresa.rfc
 
             dbtr_acct = ET.SubElement(pmt_inf, 'DbtrAcct')
             dbtr_acct_id = ET.SubElement(dbtr_acct, 'Id')
