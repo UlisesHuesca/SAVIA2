@@ -1104,10 +1104,11 @@ def eliminar_caracteres_invalidos(archivo_xml):
     # Retornar el archivo con el contenido modificado
     return archivo_xml
 
-def extraer_datos_del_xml(ruta_xml):
+def extraer_datos_del_xml(archivo_xml):
     try:
         # Parsear el archivo XML
-        tree = ET.parse(ruta_xml)
+        archivo_xml.seek(0)
+        tree = ET.parse(archivo_xml)
         root = tree.getroot()
     except (ET.ParseError, FileNotFoundError) as e:
         print(f"Error al parsear el archivo XML: {e}")
@@ -1394,8 +1395,8 @@ def matriz_complementos(request, pk):
 
 
 
-def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario):
-    factura.factura_xml = archivo_xml
+def guardar_factura(factura, archivo_procesado, nombre_archivo,  uuid_extraido, fecha_timbrado_extraida, usuario, comentario):
+    factura.factura_xml.save(nombre_archivo, archivo_procesado)
     factura.uuid = uuid_extraido
     factura.fecha_timbrado = fecha_timbrado_extraida
     factura.hecho = True
@@ -1444,10 +1445,10 @@ def factura_nueva(request, pk):
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
 
                         # Guardar temporalmente para extraer datos
-                        factura_temp = Factura(archivo_xml=archivo_xml)
-                        factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                        #factura_temp = Factura(archivo_xml=archivo_xml)
+                        #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.archivo_xml.path)
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_procesado)
                         if fecha_timbrado_extraida:
                             try:
                                 # Si la fecha incluye la hora, parsearla correctamente
@@ -1474,15 +1475,15 @@ def factura_nueva(request, pk):
                             # Si una factura existente se encuentra, verificamos si su solicitud no está aprobada
                             if factura_existente and (factura_existente.solicitud_gasto.autorizar is False or factura_existente.solicitud_gasto.autorizar2 is False):
                                 factura_existente.delete()
-                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+                                guardar_factura(factura, archivo_procesado, archivo_xml.name, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
 
                             elif facturas_existentes and (facturas_existentes.oc.autorizado1 is False or facturas_existentes.oc.autorizado2 is False):
                                 facturas_existentes.delete()
-                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+                                guardar_factura(factura, archivo_procesado, archivo_xml.name, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
 
                             elif viaticos_factura_existente and (viaticos_factura_existente.solicitud_viatico.autorizar is False or viaticos_factura_existente.solicitud_viatico.autorizar2 is False):
                                 viaticos_factura_existente.delete()
-                                guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+                                guardar_factura(factura, archivo_procesado, archivo_xml.name, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
 
                             else:
                                 # Si no cumple las condiciones de eliminación, consideramos la factura duplicada
@@ -1490,7 +1491,7 @@ def factura_nueva(request, pk):
                                 continue  # Saltar al siguiente archivo si se encuentra duplicado
                         else:
                             # Si no existe ninguna factura, guardar la nueva
-                            guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
+                            guardar_factura(factura, archivo_procesado, archivo_xml.name, uuid_extraido, fecha_timbrado_extraida, usuario, comentario)
                             #messages.success(request, 'Las facturas se registraron de manera exitosa')
                     if archivo_pdf:
                         factura.factura_pdf = archivo_pdf
