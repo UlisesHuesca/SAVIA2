@@ -68,7 +68,7 @@ class Solicitud_Viatico(models.Model):
         return f'{self.folio}'
 
 class Puntos_Intermedios(models.Model):
-    solicitud = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True)
+    solicitud = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True, related_name= "puntos")
     nombre = models.CharField(max_length=40)
     comentario_hospedaje = models.TextField(null=True) 
     fecha_inicio = models.DateField(null=True)

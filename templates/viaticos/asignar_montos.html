@@ -135,6 +135,19 @@
                     {% endif %}
                     </tbody> 
                 </table>
+                <h3>Puntos intermedios</h3>
+                <ul>
+                {% for punto in viatico.puntos.all %}
+                    <li>
+                        <strong>{{ punto.nombre }}</strong>  
+                        <br>Fecha inicio: {{ punto.fecha_inicio }}  
+                        <br>Fecha fin: {{ punto.fecha_fin }}  
+                        <br>Hospedaje: {{ punto.comentario_hospedaje }}  
+                    </li>
+                {% empty %}
+                    <li>No hay puntos intermedios registrados.</li>
+                {% endfor %}
+                </ul>
                 <form method="post">
                     {% csrf_token %}
                 <input class="btn btn-outline-info btn-lg btn-block my-2" name="btn_asignar" id="btn_asignar" type="submit" value="Asignar"> 
