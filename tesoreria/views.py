@@ -1463,9 +1463,10 @@ def factura_nueva(request, pk):
                         año_factura = fecha_timbrado_dt.year  # Obtener el año de la factura
 
                         # Validar que el mes y el año de la factura sea el mismo que el actual
-                        if mes_factura != mes_actual or año_factura != año_actual:
-                            facturas_mes_invalido.append(uuid_extraido)
-                            continue  # Saltar la factura si no cumple la condición
+                        # Se quita por el momento la restricción del mes
+                        #if mes_factura != mes_actual or año_factura != año_actual:
+                        #    facturas_mes_invalido.append(uuid_extraido)
+                        #    continue  # Saltar la factura si no cumple la condición
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
                         facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
