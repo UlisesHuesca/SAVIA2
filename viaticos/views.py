@@ -842,8 +842,8 @@ def facturas_viaticos(request, pk):
 
     return render(request, 'viaticos/matriz_facturas.html', context)
 
-def guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario):
-    factura.factura_xml = archivo_xml
+def guardar_factura(factura, archivo_procesado, nombre_archivo, uuid_extraido, fecha_timbrado_extraida, usuario):
+    factura.factura_xml.save(nombre_archivo, archivo_procesado)
     factura.uuid = uuid_extraido
     factura.fecha_timbrado = fecha_timbrado_extraida
     factura.hecho = True
@@ -887,10 +887,10 @@ def factura_nueva_viatico(request, pk):
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
 
                         # Guardar temporalmente para extraer datos
-                        factura_temp = Viaticos_Factura(factura_xml=archivo_xml)
-                        factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
-                        print(factura_temp)
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(factura_temp.factura_xml.path)
+                        #factura_temp = Viaticos_Factura(factura_xml=archivo_xml)
+                        #factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                        #print(factura_temp)
+                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_xml)
 
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
@@ -917,7 +917,7 @@ def factura_nueva_viatico(request, pk):
                                 continue  # Saltar al siguiente archivo si se encuentra duplicado
                         else:
                             # Si no existe ninguna factura, guardar la nueva
-                            guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
+                            guardar_factura(factura, archivo_procesado, archivo_xml.name, uuid_extraido, fecha_timbrado_extraida, usuario)
                             #messages.success(request, 'Las facturas se registraron de manera exitosa')
                     if archivo_pdf:
                         factura.factura_pdf = archivo_pdf
