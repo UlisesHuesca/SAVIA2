@@ -260,6 +260,9 @@ def crear_gasto(request):
                 articulo.save()
                 messages.success(request, 'Haz agregado un artículo correctamente')
                 return redirect('crear-gasto')
+            else:
+                for field, errors in form_product.errors.items():
+                    error_messages[f'Líneas de Gasto| Campo:{field}'] = errors.as_text()
         if "btn_factura" in request.POST:
             factura_form = UploadFileForm(request.POST, request.FILES or None)
             if factura_form.is_valid():
