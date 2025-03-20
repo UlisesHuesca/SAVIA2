@@ -901,6 +901,13 @@ def cierre_nc(request, pk):
                 producto.cantidad_pendiente = producto.cantidad_pendiente - articulos_nc.cantidad
                 oc.save()
                 producto.save()
+            else:
+                oc.entrada_completa = False
+                oc.pagada = False
+                oc.save()
+                producto.entrada_completa = False
+                producto.cantidad_pendiente = producto.cantidad_pendiente - articulos_nc.cantidad
+                producto.save()
 
             return redirect('matriz-nc')
 
