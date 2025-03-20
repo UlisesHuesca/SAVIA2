@@ -88,10 +88,11 @@ def eliminar_caracteres_invalidos(archivo_xml):
     # Retornar el archivo con el contenido modificado
     return archivo_xml
 
-def extraer_datos_del_xml(ruta_xml):
+def extraer_datos_del_xml(archivo_xml):
     try:
         # Parsear el archivo XML
-        tree = ET.parse(ruta_xml)
+        archivo_xml.seek(0)
+        tree = ET.parse(archivo_xml)
         root = tree.getroot()
     except (ET.ParseError, FileNotFoundError) as e:
         print(f"Error al parsear el archivo XML: {e}")
