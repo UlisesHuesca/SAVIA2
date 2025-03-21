@@ -940,17 +940,17 @@ def matriz_pagos(request):
 
                             fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
                             titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
-                            importe_operacion = variables_pago.get('importe_operacion', '').replace('.', '').replace(',', '')
+                            importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
                              # Validamos si todas las variables son válidas:
                             if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'PAGO_{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                                pago_file_name = f'{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
                             else:
                                 # Si no, conservamos el nombre original
                                 pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             
                             #pago_file_name = os.path.basename(pago.comprobante_pago.path)
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
+                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
                             processed_pagos.add(pago.id)
                 
                 #Se procesan facturas de compras
@@ -988,15 +988,16 @@ def matriz_pagos(request):
 
                             fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
                             titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
-                            importe_operacion = variables_pago.get('importe_operacion', '').replace('.', '').replace(',', '')
+                            importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
+
 
                             if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'PAGO_{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                                pago_file_name = f'{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
                             else:
                                 pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             #pago_file_name = os.path.basename(pago.comprobante_pago.path)
 
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
+                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
                             processed_pagos.add(pago.id)
                     
                     # Generar e incluir la OC en el ZIP solo si no ha sido procesada
@@ -1047,15 +1048,15 @@ def matriz_pagos(request):
 
                             fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
                             titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
-                            importe_operacion = variables_pago.get('importe_operacion', '').replace('.', '').replace(',', '')
+                            importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
                             if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'PAGO_{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                                pago_file_name = f'{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
                             else:
                                 pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             
                             #pago_file_name = os.path.basename(pago.comprobante_pago.path)
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
+                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
                             processed_pagos.add(pago.id)
 
                  # Crear archivo Excel con los datos extraídos
