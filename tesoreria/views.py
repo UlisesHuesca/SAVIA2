@@ -2653,12 +2653,21 @@ def layout_pagos(request):
             ET.SubElement(fin_instn_id_cdtr, 'BIC').text = bic_banco_receptor
 
             cdtr = ET.SubElement(cdt_trf_tx_inf, 'Cdtr')
-            ET.SubElement(cdtr, 'Nm').text = compra.proveedor.nombre.rfc
+            ET.SubElement(cdtr, 'Nm').text = compra.proveedor.nombre.razon_social
+
+            PstlAdr = ET.SubElement(cdtr,'PstlAdr')
+            ET.SubElement(PstlAdr, 'StrtNm').text = compra.proveedor.domicilio
+            ET.SubElement(PstlAdr, 'TwnNm').text = compra.proveedor.estado
+            if compra.proveedor.nombre.extranjero == False:
+                ET.SubElement(PstlAdr, 'Ctry').text = 'MX'
+            else:
+                ET.SubElement(PstlAdr, 'Ctry').text = 'EX'
 
             cdtr_id = ET.SubElement(cdtr, 'Id')
             cdtr_org_id = ET.SubElement(cdtr_id, 'OrgId')
             cdtr_othr = ET.SubElement(cdtr_org_id, 'Othr')
             ET.SubElement(cdtr_othr, 'Id').text = compra.proveedor.nombre.rfc
+
 
             cdtr_acct = ET.SubElement(cdt_trf_tx_inf, 'CdtrAcct')
             cdtr_acct_id = ET.SubElement(cdtr_acct, 'Id')
