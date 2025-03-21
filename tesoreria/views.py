@@ -2596,13 +2596,13 @@ def layout_pagos(request):
         id_ = ET.SubElement(initg_pty, 'Id')
         org_id = ET.SubElement(id_, 'OrgId')
         othr = ET.SubElement(org_id, 'Othr')
-        
+        ET.SubElement(othr, 'Id').text = 'VORDCA00H2H'
         
         for count, compra in enumerate(compras, start=1):
             cuenta_pago_id = request.POST.get(f'cuenta_{count}')
             cuenta_pago = cuentas_disponibles.get(id=cuenta_pago_id)
 
-            ET.SubElement(othr, 'Id').text = cuenta_pago.clabe
+            
            
             monto = float(request.POST.get(f'monto_{count}', '0'))
             
@@ -2621,7 +2621,7 @@ def layout_pagos(request):
             dbtr_id = ET.SubElement(dbtr, 'Id')
             dbtr_org_id = ET.SubElement(dbtr_id, 'OrgId')
             dbtr_othr = ET.SubElement(dbtr_org_id, 'Othr')
-            ET.SubElement(dbtr_othr, 'Id').text = cuenta_pago.empresa.rfc
+            ET.SubElement(dbtr_othr, 'Id').text = '123456789'
 
             dbtr_acct = ET.SubElement(pmt_inf, 'DbtrAcct')
             dbtr_acct_id = ET.SubElement(dbtr_acct, 'Id')
@@ -2641,6 +2641,8 @@ def layout_pagos(request):
             ET.SubElement(pmt_id, 'EndToEndId').text = instr_id
 
             amt = ET.SubElement(cdt_trf_tx_inf, 'Amt')
+            if compra.moneda.nombre == "PESOS":
+                moneda = "MXN"
             ET.SubElement(amt, 'InstdAmt', Ccy=compra.moneda.nombre).text = f"{monto:.2f}"
 
             ET.SubElement(cdt_trf_tx_inf, 'ChrgBr').text = 'DEBT'

@@ -674,7 +674,7 @@
                                                 {% endif %}
                                             {% endfor %}
                                             {% if documentos_count.otros > documentos_validados_count.otros %}
-                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de Cumplimiento 32D" hx-target="#document" hx-get="{% url 'edit-calidad' proveedor.id %}">
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento" hx-target="#document" hx-get="{% url 'edit-otros' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
                                             {% endif %}
