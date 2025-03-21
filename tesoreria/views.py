@@ -27,7 +27,7 @@ from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
 from user.models import Profile
-from .utils import extraer_texto_de_pdf, encontrar_variables
+from .utils import extraer_texto_de_pdf, encontrar_variables, extraer_texto_pdf_prop
 import pytz  # Si estás utilizando pytz para manejar zonas horarias
 from io import BytesIO
 from num2words import num2words
@@ -935,7 +935,21 @@ def matriz_pagos(request):
                     pagos = Pago.objects.filter(gasto=factura.solicitud_gasto)
                     for pago in pagos:
                         if pago.comprobante_pago and pago.id not in processed_pagos:
-                            pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
+                            variables_pago = encontrar_variables(texto_pago)
+
+                            fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
+                            importe_operacion = variables_pago.get('importe_operacion', '').replace('.', '').replace(',', '')
+
+                             # Validamos si todas las variables son válidas:
+                            if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
+                                pago_file_name = f'PAGO_{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                            else:
+                                # Si no, conservamos el nombre original
+                                pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            
+                            #pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
                             processed_pagos.add(pago.id)
                 
@@ -969,7 +983,19 @@ def matriz_pagos(request):
                     pagos = Pago.objects.filter(oc=factura.oc)
                     for pago in pagos:
                         if pago.comprobante_pago and pago.id not in processed_pagos:
-                            pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
+                            variables_pago = encontrar_variables(texto_pago)
+
+                            fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
+                            importe_operacion = variables_pago.get('importe_operacion', '').replace('.', '').replace(',', '')
+
+                            if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
+                                pago_file_name = f'PAGO_{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                            else:
+                                pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            #pago_file_name = os.path.basename(pago.comprobante_pago.path)
+
                             zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
                             processed_pagos.add(pago.id)
                     
@@ -1016,7 +1042,19 @@ def matriz_pagos(request):
                     pagos = Pago.objects.filter(viatico=factura.solicitud_viatico)
                     for pago in pagos:
                         if pago.comprobante_pago and pago.id not in processed_pagos:
-                            pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
+                            variables_pago = encontrar_variables(texto_pago)
+
+                            fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
+                            importe_operacion = variables_pago.get('importe_operacion', '').replace('.', '').replace(',', '')
+
+                            if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
+                                pago_file_name = f'PAGO_{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                            else:
+                                pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                            
+                            #pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'PAGO_{pago_file_name}'))
                             processed_pagos.add(pago.id)
 
