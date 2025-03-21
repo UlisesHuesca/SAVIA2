@@ -2304,7 +2304,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio','Fecha Autorización','Proyecto','Subproyecto','Distrito','Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda',
+    columns = ['Folio OC','Fecha Autorización OC','Folio UUID','Proyecto','Subproyecto','Distrito','Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda',
                 'Tipo de cambio','Importe','Total en Pesos','Importe Pagado','Importe Restante','C. Pago', 'Días de Crédito','Fecha Creación','Recibida','Factura']
 
     for col_num in range(len(columns)):
@@ -2356,14 +2356,18 @@ def convert_excel_matriz_compras_tesoreria(compras):
 
         if compra.facturas.filter(factura_xml__isnull=False).exists():
             tiene_facturas = 'Sí'
+            uuids = compra.facturas.filter(factura_xml__isnull=False, uuid__isnull=False).values_list('uuid', flat=True)
+            uuid_string = "///".join(uuids)
         else:
             tiene_facturas = 'No'
+            uuid_string = ''  # O None, según lo que necesites
 
         recibida = "Recibida" if compra.entrada_completa else "No Recibida"
 
         row = [
             compra.folio,
             autorizado_at_2_naive,
+            uuid_string,
             compra.req.orden.proyecto.nombre,
             compra.req.orden.subproyecto.nombre,
             compra.req.orden.distrito.nombre,
