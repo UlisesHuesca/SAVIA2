@@ -944,7 +944,7 @@ def matriz_pagos(request):
 
                              # Validamos si todas las variables son válidas:
                             if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                                pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
                             else:
                                 # Si no, conservamos el nombre original
                                 pago_file_name = os.path.basename(pago.comprobante_pago.path)
@@ -992,7 +992,7 @@ def matriz_pagos(request):
 
 
                             if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'{fecha_pago}_{titular_cuenta_2}_{importe_operacion}.pdf'
+                                pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
                             else:
                                 pago_file_name = os.path.basename(pago.comprobante_pago.path)
                             #pago_file_name = os.path.basename(pago.comprobante_pago.path)
