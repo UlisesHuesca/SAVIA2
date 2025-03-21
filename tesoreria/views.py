@@ -907,14 +907,23 @@ def matriz_pagos(request):
                     if factura.archivo_pdf:   
                         file_name = os.path.basename(factura.archivo_pdf.path)
                         zip_file.write(factura.archivo_pdf.path, os.path.join(folder_name, file_name))
-                        zip_file.write(factura.archivo_pdf.path, os.path.join(general_pdfs_folder, file_name)) #Está línea guarda en el zip general de pdf
+                        if factura.archivo_xml:
+                            # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
+                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                            general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                        else:
+                            general_file_name = file_name
+                        zip_file.write(factura.archivo_pdf.path, os.path.join(general_pdfs_folder, general_file_name)) #Está línea guarda en el zip general de pdf
                        
                     
                     distrito = factura.solicitud_gasto.distrito.nombre  # Obtener distrito de la factura
                     if factura.archivo_xml:
                         file_name = os.path.basename(factura.archivo_xml.path)
                         zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
-                        zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, file_name)) #Está línea guarda en el zip general de xml's
+                        uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                        general_file_name = f'{factura.id}_{uuid_str}.pdf'
+
+                        zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
                         datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito))
 
                     if factura.solicitud_gasto.id not in processed_gastos:
@@ -937,13 +946,23 @@ def matriz_pagos(request):
                         #folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
                         file_name = os.path.basename(factura.factura_pdf.path)
                         zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
+                        if factura.factura_xml:
+                            # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
+                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                            general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                        else:
+                            general_file_name = file_name
+
                         zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, file_name))
 
                     distrito = factura.oc.req.orden.distrito.nombre  # Obtener distrito de la factura
                     if factura.factura_xml:
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
-                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, file_name))
+                        uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                        general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                        
+                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
                         datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito))
                     
                     # Incluir la ficha de pago
@@ -965,15 +984,25 @@ def matriz_pagos(request):
                 for factura in facturas_viaticos:
                     folder_name = f'VIATICO_{factura.solicitud_viatico.folio}_{factura.solicitud_viatico.distrito.nombre}'
                     if factura.factura_pdf:
+
                         file_name = os.path.basename(factura.factura_pdf.path)
                         zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
-                        zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, file_name))
+                        if factura.factura_xml:
+                            # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
+                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                            general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                        else:
+                            general_file_name = file_name
+                        zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, general_file_name))
 
                     distrito = factura.solicitud_viatico.distrito.nombre  # Obtener distrito de la factura
                     if factura.factura_xml:
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
-                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, file_name))
+                        uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                        general_file_name = f'{factura.id}_{uuid_str}.pdf'
+
+                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
                         datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito))
 
                     if factura.solicitud_viatico.id not in processed_viaticos:
@@ -997,7 +1026,7 @@ def matriz_pagos(request):
                 ws = wb.active
                 ws.title = "Resumen XML"
 
-                columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago', 'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento']
+                columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago','Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento']
                 ws.append(columnas)
 
                 for dato in datos_xml_lista:
@@ -1231,6 +1260,7 @@ def extraer_datos_xml_carpetas(xml_file, distrito):
         moneda = root.get('Moneda', '')
         monto_total = float(root.get('Total', '0'))
         forma_pago = root.get('FormaPago', '')
+        metodo_pago = root.get('MetodoPago', '')
         tipo_documento = "Factura"
 
     datos = {
@@ -1241,6 +1271,7 @@ def extraer_datos_xml_carpetas(xml_file, distrito):
         'Folio Fiscal (UUID)': complemento.get('UUID') if complemento is not None else '',
         'Monto Total Factura': monto_total,
         'Tipo de Moneda': moneda,
+        'Metodo de Pago': metodo_pago,
         'Forma de pago': forma_pago,
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
         'Archivo': os.path.basename(xml_file)
