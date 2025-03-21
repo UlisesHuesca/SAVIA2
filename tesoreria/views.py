@@ -921,7 +921,7 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.archivo_xml.path)
                         zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
                         uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                        general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                        general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
                         datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito))
@@ -960,7 +960,7 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
                         uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                        general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                        general_file_name = f'{factura.id}_{uuid_str}.xml'
                         
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
                         datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito))
@@ -1000,7 +1000,7 @@ def matriz_pagos(request):
                         file_name = os.path.basename(factura.factura_xml.path)
                         zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
                         uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                        general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                        general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
                         datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito))
