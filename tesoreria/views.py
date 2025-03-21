@@ -924,7 +924,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name))
 
                     if factura.solicitud_gasto.id not in processed_gastos:
                         buf = render_pdf_gasto(factura.solicitud_gasto.id)
@@ -963,7 +963,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
                         
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
                     
                     # Incluir la ficha de pago
                     pagos = Pago.objects.filter(oc=factura.oc)
@@ -1003,7 +1003,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
 
                     if factura.solicitud_viatico.id not in processed_viaticos:
                         buf = generar_pdf_viatico(factura.solicitud_viatico.id)
@@ -1216,7 +1216,7 @@ def extraer_datos_del_complemento(ruta_xml):
     return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
 
 
-def extraer_datos_xml_carpetas(xml_file, distrito):
+def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
     """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones, incluyendo complementos de pago."""
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -1274,7 +1274,7 @@ def extraer_datos_xml_carpetas(xml_file, distrito):
         'Método de Pago': metodo_pago,
         'Forma de pago': forma_pago,
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
-        'Archivo': os.path.basename(xml_file)
+        'Archivo': nombre_general
     }
 
     return datos
