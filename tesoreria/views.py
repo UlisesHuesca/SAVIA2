@@ -2329,7 +2329,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(P:P)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(Q:Q)").style = money_resumen_style
   
     
    
@@ -2380,9 +2380,9 @@ def convert_excel_matriz_compras_tesoreria(compras):
             compra.tipo_de_cambio if compra.tipo_de_cambio else '',
             compra.costo_plus_adicionales,
             # Calcula total en pesos usando la fórmula de Excel
-            f'=IF(L{row_num}="",M{row_num},M{row_num}*L{row_num})', 
+            f'=IF(M{row_num}="",N{row_num},N{row_num}*M{row_num})', 
             compra.monto_pagado,
-            f'=N{row_num} - O{row_num}',
+            f'=O{row_num} - P{row_num}',
             compra.cond_de_pago.nombre,
             compra.dias_de_credito if compra.dias_de_credito else '',
             created_at_naive,
@@ -2393,9 +2393,9 @@ def convert_excel_matriz_compras_tesoreria(compras):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num in [1, 18]:
+            if col_num in [1, 19]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [11, 12, 13,14, 15]:
+            if col_num in [12, 13, 14,15, 16]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
