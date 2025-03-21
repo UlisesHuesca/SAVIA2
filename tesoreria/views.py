@@ -1271,7 +1271,7 @@ def extraer_datos_xml_carpetas(xml_file, distrito):
         'Folio Fiscal (UUID)': complemento.get('UUID') if complemento is not None else '',
         'Monto Total Factura': monto_total,
         'Tipo de Moneda': moneda,
-        'Metodo de Pago': metodo_pago,
+        'Método de Pago': metodo_pago,
         'Forma de pago': forma_pago,
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
         'Archivo': os.path.basename(xml_file)
