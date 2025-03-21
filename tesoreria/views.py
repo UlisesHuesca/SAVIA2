@@ -2304,7 +2304,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio OC','Fecha Autorización OC','Folio UUID','Proyecto','Subproyecto','Distrito','Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda',
+    columns = ['Folio OC','Fecha Autorización OC','Folio UUID','Fecha_Timbrado','Proyecto','Subproyecto','Distrito','Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda',
                 'Tipo de cambio','Importe','Total en Pesos','Importe Pagado','Importe Restante','C. Pago', 'Días de Crédito','Fecha Creación','Recibida','Factura']
 
     for col_num in range(len(columns)):
@@ -2358,9 +2358,12 @@ def convert_excel_matriz_compras_tesoreria(compras):
             tiene_facturas = 'Sí'
             uuids = compra.facturas.filter(factura_xml__isnull=False, uuid__isnull=False).values_list('uuid', flat=True)
             uuid_string = "///".join(uuids)
+            fechas_timbrado = compra.facturas.filter(factura_xml__isnull=False, fecha_timbrado__isnull=False).values_list('fecha_timbrado', flat=True)
+            fecha_timbrado_string = ">>>".join([fecha.strftime("%d/%m/%Y") for fecha in fechas_timbrado])
         else:
             tiene_facturas = 'No'
             uuid_string = ''  # O None, según lo que necesites
+            fecha_timbrado_string = ''
 
         recibida = "Recibida" if compra.entrada_completa else "No Recibida"
 
@@ -2368,6 +2371,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
             compra.folio,
             autorizado_at_2_naive,
             uuid_string,
+            fecha_timbrado_string,
             compra.req.orden.proyecto.nombre,
             compra.req.orden.subproyecto.nombre,
             compra.req.orden.distrito.nombre,
@@ -2627,7 +2631,8 @@ def layout_pagos(request):
             dbtr_acct_id = ET.SubElement(dbtr_acct, 'Id')
             dbtr_acct_othr = ET.SubElement(dbtr_acct_id, 'Othr')
             ET.SubElement(dbtr_acct_othr, 'Id').text = str(cuenta_pago.cuenta)
-            ET.SubElement(dbtr_acct, 'Ccy').text = compra.moneda.nombre
+            
+            #ET.SubElement(dbtr_acct, 'Ccy').text = compra.moneda.nombre
 
             dbtr_agt = ET.SubElement(pmt_inf, 'DbtrAgt')
             fin_instn_id = ET.SubElement(dbtr_agt, 'FinInstnId')
@@ -2643,7 +2648,7 @@ def layout_pagos(request):
             amt = ET.SubElement(cdt_trf_tx_inf, 'Amt')
             if compra.moneda.nombre == "PESOS":
                 moneda = "MXN"
-            ET.SubElement(amt, 'InstdAmt', Ccy=compra.moneda.nombre).text = f"{monto:.2f}"
+            ET.SubElement(amt, 'InstdAmt', Ccy=moneda).text = f"{monto:.2f}"
 
             ET.SubElement(cdt_trf_tx_inf, 'ChrgBr').text = 'DEBT'
 
@@ -2657,7 +2662,8 @@ def layout_pagos(request):
 
             PstlAdr = ET.SubElement(cdtr,'PstlAdr')
             ET.SubElement(PstlAdr, 'StrtNm').text = compra.proveedor.domicilio
-            ET.SubElement(PstlAdr, 'TwnNm').text = compra.proveedor.estado
+            if compra.proveedor.estado:
+                ET.SubElement(PstlAdr, 'TwnNm').text = compra.proveedor.estado.nombre
             if compra.proveedor.nombre.extranjero == False:
                 ET.SubElement(PstlAdr, 'Ctry').text = 'MX'
             else:
