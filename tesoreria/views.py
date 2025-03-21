@@ -939,7 +939,7 @@ def matriz_pagos(request):
                             variables_pago = encontrar_variables(texto_pago)
 
                             fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
-                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
+                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                             importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
                              # Validamos si todas las variables son válidas:
@@ -987,7 +987,7 @@ def matriz_pagos(request):
                             variables_pago = encontrar_variables(texto_pago)
 
                             fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
-                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
+                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                             importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
 
@@ -1047,7 +1047,7 @@ def matriz_pagos(request):
                             variables_pago = encontrar_variables(texto_pago)
 
                             fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
-                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '').replace(' ', '_')
+                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                             importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
                             if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
