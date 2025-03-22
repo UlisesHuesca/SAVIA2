@@ -1289,10 +1289,12 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
             moneda = pago.get("MonedaP", "")
             monto_total = float(pago.get("Monto", "0"))
             forma_pago = pago.get("FormaDePagoP", "")
+            metodo_pago = pago.get("MetodoPago", "N/A")  
         else:
             moneda = ""
             monto_total = 0
             forma_pago = ""
+            metodo_pago = ""
 
         tipo_documento = "Complemento de Pago"
     else:
