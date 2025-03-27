@@ -399,19 +399,19 @@
                         <ul class="nav nav-pills">
                             {% if pago.oc %}
                             <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' pago.oc.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="OC">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' pago.oc.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="OC">
                                 <i class="fa-solid fa-file-pdf"></i></a>
                             </li>
                             {% endif %}
                             {% if pago.gasto %}
                             <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'descargar-pdf-gasto' pago.gasto.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de gasto">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'descargar-pdf-gasto' pago.gasto.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de gasto">
                                     <i class="fa-solid fa-file-pdf"></i></a>
                             </li>
                             {% endif %}
                             {% if pago.viatico %}
                             <li class="nav-item mx-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-viatico' pago.viatico.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de viático">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-viatico' pago.viatico.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de viático">
                                     <i class="fa-solid fa-file-pdf"></i></a>
                             </li>
                             {% endif %}

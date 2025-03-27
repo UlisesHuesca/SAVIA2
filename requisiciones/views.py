@@ -436,9 +436,19 @@ def salida_material(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     orden = Order.objects.get(id = pk)
-    print(orden)
+    #print(orden)
     productos = ArticulosparaSurtir.objects.filter(articulos__orden = orden, surtir=True)
-    productos_no_seleccionados = productos.filter(seleccionado_salida = False)
+    #print(productos)
+    productos_no_seleccionados = productos.filter(seleccionado_salida = False, cantidad__gt = 0)
+    
+    #Estos corrigen el error de la seleccion doble de productos que provocaba que se generaran productos con salidas y que quedaban pendientes de salir
+    productos_seleccionado_doble = productos.filter(cantidad__lte = 0)
+    #print('psd',productos_seleccionado_doble)
+    
+    for producto in productos_seleccionado_doble:
+        producto.surtir = False
+        producto.salida = True
+        producto.save()
     vale_salidas = ValeSalidas.objects.filter(solicitud__distrito = usuario.distritos)
     vale_salida, created = vale_salidas.get_or_create(almacenista = usuario,complete = False,solicitud=orden)
     salidas = Salidas.objects.filter(vale_salida = vale_salida)
@@ -469,6 +479,7 @@ def salida_material(request, pk):
             cantidad_productos = productos.count()
 
             productos_vale = ArticulosparaSurtir.objects.filter(articulos__orden = orden)
+            print(productos_vale)
             for producto in productos_vale:
                 producto.seleccionado_salida = False
                 producto.seleccionado_por = None
