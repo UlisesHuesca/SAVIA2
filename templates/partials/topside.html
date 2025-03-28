@@ -205,7 +205,14 @@
         })
         .then(data => {
             modal.hide();  // Cierra el modal
-            console.log('Política aceptada');
+             // ✅ Al cerrar, muestra el mensaje
+            Swal.fire({
+                icon: 'success',
+                title: '¡Gracias!',
+                text: 'Tu aceptación de la política antisoborno ha sido registrada.',
+                confirmButtonColor: '#3085d6',
+                confirmButtonText: 'Entendido'
+            });
         })
         .catch(error => {
             alert('Ocurrió un error al aceptar la política');
