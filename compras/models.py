@@ -41,6 +41,8 @@ class Proveedor(models.Model):
     comentario_factura = models.CharField(max_length=200,null=True, blank=True)
     comentario_calidad = models.CharField(max_length=200,null=True, blank=True)
     comentario_otros = models.CharField(max_length=200,null=True, blank=True)
+    acepto_politica = models.BooleanField(default=False)
+    fecha_aceptacion_politica = models.DateTimeField(null=True, blank=True)
 
 
 

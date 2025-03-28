@@ -130,14 +130,107 @@
                                 </div>
                             </a>
                         </div>
+                        <div class="col-md-4">
+                            <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Política Antisoborno">
+                                <div class="card my-card shadow text-center p-3">
+                                    <h4>Política Antisoborno <i class="fa-duotone fa-solid fa-book"></i></h4>
+                                    <h3></h3>
+                                </div>
+                            </a>
+                           
+                       
+                        </div>
                     </div>
+                   
                     {% endif %}
                 </div>
+                  <!-- Modal con visor de PDF -->
+                  
             </div>
+            <div class="modal fade" id="pdfModal" tabindex="-1" aria-labelledby="pdfModalLabel" aria-hidden="true" data-bs-backdrop="static" data-bs-keyboard="false">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pdfModalLabel">Política Antisoborno</h5>
+                            <!--<button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>-->
+                        </div>
+                        <div class="modal-body p-0">
+                            <iframe id="iframePolitica" src="" style="border:none;" width="100%" height="750px"></iframe>
+                        </div>
+                        <div class="modal-footer">
+                            <div class="form-check me-auto">
+                              <label class="form-check-label" for="checkAceptar">
+                                Acepto haber leído y comprendido la política antisoborno.
+                              </label>
+                            </div>
+                            <button type="button" class="btn btn-primary" id="btnAceptarPolitica">Aceptar</button>
+                        </div>
+                    </div>
+                </div>
+              </div>
         </div>
 
     </div>
 </div>
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        const iframe = document.getElementById('iframePolitica');
+        const modalElement = document.getElementById('pdfModal');
+        const modal = new bootstrap.Modal(modalElement);
+        const btnAceptar = document.getElementById('btnAceptarPolitica');
+        console.log(btnAceptar);
+
+        document.getElementById('btnVerPolitica').addEventListener('click', function () {
+            fetch("{% url 'ver-politica-pdf' %}")
+                .then(response => response.json())
+                .then(data => {
+                    // Reemplazamos las barras invertidas \\ por normales /
+                    const url = data.url.replace(/\\/g, '/');
+                    iframe.src = url + "#zoom=80";
+                    modal.show();
+                });
+        });
+        btnAceptar.addEventListener('click', function () {
+        fetch("{% url 'aceptar-politica' %}", {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': getCookie('csrftoken')
+            },
+            body: JSON.stringify({ aceptado: true })
+        })
+        .then(response => {
+            if (!response.ok) throw new Error('Error al guardar');
+            return response.json();
+        })
+        .then(data => {
+            modal.hide();  // Cierra el modal
+            console.log('Política aceptada');
+        })
+        .catch(error => {
+            alert('Ocurrió un error al aceptar la política');
+            console.error(error);
+        });
+    });
+
+    // Función para obtener el CSRF token
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+});
+        
+</script>
 {% endblock %}
 </body>
 </html>

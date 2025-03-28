@@ -4937,3 +4937,24 @@ def pdf_formato_comparativo(request, pk):
     c.save()
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename=f'Comparativo_{pk}.pdf')
+
+
+def ver_politica_pdf(request):
+    filename = 'politica_antisoborno.pdf'
+    carpeta = os.path.join(settings.MEDIA_ROOT, 'politicas')
+    filepath = os.path.join(carpeta, filename)
+
+    # Si el archivo ya existe, solo regresamos la URL
+    if os.path.exists(filepath):
+        url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+        return JsonResponse({'url': url})
+
+    # Si no existe, lo generamos y lo guardamos
+    os.makedirs(carpeta, exist_ok=True)
+    pdf_buffer = generar_politica_antisoborno()
+
+    with open(filepath, 'wb') as f:
+        f.write(pdf_buffer.getbuffer())
+
+    url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+    return JsonResponse({'url': url})

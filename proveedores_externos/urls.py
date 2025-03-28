@@ -19,4 +19,5 @@ urlpatterns = [
     path('subir_evidencias/<int:pk>', views.subir_evidencias, name='subir-evidencias'),
     path('eliminar_evidencia/<int:pk>/', views.eliminar_evidencia, name='eliminar-evidencia'),
     path('update_comentario/', views.update_comentario, name='update_comentario'),
+    path('politica/aceptar/', views.aceptar_politica, name='aceptar-politica'),
 ]

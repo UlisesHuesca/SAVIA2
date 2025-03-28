@@ -39,7 +39,8 @@ def perfil_seleccionado_required(view_func):
                                   'productos-oc', 'factura-nueva', 'edit-csf','edit-acta-credencial', 'edit-comprobante-domicilio',
                                   'edit-opinion-cumplimiento','evidencias-proveedor','subir-evidencias','eliminar-evidencia',
                                   'matriz-complementos', 'complemento-nuevo','complemento-eliminar','subir-documento-competencia',
-                                  'subir-documento-contrato', 'subir-documento-factura-predial','factura-eliminar']  # Cambia por los nombres reales de las vistas
+                                  'subir-documento-contrato', 'subir-documento-factura-predial','factura-eliminar','ver-politica-pdf',
+                                  'aceptar_politica',]  # Cambia por los nombres reales de las vistas
 
             vista_actual = resolve(request.path_info).url_name
             if vista_actual not in vistas_permitidas:

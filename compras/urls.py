@@ -48,6 +48,7 @@ urlpatterns = [
     path('compras/politica_antisoborno_pdf', views.descargar_antisoborno_pdf, name='politica-antisoborno'),
     path('compras/aviso_privacidad_pdf', views.descargar_aviso_privacidad_pdf, name='aviso-privacidad'),
     path('compras/codigo_etica_pdf', views.descargar_codigo_etica_pdf, name='codigo-etica'),
+    path('politica/antisoborno/', views.ver_politica_pdf, name='ver-politica-pdf'),
     ]
 
 if settings.DEBUG:

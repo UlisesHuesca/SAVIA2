@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import Http404, HttpResponse, JsonResponse
 from django.core.mail import EmailMessage
 from django.conf import settings
+from django.utils import timezone
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.core.paginator import Paginator
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor
@@ -717,3 +718,25 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     output.close()
     return response
 
+#@perfil_seleccionado_required
+def aceptar_politica(request):
+    print("Entrando a aceptar politica")
+    if request.method == "POST":
+        perfil_id = request.session.get('selected_profile_id')
+        print(perfil_id)
+        try:
+            perfil = Profile.objects.get(id=perfil_id)
+        except Profile.DoesNotExist:
+            return JsonResponse({'error': 'Perfil no válido'}, status=404)
+
+        try:
+            proveedor = Proveedor.objects.get(perfil_proveedor=perfil)
+            print(proveedor)
+            proveedor.acepto_politica = True
+            proveedor.fecha_aceptacion_politica = timezone.now()
+            proveedor.save()
+            return JsonResponse({'status': 'ok'})
+        except Proveedor.DoesNotExist:
+            return JsonResponse({'error': 'Proveedor no encontrado'}, status=404)
+
+    return JsonResponse({'error': 'Método no permitido'}, status=405)
