@@ -71,8 +71,11 @@
                         <li>
                             <a class="btn btn-outline-info btn-block mx-auto" type="button" href="{% url 'solicitud-inventario-add' %}"><i class="fa-solid fa-circle-plus">Agregar</i></a>
                             <hr>
-                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_inventario' %}">
-                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
+                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload-batch-inventario' %}" title="Carga Masiva Actualizacion">
+                                <i class="fa-solid fa-file-arrow-up"></i>
+                            </a>
+                            <a type="button" class="btn btn-outline-danger" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload-batch-inventario-nuevos' %}" title="Carga Masiva Nuevos">
+                                <i class="fa-solid fa-file-arrow-up"></i>
                             </a>
                             <hr>
                             {% if usuario.tipo.nombre == "Admin" %}

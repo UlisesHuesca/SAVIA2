@@ -10,7 +10,7 @@ from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max, Q
-from dashboard.models import Activo, Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden, Plantilla, ArticuloPlantilla
+from dashboard.models import Activo, Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden, Plantilla, ArticuloPlantilla, Unidad
 from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas
 from requisiciones.views import get_image_base64
 from compras.models import Compra
@@ -45,7 +45,7 @@ from openpyxl.drawing.image import Image
 import datetime as dt
 import csv
 import ast
-
+import pandas as pd
 # Create your views here.
 
 
@@ -1244,7 +1244,213 @@ def upload_batch_inventario(request):
 
     return render(request,'dashboard/upload_batch_inventario.html', context)
 
+@login_required(login_url='user-login')
+def upload_batch_inventario_actualizacion(request):
+    form = Inventario_BatchForm(request.POST or None, request.FILES or None)
 
+    if request.method == 'POST' and form.is_valid():
+        batch = form.save()
+        file_path = batch.file_name.path
+        errores = []
+        try:
+            df = pd.read_csv(file_path, encoding='latin1')
+        except Exception as e:
+            return HttpResponse(f"Error al leer el archivo CSV: {e}", status=400)
+
+        for index, row in df.iterrows():
+            codigo_producto = row.iloc[0]
+            ubicacion = row.iloc[1]
+            cantidad = row.iloc[3]
+            almacen_nombre = row.iloc[2]
+            precio = row.iloc[4]
+            nombre_producto = row.iloc[5] 
+            unidad_nombre = row.iloc[6] 
+            distrito_nombre = row.iloc[7] 
+            servicio_str = row.iloc[8]
+            print(codigo_producto)
+            print(nombre_producto)
+            print(almacen_nombre)
+            try:
+                producto = Product.objects.get(codigo=codigo_producto)
+                print(producto)
+                distrito = Distrito.objects.get(nombre=almacen_nombre)
+                print(distrito)
+                almacen = Almacen.objects.get(nombre=almacen_nombre)
+                inventario = Inventario.objects.filter(producto=producto).first()
+                print(inventario)
+                
+                if inventario:
+                    inventario.ubicacion = ubicacion
+                    inventario.cantidad = cantidad
+                    inventario.almacen = almacen
+                    inventario.distrito = distrito
+                    inventario.price = precio
+                    inventario.complete = True
+                    inventario.updated_at = timezone.now()
+                    inventario.save()
+                    # Actualizar producto
+                    if nombre_producto:
+                        producto.nombre = nombre_producto
+                    if servicio_str:
+                        producto.servicio = True if servicio_str.strip().upper() == 'SI' else False
+                    if unidad_nombre:
+                        try:
+                            unidad = Unidad.objects.get(nombre=unidad_nombre)
+                            producto.unidad = unidad
+                        except Unidad.DoesNotExist:
+                            errores.append({codigo_producto, f"Unidad '{unidad_nombre}' no encontrada"})
+                    producto.updated_at = timezone.now()
+                    producto.save()
+                    
+                    #Este es el masivo que elimina los articulos por surtir #No utilizar a menos que sea nesario
+                    #articulos_surtir = ArticulosparaSurtir.objects.filter(
+                    #    surtir=True, 
+                    #    articulos__producto= inventario
+                    #)
+                    #print(articulos_surtir)
+                    #for articulo in articulos_surtir:
+                    #    articulo.surtir = False
+                    #    articulo.cantidad = 0
+                    #    articulo.save()
+
+            except Product.DoesNotExist:
+                errores.append({codigo_producto, f"Producto no encontrado"})
+            except Almacen.DoesNotExist:
+                errores.append({codigo_producto, f"Almacen '{almacen_nombre}' no encontrado"})
+            except Distrito.DoesNotExist:
+                errores.append({codigo_producto, f"Distrito '{distrito_nombre}' no encontrado"})
+            except Unidad.DoesNotExist:
+                errores.append({codigo_producto, f"Unidad '{unidad_nombre}' no encontrada"})
+
+        batch.activated = True
+        batch.save()
+        # Si hay errores, guardar archivo y devolver enlace
+        # Si hay errores, guardar archivo CSV
+        # Si hay errores, generar y devolver el archivo como descarga directa
+        if errores:
+            print('Estoy entrando en errores')
+            errores_df = pd.DataFrame(errores)
+            root_dir = settings.BASE_DIR
+            error_dir = os.path.join(root_dir, 'errores_batch')
+            os.makedirs(error_dir, exist_ok=True)
+
+            error_file_name = f'errores_batch_{batch.id}.csv'
+            error_file_path = os.path.join(error_dir, error_file_name)
+
+            errores_df.to_csv(error_file_path, index=False, encoding='utf-8')
+
+            # Si lo quieres servir vía navegador local, solo devuelves la ruta relativa o absoluta:
+            error_file_url = f"/errores_batch/{error_file_name}"
+            return JsonResponse({'status': 'partial', 'error_file': error_file_url}, status=207)
+        return HttpResponse(status=204)
+
+    return render(request, 'dashboard/upload_batch_inventario.html', {'form': form}) 
+
+@login_required(login_url='user-login')
+def upload_batch_inventario_nuevos(request):
+    form = Inventario_BatchForm(request.POST or None, request.FILES or None)
+
+    if request.method == 'POST' and form.is_valid():
+        batch = form.save()
+        file_path = batch.file_name.path
+        errores = []
+
+        try:
+            df = pd.read_csv(file_path, encoding='latin1')
+        except Exception as e:
+            return HttpResponse(f"Error al leer el archivo CSV: {e}", status=400)
+
+        for index, row in df.iterrows():
+            codigo_producto = row.iloc[0]
+            ubicacion = row.iloc[1]
+            cantidad = row.iloc[3]
+            almacen_nombre = row.iloc[2]
+            precio = row.iloc[4]
+            nombre_producto = row.iloc[5]
+            unidad_nombre = row.iloc[6]
+            distrito_nombre = row.iloc[7]
+            servicio_str = row.iloc[8]
+            # Validar que no exista producto con ese código o nombre
+            if Product.objects.filter(codigo=codigo_producto).exists():
+                errores.append({'Código': codigo_producto, 'Razón': "El código ya existe"})
+                continue
+
+            if Product.objects.filter(nombre=nombre_producto).exists():
+                errores.append({'Código': codigo_producto, 'Razón': f"El nombre '{nombre_producto}' ya existe"})
+                continue
+
+          
+            
+
+            try:
+                producto = Product(
+                    codigo=codigo_producto,
+                    nombre=nombre_producto,
+                    updated_at=timezone.now()
+                    
+                )
+                if servicio_str:       
+                    producto.servicio = True if servicio_str.strip().upper() == 'SI' else False
+                    
+
+                if unidad_nombre:
+                    try:
+                        unidad = Unidad.objects.get(nombre=unidad_nombre)
+                        producto.unidad = unidad
+                        
+                    except Unidad.DoesNotExist:
+                        errores.append({'Código': codigo_producto, 'Razón': f"Unidad '{unidad_nombre}' no encontrada"})
+                        continue
+
+
+                producto.save()
+
+                if distrito_nombre:
+                    try:
+                        distrito = Distrito.objects.get(nombre=distrito_nombre)
+                    except Distrito.DoesNotExist:
+                        errores.append({'Código': codigo_producto, 'Razón': f"Distrito '{distrito_nombre}' no encontrado"})
+                        continue
+
+                try:
+                    almacen = Almacen.objects.get(nombre=almacen_nombre)
+                except Almacen.DoesNotExist:
+                    errores.append({'Código': codigo_producto, 'Razón': f"Almacén '{almacen_nombre}' no encontrado"})
+                    continue
+
+                Inventario.objects.create(
+                    producto=producto,
+                    ubicacion=ubicacion,
+                    cantidad=cantidad,
+                    price=precio,
+                    complete=True,
+                    distrito=distrito,
+                    almacen=almacen,
+                )
+
+            except Exception as e:
+                errores.append({'Código': codigo_producto, 'Razón': f"Error inesperado: {str(e)}"})
+
+        batch.activated = True
+        batch.save()
+
+        if errores:
+            errores_df = pd.DataFrame(errores)
+            root_dir = settings.BASE_DIR
+            error_dir = os.path.join(root_dir, 'errores_batch')
+            os.makedirs(error_dir, exist_ok=True)
+
+            error_file_name = f'errores_nuevos_batch_{batch.id}.csv'
+            error_file_path = os.path.join(error_dir, error_file_name)
+
+            errores_df.to_csv(error_file_path, index=False, encoding='utf-8', sep=';')
+
+            error_file_url = f"/errores_batch/{error_file_name}"
+            return JsonResponse({'status': 'partial', 'error_file': error_file_url}, status=207)
+
+        return HttpResponse(status=204)
+
+    return render(request, 'dashboard/upload_batch_inventario.html', {'form': form})
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required

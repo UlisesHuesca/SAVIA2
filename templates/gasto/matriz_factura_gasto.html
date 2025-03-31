@@ -140,7 +140,8 @@
                             <th scope="col">Concepto [XML]</th>
                             <th scope="col">Proveedor [XML]</th>
                             <th scope="col">Monto [XML]</th>
-                            <th>Facturas</th>
+                            <th>PDF</th>
+                            <th>XML</th>
                             <th>PDF-Render</th>
                             {% if usuario.tipo.tesoreria %}
                             <th>Validar</th>
@@ -153,7 +154,7 @@
                         <tr>
                             <td>{% if factura.archivo_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
                             <td>{% if factura.archivo_xml %}
-                                 {{ factura.emisor.nombre }} 
+                                 {{ factura.emisor.nombre_emisor }} 
                                 {% endif %}
                             </td>
                             {% if factura.archivo_xml %}
@@ -166,11 +167,11 @@
                             <td>
                                 <ul class="nav nav-pills">
                                     {% if factura.archivo_pdf %}
-                                    <li class="nav-item mx-1">
+                                  
                                         <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}" title="Ver comprobante de pago">
-                                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                                         </button>
-                                    </li>
+                                   
                                     <!-- Modal con visor de PDF -->
                                     <div class="modal fade" id="pdfModal{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ factura.id|unlocalize }}" aria-hidden="true">
                                         <div class="modal-dialog modal-xl">
@@ -186,12 +187,14 @@
                                         </div>
                                     </div>
                                     {% endif %}
+                                </td>
+                                <td>
                                     {% if factura.archivo_xml %}
-                                    <li class="nav-item mx-1">
+                                    
                                         <a href="{{ factura.archivo_xml.url }}" download class="btn btn-outline-secondary">
-                                            <i class="fa-solid fa-file-code fa-2xl"></i>
+                                            <i class="fa-duotone fa-solid fa-file-xml fa-xl"></i>
                                         </a>
-                                    </li>
+                                    
                                     {% endif %}
                                 </ul>
                             </td>
@@ -199,7 +202,7 @@
                             <!-- PDF Render -->
                             <td>
                                 <a href="{% url 'generar_cfdi_gasto' factura.id %}" download class="btn btn-outline-info">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                                 </a>
                             </td>
 
@@ -239,8 +242,8 @@
                 <!-- Botón para subir nueva factura -->
                 <ul class="nav">
                     <li class="nav-item">
-                        <a class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}">
-                            Facturas <i class="fa-solid fa-file-arrow-up"></i>
+                        <a class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}" title ="Subir nuevas facturas">
+                            <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
                         </a>
                     </li>
                 </ul>
@@ -372,10 +375,15 @@ function enviarFormulario() {
 ;(function() {
     const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
+    htmx.on('htmx:afterSwap', (e) => {
+    if (e.detail.target.id === "document") {
+        const response = e.detail.xhr.responseText;
+        if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
+            modal.hide();
+        }
+    }
+});
+
 })()
 
 // Recargar la página cuando se cierre el modal de confirmación
