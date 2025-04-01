@@ -3,6 +3,7 @@ from .models import Solicitud_Gasto, Conceptos_Entradas, Tipo_Gasto
 from solicitudes.models import Proyecto, Subproyecto
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
+from django.forms import TextInput
 
 
 
