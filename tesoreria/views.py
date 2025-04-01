@@ -68,6 +68,7 @@ from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
 from bs4 import BeautifulSoup
 from user.decorators import perfil_seleccionado_required
+import subprocess
 
 @perfil_seleccionado_required
 def compras_por_pagar(request):
@@ -1638,11 +1639,24 @@ def complemento_nuevo(request, pk):
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
 
                         # Guardar temporalmente el XML para extraer datos
-                        complemento_temp = Complemento_Pago(complemento_xml=archivo_xml)
-                        complemento_temp.complemento_xml.save(archivo_xml.name, archivo_procesado, save=False)
+                        #complemento_temp = Complemento_Pago(complemento_xml=archivo_xml)
+                        #complemento_temp.complemento_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
                         # Extraer UUID y ID del documento relacionado
-                        uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(complemento_temp.complemento_xml.path)
+                        #uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(complemento_temp.complemento_xml.path)
+                        # Guardar el archivo XML en un archivo temporal para procesarlo
+                        with tempfile.NamedTemporaryFile(delete=False, suffix='.xml') as tmp:
+                            for chunk in archivo_procesado.chunks():
+                                tmp.write(chunk)
+                            tmp_path = tmp.name
+
+                        try:
+                            # Extraer datos desde el archivo temporal
+                            uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(tmp_path)
+                        finally:
+                            # Asegurar que el archivo temporal se borre aunque falle
+                            os.remove(tmp_path)
+
 
                         # Validaciones de UUID y relación con factura
                         if not uuid_complemento or not docto_relacionado_id:
@@ -2756,9 +2770,23 @@ def layout_pagos(request):
             ET.SubElement(rmt_inf, 'Ustrd').text = f"F-{compra.folio}"
 
         xml_bytes = ET.tostring(root, encoding='utf-8', method='xml')
-        response = HttpResponse(xml_bytes, content_type='application/xml')
-        response['Content-Disposition'] = 'attachment; filename="pagos.xml"'
-        return response
+
+        # Guardar XML en disco
+        xml_path = '/home/savia/pagos_xml/pagos.xml'
+        with open(xml_path, 'wb') as f:
+            f.write(xml_bytes)
+
+        # Encriptar el archivo XML con GPG
+        encrypted_path = '/home/savia/pagos_encrypted/pagos.xml.gpg'
+        subprocess.run([
+            'gpg', '--yes', '--batch', '--trust-model', 'always',
+            '--output', encrypted_path,
+            '--encrypt', '--recipient', 'gruvor1i', xml_path
+        ], check=True)
+
+        # Mostrar mensaje de éxito y redirigir
+        messages.success(request, 'El archivo XML fue generado y cifrado correctamente.')
+        return redirect('nombre_de_la_vista_donde_regresar')  # Cambiar por el nombre real de tu vista
 
     context = {
         'compras': compras,
