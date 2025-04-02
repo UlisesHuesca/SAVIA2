@@ -72,10 +72,12 @@
                    </tbody>
                 </table>
                 <h6>Activo: {% if compra.req.orden.activo %} {{compra.req.orden.activo}} {% else %} No hay activo definido {% endif %} </h6>
+                <h6>Comentario Gerente: {% if compra.comentario_gerencia %} {{compra.comentario_gerencia}} {% else %} No hay comentario {% endif %}</h6>
                 <h6>Comentario Compra: {% if compra.comentarios %} {{compra.comentarios}} {%else%} No hay comentario {% endif %}</h6>
                 <h6>Comentario Superintendente:   {%if compra.req.comentario_super%} {{compra.req.comentario_super}} {% else %} No hay comentario {% endif %}</h6>
                 <h6>Comentario Almacén: {%if compra.req.comentario_compras %} {{compra.req.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
                 <h6>Comentario Usuario: {%if compra.req.orden.comentario %} {{compra.req.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
+                
         </div>
 
         <div class="modal-footer">

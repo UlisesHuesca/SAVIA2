@@ -277,7 +277,9 @@
                         {% endwith %}
                     </td>
                     <td>
-                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
+                        <a id="myBtn" type="button" title= "Productos y Comentarios" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">
+                            <i class="fa-duotone fa-solid fa-circle-info"></i>
+                        </a>
                     </td>
                     <td>
                         <ul class="nav nav-pills">
@@ -301,7 +303,9 @@
                                 </ul>
                             </li>
                             <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra">
+                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                </a>
                             </li>
                         </ul>
                     </td>
