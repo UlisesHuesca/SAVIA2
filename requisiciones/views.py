@@ -1199,6 +1199,7 @@ def requisicion_cancelar(request, pk):
 
     if request.method == 'POST':
         form= Rechazo_Requi_Form(request.POST,instance=requis)
+        comentario = requis.comentario_compras or requis.comentario_rechazo
         if form.is_valid():
             requis.autorizada_por = perfil
             requis.autorizar = False
@@ -1206,7 +1207,7 @@ def requisicion_cancelar(request, pk):
             try:
                 email = EmailMessage(
                     f'Requisición Rechazada {requis.folio}',
-                    f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {requis.comentario_compras} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                    f'Estimado {requis.orden.staff.staff.staff.first_name} {requis.orden.staff.staff.staff.last_name},\n Estás recibiendo este correo porque tu solicitud: {requis.orden.folio}| Req: {requis.folio} ha sido rechazada,\n por {requis.autorizada_por.staff.staff.first_name} {requis.autorizada_por.staff.staff.last_name} por el siguiente motivo: \n " {comentario} ".\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
                     settings.DEFAULT_FROM_EMAIL,
                     ['ulises_huesc@hotmail.com',requis.orden.staff.staff.staff.email],
                     )

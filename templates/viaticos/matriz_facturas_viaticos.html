@@ -9,48 +9,8 @@
 </head>
 <body>
 {% block content %}
-<hr>
-<hr>
-<hr>
-<h6>&nbsp;</h6>
-<div class = "row mt-2 bg-white" id="response-div">
-        <div class="col-12">
-            <div class="card card-body">
-                
-                <form method=POST>
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                    <li class="nav-item mx-1">
-                        <a href="{{ next_url }}" class="btn btn-outline-info">
-                            <i class="fa-solid fa-backward"></i>
-                        </a>
-                    </li>
-                    <!--{% if usuario.tipo.tesoreria == True %}
-                        <li class="nav-item mx-1">
-                            <a href="{% url 'viaticos-autorizados-pago' %}" class="btn btn-outline-info">
-                                <i class="fa-solid fa-backward"> VIATICOS</i>
-                            </a>                 
-                        </li>
-                        <li class="nav-item mx-2">
-                            <a href="{% url 'matriz-pagos' %}" class="btn btn-outline-info">
-                                <i class="fa-solid fa-backward"> MATRIZ PAGOS</i>
-                            </a>
-                        </li>
-                        {% endif %}
-                        <li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
-                    </ul>
-                </form>
-            </div>
-        </div>
-    
-    <!-- Aquí terminan el encabezado de los filtros -->
-
-<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
-<div class="row my-4">
+  <!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+  <div class="row my-4">
     <div class="col-md-4">
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
         {% if messages %}
@@ -77,249 +37,288 @@
     </div>
 </div>
 
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Viático</th>
-                    <th scope="col">Concepto</th>
-                    <th scope="col">Descripción</th>
-                    <th scope="col">Importe Gasto</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for concepto in conceptos_viatico %}
-                <tr>
-                    <th scope="row">{{concepto.id}}</th>
-                    <td>{{concepto.producto}}</td>
-                    <td>{{concepto.comentario}}</td>
-                    <td class="total-linea"  total="{{concepto.get_total_parcial|unlocalize}}">${{concepto.get_total_parcial|floatformat:2}}</td>
-                </tr>
-                {% endfor %}
-                <tr>
-                    <td></td>
-                    <td></td>
-                    <th>Total</th>
-                    <td id="total"></td>
-                </tr>
-            </tbody>
-        </table>
-        <br>
-<div class="nav-item ms-auto">
-    <form method="POST" class="d-inline">
-        {% csrf_token %}
-        <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
-            <i class="fas fa-file-archive"></i> Descargar Facturas
-        </button>
-    </form>
-</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
 
-<br>
-<form method="POST">
-    {% csrf_token %}
-    <table class="table bg-white">
-        <thead class="text-black" style="background-color: #F5F5F5;">
-            <tr>
-                <th>Clasificación</th>
-                <th scope="col">Concepto [XML]</th>
-                <th scope="col">Proveedor [XML]</th>
-                <th scope="col">Monto [XML]</th>
-                <th>PDF</th>
-                <th>XML</th>
-                <th>PDF-render</th>
-                {% if usuario.tipo.tesoreria %}
-                <th>Validar</th>
-                {% endif %}
-                <th>Eliminar</th>
-            </tr>
-        </thead>
-        <tbody>
-            {% for factura in facturas %}
-            <tr>
-                <td data-clasificacion="{% if factura.factura_xml %}{% if factura.emisor %}{{ factura.emisor.clasificacion_general }}{% endif %}{% endif %}">
-                    {% if factura.factura_xml and factura.emisor %}
-                    <strong>{{ factura.emisor.clasificacion_general }}</strong>
-                    {% endif %}
-                </td>
-                <td>{% if factura.factura_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
-                <td>{% if factura.factura_xml %} {{ factura.emisor.nombre_emisor }} {% endif %}</td>
-                <td>
-                    {% if factura.factura_xml %}
-                    <span class="total-xml" total="{{ factura.emisor.total }}"> ${{ factura.emisor.total }} </span>
-                    {% else %}
-                    <span></span>
-                    {% endif %}
-                </td>
-                <td>
+<div class="container">
+    <div class = "card">
+            <div class="card-header">
+                
+                <form method=POST>
+                    {% csrf_token %}
                     <ul class="nav nav-pills">
-                        {% if factura.factura_pdf %}
-                        <ul class="nav nav-pills">
-                            
-                            <li class="nav-item mx-1">
-                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                                </button>
-                            </li>
-                        </ul>
-                            <!-- Modal con visor de PDF -->
-                            <div class="modal fade" id="pdfModal{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ factura.id|unlocalize }}" aria-hidden="true">
-                                <div class="modal-dialog modal-xl">
-                                    <div class="modal-content">
-                                        <div class="modal-header">
-                                            <h5 class="modal-title" id="pdfModalLabel{{ factura.id|unlocalize }}">Comprobante de Pago</h5>
-                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                        </div>
-                                        <div class="modal-body">
-                                            <iframe src="{{ factura.factura_pdf.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        {% endif %}
-                    </ul>
-                </td>
-                <td>
-                    <ul class="nav nav-pills">
-                        {% if factura.factura_xml %}
                         <li class="nav-item mx-1">
-                            <a href="{{ factura.factura_xml.url }}" download class="btn btn-outline-secondary">
-                                <i class="fa-solid fa-file-code fa-2xl"></i>
+                            <a href="{{ next_url }}" class="btn btn-outline-info">
+                                <i class="fa-solid fa-backward"></i>
                             </a>
                         </li>
-                        {% endif %}
+                       
+                        <li class="nav-item mx-1">
+                            <h3>Facturas Viáticos</h3>             
+                        </li>
+                        <!--    <li class="nav-item mx-2">
+                                <a href="{% url 'matriz-pagos' %}" class="btn btn-outline-info">
+                                    <i class="fa-solid fa-backward"> MATRIZ PAGOS</i>
+                                </a>
+                            </li>
+                           
+                            <li class="nav-item mx-2">
+                                <button type="button" class="btn btn-outline-danger">
+                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </button>
+                            </li>-->
                     </ul>
-                </td>
-                <td>
-                    {% if factura.factura_xml %}
-                    <!--<button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfM{{ factura.id|unlocalize }}">
-                        <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                    </button>
                     
-                     Modal con visor de PDF
-                    <div class="modal fade" id="pdfM{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfLabel{{ factura.id|unlocalize }}" aria-hidden="true">
-                        <div class="modal-dialog modal-xl">
-                            <div class="modal-content">
-                                <div class="modal-header">
-                                    <h5 class="modal-title" id="pdfModalLabel{{ factura.id|unlocalize }}">Vista Previa del CFDI</h5>
-                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                </div>
-                                <div class="modal-body">
-                                    <iframe src="{% url 'generar_cfdi_viaticos' factura.id %}" width="100%" height="600px"></iframe>
-                                </div>
-                            </div>
-                        </div>
-                    </div>-->
-                        <a href="{% url 'generar_cfdi_viaticos' factura.id %}" download class="btn btn-outline-info">
-                            <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                        </a>
-                    {% endif %}
-                </td>
-                {% if usuario.tipo.tesoreria %}
-                <td>
-                    <input type="checkbox" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %} onchange="actualizarTotales()">
-                </td>
-                {% endif %}
-                <td>
-                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize}})">
-                        <i class="fa-regular fa-trash-can"></i>
+                </form>
+            </div>
+    
+        <!-- Aquí terminan el encabezado de los filtros -->
+
+      
+        <div class = "card-body">
+            <table class="table bg-white">
+                <thead class="text-black" style="background-color: #F5F5F5;">
+                    <tr>
+                        <th scope="col">Viático</th>
+                        <th scope="col">Concepto</th>
+                        <th scope="col">Descripción</th>
+                        <th scope="col">Importe Gasto</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for concepto in conceptos_viatico %}
+                    <tr>
+                        <th scope="row">{{concepto.id}}</th>
+                        <td>{{concepto.producto}}</td>
+                        <td>{{concepto.comentario}}</td>
+                        <td class="total-linea"  total="{{concepto.get_total_parcial|unlocalize}}">${{concepto.get_total_parcial|floatformat:2}}</td>
+                    </tr>
+                    {% endfor %}
+                    <tr>
+                        <td></td>
+                        <td></td>
+                        <th>Total</th>
+                        <td id="total"></td>
+                    </tr>
+                </tbody>
+            </table>
+            <div class="nav-item ms-auto">
+                <form method="POST" class="d-inline">
+                    {% csrf_token %}
+                    <button type="submit" name="btn_descargar_todo" class="btn btn-sm btn-primary float-end">
+                        <i class="fas fa-file-archive"></i> Descargar Facturas
                     </button>
-                </td>
-            </tr>
-            {% endfor %}
-            {% if usuario.tipo.tesoreria %}
-            <tr>
-                <td></td>
-                <td></td>
-                <th></th>
-                <th></th>
-                <th class="center">Autorizadas</th>
-            </tr>
-            {% endif %}
-            <tr>
-                <td></td>
-                <td></td>
-                <th>Total Hospedaje</th>
-                <td scope="col" id="hospedaje"></td>
-                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                <td scope="col" id="hospedaje-autorizadas"></td>
-                {% endif %}
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <th>Total Gasolina</th>
-                <td scope="col" id="gasolina"></td>
-                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                <td scope="col" id="gasolina-autorizadas"></td>
-                {% endif %}
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <th>Total Alimentos</th>
-                <td scope="col" id="alimentos"></td>
-                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                <td scope="col" id="alimentos-autorizadas"></td>
-                {% endif %}
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <th>Total Peajes</th>
-                <td scope="col" id="peaje"></td>
-                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                <td scope="col" id="peaje-autorizadas"></td>
-                {% endif %}
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <th>Total Otros</th>
-                <td scope="col" id="otros"></td>
-                {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                <td scope="col" id="otros-autorizadas"></td>
-                {% endif %}
-            </tr>
-            <tr>
-                <td></td>
-                <td></td>
-                <th>Total</th>
-                <td scope="col" id="total2"></td>
-                <td scope="col" id="total3"></td>
-            </tr>
-        </tbody>
-    </table>
-    <div class="row ms-3 my-2">
-        {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
-        <div class="form-check form-switch col-sm">
-            <label for="form.facturas_completas" class="form-check-label"><strong>Facturas Completas</strong></label>
-            {{ form.facturas_completas|add_class:"form-check-input" }}
+                </form>
+            </div>
+
+            <form method="POST">
+                {% csrf_token %}
+                <table class="table bg-white">
+                    <thead class="text-black" style="background-color: #F5F5F5;">
+                        <tr>
+                            <th>Clasificación</th>
+                            <th scope="col">Concepto [XML]</th>
+                            <th scope="col">Proveedor [XML]</th>
+                            <th scope="col">Monto [XML]</th>
+                            <th>PDF</th>
+                            <th>XML</th>
+                            <th>PDF-render</th>
+                            {% if usuario.tipo.tesoreria %}
+                            <th>Validar</th>
+                            {% endif %}
+                            <th>Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for factura in facturas %}
+                        <tr>
+                            <td data-clasificacion="{% if factura.factura_xml %}{% if factura.emisor %}{{ factura.emisor.clasificacion_general }}{% endif %}{% endif %}">
+                                {% if factura.factura_xml and factura.emisor %}
+                                <strong>{{ factura.emisor.clasificacion_general }}</strong>
+                                {% endif %}
+                            </td>
+                            <td>{% if factura.factura_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
+                            <td>{% if factura.factura_xml %} {{ factura.emisor.nombre_emisor }} {% endif %}</td>
+                            <td>
+                                {% if factura.factura_xml %}
+                                <span class="total-xml" total="{{ factura.emisor.total }}"> ${{ factura.emisor.total }} </span>
+                                {% else %}
+                                <span></span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <ul class="nav nav-pills">
+                                    {% if factura.factura_pdf %}
+                                    <ul class="nav nav-pills">
+                                        
+                                        <li class="nav-item mx-1">
+                                            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ factura.id|unlocalize }}" title="Ver comprobante de pago">
+                                                <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+                                            </button>
+                                        </li>
+                                    </ul>
+                                        <!-- Modal con visor de PDF -->
+                                        <div class="modal fade" id="pdfModal{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ factura.id|unlocalize }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-xl">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="pdfModalLabel{{ factura.id|unlocalize }}">Comprobante de Pago</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <iframe src="{{ factura.factura_pdf.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </ul>
+                            </td>
+                            <td>
+                                <ul class="nav nav-pills">
+                                    {% if factura.factura_xml %}
+                                    <li class="nav-item mx-1">
+                                        <a href="{{ factura.factura_xml.url }}" download class="btn btn-outline-secondary">
+                                            <i class="fa-duotone fa-solid fa-file-xml fa-xl"></i>
+                                        </a>
+                                    </li>
+                                    {% endif %}
+                                </ul>
+                            </td>
+                            <td>
+                                {% if factura.factura_xml %}
+                                <!--<button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfM{{ factura.id|unlocalize }}">
+                                    <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                                </button>
+                                
+                                Modal con visor de PDF
+                                <div class="modal fade" id="pdfM{{ factura.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfLabel{{ factura.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfModalLabel{{ factura.id|unlocalize }}">Vista Previa del CFDI</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{% url 'generar_cfdi_viaticos' factura.id %}" width="100%" height="600px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>-->
+                                    <a href="{% url 'generar_cfdi_viaticos' factura.id %}" download class="btn btn-outline-info">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+                                    </a>
+                                {% endif %}
+                            </td>
+                            {% if usuario.tipo.tesoreria %}
+                            <td>
+                                <input type="checkbox" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %} onchange="actualizarTotales()">
+                            </td>
+                            {% endif %}
+                            <td>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize}})">
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                        {% if usuario.tipo.tesoreria %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th></th>
+                            <th></th>
+                            <th class="center">Autorizadas</th>
+                        </tr>
+                        {% endif %}
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total Hospedaje</th>
+                            <td scope="col" id="hospedaje"></td>
+                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            <td scope="col" id="hospedaje-autorizadas"></td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total Gasolina</th>
+                            <td scope="col" id="gasolina"></td>
+                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            <td scope="col" id="gasolina-autorizadas"></td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total Alimentos</th>
+                            <td scope="col" id="alimentos"></td>
+                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            <td scope="col" id="alimentos-autorizadas"></td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total Peajes</th>
+                            <td scope="col" id="peaje"></td>
+                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            <td scope="col" id="peaje-autorizadas"></td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total Otros</th>
+                            <td scope="col" id="otros"></td>
+                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            <td scope="col" id="otros-autorizadas"></td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total</th>
+                            <td scope="col" id="total2"></td>
+                            <td scope="col" id="total3"></td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div class="row ms-3 my-2">
+                    {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
+                    <div class="form-check form-switch col-sm">
+                        <label for="form.facturas_completas" class="form-check-label"><strong>Facturas Completas</strong></label>
+                        {{ form.facturas_completas|add_class:"form-check-input" }}
+                    </div>
+                    {% endif %}
+                    <hr>
+                    <ul class="nav">
+                        <!--{% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
+                        <li class="nav-item">
+                            <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
+                        </li>
+                        {% elif fuera_de_tiempo == False %}
+                        {% endif %}-->
+                        <li class="nav-item">
+                            <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" title="Subir Facturas">
+                                <i class="fa-solid fa-cloud-arrow-up"></i>
+                            </a>
+                        </li>
+                    <!--- aquí iba el endif del fuera de tiempo se quita por indicación de HT 31/12/2024-->
+                        <li class="nav-item ms-4">
+                            <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
+                        </li>
+                        <li class="nav-item ms-4">      
+                            <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
+                        </li>
+                    </ul>
+                </div>
+            </form>
         </div>
-        {% endif %}
-        <hr>
-        <ul class="nav">
-            <!--{% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
-            <li class="nav-item">
-                <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
-            </li>
-            {% elif fuera_de_tiempo == False %}
-            {% endif %}-->
-            <li class="nav-item">
-                <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" title="Subir Facturas">
-                    <i class="fa-solid fa-cloud-arrow-up"></i>
-                </a>
-            </li>
-           <!--- aquí iba el endif del fuera de tiempo se quita por indicación de HT 31/12/2024-->
-            <li class="nav-item ms-4">
-                <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
-            </li>
-            <li class="nav-item ms-4">      
-                <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
-            </li>
-        </ul>
+   
     </div>
-</form>
 </div>
 <!--Este es el modal 1 facturas-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
