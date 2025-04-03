@@ -308,14 +308,7 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-;(function(){
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
-    htmx.on('htmx:beforeSwap',(e)=>{
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-        modal.hide()
-    })
-})()
 var myModal = document.getElementById('dialog')
 
 myModal.addEventListener('hidden.bs.modal', function (event) {
@@ -386,11 +379,12 @@ function enviarFormulario() {
 
 })()
 
-// Recargar la página cuando se cierre el modal de confirmación
-var confirmModal = document.getElementById('confirmModal');
-confirmModal.addEventListener('hidden.bs.modal', function (event) {
-    location.reload();  
-});
+const confirmModal = document.getElementById('confirmModal');
+if (confirmModal) {
+    confirmModal.addEventListener('hidden.bs.modal', function (event) {
+        location.reload();  
+    });
+}
 </script>
 {% endblock %}
 </body>

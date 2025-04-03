@@ -306,7 +306,9 @@
             {% elif fuera_de_tiempo == False %}
             {% endif %}-->
             <li class="nav-item">
-                <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" >Facturas <i class="fa-solid fa-file-arrow-up"></i></a>
+                <a type="button" class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-viatico' viatico.id %}" title="Subir Facturas">
+                    <i class="fa-solid fa-cloud-arrow-up"></i>
+                </a>
             </li>
            <!--- aquí iba el endif del fuera de tiempo se quita por indicación de HT 31/12/2024-->
             <li class="nav-item ms-4">
@@ -353,14 +355,6 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
-
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
-})()
 var myModal = document.getElementById('dialog')
 myModal.addEventListener('hidden.bs.modal', function (event) {
       location.reload();
@@ -516,13 +510,20 @@ function enviarFormulario() {
     }
 }
 ;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    const modalElement = document.getElementById('dialog');
+    const modal = new bootstrap.Modal(modalElement);
 
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
-})()
+    htmx.on('htmx:afterSwap', (e) => {
+        if (e.detail.target.id === "document") {
+            const response = e.detail.xhr.responseText;
+            if (response.includes("Facturas se registraron") || response.includes("Se han registrado")) {
+                modal.hide();
+                // Si quieres, puedes recargar también aquí:
+                setTimeout(() => location.reload(), 500); // Recarga medio segundo después
+            }
+        }
+    });
+})();
 
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');
