@@ -2786,7 +2786,7 @@ def layout_pagos(request):
 
         # Mostrar mensaje de éxito y redirigir
         messages.success(request, 'El archivo XML fue generado y cifrado correctamente.')
-        return redirect('nombre_de_la_vista_donde_regresar')  # Cambiar por el nombre real de tu vista
+        return redirect('compras-autorizadas')  # Cambiar por el nombre real de tu vista
 
     context = {
         'compras': compras,
