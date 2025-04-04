@@ -47,6 +47,9 @@ def matriz_oc_proveedores(request):
     else:
         compras = Compra.objects.none()
     
+    compras_no_pagadas = compras.filter(pagada=False, entrada_completa = True)
+    suma_compras_no_pagadas = compras_no_pagadas.aggregate(total=Sum('costo_oc'))['total'] or 0
+    print(suma_compras_no_pagadas)
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
     print(compras)
@@ -117,6 +120,7 @@ def matriz_oc_proveedores(request):
         'compras_list':compras_list,
         'compras':compras,
         'myfilter':myfilter,
+        'suma_compras_no_pagadas': suma_compras_no_pagadas,
         #'cumplimiento': cumplimiento,
         }
     

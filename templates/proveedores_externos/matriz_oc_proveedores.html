@@ -124,17 +124,18 @@
                                 <i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
+                        
                         <!-- Mensaje de estado (opcional) -->
-                        <div id="statusMessage_tag" class="alert alert-primary d-none" role="alert">Reporte en proceso...</div>
-                        <!-- Botón de descarga (inicialmente oculto) -->
+                        <!--<div id="statusMessage_tag" class="alert alert-primary d-none" role="alert">Reporte en proceso...</div>
+                         Botón de descarga (inicialmente oculto)
                         <a type="button" href="#" id="downloadButton" onclick="downloadLimpiar(this)" class="btn btn-outline-success d-none m-1">
                             <i class="fa-solid fa-cloud-arrow-down"></i>
-                        </a>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
+                        </a>-->
+                        <li class="nav-item mx-2">
+                            <div class="alert alert-primary">
+                                <strong>Saldo:</strong> ${{suma_compras_no_pagadas|floatformat:2 }}
+                            </div>
+                        </li>
                         <li class="nav-item m-1 d-lg-none">
                         </li>
                     </ul>
