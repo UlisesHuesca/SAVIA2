@@ -356,7 +356,7 @@ def proveedor_direcciones(request, pk):
         if usuario.tipo.nombre == "Subdirector_Alt":
             direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True, distrito__id= 8)
         else:
-            direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True, distrito__id__in=almacenes_distritos)
+            direcciones = Proveedor_direcciones.objects.filter(nombre__id=pk, completo = True, distrito__id__in = almacenes_distritos)
     else:
         raise Http404("No tienes permiso para ver esta vista")
     context = {
@@ -499,8 +499,9 @@ def product(request):
 def proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
-    proveedores_dir = Proveedor_direcciones.objects.all()
+    proveedores_dir = Proveedor_direcciones.objects.filter(distrito__id__in = almacenes_distritos)
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.proveedores:
