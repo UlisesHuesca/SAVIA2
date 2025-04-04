@@ -69,6 +69,19 @@ from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, Tabl
 from bs4 import BeautifulSoup
 from user.decorators import perfil_seleccionado_required
 import subprocess
+import paramiko
+import logging
+
+# Configurar logger
+LOG_PATH = '/home/savia/logs/pagos_sftp.log'
+os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
+logging.basicConfig(
+    filename=LOG_PATH,
+    level=logging.INFO,
+    format='[%(asctime)s] %(levelname)s: %(message)s',
+    datefmt='%Y-%m-%d %H:%M:%S'
+)
+
 
 @perfil_seleccionado_required
 def compras_por_pagar(request):
@@ -2670,123 +2683,145 @@ def layout_pagos(request):
     cuentas_disponibles = Cuenta.objects.all()
 
     if request.method == 'POST':
-        root = ET.Element('Document', {
-            'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
-            'xmlns': 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03'
-        })
+        try:
+            root = ET.Element('Document', {
+                'xmlns:xsi': 'http://www.w3.org/2001/XMLSchema-instance',
+                'xmlns': 'urn:iso:std:iso:20022:tech:xsd:pain.001.001.03'
+            })
 
-        cstmr_cdt_trf_initn = ET.SubElement(root, 'CstmrCdtTrfInitn')
-        grp_hdr = ET.SubElement(cstmr_cdt_trf_initn, 'GrpHdr')
-        now_local = datetime.now()
-        ET.SubElement(grp_hdr, 'MsgId').text = 'AUTO' +  now_local.strftime('%Y%m%d%H%M%S')
-        ET.SubElement(grp_hdr, 'CreDtTm').text = now_local.isoformat()
-        ET.SubElement(grp_hdr, 'NbOfTxs').text = str(len(compras))
+            cstmr_cdt_trf_initn = ET.SubElement(root, 'CstmrCdtTrfInitn')
+            grp_hdr = ET.SubElement(cstmr_cdt_trf_initn, 'GrpHdr')
+            now_local = datetime.now()
+            ET.SubElement(grp_hdr, 'MsgId').text = 'AUTO' +  now_local.strftime('%Y%m%d%H%M%S')
+            ET.SubElement(grp_hdr, 'CreDtTm').text = now_local.isoformat()
+            ET.SubElement(grp_hdr, 'NbOfTxs').text = str(len(compras))
 
-        initg_pty = ET.SubElement(grp_hdr, 'InitgPty')
-        id_ = ET.SubElement(initg_pty, 'Id')
-        org_id = ET.SubElement(id_, 'OrgId')
-        othr = ET.SubElement(org_id, 'Othr')
-        ET.SubElement(othr, 'Id').text = 'VORDCA00H2H'
-        
-        for count, compra in enumerate(compras, start=1):
-            cuenta_pago_id = request.POST.get(f'cuenta_{count}')
-            cuenta_pago = cuentas_disponibles.get(id=cuenta_pago_id)
-
+            initg_pty = ET.SubElement(grp_hdr, 'InitgPty')
+            id_ = ET.SubElement(initg_pty, 'Id')
+            org_id = ET.SubElement(id_, 'OrgId')
+            othr = ET.SubElement(org_id, 'Othr')
+            ET.SubElement(othr, 'Id').text = 'VORDCA00H2H'
             
-           
-            monto = float(request.POST.get(f'monto_{count}', '0'))
+            for count, compra in enumerate(compras, start=1):
+                cuenta_pago_id = request.POST.get(f'cuenta_{count}')
+                cuenta_pago = cuentas_disponibles.get(id=cuenta_pago_id)
+
+                
             
+                monto = float(request.POST.get(f'monto_{count}', '0'))
+                
 
-            pmt_inf = ET.SubElement(cstmr_cdt_trf_initn, 'PmtInf')
-            ET.SubElement(pmt_inf, 'PmtInfId').text = f'Pmt-{compra.id}'
-            ET.SubElement(pmt_inf, 'PmtMtd').text = 'TRF'
+                pmt_inf = ET.SubElement(cstmr_cdt_trf_initn, 'PmtInf')
+                ET.SubElement(pmt_inf, 'PmtInfId').text = f'Pmt-{compra.id}'
+                ET.SubElement(pmt_inf, 'PmtMtd').text = 'TRF'
 
-            pmt_tp_inf = ET.SubElement(pmt_inf, 'PmtTpInf')
-            svc_lvl = ET.SubElement(pmt_tp_inf, 'SvcLvl')
-            ET.SubElement(svc_lvl, 'Cd').text = 'URGP'
+                pmt_tp_inf = ET.SubElement(pmt_inf, 'PmtTpInf')
+                svc_lvl = ET.SubElement(pmt_tp_inf, 'SvcLvl')
+                ET.SubElement(svc_lvl, 'Cd').text = 'URGP'
 
-            ET.SubElement(pmt_inf, 'ReqdExctnDt').text = now_local.strftime('%Y-%m-%d')
+                ET.SubElement(pmt_inf, 'ReqdExctnDt').text = now_local.strftime('%Y-%m-%d')
 
-            dbtr = ET.SubElement(pmt_inf, 'Dbtr')
-            dbtr_id = ET.SubElement(dbtr, 'Id')
-            dbtr_org_id = ET.SubElement(dbtr_id, 'OrgId')
-            dbtr_othr = ET.SubElement(dbtr_org_id, 'Othr')
-            ET.SubElement(dbtr_othr, 'Id').text = '123456789'
+                dbtr = ET.SubElement(pmt_inf, 'Dbtr')
+                dbtr_id = ET.SubElement(dbtr, 'Id')
+                dbtr_org_id = ET.SubElement(dbtr_id, 'OrgId')
+                dbtr_othr = ET.SubElement(dbtr_org_id, 'Othr')
+                ET.SubElement(dbtr_othr, 'Id').text = '123456789'
 
-            dbtr_acct = ET.SubElement(pmt_inf, 'DbtrAcct')
-            dbtr_acct_id = ET.SubElement(dbtr_acct, 'Id')
-            dbtr_acct_othr = ET.SubElement(dbtr_acct_id, 'Othr')
-            ET.SubElement(dbtr_acct_othr, 'Id').text = str(cuenta_pago.cuenta)
-            
-            #ET.SubElement(dbtr_acct, 'Ccy').text = compra.moneda.nombre
+                dbtr_acct = ET.SubElement(pmt_inf, 'DbtrAcct')
+                dbtr_acct_id = ET.SubElement(dbtr_acct, 'Id')
+                dbtr_acct_othr = ET.SubElement(dbtr_acct_id, 'Othr')
+                ET.SubElement(dbtr_acct_othr, 'Id').text = str(cuenta_pago.cuenta)
+                
+                #ET.SubElement(dbtr_acct, 'Ccy').text = compra.moneda.nombre
 
-            dbtr_agt = ET.SubElement(pmt_inf, 'DbtrAgt')
-            fin_instn_id = ET.SubElement(dbtr_agt, 'FinInstnId')
-            ET.SubElement(fin_instn_id, 'BIC').text = 'BCMRMXMM'
+                dbtr_agt = ET.SubElement(pmt_inf, 'DbtrAgt')
+                fin_instn_id = ET.SubElement(dbtr_agt, 'FinInstnId')
+                ET.SubElement(fin_instn_id, 'BIC').text = 'BCMRMXMM'
 
-            cdt_trf_tx_inf = ET.SubElement(pmt_inf, 'CdtTrfTxInf')
+                cdt_trf_tx_inf = ET.SubElement(pmt_inf, 'CdtTrfTxInf')
 
-            pmt_id = ET.SubElement(cdt_trf_tx_inf, 'PmtId')
-            instr_id = f'INST-{compra.id}'
-            ET.SubElement(pmt_id, 'InstrId').text = instr_id
-            ET.SubElement(pmt_id, 'EndToEndId').text = instr_id
+                pmt_id = ET.SubElement(cdt_trf_tx_inf, 'PmtId')
+                instr_id = f'INST-{compra.id}'
+                ET.SubElement(pmt_id, 'InstrId').text = instr_id
+                ET.SubElement(pmt_id, 'EndToEndId').text = instr_id
 
-            amt = ET.SubElement(cdt_trf_tx_inf, 'Amt')
-            if compra.moneda.nombre == "PESOS":
-                moneda = "MXN"
-            ET.SubElement(amt, 'InstdAmt', Ccy=moneda).text = f"{monto:.2f}"
+                amt = ET.SubElement(cdt_trf_tx_inf, 'Amt')
+                if compra.moneda.nombre == "PESOS":
+                    moneda = "MXN"
+                ET.SubElement(amt, 'InstdAmt', Ccy=moneda).text = f"{monto:.2f}"
 
-            ET.SubElement(cdt_trf_tx_inf, 'ChrgBr').text = 'DEBT'
+                ET.SubElement(cdt_trf_tx_inf, 'ChrgBr').text = 'DEBT'
 
-            cdtr_agt = ET.SubElement(cdt_trf_tx_inf, 'CdtrAgt')
-            fin_instn_id_cdtr = ET.SubElement(cdtr_agt, 'FinInstnId')
-            bic_banco_receptor = compra.proveedor.banco.bic if compra.proveedor.banco.bic else 'BICDESCONOCIDO'
-            ET.SubElement(fin_instn_id_cdtr, 'BIC').text = bic_banco_receptor
+                cdtr_agt = ET.SubElement(cdt_trf_tx_inf, 'CdtrAgt')
+                fin_instn_id_cdtr = ET.SubElement(cdtr_agt, 'FinInstnId')
+                bic_banco_receptor = compra.proveedor.banco.bic if compra.proveedor.banco.bic else 'BICDESCONOCIDO'
+                ET.SubElement(fin_instn_id_cdtr, 'BIC').text = bic_banco_receptor
 
-            cdtr = ET.SubElement(cdt_trf_tx_inf, 'Cdtr')
-            ET.SubElement(cdtr, 'Nm').text = compra.proveedor.nombre.razon_social
+                cdtr = ET.SubElement(cdt_trf_tx_inf, 'Cdtr')
+                ET.SubElement(cdtr, 'Nm').text = compra.proveedor.nombre.razon_social
 
-            PstlAdr = ET.SubElement(cdtr,'PstlAdr')
-            ET.SubElement(PstlAdr, 'StrtNm').text = compra.proveedor.domicilio
-            if compra.proveedor.estado:
-                ET.SubElement(PstlAdr, 'TwnNm').text = compra.proveedor.estado.nombre
-            if compra.proveedor.nombre.extranjero == False:
-                ET.SubElement(PstlAdr, 'Ctry').text = 'MX'
-            else:
-                ET.SubElement(PstlAdr, 'Ctry').text = 'EX'
+                PstlAdr = ET.SubElement(cdtr,'PstlAdr')
+                ET.SubElement(PstlAdr, 'StrtNm').text = compra.proveedor.domicilio
+                if compra.proveedor.estado:
+                    ET.SubElement(PstlAdr, 'TwnNm').text = compra.proveedor.estado.nombre
+                if compra.proveedor.nombre.extranjero == False:
+                    ET.SubElement(PstlAdr, 'Ctry').text = 'MX'
+                else:
+                    ET.SubElement(PstlAdr, 'Ctry').text = 'EX'
 
-            cdtr_id = ET.SubElement(cdtr, 'Id')
-            cdtr_org_id = ET.SubElement(cdtr_id, 'OrgId')
-            cdtr_othr = ET.SubElement(cdtr_org_id, 'Othr')
-            ET.SubElement(cdtr_othr, 'Id').text = compra.proveedor.nombre.rfc
+                cdtr_id = ET.SubElement(cdtr, 'Id')
+                cdtr_org_id = ET.SubElement(cdtr_id, 'OrgId')
+                cdtr_othr = ET.SubElement(cdtr_org_id, 'Othr')
+                ET.SubElement(cdtr_othr, 'Id').text = compra.proveedor.nombre.rfc
 
 
-            cdtr_acct = ET.SubElement(cdt_trf_tx_inf, 'CdtrAcct')
-            cdtr_acct_id = ET.SubElement(cdtr_acct, 'Id')
-            cdtr_acct_othr = ET.SubElement(cdtr_acct_id, 'Othr')
-            ET.SubElement(cdtr_acct_othr, 'Id').text = str(compra.proveedor.cuenta)
+                cdtr_acct = ET.SubElement(cdt_trf_tx_inf, 'CdtrAcct')
+                cdtr_acct_id = ET.SubElement(cdtr_acct, 'Id')
+                cdtr_acct_othr = ET.SubElement(cdtr_acct_id, 'Othr')
+                ET.SubElement(cdtr_acct_othr, 'Id').text = str(compra.proveedor.cuenta)
 
-            rmt_inf = ET.SubElement(cdt_trf_tx_inf, 'RmtInf')
-            ET.SubElement(rmt_inf, 'Ustrd').text = f"F-{compra.folio}"
+                rmt_inf = ET.SubElement(cdt_trf_tx_inf, 'RmtInf')
+                ET.SubElement(rmt_inf, 'Ustrd').text = f"F-{compra.folio}"
 
-        xml_bytes = ET.tostring(root, encoding='utf-8', method='xml')
+            xml_bytes = ET.tostring(root, encoding='utf-8', method='xml')
 
-        # Guardar XML en disco
-        xml_path = '/home/savia/pagos_xml/pagos.xml'
-        with open(xml_path, 'wb') as f:
-            f.write(xml_bytes)
+            # Guardar XML en disco
+            xml_path = '/home/savia/pagos_xml/pagos.xml'
+            with open(xml_path, 'wb') as f:
+                f.write(xml_bytes)
+            logging.info(f'Archivo XML generado: {xml_path}')
 
-        # Encriptar el archivo XML con GPG
-        encrypted_path = '/home/savia/pagos_encrypted/pagos.xml.gpg'
-        subprocess.run([
-            'gpg', '--yes', '--batch', '--trust-model', 'always',
-            '--output', encrypted_path,
-            '--encrypt', '--recipient', 'gruvor1i', xml_path
-        ], check=True)
+            # Encriptar el archivo XML con GPG
+            encrypted_path = '/home/savia/pagos_encrypted/pagos.xml.gpg'
+            subprocess.run([
+                '/usr/bin/gpg', '--yes', '--batch', '--trust-model', 'always',
+                '--output', encrypted_path,
+                '--encrypt', '--recipient', 'gruvor1i', xml_path
+            ], check=True)
+            logging.info(f'Archivo encriptado: {encrypted_path}')
+            # 5. Enviar por SFTP
 
-        # Mostrar mensaje de éxito y redirigir
-        messages.success(request, 'El archivo XML fue generado y cifrado correctamente.')
-        return redirect('compras-autorizadas')  # Cambiar por el nombre real de tu vista
+            host = os.getenv("BBVA_SFTP_HOST")
+            port = int(os.getenv("BBVA_PORT"))
+            username = os.getenv("BBVA_UP")
+            password = os.getenv("BBVA_PP")
+            remote_path = '/'
+
+            transport = paramiko.Transport((host, port))
+            transport.connect(username=username, password=password)
+            sftp = paramiko.SFTPClient.from_transport(transport)
+            sftp.chdir(remote_path)
+            sftp.put(encrypted_path, 'pagos.xml.gpg')
+            sftp.close()
+            transport.close()
+            logging.info(f'Archivo enviado a BBVA SFTP ({host}:{port}{remote_path})')
+
+            messages.success(request, 'Archivo encriptado y enviado por SFTP a BBVA correctamente.')
+            return redirect('compras-autorizadas')  # Cambiar por el nombre real de tu vista
+        except Exception as e:
+            logging.error(f'Error durante el proceso de envío: {str(e)}')
+            messages.error(request, 'Ocurrió un error al enviar el archivo.')
+            return redirect('compras-autorizadas')
 
     context = {
         'compras': compras,
@@ -2794,6 +2829,40 @@ def layout_pagos(request):
     }
 
     return render(request, 'tesoreria/layout_pagos.html', context)
+
+
+def descargar_respuestas_bbva():
+    host = os.getenv("BBVA_SFTP_HOST")
+    port = int(os.getenv("BBVA_PORT"))
+    username = os.getenv("BBVA_UG")   
+    password = os.getenv("BBVA_PG")     
+    remote_path = '/'                 
+    local_path = '/home/savia/pagos_respuestas/'
+
+    os.makedirs(local_path, exist_ok=True)
+
+    try:
+        transport = paramiko.Transport((host, port))
+        transport.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        sftp.chdir(remote_path)
+
+        archivos = sftp.listdir()
+        logging.info(f'Se encontraron {len(archivos)} archivo(s) en {remote_path}.')
+
+        for archivo in archivos:
+            remote_file = f"{remote_path}{archivo}" if not remote_path.endswith('/') else f"{remote_path}{archivo}"
+            local_file = os.path.join(local_path, archivo)
+
+            sftp.get(remote_file, local_file)
+            logging.info(f'Archivo descargado: {archivo} → {local_file}')
+
+        sftp.close()
+        transport.close()
+        logging.info('Conexión cerrada correctamente después de descargar archivos.')
+
+    except Exception as e:
+        logging.error(f'Error al descargar archivos desde BBVA: {str(e)}')
 
 def convert_excel_control_bancos(pagos):
     # Reordenar los pagos en orden ascendente por 'pagado_real'
