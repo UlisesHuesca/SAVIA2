@@ -138,7 +138,7 @@ def matriz_direcciones(request):
     
     if usuario.tipo.proveedor_externo:
         proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
-        direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
+        direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre="Rechazado")
         tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
         tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
 
