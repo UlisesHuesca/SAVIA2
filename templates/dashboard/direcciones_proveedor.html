@@ -63,7 +63,7 @@
                 -->
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores' %}">
+                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores' %}?razon_social={{ razon }}&rfc={{ rfc }}">
                                 <i class="fa-solid fa-backward"></i>
                             </a>
                             {% if usuario.tipo.proveedores %}

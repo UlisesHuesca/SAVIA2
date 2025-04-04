@@ -23,6 +23,7 @@ from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
 from django.utils import translation
+from django.urls import reverse
 from django.conf import settings
 import os
 #import decimal
@@ -350,6 +351,8 @@ def proveedor_direcciones(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    razon = request.GET.get('razon_social', '')
+    rfc = request.GET.get('rfc', '')
     #print(almacenes_distritos)
     if usuario.tipo.proveedores:
         proveedor = Proveedor.objects.get(id=pk)
@@ -362,6 +365,8 @@ def proveedor_direcciones(request, pk):
     context = {
         'proveedor':proveedor,
         'direcciones':direcciones,
+        'razon': razon,
+        'rfc': rfc,
         }
     return render(request,'dashboard/direcciones_proveedor.html', context)
 
@@ -581,6 +586,9 @@ def matriz_revision_proveedor(request):
 def proveedores_update(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
+    razon = request.GET.get('razon_social', '')
+    rfc = request.GET.get('rfc', '')
+
     if usuario.tipo.proveedores == True:
         proveedores = Proveedor.objects.get(id=pk)
         error_messages = {}
@@ -589,7 +597,7 @@ def proveedores_update(request, pk):
             if form.is_valid():
                 form.save()
                 messages.success(request,f'Has actualizado correctamente el proyecto {proveedores.razon_social}')
-                return redirect('dashboard-proveedores')
+                return redirect(f"{reverse('dashboard-proveedores')}?razon_social={razon}&rfc={rfc}")
             else:
                 for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
@@ -602,6 +610,8 @@ def proveedores_update(request, pk):
         'error_messages': error_messages,
         'form': form,
         'proveedores':proveedores,
+        'razon': razon,
+        'rfc': rfc,
         }
 
     return render(request,'dashboard/proveedores_update.html', context)
@@ -613,6 +623,7 @@ def proveedores_update(request, pk):
 def add_proveedores_old(request):
     usuario = Profile.objects.get(staff=request.user)
     item, created = Proveedor.objects.get_or_create(creado_por=usuario, completo = False)
+   
 
     if request.method =='POST':
         form = ProveedoresForm(request.POST, request.FILES or None, instance = item)
@@ -620,7 +631,9 @@ def add_proveedores_old(request):
             item = form.save(commit=False)
             item.completo = True
             item.save()
+            # Recuperas los filtros que venían en el POST
             messages.success(request,f'Has agregado correctamente el proveedor {item.razon_social}')
+           
             return redirect('dashboard-proveedores')
     else:
         form = ProveedoresForm(instance=item)
@@ -629,6 +642,7 @@ def add_proveedores_old(request):
     context = {
         'form': form,
         'item':item,
+      
         }
     return render(request,'dashboard/add_proveedores.html', context)
 
@@ -891,6 +905,7 @@ def edit_proveedor_direccion(request, pk):
         'proveedor':proveedor,
         'form': form,
         'direccion':direccion,
+       
         }
     return render(request,'dashboard/edit_direcciones_proveedores.html', context)
 
@@ -1010,7 +1025,9 @@ def upload_batch_proveedores_direcciones(request):
 def documentacion_proveedores(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    proveedor = Proveedor.objects.get(id=pk)            
+    proveedor = Proveedor.objects.get(id=pk)       
+    razon = request.GET.get('razon_social', '')
+    rfc = request.GET.get('rfc', '')     
 
     direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
     tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
@@ -1090,6 +1107,8 @@ def documentacion_proveedores(request, pk):
         'documentos_count': documentos_count,  # Dict con el total de documentos por tipo
         'documentos_validados_count': documentos_validados_count,  # Dict con validados por tipo
         'documentos': documentos,
+        'razon': razon,
+        'rfc': rfc,
         }
     
     return render(request,'dashboard/documentacion_proveedor.html', context)

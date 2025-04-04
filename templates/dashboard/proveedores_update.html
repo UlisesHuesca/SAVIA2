@@ -91,7 +91,7 @@
                             {{form.extranjero|add_class:"form-check-input"}}
                         </div>
                     </div>
-                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
+                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}?razon_social={{ razon }}&rfc={{ rfc }}">Cancelar</a>
                     <input class="btn btn-outline-info" type='submit' value="Actualizar">
                 </form>
                 </div>

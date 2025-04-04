@@ -138,7 +138,7 @@ def matriz_oc_proveedores(request):
 def matriz_direcciones(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    
+   
     
     if usuario.tipo.proveedor_externo:
         proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
@@ -158,6 +158,7 @@ def matriz_direcciones(request):
             'competencias',
             'contrato',
             'factura_predial',
+            
         ]
 
         documentos_count = {tipo: 0 for tipo in tipos_documentos}
@@ -180,6 +181,7 @@ def matriz_direcciones(request):
         'direcciones':direcciones,
         'tiene_servicio': tiene_servicio,
         'tiene_arrendamiento': tiene_arrendamiento,
+        
         }
     return render(request,'proveedores_externos/informacion_proveedores.html', context)
 
