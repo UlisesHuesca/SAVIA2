@@ -77,7 +77,10 @@
                 <table class='table table-striped'>
                     <thead>
                         <th>
-                            Fecha
+                            Fecha de Subida al sistema
+                        </th>
+                        <th>
+                            Fecha de Pago [Ficha]
                         </th>
                         <th>
                             Pago
@@ -89,6 +92,7 @@
                         <tr>
                             {% if pago.comprobante_pago %}
                             <th scope="col">{{pago.pagado_date}} </th>
+                            <th>{{pago.fecha_comprobante}}</th>
                             <th scope="col">
                                 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
                                     <i class="fa-duotone fa-solid fa-file-invoice-dollar fa-xl"></i>
@@ -290,6 +294,7 @@
             modal.hide()
         })
     })()
+
     var myModal = document.getElementById('dialog')
     
     myModal.addEventListener('hidden.bs.modal', function (event) {
@@ -327,14 +332,6 @@ function enviarFormulario() {
         document.getElementById('deleteForm').submit();  
     }
 }
-;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
-
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
-})()
 
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');

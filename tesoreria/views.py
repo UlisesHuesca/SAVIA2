@@ -1350,7 +1350,7 @@ def generar_archivo_zip(facturas, compra):
 
 @perfil_seleccionado_required
 def matriz_facturas_nomodal(request, pk):
-    print('estoy en matriz_facturas_nomodal')
+    #print('estoy en matriz_facturas_nomodal')
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
 
@@ -1368,6 +1368,19 @@ def matriz_facturas_nomodal(request, pk):
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
     form = Facturas_Completas_Form(instance=compra)
+
+    
+    for pago in pagos:
+        fecha_pdf = None
+        if pago.comprobante_pago:
+            try:
+                texto = extraer_texto_pdf_prop(pago.comprobante_pago)
+                variables = encontrar_variables(texto)
+                fecha_pdf = variables.get('fecha', 'No disponible')
+            except Exception as e:
+                fecha_pdf = f"Error: {str(e)}"
+
+        pago.fecha_pdf = fecha_pdf  # Asignar el valor a la variable de instancia
    
     if request.method == 'POST':
         form = Facturas_Completas_Form(request.POST, instance=compra)
