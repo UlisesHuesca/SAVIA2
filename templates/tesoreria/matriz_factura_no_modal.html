@@ -77,10 +77,7 @@
                 <table class='table table-striped'>
                     <thead>
                         <th>
-                            Fecha de Pago S2
-                        </th>
-                        <th>
-                            Fecha de Pago [Ficha]
+                            Fecha
                         </th>
                         <th>
                             Pago
@@ -91,8 +88,7 @@
                         {% for pago in pagos %}
                         <tr>
                             {% if pago.comprobante_pago %}
-                            <th scope="col">{{pago.pagado_date|date:"d/m/Y"}} </th>
-                            <th>{{pago.fecha_pdf}}</th>
+                            <th>{% if pago.fecha_pdf %}Comprobante: {{pago.fecha_pdf}}{% else %}Sistema: {{pago.pagado_date|date:"d/m/Y"}}{% endif %}</th>
                             <th scope="col">
                                 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
                                     <i class="fa-duotone fa-solid fa-file-invoice-dollar fa-xl"></i>
