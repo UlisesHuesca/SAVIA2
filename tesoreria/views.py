@@ -1381,6 +1381,7 @@ def matriz_facturas_nomodal(request, pk):
                 fecha_pdf = f"Error: {str(e)}"
 
         pago.fecha_pdf = fecha_pdf  # Asignar el valor a la variable de instancia
+        #print(pago.fecha_pdf)  # Imprimir el valor de fecha_pdf
    
     if request.method == 'POST':
         form = Facturas_Completas_Form(request.POST, instance=compra)
