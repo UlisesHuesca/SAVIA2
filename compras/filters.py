@@ -20,6 +20,11 @@ class CompraFilter(django_filters.FilterSet):
         ('DOLARES','DOLARES'),
         ('PESOS','PESOS'),
     ]
+
+    PAGADA_CHOICES = [
+    ('true', 'Pagada'),
+    ('false', 'No pagada'),
+    ]
     proveedor = CharFilter(field_name='proveedor__nombre__razon_social', lookup_expr='icontains')
     creada_por = CharFilter(field_name='creada_por', lookup_expr='icontains')
     req = CharFilter(field_name='req__folio', lookup_expr='icontains')
@@ -34,10 +39,11 @@ class CompraFilter(django_filters.FilterSet):
     pago = ChoiceFilter(choices=PAGO_CHOICES, method='filter_by_pago', label='Pago') # Changed filter
     moneda = ChoiceFilter(choices = MONEDA_CHOICES, method='filter_by_moneda', label ='Moneda')
     distrito = CharFilter(field_name='req__orden__distrito__nombre', lookup_expr='icontains')
+    pagada = ChoiceFilter(choices=PAGADA_CHOICES, method='filter_by_pagada', label='Pagada') # Changed filter
 
     class Meta:
         model = Compra
-        fields = ['folio','proveedor','creada_por','req','solicitud','proyecto','subproyecto','start_date','end_date', 'costo_oc','atrasado','pago', 'moneda']
+        fields = ['folio','proveedor','creada_por','req','solicitud','proyecto','subproyecto','start_date','end_date', 'costo_oc','atrasado','pago', 'moneda','pagada']
 
     def filter_by_pago(self, queryset, name, value):
         # Asegúrate de que 'value' coincida con las opciones 'CREDITO' o 'CONTADO'
@@ -47,7 +53,12 @@ class CompraFilter(django_filters.FilterSet):
             return queryset.filter(cond_de_pago__nombre='CONTADO')
         return queryset
     
-
+    def filter_by_pagada(self, queryset, name, value):
+        if value == 'true':
+            return queryset.filter(pagada=True)
+        elif value == 'false':
+            return queryset.filter(pagada=False)
+        return queryset
 
     def filter_by_moneda(self, queryset, name, value):
         # Asegúrate de que 'value' coincida con las opciones 'CREDITO' o 'CONTADO'
