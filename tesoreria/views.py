@@ -2279,7 +2279,7 @@ def mis_comprobaciones_gasto(request):
                 correos = list(set(correos))
                 print('correos:',correos)
                 email = EmailMessage(
-                subject=f'Comprobación de Gastos - {request.user.get_full_name()} - G{', '.join(folios_gastos_enviados)}',
+                subject=f"Comprobación de Gastos - {request.user.get_full_name()} - G{', '.join(folios_gastos_enviados)}",
                 body=html_message,
                 from_email=settings.DEFAULT_FROM_EMAIL,
                 to = correos,   
