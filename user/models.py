@@ -80,6 +80,7 @@ class Tipo_perfil(models.Model):
     proveedor_externo = models.BooleanField(default = False)
     proyectos =  models.BooleanField(default = False)
     productos = models.BooleanField(default = False)
+    documentos = models.BooleanField(default = False)
     def __str__(self):
         return f'{self.nombre}'
 

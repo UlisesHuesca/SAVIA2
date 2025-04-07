@@ -1338,7 +1338,7 @@ def gasto_entrada(request, pk):
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
-                email.send()
+                #email.send()
                 
                 return redirect('matriz-gasto-entrada')
         if "input_producto" in request.POST:
@@ -2128,8 +2128,8 @@ def entradas_por_gasto(request):
 
     return render(request,'gasto/reporte_entradas_gasto.html', context)
 
-def generar_cfdi_gasto(request, pk):
-    factura = Factura.objects.get(id=pk)
+def crear_pdf_cfdi_buffer(factura):
+    #factura = Factura.objects.get(id=pk)
     data = factura.emisor
     # Verificar y asignar un valor predeterminado para impuestos si es None
     if data['impuestos'] is None:
@@ -2376,9 +2376,14 @@ def generar_cfdi_gasto(request, pk):
     c.save()
 
     buffer.seek(0)
-    # Crear la respuesta HTTP con el PDF
-    folio_fiscal = data['uuid']
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{folio_fiscal}.pdf"'
 
-    return response
+    return buffer
+    
+def generar_cfdi_gasto(request, pk):
+    factura = Factura.objects.get(id=pk)
+    buffer = crear_pdf_cfdi_buffer(factura)
+    # Crear la respuesta HTTP con el PDF
+    folio_fiscal = factura.emisor.get('uuid', f'factura_{factura.id}')
+    return HttpResponse(buffer, content_type='application/pdf', headers={
+        'Content-Disposition': f'attachment; filename="{folio_fiscal}.pdf"'
+    })

@@ -18,7 +18,7 @@ from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_cod
 from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
-from gastos.views import render_pdf_gasto
+from gastos.views import render_pdf_gasto,crear_pdf_cfdi_buffer
 from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
@@ -46,6 +46,7 @@ import io
 import zipfile
 import xml.etree.ElementTree as ET
 
+
 #Excel stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -64,13 +65,14 @@ from reportlab.lib.pagesizes import letter
 from reportlab.rl_config import defaultPageSize
 from compras.tasks import convert_excel_matriz_compras_task
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
-from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY, TA_RIGHT
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
 from bs4 import BeautifulSoup
 from user.decorators import perfil_seleccionado_required
 import subprocess
 import paramiko
 import logging
+from PyPDF2 import PdfMerger
 
 # Configurar logger
 LOG_PATH = '/home/savia/logs/pagos_sftp.log'
@@ -1981,7 +1983,10 @@ def complemento_eliminar(request, pk):
 def mis_gastos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    gastos = Solicitud_Gasto.objects.filter(Q(staff = usuario) |Q(colaborador = usuario), complete=True).order_by('-folio')
+    gastos = Solicitud_Gasto.objects.filter(
+        Q(staff = usuario) |Q(colaborador = usuario), 
+        complete=True
+        ).order_by('-folio')
     myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
     gastos = myfilter.qs
 
@@ -2031,26 +2036,277 @@ def mis_comprobaciones_gasto(request):
     usuario = Profile.objects.get(id = pk_profile)
     año_actual = datetime.now().year
     año_anterior = año_actual - 1
+    inicio = datetime(año_anterior, 1, 1)
+    fin = datetime(año_actual, 12, 31, 23, 59, 59)
 
-    gastos = Solicitud_Gasto.objects.filter(Q(staff=usuario) | Q(colaborador=usuario),autorizar2=True,created_at__year__in=[año_anterior, año_actual],complete=True
-                ).annotate(total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
-                ).order_by('-folio')
-
+    print(año_actual)
+    print(año_anterior)
+    gastos = Solicitud_Gasto.objects.filter(
+        Q(staff=usuario) | Q(colaborador=usuario),
+        autorizar2=True,
+        created_at__range=(inicio, fin),
+        complete=True
+    ).annotate(
+        facturas_hechas=Count('facturas', filter=Q(facturas__hecho=True))
+    ).order_by('-folio')
+    
+    #).annotate(total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
+    #            ).order_by('-folio')
+    print('gastos:',gastos)
     #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     #viaticos = myfilter.qs
 
     #p = Paginator(pagos, 25)
     #page = request.GET.get('page')
     #pagos_list = p.get_page(page)
-    total_todas_facturas = decimal.Decimal(0)
+    
+    suma = decimal.Decimal(0)
     total_monto_gastos = decimal.Decimal(0)
+    total_todas_facturas = decimal.Decimal(0)
     for gasto in gastos:
-        gasto.suma_total_facturas = sum(decimal.Decimal(factura.emisor['total']) for factura in gasto.facturas.all() if factura.archivo_xml and factura.hecho and factura.emisor is not None)
-        # Agrega la suma del gasto actual al total general
-        total_todas_facturas += gasto.suma_total_facturas
+        suma = decimal.Decimal('0')
         total_monto_gastos += gasto.get_total_solicitud
-    if request.method =='POST' and 'btnExcel' in request.POST:
-        return convert_comprobacion_gastos_to_xls2(gastos, año_actual,total_todas_facturas,total_monto_gastos)
+        for factura in gasto.facturas.all():
+            if factura.archivo_xml and factura.hecho: 
+                try:
+                    if factura.emisor is not None:
+                        suma += decimal.Decimal(factura.emisor['total'])
+                except FileNotFoundError:
+                    # Ignorar o registrar si el archivo XML no existe
+                    pass
+        gasto.suma_total_facturas = suma
+        total_todas_facturas += gasto.suma_total_facturas
+
+    # Agrega la suma del gasto actual al total general
+    #total_todas_facturas += gasto.suma_total_facturas
+    #total_monto_gastos += gasto.get_total_solicitud
+
+    if request.method =='POST':
+        if 'btnExcel' in request.POST:
+            return convert_comprobacion_gastos_to_xls2(gastos, año_actual,total_todas_facturas,total_monto_gastos)
+            
+        if 'btnImprimir' in request.POST or 'btnCorreo' in request.POST:
+            # Obtener los IDs de los gastos seleccionados
+            ids = request.POST.getlist('gastos')
+            print(ids)
+            tabla_gastos = """
+            <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-size: 14px; width: 100%;">
+                <thead style="background-color: #eaeaea;">
+                    <tr>
+                        <th>Folio</th>
+                        <th>Monto Solicitado</th>
+                        <th>Monto Comprobado</th>
+                        <th>Diferencia</th>
+                    </tr>
+                </thead>
+                <tbody>
+            """
+            gastos_enviar = Solicitud_Gasto.objects.filter(id__in=ids).prefetch_related('facturas', 'articulos')
+            merger = PdfMerger()
+            folios_gastos_enviados = []
+           
+            for gasto in gastos_enviar:
+                # 1. Generar la carátula en memoria
+                buffer = render_pdf_gasto(gasto.id)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_caratula:
+                    temp_caratula.write(buffer.read())
+                    caratula_path = temp_caratula.name
+                merger.append(caratula_path)
+                folios_gastos_enviados.append(str(gasto.folio))
+                # 2. Comprobantes de pago (justo después de la carátula)
+                for pago in gasto.pagosg.filter(hecho=True):
+                    #print('esta entrando pago',pago)
+                    if pago.comprobante_pago and os.path.exists(pago.comprobante_pago.path):
+                        try:
+                            merger.append(pago.comprobante_pago.path, import_outline=False)
+                        except Exception as e:
+                            print(f"Error al agregar comprobante de pago para gasto {gasto.folio}: {e}")
+
+                suma = 0
+                for factura in gasto.facturas.all():
+                    
+                    if factura.archivo_pdf and factura.hecho: 
+                        path = factura.archivo_pdf.path
+                        if os.path.exists(path):  # ✅ Validación que te faltó
+                            merger.append(path)
+                        else:
+                            print(f"Archivo no encontrado: {path}")
+                    elif factura.archivo_xml and factura.hecho:
+                        try:
+                            buffer = crear_pdf_cfdi_buffer(factura)  # <-- aquí llamas a tu función que genera el PDF desde XML
+                            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_pdf:
+                                temp_pdf.write(buffer.read())
+                                temp_pdf.flush()
+                                merger.append(temp_pdf.name, import_outline=False)
+                        except Exception as e:
+                            print(f"Error al generar PDF desde XML para factura {factura.id}: {str(e)}") 
+
+                    if factura.archivo_xml and factura.hecho: 
+                        try:
+                            if factura.emisor is not None:
+                                suma += decimal.Decimal(factura.emisor['total'])
+                        except FileNotFoundError:
+                            # Ignorar o registrar si el archivo XML no existe
+                            pass
+                        gasto.suma_total_facturas = suma    
+                    
+                    
+                
+                comprobado = gasto.suma_total_facturas
+                monto = gasto.get_total_solicitud  # o gasto.monto si lo prefieres
+                diferencia = comprobado - monto
+                tabla_gastos += f"""
+                    <tr>
+                        <td>{gasto.folio}</td>
+                        <td>${monto:,.2f}</td>
+                        <td>${comprobado:,.2f}</td>
+                        <td style="color: {'green' if diferencia > 0 else 'red' if diferencia < 0 else 'black'};">
+                            ${diferencia:,.2f}
+                        </td>
+                    </tr>
+                """
+
+
+                 # ⚠️ Salimos del bucle antes de escribir o cerrar
+            if not merger.pages:
+                return HttpResponse("No hay facturas válidas para imprimir.", content_type="text/plain")
+
+           
+           
+            if 'btnImprimir' in request.POST:
+                acuse_buffer = generar_acuse_recibo(usuario, gastos_enviar)
+                with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_acuse:
+                    temp_acuse.write(acuse_buffer.read())
+                    acuse_path = temp_acuse.name
+                merger.append(acuse_path)
+            
+            
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_file:
+                merger.write(temp_file.name)
+                temp_file_path = temp_file.name
+
+           
+            merger.close()
+            print('temp_file_path:', temp_file_path)
+            if 'btnImprimir' in request.POST:
+                #return FileResponse(open(temp_file_path, 'rb'), content_type='application/pdf')
+                # Guarda la ruta del archivo temporal en la sesión
+                request.session['temp_pdf_path'] = temp_file_path
+                return redirect('mostrar-pdf')
+            if 'btnCorreo' in request.POST:
+                # 2. Leer el contenido del archivo temporal
+                with open(temp_file_path, 'rb') as f:
+                    contenido_pdf = f.read()
+                nombre_archivo = f"Comprobacion_gastos_{'_'.join(folios_gastos_enviados)}.pdf"
+                static_path = settings.STATIC_ROOT
+                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+                image_base64 = get_image_base64(img_path)
+                logo_v_base64 = get_image_base64(img_path2)
+                html_message = f"""
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                            <tr>
+                                <td align="center">
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td align="center">
+                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    A quien corresponda,
+                                                </p>
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                    Adjunto la comprobación de gastos de los siguientes folios: {', '.join(folios_gastos_enviados)},
+                                                </p>
+                                            </td>
+                                        </tr>
+                                        <tr>
+                                            <td style="padding: 20px;">
+                                            {tabla_gastos}
+                                            </td>
+                                        </tr>
+                                    </table>
+                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                        <tr>
+                                            <td>
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                Atte.
+                                                </p>
+                                                <p style="font-size: 18px; text-align: justify;">
+                                                {request.user.get_full_name()}
+                                                </p>
+                                                <p style="text-align: center; margin: 20px 0;">
+                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                </p>
+                                                <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                    Este mensaje ha sido generado por SAVIA 2.0
+                                                </p>
+                                            </td>
+                                        </tr>
+                                    </table>
+                                </td>
+                            </tr>
+                        </table>
+                    </body>
+                </html>
+                """
+                # Lista base con el remitente y alguien más si quieres
+                correos = [request.user.email, 'ulises.huesca@grupovordcab.com']
+                #otros_correos = []
+                # Si se marcó el checkbox de RH
+                if request.POST.get('enviarRH'):
+                    personal_rh = Profile.objects.filter(tipo__rh=True, distritos=usuario.distritos, st_activo = True, tipo__documentos = True)
+                    for persona in personal_rh:
+                        if persona.staff.staff.email:
+                            correos.append(persona.staff.staff.email)
+
+                # Si se marcó el checkbox de contabilidad y tesorería
+                if request.POST.get('enviarContabilidad'):
+                    personal_ct = Profile.objects.filter(tipo__tesoreria=True, tipo__rh = False, distritos=usuario.distritos, st_activo = True, tipo__documentos = True)
+                    for persona in personal_ct:
+                        if persona.staff.staff.email:
+                            correos.append(persona.staff.staff.email)
+
+                # Elimina duplicados
+                correos = list(set(correos))
+                print('correos:',correos)
+                email = EmailMessage(
+                subject=f'Comprobación de Gastos - {request.user.get_full_name()} - G{', '.join(folios_gastos_enviados)}',
+                body=html_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to = correos,   
+                headers={'Content-Type': 'text/html'}
+            )
+            email.attach(nombre_archivo, contenido_pdf, 'application/pdf')
+            # Adjuntar los XMLs de las facturas
+            for gasto in gastos_enviar:
+                for factura in gasto.facturas.all():
+                    if factura.archivo_xml and factura.hecho:
+                        try:
+                            path = factura.archivo_xml.path
+                            if os.path.exists(path):
+                                nombre_xml = f"G{gasto.folio}_F{factura.uuid}.xml"
+                                with open(path, 'rb') as f:
+                                    email.attach(nombre_xml, f.read(), 'application/xml')
+                            else:
+                                print(f"XML no encontrado: {path}")
+                        except Exception as e:
+                            print(f"Error al adjuntar XML: {e}")
+            email.content_subtype = "html"
+            email.send()
+
+            messages.success(request, "El correo fue enviado exitosamente.")
+            return redirect('mis-comprobaciones-gasto')
+        
+    
     context= {
         'gastos':gastos,
         'total_todas_facturas':total_todas_facturas,
@@ -2101,6 +2357,15 @@ def mis_comprobaciones_viaticos(request):
         }
 
     return render(request, 'tesoreria/mis_comprobaciones_viaticos.html',context)
+
+#@perfil_seleccionado_required
+def mostrar_pdf(request):
+    pdf_path = request.session.get('temp_pdf_path')
+
+    if not pdf_path or not os.path.exists(pdf_path):
+        return HttpResponse("Archivo PDF no encontrado.", status=404)
+
+    return FileResponse(open(pdf_path, 'rb'), content_type='application/pdf')
 
 
 def convert_comprobacion_gastos_to_xls2(entradas, año_actual, total_todas_facturas, total_monto_gastos):
@@ -3548,3 +3813,146 @@ def convert_excel_gasto(gastos):
     wb.save(response)
 
     return(response)
+
+
+def generar_acuse_recibo(usuario, gastos_enviar):
+      #Configuration of the PDF object
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+
+    styles = getSampleStyleSheet()
+    normal_style = styles['Normal']
+    custom_style = ParagraphStyle(
+        name='CustomStyle',
+        parent=normal_style,
+        fontSize=10,
+        alignment=1,  # Alineación centrada (0 = izquierda, 1 = centro, 2 = derecha)
+    )
+    #Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    #Elaborar caja
+    #c.line(caja_iso,500,caja_iso,720)
+
+
+
+    #Encabezado
+    c.drawString(420,caja_iso,'Preparado por:')
+    c.drawString(420,caja_iso-10,'S2')
+    c.drawString(520,caja_iso,'Aprobación')
+    c.drawString(520,caja_iso-10,'---')
+    c.drawString(150,caja_iso-20,'Número de documento')
+    c.drawString(160,caja_iso-30,'--------')
+    c.drawString(245,caja_iso-20,'Clasificación del documento')
+    c.drawString(275,caja_iso-30,'--------')
+    c.drawString(355,caja_iso-20,'Nivel del documento')
+    c.drawString(380,caja_iso-30, '--------')
+    c.drawString(440,caja_iso-20,'Revisión No.')
+    c.drawString(452,caja_iso-30,'000')
+    c.drawString(510,caja_iso-20,'Fecha de Emisión')
+    c.drawString(525,caja_iso-30,'04/2024')
+
+    caja_proveedor = caja_iso - 65
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Solicitud
+    c.rect(20,caja_proveedor - 8,565,20, fill=True, stroke=False) #Barra azul superior Proveedor | Detalle
+    c.rect(20,615,565,2, fill=True, stroke=False) #Linea posterior horizontal
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(280,755,'Acuse de Recibo')
+    c.setLineWidth(.3) #Grosor
+    c.line(20,caja_proveedor-8,20,615) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    c.line(584,caja_proveedor-8,584,615) #Linea 2 contorno
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    #c.drawString(120,caja_proveedor,'Infor')
+    c.drawString(300,caja_proveedor, 'Detalles')
+    inicio_central = 300
+    #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+    c.drawString(30,caja_proveedor-20,'Presentó:')
+    c.drawString(30,caja_proveedor-40,'Distrito:')
+    c.drawString(30,caja_proveedor-60,'Fecha:')
+    # Segunda columna del encabezado
+    #c.drawString(30,caja_proveedor-80,'Empresa')
+
+
+    folios_str = ', '.join(str(g.folio) for g in gastos_enviar)
+    fecha_hoy = datetime.today().strftime("%d/%m/%Y")
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(300,caja_proveedor-20,'FOLIOS:')
+    c.setFillColor(rojo)
+    c.setFont('Helvetica-Bold',12)
+    c.drawString(350,caja_proveedor-20, folios_str)
+
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+    c.drawString(100,caja_proveedor-20, usuario.staff.staff.first_name+' '+ usuario.staff.staff.last_name)
+    c.drawString(100,caja_proveedor-40, usuario.distritos.nombre)
+    c.drawString(100,caja_proveedor-60, fecha_hoy)
+
+    # --- Tabla de resumen de gastos ---
+    tabla_gastos_data = [['Folio', 'Monto Solicitado', 'Monto Comprobado', 'Diferencia']]
+    for gasto in gastos_enviar:
+        monto = gasto.get_total_solicitud
+        comprobado = gasto.suma_total_facturas if hasattr(gasto, 'suma_total_facturas') else Decimal('0.00')
+        diferencia = comprobado - monto
+        color = colors.black
+        if diferencia > 0:
+            color = colors.green
+        elif diferencia < 0:
+            color = colors.red
+
+        tabla_gastos_data.append([
+            str(gasto.folio),
+            f"${monto:,.2f}",
+            f"${comprobado:,.2f}",
+            Paragraph(f"${diferencia:,.2f}", ParagraphStyle('diff', textColor=color, alignment=TA_RIGHT))
+        ])
+
+    # Crear la tabla
+    tabla = Table(tabla_gastos_data, colWidths=[3*cm, 4*cm, 4*cm, 5*cm])
+    tabla.setStyle(TableStyle([
+        ('BACKGROUND', (0,0), (-1,0), colors.grey),
+        ('TEXTCOLOR', (0,0), (-1,0), colors.whitesmoke),
+        ('ALIGN', (1,1), (-1,-1), 'RIGHT'),
+        ('FONTNAME', (0,0), (-1,0), 'Helvetica-Bold'),
+        ('FONTSIZE', (0,0), (-1,-1), 9),
+        ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+
+    # Posición de la tabla
+    tabla.wrapOn(c, 500, 200)
+    tabla.drawOn(c, 80, 500)  # Ajusta esta posición si necesitas moverla más arriba/abajo
+
+
+    c.setFont("Helvetica", 10)
+    c.drawString(100, 280, "Nombre y firma de quien recibe:")
+    c.line(100, 245, 500, 245)
+
+    c.drawString(100, 230, "Fecha de recepción:")
+    c.line(100, 205, 300, 205)
+
+    c.drawString(100, 190, "Comentarios u observaciones:")
+    c.rect(100, 100, 400, 80)  # cuadro para observaciones (de 300 a 380)
+
+    # Línea final del documento (opcional)
+    c.setFont("Helvetica-Oblique", 8)
+    c.drawCentredString(300, 80, "Este acuse de recibo corresponde a la comprobación de gastos generada por SAVIA 2.0.")
+    c.showPage()
+    c.save()
+
+    buffer.seek(0)
+    return buffer
