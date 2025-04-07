@@ -2259,7 +2259,7 @@ def mis_comprobaciones_gasto(request):
                 </html>
                 """
                 # Lista base con el remitente y alguien más si quieres
-                correos = [request.user.email, 'ulises.huesca@grupovordcab.com']
+                correos = [request.user.email]
                 #otros_correos = []
                 # Si se marcó el checkbox de RH
                 if request.POST.get('enviarRH'):
