@@ -245,7 +245,7 @@
                             <li class="nav-item m-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
                             </li>
-                            {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" %}
+                            {% if usuario.tipo.pagos == True %}
                             <li class="nav-item m-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'compras-pagos' compra.id %}">Pago</a>
                             </li>

@@ -176,7 +176,7 @@
                             <li class="nav-item mx-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}">Detalle</a>
                             </li>
-                            {% if usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "SUPERIN_ADM" %}
+                            {% if usuario.tipo.pagos %}
                             <li class="nav-item mx-1">
                                 <a id="myBtn" type="button" class="btn btn-outline-info"  href="{% url 'viaticos-pagos' viatico.id %}">Pago</a>
                             </li>

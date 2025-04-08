@@ -81,6 +81,8 @@ class Tipo_perfil(models.Model):
     proyectos =  models.BooleanField(default = False)
     productos = models.BooleanField(default = False)
     documentos = models.BooleanField(default = False)
+    pagos = models.BooleanField(default = False)
+
     def __str__(self):
         return f'{self.nombre}'
 
