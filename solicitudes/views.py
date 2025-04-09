@@ -1370,25 +1370,36 @@ def upload_batch_inventario_nuevos(request):
             unidad_nombre = row.iloc[6]
             distrito_nombre = row.iloc[7]
             servicio_str = row.iloc[8]
-            # Validar que no exista producto con ese código o nombre
-            if Product.objects.filter(codigo=codigo_producto).exists():
-                errores.append({'Código': codigo_producto, 'Razón': "El código ya existe"})
-                continue
+            # Valida que no exista producto con ese código o nombre
+            #if Product.objects.filter(codigo=codigo_producto).exists():
+            #    errores.append({'Código': codigo_producto, 'Razón': "El código ya existe"})
+            #    continue
 
-            if Product.objects.filter(nombre=nombre_producto).exists():
-                errores.append({'Código': codigo_producto, 'Razón': f"El nombre '{nombre_producto}' ya existe"})
-                continue
+            #if Product.objects.filter(nombre=nombre_producto).exists():
+            #    errores.append({'Código': codigo_producto, 'Razón': f"El nombre '{nombre_producto}' ya existe"})
+            #    continue
 
           
             
 
-            try:
-                producto = Product(
-                    codigo=codigo_producto,
-                    nombre=nombre_producto,
-                    updated_at=timezone.now()
+            #try:
+            #    producto = Product(
+            #        codigo=codigo_producto,
+            #        nombre=nombre_producto,
+            #        updated_at=timezone.now()
                     
-                )
+            #    )
+
+            #Para cuando tienes el producto pero quieres agregar el inventario
+            #Inicia Bloque #1 
+            try:
+                producto = Product.objects.get(codigo=codigo_producto)
+
+                # Actualizar nombre si es diferente
+                if nombre_producto and producto.nombre != nombre_producto:
+                    producto.nombre = nombre_producto
+
+            #Acaba Bloque #1
                 if servicio_str:       
                     producto.servicio = True if servicio_str.strip().upper() == 'SI' else False
                     
@@ -1427,6 +1438,10 @@ def upload_batch_inventario_nuevos(request):
                     distrito=distrito,
                     almacen=almacen,
                 )
+                
+            except Product.DoesNotExist:
+                errores.append({'Código': codigo_producto, 'Razón': "Producto con ese código no existe"})
+                continue
 
             except Exception as e:
                 errores.append({'Código': codigo_producto, 'Razón': f"Error inesperado: {str(e)}"})
