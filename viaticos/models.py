@@ -52,7 +52,7 @@ class Solicitud_Viatico(models.Model):
 
     @property
     def get_total(self):
-        conceptos = self.concepto_viatico_set.all()
+        conceptos = self.conceptos.all()
         conceptos = conceptos.filter(completo=True)
         total = sum([concepto.get_total_parcial for concepto in conceptos])
         return total
@@ -78,7 +78,7 @@ class Concepto_Viatico(models.Model):
     staff = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     producto = models.ForeignKey(Product, on_delete = models.CASCADE, null=True)
     comentario = models.CharField(max_length=255, null=True, blank=True)
-    viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True)
+    viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True, related_name='conceptos')
     cantidad = models.DecimalField(max_digits=10, decimal_places=2, null=True, default=1)
     precio = models.DecimalField(max_digits=20, decimal_places=6, null=True)
     rendimiento = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)

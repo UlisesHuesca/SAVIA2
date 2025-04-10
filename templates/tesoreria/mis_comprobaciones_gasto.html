@@ -63,15 +63,18 @@
     </div>
 </div>
 
-<div class="card  mt-2">
+<div class="col-12">
+    <div class = "card">
     <div class="card-header">
         <h5>Mis Gastos {{ año_anterior }}|{{ año_actual }}</h5>
     </div>
+    <form method = "POST" id="formGastos">
+        {% csrf_token %}
     <div class="card-body">
-        <form method = "POST" id="formGastos">
+        
         <div class="d-flex justify-content-center mt-2">
         
-            {% csrf_token %}
+           
             <p class="mx-3"><strong>Total Monto Gastos:</strong> ${{ total_monto_gastos|floatformat:2 }}</p>
             <p class="mx-3"><strong>Total de Facturas:</strong> ${{ total_todas_facturas|floatformat:2 }}</p>
             
@@ -91,7 +94,10 @@
                 <label class="form-check-label" for="enviarRH">RH</label>
             </div>
         </div>
-       
+    
+
+
+   
             <table class="table bg-white">
                 <thead class="text-black" style="background-color: #F5F5F5;">
                     <tr>
@@ -139,9 +145,10 @@
                     {% endfor %}
                 </tbody>
             </table>
-        </div>
-        </form>
+        
     </div>
+   </form>
+</div>
 </div>
 <script>
     document.addEventListener('DOMContentLoaded', function () {
