@@ -43,12 +43,13 @@ def matriz_oc_proveedores(request):
             autorizado2 = True).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
             autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
-            ).order_by('-folio')
+            ).order_by('-created_at')
     else:
         compras = Compra.objects.none()
     
     compras_no_pagadas = compras.filter(pagada=False, entrada_completa = True)
-    suma_compras_no_pagadas = compras_no_pagadas.aggregate(total=Sum('costo_oc'))['total'] or 0
+    #suma_compras_no_pagadas = compras_no_pagadas.aggregate(total=Sum('costo_oc'))['total'] or 0
+    suma_compras_no_pagadas = sum(c.costo_plus_adicionales for c in compras_no_pagadas)
     print(suma_compras_no_pagadas)
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs

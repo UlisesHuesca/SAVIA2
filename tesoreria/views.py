@@ -74,6 +74,9 @@ import paramiko
 import logging
 from PyPDF2 import PdfMerger
 
+#Para conectar con API del SAT
+from zeep import Client
+import time
 # Configurar logger
 LOG_PATH = '/home/savia/logs/pagos_sftp.log'
 os.makedirs(os.path.dirname(LOG_PATH), exist_ok=True)
@@ -1081,7 +1084,9 @@ def matriz_pagos(request):
                 ws = wb.active
                 ws.title = "Resumen XML"
 
-                columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago','Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento']
+                columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                            'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento','EstadoSAT','EsCancelable','EstatusCancelacion'
+                            ]
                 ws.append(columnas)
 
                 for dato in datos_xml_lista:
@@ -1320,6 +1325,10 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
         metodo_pago = root.get('MetodoPago', '')
         tipo_documento = "Factura"
 
+    uuid = complemento.get('UUID') if complemento is not None else ''
+    rfc_emisor = emisor.get('Rfc') if emisor is not None else ''
+    rfc_receptor = receptor.get('Rfc') if receptor is not None else ''
+
     datos = {
         'Distrito': distrito,  # Se agrega el distrito
         'Tipo de Documento': tipo_documento,
@@ -1334,7 +1343,42 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
         'Archivo': nombre_general
     }
 
+    if uuid and rfc_emisor and rfc_receptor:
+        estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
+        datos.update(estatus_sat)
+        time.sleep(1.5)  # Evita bloqueos del SAT
+    else:
+        datos.update({
+            'EstadoSAT': 'Datos insuficientes',
+            'EsCancelable': 'N/A',
+            'EstatusCancelacion': 'N/A'
+        })
+
     return datos
+
+    return datos
+
+def obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total_decimal):
+    """Consulta el estatus de un CFDI ante el SAT."""
+    wsdl_url = 'https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaCFDIService.svc?wsdl'
+    client = Client(wsdl=wsdl_url)
+
+    total_str = f"{decimal.Decimal(total_decimal):017.6f}"
+    expresion = f'?re={rfc_emisor}&rr={rfc_receptor}&tt={total_str}&id={uuid}'
+
+    try:
+        respuesta = client.service.Consulta(expresionImpresa=expresion)
+        return {
+            'EstadoSAT': respuesta.Estado,
+            'EsCancelable': respuesta.EsCancelable,
+            'EstatusCancelacion': respuesta.EstatusCancelacion
+        }
+    except Exception as e:
+        return {
+            'EstadoSAT': 'Error',
+            'EsCancelable': 'N/A',
+            'EstatusCancelacion': str(e)
+        }
 
 def generar_archivo_zip(facturas, compra):
     nombre = compra.folio if compra.folio else ''
