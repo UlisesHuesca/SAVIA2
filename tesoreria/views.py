@@ -2565,7 +2565,7 @@ def mis_comprobaciones_viaticos(request):
             # Adjuntar los XMLs de las facturas
             for viatico in viaticos_enviar:
                 for factura in viatico.facturas.all():
-                    if factura.archivo_xml and factura.hecho:
+                    if factura.factura_xml and factura.hecho:
                         try:
                             path = factura.factura_xml.path
                             if os.path.exists(path):
