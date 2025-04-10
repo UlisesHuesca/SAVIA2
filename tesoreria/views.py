@@ -1343,18 +1343,28 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
         'Archivo': nombre_general
     }
 
-    if uuid and rfc_emisor and rfc_receptor:
-        estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
-        datos.update(estatus_sat)
-        time.sleep(1.5)  # Evita bloqueos del SAT
-    else:
+    if tipo_documento == "Complemento de Pago":
+        # Complementos de pago muchas veces causan errores en el SAT, mejor no validarlos
         datos.update({
-            'EstadoSAT': 'Datos insuficientes',
+            'EstadoSAT': 'No validado (Complemento de Pago)',
             'EsCancelable': 'N/A',
             'EstatusCancelacion': 'N/A'
         })
-
-    return datos
+        print(f"[~] Complemento de Pago detectado: {nombre_general} — No se valida en SAT.")
+    else:
+        if uuid and rfc_emisor and rfc_receptor:
+            estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
+            datos.update(estatus_sat)
+            print(f"[✔] Validado: {nombre_general} | UUID: {uuid} | EstadoSAT: {estatus_sat['EstadoSAT']}")
+            time.sleep(1.5)
+        else:
+            datos.update({
+                'EstadoSAT': 'Datos insuficientes',
+                'EsCancelable': 'N/A',
+                'EstatusCancelacion': 'N/A'
+            })
+            print(f"[✖] Sin datos suficientes para validar: {nombre_general}")
+        
 
     return datos
 
