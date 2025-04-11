@@ -1336,9 +1336,6 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
         forma_pago = root.get('FormaPago', '')
         metodo_pago = root.get('MetodoPago', '')
         tipo_documento = "Factura"
-    
-    datos['EstadoSAT'] = factura.estado_sat or ''
-    datos['Fecha Validación SAT'] = factura.fecha_validacion_sat.strftime("%Y-%m-%d %H:%M:%S") if factura.fecha_validacion_sat else ''
 
     datos = {
         'Distrito': distrito,  # Se agrega el distrito
@@ -1351,7 +1348,9 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
         'Método de Pago': metodo_pago,
         'Forma de pago': forma_pago,
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
-        'Archivo': nombre_general
+        'Archivo': nombre_general,
+        'EstadoSAT': factura.estado_sat or '',
+        'Fecha Validación SAT': factura.fecha_validacion_sat.strftime("%Y-%m-%d %H:%M:%S") if factura.fecha_validacion_sat else '',
     }
     return datos
 
