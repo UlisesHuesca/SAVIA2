@@ -180,7 +180,8 @@ class Factura(models.Model):
     autorizada = models.BooleanField(null=True, default=None)
     autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='autorizado_factura_gasto')
     autorizada_el = models.DateTimeField(null=True)
-    # Puedes agregar más campos si es necesario, como fecha, descripción, etc.
+    estado_sat = models.CharField(max_length=50, null=True, blank=True)
+    fecha_validacion_sat = models.DateTimeField(null=True, blank=True)
 
     @property   
     def emisor(self):

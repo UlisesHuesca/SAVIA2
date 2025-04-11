@@ -82,6 +82,8 @@ class Facturas(models.Model):
     autorizada = models.BooleanField(null=True, default=None)
     autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='autorizado_factura_compra')
     autorizada_el = models.DateTimeField(null=True)
+    estado_sat = models.CharField(max_length=50, null=True, blank=True)
+    fecha_validacion_sat = models.DateTimeField(null=True, blank=True)
 
     def __str__(self):
         return f'id:{self.id} oc:{self.oc}'
