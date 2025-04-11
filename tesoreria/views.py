@@ -874,6 +874,7 @@ def matriz_pagos(request):
         if 'btnReporte' in request.POST:
             return convert_excel_matriz_pagos(pagos)
         elif 'btnDescargarFacturas' in request.POST:
+            validar_sat = request.POST.get('validacion') == 'on'
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
             distrito_id = request.POST.get('distrito')
@@ -943,7 +944,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name, validar_sat))
 
                     if factura.solicitud_gasto.id not in processed_gastos:
                         buf = render_pdf_gasto(factura.solicitud_gasto.id)
@@ -996,7 +997,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
                         
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, validar_sat))
                     
                     # Incluir la ficha de pago
                     pagos = Pago.objects.filter(oc=factura.oc)
@@ -1049,7 +1050,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, validar_sat))
 
                     if factura.solicitud_viatico.id not in processed_viaticos:
                         buf = generar_pdf_viatico(factura.solicitud_viatico.id)
@@ -1276,7 +1277,7 @@ def extraer_datos_del_complemento(ruta_xml):
     return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
 
 
-def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
+def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, validar_sat):
     """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones, incluyendo complementos de pago."""
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -1342,28 +1343,28 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
         'Archivo': nombre_general
     }
-
-    if tipo_documento == "Complemento de Pago":
-        # Complementos de pago muchas veces causan errores en el SAT, mejor no validarlos
-        datos.update({
-            'EstadoSAT': 'No validado (Complemento de Pago)',
-            'EsCancelable': 'N/A',
-            'EstatusCancelacion': 'N/A'
-        })
-        print(f"[~] Complemento de Pago detectado: {nombre_general} — No se valida en SAT.")
-    else:
-        if uuid and rfc_emisor and rfc_receptor:
-            estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
-            datos.update(estatus_sat)
-            print(f"[✔] Validado: {nombre_general} | UUID: {uuid} | EstadoSAT: {estatus_sat['EstadoSAT']}")
-            time.sleep(1.5)
-        else:
+    if validar_sat:
+        if tipo_documento == "Complemento de Pago":
+            # Complementos de pago muchas veces causan errores en el SAT, mejor no validarlos
             datos.update({
-                'EstadoSAT': 'Datos insuficientes',
+                'EstadoSAT': 'No validado (Complemento de Pago)',
                 'EsCancelable': 'N/A',
                 'EstatusCancelacion': 'N/A'
             })
-            print(f"[✖] Sin datos suficientes para validar: {nombre_general}")
+            print(f"[~] Complemento de Pago detectado: {nombre_general} — No se valida en SAT.")
+        else:
+            if uuid and rfc_emisor and rfc_receptor:
+                estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
+                datos.update(estatus_sat)
+                print(f"[✔] Validado: {nombre_general} | UUID: {uuid} | EstadoSAT: {estatus_sat['EstadoSAT']}")
+                time.sleep(1.5)
+            else:
+                datos.update({
+                    'EstadoSAT': 'Datos insuficientes',
+                    'EsCancelable': 'N/A',
+                    'EstatusCancelacion': 'N/A'
+                })
+                print(f"[✖] Sin datos suficientes para validar: {nombre_general}")
         
 
     return datos
