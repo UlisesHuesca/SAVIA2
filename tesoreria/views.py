@@ -874,6 +874,7 @@ def matriz_pagos(request):
         if 'btnReporte' in request.POST:
             return convert_excel_matriz_pagos(pagos)
         elif 'btnDescargarFacturas' in request.POST:
+            validar_sat = request.POST.get('validacion') == 'on'
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
             distrito_id = request.POST.get('distrito')
@@ -907,203 +908,215 @@ def matriz_pagos(request):
                 facturas_compras = Facturas.objects.filter(oc__autorizado_at_2__range=[fecha_inicio, fecha_fin], oc__req__orden__distrito = usuario.distritos)
                 facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__approved_at2__range=[fecha_inicio, fecha_fin], solicitud_viatico__distrito = usuario.distritos)
 
-
-            zip_buffer = BytesIO()
-            processed_ocs = set()  # Mantén un conjunto de OCs procesadas
-            processed_gastos = set()  # Mantén un conjunto de gastos procesados
-            processed_viaticos = set()  # Mantén un conjunto de viáticos procesados
-            processed_pagos = set()  # Mantén un conjunto de pagos procesados
-            datos_xml_lista = []  # Lista para el resumen en Excel
-
-            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                #Se agrgean carpetas generales
-                general_pdfs_folder = "GENERAL_PDFs"
-                general_xmls_folder = "GENERAL_XMLs"
-                
-                #Se procesan facturas de gastos
+            if validar_sat:
                 for factura in facturas_gastos:
-                    folder_name = f'GASTO_{factura.solicitud_gasto.folio}_{factura.solicitud_gasto.distrito.nombre}'
-                    if factura.archivo_pdf:   
-                        file_name = os.path.basename(factura.archivo_pdf.path)
-                        zip_file.write(factura.archivo_pdf.path, os.path.join(folder_name, file_name))
-                        if factura.archivo_xml:
-                            # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
-                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                            general_file_name = f'{factura.id}_{uuid_str}.pdf'
-                        else:
-                            general_file_name = file_name
-                        zip_file.write(factura.archivo_pdf.path, os.path.join(general_pdfs_folder, general_file_name)) #Está línea guarda en el zip general de pdf
-                       
-                    
-                    distrito = factura.solicitud_gasto.distrito.nombre  # Obtener distrito de la factura
                     if factura.archivo_xml:
-                        file_name = os.path.basename(factura.archivo_xml.path)
-                        zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
-                        uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                        general_file_name = f'{factura.id}_{uuid_str}.xml'
-
-                        zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name))
-
-                    if factura.solicitud_gasto.id not in processed_gastos:
-                        buf = render_pdf_gasto(factura.solicitud_gasto.id)
-                        gasto_file_name = f'GASTO_{factura.solicitud_gasto.folio}.pdf'
-                        zip_file.writestr(os.path.join(folder_name, gasto_file_name), buf.getvalue())
-                        processed_gastos.add(factura.solicitud_gasto.id)
-
-                    pagos = Pago.objects.filter(gasto=factura.solicitud_gasto)
-                    for pago in pagos:
-                        if pago.comprobante_pago and pago.id not in processed_pagos:
-                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
-                            variables_pago = encontrar_variables(texto_pago)
-
-                            fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
-                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
-                            importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
-
-                             # Validamos si todas las variables son válidas:
-                            if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
-                            else:
-                                # Si no, conservamos el nombre original
-                                pago_file_name = os.path.basename(pago.comprobante_pago.path)
-                            
-                            #pago_file_name = os.path.basename(pago.comprobante_pago.path)
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
-                            processed_pagos.add(pago.id)
-                
-                #Se procesan facturas de compras
+                        extraer_datos_validacion(factura.archivo_xml.path, factura)
                 for factura in facturas_compras:
-                    folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
-                    if factura.factura_pdf:
-                        #folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
-                        file_name = os.path.basename(factura.factura_pdf.path)
-                        zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
-                        if factura.factura_xml:
-                            # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
-                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                            general_file_name = f'{factura.id}_{uuid_str}.pdf'
-                        else:
-                            general_file_name = file_name
-
-                        zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, file_name))
-
-                    distrito = factura.oc.req.orden.distrito.nombre  # Obtener distrito de la factura
                     if factura.factura_xml:
-                        file_name = os.path.basename(factura.factura_xml.path)
-                        zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
-                        uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                        general_file_name = f'{factura.id}_{uuid_str}.xml'
-                        
-                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
-                    
-                    # Incluir la ficha de pago
-                    pagos = Pago.objects.filter(oc=factura.oc)
-                    for pago in pagos:
-                        if pago.comprobante_pago and pago.id not in processed_pagos:
-                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
-                            variables_pago = encontrar_variables(texto_pago)
-
-                            fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
-                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
-                            importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
-
-
-                            if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
-                            else:
-                                pago_file_name = os.path.basename(pago.comprobante_pago.path)
-                            #pago_file_name = os.path.basename(pago.comprobante_pago.path)
-
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
-                            processed_pagos.add(pago.id)
-                    
-                    # Generar e incluir la OC en el ZIP solo si no ha sido procesada
-                    if factura.oc.id not in processed_ocs:
-                        buf = generar_pdf(factura.oc)
-                        oc_file_name = f'OC_{factura.oc.folio}.pdf'
-                        zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
-                        processed_ocs.add(factura.oc.id)
-                   
-
-                for factura in facturas_viaticos:
-                    folder_name = f'VIATICO_{factura.solicitud_viatico.folio}_{factura.solicitud_viatico.distrito.nombre}'
-                    if factura.factura_pdf:
-
-                        file_name = os.path.basename(factura.factura_pdf.path)
-                        zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
-                        if factura.factura_xml:
-                            # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
-                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                            general_file_name = f'{factura.id}_{uuid_str}.pdf'
-                        else:
-                            general_file_name = file_name
-                        zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, general_file_name))
-
-                    distrito = factura.solicitud_viatico.distrito.nombre  # Obtener distrito de la factura
-                    if factura.factura_xml:
-                        file_name = os.path.basename(factura.factura_xml.path)
-                        zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
-                        uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
-                        general_file_name = f'{factura.id}_{uuid_str}.xml'
-
-                        zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
-
-                    if factura.solicitud_viatico.id not in processed_viaticos:
-                        buf = generar_pdf_viatico(factura.solicitud_viatico.id)
-                        viatico_file_name = f'VIATICO_{factura.solicitud_viatico.folio}.pdf'
-                        zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
-                        processed_viaticos.add(factura.solicitud_viatico.id)
-
+                        extraer_datos_validacion(factura.factura_xml.path, factura)
                 
+                for factura in facturas_viaticos:
+                    if factura.factura_xml:
+                        extraer_datos_validacion(factura.factura_xml.path, factura)  
+
+            else:
+                zip_buffer = BytesIO()
+                processed_ocs = set()  # Mantén un conjunto de OCs procesadas
+                processed_gastos = set()  # Mantén un conjunto de gastos procesados
+                processed_viaticos = set()  # Mantén un conjunto de viáticos procesados
+                processed_pagos = set()  # Mantén un conjunto de pagos procesados
+                datos_xml_lista = []  # Lista para el resumen en Excel
+
+                with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                    #Se agrgean carpetas generales
+                    general_pdfs_folder = "GENERAL_PDFs"
+                    general_xmls_folder = "GENERAL_XMLs"
                     
-                    pagos = Pago.objects.filter(viatico=factura.solicitud_viatico)
-                    for pago in pagos:
-                        if pago.comprobante_pago and pago.id not in processed_pagos:
-                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
-                            variables_pago = encontrar_variables(texto_pago)
-
-                            fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
-                            titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
-                            importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
-
-                            if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
-                                pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
+                    #Se procesan facturas de gastos
+                    for factura in facturas_gastos:
+                        folder_name = f'GASTO_{factura.solicitud_gasto.folio}_{factura.solicitud_gasto.distrito.nombre}'
+                        if factura.archivo_pdf:   
+                            file_name = os.path.basename(factura.archivo_pdf.path)
+                            zip_file.write(factura.archivo_pdf.path, os.path.join(folder_name, file_name))
+                            if factura.archivo_xml:
+                                # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
+                                uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                                general_file_name = f'{factura.id}_{uuid_str}.pdf'
                             else:
-                                pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                                general_file_name = file_name
+                            zip_file.write(factura.archivo_pdf.path, os.path.join(general_pdfs_folder, general_file_name)) #Está línea guarda en el zip general de pdf
+                        
+                        
+                        distrito = factura.solicitud_gasto.distrito.nombre  # Obtener distrito de la factura
+                        if factura.archivo_xml:
+                            file_name = os.path.basename(factura.archivo_xml.path)
+                            zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
+                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                            general_file_name = f'{factura.id}_{uuid_str}.xml'
+
+                            zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name, factura))
+
+                        if factura.solicitud_gasto.id not in processed_gastos:
+                            buf = render_pdf_gasto(factura.solicitud_gasto.id)
+                            gasto_file_name = f'GASTO_{factura.solicitud_gasto.folio}.pdf'
+                            zip_file.writestr(os.path.join(folder_name, gasto_file_name), buf.getvalue())
+                            processed_gastos.add(factura.solicitud_gasto.id)
+
+                        pagos = Pago.objects.filter(gasto=factura.solicitud_gasto)
+                        for pago in pagos:
+                            if pago.comprobante_pago and pago.id not in processed_pagos:
+                                texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
+                                variables_pago = encontrar_variables(texto_pago)
+
+                                fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                                titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
+                                importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
+
+                                # Validamos si todas las variables son válidas:
+                                if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
+                                    pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
+                                else:
+                                    # Si no, conservamos el nombre original
+                                    pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                                
+                                #pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                                zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
+                                processed_pagos.add(pago.id)
+                    
+                    #Se procesan facturas de compras
+                    for factura in facturas_compras:
+                        folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
+                        if factura.factura_pdf:
+                            #folder_name = f'COMPRA_{factura.oc.folio}_{factura.oc.req.orden.distrito.nombre}'
+                            file_name = os.path.basename(factura.factura_pdf.path)
+                            zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
+                            if factura.factura_xml:
+                                # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
+                                uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                                general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                            else:
+                                general_file_name = file_name
+
+                            zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, file_name))
+
+                        distrito = factura.oc.req.orden.distrito.nombre  # Obtener distrito de la factura
+                        if factura.factura_xml:
+                            file_name = os.path.basename(factura.factura_xml.path)
+                            zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
+                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                            general_file_name = f'{factura.id}_{uuid_str}.xml'
                             
-                            #pago_file_name = os.path.basename(pago.comprobante_pago.path)
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
-                            processed_pagos.add(pago.id)
+                            zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, factura))
+                        
+                        # Incluir la ficha de pago
+                        pagos = Pago.objects.filter(oc=factura.oc)
+                        for pago in pagos:
+                            if pago.comprobante_pago and pago.id not in processed_pagos:
+                                texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
+                                variables_pago = encontrar_variables(texto_pago)
 
-                 # Crear archivo Excel con los datos extraídos
-                output = BytesIO()
-                wb = Workbook()
-                ws = wb.active
-                ws.title = "Resumen XML"
+                                fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                                titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
+                                importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
-                columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                            'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento','EstadoSAT','EsCancelable','EstatusCancelacion'
-                            ]
-                ws.append(columnas)
 
-                for dato in datos_xml_lista:
-                    ws.append([dato[col] for col in columnas])
+                                if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
+                                    pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
+                                else:
+                                    pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                                #pago_file_name = os.path.basename(pago.comprobante_pago.path)
 
-                # Formatos de Excel
-                for col in ['D']:  # Monto Total Factura
-                    for row in range(2, ws.max_row + 1):
-                        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+                                zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
+                                processed_pagos.add(pago.id)
+                        
+                        # Generar e incluir la OC en el ZIP solo si no ha sido procesada
+                        if factura.oc.id not in processed_ocs:
+                            buf = generar_pdf(factura.oc)
+                            oc_file_name = f'OC_{factura.oc.folio}.pdf'
+                            zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
+                            processed_ocs.add(factura.oc.id)
+                    
 
-                wb.save(output)
-                zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
+                    for factura in facturas_viaticos:
+                        folder_name = f'VIATICO_{factura.solicitud_viatico.folio}_{factura.solicitud_viatico.distrito.nombre}'
+                        if factura.factura_pdf:
 
-            zip_buffer.seek(0)
-            response = HttpResponse(zip_buffer, content_type='application/zip')
-            response['Content-Disposition'] = 'attachment; filename=facturas.zip'
-            return response
+                            file_name = os.path.basename(factura.factura_pdf.path)
+                            zip_file.write(factura.factura_pdf.path, os.path.join(folder_name, file_name))
+                            if factura.factura_xml:
+                                # Guardar en la carpeta GENERAL_PDFs con nombre id_uuid.pdf
+                                uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                                general_file_name = f'{factura.id}_{uuid_str}.pdf'
+                            else:
+                                general_file_name = file_name
+                            zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, general_file_name))
+
+                        distrito = factura.solicitud_viatico.distrito.nombre  # Obtener distrito de la factura
+                        if factura.factura_xml:
+                            file_name = os.path.basename(factura.factura_xml.path)
+                            zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
+                            uuid_str = factura.uuid if factura.uuid else 'SIN_UUID'
+                            general_file_name = f'{factura.id}_{uuid_str}.xml'
+
+                            zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, factura))
+
+                        if factura.solicitud_viatico.id not in processed_viaticos:
+                            buf = generar_pdf_viatico(factura.solicitud_viatico.id)
+                            viatico_file_name = f'VIATICO_{factura.solicitud_viatico.folio}.pdf'
+                            zip_file.writestr(os.path.join(folder_name, viatico_file_name), buf.getvalue())
+                            processed_viaticos.add(factura.solicitud_viatico.id)
+
+                    
+                        
+                        pagos = Pago.objects.filter(viatico=factura.solicitud_viatico)
+                        for pago in pagos:
+                            if pago.comprobante_pago and pago.id not in processed_pagos:
+                                texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
+                                variables_pago = encontrar_variables(texto_pago)
+
+                                fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                                titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
+                                importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
+
+                                if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
+                                    pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
+                                else:
+                                    pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                                
+                                #pago_file_name = os.path.basename(pago.comprobante_pago.path)
+                                zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
+                                processed_pagos.add(pago.id)
+
+                    # Crear archivo Excel con los datos extraídos
+                    output = BytesIO()
+                    wb = Workbook()
+                    ws = wb.active
+                    ws.title = "Resumen XML"
+
+                    columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                                'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT'
+                                ]
+                    ws.append(columnas)
+
+                    for dato in datos_xml_lista:
+                        ws.append([dato.get(col, '') for col in columnas])
+
+                    # Formatos de Excel
+                    for col in ['D']:  # Monto Total Factura
+                        for row in range(2, ws.max_row + 1):
+                            ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+
+                    wb.save(output)
+                    zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
+
+                zip_buffer.seek(0)
+                response = HttpResponse(zip_buffer, content_type='application/zip')
+                response['Content-Disposition'] = 'attachment; filename=facturas.zip'
+                return response
     for pago in pagos_list:
         if pago.total_facturas == 0:
             pago.estado_facturas = 'sin_facturas'
@@ -1276,7 +1289,7 @@ def extraer_datos_del_complemento(ruta_xml):
     return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
 
 
-def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
+def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
     """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones, incluyendo complementos de pago."""
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -1363,20 +1376,23 @@ def extraer_datos_validacion(xml_file_path, factura):
         total = root.attrib.get('Total')
 
         if uuid and rfc_emisor and rfc_receptor:
-            estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
-            datos.update(estatus_sat)
-            print(f"[✔] Validado: {nombre_general} | UUID: {uuid} | EstadoSAT: {estatus_sat['EstadoSAT']}")
-            time.sleep(1.5)
+            resultado = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total)
+            factura.estado_sat = resultado['EstadoSAT']
+            factura.fecha_validacion_sat = datetime.now()
+            factura.save()
+            logging.info(f"✔ Factura ID {factura.id} validada | UUID: {uuid} | Estado: {factura.estado_sat}")
         else:
-            datos.update({
-                'EstadoSAT': 'Datos insuficientes',
-                'EsCancelable': 'N/A',
-                'EstatusCancelacion': 'N/A'
-            })
-            print(f"[✖] Sin datos suficientes para validar: {nombre_general}")
-        
+            factura.estado_sat = 'Datos insuficientes'
+            factura.fecha_validacion_sat = datetime.now()
+            factura.save()
+            logging.warning(f"✖ Factura ID {factura.id} sin datos suficientes para validar")
 
-    return datos
+
+    except Exception as e:
+        factura.estado_sat = f"Error: {str(e)}"
+        factura.fecha_validacion_sat = datetime.now()
+        factura.save()
+        logging.error(f"✖ Error al validar factura ID {factura.id}: {e}")
 
 def obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total_decimal):
     """Consulta el estatus de un CFDI ante el SAT."""
