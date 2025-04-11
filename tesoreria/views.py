@@ -874,7 +874,6 @@ def matriz_pagos(request):
         if 'btnReporte' in request.POST:
             return convert_excel_matriz_pagos(pagos)
         elif 'btnDescargarFacturas' in request.POST:
-            validar_sat = request.POST.get('validacion') == 'on'
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
             distrito_id = request.POST.get('distrito')
@@ -908,17 +907,6 @@ def matriz_pagos(request):
                 facturas_compras = Facturas.objects.filter(oc__autorizado_at_2__range=[fecha_inicio, fecha_fin], oc__req__orden__distrito = usuario.distritos)
                 facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__approved_at2__range=[fecha_inicio, fecha_fin], solicitud_viatico__distrito = usuario.distritos)
 
-            if validar_sat:
-                for factura in facturas_gastos:
-                    if factura.archivo_xml:
-                        extraer_datos_validacion(factura.archivo_xml.path, factura)
-                for factura in facturas_compras:
-                    if factura.factura_xml:
-                        extraer_datos_validacion(factura.factura_xml.path, factura)
-                
-                for factura in facturas_viaticos:
-                    if factura.archivo_xml:
-                        extraer_datos_validacion(factura.archivo_xml.path, factura)                                              
 
             zip_buffer = BytesIO()
             processed_ocs = set()  # Mantén un conjunto de OCs procesadas
@@ -955,7 +943,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name, factura))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name))
 
                     if factura.solicitud_gasto.id not in processed_gastos:
                         buf = render_pdf_gasto(factura.solicitud_gasto.id)
@@ -1008,7 +996,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
                         
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, factura))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
                     
                     # Incluir la ficha de pago
                     pagos = Pago.objects.filter(oc=factura.oc)
@@ -1061,7 +1049,7 @@ def matriz_pagos(request):
                         general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                         zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, factura))
+                        datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name))
 
                     if factura.solicitud_viatico.id not in processed_viaticos:
                         buf = generar_pdf_viatico(factura.solicitud_viatico.id)
@@ -1097,7 +1085,8 @@ def matriz_pagos(request):
                 ws.title = "Resumen XML"
 
                 columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                            'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento','EstadoSAT','Fecha Validacion SAT','Estado Factura']
+                            'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento','EstadoSAT','EsCancelable','EstatusCancelacion'
+                            ]
                 ws.append(columnas)
 
                 for dato in datos_xml_lista:
@@ -1114,7 +1103,6 @@ def matriz_pagos(request):
             zip_buffer.seek(0)
             response = HttpResponse(zip_buffer, content_type='application/zip')
             response['Content-Disposition'] = 'attachment; filename=facturas.zip'
-            response.set_cookie('descarga_iniciada', 'true') # Establecer la cookie para indicar que la descarga ha comenzado
             return response
     for pago in pagos_list:
         if pago.total_facturas == 0:
@@ -1288,7 +1276,7 @@ def extraer_datos_del_complemento(ruta_xml):
     return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
 
 
-def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
+def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
     """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones, incluyendo complementos de pago."""
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -1336,9 +1324,10 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
         forma_pago = root.get('FormaPago', '')
         metodo_pago = root.get('MetodoPago', '')
         tipo_documento = "Factura"
-    
-    datos['EstadoSAT'] = factura.estado_sat or ''
-    datos['Fecha Validación SAT'] = factura.fecha_validacion_sat.strftime("%Y-%m-%d %H:%M:%S") if factura.fecha_validacion_sat else ''
+
+    uuid = complemento.get('UUID') if complemento is not None else ''
+    rfc_emisor = emisor.get('Rfc') if emisor is not None else ''
+    rfc_receptor = receptor.get('Rfc') if receptor is not None else ''
 
     datos = {
         'Distrito': distrito,  # Se agrega el distrito
@@ -1353,45 +1342,31 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
         'Archivo': nombre_general
     }
-    return datos
 
-def extraer_datos_validacion(xml_file_path, factura):
-    try:
-        tree = ET.parse(xml_file_path)
-        root = tree.getroot()
-
-        version = root.get("Version", "3.3")
-        ns = {
-            'cfdi': f'http://www.sat.gob.mx/cfd/{version[0]}',
-            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
-        }
-
-        emisor = root.find("cfdi:Emisor", ns)
-        receptor = root.find("cfdi:Receptor", ns)
-        timbre = root.find(".//tfd:TimbreFiscalDigital", ns)
-
-        uuid = timbre.attrib.get('UUID')
-        rfc_emisor = emisor.attrib.get('Rfc')
-        rfc_receptor = receptor.attrib.get('Rfc')
-        total = root.attrib.get('Total')
-
+    if tipo_documento == "Complemento de Pago":
+        # Complementos de pago muchas veces causan errores en el SAT, mejor no validarlos
+        datos.update({
+            'EstadoSAT': 'No validado (Complemento de Pago)',
+            'EsCancelable': 'N/A',
+            'EstatusCancelacion': 'N/A'
+        })
+        print(f"[~] Complemento de Pago detectado: {nombre_general} — No se valida en SAT.")
+    else:
         if uuid and rfc_emisor and rfc_receptor:
-            resultado = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total)
-            factura.estado_sat = resultado['EstadoSAT']
-            factura.fecha_validacion_sat = now()
-            factura.save()
-            print(f"[✔] Factura {factura.id} validada | Estado: {resultado['EstadoSAT']}")
+            estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
+            datos.update(estatus_sat)
+            print(f"[✔] Validado: {nombre_general} | UUID: {uuid} | EstadoSAT: {estatus_sat['EstadoSAT']}")
+            time.sleep(1.5)
         else:
-            factura.estado_sat = 'Datos insuficientes'
-            factura.fecha_validacion_sat = now()
-            factura.save()
-            print(f"[✖] Factura {factura.id} sin datos suficientes para validar")
+            datos.update({
+                'EstadoSAT': 'Datos insuficientes',
+                'EsCancelable': 'N/A',
+                'EstatusCancelacion': 'N/A'
+            })
+            print(f"[✖] Sin datos suficientes para validar: {nombre_general}")
+        
 
-    except Exception as e:
-        factura.estado_sat = f"Error: {str(e)}"
-        factura.fecha_validacion_sat = now()
-        factura.save()
-        print(f"[✖] Error al validar factura {factura.id}: {e}")
+    return datos
 
 def obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total_decimal):
     """Consulta el estatus de un CFDI ante el SAT."""
