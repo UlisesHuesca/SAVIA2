@@ -145,7 +145,7 @@
 </div>
 <div class = "col-lg-8">
     <div class = "card">
-    <form method=POST>
+    <form method=POST onsubmit="mostrarIndicadorCarga()">
         {% csrf_token %}
         <div class="card-header">
             <h6>Facturas | Descarga</h6>
