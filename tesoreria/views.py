@@ -1325,10 +1325,6 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
         metodo_pago = root.get('MetodoPago', '')
         tipo_documento = "Factura"
 
-    uuid = complemento.get('UUID') if complemento is not None else ''
-    rfc_emisor = emisor.get('Rfc') if emisor is not None else ''
-    rfc_receptor = receptor.get('Rfc') if receptor is not None else ''
-
     datos = {
         'Distrito': distrito,  # Se agrega el distrito
         'Tipo de Documento': tipo_documento,
@@ -1340,18 +1336,32 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general):
         'Método de Pago': metodo_pago,
         'Forma de pago': forma_pago,
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
-        'Archivo': nombre_general
+        'Archivo': nombre_general,
+        'EstadoSAT': factura.estado_sat or '',
+        'Fecha Validación SAT': factura.fecha_validacion_sat.strftime("%Y-%m-%d %H:%M:%S") if factura.fecha_validacion_sat else '',
     }
+    return datos
 
-    if tipo_documento == "Complemento de Pago":
-        # Complementos de pago muchas veces causan errores en el SAT, mejor no validarlos
-        datos.update({
-            'EstadoSAT': 'No validado (Complemento de Pago)',
-            'EsCancelable': 'N/A',
-            'EstatusCancelacion': 'N/A'
-        })
-        print(f"[~] Complemento de Pago detectado: {nombre_general} — No se valida en SAT.")
-    else:
+def extraer_datos_validacion(xml_file_path, factura):
+    try:
+        tree = ET.parse(xml_file_path)
+        root = tree.getroot()
+
+        version = root.get("Version", "3.3")
+        ns = {
+            'cfdi': f'http://www.sat.gob.mx/cfd/{version[0]}',
+            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
+        }
+
+        emisor = root.find("cfdi:Emisor", ns)
+        receptor = root.find("cfdi:Receptor", ns)
+        timbre = root.find(".//tfd:TimbreFiscalDigital", ns)
+
+        uuid = timbre.attrib.get('UUID')
+        rfc_emisor = emisor.attrib.get('Rfc')
+        rfc_receptor = receptor.attrib.get('Rfc')
+        total = root.attrib.get('Total')
+
         if uuid and rfc_emisor and rfc_receptor:
             estatus_sat = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, monto_total)
             datos.update(estatus_sat)
