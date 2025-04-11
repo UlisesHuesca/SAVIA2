@@ -1365,7 +1365,14 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, validar_sat):
                     'EstatusCancelacion': 'N/A'
                 })
                 print(f"[✖] Sin datos suficientes para validar: {nombre_general}")
-        
+    else:
+        datos.update({
+            'EstadoSAT': 'No validado',
+            'EsCancelable': 'N/A',
+            'EstatusCancelacion': 'N/A'
+        })
+        print(f"[~] Validación desactivada para: {nombre_general}")
+
 
     return datos
 
