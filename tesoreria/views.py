@@ -426,8 +426,22 @@ def compras_pagos(request, pk):
     pago, created = Pago.objects.get_or_create(tesorero = usuario, oc__req__orden__distrito = usuario.distritos, oc=compra, hecho=False)
     form = PagoForm(instance=pago)
 
+    base_url = reverse('compras-autorizadas')
+    filtros = {
+        'proveedor': request.GET.get('proveedor', ''),
+        'distrito': request.GET.get('distrito', ''),
+        'start_date': request.GET.get('start_date', ''),
+        'end_date': request.GET.get('end_date', ''),
+    }
+    # Codificar los parámetros
+    query_string = urlencode(filtros)
+    #print('query_string:',filtros)
     
    
+   
+    
+    redirect_url = f"{base_url}?{query_string}" if query_string else base_url
+    print('redirect_url',redirect_url)
     
     if request.method == 'POST' and "envio" in request.POST:
         form = PagoForm(request.POST, request.FILES or None, instance = pago)
@@ -666,7 +680,7 @@ def compras_pagos(request, pk):
             sub.save()
             cuenta.save()
             messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
-            return redirect('compras-autorizadas')#No content to render nothing and send a "signal" to javascript in order to close window
+            return redirect(redirect_url)#No content to render nothing and send a "signal" to javascript in order to close window
             #elif monto_pagado > compra.costo_oc:
             #    messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_pagado} > {compra.costo_oc}')
         else:
@@ -872,6 +886,7 @@ def matriz_pagos(request):
     p = Paginator(pagos, 50)
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
+    
 
     if request.method == 'POST': 
         if 'btnReporte' in request.POST:
