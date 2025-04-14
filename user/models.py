@@ -1,5 +1,6 @@
 from django.db import models
 from django.contrib.auth.models import User
+from simple_history.models import HistoricalRecords
 
 # Create your models here.
 class Pais(models.Model):
@@ -35,6 +36,7 @@ class CustomUser(models.Model):
     puesto = models.CharField(max_length=40, null=True, blank=True)
     apoyo_renta = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
     apoyo_mantto = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
+    history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
 
     @property
