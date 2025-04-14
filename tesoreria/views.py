@@ -38,6 +38,7 @@ from django.utils import timezone
 from django.urls import reverse
 import re
 from openpyxl.styles import numbers
+from .tasks import validar_lote_facturas
 
 from datetime import date, datetime
 import decimal
@@ -909,16 +910,23 @@ def matriz_pagos(request):
                 facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__approved_at2__range=[fecha_inicio, fecha_fin], solicitud_viatico__distrito = usuario.distritos)
 
             if validar_sat:
-                for factura in facturas_gastos:
-                    if factura.archivo_xml:
-                        extraer_datos_validacion(factura.archivo_xml.path, factura)
-                for factura in facturas_compras:
-                    if factura.factura_xml:
-                        extraer_datos_validacion(factura.factura_xml.path, factura)
+                ids_gastos = list(facturas_gastos.values_list('id', flat=True))
+                ids_compras = list(facturas_compras.values_list('id', flat=True))
+                ids_viaticos = list(facturas_viaticos.values_list('id', flat=True))
+
+                validar_lote_facturas.delay(ids_gastos, ids_compras, ids_viaticos)
                 
-                for factura in facturas_viaticos:
-                    if factura.factura_xml:
-                        extraer_datos_validacion(factura.factura_xml.path, factura)  
+                
+                #for factura in facturas_gastos:
+                #    if factura.archivo_xml:
+                #        extraer_datos_validacion(factura.archivo_xml.path, factura)
+                #for factura in facturas_compras:
+                #    if factura.factura_xml:
+                #        extraer_datos_validacion(factura.factura_xml.path, factura)
+                
+                #for factura in facturas_viaticos:
+                #    if factura.factura_xml:
+                #        extraer_datos_validacion(factura.factura_xml.path, factura)  
 
             else:
                 zip_buffer = BytesIO()
@@ -1355,66 +1363,7 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
     }
     return datos
 
-def extraer_datos_validacion(xml_file_path, factura):
-    try:
-        tree = ET.parse(xml_file_path)
-        root = tree.getroot()
 
-        version = root.get("Version", "3.3")
-        ns = {
-            'cfdi': f'http://www.sat.gob.mx/cfd/{version[0]}',
-            'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital'
-        }
-
-        emisor = root.find("cfdi:Emisor", ns)
-        receptor = root.find("cfdi:Receptor", ns)
-        timbre = root.find(".//tfd:TimbreFiscalDigital", ns)
-
-        uuid = timbre.attrib.get('UUID')
-        rfc_emisor = emisor.attrib.get('Rfc')
-        rfc_receptor = receptor.attrib.get('Rfc')
-        total = root.attrib.get('Total')
-
-        if uuid and rfc_emisor and rfc_receptor:
-            resultado = obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total)
-            factura.estado_sat = resultado['EstadoSAT']
-            factura.fecha_validacion_sat = datetime.now()
-            factura.save()
-            logging.info(f"✔ Factura ID {factura.id} validada | UUID: {uuid} | Estado: {factura.estado_sat}")
-        else:
-            factura.estado_sat = 'Datos insuficientes'
-            factura.fecha_validacion_sat = datetime.now()
-            factura.save()
-            logging.warning(f"✖ Factura ID {factura.id} sin datos suficientes para validar")
-
-
-    except Exception as e:
-        factura.estado_sat = f"Error: {str(e)}"
-        factura.fecha_validacion_sat = datetime.now()
-        factura.save()
-        logging.error(f"✖ Error al validar factura ID {factura.id}: {e}")
-
-def obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total_decimal):
-    """Consulta el estatus de un CFDI ante el SAT."""
-    wsdl_url = 'https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaCFDIService.svc?wsdl'
-    client = Client(wsdl=wsdl_url)
-
-    total_str = f"{decimal.Decimal(total_decimal):017.6f}"
-    expresion = f'?re={rfc_emisor}&rr={rfc_receptor}&tt={total_str}&id={uuid}'
-
-    try:
-        respuesta = client.service.Consulta(expresionImpresa=expresion)
-        return {
-            'EstadoSAT': respuesta.Estado,
-            'EsCancelable': respuesta.EsCancelable,
-            'EstatusCancelacion': respuesta.EstatusCancelacion
-        }
-    except Exception as e:
-        return {
-            'EstadoSAT': 'Error',
-            'EsCancelable': 'N/A',
-            'EstatusCancelacion': str(e)
-        }
 
 def generar_archivo_zip(facturas, compra):
     nombre = compra.folio if compra.folio else ''
