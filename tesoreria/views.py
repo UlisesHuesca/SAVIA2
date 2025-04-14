@@ -10,6 +10,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils.dateparse import parse_date
+from django.urls import reverse, NoReverseMatch
 from user.models import Distrito
 from compras.models import ArticuloComprado, Compra
 from compras.forms import CompraForm
@@ -38,6 +39,7 @@ from django.utils import timezone
 from django.urls import reverse
 import re
 from openpyxl.styles import numbers
+from urllib.parse import urlencode
 
 from datetime import date, datetime
 import decimal
@@ -1451,11 +1453,15 @@ def matriz_facturas_nomodal(request, pk):
 
     try:
         if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
-            next_url = 'matriz-oc-proveedores'
+            base_url = reverse('matriz-oc-proveedores')
             compra = get_object_or_404(Compra, id=pk, proveedor__nombre__perfil_proveedor = perfil)
         else:
             compra = get_object_or_404(Compra, id=pk)
-            next_url = request.GET.get('next','matriz-compras')
+            next_url = request.GET.get('next', 'matriz-compras')
+            try:
+                base_url = reverse(next_url)
+            except NoReverseMatch:
+                base_url = next_url
 
     except Http404:
         messages.error(request, "No tienes acceso a esta orden de compra.")
@@ -1463,7 +1469,17 @@ def matriz_facturas_nomodal(request, pk):
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
     form = Facturas_Completas_Form(instance=compra)
-
+    # Construir los parámetros de filtro
+    print('base_url',base_url)
+    filtros = {
+        'proveedor': request.GET.get('proveedor', ''),
+        'distrito': request.GET.get('distrito', ''),
+        'start_date': request.GET.get('start_date', ''),
+        'end_date': request.GET.get('end_date', ''),
+    }
+    # Codificar los parámetros
+    query_string = urlencode(filtros)
+    #print('query_string:',filtros)
     
     for pago in pagos:
         fecha_pdf = None
@@ -1479,6 +1495,10 @@ def matriz_facturas_nomodal(request, pk):
         #print(pago.fecha_pdf)  # Imprimir el valor de fecha_pdf
    
     if request.method == 'POST':
+        #connector = '&' if '?' in base_url else '?'
+        #print(query_string)
+        redirect_url = f"{base_url}?{query_string}" if query_string else base_url
+        #print('imprimiendo',redirect_url)
         form = Facturas_Completas_Form(request.POST, instance=compra)
         if "btn_factura_completa" in request.POST:
             fecha_hora = datetime.today()
@@ -1494,8 +1514,8 @@ def matriz_facturas_nomodal(request, pk):
                 factura.save()
             if form.is_valid():
                 form.save()
-                messages.success(request,'Haz cambiado el status de facturas completas')
-                return redirect(next_url)
+                messages.success(request,'Has cambiado el status de facturas completas')
+                return redirect(redirect_url)
             else:
                 messages.error(request,'No está validando')
         elif "btn_descargar_todo" in request.POST:
@@ -1504,7 +1524,7 @@ def matriz_facturas_nomodal(request, pk):
             response['Content-Disposition'] = f'attachment; filename="{zip_filename}"'
             return response
         elif 'salir' in request.POST:
-            return redirect(next_url)
+            return redirect(redirect_url)
 
     context={
         'pagos':pagos,
@@ -3023,7 +3043,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(Q:Q)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(R:R)").style = money_resumen_style
   
     
    
@@ -3078,9 +3098,9 @@ def convert_excel_matriz_compras_tesoreria(compras):
             compra.tipo_de_cambio if compra.tipo_de_cambio else '',
             compra.costo_plus_adicionales,
             # Calcula total en pesos usando la fórmula de Excel
-            f'=IF(M{row_num}="",N{row_num},N{row_num}*M{row_num})', 
+            f'=IF(N{row_num}="",O{row_num},O{row_num}*N{row_num})', 
             compra.monto_pagado,
-            f'=O{row_num} - P{row_num}',
+            f'=P{row_num} - Q{row_num}',
             compra.cond_de_pago.nombre,
             compra.dias_de_credito if compra.dias_de_credito else '',
             created_at_naive,
@@ -3091,9 +3111,9 @@ def convert_excel_matriz_compras_tesoreria(compras):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num in [1, 19]:
+            if col_num in [1, 20]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [12, 13, 14,15, 16]:
+            if col_num in [13, 14,15, 16, 17]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
