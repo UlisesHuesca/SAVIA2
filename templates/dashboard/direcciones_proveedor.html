@@ -39,42 +39,28 @@
     </div>
 </div>
 <div class = "row mt-2 bg-white">
-        <div class="col-12">
-            <div class="card card-body">
-                <h5>Direcciones del Proveedor: {{proveedor.razon_social}}</h5>
-                <hr>
-                <!--{% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>Razón Social:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.razon_social|add_class:'form-control'}}
-                    </div>
-                    <label for="myfilter.form.codigo" class="col-sm-auto col-form-label text-right my-2"><strong>RFC:</strong></label>
-                    <div class="col-auto my-2">
-                        {{myfilter.form.rfc|add_class:'form-control'}}
-                    </div>
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    </div>
+    <div class="col-12">
+        <div class = "card">
+                <div class="card-header">
+                    <h5>Direcciones del Proveedor: {{proveedor.razon_social}}</h5>
                 </div>
-                <hr>
-                </form>
-                -->
+        
+                <div class="card-body">
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores' %}?razon_social={{ razon }}&rfc={{ rfc }}">
                                 <i class="fa-solid fa-backward"></i>
                             </a>
-                            {% if usuario.tipo.proveedores %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-proveedor-direccion' proveedor.id %}">
                                 <i class="fa-solid fa-plus"> Agregar Direccion</i>
                             </a>
                             {% endif %}
                         </li>
                     </ul>
-            </div>
+                </div>
         </div>
+    </div>
 </div>
 
     <div class="col-md-12 my-2">
@@ -94,7 +80,7 @@
                     
                     <th scope="col">Dias de Crédito</th>
                     <th scope="col">Status</th>
-                    {% if usuario.tipo.proveedores %}
+                    {% if usuario.tipo.proveedores_edicion %}
                     <th scope="col">Edición</th>
                     {% endif %}
                     <th>Registro</th>
@@ -119,7 +105,7 @@
                     {% endif %}
                     <td>{{direccion.dias_credito}}</td>
                     <td>{{direccion.estatus}}</td>
-                    {% if usuario.tipo.proveedores %}
+                    {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'edit_proveedor_direccion' direccion.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>

@@ -83,10 +83,13 @@
                                 <i class="fa-solid fa-file-arrow-up"> Carga Masiva Direcciones</i>
                             </a>
                             {% endif %}
+                            {% if usuario.tipo.proveedores_edicion %}
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add_proveedores2' %}">
                                 <i class="fa-solid fa-plus"> Agregar Proveedor</i>
                             </a>
+                           
                             <a type="button" class="btn btn-outline-info m-1"  href="{% url 'matriz-oc-productos' %}">Reporte Productos OC</a>
+                            {% endif %}
                         </li>
 
                     </ul>
@@ -94,6 +97,7 @@
             </div>
         </div>  
     </div>
+    {% if usuario.tipo.proveedores_edicion %}
     <div class="col-lg-2 col-sm-3 mt-2">
         <div class="card">
             <div class = "card-header">
@@ -114,6 +118,7 @@
             </div>
         </div>
     </div>
+    {% endif %}
     <div class="col-lg-2 col-sm-3 mt-2">
         <div class="card">
             <div class="card-header">
@@ -133,7 +138,7 @@
     </div>
 </div>
 
-<div class="col-md-8 my-2">
+<div class="col-lg-12 my-2">
     <div class="card">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
@@ -146,11 +151,13 @@
                     <th scope="col">Domicilio</th>
                     <th scope="col">Nombre Comercial</th>
                     <th scope="col">RFC</th>
-                    {% if usuario.tipo.proveedores %}
+                    {% if usuario.tipo.proveedores_edicion %}
                     <th scope="col">Edición</th>
                     {% endif %}
                     <th scope="col">Direcciones</th>
+                    {% if usuario.tipo.proveedores_edicion %}
                     <th>Documentación</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -168,7 +175,7 @@
                     <td>{{proveedor.nombre_comercial}}</td>
                     {% endif %}
                     <td>{{proveedor.rfc}}</td>
-                    {% if usuario.tipo.proveedores %}
+                    {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
                             <i class="fa-duotone fa-solid fa-pen-to-square"></i>
@@ -180,11 +187,13 @@
                             <i class="fa-duotone fa-solid fa-location-dot"></i>
                         </a>
                     </td>
+                    {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
                             <i class="fa-duotone fa-solid fa-file-check"></i>
                         </a>
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>
