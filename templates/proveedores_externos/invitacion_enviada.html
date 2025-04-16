@@ -1,0 +1,28 @@
+{% extends 'partials/base.html' %}
+<html>
+<head>
+    {% block title %}Proveedores{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- CDN de SweetAlert2 -->
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+        Swal.fire({
+            title: '¡Invitación enviada!',
+            text: 'El proveedor recibirá un enlace para registrarse.',
+            icon: 'success',
+            confirmButtonText: 'OK',
+        }).then((result) => {
+            if (result.isConfirmed) {
+                // Redirección al dashboard (ajusta si usas otro nombre de URL)
+                window.location.href = "{% url 'dashboard-index' %}";
+            }
+        });
+    });
+</script>
+{% endblock %}
+</body>
+</html>

@@ -10,6 +10,7 @@ from dateutil.relativedelta import relativedelta
 from phone_field import PhoneField
 import re
 import PyPDF2
+import uuid
 # Create your models here.
 
 
@@ -220,6 +221,16 @@ class Proveedor_direcciones(models.Model):
 
     def __str__(self):
         return f'{self.nombre}'
+    
+class InvitacionProveedor(models.Model):
+    email = models.EmailField(unique=True)
+    rfc = models.CharField(max_length=14)
+    token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
+    proveedor = models.ForeignKey('compras.Proveedor', null=True, blank=True, on_delete=models.SET_NULL)
+    creado_por = models.ForeignKey('user.Profile', on_delete=models.CASCADE)
+    usado = models.BooleanField(default=False)
+    fecha_creacion = models.DateTimeField(auto_now_add=True)
+    fecha_uso = models.DateTimeField(null=True, blank=True)
 
 class Proveedor_Direcciones_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])

@@ -5,10 +5,11 @@ from django.conf import settings
 from django.utils import timezone
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
 from django.core.paginator import Paginator
-from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor
+from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor
 from user.models import Profile
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
+from requisiciones.views import get_image_base64
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
 from .forms import SubirDocumentoForm, UploadFileForm
@@ -18,11 +19,13 @@ from django.db.models.functions import Concat, Coalesce
 from tesoreria.models import Pago, Facturas
 import datetime as dt
 import decimal
+import os
 from django.views.decorators.csrf import csrf_exempt
 # Import Excel Stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 import json
+from django.core.mail import EmailMessage
 # Create your views here.
 
 @perfil_seleccionado_required
@@ -142,7 +145,7 @@ def matriz_direcciones(request):
    
     
     if usuario.tipo.proveedor_externo:
-        proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
+        proveedor = Proveedor.objects.get(id = usuario.proveedor.id)
         direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre="Rechazado")
         tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
         tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
@@ -737,7 +740,7 @@ def aceptar_politica(request):
             return JsonResponse({'error': 'Perfil no válido'}, status=404)
 
         try:
-            proveedor = Proveedor.objects.get(perfil_proveedor=perfil)
+            proveedor = Proveedor.objects.get(id=perfil.proveedor.id)
             print(proveedor)
             proveedor.acepto_politica = True
             proveedor.fecha_aceptacion_politica = timezone.now()
@@ -747,3 +750,96 @@ def aceptar_politica(request):
             return JsonResponse({'error': 'Proveedor no encontrado'}, status=404)
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
+@perfil_seleccionado_required
+def invitar_proveedor(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = get_object_or_404(Profile, id=pk_perfil)
+    
+    
+    if request.method == 'POST':
+        email = request.POST['email']
+        rfc = request.POST['rfc']
+        print(email, rfc)
+         # Validar si ya hay una invitación para ese correo sin usar
+        if InvitacionProveedor.objects.filter(email=email, usado=False).exists():
+            messages.error(request, 'Ya existe un proveedor con este correo registrado')
+            return redirect('invitar-proveedor')  # Ajusta según el nombre de tu URL
+
+        proveedor = Proveedor.objects.filter(rfc=rfc).first()
+
+        invitacion = InvitacionProveedor.objects.create(
+            email=email,
+            rfc=rfc,
+            proveedor=proveedor,
+            creado_por= perfil
+        )
+
+        link = request.build_absolute_uri(f'/registro-proveedor/{invitacion.token}/')
+        # aquí puedes enviar el link por email
+        enviar_correo_invitacion(email, rfc, link, perfil.staff.staff.first_name + " " + perfil.staff.staff.last_name)
+
+        return render(request, 'proveedores_externos/invitacion_enviada.html', {'link': link})
+    
+    return render(request, 'proveedores_externos/formulario_invitacion.html')
+
+def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre):
+    static_path = settings.STATIC_ROOT
+    img_path1 = os.path.join(static_path, 'images', 'SAVIA_Logo.png')
+    img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
+    image_base64 = get_image_base64(img_path1)
+    logo_v_base64 = get_image_base64(img_path2)
+
+    html_message = f"""
+    <html>
+        <head>
+            <meta charset="UTF-8">
+        </head>
+        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                            <tr>
+                                <td align="center">
+                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 120px;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 20px;">
+                                    <p style="font-size: 18px;">Hola,</p>
+                                    <p style="font-size: 16px;">
+                                        Has sido invitado a registrarte como proveedor en nuestra plataforma. Tu RFC registrado es <strong>{rfc}</strong>.
+                                    </p>
+                                    <p style="text-align: center; margin: 30px 0;">
+                                        <a href="{link}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+                                            Completar registro
+                                        </a>
+                                    </p>
+                                    <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>
+                                    <p style="margin-top: 40px; font-size: 14px;">Atentamente,<br><strong>{creado_por_nombre}</strong></p>
+                                    <div style="text-align: center; margin-top: 30px;">
+                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                        <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.0</p>
+                                    </div>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+    """
+
+    try:
+        email = EmailMessage(
+            subject='Invitación para registro de proveedor',
+            body=html_message,
+            from_email=settings.DEFAULT_FROM_EMAIL,
+            to=[email_destino],
+        )
+        email.content_subtype = "html"
+        email.send()
+    except Exception as e:
+        print(f"Error al enviar el correo: {e}")
