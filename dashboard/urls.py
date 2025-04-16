@@ -38,5 +38,6 @@ urlpatterns = [
     path('ajax/load-subfamilias/', views.load_subfamilias, name='ajax_load_subfamilias'),  # <-- rutina en Ajax
     path('dashboard/staff_detail/<int:pk>/', views.staff_detail, name='dashboard-staff-detail'),
     path('dashboard/update_comentario/', views.update_comentario, name='update_comentario'),
+    
 ]
 
