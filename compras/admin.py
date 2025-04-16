@@ -15,7 +15,7 @@ class ArticuloComprado_Admin(admin.ModelAdmin):
 class ProveedorAdmin(admin.ModelAdmin):
     search_fields = ('razon_social',)
     list_display = ('id','razon_social',) 
-    raw_id_fields = ('perfil_proveedor',)
+    #raw_id_fields = ('perfil_proveedor',)
 
 class Proveedor_direccionesAdmin(admin.ModelAdmin):
     search_fields = ('nombre__razon_social',)

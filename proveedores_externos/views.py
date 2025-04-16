@@ -30,16 +30,18 @@ def matriz_oc_proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
-    print(usuario)
-    try:
-        proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
-    except Proveedor.DoesNotExist:
-        proveedor = None
-    print(proveedor)
-    if usuario.tipo.proveedor_externo == True and proveedor is not None:
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    proveedor = usuario.proveedor if hasattr(usuario, 'proveedor') else None
+    #try:
+    #    proveedor = Proveedor.objects.get(perfil_proveedor = usuario)
+    #except Proveedor.DoesNotExist:
+    #    proveedor = None
+    #print(proveedor)
+    if usuario.tipo.proveedor_externo and proveedor is not None:
         compras = Compra.objects.filter(
             complete = True, 
-            proveedor__nombre = proveedor, 
+            proveedor__nombre = proveedor,
+            req__orden__distrito__id__in = almacenes_distritos, 
             autorizado2 = True).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
             autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
@@ -67,10 +69,8 @@ def matriz_oc_proveedores(request):
     if start_date is not None and end_date is not None:
     # Si las fechas no tienen información de la zona horaria, hazlas "aware"
         # Filtrar las requisiciones aprobadas dentro del rango de fechas
-        if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ":
-            approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True)
-        else:
-            approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True, orden__distrito = usuario.distritos)
+       
+        approved_requis = Requis.objects.filter(approved_at__gte=start_date, approved_at__lte=end_date, autorizar = True, orden__distrito = usuario.distritos)
         approved_requis_ids = approved_requis.values_list('id', flat=True)
         num_approved_requis = approved_requis.count() 
 

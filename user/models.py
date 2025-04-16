@@ -2,6 +2,7 @@ from django.db import models
 from django.contrib.auth.models import User
 from simple_history.models import HistoricalRecords
 
+
 # Create your models here.
 class Pais(models.Model):
     nombre = models.CharField(max_length=30, null=True)
@@ -114,7 +115,7 @@ class Profile(models.Model):
     tipo = models.ForeignKey(Tipo_perfil, on_delete = models.CASCADE, null=True)
     st_activo = models.BooleanField(default = False)
     sustituto = models.ForeignKey(CustomUser, on_delete=models.SET_NULL, null=True, blank=True, related_name='sustitutos')
-
+    proveedor = models.ForeignKey('compras.Proveedor', on_delete=models.SET_NULL, null=True, blank=True, related_name='perfiles')
 
     def __str__(self):
         if self.sustituto:

@@ -1,7 +1,7 @@
 from django.db import models
-from dashboard.models import Order, Inventario, ArticulosparaSurtir, Familia
+from dashboard.models import Inventario, ArticulosparaSurtir, Familia
 from requisiciones.models import Requis, ArticulosRequisitados
-from user.models import Profile, Distrito, Banco, Pais
+from user.models import Distrito, Banco, Pais
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 from datetime import datetime
@@ -24,13 +24,13 @@ class Estatus_proveedor(models.Model):
 class Proveedor(models.Model):
     razon_social = models.CharField(max_length=150, null=True, unique=True)
     rfc = models.CharField(max_length=14, null=True, unique=True)
-    creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    creado_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, related_name='creado_por')
     completo = models.BooleanField(default=False)
     extranjero = models.BooleanField(default=False)
     visita = models.BooleanField(default=False)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
-    perfil_proveedor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='prov_perfil')
+    #perfil_proveedor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='prov_perfil')
     comentario_csf = models.CharField(max_length=200,null=True, blank=True)
     comentario_comprobante_domicilio = models.CharField(max_length=200,null=True, blank=True)
     comentario_opinion_cumplimiento = models.CharField(max_length=200,null=True, blank=True)
@@ -73,7 +73,7 @@ class DocumentosProveedor(models.Model):
     fecha_subida = models.DateTimeField(auto_now_add=True)
     activo = models.BooleanField(default=True)  # Permite activar/inactivar documentos
     validada = models.BooleanField(null=True, default=None)
-    validada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='validada_por')
+    validada_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, related_name='validada_por')
     validada_fecha = models.DateTimeField(null=True)
     comentario = models.CharField(max_length=200, null=True, blank=True)
     def __str__(self):
@@ -186,7 +186,7 @@ class Moneda(models.Model):
 
 class Proveedor_direcciones(models.Model):
     nombre = models.ForeignKey(Proveedor, on_delete=models.CASCADE, null=True, related_name="direcciones")
-    creado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    creado_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True)
     distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE, null=True)
     domicilio = models.CharField(max_length=200, null=True)
     telefono = models.CharField(null=True, max_length=14)
@@ -208,7 +208,7 @@ class Proveedor_direcciones(models.Model):
     completo = models.BooleanField(default=False)
     created_at = models.DateTimeField(null=True)
     modified = models.DateField(auto_now=True)
-    actualizado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Des_proveedores' )
+    actualizado_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, related_name='Des_proveedores' )
     modificado_fecha = models.DateField(null=True, blank=True)
     enviado_fecha = models.DateField(null=True)
     servicio = models.BooleanField(default=False)
@@ -253,7 +253,7 @@ class Comparativo(models.Model):
     cotizacion3 = models.FileField(null=True, upload_to='comparativos',validators=[FileExtensionValidator(['pdf'])])
     cotizacion4 = models.FileField(null=True, upload_to='comparativos', blank=True)
     cotizacion5 = models.FileField(null=True, upload_to='comparativos', blank=True)
-    creada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    creada_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
     completo = models.BooleanField(default=False)
     comentarios = models.TextField(max_length=200, null=True)
@@ -284,16 +284,16 @@ class Compra(models.Model):
     req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True, related_name = 'compras')
     folio = models.IntegerField(null=True)
     complete = models.BooleanField(default=False)
-    creada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Generacion')
+    creada_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, related_name='Generacion')
     created_at = models.DateTimeField(null=True)
-    oc_autorizada_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Aprobacion')
+    oc_autorizada_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Aprobacion')
     autorizado_at = models.DateTimeField(null=True, blank=True)
     autorizado1 = models.BooleanField(null=True, default=None)
-    oc_autorizada_por2 = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True,related_name='Aprobacion2')
+    oc_autorizada_por2 = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True,related_name='Aprobacion2')
     autorizado_at_2 = models.DateTimeField(null=True, blank=True)
     autorizado2 = models.BooleanField(null=True, default=None)
     proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True)
-    tesorero = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Tesoreria')
+    tesorero = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Tesoreria')
     referencia = models.CharField(max_length=20, null=True, blank=True)
     cond_de_pago = models.ForeignKey(Cond_pago, on_delete = models.CASCADE, null=True)
     formas_de_pago = models.ForeignKey(Formas_pago, on_delete = models.CASCADE, null=True)
@@ -454,4 +454,4 @@ class Evidencia(models.Model):
     uploaded = models.DateField()
     comentario = models.CharField(max_length=200, null=True, blank=True)
     hecho = models.BooleanField(default=False)
-    subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    subido_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True)
