@@ -21,12 +21,19 @@ class RegistroProveedorForm(forms.Form):
     password = forms.CharField(widget=forms.PasswordInput, required=True, label="Contraseña")
     confirm_password = forms.CharField(widget=forms.PasswordInput, required=True, label="Confirmar Contraseña")
     
+    #Datos Bancarios
+    clabe = forms.CharField(max_length=20, required=True)
+    cuenta = forms.CharField(max_length=20, required=True)
+    referencia = forms.CharField(max_length=20, required=True)
+    banco = forms.ModelChoiceField(queryset=Banco.objects.all(), required=True)
+    convenio = forms.CharField(max_length=20, required=True)
+
+
+    # Datos del proveedor y contacto
     contacto = forms.CharField(max_length=50, required=True)
     telefono = forms.CharField(max_length=14, required=True)
     domicilio = forms.CharField(max_length=200, required=True)
-    clabe = forms.CharField(max_length=20, required=True)
-    banco = forms.ModelChoiceField(queryset=Banco.objects.all(), required=True)
-    distrito = forms.ModelChoiceField(queryset=Distrito.objects.all(), required=True)
+    
 
     def clean(self):
         cleaned_data = super().clean()

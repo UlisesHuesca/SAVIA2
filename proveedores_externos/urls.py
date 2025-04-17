@@ -21,4 +21,5 @@ urlpatterns = [
     path('update_comentario/', views.update_comentario, name='update_comentario'),
     path('politica/aceptar/', views.aceptar_politica, name='aceptar-politica'),
     path('proveedores/invitar/', views.invitar_proveedor, name='invitar-proveedor'),
+    path('registro-proveedor/<uuid:token>/', views.registro_proveedor, name='registro-proveedor'),
 ]
