@@ -3,8 +3,15 @@ from django.http import Http404, HttpResponse, JsonResponse
 from django.core.mail import EmailMessage
 from django.conf import settings
 from django.utils import timezone
+from django.views.decorators.csrf import csrf_exempt
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
+from django.db.models.functions import Concat, Coalesce
 from django.core.paginator import Paginator
+from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from django.contrib import messages
+from django.utils.timezone import now
+from django.urls import reverse
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor
 from user.models import Profile
 from compras.filters import CompraFilter
@@ -12,15 +19,15 @@ from requisiciones.models import Requis
 from requisiciones.views import get_image_base64
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
-from .forms import SubirDocumentoForm, UploadFileForm
-from django.contrib import messages
+from .forms import SubirDocumentoForm, UploadFileForm, RegistroProveedorForm
+
 from io import BytesIO
-from django.db.models.functions import Concat, Coalesce
+
 from tesoreria.models import Pago, Facturas
 import datetime as dt
 import decimal
 import os
-from django.views.decorators.csrf import csrf_exempt
+
 # Import Excel Stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -775,7 +782,7 @@ def invitar_proveedor(request):
             creado_por= perfil
         )
 
-        link = request.build_absolute_uri(f'/registro-proveedor/{invitacion.token}/')
+        link = request.build_absolute_uri(reverse('registro-proveedor', args=[invitacion.token]))
         # aquí puedes enviar el link por email
         enviar_correo_invitacion(email, rfc, link, perfil.staff.staff.first_name + " " + perfil.staff.staff.last_name)
 
@@ -843,3 +850,54 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre):
         email.send()
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
+
+def registro_proveedor(request, token):
+    invitacion = get_object_or_404(InvitacionProveedor, token=token, usado=False)
+
+    if request.method == 'POST':
+        form = RegistroProveedorForm(request.POST)
+        if form.is_valid():
+            # Validar que no exista ya el usuario
+            if User.objects.filter(email=invitacion.email).exists():
+                form.add_error('email', 'Este correo ya está registrado.')
+            else:
+                user = User.objects.create(
+                    username=invitacion.email,
+                    email=invitacion.email,
+                    password=make_password(form.cleaned_data['password'])
+                )
+                tipo = Profile.objects.get(nombre="PROVEEDOR_EXTERNO")
+
+                proveedor = invitacion.proveedor or Proveedor.objects.create(
+                    rfc=invitacion.rfc,
+                    razon_social=form.cleaned_data['razon_social'],
+                    creado_por=invitacion.creado_por
+                )
+
+                profile = Profile.objects.create(
+                    user=user,
+                    tipo=tipo,
+                    proveedor=proveedor,
+                )
+
+                Proveedor_direcciones.objects.create(
+                    nombre=proveedor,
+                    creado_por=profile,
+                    domicilio=form.cleaned_data['domicilio'],
+                    telefono=form.cleaned_data['telefono'],
+                    contacto=form.cleaned_data['contacto'],
+                    email=invitacion.email,
+                    banco=form.cleaned_data['banco'],
+                    clabe=form.cleaned_data['clabe'],
+                    distrito=form.cleaned_data['distrito']
+                )
+
+                invitacion.usado = True
+                invitacion.fecha_uso = now()
+                invitacion.save()
+
+                return redirect('user-login')  # O alguna página de éxito
+    else:
+        form = RegistroProveedorForm(initial={'email': invitacion.email, 'rfc': invitacion.rfc})
+
+    return render(request, 'proveedores_externos/registro_proveedor.html', {'form': form})

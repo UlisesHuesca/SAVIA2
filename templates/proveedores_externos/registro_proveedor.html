@@ -1,0 +1,156 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% block title %}Registro de Proveedor{% endblock %}
+
+{% block content %}
+<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+
+<div class="container d-flex justify-content-center align-items-center mt-5 mb-5">
+    <div class="card col-md-10 offset-md-2">
+        <div class="card-header text-center text-white" style="background-color: #122D45;">
+            <h4>Completa tu registro como proveedor</h4>
+        </div>
+        <div class="card-body">
+            <form method="post">
+                {% csrf_token %}
+                
+                <!-- Datos de acceso -->
+                <h5 class="mb-3">Datos de acceso</h5>
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{ form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razón Social" }}
+                            <label style="color: #121212;" for="id_area">Razón Social*</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{ form.password|add_class:"form-control" |append_attr:"placeholder= Password" }}
+                            <label style="color: #121212;" for="id_area">Password*</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{ form.confirm_password|add_class:"form-control"|append_attr:"placeholder=Confirmar Password" }}
+                            <label style="color: #121212;" for="id_area">Confirmar Password*</label>
+                        </div>
+                    </div>
+                </div>
+
+              
+
+                <hr class="my-4" />
+
+                <!-- Datos bancarios -->
+                <h5 class="mb-3">Datos bancarios</h5>
+                <div class="row">
+                    <div class="col-sm-12 col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.banco|add_class:"form-control"|append_attr:"placeholder=Banco"}}
+                            <label for="id_lugar_partida">Banco*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-lg-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta"}}
+                            <label for="id_lugar_partida">Cuenta*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
+                            <label for="id_lugar_partida">Clabe*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.referencia|add_class:"form-control"|append_attr:"placeholder=Referencia"}}
+                            <label for="id_lugar_partida">Referencia</label>
+                            </div>
+                        </div>
+                    </div>   
+                </div>
+                <div class="row">
+                    <div class="col-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
+                            <label for="id_lugar_partida">Convenio*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <hr class="my-4" />
+                <!-- Datos de contacto -->
+                <h5 class="mb-3">Datos de Proveedor y Contacto</h5>
+                <div class ="row">
+                    <div class="col-lg-6 col-sm-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.domicilio|add_class:"form-control required"|append_attr:"placeholder=Domicilio"}}
+                            <label for="id_lugar_partida">Domicilio*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.telefono|add_class:"form-control required"|append_attr:"placeholder=Teléfono"}}
+                            <label for="id_lugar_partida">Teléfono*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                
+                <div class="col-lg-6 col-sm-6">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.contacto|add_class:"form-control required"|append_attr:"placeholder=Contacto"}}
+                        <label for="id_lugar_partida">Contacto*</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label for="domicilio" class="form-label">Domicilio</label>
+                    {{ form.domicilio|add_class:"form-control"|append_attr:"placeholder= Domicilio" }}
+                </div>
+                <hr class="my-4" />
+
+                <div class="text-center">
+                    <button type="submit" class="btn btn-success mt-3">Registrarme</button>
+                </div>
+
+
+              
+                
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
