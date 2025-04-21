@@ -46,7 +46,11 @@
                         {% if compra.opciones_condiciones %}
                         <tr>
                             <th scope="col">Comentarios OC:</th>
-                            <th scope="col" > {{compra.opciones_condiciones}}</th>
+                            <th scope="col" >
+                                <div style="max-height: 100px; overflow-y: auto; white-space: normal; word-wrap: break-word;"> 
+                                    {{compra.opciones_condiciones}}
+                                </div>
+                            </th>
                         </tr>
                         {% endif %}
                         {% if compra.req.orden.comentario and compra.comentario_solicitud %}
