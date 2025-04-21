@@ -426,3 +426,19 @@ class Conceptos_Entradas(models.Model):
         subtotal = self.cantidad * self.precio_unitario
         return subtotal 
 
+class ValeRosa(models.Model):
+    gasto = models.ForeignKey(Solicitud_Gasto, on_delete=models.CASCADE, related_name='vales_rosa')
+    motivo = models.TextField()
+    monto = models.DecimalField(max_digits=12, decimal_places=2)
+
+    creado_por = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='vale_rosa_creado', null=True)
+    creado_en = models.DateTimeField(auto_now_add=True)
+
+    aprobado_por = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='vale_rosa_aprobado', null=True, blank=True)
+    aprobado_en = models.DateTimeField(null=True, blank=True)
+    esta_aprobado = models.BooleanField(default=False)
+
+    comentarios = models.TextField(null=True, blank=True)
+
+    def __str__(self):
+        return f"Vale Rosa #{self.id} para Gasto #{self.gasto.folio}"

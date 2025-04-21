@@ -120,7 +120,7 @@
         </div>
         <div class="card mt-2"> 
             <div class="card-header">
-					<h2>{% trans "Subir Facturas" %}</h2>
+					<h4>{% trans "Subir Facturas" %}</h4>
             </div>
             <div class="card-body">  
                 <form method="post" enctype="multipart/form-data">
@@ -130,7 +130,7 @@
                         <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>{% trans "Factura XML" %}:</strong></label>
                         <input type="file" name="archivo_xml" class="form-control" multiple>   
                         <div class="container-fluid text-end">
-                            <button class="btn btn-outline-info btn-block my-2" type="submit" name="btn_factura">{% trans "Subir Facturas" %}</button>
+                            <button class="btn btn-outline-success btn-block my-2" type="submit" name="btn_factura" title = "Subir Facturas"><i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i></button>
                         </div>
                 </form>
                 <div class ="table-responsive-sm">
@@ -175,20 +175,63 @@
                         </tbody>
                     </table>
                 </div>
+                <table class="table table-light table-striped">
+                    <thead>
+                    <tr>
+                            <th scope="col">Total</th>
+                            <td scope="col" id="total-sum">0.00</td>
+                        </tr>
+                    </thead> 
+               
+                </table>
             </div>
-            <table class="table table-light table-striped">
-            <thead>
-               <tr>
-                    <th scope="col">Total</th>
-                    <td scope="col" id="total-sum">0.00</td>
-                </tr>
-            </thead> 
            
-            </table>
         </div>
            
-    </div>
+   
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4>Agregar Vale Rosa</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="formValeRosa">
+                {% csrf_token %}
+                <div class="mb-2">
+                    <label class="form-label">Motivo</label>
+                    <textarea name="motivo" class="form-control" required></textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Monto</label>
+                    <input type="number" name="monto" step="0.01" class="form-control" required>
+                </div>
+                <div class="text-end">
+                    <button type="submit" name="btn_valerosa" class="btn btn-success">
+                        <i class="fa fa-check"></i> Agregar Vale Rosa
+                    </button>
+                </div>
+            </form>
+            <h5 class="mt-4">Vales Rosa Registrados</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="valesRosaLista">
+                    {% for vale in gasto.vales_rosa.all %}
+                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
 
+    </div>
+</div>
     <div class="col-lg-7">
         <div class="card">
             <div class="card-header">

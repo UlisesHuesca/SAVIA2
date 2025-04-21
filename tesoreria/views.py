@@ -1560,7 +1560,7 @@ def matriz_complementos(request, pk):
         if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
             next_url = 'matriz-oc-proveedores'
             print(next_url)
-            factura = get_object_or_404(Facturas, id=pk, oc__proveedor__nombre__perfil_proveedor = perfil)
+            factura = get_object_or_404(Facturas, id=pk, oc__proveedor__nombre = perfil.proveedor)
         else:
             factura = get_object_or_404(Facturas, id=pk)
             next_url = request.GET.get('next','matriz-compras')
