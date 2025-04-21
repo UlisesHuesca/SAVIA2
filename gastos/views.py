@@ -8,12 +8,16 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import EmailMessage
 from django.conf import settings
-import zipfile
 from django.urls import reverse
 from django.core.mail import EmailMessage, BadHeaderError
+
+
+
+import zipfile
+
 from smtplib import SMTPException
 import logging
-from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
+from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile
@@ -333,17 +337,18 @@ def crear_gasto(request):
                     messages.warning(request, f'Las siguientes no se pudieron subir porque ya estaban registradas: {", ".join(facturas_duplicadas)}')
 
             else:
-                messages.error(request,'No se pudo subir tu documento')
-        
-                
-               
-
-              
-
-
-               
-          
-   
+                messages.error(request,'No se pudo subir tu documento') 
+        if "btn_valerosa" in request.POST:
+            motivo = request.POST.get('motivo')
+            monto = request.POST.get('monto')
+            if motivo and monto:
+                vale = ValeRosa.objects.create(
+                    gasto=gasto,
+                    motivo=motivo,
+                    monto=monto,
+                    creado_por=usuario
+                )
+                return redirect('crear-gasto')
 
     #total = sum([factura.emisor['total'] for factura in facturas if factura.emisor and 'total' in factura.emisor and factura.emisor['total']])
 
@@ -372,6 +377,14 @@ def crear_gasto(request):
         'factura_form': factura_form,
     }
     return render(request, 'gasto/crear_gasto.html', context)
+
+def agregar_vale_rosa(request, pk):
+    gasto = get_object_or_404(Solicitud_Gasto, id=pk)
+    print('pero que')
+    
+    return HttpResponse(status=400)
+
+
 
 @perfil_seleccionado_required
 def delete_gasto(request, pk):

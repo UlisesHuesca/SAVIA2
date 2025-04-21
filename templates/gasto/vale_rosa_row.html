@@ -1,0 +1,12 @@
+<tr>
+    <td>{{ vale.id }}</td>
+    <td>{{ vale.motivo }}</td>
+    <td>${{ vale.monto|floatformat:2 }}</td>
+    <td>
+        {% if vale.esta_aprobado %}
+            ✅ Aprobado
+        {% else %}
+            ⏳ Pendiente
+        {% endif %}
+    </td>
+</tr>
