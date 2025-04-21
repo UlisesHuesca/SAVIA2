@@ -47,9 +47,9 @@
                         <tr>
                             <th scope="col">Comentarios OC:</th>
                             <th scope="col" >
-                                <div style="max-height: 100px; overflow-y: auto; white-space: normal; word-wrap: break-word;"> 
-                                    {{compra.opciones_condiciones}}
-                                </div>
+                               
+                                {{compra.opciones_condiciones|cut:","|add: ", "|safe}}
+                                
                             </th>
                         </tr>
                         {% endif %}
