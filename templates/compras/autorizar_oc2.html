@@ -106,31 +106,32 @@
                 {% if tipo_cambio %}
                 <p style="color:#3e92cc">Esta OC se realizó en dólares, su valor es estimado al tipo de cambio: {{tipo_cambio}}</p>
                 {% endif %}
-
-                <table class='table table-dark table-striped'>
-                    <thead>
-                        <tr>
-                            <th scope="col-3">#</th>
-                            <th scope="col-2">Código</th>
-                            <th scope="col-3">Artículos</th>
-                            <th>Comentario</th>
-                            <th scope="col-3">Cantidad</th>
-                            <th scope="col-3">P.U.</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                    {% for producto in productos %}
-                        <tr>
-                            <th scope="row"><img class='row-image' src="{{producto.producto.producto.articulos.producto.producto.imageURL}}"></th>
-                            <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
-                            <td>{{producto.producto.producto.articulos.producto.producto}}</td>
-                            <td style="max-width: 400px; word-break: break-word; white-space: normal; overflow-y: auto;">{{producto.producto.producto.articulos.comentario}}</td>
-                            <td>{{producto.cantidad}}</td>
-                            <td>${{producto.precio_unitario|floatformat:2}}</td>
-                        </tr>
-                   {% endfor %}
-                   </tbody>
-                </table>
+                <div class="table-responsive">
+                    <table class='table table-dark table-striped'>
+                        <thead>
+                            <tr>
+                                <th scope="col-3">#</th>
+                                <th scope="col-2">Código</th>
+                                <th scope="col-3">Artículos</th>
+                                <th>Comentario</th>
+                                <th scope="col-3">Cantidad</th>
+                                <th scope="col-3">P.U.</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                        {% for producto in productos %}
+                            <tr>
+                                <th scope="row"><img class='row-image' src="{{producto.producto.producto.articulos.producto.producto.imageURL}}"></th>
+                                <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
+                                <td>{{producto.producto.producto.articulos.producto.producto}}</td>
+                                <td style="max-width: 400px; word-break: break-word; white-space: normal; overflow-y: auto;">{{producto.producto.producto.articulos.comentario}}</td>
+                                <td>{{producto.cantidad}}</td>
+                                <td>${{producto.precio_unitario|floatformat:2}}</td>
+                            </tr>
+                    {% endfor %}
+                    </tbody>
+                    </table>
+                </div>
                 <p style="max-width: 400px; word-break: break-word; white-space: normal; overflow-y: auto;">Comentario Solicitud:&nbsp;<strong>{{compra.req.orden.comentario}}</strong> </p>
         </div>
 
