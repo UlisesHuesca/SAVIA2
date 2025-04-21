@@ -124,14 +124,14 @@
                             <th scope="row"><img class='row-image' src="{{producto.producto.producto.articulos.producto.producto.imageURL}}"></th>
                             <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
                             <td>{{producto.producto.producto.articulos.producto.producto}}</td>
-                            <td>{{producto.producto.producto.articulos.comentario}}</td>
+                            <td style="max-width: 400px; word-break: break-word; white-space: normal; overflow-y: auto;">{{producto.producto.producto.articulos.comentario}}</td>
                             <td>{{producto.cantidad}}</td>
                             <td>${{producto.precio_unitario|floatformat:2}}</td>
                         </tr>
                    {% endfor %}
                    </tbody>
                 </table>
-                <p>Comentario Solicitud:&nbsp;<strong>{{compra.req.orden.comentario}}</strong> </p>
+                <p style="max-width: 400px; word-break: break-word; white-space: normal; overflow-y: auto;">Comentario Solicitud:&nbsp;<strong>{{compra.req.orden.comentario}}</strong> </p>
         </div>
 
         <div class="modal-footer">
