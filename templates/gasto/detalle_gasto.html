@@ -85,6 +85,41 @@
             {% endfor %}
             </tbody>
         </table>
+        <h4 class="mt-4">Contenido de Vales Rosa</h4>
+            <table class="table" style="color:white">
+                <thead style="background-color: #f8d7da;">
+                    <tr>
+                        <th>ID</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Fecha</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for vale in gasto.vales_rosa.all %}
+                    <tr>
+                        <td>{{ vale.id }}</td>
+                        <td>{{ vale.motivo }}</td>
+                        <td>${{ vale.monto|floatformat:2 }}</td>
+                        <td>
+                            {% if vale.esta_aprobado %} 
+                            <span class="badge bg-primary">Autorizado</span> 
+                            {% elif vale.esta_aprobado == False %} 
+                                <span class="badge bg-danger">Cancelado</span>
+                            {% else %} 
+                                <span class="badge bg-warning">No Autorizado Aún</span> 
+                            {% endif %}
+                        </td>
+                        <td>{{ vale.creado_en|date:"d/m/Y" }}</td>
+                    </tr>
+                    {% empty %}
+                    <tr>
+                        <td colspan="6" class="text-center text-muted">Sin vales rosa registrados</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
     </div>
 </div>
