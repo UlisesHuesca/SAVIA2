@@ -156,7 +156,7 @@ def crear_gasto(request):
     elif usuario.distritos.nombre == "BRASIL":
         superintendentes = colaborador.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True).exclude(tipo__nombre="Admin")
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin" and not usuario.tipo.nombre == "GERENCIA":
-        superintendentes = colaborador.filter(staff =  usuario.staff, distritos = usuario.distritos )  
+        superintendentes = colaborador.filter(tipo__superintendente = True, staff =  usuario.staff, distritos = usuario.distritos )  
     else:
         superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
 
