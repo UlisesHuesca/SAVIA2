@@ -152,7 +152,15 @@
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
                     <td>{% if orden.colaborador %}{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}{% elif orden.proveedor %} {{orden.proveedor}}{% endif %}</td>
                     {% if orden.get_validado %}
-                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}{% if orden.autorizar %} <span class="badge bg-primary">Autorizado</span> {% elif orden.autorizar == False %} <span class="badge bg-danger">Cancelado</span>{% else %} <span class="badge bg-warning">No Autorizado Aún</span> {% endif %}</td>
+                    <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}
+                        {% if orden.autorizar %} 
+                            <span class="badge bg-primary">Autorizado</span> 
+                        {% elif orden.autorizar == False %} 
+                            <span class="badge bg-danger">Cancelado</span>
+                        {% else %} 
+                            <span class="badge bg-warning">No Autorizado Aún</span> 
+                        {% endif %}
+                    </td>
                     {% else %}
                     <td><span class="badge bg-warning">Llevar Material a Almacén</span></td>
                     {% endif %}

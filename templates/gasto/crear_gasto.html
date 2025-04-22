@@ -108,29 +108,55 @@
                                     </div>  
                                 </div>
                             </div> 
+                            <div class="form-check form-switch my-3">
+                                <input class="form-check-input" type="checkbox" id="activarFacturas">
+                                <label class="form-check-label" for="activarFacturas">Subir facturas</label>
+                            </div>
+                            
+                            <div class="form-check form-switch my-3">
+                                <input class="form-check-input" type="checkbox" id="activarValeRosa">
+                                <label class="form-check-label" for="activarValeRosa">Agregar vale rosa</label>
+                            </div>
+
 
                         {% if productos %}
-                        <div class="container-fluid text-end">
-                            <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value={% trans "Crear Solicitud" %}>
+                        <div class="text-end">
+                            <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Crear Solicitud" %}'>
                         </div>
                         {% endif %}
 
                 </form> 
             </div>
         </div>
-        <div class="card mt-2"> 
+        <div class="card mt-2 d-none" id="cardFacturas"> 
             <div class="card-header">
 					<h4>{% trans "Subir Facturas" %}</h4>
             </div>
             <div class="card-body">  
                 <form method="post" enctype="multipart/form-data">
                         {% csrf_token %}
-                        <label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>{% trans "Factura PDF" %}:</strong></label>
-                        <input type="file" name="archivo_pdf" class="form-control" multiple>
-                        <label for="archivo_xml" class="col-auto col-form-label my-1"><strong>{% trans "Factura XML" %}:</strong></label>
-                        <input type="file" name="archivo_xml" class="form-control" multiple>   
-                        <div class="container-fluid text-end">
-                            <button class="btn btn-outline-success btn-block my-2" type="submit" name="btn_factura" title = "Subir Facturas"><i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i></button>
+                        <!--<label for="archivo_pdf" class="col-auto col-form-label my-1"><strong>{% trans "Factura PDF" %}:</strong></label>
+                        <input type="file" name="archivo_pdf" class="form-control" multiple>-->
+                        <div class="input-group mb-3" title="Subir facturas PDF">
+                            <span class="input-group-text" >
+                                <i class="fa-solid fa-file-pdf fa-xl" style="color: #990f0f"></i>
+                            </span>
+                            <input type="file" name="archivo_pdf" class="form-control" multiple>
+                        </div>
+                        
+                        <!--<label for="archivo_xml" class="col-auto col-form-label my-1"><strong>{% trans "Factura XML" %}:</strong></label>
+                        <input type="file" name="archivo_xml" class="form-control" multiple>-->
+                        <div class="input-group mb-3" title="Subir facturas XML">
+                            <span class="input-group-text">
+                                <i class="fa-duotone fa-solid fa-file-xml fa-xl text-secondary"></i>
+                            </span>
+                            <input type="file" name="archivo_xml" class="form-control" multiple>
+                        </div>
+                    
+                        <div class="text-end">
+                            <button class="btn btn-outline-success btn-block my-2" type="submit" name="btn_factura" title = "Subir Facturas">
+                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
+                            </button>
                         </div>
                 </form>
                 <div class ="table-responsive-sm">
@@ -188,8 +214,8 @@
            
         </div>
            
-        <!--
-    <div class="card mt-4">
+        
+    <div class="card mt-4 d-none" id="cardValeRosa">
         <div class="card-header">
             <h4>Agregar Vale Rosa</h4>
         </div>
@@ -205,15 +231,15 @@
                     <input type="number" name="monto" step="0.01" class="form-control" required>
                 </div>
                 <div class="text-end">
-                    <button type="submit" name="btn_valerosa" class="btn btn-success">
-                        <i class="fa fa-check"></i> Agregar Vale Rosa
+                    <button type="submit" name="btn_valerosa" class="btn btn-outline-success" title ="Agregar Vale Rosa">
+                        <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
                     </button>
                 </div>
             </form>
             <h5 class="mt-4">Vales Rosa Registrados</h5>
             <table class="table table-bordered">
                 <thead>
-                    <tr>
+                    <tr style="background-color: #f8d7da;">
                         <th>ID</th>
                         <th>Motivo</th>
                         <th>Monto</th>
@@ -230,18 +256,19 @@
             </table>
         </div>
 
-    </div>-->
+    </div>
 </div>
-    <div class="col-lg-7">
+<div class="col-lg-7">
         <div class="card">
             <div class="card-header">
                 <h2 id="linea_gasto">{% trans "Líneas de Gasto" %}</h2>
             </div>
-            <div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
+            <!--<div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
                 <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
                 <label class="form-check-label" for="SwitchUsarXML">{% trans "Usar XML" %}</label>
-            </div>            
-            <div>
+            </div>--> 
+        <div class ="card-body">
+        <div>
                 <form id="form_product" method="post" enctype="multipart/form-data">
                 {% csrf_token %}    
                 <div class="row">
@@ -365,7 +392,7 @@
                         <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
                         <label class="form-check-label" for="SwitchEntrada_Salida" id="LabelAlmacén">Entrada-Salida Express</label>
                 </div>
-            <div class="container-fluid text-end">
+            <div class="text-end my-2">
                     <input class="btn btn-outline-info btn-block btn-lg" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
             </div>
         </form>
@@ -430,6 +457,7 @@
             </table>
         </div>
     </div>
+    
 </div>
 
 <!--Este es el modal-->
@@ -450,7 +478,7 @@ $(document).ready(function(){
 });
 
 
-    function sumarTotales() {
+    /*function sumarTotales() {
         let total = 0;
         const totales = document.querySelectorAll('.factura-total');
         
@@ -461,6 +489,27 @@ $(document).ready(function(){
 
         // Mostrar el total en el elemento correspondiente
         document.getElementById('total-sum').textContent = total.toFixed(2); // Puedes ajustar el número de decimales según necesites
+    }*/
+    function sumarTotales() {
+        let totalFacturas = 0;
+        let totalVales = 0;
+
+        const totalesFacturas = document.querySelectorAll('.factura-total');
+        const montosVales = document.querySelectorAll('.monto-vale');
+
+        totalesFacturas.forEach((element) => {
+            const value = parseFloat(element.textContent.trim().replace('$', '')) || 0;
+            totalFacturas += value;
+        });
+
+        montosVales.forEach((element) => {
+            const value = parseFloat(element.textContent.trim().replace('$', '')) || 0;
+            totalVales += value;
+        });
+
+        const total = totalFacturas + totalVales;
+
+        document.getElementById('total-sum').textContent = total.toFixed(2);
     }
 
     
@@ -487,6 +536,36 @@ $(document).ready(function(){
     document.getElementById('id_precio_unitario').addEventListener('change', validarCampo);
 
     document.addEventListener('DOMContentLoaded', function() {
+        const chkFacturas = document.getElementById("activarFacturas");
+        const cardFacturas = document.getElementById("cardFacturas");
+
+        const chkValeRosa = document.getElementById("activarValeRosa");
+        const cardValeRosa = document.getElementById("cardValeRosa");
+
+       // Restaurar estado desde localStorage
+        if (localStorage.getItem("mostrarFacturas") === "true") {
+            chkFacturas.checked = true;
+            cardFacturas.classList.remove("d-none");
+        }
+
+        if (localStorage.getItem("mostrarValeRosa") === "true") {
+            chkValeRosa.checked = true;
+            cardValeRosa.classList.remove("d-none");
+        }
+
+        // Escuchar cambios para guardar en localStorage
+        chkFacturas.addEventListener("change", function () {
+            const activo = this.checked;
+            localStorage.setItem("mostrarFacturas", activo);
+            cardFacturas.classList.toggle("d-none", !activo);
+        });
+
+        chkValeRosa.addEventListener("change", function () {
+            const activo = this.checked;
+            localStorage.setItem("mostrarValeRosa", activo);
+            cardValeRosa.classList.toggle("d-none", !activo);
+        });
+
         const form = document.getElementById('OrderForm');
         const btnAgregar = document.getElementById('btn_agregar');
         sumarTotales();
@@ -647,7 +726,7 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
 
-document.getElementById('SwitchUsarXML').addEventListener('change', function() {
+/* document.getElementById('SwitchUsarXML').addEventListener('change', function() {
 // Obtener los formularios
 var form_product = document.getElementById('form_product');
 var form_product2 = document.getElementById('form_product2');
@@ -677,7 +756,7 @@ for (var i = 0; i < inputs_form_product.length; i++) {
     form_product.classList.remove('d-none');
     form_product2.classList.add('d-none');
     }
-});
+}); */
 
 
 var datosProyectos = {{proyectos_para_select2|safe}}

@@ -436,7 +436,7 @@ class ValeRosa(models.Model):
 
     aprobado_por = models.ForeignKey(Profile, on_delete=models.CASCADE, related_name='vale_rosa_aprobado', null=True, blank=True)
     aprobado_en = models.DateTimeField(null=True, blank=True)
-    esta_aprobado = models.BooleanField(default=False)
+    esta_aprobado = models.BooleanField(null=True, default=None)
 
     comentarios = models.TextField(null=True, blank=True)
 

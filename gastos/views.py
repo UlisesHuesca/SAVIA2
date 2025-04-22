@@ -849,6 +849,20 @@ def autorizar_gasto(request, pk):
         if perfil.tipo.subdirector == True:
             gasto.autorizar2 = True
             gasto.approbado_fecha2 = datetime.now()
+        for key, value in request.POST.items():
+            if key.startswith("vale_"):
+                try:
+                    vale_id = int(key.split("_")[1])
+                    vale = ValeRosa.objects.get(id=vale_id, gasto=gasto)
+
+                    if value == "aprobar":
+                        vale.esta_aprobado = True
+                    elif value == "rechazar":
+                        vale.esta_aprobado = False
+
+                    vale.save()
+                except (ValueError, ValeRosa.DoesNotExist):
+                    continue
         gasto.save()
         messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {gasto.folio}')
         return redirect ('gastos-pendientes-autorizar')

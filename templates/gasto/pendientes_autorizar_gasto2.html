@@ -11,58 +11,61 @@
 {% block content %}
 <hr>
 <hr>
-<hr>
+
+<h6>&nbsp;</h6>
 <div class="row my-4">
-        <div class="col-md-12">
-        <div class="card card-body">
+    <div class="col-md-12">
+    <div class="card">
+        <div class="card-header">
             <h5>Filtro de Gastos</h5>
-            <hr>
+        </div>
+        <div class="card-body"> 
             <form method="GET">
                 {% csrf_token %}
-                <div class="row g-12">
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por:"}}
-                                <label style="color: #121212;" for="id_id">Folio</label>
-                            </div>
+                <div class="row">
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.solicitado_por|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                            <label style="color: #121212;" for="id_staff">Solicitado por</label>
                         </div>
                     </div>
-                    <div class="col-lg-4 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                                <label style="color: #121212;" for="id_id">Folio</label>
-                            </div>
+                </div>
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                            <label style="color: #121212;" for="id_proyecto">Folio</label>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                            </div>
+                </div>
+                <div class="col-lg-2 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_start_date">Desde:</label>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                            </div>
+                </div>
+                <div class="col-lg-2 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                        <label style="color: #121212;" for="id_end_date">Hasta:</label>
                         </div>
                     </div>
-                    <div class="col-2">
-                    <button class="btn btn-outline-success" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    </div>
-            </div>
+                </div>
+                <div class="col-auto">
+                <button class="btn btn-outline-success m-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                </div>
+                </div>
             </form>
             <hr>
-            <div class = "row mt-2 bg-white">
+            <div class = "row bg-white">
                 <form method=POST>
                     {% csrf_token %}
                 <ul class="nav nav-pills">
@@ -84,6 +87,8 @@
         </div>
     </div>
 </div>
+</div>
+
 
 <div class="row my-4">
     <div class="col-md-4">
@@ -116,7 +121,7 @@
             <tbody>
                 {% for orden in ordenes_list %}
                 <tr>
-                    <th scope="row">{{orden.id}}</th>
+                    <th scope="row">{{orden.folio}}</th>
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
                     <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}</td>
                     <td>{{orden.proyectos}}</td>
@@ -124,8 +129,8 @@
                     <td>{{orden.created_at}}</td>
                     <td>${{orden.get_total_solicitud}}</td>
                     <td><a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-gastos' orden.id %}">Productos</a>
-                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-gasto2' orden.id %}" ><i class="fa-solid fa-circle-check"></i></a>
-                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-gasto2' orden.id %}"><i class="fa-solid fa-xmark"></i></a>
+                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-gasto2' orden.id %}" ><i class="fa-solid fa-check fa-xl"></i></a>
+                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-gasto2' orden.id %}"><i class="fa-solid fa-xmark fa-xl"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

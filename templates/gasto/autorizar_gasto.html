@@ -14,7 +14,8 @@
             <h5 class="modal-title">Autorizar Solicitud: {{gasto.folio}}</h5>
             <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-
+        <form action="{% url 'autorizar-gasto' gasto.id %}" method=POST>
+        {% csrf_token %}
         <div class="modal-body">
             <div class='box-element-2'>
                 <div class='cart-row'>
@@ -51,18 +52,98 @@
                 </div>
                 {% endfor %}
             </div>
+       
+            <h5 class="mt-4">Vales Rosa</h5>
+            <table class="table" style="color:white">
+                <thead style="background-color: #f8d7da;">
+                    <tr>
+                        <th>ID</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Acción</th>
+                    </tr>
+                </thead>
+                <tbody>
+                   
+                    {% if gasto.vales_rosa.all.count == 0 %}
+                        <tr><td colspan="5" class="text-center text-muted">No hay vales rosa en esta solicitud</td></tr>
+                    {% endif %}
+                    {% for vale in gasto.vales_rosa.all %}
+                    <tr>
+                        <td>{{ vale.id }}</td>
+                        <td>{{ vale.motivo }}</td>
+                        <td>${{ vale.monto|floatformat:2 }}</td>
+                        <td>
+                            {% if vale.esta_aprobado %} 
+                            <span class="badge bg-primary">Autorizado</span> 
+                            {% elif vale.esta_aprobado == False %} 
+                                <span class="badge bg-danger">Cancelado</span>
+                            {% else %} 
+                                <span class="badge bg-warning">No Autorizado Aún</span> 
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="vale_{{ vale.id }}" id="aprobar_{{ vale.id }}" value="aprobar">
+                                {% if vale.esta_aprobado == True %}checked{% endif %}
+                                <label class="form-check-label" for="aprobar_{{ vale.id }}">Autorizar</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="vale_{{ vale.id }}" id="rechazar_{{ vale.id }}" value="rechazar">
+                                {% if vale.esta_aprobado == False %}checked{% endif %}
+                                <label class="form-check-label" for="rechazar_{{ vale.id }}">Rechazar</label>
+                            </div>
+                        </td>
+                    </tr>
+                    {% empty %}
+                    <tr><td colspan="5" class="text-center text-muted">No hay vales rosa en esta solicitud</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
         </div>
-
         <div class="modal-footer">
-            <form action="{% url 'autorizar-gasto' gasto.id %}" method=POST>
-                {% csrf_token %}
-                <button id="approve-btn" name="btn_autorizar" class="btn btn-success" type="submit">Autorizar</button>
+           
+                
+                <button id="approve-btn" name="btn_autorizar" class="btn btn-success" type="submit" disabled>Autorizar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </form>
+          
         </div>
+        </form>
     </div>
 </div>
-
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+     
+        const btnAutorizar = document.getElementById("approve-btn");
+    
+        function verificarSelecciones() {
+            // Buscar todos los vales
+            const vales = document.querySelectorAll("input[type='radio'][name^='vale_']");
+            console.log(vales);
+            // Agrupar por vale (por nombre)
+            const nombres = [...new Set(Array.from(vales).map(input => input.name))];
+    
+            // Verificar que cada grupo tenga un seleccionado
+            const todosSeleccionados = nombres.every(name => {
+                return document.querySelector(`input[name='${name}']:checked`) !== null;
+            });
+    
+            // Habilitar o deshabilitar el botón
+            btnAutorizar.disabled = !todosSeleccionados;
+        }
+    
+        // Escuchar cambios en todos los radios
+        document.querySelectorAll("input[type='radio'][name^='vale_']").forEach(radio => {
+            radio.addEventListener("change", verificarSelecciones);
+        });
+    
+        // Verificación inicial
+        verificarSelecciones();
+</script>
 {% endblock %}
 </body>
 </html>

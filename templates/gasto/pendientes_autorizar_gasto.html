@@ -14,7 +14,8 @@
 <hr>
 <h6>&nbsp;</h6>
 <div class="row">
-    <div class="card col-md-12">
+    <div class="col-md-12">
+        <div class="card">
         <div class="card-header">
             <h5>Filtro de Gastos</h5>
         </div>
@@ -26,7 +27,7 @@
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                            {{myfilter.form.solicitado_por|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
                             <label style="color: #121212;" for="id_staff">Solicitado por</label>
                         </div>
                     </div>
@@ -84,6 +85,7 @@
                 </form>
             </div>
         </div>
+        </div>
     </div>
 </div>
 
@@ -137,8 +139,8 @@
                     </td>
                     <td>${{orden.get_total_solicitud}}
                     <td><a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalle-gastos' orden.id %}">Conceptos</a>
-                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-gasto' orden.id %}" ><i class="fa-solid fa-circle-check"></i></a>
-                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-gasto' orden.id %}"><i class="fa-solid fa-trash-can"></i></a>
+                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-gasto' orden.id %}" ><i class="fa-solid fa-check fa-xl"></i></a>
+                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-gasto' orden.id %}"><i class="fa-solid fa-xmark fa-xl"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
@@ -189,6 +191,7 @@ var myModal = document.getElementById('dialog')
 myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
+
 
 
 </script>
