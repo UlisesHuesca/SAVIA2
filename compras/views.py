@@ -3682,7 +3682,9 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
     start_time = time.time()  # Marca el tiempo de inicio
     print('Aqui comienza',productos.count())
 
-    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC', 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Visita']
+    columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC',
+                'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Estado','Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 
+                'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Visita']
     data = [columns]
 
     for articulo in productos:
@@ -3731,6 +3733,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             articulo.oc.proveedor.nombre.razon_social,
             articulo.oc.proveedor.estatus.nombre,
             articulo.oc.proveedor.domicilio,
+            articulo.oc.proveedor.estado.nombre if articulo.oc.proveedor.estado else 'No Identificado',
             fecha_creacion,
             proyecto_nombre,
             subproyecto_nombre,
@@ -3778,7 +3781,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
     #            cell_format = date_style
     
     for col_num in range(1, len(columns) + 1):
-        if col_num == 19:  # Fecha
+        if col_num in [20]:  # Fecha
             ws.set_col_style(col_num, date_style)
         elif col_num in [10, 12, 13, 14, 15]:  # Dinero
             ws.set_col_style(col_num, money_style)
