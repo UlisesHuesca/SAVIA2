@@ -1,7 +1,8 @@
 import django_filters
-from .models import Product, Proyecto, Subproyecto
+from .models import Product
+from solicitudes.models import Proyecto, Subproyecto, St_Entrega
 from compras.models import Proveedor
-from django_filters import CharFilter, DateTimeFilter
+from django_filters import CharFilter, DateTimeFilter, ModelChoiceFilter
 
 class ProductFilter(django_filters.FilterSet):
     nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
@@ -31,7 +32,11 @@ class ProyectoFilter(django_filters.FilterSet):
     cliente = CharFilter(field_name='cliente', lookup_expr='icontains')
     folio_cotizacion = CharFilter(field_name='folio__cotizacion', lookup_expr='icontains')
     factura = CharFilter(field_name='factura', lookup_expr='icontains')
-    status_entrega = CharFilter(field_name='status_de_entrega', lookup_expr='icontains')
+    status_entrega = ModelChoiceFilter(
+        field_name='status_de_entrega',
+        queryset=St_Entrega.objects.all(),
+        label='Estatus de entrega'
+    )
     fecha = DateTimeFilter(field_name='created_at', lookup_expr='gte')
 
     class Meta:

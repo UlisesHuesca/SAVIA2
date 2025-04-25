@@ -209,7 +209,7 @@ def crear_gasto(request):
     
     articulo, created = articulos_gasto.get_or_create(completo = False, staff=usuario)
 
-    productos = articulos_gasto.filter(gasto=gasto, completo = True)
+    productos = articulos_gasto.filter(gasto=gasto, completo = True) 
 
     
     colaboradores_para_select2 = [
@@ -220,6 +220,7 @@ def crear_gasto(request):
     ]
     
 
+    #articulos_gasto = conceptos.filter(gasto = True, baja_item = False) #Cuando Alberto envie los conceptos se implementa
     articulos_gasto = conceptos.filter(gasto = True)
     facturas = Factura.objects.filter(solicitud_gasto = gasto)
     form_product = Articulo_GastoForm()
