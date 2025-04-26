@@ -16,7 +16,7 @@ class Concepto_ViaticoAdmin(admin.ModelAdmin):
 
 class Viatico_Factura_Admin(admin.ModelAdmin):
     list_display = ('id','solicitud_viatico','factura_pdf','factura_xml','uuid')
-    search_fields = ['id','uuid',,'solicitud_viatico__folio']
+    search_fields = ['id','uuid','solicitud_viatico__folio']
 
 admin.site.register(Solicitud_Viatico, Solicitud_ViaticoAdmin)
 
