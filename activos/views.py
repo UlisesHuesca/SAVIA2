@@ -284,7 +284,7 @@ def edit_activo(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     empleados = Profile.objects.all()
     perfil = empleados.get(id = pk_perfil)
-    productos = Inventario.objects.filter(producto__activo=True, distrito = perfil.distritos)
+    productos = Inventario.objects.filter(producto__activo = True, distrito = perfil.distritos)
 
     for producto in productos: #Asignar al producto que es un activo disponible si tiene más de 1
         if producto.cantidad >= 1:
@@ -310,7 +310,7 @@ def edit_activo(request, pk):
             subfamilia = ''
     tipo_activo = Tipo_Activo.objects.all()
     if activo.responsable:
-        responsable = empleados.get(id=activo.responsable.id )
+        responsables = empleados.get(id=activo.responsable.id )
     if perfil.tipo.nombre == "ADMIN_ACTIVOS":
         responsables = empleados.filter(st_activo = True)
     else:
@@ -321,7 +321,7 @@ def edit_activo(request, pk):
     else:
         marca_p = None
 
-    productos_activos = productos.filter(activo_disponible =True) #Filtrar a aquellos productos activo disponibles
+    productos_activos = productos.filter(activo_disponible = True) #Filtrar a aquellos productos activo disponibles
     form = Edit_Activo_Form(instance = activo)
     form.fields['activo'].queryset = productos
 

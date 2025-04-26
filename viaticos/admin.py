@@ -10,7 +10,7 @@ class Solicitud_ViaticoAdmin(admin.ModelAdmin):
 
 class Concepto_ViaticoAdmin(admin.ModelAdmin):
     list_display = ('id','viatico','producto','precio','cantidad','comentario')
-    search_fields = ('id',)
+    search_fields = ('id','solicitud_viatico__folio')
     raw_id_fields =('producto','viatico',)
 
 
