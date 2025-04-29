@@ -3436,12 +3436,40 @@ def descargar_respuestas_bbva():
             sftp.get(remote_file, local_file)
             logging.info(f'Archivo descargado: {archivo} → {local_file}')
 
+            # Si es archivo .pgp, desencriptarlo
+            if archivo.endswith('.pgp') or archivo.endswith('.gpg'):
+                desencriptar_pgp(local_file)
+
         sftp.close()
         transport.close()
         logging.info('Conexión cerrada correctamente después de descargar archivos.')
 
     except Exception as e:
         logging.error(f'Error al descargar archivos desde BBVA: {str(e)}')
+
+
+
+def desencriptar_pgp(archivo_pgp):
+    """Desencripta un archivo .pgp usando GPG."""
+    archivo_xml = archivo_pgp.replace('.pgp', '.xml')
+
+    if os.path.exists(archivo_xml):
+        logging.info(f'Archivo ya desencriptado: {archivo_xml}')
+        return
+
+    try:
+        logging.info(f'Desencriptando {archivo_pgp}...')
+        result = subprocess.run(
+            ['gpg', '--batch', '--yes', '--output', archivo_xml, '--decrypt', archivo_pgp],
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            check=True
+        )
+        logging.info(f'Archivo desencriptado exitosamente: {archivo_xml}')
+    except subprocess.CalledProcessError as e:
+        logging.error(f'Error desencriptando {archivo_pgp}: {e.stderr.decode()}')
+
+    
 
 def convert_excel_control_bancos(pagos):
     # Reordenar los pagos en orden ascendente por 'pagado_real'
