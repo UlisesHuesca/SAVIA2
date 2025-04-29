@@ -974,7 +974,7 @@ def matriz_pagos(request):
                         
                         
                         distrito = factura.solicitud_gasto.distrito.nombre  # Obtener distrito de la factura
-                        folio = 'G' + factura.solicitud_gasto.folio
+                        folio = 'G' + str(factura.solicitud_gasto.folio)
                         if factura.archivo_xml:
                             file_name = os.path.basename(factura.archivo_xml.path)
                             zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
@@ -1082,7 +1082,7 @@ def matriz_pagos(request):
                             zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, general_file_name))
 
                         distrito = factura.solicitud_viatico.distrito.nombre  # Obtener distrito de la factura
-                        folio = 'V' + factura.solicitud_viatico.folio
+                        folio = 'V' + str(factura.solicitud_viatico.folio)
                         if factura.factura_xml:
                             file_name = os.path.basename(factura.factura_xml.path)
                             zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
