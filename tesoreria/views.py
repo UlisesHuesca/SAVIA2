@@ -974,6 +974,7 @@ def matriz_pagos(request):
                         
                         
                         distrito = factura.solicitud_gasto.distrito.nombre  # Obtener distrito de la factura
+                        folio = 'G' + factura.solicitud_gasto.folio
                         if factura.archivo_xml:
                             file_name = os.path.basename(factura.archivo_xml.path)
                             zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
@@ -981,7 +982,7 @@ def matriz_pagos(request):
                             general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                             zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
-                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, distrito, general_file_name, factura))
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, folio, distrito, general_file_name, factura))
 
                         if factura.solicitud_gasto.id not in processed_gastos:
                             buf = render_pdf_gasto(factura.solicitud_gasto.id)
@@ -1027,6 +1028,7 @@ def matriz_pagos(request):
                             zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, file_name))
 
                         distrito = factura.oc.req.orden.distrito.nombre  # Obtener distrito de la factura
+                        folio = factura.oc.folio
                         if factura.factura_xml:
                             file_name = os.path.basename(factura.factura_xml.path)
                             zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
@@ -1034,7 +1036,7 @@ def matriz_pagos(request):
                             general_file_name = f'{factura.id}_{uuid_str}.xml'
                             
                             zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, factura))
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, folio, distrito, general_file_name, factura))
                         
                         # Incluir la ficha de pago
                         pagos = Pago.objects.filter(oc=factura.oc)
@@ -1080,6 +1082,7 @@ def matriz_pagos(request):
                             zip_file.write(factura.factura_pdf.path, os.path.join(general_pdfs_folder, general_file_name))
 
                         distrito = factura.solicitud_viatico.distrito.nombre  # Obtener distrito de la factura
+                        folio = 'V' + factura.solicitud_viatico.folio
                         if factura.factura_xml:
                             file_name = os.path.basename(factura.factura_xml.path)
                             zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
@@ -1087,7 +1090,7 @@ def matriz_pagos(request):
                             general_file_name = f'{factura.id}_{uuid_str}.xml'
 
                             zip_file.write(factura.factura_xml.path, os.path.join(general_xmls_folder, general_file_name))
-                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, distrito, general_file_name, factura))
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, folio, distrito, general_file_name, factura))
 
                         if factura.solicitud_viatico.id not in processed_viaticos:
                             buf = generar_pdf_viatico(factura.solicitud_viatico.id)
@@ -1122,7 +1125,7 @@ def matriz_pagos(request):
                     ws = wb.active
                     ws.title = "Resumen XML"
 
-                    columnas = ['Distrito','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                    columnas = ['Distrito','Folio','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
                                 'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT'
                                 ]
                     ws.append(columnas)
@@ -1314,7 +1317,7 @@ def extraer_datos_del_complemento(ruta_xml):
     return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
 
 
-def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
+def extraer_datos_xml_carpetas(xml_file, folio, distrito, nombre_general, factura):
     """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones, incluyendo complementos de pago."""
     tree = ET.parse(xml_file)
     root = tree.getroot()
@@ -1364,6 +1367,7 @@ def extraer_datos_xml_carpetas(xml_file, distrito, nombre_general, factura):
         tipo_documento = "Factura"
 
     datos = {
+        'Folio': folio,
         'Distrito': distrito,  # Se agrega el distrito
         'Tipo de Documento': tipo_documento,
         'Fecha factura': fecha_emision_excel,
