@@ -138,6 +138,7 @@
                     <thead class="text-black" style="background-color: #F5F5F5;">
                         <tr>
                             <th scope="col">Concepto [XML]</th>
+                            <th>Fecha Subida</th>
                             <th scope="col">Proveedor [XML]</th>
                             <th scope="col">Monto [XML]</th>
                             <th>PDF</th>
@@ -153,6 +154,7 @@
                         {% for factura in facturas %}
                         <tr>
                             <td>{% if factura.archivo_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
+                            <td>{{factura.fecha_subida|date:"d/m/Y"}}</td>
                             <td>{% if factura.archivo_xml %}
                                  {{ factura.emisor.nombre_emisor }} 
                                 {% endif %}

@@ -118,6 +118,7 @@
                     <thead class="text-black" style="background-color: #F5F5F5;">
                         <tr>
                             <th>Clasificación</th>
+                            <th>Fecha subida</th>
                             <th scope="col">Concepto [XML]</th>
                             <th scope="col">Proveedor [XML]</th>
                             <th scope="col">Monto [XML]</th>
@@ -138,6 +139,7 @@
                                 <strong>{{ factura.emisor.clasificacion_general }}</strong>
                                 {% endif %}
                             </td>
+                            <td>{{factura.fecha_subido|date:"d/m/Y"}}</td>
                             <td>{% if factura.factura_xml %} {{ factura.emisor.resultados }} {% endif %}</td>
                             <td>{% if factura.factura_xml %} {{ factura.emisor.nombre_emisor }} {% endif %}</td>
                             <td>

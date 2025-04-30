@@ -136,6 +136,7 @@
                         <tr>
                             <th>#</th>
                             <th>Fecha Timbrado</th>
+                            <th>Fecha Subida</th>
                             <th>Método de Pago</th>
                             <th>Comentario</th>
                             <th>PDF</th>
@@ -153,6 +154,7 @@
                         <tr>
                             <th scope="row">{{p.id}}</th>
                             <td>{{p.emisor.fecha_timbrado}}</td>
+                            <td>{{p.fecha_subida|date:"d/m/Y"}}</td>
                             <td>{{p.emisor.metodo_pago}}</td>
                             <td>{% if p.comentario %} {{p.comentario}} {% else %} S/C {% endif %}</td>
                             <td>
