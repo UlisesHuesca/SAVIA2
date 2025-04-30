@@ -1128,7 +1128,7 @@ def matriz_pagos(request):
                     ws = wb.active
                     ws.title = "Resumen XML"
 
-                    columnas = ['Distrito','Folio','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                    columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
                                 'Receptor (Empresa) Nombre', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT'
                                 ]
                     ws.append(columnas)
