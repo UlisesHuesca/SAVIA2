@@ -291,6 +291,7 @@ def edit_activo(request, pk):
             producto.activo_disponible = True
         else:
             producto.activo_disponible = False
+        print(producto)
         producto.save()  
 
     #producto = Salidas.objects.get(id=pk)
@@ -391,6 +392,10 @@ def edit_activo(request, pk):
     if request.method =='POST':
         form = Edit_Activo_Form(request.POST, request.FILES, instance = activo)
         if form.is_valid():
+            inventario = Inventario.objects.get(id = activo.activo.id)
+            if inventario.cantidad >= 1:
+                inventario.cantidad -= 1
+                inventario.save()
             activo = form.save(commit=False)
             activo.completo = True
             activo.modified_at = date.today()
@@ -468,7 +473,7 @@ def cambio_distrito_activo(request, pk):
             } for producto in productos
         ]
         print(productos)
-        
+
         error_messages = {}    
         if activo.activo:
             id_actual = activo.activo.id
