@@ -1137,7 +1137,7 @@ def matriz_pagos(request):
                         ws.append([dato.get(col, '') for col in columnas])
 
                     # Formatos de Excel
-                    for col in ['D']:  # Monto Total Factura
+                    for col in ['G']:  # Monto Total Factura
                         for row in range(2, ws.max_row + 1):
                             ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
 
