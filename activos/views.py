@@ -467,7 +467,8 @@ def cambio_distrito_activo(request, pk):
                 'codigo': str(producto.producto.codigo),
             } for producto in productos
         ]
-
+        print(productos)
+        
         error_messages = {}    
         if activo.activo:
             id_actual = activo.activo.id
