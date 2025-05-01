@@ -48,8 +48,9 @@ from user.decorators import perfil_seleccionado_required
 def activos(request):
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
-        activos = Activo.objects.filter(completo=True).exclude(responsable__distritos__id__in=[7, 8])
+        activos = Activo.objects.filter(completo=True).exclude(responsable__distritos__id__in=almacenes_distritos)
     else:    
         activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
     myfilter = ActivoFilter(request.GET, queryset=activos)
@@ -284,14 +285,15 @@ def edit_activo(request, pk):
     pk_perfil = request.session.get('selected_profile_id') 
     empleados = Profile.objects.all()
     perfil = empleados.get(id = pk_perfil)
-    productos = Inventario.objects.filter(producto__activo = True, distrito = perfil.distritos)
+    almacenes_distritos = set(perfil.almacen.values_list('distrito__id', flat=True))
+    productos = Inventario.objects.filter(producto__activo = True, distrito__id__in = almacenes_distritos)
 
     for producto in productos: #Asignar al producto que es un activo disponible si tiene más de 1
         if producto.cantidad >= 1:
             producto.activo_disponible = True
         else:
             producto.activo_disponible = False
-        print(producto)
+        #print(producto)
         producto.save()  
 
     #producto = Salidas.objects.get(id=pk)
@@ -329,10 +331,11 @@ def edit_activo(request, pk):
     productos_para_select2 = [
         {
             'id': producto.id, 
-            'text': str(producto.producto.nombre),
+            'text': producto.producto.nombre,
             'cantidad':str(producto.cantidad),
         } for producto in productos_activos
     ]
+    print(productos_para_select2)
     if activo.activo:
         producto_predeterminado = {
             'id': activo.activo.id, 
@@ -1320,8 +1323,9 @@ def gestionar_marca(request):
 def activos_producto(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
-        items = Inventario.objects.filter(complete = True, producto__activo = True).annotate(activo_count=Count('activo')).order_by('producto__codigo')
+        items = Inventario.objects.filter(complete = True, producto__activo = True, distrito__in=almacenes_distritos ).annotate(activo_count=Count('activo')).order_by('producto__codigo')
     elif usuario.tipo.nombre == "ACTIVOS": 
         items = Inventario.objects.filter(complete = True, producto__activo = True, distrito = usuario.distritos).annotate(activo_count=Count('activo')).order_by('producto__codigo')
     else:

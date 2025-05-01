@@ -325,7 +325,7 @@ $(document).ready(function() {
 
 var datosProductos = {{ productos_para_select2|safe }};
 var productoPredeterminado = {{ producto_predeterminado|default:"null" |safe }};
-
+//console.log(datosProductos)
 $(document).ready(function () {
     var ProductoSelect = $('#id_activo');
     var cantidadEtiqueta = $('#cantidad');
@@ -441,10 +441,10 @@ function formatRepo (repo) {
 
     return $container;
 }
-
-function formatRepoSelection (repo) {
+function formatRepoSelection(repo) {
     return repo.text || repo.id;
 }
+
 
 </script>
 {% endblock %}
