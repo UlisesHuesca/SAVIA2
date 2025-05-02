@@ -50,7 +50,7 @@ def activos(request):
     usuario = Profile.objects.get(id = pk_perfil)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
-        activos = Activo.objects.filter(completo=True).exclude(responsable__distritos__id__in=almacenes_distritos)
+        activos = Activo.objects.filter(completo=True, responsable__distritos__id__in = almacenes_distritos)
     else:    
         activos = Activo.objects.filter(Q(responsable__distritos = usuario.distritos)|Q(activo__distrito = usuario.distritos), completo=True)
     myfilter = ActivoFilter(request.GET, queryset=activos)
