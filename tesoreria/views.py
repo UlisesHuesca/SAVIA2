@@ -975,7 +975,7 @@ def matriz_pagos(request):
                         
                         distrito = factura.solicitud_gasto.distrito.nombre  # Obtener distrito de la factura
                         folio = 'G' + str(factura.solicitud_gasto.folio)
-                        fecha_subida = factura.fecha_subida.strftime('%Y-%m-%d')
+                        fecha_subida = factura.fecha_subida.strftime('%Y-%m-%d') if factura.fecha_subida else 'No disponible'
                         if factura.archivo_xml:
                             file_name = os.path.basename(factura.archivo_xml.path)
                             zip_file.write(factura.archivo_xml.path, os.path.join(folder_name, file_name))
@@ -1030,7 +1030,7 @@ def matriz_pagos(request):
 
                         distrito = factura.oc.req.orden.distrito.nombre  # Obtener distrito de la factura
                         folio = factura.oc.folio
-                        fecha_subida = factura.fecha_subido.strftime('%Y-%m-%d')
+                        fecha_subida = factura.fecha_subido.strftime('%Y-%m-%d') if factura.fecha_subido else 'No disponible'
                         if factura.factura_xml:
                             file_name = os.path.basename(factura.factura_xml.path)
                             zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
@@ -1085,7 +1085,7 @@ def matriz_pagos(request):
 
                         distrito = factura.solicitud_viatico.distrito.nombre  # Obtener distrito de la factura
                         folio = 'V' + str(factura.solicitud_viatico.folio)
-                        fecha_subida = factura.fecha_subido.strftime('%Y-%m-%d')  # Formato YYYY-MM-DD
+                        fecha_subida = factura.fecha_subido.strftime('%Y-%m-%d') if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
                         if factura.factura_xml:
                             file_name = os.path.basename(factura.factura_xml.path)
                             zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
