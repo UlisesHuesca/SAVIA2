@@ -850,7 +850,35 @@ def matriz_pagos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-    pagos = Pago.objects.filter(
+    if usuario.tipo.rh == True and usuario.tipo.documentos == True:
+        pagos = Pago.objects.filter(
+        gasto__distrito__in = almacenes_distritos, gasto__autorizar2 = True, gasto__tipo__tipo__in = ['APOYO DE MANTENIMIENTO', 'APOYO DE RENTA'] , 
+        hecho=True
+        ).annotate(
+        # Detectar la relación que tiene facturas
+        total_facturas=Count(
+            'oc__facturas', filter=Q(oc__facturas__hecho=True)
+        ) + Count(
+            'gasto__facturas__hecho', filter=Q(gasto__facturas__hecho=True)
+        ) + Count(
+            'viatico__facturas__hecho', filter=Q(viatico__facturas__hecho=True)
+        ),
+        autorizadas=Count(
+            Case(
+                When(Q(oc__facturas__autorizada=True, oc__facturas__hecho=True), then=Value(1))
+            )
+        ) + Count(
+            Case(
+                When(Q(gasto__facturas__autorizada=True, gasto__facturas__hecho=True), then=Value(1))
+            )
+        ) + Count(
+            Case(
+                When(Q(viatico__facturas__autorizada=True, viatico__facturas__hecho=True), then=Value(1))
+            )
+        ),
+        ).order_by('-pagado_real')  
+    else:    
+        pagos = Pago.objects.filter(
         Q(oc__req__orden__distrito__in =almacenes_distritos) & Q(oc__autorizado2=True) | 
         Q(viatico__distrito__in = almacenes_distritos) & Q(viatico__autorizar2=True) |
         Q(gasto__distrito__in = almacenes_distritos) & Q(gasto__autorizar2 = True), 
