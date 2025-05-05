@@ -1323,8 +1323,16 @@ def extraer_datos_del_complemento(ruta_xml):
 
 def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, nombre_general, factura):
     """Extrae los datos clave de un archivo XML CFDI, compatible con diferentes versiones, incluyendo complementos de pago."""
-    tree = ET.parse(xml_file)
-    root = tree.getroot()
+    try:
+        tree = ET.parse(xml_file)
+        root = tree.getroot()
+    except ET.ParseError as e:
+        print(f"Error al parsear {xml_file}: {e}")
+        return {
+            'Folio': folio,
+            'Archivo': nombre_general,
+            'Error': f"Archivo XML inválido: {e}"
+        }
 
     # Detectar la versión del CFDI
     version = root.get("Version", "3.3")
