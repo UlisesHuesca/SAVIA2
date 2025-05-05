@@ -12,7 +12,7 @@ class ProfileAdmin(admin.ModelAdmin):
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = ('id','staff', 'empresa',)
     search_fields = ('staff__username',)
-    raw_id_fields = ('staff',)
+    raw_id_fields = ('staff','sustituto')
 
 class DistritoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre')
