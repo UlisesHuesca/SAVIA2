@@ -7,12 +7,12 @@ from django.contrib.auth.models import User
 class ProfileAdmin(admin.ModelAdmin):
     list_display = ('id','staff', 'distritos', 'tipo','st_activo')
     search_fields = ('staff__staff__username','tipo__nombre')
-    raw_id_fields = ('staff','proveedor')
+    raw_id_fields = ('staff','proveedor','sustituto')
    
 class CustomUserAdmin(admin.ModelAdmin):
     list_display = ('id','staff', 'empresa',)
     search_fields = ('staff__username',)
-    raw_id_fields = ('staff','sustituto')
+    raw_id_fields = ('staff')
 
 class DistritoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre')
