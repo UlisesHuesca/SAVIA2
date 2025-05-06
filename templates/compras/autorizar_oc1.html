@@ -82,7 +82,7 @@
                         {% endif %}
                         {% if compra.opciones_condiciones %}
                         <tr>
-                            <th scope="col">Comentarios OC:</th>
+                            <th scope="col">Opciones y condiciones OC:</th>
                             <th scope="col" > {{compra.opciones_condiciones}}</th>
                         </tr>
                         {% endif %}
@@ -90,6 +90,12 @@
                         <tr>
                             <th scope="col">Comentarios Solicitud:</th>
                             <th scope="col"> {{compra.req.orden.comentario}}</th>
+                        </tr>
+                        {% endif %}
+                        {% if compra.comentarios %}
+                        <tr>
+                            <th scope="col">Comentarios:</th>
+                            <th scope="col"> {{compra.comentarios}}</th>
                         </tr>
                         {% endif %}
                         <tr style="color:#3e92cc">
