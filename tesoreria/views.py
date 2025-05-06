@@ -1116,7 +1116,7 @@ def matriz_pagos(request):
                         beneficiario = factura.solicitud_viatico.colaborador.staff.staff.first_name + ' ' + factura.solicitud_viatico.colaborador.staff.staff.last_name  if factura.solicitud_viatico.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
                         distrito = factura.solicitud_viatico.distrito.nombre  # Obtener distrito de la factura
                         folio = 'V' + str(factura.solicitud_viatico.folio)
-                        fecha_subida = factura.fecha_subido if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
+                        fecha_subida = factura.fecha_subido.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
                         if factura.factura_xml:
                             file_name = os.path.basename(factura.factura_xml.path)
                             zip_file.write(factura.factura_xml.path, os.path.join(folder_name, file_name))
