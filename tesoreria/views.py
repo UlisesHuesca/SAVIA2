@@ -97,7 +97,11 @@ def compras_por_pagar(request):
     usuario = Profile.objects.get(id = pk_profile)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.tesoreria == True:
-        compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
+        if usuario.tipo.nombre == "Tesoreria_Documentos":
+            #Esto es para que el usuario específico de Tesoreria_Documentos vea las compras sollo de su distrito y no de los demás almacenes
+            compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, req__orden__distrito = usuario.distritos ).order_by('-folio')
+        else:
+            compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
    
     
     #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
@@ -908,8 +912,9 @@ def matriz_pagos(request):
         ).order_by('-pagado_real')
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
-    distritos = Distrito.objects.exclude(id__in=[7, 8])
-    tesoreros = Profile.objects.filter(tipo__nombre = "Tesoreria", st_activo = True).exclude(distritos__id__in=[7, 8])
+    #Los distritos se definen de forma "dinámica" de acuerdo a los almacenes que tiene el usuario en el perfil
+    distritos = Distrito.objects.filter(id__in=almacenes_distritos)
+    tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos" ], st_activo = True, distritos__in = almacenes_distritos)
     #Set up pagination
     p = Paginator(pagos, 50)
     page = request.GET.get('page')
