@@ -3479,6 +3479,11 @@ def descargar_respuestas_bbva():
         archivos = sftp.listdir()
         logging.info(f'Se encontraron {len(archivos)} archivo(s) en {remote_path}.')
 
+        logging.info("📂 Listado completo del directorio remoto:")
+        for entry in sftp.listdir_attr(remote_path):
+            tipo = '📁 Carpeta' if str(entry.longname).startswith('d') else '📄 Archivo'
+            logging.info(f"{tipo}: {entry.filename}")
+
         for archivo in archivos:
             remote_file = f"{remote_path}{archivo}" if not remote_path.endswith('/') else f"{remote_path}{archivo}"
             local_file = os.path.join(local_path, archivo)
@@ -3502,41 +3507,96 @@ def es_respuesta_bbva(path_xml):
     try:
         tree = ET.parse(path_xml)
         root = tree.getroot()
-
-        # Busca si alguna palabra clave está en el nombre del tag raíz
         claves = ['respuesta', 'ack', 'estatus', 'resultado', 'codigo']
         return any(clave in root.tag.lower() for clave in claves)
     except Exception as e:
-        logging.warning(f'No se pudo analizar {path_xml} como XML: {str(e)}')
+        logging.warning(f"No se pudo analizar {path_xml} como XML: {str(e)}")
         return False
 
 def desencriptar_pgp(archivo_pgp):
+    global desencriptados, errores
     archivo_xml = archivo_pgp.replace('.pgp', '.xml').replace('.gpg', '.xml')
-
     if os.path.exists(archivo_xml):
-        logging.info(f'Archivo ya desencriptado: {archivo_xml}')
+        logging.info(f"Archivo ya desencriptado: {archivo_xml}")
         return
-
     try:
-        logging.info(f'Desencriptando {archivo_pgp}...')
+        logging.info(f"Desencriptando {archivo_pgp}...")
         result = subprocess.run(
             ['gpg', '--batch', '--yes', '--output', archivo_xml, '--decrypt', archivo_pgp],
             stdout=subprocess.PIPE,
             stderr=subprocess.PIPE,
             check=True
         )
-        logging.info(f'Desencriptado exitosamente: {archivo_xml}')
-
-        # Verificar si es respuesta
+        logging.info(f"Desencriptado exitosamente: {archivo_xml}")
+        desencriptados += 1
         if es_respuesta_bbva(archivo_xml):
-            logging.info(f'✅ Archivo identificado como respuesta BBVA: {archivo_xml}')
+            logging.info(f"✅ Archivo identificado como respuesta BBVA: {archivo_xml}")
         else:
-            logging.info(f'ℹ️ Archivo desencriptado, pero no parece una respuesta BBVA: {archivo_xml}')
-
+            logging.info(f"ℹ️ Archivo desencriptado pero no parece respuesta BBVA: {archivo_xml}")
     except subprocess.CalledProcessError as e:
-        logging.error(f'Error desencriptando {archivo_pgp}: {e.stderr.decode()}')
+        logging.error(f"Error desencriptando {archivo_pgp}: {e.stderr.decode()}")
+        errores += 1
     
 
+def escanear_sftp_recursivo(sftp, remote_path, local_path):
+    global descargados, errores
+    os.makedirs(local_path, exist_ok=True)
+    logging.info(f"📁 Visitando carpeta: {remote_path}")
+
+    try:
+        for item in sftp.listdir_attr(remote_path):
+            remote_item_path = os.path.join(remote_path, item.filename)
+            local_item_path = os.path.join(local_path, item.filename)
+
+            if str(item.longname).startswith('d'):
+                escanear_sftp_recursivo(sftp, remote_item_path, local_item_path)
+            else:
+                logging.info(f"📄 Archivo encontrado: {remote_item_path}")
+                try:
+                    sftp.get(remote_item_path, local_item_path)
+                    logging.info(f"Archivo descargado: {remote_item_path} → {local_item_path}")
+                    descargados += 1
+                    if item.filename.endswith(('.pgp', '.gpg')):
+                        desencriptar_pgp(local_item_path)
+                except Exception as e:
+                    logging.error(f"Error descargando {remote_item_path}: {str(e)}")
+                    errores += 1
+    except IOError as e:
+        logging.warning(f"No se pudo acceder a {remote_path}: {str(e)}")
+        errores += 1
+
+
+def escanear_todo_bbva():
+    global descargados, desencriptados, errores
+    descargados = 0
+    desencriptados = 0
+    errores = 0
+
+    host = os.getenv("BBVA_SFTP_HOST")
+    port = int(os.getenv("BBVA_PORT"))
+    username = os.getenv("BBVA_UG")   
+    password = os.getenv("BBVA_PG")     
+    remote_root = '/'                 
+    local_root = '/home/savia/pagos_respuestas/'
+
+    try:
+        transport = paramiko.Transport((host, port))
+        transport.connect(username=username, password=password)
+        sftp = paramiko.SFTPClient.from_transport(transport)
+        logging.info(f"🔍 Iniciando escaneo completo en SFTP desde: {remote_root}")
+
+        escanear_sftp_recursivo(sftp, remote_root, local_root)
+
+        sftp.close()
+        transport.close()
+        logging.info("✅ Escaneo completo finalizado correctamente.")
+        logging.info(f"📦 Archivos descargados: {descargados}")
+        logging.info(f"🔐 Archivos desencriptados: {desencriptados}")
+        logging.info(f"❌ Errores durante el proceso: {errores}")
+
+    except Exception as e:
+        logging.error(f"❌ Error en escaneo de SFTP: {str(e)}")
+        
 def convert_excel_control_bancos(pagos):
     # Reordenar los pagos en orden ascendente por 'pagado_real'
     pagos = pagos.order_by('pagado_real')
