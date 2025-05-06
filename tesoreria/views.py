@@ -3484,6 +3484,7 @@ def descargar_respuestas_bbva():
             local_file = os.path.join(local_path, archivo)
 
             sftp.get(remote_file, local_file)
+            logging.info(f'Archivo encontrado en SFTP: {archivo}')
             logging.info(f'Archivo descargado: {archivo} → {local_file}')
 
             # Si es archivo .pgp, desencriptarlo
@@ -3497,11 +3498,20 @@ def descargar_respuestas_bbva():
     except Exception as e:
         logging.error(f'Error al descargar archivos desde BBVA: {str(e)}')
 
+def es_respuesta_bbva(path_xml):
+    try:
+        tree = ET.parse(path_xml)
+        root = tree.getroot()
 
+        # Busca si alguna palabra clave está en el nombre del tag raíz
+        claves = ['respuesta', 'ack', 'estatus', 'resultado', 'codigo']
+        return any(clave in root.tag.lower() for clave in claves)
+    except Exception as e:
+        logging.warning(f'No se pudo analizar {path_xml} como XML: {str(e)}')
+        return False
 
 def desencriptar_pgp(archivo_pgp):
-    """Desencripta un archivo .pgp usando GPG."""
-    archivo_xml = archivo_pgp.replace('.pgp', '.xml')
+    archivo_xml = archivo_pgp.replace('.pgp', '.xml').replace('.gpg', '.xml')
 
     if os.path.exists(archivo_xml):
         logging.info(f'Archivo ya desencriptado: {archivo_xml}')
@@ -3515,10 +3525,16 @@ def desencriptar_pgp(archivo_pgp):
             stderr=subprocess.PIPE,
             check=True
         )
-        logging.info(f'Archivo desencriptado exitosamente: {archivo_xml}')
+        logging.info(f'Desencriptado exitosamente: {archivo_xml}')
+
+        # Verificar si es respuesta
+        if es_respuesta_bbva(archivo_xml):
+            logging.info(f'✅ Archivo identificado como respuesta BBVA: {archivo_xml}')
+        else:
+            logging.info(f'ℹ️ Archivo desencriptado, pero no parece una respuesta BBVA: {archivo_xml}')
+
     except subprocess.CalledProcessError as e:
         logging.error(f'Error desencriptando {archivo_pgp}: {e.stderr.decode()}')
-
     
 
 def convert_excel_control_bancos(pagos):
