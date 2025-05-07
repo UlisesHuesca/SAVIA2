@@ -896,7 +896,7 @@ def requisicion_autorizacion(request):
     
     #ordenes = Order.objects.filter(complete=True, autorizar=True, staff__distrito=perfil.distrito)
     if perfil.distritos.nombre == "MATRIZ":  
-        requis = Requis.objects.filter(autorizar=None, complete =True).filter(Q(orden__supervisor=perfil) & Q(orden__tipo__tipo = 'normal') | Q(orden__superintendente=perfil) ) #& Q(orden__tipo__tipo = 'resurtimiento'))
+        requis = Requis.objects.filter(autorizar=None, complete =True).filter(Q(orden__tipo__tipo = 'normal') | Q(orden__superintendente=perfil) ) #& Q(orden__tipo__tipo = 'resurtimiento'))
     elif perfil.distritos.nombre == "BRASIL" and perfil.tipo.supervisor:
          requis = Requis.objects.filter(autorizar=None, complete =True).filter(Q(orden__supervisor=perfil) & Q(orden__tipo__tipo = 'normal') | Q(orden__superintendente=perfil)  & Q(orden__tipo__tipo = 'resurtimiento')) 
     elif perfil.tipo.superintendente == True and perfil.tipo.nombre != "Admin":
