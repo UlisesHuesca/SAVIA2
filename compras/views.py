@@ -5093,7 +5093,7 @@ def generar_politica_proveedores():
     titulo1 = """1. Objetivo"""
     titulo2 = """2. Alcance"""
     titulo3 = """3. Lineamiento"""
-    subtitulo31 = """3.1 Relacionaciones con los Proveedores"""
+    subtitulo31 = """3.1 Relaciones con los Proveedores"""
     subtitulo32 = """3.2 Desarrollo de Proveedores"""
     subtitulo33 = """3.3 Negociaciones"""
     
