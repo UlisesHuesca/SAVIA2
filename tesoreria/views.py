@@ -15,7 +15,7 @@ from user.models import Distrito
 from compras.models import ArticuloComprado, Compra
 from compras.forms import CompraForm
 from compras.filters import CompraFilter
-from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, generar_pdf #convert_excel_matriz_compras
+from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf #convert_excel_matriz_compras
 from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
@@ -486,6 +486,7 @@ def compras_pagos(request, pk):
                 pdf_antisoborno = attach_antisoborno_pdf(request)
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
                 pdf_etica = attach_codigo_etica_pdf(request)
+                pdf_politica_proveedor = attach_politica_proveedor(request)
                 static_path = settings.STATIC_ROOT
                 img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
                 img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
@@ -640,6 +641,7 @@ def compras_pagos(request, pk):
                     email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                     email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                     email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                    email.attach(f'Politica_de_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
                     #email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
                     archivo_comprobante = request.FILES.get('comprobante_pago')
                     if archivo_comprobante:  # Verifica que el archivo exista en el request

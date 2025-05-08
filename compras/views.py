@@ -1482,6 +1482,7 @@ def autorizar_oc1(request, pk):
             pdf_antisoborno = attach_antisoborno_pdf(request)
             pdf_privacidad = attach_aviso_privacidad_pdf(request)
             pdf_etica = attach_codigo_etica_pdf(request)
+            pdf_politica_proveedor = attach_politica_proveedor(request)
             static_path = settings.STATIC_ROOT
             img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
             img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
@@ -1628,6 +1629,7 @@ def autorizar_oc1(request, pk):
                         email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                         email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                         email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                        email.attach(f'Politica_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
                         # Adjuntar los archivos con nombres personalizados
                         for articulo in productos:
                             producto = articulo.producto.producto.articulos.producto.producto
@@ -1892,6 +1894,7 @@ def autorizar_oc2(request, pk):
                 pdf_antisoborno = attach_antisoborno_pdf(request)
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
                 pdf_etica = attach_codigo_etica_pdf(request)
+                pdf_politica_proveedor = attach_politica_proveedor(request)
                 html_message2 = f"""
                 <html>
                     <head>
@@ -1947,6 +1950,7 @@ def autorizar_oc2(request, pk):
                     email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
                     email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
                     email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                    email.attach(f'Politica_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
                     # Adjuntar los archivos con nombres personalizados
                     articulos = ArticuloComprado.objects.filter(oc=compra)
                     for articulo in articulos:
@@ -2406,9 +2410,19 @@ def attach_oc_pdf(request, pk):
 
     return buf.getvalue()
 
+def attach_politica_proveedor(request, pk):
+    compra = get_object_or_404(Compra, id=pk)
+    buf = generar_politica_proveedores()
+
+    return buf.getvalue()
+
 def descargar_antisoborno_pdf(request):
     buf = generar_politica_antisoborno()
     return FileResponse(buf, as_attachment=True, filename='Política_Antisoborno' +'.pdf')
+
+def descargar_proveedores_pdf(request):
+    buf = generar_politica_proveedores()
+    return FileResponse(buf, as_attachment=True, filename='Política_Proveedores' +'.pdf')
 
 def attach_antisoborno_pdf(request):
     buf = generar_politica_antisoborno()
@@ -4961,3 +4975,261 @@ def ver_politica_pdf(request):
 
     url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
     return JsonResponse({'url': url})
+
+
+def ver_politica_proveedores(request):
+    filename = 'politica_proveedores.pdf'
+    carpeta = os.path.join(settings.MEDIA_ROOT, 'politicas')
+    filepath = os.path.join(carpeta, filename)
+
+    # Si el archivo ya existe, solo regresamos la URL
+    if os.path.exists(filepath):
+        url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+        return JsonResponse({'url': url})
+
+    # Si no existe, lo generamos y lo guardamos
+    os.makedirs(carpeta, exist_ok=True)
+    pdf_buffer = generar_politica_proveedores()
+
+    with open(filepath, 'wb') as f:
+        f.write(pdf_buffer.getbuffer())
+
+    url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+    return JsonResponse({'url': url})
+
+
+def generar_politica_proveedores():
+    #Configuration of the PDF object
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    width, height = letter
+    #Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    #Elaborar caja
+    #c.line(caja_iso,500,caja_iso,720)
+
+    #c.drawString(430,caja_iso,'Preparado por:')
+    #c.drawString(405,caja_iso-10,'Auditoría de Proveedores')
+
+    #Primera Tabla
+    caja_proveedor = caja_iso - 85
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(170,750,260,20, fill=True, stroke=False) #Barra azul superior Título
+    c.rect(20,caja_proveedor - 7,565,20, fill=True, stroke=False) #Barra azul superior |Objetivo
+    c.rect(20,caja_proveedor - 122,565,20, fill=True, stroke=False) #Linea posterior horizontal
+    c.rect(20,caja_proveedor - 227,565,20, fill=True, stroke=False) #Linea posterior horizontal
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(300,755,'Politica de Proveedores')
+    c.setLineWidth(.3) #Grosor
+    #c.line(20,caja_proveedor-8,20,520) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
+    #c.line(585,caja_proveedor-8,585,520) #Linea 2 contorno
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',11)
+    #c.drawString(200,caja_proveedor,'Objetivo')
+    inicio_central = 300
+    #c.line(inicio_central,caja_proveedor-25,inicio_central,520) #Linea Central de caja Proveedor | Detalle
+    c.setFillColor(black)
+    c.setFont('Helvetica-Bold',9)
+    
+
+    #Segundo Parrafo
+    segundo_parrafo = caja_proveedor - 150
+   
+   
+   
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+
+    #Cuarta tabla
+    cuarta_tabla = segundo_parrafo - 400
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    
+   
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+   
+
+    texto = """El objetivo de esta política es establecer un marco para la gestión responsable y sostenible de las relaciones con los proveedores, 
+    buscando el desarrollo de la cadena de valor a lo largo de toda la cadena de suministro. Nuestras operaciones comerciales con proveedores deben 
+    mantener altos estándares de calidad, seguridad y respeto al medio ambiente, reflejando nuestro compromiso con la transparencia y confiabilidad.<br/>
+    """
+    
+    texto2 = """Esta Política de Proveedores aplica a todos los proveedores de GRUPO VORDCAB y a todos los empleados involucrados en el proceso de adquisición.
+      Asegura que nuestras relaciones comerciales mantengan altos estándares de calidad, ética y sostenibilidad.<br/> """
+    
+
+    texto3 = """•	Código de Ética y Políticas: Comunicar nuestro código de ética, política antisoborno y aviso de privacidad a todos nuestros proveedores.<br/>
+    •	Igualdad de Oportunidades: Ofrecer igualdad de oportunidades a todas las empresas mediante procesos de evaluación objetivos y confidenciales, con retroalimentación
+    y análisis continuo del desempeño.<br/>
+    •	Prácticas Comerciales Responsables: Evaluar integralmente los productos y servicios de nuestros proveedores, considerando costo, calidad, tiempo de respuesta,
+    capacidad de adaptación, prestaciones, garantías y compromiso con la ética y el desarrollo sustentable.<br/>
+    •	Confianza y Respeto: Fomentar relaciones de confianza y respeto mutuo con los proveedores, basadas en la comunicación abierta y transparente.<br/>
+    •	Prevención de Delitos: Implementar medidas de control interno para evitar delitos como lavado de activos, corrupción, financiamiento del terrorismo y cohecho.<br/> 
+    •	Correo para denuncias: denuncia@grupovordcab.com<br/>"""
+
+    texto4 = """•	Promoción de Calidad, Eficiencia, Ética y Sostenibilidad: Brindar apoyo a los proveedores para mejorar continuamente la calidad de sus productos y servicios,
+    y adoptar prácticas más eficientes, éticas y sostenibles.<br/>"""
+
+    texto5 = """•	Comunicación Transparente y Abierta: Mantener una comunicación transparente y abierta con los proveedores, informándoles oportunamente sobre nuestras expectativas
+    y requerimientos.<br/>
+    •	Cumplimiento de Contratos y Acuerdos: Cumplir con los términos y condiciones de los contratos y acuerdos establecidos.<br/>
+    •	Condiciones de Negociación Equitativas: Promover condiciones de negociación equitativas que beneficien a ambas partes.<br/>"""
+
+
+    titulo1 = """1. Objetivo"""
+    titulo2 = """2. Alcance"""
+    titulo3 = """3. Lineamiento"""
+    subtitulo31 = """3.1 Relacionaciones con los Proveedores"""
+    subtitulo32 = """3.2 Desarrollo de Proveedores"""
+    subtitulo33 = """3.3 Negociaciones"""
+    
+    styles = getSampleStyleSheet()
+    styleN = styles["BodyText"]
+    styleN.fontSize = 10
+    styleN.alignment = TA_JUSTIFY
+   
+    styleT = styles["Normal"]
+    styleT.textColor = white
+    styleT.alignment = TA_JUSTIFY
+
+    styleItalic = ParagraphStyle(
+        'Title',
+        parent = styles["BodyText"],
+        fontName = 'Helvetica-Oblique',
+        fontSize = 10,
+        alignment = TA_JUSTIFY
+    )
+
+    titulo1 = Paragraph(titulo1, styleT)
+    parrafo = Paragraph(texto, styleN)
+    titulo2 = Paragraph(titulo2, styleT)
+    parrafo2 = Paragraph(texto2, styleN)
+    titulo3 = Paragraph(titulo3, styleT)
+    titulo31 = Paragraph(subtitulo31, styleItalic)   
+    parrafo3 = Paragraph(texto3, styleN)
+    titulo32 = Paragraph(subtitulo32, styleItalic)   
+    parrafo4 = Paragraph(texto4, styleN)
+    titulo33 = Paragraph(subtitulo33, styleItalic)
+    parrafo5 = Paragraph(texto5, styleN)
+
+    ancho, alto = letter  # Asegúrate de tener estas dimensiones definidas
+    #frame = Frame(120, 720, ancho - 100, alto - 100, id='frameTextoConstante')  # Ajusta las dimensiones según sea necesario
+    elementos = [
+        titulo1, Spacer(1,25),
+        parrafo, Spacer(1,25), 
+        titulo2,Spacer(1,25), 
+        parrafo2, Spacer(1,25),
+        titulo3,Spacer(1,25),
+        titulo31, Spacer(1,10),
+        parrafo3, Spacer(1,25),
+        titulo32, Spacer(1,10),
+        parrafo4, Spacer(1,25),
+        titulo33, Spacer(1,10),
+        parrafo5, Spacer(1,25),
+    ]
+    frame = Frame(30, 0, width-50, height-100, id='frameTextoConstante')
+    frame.addFromList(elementos, c)
+
+    c.showPage()
+
+    caja_proveedor = caja_iso - 85
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(170,750,260,20, fill=True, stroke=False) #Barra azul superior Título
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',14)
+    c.setLineWidth(.2)
+    c.drawCentredString(300,755,'Politica de Proveedores')
+    c.setLineWidth(.3) #Grosor
+    
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen Vordcab
+
+    c.setFillColor(black)
+    c.setFont('Helvetica',9)
+
+    texto6 = """•	Metas de Compra: Realizar el 80% del importe total de compras autorizadas a proveedores nacionales.<br/>
+    • Sostenibilidad y Responsabilidad Social: Fomentar prácticas de sostenibilidad y responsabilidad social entre los proveedores locales.
+    <br/>"""
+
+    texto7 = """•	Evaluación de Proveedores: Evaluar periódicamente a los proveedores para asegurar el cumplimiento de los principios y 
+    requisitos establecidos en esta política.<br/>
+    •	Monitoreo del Desempeño: Monitorear el desempeño de los proveedores y proporcionarles retroalimentación para mejorar.<br/>
+    •	Canales de Denuncia: Mantener canales de comunicación abiertos, confiables y confidenciales para que los proveedores puedan 
+    reportar incumplimientos a nuestras políticas y normas.<br/>
+    """
+
+    texto8 = """Esta política será revisada y actualizada periódicamente para reflejar los cambios en las necesidades de la empresa y 
+    el entorno empresarial.<br/>"""
+
+    texto9 = """Esta política será comunicada a todos los empleados de la empresa y a nuestros proveedores.<br/>"""
+
+    texto10 = """El cumplimiento de esta política es obligatorio para todos los proveedores de la empresa.<br/>
+    El incumplimiento puede resultar en la suspensión o terminación de la relación comercial.<br/>"""
+
+    texto11 = """GRUPO VORDCAB se compromete a implementar los mecanismos necesarios para asegurar el cumplimiento de esta política. Esto incluye:<br/>
+    •	Desarrollo de Procedimientos: Crear y establecer procedimientos específicos para la gestión de proveedores según los lineamientos de esta política.<br/>
+    •	Capacitación y Sensibilización: Brindar capacitación continua a los empleados sobre la política de proveedores y sus responsabilidades.<br/>
+    •	Canales de Comunicación: Establecer y mantener canales de comunicación efectivos con los proveedores para asegurar la transparencia y la colaboración.<br/>
+    •	Asignación de Recursos: Proveer los recursos humanos y financieros necesarios para la implementación y mantenimiento de esta política.<br/>
+    •	Monitoreo y Evaluación: Monitorear y evaluar periódicamente la efectividad de los mecanismos implementados para asegurar el cumplimiento de esta política.<br/>
+    """
+
+    subtitulo34 = """3.4 Consumo Local"""
+    subtitulo35 = """3.5 Evaluación y Monitoreo"""
+    subtitulo36 = """3.6 Revisión y Actualización"""
+    subtitulo37 = """3.7 Comunicación"""
+    subtitulo38 = """3.8 Cumplimiento"""
+    subtitulo39 = """3.9 Obligaciones de GRUPO VORDCAB"""
+
+
+    subtitulo34 = Paragraph(subtitulo34, styleItalic)
+    parrafo6 = Paragraph(texto6, styleN)
+    subtitulo35 = Paragraph(subtitulo35, styleItalic)
+    parrafo7 = Paragraph(texto7, styleN)
+    subtitulo36 = Paragraph(subtitulo36, styleItalic)   
+    parrafo8 = Paragraph(texto8, styleN)
+    subtitulo37 = Paragraph(subtitulo37, styleItalic)   
+    parrafo9 = Paragraph(texto9, styleN)
+    subtitulo38 = Paragraph(subtitulo38, styleItalic)
+    parrafo10 = Paragraph(texto10, styleN)
+    subtitulo39 = Paragraph(subtitulo39, styleItalic)
+    parrafo11 = Paragraph(texto11, styleN)
+
+    ancho, alto = letter  # Asegúrate de tener estas dimensiones definidas
+    #frame = Frame(120, 720, ancho - 100, alto - 100, id='frameTextoConstante')  # Ajusta las dimensiones según sea necesario
+    elementos = [
+        subtitulo34, Spacer(1,10),
+        parrafo6, Spacer(1,25), 
+        subtitulo35,Spacer(1,10), 
+        parrafo7, Spacer(1,25),
+        subtitulo36,Spacer(1,10),
+        parrafo8, Spacer(1,25),
+        subtitulo37, Spacer(1,10),
+        parrafo9, Spacer(1,25),
+        subtitulo38, Spacer(1,10),
+        parrafo10, Spacer(1,25),
+        subtitulo39, Spacer(1,10),
+        parrafo11, Spacer(1,25),
+    ]
+    frame = Frame(30, 0, width-50, height-100, id='frameTextoConstante')
+    frame.addFromList(elementos, c)
+
+
+    c.save()
+    buf.seek(0)
+    return buf 
