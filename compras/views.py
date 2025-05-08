@@ -2410,8 +2410,8 @@ def attach_oc_pdf(request, pk):
 
     return buf.getvalue()
 
-def attach_politica_proveedor(request, pk):
-    compra = get_object_or_404(Compra, id=pk)
+def attach_politica_proveedor(request):
+    #compra = get_object_or_404(Compra, id=pk)
     buf = generar_politica_proveedores()
 
     return buf.getvalue()
