@@ -673,15 +673,23 @@
         })
     })()
 
-    //var myModal = document.getElementById('dialog')
+     //var myModal = document.getElementById('dialog')
 
-    document.querySelectorAll('.modal').forEach(modal => {
-    modal.addEventListener('hidden.bs.modal', function () {
-        setTimeout(function(){
-            location.reload();
-        }, 500);
+    document.addEventListener("htmx:afterRequest", function(evt) {
+        console.log("HTMX Request Successful: ", evt.detail.requestConfig.verb);
+
+
+
+        if (evt.detail.successful && evt.detail.requestConfig.verb === "post") {
+            console.log("Subida exitosa, cerrando modal...");
+            var modal = bootstrap.Modal.getInstance(document.querySelector("#dialog"));
+            modal.hide();
+            
+                setTimeout(function(){
+                    location.reload();
+                }, 500);
+            }
     });
-});
 
   </script>
 {% endblock %}
