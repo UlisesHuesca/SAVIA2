@@ -380,7 +380,14 @@ class Compra(models.Model):
         pagos = self.pago_set.all()
         return pagos
 
-    
+    @property
+    def fechas_pago(self):
+        fechas = []
+        for pago in self.pagos.all():
+            detalles = pago.detalles_comprobante
+            if 'fecha' in detalles:
+                fechas.append(detalles['fecha'])  # Suponiendo que regresa un diccionario
+        return ', '.join(fechas)
 
     @property
     def get_subtotal(self):

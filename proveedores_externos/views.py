@@ -52,6 +52,7 @@ def matriz_oc_proveedores(request):
             complete = True, 
             proveedor__nombre = proveedor,
             req__orden__distrito__id__in = almacenes_distritos, 
+            created_at__gte=dt.datetime(2024, 1, 1),
             autorizado2 = True).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
             autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))

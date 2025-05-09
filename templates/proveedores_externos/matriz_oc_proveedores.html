@@ -204,6 +204,7 @@
                     <th class="d-none d-lg-table-cell">Status Autorización</th>
                     <th class="d-none d-lg-table-cell">Status Entrega</th>
                     <th class="d-none d-lg-table-cell">Días de Entrega</th>
+                    <th class="d-none d-lg-none">Fecha de pago</th>
                     <th class="d-none d-lg-table-cell">Complemento de Pago</th>
                     <th scope="col">Productos</th>
                     <th>Documentos</th>
@@ -228,6 +229,7 @@
                     <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 == False or compra.autorizado2 == False %}<span class="badge bg-danger">Cancelado</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
                     <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
                     <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
+                    <td class="d-none d-lg-table-cell">{{compra.fechas_pago}}</td>
                     <td>
                         {% with tiene_complemento=False %}
                             {% for factura in compra.facturas.all %}
