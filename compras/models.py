@@ -383,7 +383,7 @@ class Compra(models.Model):
     @property
     def fechas_pago(self):
         fechas = []
-        for pago in self.pagos.all():
+        for pago in self.pagos.filter(hecho = True):
             detalles = pago.detalles_comprobante
             if 'fecha' in detalles:
                 fechas.append(detalles['fecha'])  # Suponiendo que regresa un diccionario
