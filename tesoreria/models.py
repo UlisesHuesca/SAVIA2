@@ -332,7 +332,7 @@ class Saldo_Cuenta(models.Model):
     
 
 class Complemento_Pago(models.Model):
-    factura = models.ForeignKey(Facturas, on_delete = models.CASCADE, null=True, related_name='complemento')
+    #factura = models.ForeignKey(Facturas, on_delete = models.CASCADE, null=True, related_name='complemento')
     facturas = models.ManyToManyField(Facturas, related_name='complementos', blank=True)
     subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='complemento_subido_por')
     fecha_subido = models.DateField(null=True, blank=True)

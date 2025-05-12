@@ -19,7 +19,7 @@ class FacturasAdmin(admin.ModelAdmin):
 
 class ComplementosAdmin(admin.ModelAdmin):
     search_fields = ['factura__id','id','uuid']
-    raw_id_fields = ('factura',)
+    raw_id_fields = ('facturas',)
     list_display = ('id','complemento_pdf')
 
 
