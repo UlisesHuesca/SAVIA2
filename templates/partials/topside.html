@@ -117,7 +117,7 @@
                         <div class="col-md-4">
                             <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}" title="Ordenes de Compra">
                                 <div class="card my-card shadow text-center p-3">
-                                    <h4>Compras <i class="fa-solid fa-user"></i></h4>
+                                    <h4>Ordenes de Compra <i class="fa-solid fa-user"></i></h4>
                                     <h3></h3>
                                 </div>
                             </a>
@@ -133,7 +133,7 @@
                         <div class="col-md-4">
                             <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Política Antisoborno">
                                 <div class="card my-card shadow text-center p-3">
-                                    <h4>Política Antisoborno <i class="fa-duotone fa-solid fa-book"></i></h4>
+                                    <h4>Políticas <i class="fa-duotone fa-solid fa-book"></i></h4>
                                     <h3></h3>
                                 </div>
                             </a>
@@ -159,7 +159,7 @@
                         </div>
                         <div class="modal-footer">
                             <div class="form-check me-auto">
-                              <label class="form-check-label" for="checkAceptar">
+                              <label id="labelPolitica" class="form-check-label" for="checkAceptar">
                                 Acepto haber leído y comprendido la política antisoborno.
                               </label>
                             </div>
@@ -177,47 +177,72 @@
         const iframe = document.getElementById('iframePolitica');
         const modalElement = document.getElementById('pdfModal');
         const modal = new bootstrap.Modal(modalElement);
+        const modalTitle = document.getElementById('pdfModalLabel'); 
         const btnAceptar = document.getElementById('btnAceptarPolitica');
-        console.log(btnAceptar);
+        // ⚠️ Definir aquí para que sea accesible desde todos los eventos
+        let politicas = [];
+        let indiceActual = 0;
+        
+        //console.log(btnAceptar);
 
-        document.getElementById('btnVerPolitica').addEventListener('click', function () {
-            fetch("{% url 'ver-politica-pdf' %}")
-                .then(response => response.json())
-                .then(data => {
-                    // Reemplazamos las barras invertidas \\ por normales /
-                    const url = data.url.replace(/\\/g, '/');
-                    iframe.src = url + "#zoom=80";
-                    modal.show();
-                });
-        });
-        btnAceptar.addEventListener('click', function () {
-        fetch("{% url 'aceptar-politica' %}", {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'X-CSRFToken': getCookie('csrftoken')
-            },
-            body: JSON.stringify({ aceptado: true })
-        })
-        .then(response => {
-            if (!response.ok) throw new Error('Error al guardar');
-            return response.json();
-        })
+       fetch("{% url 'politicas-pendientes' %}")
+        .then(response => response.json())
         .then(data => {
-            modal.hide();  // Cierra el modal
-             // ✅ Al cerrar, muestra el mensaje
-            Swal.fire({
-                icon: 'success',
-                title: '¡Gracias!',
-                text: 'Tu aceptación de la política antisoborno ha sido registrada.',
-                confirmButtonColor: '#3085d6',
-                confirmButtonText: 'Entendido'
-            });
-        })
-        .catch(error => {
-            alert('Ocurrió un error al aceptar la política');
-            console.error(error);
+            politicas = data;
+            if (politicas.length > 0) {
+                mostrarPolitica(indiceActual);
+            }
         });
+
+    function mostrarPolitica(indice) {
+        const politica = politicas[indice];
+        fetch(politica.url)
+            .then(res => res.json())
+            .then(data => {
+                const url = data.url.replace(/\\/g, '/');
+                iframe.src = url + "#zoom=80";
+                modalTitle.textContent = politica.nombre;
+                console.log(politica.nombre)
+                if (politica.nombre == "Aviso de Privacidad" || politica.nombre == "Código de Ética"){
+                    labelPolitica.textContent = `Acepto haber leído y comprendido el ${politica.nombre.toLowerCase()}.`;
+                } else {
+                    labelPolitica.textContent = `Acepto haber leído y comprendido la ${politica.nombre.toLowerCase()}.`;
+                }               
+                modal.show();
+            });
+    }
+
+    btnAceptar.addEventListener('click', function () {
+        if (indiceActual < politicas.length) {
+            fetch("{% url 'aceptar-politica' %}", {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': getCookie('csrftoken')
+                },
+                body: JSON.stringify({ clave: politicas[indiceActual].clave })
+            })
+            .then(response => response.json())
+            .then(data => {
+                indiceActual++;
+                if (indiceActual < politicas.length) {
+                    mostrarPolitica(indiceActual);
+                } else {
+                    modal.hide();
+                    Swal.fire({
+                        icon: 'success',
+                        title: '¡Gracias!',
+                        text: 'Tu aceptación de las políticas ha sido registrada.',
+                        confirmButtonColor: '#3085d6',
+                        confirmButtonText: 'Entendido'
+                    });
+                }
+            })
+            .catch(error => {
+                alert('Error al registrar aceptación');
+                console.error(error);
+            });
+        }
     });
 
     // Función para obtener el CSRF token

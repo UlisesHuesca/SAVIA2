@@ -48,7 +48,12 @@ urlpatterns = [
     path('compras/politica_antisoborno_pdf', views.descargar_antisoborno_pdf, name='politica-antisoborno'),
     path('compras/aviso_privacidad_pdf', views.descargar_aviso_privacidad_pdf, name='aviso-privacidad'),
     path('compras/codigo_etica_pdf', views.descargar_codigo_etica_pdf, name='codigo-etica'),
-    path('politica/antisoborno/', views.ver_politica_pdf, name='ver-politica-pdf'),
+    path('politicas/pendientes/', views.politicas_pendientes, name='politicas-pendientes'),
+    path('politica/ver_antisoborno/', views.ver_politica_pdf, name='ver-politica-pdf'),
+    path('politica/ver_proveedores/', views.ver_politica_proveedores, name='ver-politica-proveedores'),
+    path('politica/ver_aviso_privacidad/', views.ver_aviso_privacidad, name='ver-aviso-privacidad'),
+    path('politica/ver_codigo_etica/', views.ver_codigo_etica, name='ver-codigo-etica'),
+    #path('politicas/aceptar/', views.aceptar_politica, name='aceptar-politica'),
     path('politica/proveedores/', views.descargar_proveedores_pdf, name='politica-proveedores'),
     ]
 

@@ -10,7 +10,9 @@ from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
+from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
+from django.urls import reverse
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
 from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir
 from requisiciones.models import Requis, ArticulosRequisitados
@@ -4976,7 +4978,6 @@ def ver_politica_pdf(request):
     url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
     return JsonResponse({'url': url})
 
-
 def ver_politica_proveedores(request):
     filename = 'politica_proveedores.pdf'
     carpeta = os.path.join(settings.MEDIA_ROOT, 'politicas')
@@ -4996,6 +4997,85 @@ def ver_politica_proveedores(request):
 
     url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
     return JsonResponse({'url': url})
+
+def ver_aviso_privacidad(request):
+    filename = 'aviso_privacidad.pdf'
+    carpeta = os.path.join(settings.MEDIA_ROOT, 'politicas')
+    filepath = os.path.join(carpeta, filename)
+
+    # Si el archivo ya existe, solo regresamos la URL
+    if os.path.exists(filepath):
+        url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+        return JsonResponse({'url': url})
+
+    # Si no existe, lo generamos y lo guardamos
+    os.makedirs(carpeta, exist_ok=True)
+    pdf_buffer = generar_aviso_privacidad()
+
+    with open(filepath, 'wb') as f:
+        f.write(pdf_buffer.getbuffer())
+
+    url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+    return JsonResponse({'url': url})
+
+def ver_codigo_etica(request):
+    filename = 'codigo_etica.pdf'
+    carpeta = os.path.join(settings.MEDIA_ROOT, 'politicas')
+    filepath = os.path.join(carpeta, filename)
+
+    # Si el archivo ya existe, solo regresamos la URL
+    if os.path.exists(filepath):
+        url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+        return JsonResponse({'url': url})
+
+    # Si no existe, lo generamos y lo guardamos
+    os.makedirs(carpeta, exist_ok=True)
+    pdf_buffer = generar_codigo_etica()
+
+    with open(filepath, 'wb') as f:
+        f.write(pdf_buffer.getbuffer())
+
+    url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
+    return JsonResponse({'url': url})
+
+@login_required
+@login_required
+def politicas_pendientes(request):
+    perfil_id = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id=perfil_id)
+    proveedor = Proveedor.objects.get(id=perfil.proveedor.id)
+    politicas = []
+    print('proveedor:',proveedor)
+    if proveedor:
+        if not proveedor.acepto_politica:
+            politicas.append({
+                "nombre": "Política Antisoborno",
+                "url": reverse('ver-politica-pdf'),
+                "clave": "antisoborno"
+            })
+
+        if not proveedor.acepto_politica_proveedor:
+            politicas.append({
+                "nombre": "Política de Proveedores",
+                "url": reverse('ver-politica-proveedores'),
+                "clave": "proveedores"
+            })
+        
+        if not proveedor.acepto_aviso_privacidad:
+            politicas.append({
+                "nombre": "Aviso de Privacidad",
+                "url": reverse('ver-aviso-privacidad'),
+                "clave": "privacidad"
+            })
+        
+        if not proveedor.acepto_codigo_etica:
+            politicas.append({
+                "nombre": "Código de Ética",
+                "url": reverse('ver-codigo-etica'),
+                "clave": "etica"
+            })
+
+    return JsonResponse(politicas, safe=False)
 
 
 def generar_politica_proveedores():

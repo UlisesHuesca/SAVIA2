@@ -43,8 +43,9 @@ def index(request):
     usuario = Profile.objects.get(id = pk)
     inventarios = Inventario.objects.all()
     proyectos = Proyecto.objects.all()
-    
-
+    proveedor = usuario.proveedor
+    print(proveedor.acepto_politica)
+    mostrar_modal = proveedor.acepto_politica is False
     # Obtener los proyectos y calcular el total
     #proyectos_total = [(proyecto, proyecto.get_projects_gastado) for proyecto in proyectos]
 
@@ -90,6 +91,7 @@ def index(request):
     #graph_inventarios = fig2.to_html(full_html=False)
 
     context = {
+        'mostrar_modal': mostrar_modal,
         #'select_profile':selected_profil
         #'graph_proyectos': graph_proyectos,
         #'graph_inventarios':graph_inventarios,

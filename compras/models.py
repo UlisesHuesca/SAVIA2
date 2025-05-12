@@ -43,6 +43,9 @@ class Proveedor(models.Model):
     comentario_calidad = models.CharField(max_length=200,null=True, blank=True)
     comentario_otros = models.CharField(max_length=200,null=True, blank=True)
     acepto_politica = models.BooleanField(default=False)
+    acepto_politica_proveedor = models.BooleanField(default=False)
+    acepto_codigo_etica = models.BooleanField(default=False)
+    acepto_aviso_privacidad = models.BooleanField(default=False)
     fecha_aceptacion_politica = models.DateTimeField(null=True, blank=True)
 
 

@@ -736,28 +736,36 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     output.close()
     return response
 
-#@perfil_seleccionado_required
+@csrf_exempt
+#@login_required
 def aceptar_politica(request):
-    print("Entrando a aceptar politica")
-    if request.method == "POST":
-        perfil_id = request.session.get('selected_profile_id')
-        print(perfil_id)
-        try:
-            perfil = Profile.objects.get(id=perfil_id)
-        except Profile.DoesNotExist:
-            return JsonResponse({'error': 'Perfil no válido'}, status=404)
+    perfil_id = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id=perfil_id)
+    proveedor = Proveedor.objects.get(id=perfil.proveedor.id)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        clave = data.get('clave')
+        print('clave:',clave)
+        if proveedor and clave:
+            now = timezone.now()
 
-        try:
-            proveedor = Proveedor.objects.get(id=perfil.proveedor.id)
-            print(proveedor)
-            proveedor.acepto_politica = True
-            proveedor.fecha_aceptacion_politica = timezone.now()
+            if clave == 'antisoborno':
+                proveedor.acepto_politica = True
+            elif clave == 'proveedores':
+                proveedor.acepto_politica_proveedor = True
+            elif clave == 'privacidad':
+                proveedor.acepto_aviso_privacidad = True
+            elif clave == 'etica':
+                proveedor.acepto_codigo_etica = True
+            # puedes seguir agregando aquí más claves/políticas
+            else:
+                return JsonResponse({'error': 'Política no reconocida'}, status=400)
+
             proveedor.save()
-            return JsonResponse({'status': 'ok'})
-        except Proveedor.DoesNotExist:
-            return JsonResponse({'error': 'Proveedor no encontrado'}, status=404)
+            return JsonResponse({'success': True})
 
     return JsonResponse({'error': 'Método no permitido'}, status=405)
+
 
 @perfil_seleccionado_required
 def invitar_proveedor(request):
