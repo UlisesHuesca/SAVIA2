@@ -1568,7 +1568,7 @@ def matriz_complementos(request, pk):
     except Http404:
         messages.error(request, "No tienes acceso a esta orden de compra.")
         return redirect(next_url)
-    complementos = Complemento_Pago.objects.filter(factura = factura, hecho=True)
+    complementos = Complemento_Pago.objects.filter(facturas=factura, hecho=True)
     #pagos = Factura.objects.filter(oc = compra)
     #form = Facturas_Completas_Form(instance=compra)
     
@@ -1747,7 +1747,7 @@ def factura_nueva(request, pk):
 def complemento_nuevo(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    factura = Facturas.objects.get(id = pk)
+    #factura = Facturas.objects.get(id = pk)
     #facturas = Facturas.objects.filter(pago = pago, hecho=True)
 
     form = UploadComplementoForm()
@@ -1783,12 +1783,6 @@ def complemento_nuevo(request, pk):
                     try:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
 
-                        # Guardar temporalmente el XML para extraer datos
-                        #complemento_temp = Complemento_Pago(complemento_xml=archivo_xml)
-                        #complemento_temp.complemento_xml.save(archivo_xml.name, archivo_procesado, save=False)
-
-                        # Extraer UUID y ID del documento relacionado
-                        #uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(complemento_temp.complemento_xml.path)
                         # Guardar el archivo XML en un archivo temporal para procesarlo
                         with tempfile.NamedTemporaryFile(delete=False, suffix='.xml') as tmp:
                             for chunk in archivo_procesado.chunks():
@@ -1797,14 +1791,14 @@ def complemento_nuevo(request, pk):
 
                         try:
                             # Extraer datos desde el archivo temporal
-                            uuid_complemento, docto_relacionado_id = extraer_datos_del_complemento(tmp_path)
+                            uuid_complemento, _ = extraer_datos_del_complemento(tmp_path)
                         finally:
                             # Asegurar que el archivo temporal se borre aunque falle
                             os.remove(tmp_path)
 
 
                         # Validaciones de UUID y relación con factura
-                        if not uuid_complemento or not docto_relacionado_id:
+                        if not uuid_complemento:
                             complementos_invalidos.append(archivo_xml.name)
                             continue
 
@@ -1813,24 +1807,36 @@ def complemento_nuevo(request, pk):
                             complementos_duplicados.append(uuid_complemento)
                             complemento_final = complemento_existente  # Reusar complemento existente
                         else:
-                            factura_relacionada = Facturas.objects.filter(uuid=docto_relacionado_id).first()
-                            if factura_relacionada != factura:
-                                complementos_invalidos.append(archivo_xml.name)
-                                continue
-
-                            # Guardar complemento de pago si es válido
-                            complemento_final = Complemento_Pago(
+                            # Crear nuevo complemento sin facturas aún
+                            complemento_final = Complemento_Pago.objects.create(
                                 complemento_xml=archivo_xml,
                                 uuid=uuid_complemento,
-                                factura=factura,
-                                subido_por= usuario,
-                                fecha_subido = date.today(),
-                                hora_subido = datetime.now().time(),
-                                comentario = comentario,
-                                hecho = True
+                                subido_por=usuario,
+                                fecha_subido=date.today(),
+                                hora_subido=datetime.now().time(),
+                                comentario=comentario,
+                                hecho=True
                             )
-                            complemento_final.save()
-                            complementos_registrados.append(uuid_complemento)
+                            # Llamar la property que extrae los UUIDs de facturas
+                            info_xml = complemento_final.emisor
+                            if info_xml and 'doctos_relacionados_uuids' in info_xml:
+                                uuids_facturas = info_xml['doctos_relacionados_uuids']
+                                facturas_relacionadas = Facturas.objects.filter(uuid__in=uuids_facturas)
+
+                                if facturas_relacionadas.exists():
+                                    complemento_final.facturas.set(facturas_relacionadas)
+                                    complementos_registrados.append(uuid_complemento)
+                                else:
+                                    complemento_final.delete()  # limpia si no hay facturas válidas
+                                    complementos_invalidos.append(f"No se encontraron facturas relacionadas con UUIDs: {', '.join(uuids_facturas)}")
+                                    continue
+                            else:
+                                complemento_final.delete()
+                                complementos_invalidos.append(f"{archivo_xml.name} no contiene facturas relacionadas.")
+                                continue
+
+
+                          
 
                     except Exception as e:
                         messages.error(request, f"Error al procesar {archivo_xml.name}: {e}")
@@ -1860,7 +1866,6 @@ def complemento_nuevo(request, pk):
 
     context={
         'form':form,
-        'factura':factura,
         }
 
     return render(request, 'tesoreria/registrar_nuevo_complemento.html', context)

@@ -333,6 +333,7 @@ class Saldo_Cuenta(models.Model):
 
 class Complemento_Pago(models.Model):
     factura = models.ForeignKey(Facturas, on_delete = models.CASCADE, null=True, related_name='complemento')
+    facturas = models.ManyToManyField(Facturas, related_name='complementos', blank=True)
     subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='complemento_subido_por')
     fecha_subido = models.DateField(null=True, blank=True)
     hora_subido = models.TimeField(null=True, blank=True)
@@ -406,21 +407,21 @@ class Complemento_Pago(models.Model):
         imp_saldo_ant = None 
         imp_pagado = None
         # Extraer información del complemento de pagos
-        docto_relacionado_id = None
+        doctos_ids = []
 
         if complemento is not None:
             pagos = complemento.find('pago20:Pagos', ns)
             if pagos is not None:
                 pago = pagos.find('pago20:Pago', ns)
                 if pago is not None:
-                    docto_relacionado = pago.find('pago20:DoctoRelacionado', ns)
+                    doctos_relacionados = pago.findall('pago20:DoctoRelacionado', ns)
                     fecha_pago = pago.get('FechaPago', 'No Disponible')
                     monto_total_pagos = pago.get('Monto', 'No Disponible')
-                    if docto_relacionado is not None:
-                        docto_relacionado_id = docto_relacionado.get('IdDocumento', 'ID No Disponible')
-                        imp_saldo_ant = docto_relacionado.get('ImpSaldoAnt', 'No Disponible')
-                        imp_pagado = docto_relacionado.get('ImpPagado', 'No Disponible')
-
+                    for docto in doctos_relacionados:
+                        docto_id = docto.get('IdDocumento')
+                        if docto_id:
+                            doctos_ids.append(docto_id)
+                            # Puedes extraer imp_pagado y demás si quieres guardar todos
         # Extraer conceptos
         conceptos = root.findall('cfdi:Conceptos/cfdi:Concepto', ns)
         resultados = []
@@ -458,7 +459,7 @@ class Complemento_Pago(models.Model):
             'sello_cfd': sello_cfd,
             'sello_sat': sello_sat,
             'fecha_timbrado': fecha_timbrado,
-            'docto_relacionado_id': docto_relacionado_id,  # Nuevo campo
+            'doctos_relacionados_uuids': doctos_ids,
             'resultados': resultados,
             'forma_pago': forma_pago,
             'metodo_pago': metodo_pago,
