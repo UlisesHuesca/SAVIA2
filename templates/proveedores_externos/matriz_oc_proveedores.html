@@ -204,7 +204,7 @@
                     <th class="d-none d-lg-table-cell">Status Autorización</th>
                     <th class="d-none d-lg-table-cell">Status Entrega</th>
                     <th class="d-none d-lg-table-cell">Días de Entrega</th>
-                    <th class="d-none d-lg-none">Fecha de pago</th>
+                    <th class="d-none d-lg-table-cell">Fecha de pago</th>
                     <th class="d-none d-lg-table-cell">Complemento de Pago</th>
                     <th scope="col">Productos</th>
                     <th>Documentos</th>
@@ -221,14 +221,16 @@
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>{{compra.moneda.nombre}}</td>
                     <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
-                    {% if compra.pagada %}
-                    <td class="d-none d-lg-table-cell">Pagada</td>
+                    {% if compra.para_pago %}
+                    <td class="d-none d-lg-table-cell"><span class="badge bg-success">Programada para Pago</span></td>
+                    {% elif compra.pagada %}
+                    <td class="d-none d-lg-table-cell"><span class="badge bg-primary">Pagada</span></td>
                     {% else %}
                     <td class="d-none d-lg-table-cell">No Pagada</td>
                     {% endif %}
                     <td class="d-none d-lg-table-cell">{% if compra.autorizado2 %}<span class="badge bg-primary">Autorizado Gerente</span>{% elif compra.autorizado1 == False or compra.autorizado2 == False %}<span class="badge bg-danger">Cancelado</span>{% elif compra.autorizado1 %}<span class="badge bg-info">Autorizado Suptte</span>{% else %}<span class="badge bg-warning">No Autorizado Aún</span> {% endif %}  </td>
                     <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
-                    <td class="d-none d-lg-table-cell">{{compra.dias_de_entrega}}</td>
+                    <td class="d-none d-lg-table-cell">{% if compra.dias_de_entrega %}{{compra.dias_de_entrega}}{% else %} ND {% endif %} </td>
                     <td class="d-none d-lg-table-cell">{{compra.fechas_pago}}</td>
                     <td>
                         {% with tiene_complemento=False %}
