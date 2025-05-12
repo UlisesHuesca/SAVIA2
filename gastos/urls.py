@@ -29,6 +29,7 @@ urlpatterns = [
     path('gasto/delete_articulo_entrada/<int:pk>', views.delete_articulo_entrada, name='delete-articulo-entrada'),
     path('gasto/render_gasto/<int:pk>', views.descargar_pdf_gasto, name='descargar-pdf-gasto'),
     path('factura_cfdi_gasto/<int:pk>/', views.generar_cfdi_gasto, name='generar_cfdi_gasto'),
+    path('prellenar_formulario_gastos/', views.prellenar_formulario_gastos, name='prellenar_formulario_gastos'),
     #path('gasto/vale_rosa/<int:pk>', views.agregar_vale_rosa, name='agregar-vale-rosa'),
 ]
     

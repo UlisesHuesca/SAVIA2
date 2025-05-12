@@ -651,6 +651,7 @@ def factura_nueva_gasto(request, pk):
     return render(request, 'gasto/registrar_nueva_factura_gasto.html', context)
 
 def prellenar_formulario_gastos(request):
+    print('prellenar_formulario_gastos')
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         pdf_content = request.FILES.get('comprobante_pago')
         
@@ -676,14 +677,16 @@ def prellenar_formulario_gastos(request):
                 print('Se lo llevó madres')
                 pass
         
-        numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip()
+        numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip().lstrip('0')
         cuenta_objeto = None
-        
+        print(numero_cuenta_extraido)
         if numero_cuenta_extraido:
             try:
-                cuenta_objeto = Cuenta.objects.get(cuenta=numero_cuenta_extraido)
+                cuenta_objeto = Cuenta.objects.get(cuenta__contains=numero_cuenta_extraido)
+                print('cuenta_objeto:',cuenta_objeto)
             except Cuenta.DoesNotExist:
                 # Manejar el caso donde la cuenta no existe
+                print('Entro aca 34')
                 return JsonResponse({'error': 'Account not found'}, status=404)
         
         divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()

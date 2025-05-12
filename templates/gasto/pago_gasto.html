@@ -281,14 +281,15 @@ document.getElementById('id_comprobante_pago').addEventListener('change', functi
   })
   .then(response => response.json()) 
   .then(data => {
+    console.log(data);
     // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
     document.querySelector('[name="monto"]').value = data.monto;
     //document.querySelector('[name="cuenta"]').value = data.cuenta;
     document.querySelector('[name="pagado_real"]').value = data.pagado_real;
     var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
     var $selectElement = $('[name="cuenta"]');
-    var divisa = data.divisa_cuenta
-    console.log(divisa)
+    //var divisa = data.divisa_cuenta
+    //console.log(divisa)
     $selectElement.val(cuentaId).trigger('change');
     //if (divisa == "MXP" && compra_moneda == "DOLARES" ){
     //var tipo_cambio = document.getElementById('text_tc')
