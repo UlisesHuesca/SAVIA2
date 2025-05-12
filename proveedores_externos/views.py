@@ -170,7 +170,7 @@ def matriz_direcciones(request):
             'competencias',
             'contrato',
             'factura_predial',
-            
+            'otros',
         ]
 
         documentos_count = {tipo: 0 for tipo in tipos_documentos}
