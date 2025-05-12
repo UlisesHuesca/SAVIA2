@@ -45,9 +45,13 @@ def index(request):
     proyectos = Proyecto.objects.all()
     proveedor = usuario.proveedor
     mostrar_modal = True
-    if usuario.proveedor:
-        print(proveedor.acepto_politica)
-        mostrar_modal = proveedor.acepto_politica is False
+    if proveedor:
+        mostrar_modal = (
+            not proveedor.acepto_politica or
+            not proveedor.acepto_politica_proveedor or
+            not proveedor.acepto_codigo_etica or
+            not proveedor.acepto_aviso_privacidad
+        )
     # Obtener los proyectos y calcular el total
     #proyectos_total = [(proyecto, proyecto.get_projects_gastado) for proyecto in proyectos]
 
