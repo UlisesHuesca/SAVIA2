@@ -1,8 +1,13 @@
 from django.db.models import Q
-from .models import ArticulosparaSurtir, Inventario  # Asegúrate de ajustar la ruta de importación según tu proyecto.
+from .models import ArticulosparaSurtir, Inventario
+from requisiciones.models import Salidas  # Asegúrate de ajustar la ruta de importación según tu proyecto.
 from entradas.models import EntradaArticulo, Entrada  # Asegúrate de ajustar 'mi_app.models' al nombre de tu aplicación y archivo de modelos
 from compras.models import Compra
 from datetime import datetime
+from decimal import Decimal
+import logging
+
+logger = logging.getLogger('dashboard')
 
 def actualizar_articulos():
     folios_a_verificar = []  # Lista de folios a verificar.
@@ -114,3 +119,30 @@ def marcar_compras_para_pagarse():
     
     print(f'Compras actualizadas con entrada completa: {num_compras_actualizadas}')
     return num_compras_actualizadas
+
+def corregir_articulos_salida():
+    """
+    Recorre todas las salidas activas (no canceladas) y corrige los objetos relacionados de
+    ArticulosparaSurtir si coinciden el producto y la cantidad.
+    Establece salida=True, surtir=False y cantidad=0 en ArticulosparaSurtir.
+    """
+    total_salidas = 0
+    modificados = 0
+    salidas = Salidas.objects.filter(cancelada=False, complete = True)
+
+    for salida in salidas:
+        total_salidas += 1
+        articulo = salida.producto
+        if articulo and Decimal(salida.cantidad) == Decimal(articulo.cantidad):
+            #print(f"Corrigiendo artículo:{articulo.id} {articulo.articulos.producto} con cantidad: {articulo.cantidad}| salida: {salida.id}")
+            articulo.salida = True
+            articulo.surtir = False
+            articulo.cantidad = 0
+            articulo.save(update_fields=['salida', 'surtir', 'cantidad'])
+            modificados += 1
+            logger.info(f"Corregido artículo ID={articulo.id} desde salida ID={salida.id}")
+
+    logger.info(f"Evaluadas: {total_salidas} salidas completadas.")
+    logger.info(f"Artículos corregidos: {modificados}")
+    #print(f"Evaluadas: {total_salidas} salidas completadas.")
+    #print(f"Proceso completado. Se actualizaron {modificados} artículos.")

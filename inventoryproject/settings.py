@@ -177,43 +177,40 @@ LOGGING = {
         },
     },
     "handlers": {
-        "file": {
+        "file_debug": {
             "level": "DEBUG",
             "class": "logging.FileHandler",
             "filename": "debug.log",
-            "formatter": "standard",  # Aplicar el formatter 'standard'
+            "formatter": "standard",
+        },
+        "file_middleware": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": "middleware.log",
+            "formatter": "standard",
+        },
+        "file_dashboard": {
+            "level": "INFO",
+            "class": "logging.FileHandler",
+            "filename": "correccion_salidas.log",
+            "formatter": "standard",
         },
     },
     "loggers": {
         "django": {
-            "handlers": ["file"],
+            "handlers": ["file_debug"],
             "level": "DEBUG",
             "propagate": True,
         },
-    },
-}
-
-LOGGING = {
-    'version': 1,
-    'disable_existing_loggers': False,
-    'handlers': {
-        'file': {
-            'level': 'INFO',
-            'class': 'logging.FileHandler',
-            'filename': 'middleware.log',
-            'formatter': 'standard',
+        "user.middleware": {
+            "handlers": ["file_middleware"],
+            "level": "INFO",
+            "propagate": False,
         },
-    },
-    'formatters': {
-        'standard': {
-            'format': '%(asctime)s - %(levelname)s - %(name)s: %(message)s',
-        },
-    },
-    'loggers': {
-        'user.middleware': {  # Asegúrate de usar el nombre del módulo del middleware
-            'handlers': ['file'],
-            'level': 'INFO',
-            'propagate': False,
+        "dashboard": {
+            "handlers": ["file_dashboard"],
+            "level": "INFO",
+            "propagate": False,
         },
     },
 }
