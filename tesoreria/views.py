@@ -2005,7 +2005,7 @@ def complemento_eliminar(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)
     complemento = Complemento_Pago.objects.get(id = pk)
-    factura = complemento.factura
+    factura = complemento.facturas.first()
     comentario = request.POST.get('comentario')
     # Obtener el parámetro `next` de la URL
     next_url = request.GET.get('next', None)
