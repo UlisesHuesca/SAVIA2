@@ -210,7 +210,7 @@ def solicitud_autorizada(request):
 
 
     context= {
-        'productos':productos,
+        #'productos':productos,
         'productos_list':productos_list,
         'myfilter':myfilter,
         'usuario':usuario,

@@ -184,7 +184,7 @@
                     <th class="d-none d-lg-table-cell">Subproyecto</th>
                     <th scope="col">Descripción</th>
                     <th scope="col">Cantidad Solicitada</th>
-                    <th scope="col">[Apartada]</th>
+                    <th>Cantidad por Surtir</th>
                     <th class="d-none d-lg-table-cell">Status</th>
                     <th class="d-none d-lg-table-cell">Creado</th>
                     <th scope="col">Acción</th>
@@ -200,7 +200,8 @@
                     <td class="d-none d-lg-table-cell">{{producto.articulos.orden.subproyecto.nombre}}</td>
                     <td>{{producto.articulos.producto.producto}}</td>
                     <td>{{producto.articulos.cantidad}}</td>
-                    <td>{{producto.articulos.producto.apartada}}</td>
+                    <td>{{producto.cantidad}}</td>
+                    
                     {% if producto.salida == True %}
                     <td class="d-none d-lg-table-cell">Salida realizada</td>
                     {% else %}

@@ -1,6 +1,10 @@
 from django.db.models import F, Sum, Q
 from .models import ArticuloComprado
 from requisiciones.models import Requis, ArticulosRequisitados 
+from entradas.models import EntradaArticulo
+from decimal import Decimal
+import logging
+
 
 def verificar_requisiciones_colocadas():
     print('Procesando...')
@@ -33,4 +37,54 @@ def verificar_requisiciones_colocadas():
             req.save()
            
 
-#verificar_requisiciones_colocadas()
+logger = logging.getLogger('dashboard')
+
+def corregir_entradas_articulos_comprados_y_oc():
+    """
+    1. Marca entrada_completa=True en ArticuloComprado cuando la suma de entradas iguala la cantidad.
+    2. Luego evalúa cada Compra: si todos sus ArticuloComprado están con entrada_completa=True,
+       marca Compra.entrada_completa = True
+    """
+    logger.info("==== INICIO del proceso de corrección de entradas y órdenes de compra ====")
+
+    # Parte 1: Corrección por artículo comprado
+    modificados_articulos = 0
+    total_articulos = 0
+
+    articulos = ArticuloComprado.objects.all()
+
+    for articulo in articulos:
+        total_articulos += 1
+
+        suma_entradas = EntradaArticulo.objects.filter(articulo_comprado=articulo).aggregate(
+            total=Sum('cantidad')
+        )['total'] or Decimal('0')
+
+        if Decimal(suma_entradas) == Decimal(articulo.cantidad) and not articulo.entrada_completa:
+            articulo.entrada_completa = True
+            articulo.save(update_fields=['entrada_completa'])
+            logger.info(f"✅ ArtículoComprado ID={articulo.id} marcado como entrada_completa.")
+            modificados_articulos += 1
+
+    logger.info(f"Total artículos evaluados: {total_articulos}")
+    logger.info(f"Artículos modificados: {modificados_articulos}")
+
+    # Parte 2: Evaluar órdenes de compra
+    compras_modificadas = 0
+    total_compras = 0
+
+    compras = Compra.objects.all()
+
+    for oc in compras:
+        total_compras += 1
+        articulos_oc = oc.articulocomprado_set.all()  # related_name por defecto
+        if articulos_oc.exists() and all(a.entrada_completa for a in articulos_oc):
+            if not oc.entrada_completa:
+                oc.entrada_completa = True
+                oc.save(update_fields=['entrada_completa'])
+                logger.info(f"✅ Compra ID={oc.id} marcada como entrada_completa.")
+                compras_modificadas += 1
+
+    logger.info(f"Total compras evaluadas: {total_compras}")
+    logger.info(f"Compras modificadas: {compras_modificadas}")
+    logger.info("==== FIN del proceso de corrección ====")
