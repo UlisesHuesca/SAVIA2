@@ -2040,7 +2040,7 @@ def complemento_eliminar(request, pk):
                                         <p>Estimado {complemento.subido_por.staff.staff.first_name} {complemento.subido_por.staff.staff.last_name},</p>
                                     </p>
                                     <p style="font-size: 16px; text-align: justify;">
-                                        Estás recibiendo este correo porque tu complemento subido el: <strong>{complemento.fecha_subido}</strong> en la compra <strong>{complemento.factura.oc.folio}</strong> ha sido eliminado.</p>
+                                        Estás recibiendo este correo porque tu complemento subido el: <strong>{complemento.fecha_subido}</strong> en la compra <strong>{factura.oc.folio}</strong> ha sido eliminado.</p>
                                     <p>Comentario:</p>
                                     {comentario}
                                     </p>
