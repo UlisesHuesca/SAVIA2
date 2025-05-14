@@ -81,7 +81,7 @@ def pendientes_entrada(request):
         # que NO sea un servicio (O) que sea un servicio (Y) del usuario que generó la order (Y)
         # que sea del distrito del usuario (Y) que la entrada NO este completa (Y) que este autorizada 
         compras = Compra.objects.filter(
-            #Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0),
             Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)),
             req__orden__distrito = usuario.distritos,  
             entrada_completa = False, 
