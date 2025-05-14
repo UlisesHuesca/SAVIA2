@@ -40,8 +40,8 @@ def pendientes_entrada(request):
     
 
     if usuario.tipo.nombre == "Admin":
-        #compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
-        compras = Compra.objects.filter(req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+        compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+        #compras = Compra.objects.filter(req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
         for compra in compras:
             articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
             servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
@@ -55,11 +55,11 @@ def pendientes_entrada(request):
             if  cant_entradas == cant_servicios and cant_entradas > 0:
                 compra.solo_servicios = True
                 compra.save()
-            #compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, solo_servicios = False).order_by('-folio')
-            compras = Compra.objects.filter(req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
+            compras = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, solo_servicios = False).order_by('-folio')
+            #compras = Compra.objects.filter(req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True).order_by('-folio')
     elif usuario.tipo.almacen == True:
         compras = Compra.objects.filter(
-            #Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True)| Q(monto_pagado__gt=0), 
             Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)),
             req__orden__distrito = usuario.distritos,  
             entrada_completa = False, 
@@ -119,19 +119,40 @@ def pendientes_entrada(request):
 def entrada_servicios(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
+    print(usuario)
     
 
     if usuario.tipo.nombre == "Admin":
         compras = Compra.objects.filter(
-            #Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
             req__orden__distrito = usuario.distritos, solo_servicios= True,
             entrada_completa = False, autorizado2= True).order_by('-folio')
     else:
         compras = Compra.objects.filter(
-            #Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
-            solo_servicios= True, 
-            entrada_completa = False, autorizado2= True, 
-            req__orden__staff = usuario).order_by('-folio')
+                Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
+                req__orden__staff = usuario,
+                solo_servicios= False,
+                entrada_completa = False, 
+                autorizado2= True, 
+                ).order_by('-folio')
+        
+        #print(compras)
+        for compra in compras:
+            articulos_entrada  = ArticuloComprado.objects.filter(oc=compra, entrada_completa = False)
+            servicios_pendientes = articulos_entrada.filter(producto__producto__articulos__producto__producto__servicio=True)
+            cant_entradas = articulos_entrada.count()
+            cant_servicios = servicios_pendientes.count()
+                
+            if  cant_entradas == cant_servicios and cant_entradas > 0:
+                compra.solo_servicios = True
+                compra.save()
+        compras = Compra.objects.filter(
+            Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
+            req__orden__staff = usuario,
+            entrada_completa = False, 
+            autorizado2= True, 
+            solo_servicios = True).order_by('-folio')
+        #print(usuario.staff.staff.first_name)
 
 
     myfilter = CompraFilter(request.GET, queryset=compras)
