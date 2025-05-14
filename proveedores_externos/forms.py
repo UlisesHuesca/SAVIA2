@@ -17,24 +17,30 @@ class UploadFileForm(forms.Form):
     evidencia_file = forms.FileField(required=False) 
     
 class RegistroProveedorForm(forms.Form):
-    razon_social = forms.CharField(max_length=150, required=True, label="Razón Social")
-    password = forms.CharField(widget=forms.PasswordInput, required=True, label="Contraseña")
-    confirm_password = forms.CharField(widget=forms.PasswordInput, required=True, label="Confirmar Contraseña")
+    razon_social = forms.CharField(max_length=150, label="Razón Social")
+    password = forms.CharField(widget=forms.PasswordInput, label="Contraseña")
+    confirm_password = forms.CharField(widget=forms.PasswordInput, label="Confirmar Contraseña")
     
     #Datos Bancarios
-    clabe = forms.CharField(max_length=20, required=True)
-    cuenta = forms.CharField(max_length=20, required=True)
-    referencia = forms.CharField(max_length=20, required=True)
-    banco = forms.ModelChoiceField(queryset=Banco.objects.all(), required=True)
-    convenio = forms.CharField(max_length=20, required=True)
+    clabe = forms.CharField(max_length=20)
+    cuenta = forms.CharField(max_length=20)
+    banco = forms.ModelChoiceField(queryset=Banco.objects.all())
+    referencia = forms.CharField(max_length=20)
+    convenio = forms.CharField(max_length=20)
 
 
     # Datos del proveedor y contacto
-    contacto = forms.CharField(max_length=50, required=True)
-    telefono = forms.CharField(max_length=14, required=True)
-    domicilio = forms.CharField(max_length=200, required=True)
+    contacto = forms.CharField(max_length=50)
+    telefono = forms.CharField(max_length=14)
+    domicilio = forms.CharField(max_length=200)
+    email_opt = forms.EmailField(max_length=100)
     
-
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['email_opt'].required = False
+        self.fields['referencia'].required = False
+        self.fields['convenio'].required = False
+        
     def clean(self):
         cleaned_data = super().clean()
         p1 = cleaned_data.get('password')

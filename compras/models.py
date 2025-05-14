@@ -235,6 +235,9 @@ class InvitacionProveedor(models.Model):
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_uso = models.DateTimeField(null=True, blank=True)
 
+    def __str__(self):
+        return f'{self.email} | {self.proveedor}'
+
 class Proveedor_Direcciones_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])
     uploaded = models.DateField(auto_now_add=True)

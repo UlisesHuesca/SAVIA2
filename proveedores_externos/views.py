@@ -13,7 +13,7 @@ from django.contrib import messages
 from django.utils.timezone import now
 from django.urls import reverse
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor
-from user.models import Profile
+from user.models import Profile, CustomUser, Tipo_perfil, Distrito
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from requisiciones.views import get_image_base64
@@ -864,48 +864,68 @@ def registro_proveedor(request, token):
     invitacion = get_object_or_404(InvitacionProveedor, token=token, usado=False)
 
     if request.method == 'POST':
+        print(invitacion.email)
         form = RegistroProveedorForm(request.POST)
         if form.is_valid():
-            # Validar que no exista ya el usuario
-            if User.objects.filter(email=invitacion.email).exists():
-                form.add_error('email', 'Este correo ya está registrado.')
-            else:
-                user = User.objects.create(
-                    username=invitacion.email,
-                    email=invitacion.email,
-                    password=make_password(form.cleaned_data['password'])
-                )
-                tipo = Profile.objects.get(nombre="PROVEEDOR_EXTERNO")
+            # 1 Objeto user
+            user = User.objects.create(
+                username=invitacion.email,
+                email=invitacion.email,
+                first_name = form.cleaned_data['contacto'],
+                password=make_password(form.cleaned_data['password'])
+            )
+                
+            # 2 Objeto proveedor
+            proveedor = invitacion.proveedor or Proveedor.objects.create(
+                rfc=invitacion.rfc,
+                razon_social=form.cleaned_data['razon_social'],
+                creado_por=invitacion.creado_por
+            )
 
-                proveedor = invitacion.proveedor or Proveedor.objects.create(
-                    rfc=invitacion.rfc,
-                    razon_social=form.cleaned_data['razon_social'],
-                    creado_por=invitacion.creado_por
-                )
+                #3 Objeto CustomUser
+            customuser = CustomUser.objects.create(
+                staff = user,
+                banco = form.cleaned_data['banco'],
+                cuenta_bancaria = form.cleaned_data['cuenta'],
+                clabe = form.cleaned_data['clabe'],
+                phone = form.cleaned_data['telefono'],
+                puesto = "Proveedor Externo",
+                nivel = 5,
+                apoyo_renta = 0,
+                apoyo_mantto = 0,
+            )
+            #4 Objeto tipo
+            tipo = Tipo_perfil.objects.get(nombre="PROVEEDOR_EXTERNO")
+            #5 Objeto perfil
+            profile = Profile.objects.create(
+                staff=customuser,
+                tipo=tipo,
+                proveedor=proveedor,
+            )
 
-                profile = Profile.objects.create(
-                    user=user,
-                    tipo=tipo,
-                    proveedor=proveedor,
-                )
+            #5.5
+            #distrito = Distrito.objects.get(=form.cleaned_data['distrito'])
+                #6 Objeto Proveedor_direcciones
+            Proveedor_direcciones.objects.create(
+                nombre=proveedor,
+                creado_por=profile,
+                domicilio=form.cleaned_data['domicilio'],
+                telefono=form.cleaned_data['telefono'],
+                contacto=form.cleaned_data['contacto'],
+                email=invitacion.email,
+                banco=form.cleaned_data['banco'],
+                clabe=form.cleaned_data['clabe'],
+                distrito=invitacion.creado_por.distritos,
+                email_opt = form.cleaned_data['email_opt'],
+            )
+            #Deshabilitación de la invitación por medio del usado = True
+            invitacion.usado = True
+            invitacion.fecha_uso = now()
+            invitacion.proveedor = proveedor
+            invitacion.save()
 
-                Proveedor_direcciones.objects.create(
-                    nombre=proveedor,
-                    creado_por=profile,
-                    domicilio=form.cleaned_data['domicilio'],
-                    telefono=form.cleaned_data['telefono'],
-                    contacto=form.cleaned_data['contacto'],
-                    email=invitacion.email,
-                    banco=form.cleaned_data['banco'],
-                    clabe=form.cleaned_data['clabe'],
-                    distrito=form.cleaned_data['distrito']
-                )
-
-                invitacion.usado = True
-                invitacion.fecha_uso = now()
-                invitacion.save()
-
-                return redirect('user-login')  # O alguna página de éxito
+            return redirect('user-login')  # O alguna página de éxito
+            messages.success(request, 'Registro exitoso. Espera correo de confirmación')     
     else:
         form = RegistroProveedorForm(initial={'email': invitacion.email, 'rfc': invitacion.rfc})
 

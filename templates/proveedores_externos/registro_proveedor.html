@@ -6,7 +6,33 @@
 {% block content %}
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
-<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
 
 <div class="container d-flex justify-content-center align-items-center mt-5 mb-5">
     <div class="card col-md-10 offset-md-2">
@@ -23,7 +49,7 @@
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                            {{ form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razón Social" }}
+                            {{ form.razon_social|add_class:"form-control"|attr:"placeholder= Razón Social" }}
                             <label style="color: #121212;" for="id_area">Razón Social*</label>
                         </div>
                     </div>
@@ -32,7 +58,7 @@
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                            {{ form.password|add_class:"form-control" |append_attr:"placeholder= Password" }}
+                            {{ form.password|add_class:"form-control" |attr:"placeholder= Password" }}
                             <label style="color: #121212;" for="id_area">Password*</label>
                         </div>
                     </div>
@@ -41,7 +67,7 @@
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                            {{ form.confirm_password|add_class:"form-control"|append_attr:"placeholder=Confirmar Password" }}
+                            {{ form.confirm_password|add_class:"form-control"|attr:"placeholder=Confirmar Password" }}
                             <label style="color: #121212;" for="id_area">Confirmar Password*</label>
                         </div>
                     </div>
@@ -58,8 +84,8 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building-columns"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.banco|add_class:"form-control"|append_attr:"placeholder=Banco"}}
-                            <label for="id_lugar_partida">Banco*</label>
+                            {{form.banco|add_class:"form-control"|attr:"placeholder=Banco"}}
+                            <label for="id_banco">Banco*</label>
                             </div>
                         </div>
                     </div>
@@ -67,39 +93,39 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta"}}
+                            {{form.cuenta|add_class:"form-control"|attr:"placeholder=Cuenta"}}
                             <label for="id_lugar_partida">Cuenta*</label>
                             </div>
                         </div>
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-sm-12 col-lg-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.clabe|add_class:"form-control"|append_attr:"placeholder=Clabe"}}
+                            {{form.clabe|add_class:"form-control"|attr:"placeholder=Clabe"}}
                             <label for="id_lugar_partida">Clabe*</label>
                             </div>
                         </div>
                     </div>
-                    <div class="col-6">
+                    <div class="col-sm-12 col-lg-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.referencia|add_class:"form-control"|append_attr:"placeholder=Referencia"}}
-                            <label for="id_lugar_partida">Referencia</label>
+                            {{form.referencia|add_class:"form-control"|attr:"placeholder=Referencia"}}
+                            <label for="id_referencia">Referencia</label>
                             </div>
                         </div>
                     </div>   
                 </div>
                 <div class="row">
-                    <div class="col-6">
+                    <div class="col-sm-12 col-lg-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
-                            <label for="id_lugar_partida">Convenio*</label>
+                            {{form.convenio|add_class:"form-control"|attr:"placeholder=Convenio"}}
+                            <label for="id_convenio">Convenio</label>
                             </div>
                         </div>
                     </div>
@@ -112,7 +138,7 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.domicilio|add_class:"form-control required"|append_attr:"placeholder=Domicilio"}}
+                            {{form.domicilio|add_class:"form-control"|attr:"placeholder=Domicilio"}}
                             <label for="id_lugar_partida">Domicilio*</label>
                             </div>
                         </div>
@@ -121,26 +147,32 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-phone"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.telefono|add_class:"form-control required"|append_attr:"placeholder=Teléfono"}}
+                            {{form.telefono|add_class:"form-control"|attr:"placeholder=Teléfono"}}
                             <label for="id_lugar_partida">Teléfono*</label>
                             </div>
                         </div>
                     </div>
                 </div>
                 
-                
-                <div class="col-lg-6 col-sm-6">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                        {{form.contacto|add_class:"form-control required"|append_attr:"placeholder=Contacto"}}
-                        <label for="id_lugar_partida">Contacto*</label>
+                <div class="row">
+                    <div class="col-lg-6 col-sm-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.contacto|add_class:"form-control"|attr:"placeholder=Contacto"}}
+                            <label for="id_lugar_partida">Contacto*</label>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="mb-3">
-                    <label for="domicilio" class="form-label">Domicilio</label>
-                    {{ form.domicilio|add_class:"form-control"|append_attr:"placeholder= Domicilio" }}
+                    <div class="col-lg-6 col-sm-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.email_opt|add_class:"form-control"|attr:"placeholder=Email Opcional"| remove_attr:"required"}}
+                            <label for="id_lugar_partida">Email Opcional</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
                 <hr class="my-4" />
 
