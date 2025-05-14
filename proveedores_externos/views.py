@@ -781,6 +781,12 @@ def invitar_proveedor(request):
         if InvitacionProveedor.objects.filter(email=email, usado=False).exists():
             messages.error(request, 'Ya existe un proveedor con este correo registrado')
             return redirect('invitar-proveedor')  # Ajusta según el nombre de tu URL
+        elif User.objects.filter(email=email).exists():
+            messages.error(request, 'Ya existe un usuario con este correo registrado')
+            return redirect('invitar-proveedor')
+        elif Proveedor.objects.filter(rfc=rfc).exists():
+            messages.error(request, 'Ya existe un proveedor con este RFC registrado')
+            return redirect('invitar-proveedor')
 
         proveedor = Proveedor.objects.filter(rfc=rfc).first()
 
@@ -864,9 +870,10 @@ def registro_proveedor(request, token):
     invitacion = get_object_or_404(InvitacionProveedor, token=token, usado=False)
 
     if request.method == 'POST':
-        print(invitacion.email)
+        #print(invitacion.email)
         form = RegistroProveedorForm(request.POST)
         if form.is_valid():
+            print("El formulario es válido")
             # 1 Objeto user
             user = User.objects.create(
                 username=invitacion.email,
@@ -901,8 +908,10 @@ def registro_proveedor(request, token):
                 staff=customuser,
                 tipo=tipo,
                 proveedor=proveedor,
+                distritos=invitacion.creado_por.distritos,
+                
             )
-
+            profile.almacen.set(invitacion.creado_por.almacen.all())
             #5.5
             #distrito = Distrito.objects.get(=form.cleaned_data['distrito'])
                 #6 Objeto Proveedor_direcciones
@@ -923,9 +932,10 @@ def registro_proveedor(request, token):
             invitacion.fecha_uso = now()
             invitacion.proveedor = proveedor
             invitacion.save()
-
-            return redirect('user-login')  # O alguna página de éxito
-            messages.success(request, 'Registro exitoso. Espera correo de confirmación')     
+            messages.success(request, 'Registro exitoso. Espera correo de confirmación')    
+            return redirect('user-login')  # O alguna página de éxito        
+        else:
+            print("El formulario NO es válido")
     else:
         form = RegistroProveedorForm(initial={'email': invitacion.email, 'rfc': invitacion.rfc})
 

@@ -359,12 +359,12 @@ def prellenar_formulario(request):
                 print('Se lo llevó madres')
                 pass
         
-        numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip()
+        numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip().lstrip('0')
         cuenta_objeto = None
         
         if numero_cuenta_extraido:
             try:
-                cuenta_objeto = Cuenta.objects.get(cuenta=numero_cuenta_extraido)
+                cuenta_objeto = Cuenta.objects.get(cuenta__contains=numero_cuenta_extraido)
             except Cuenta.DoesNotExist:
                 # Manejar el caso donde la cuenta no existe
                 return JsonResponse({'error': 'Account not found'}, status=404)

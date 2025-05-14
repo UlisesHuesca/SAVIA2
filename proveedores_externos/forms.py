@@ -1,6 +1,9 @@
 from django import forms
 from compras.models import Proveedor, Evidencia, DocumentosProveedor
 from user.models import Banco, Distrito
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+
 
 class SubirDocumentoForm(forms.ModelForm):
     class Meta:
@@ -40,7 +43,15 @@ class RegistroProveedorForm(forms.Form):
         self.fields['email_opt'].required = False
         self.fields['referencia'].required = False
         self.fields['convenio'].required = False
-        
+
+    def clean_password(self):
+        password = self.cleaned_data.get('password')
+        try:
+            validate_password(password)  # Aquí se aplican los validators definidos en AUTH_PASSWORD_VALIDATORS
+        except ValidationError as e:
+            raise forms.ValidationError(e.messages)
+        return password
+
     def clean(self):
         cleaned_data = super().clean()
         p1 = cleaned_data.get('password')
