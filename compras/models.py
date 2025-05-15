@@ -53,6 +53,27 @@ class Proveedor(models.Model):
     def __str__(self):
         return f'{self.razon_social}'
     
+    @property
+    def documentos_completos(self):
+        documentos_requeridos = {
+            "credencial_acta_constitutiva",
+            "csf",
+            "comprobante_domicilio",
+            "opinion_cumplimiento"
+        }
+
+        # Si tiene arrendamiento en alguna dirección, agregar adicionales
+        if self.direcciones.filter(arrendamiento=True).exists():
+            documentos_requeridos.update({"contrato", "factura_predial"})
+
+        # Obtener los tipos de documentos activos subidos
+        documentos_presentes = set(
+            self.documentos.filter(activo=True).values_list("tipo_documento", flat=True)
+        )
+
+        return documentos_requeridos.issubset(documentos_presentes)
+
+    
 
 class DocumentosProveedor(models.Model):
     proveedor = models.ForeignKey(Proveedor, on_delete=models.CASCADE, related_name='documentos')
@@ -83,6 +104,7 @@ class DocumentosProveedor(models.Model):
     def __str__(self):
         return f"{self.proveedor.razon_social} - {self.get_tipo_documento_display()} (Activo: {self.activo})"
 
+   
 
     @property
     def fecha_emision(self):

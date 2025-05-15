@@ -1,5 +1,5 @@
 from django import forms
-from compras.models import Proveedor, Evidencia, DocumentosProveedor
+from compras.models import Proveedor, Evidencia, DocumentosProveedor, Cond_pago, Moneda
 from user.models import Banco, Distrito
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
@@ -28,21 +28,30 @@ class RegistroProveedorForm(forms.Form):
     clabe = forms.CharField(max_length=20)
     cuenta = forms.CharField(max_length=20)
     banco = forms.ModelChoiceField(queryset=Banco.objects.all())
+    moneda = forms.ModelChoiceField(queryset=Moneda.objects.all())
     referencia = forms.CharField(max_length=20)
     convenio = forms.CharField(max_length=20)
 
+    #Condiciones de Compra
+    condiciones = forms.ModelChoiceField(queryset=Cond_pago.objects.all())
+    dias_credito = forms.IntegerField(min_value=0, max_value=365, initial=0, label="Días de Crédito")
 
     # Datos del proveedor y contacto
     contacto = forms.CharField(max_length=50)
     telefono = forms.CharField(max_length=14)
     domicilio = forms.CharField(max_length=200)
     email_opt = forms.EmailField(max_length=100)
+
+    producto = forms.BooleanField(required=False, label='Producto')
+    servicio = forms.BooleanField(required=False, label='Servicio')
+    arrendamiento = forms.BooleanField(required=False, label='Arrendamiento')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['email_opt'].required = False
         self.fields['referencia'].required = False
         self.fields['convenio'].required = False
+        self.fields['dias_credito'].required = False
 
     def clean_password(self):
         password = self.cleaned_data.get('password')

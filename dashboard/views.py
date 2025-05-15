@@ -45,6 +45,7 @@ def index(request):
     proyectos = Proyecto.objects.all()
     proveedor = usuario.proveedor
     mostrar_modal = True
+    prealta = False
     if proveedor:
         mostrar_modal = (
             not proveedor.acepto_politica or
@@ -52,6 +53,10 @@ def index(request):
             not proveedor.acepto_codigo_etica or
             not proveedor.acepto_aviso_privacidad
         )
+        if proveedor.direcciones.filter(estatus__nombre = "PREALTA").exists():
+            prealta = True
+
+    #print(prealta)
     # Obtener los proyectos y calcular el total
     #proyectos_total = [(proyecto, proyecto.get_projects_gastado) for proyecto in proyectos]
 
@@ -98,6 +103,7 @@ def index(request):
 
     context = {
         'mostrar_modal': mostrar_modal,
+        'prealta': prealta,
         #'select_profile':selected_profil
         #'graph_proyectos': graph_proyectos,
         #'graph_inventarios':graph_inventarios,
@@ -507,7 +513,6 @@ def product(request):
     return render(request,'dashboard/product.html', context)
 
 
-@login_required(login_url='user-login')
 @perfil_seleccionado_required
 def proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -559,6 +564,60 @@ def proveedores(request):
 
 
     return render(request,'dashboard/proveedores.html', context)
+
+@perfil_seleccionado_required
+def proveedores_altas(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
+    #proveedores_dir = Proveedor_direcciones.objects.filter(distrito__id__in = almacenes_distritos)
+    #proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    #if usuario.tipo.proveedores:
+    proveedores = Proveedor.objects.filter(
+            #id__in=proveedores_ids, 
+            completo=True, 
+            direcciones__estatus__nombre = "PREALTA",
+            #direcciones__distrito__in = almacenes_distritos
+            ).exclude(familia__nombre="IMPUESTOS").distinct()
+    #else:
+    #    proveedores = Proveedor.objects.none()
+    total_prov = proveedores.count()
+
+    myfilter=ProveedorFilter(request.GET, queryset=proveedores)
+    proveedores = myfilter.qs
+
+    #if request.method == 'POST' and 'btnExcel' in request.POST:
+        #return convert_excel_proveedores(proveedores_dir)
+
+    #Set up pagination
+    p = Paginator(proveedores, 50)
+    page = request.GET.get('page')
+    proveedores_list = p.get_page(page)
+    # Añadir datos de proveedor_direcciones
+    for proveedor in proveedores_list:
+        direccion = Proveedor_direcciones.objects.filter(
+            nombre=proveedor,
+            #distrito=usuario.distritos
+        ).last()  # Obtener la ultima dirección que coincida (más actual)
+        if direccion:
+            proveedor.telefono = direccion.telefono
+            proveedor.contacto = direccion.contacto
+            proveedor.distrito = direccion.distrito
+            proveedor.domicilio = direccion.domicilio
+
+    context = {
+        'usuario':usuario,
+        'proveedores': proveedores,
+        'myfilter':myfilter,
+        'proveedores_list':proveedores_list,
+        'total_prov':total_prov,
+        }
+
+
+    return render(request,'dashboard/proveedores.html', context)
+
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required

@@ -12,7 +12,7 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.utils.timezone import now
 from django.urls import reverse
-from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor
+from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor
 from user.models import Profile, CustomUser, Tipo_perfil, Distrito
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
@@ -757,7 +757,9 @@ def aceptar_politica(request):
                 proveedor.acepto_aviso_privacidad = True
             elif clave == 'etica':
                 proveedor.acepto_codigo_etica = True
+                proveedor.fecha_aceptacion_politica = now
             # puedes seguir agregando aquí más claves/políticas
+            
             else:
                 return JsonResponse({'error': 'Política no reconocida'}, status=400)
 
@@ -833,6 +835,17 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre):
                                     <p style="font-size: 16px;">
                                         Has sido invitado a registrarte como proveedor en nuestra plataforma. Tu RFC registrado es <strong>{rfc}</strong>.
                                     </p>
+                                    <h3 style="margin-top: 30px; font-size: 16px;">Pasos para completar tu registro:</h3>
+                                    <ul style="font-size: 15px; padding-left: 20px; color: #333;">
+                                        <li><strong>Completar tu registro inicial</strong> dando clic en el botón que aparece a continuación.</li>
+                                        <li>Acceder al portal de proveedores con los datos de acceso generados.</li>
+                                    </ul>
+                                    <ol style="font-size: 15px; padding-left: 20px; color: #333;">
+                                        <li>Aceptar las políticas y códigos de Grupo Vordcab.</li>
+                                        <li>Subir los documentos requeridos.</li>
+                                        <li>Contestar el cuestionario de Debida Diligencia.</li>
+                                    </ol>
+
                                     <p style="text-align: center; margin: 30px 0;">
                                         <a href="{link}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
                                             Completar registro
@@ -866,6 +879,81 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre):
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
 
+
+def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
+    static_path = settings.STATIC_ROOT
+    img_path1 = os.path.join(static_path, 'images', 'SAVIA_Logo.png')
+    img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
+    image_base64 = get_image_base64(img_path1)
+    logo_v_base64 = get_image_base64(img_path2)
+
+    html_success_message = f"""
+    <html>
+    <head>
+        <meta charset="UTF-8">
+    </head>
+    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+            <tr>
+                <td align="center">
+                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                        <tr>
+                            <td align="center">
+                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 120px;" />
+                            </td>
+                        </tr>
+                        <tr>
+                            <td style="padding: 20px;">
+                                <p style="font-size: 18px;">¡Registro exitoso!</p>
+                                <p style="font-size: 16px;">
+                                    Has completado tu registro correctamente como proveedor en nuestra plataforma.
+                                </p>
+                                <p style="font-size: 16px;">
+                                    Tu usuario registrado es: <strong>{usuario_email}</strong>
+                                </p>
+
+                                <p style="text-align: center; margin: 30px 0;">
+                                    <a href="{savia_url}" style="background-color: #28a745; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+                                        Acceder al portal
+                                    </a>
+                                </p>
+
+                                <h3 style="margin-top: 30px; font-size: 16px;">Siguientes pasos:</h3>
+                                <ul style="font-size: 15px; padding-left: 20px; color: #333;">
+                                    <li>Inicia sesión con tu usuario y contraseña.</li>
+                                </ul>
+                                <ol style="font-size: 15px; padding-left: 20px; color: #333;">
+                                    <li>Acepta las políticas y códigos de Grupo Vordcab.</li>
+                                    <li>Sube los documentos requeridos.</li>
+                                    <li>Contesta el cuestionario de Debida Diligencia.</li>
+                                </ol>
+
+                                <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>
+                                <p style="margin-top: 40px; font-size: 14px;">Atentamente,<br><strong>{creado_por_nombre}</strong></p>
+
+                                <div style="text-align: center; margin-top: 30px;">
+                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                    <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.0</p>
+                                </div>
+                            </td>
+                        </tr>
+                    </table>
+                </td>
+            </tr>
+        </table>
+    </body>
+    </html>
+    """
+
+    email = EmailMessage(
+        subject="Registro exitoso en SAVIA 2.0",
+        body=html_success_message,
+        from_email=settings.DEFAULT_FROM_EMAIL,
+        to=[usuario_email],
+    )
+    email.content_subtype = "html"
+    email.send()
+
 def registro_proveedor(request, token):
     invitacion = get_object_or_404(InvitacionProveedor, token=token, usado=False)
 
@@ -886,7 +974,8 @@ def registro_proveedor(request, token):
             proveedor = invitacion.proveedor or Proveedor.objects.create(
                 rfc=invitacion.rfc,
                 razon_social=form.cleaned_data['razon_social'],
-                creado_por=invitacion.creado_por
+                creado_por=invitacion.creado_por,
+                completo = True,
             )
 
                 #3 Objeto CustomUser
@@ -909,11 +998,17 @@ def registro_proveedor(request, token):
                 tipo=tipo,
                 proveedor=proveedor,
                 distritos=invitacion.creado_por.distritos,
-                
+                st_activo =True,
+
             )
             profile.almacen.set(invitacion.creado_por.almacen.all())
+            condicion_seleccionada = form.cleaned_data['condiciones']
+            if condicion_seleccionada == 'CREDITO':
+                financiamiento = True
+            else:
+                financiamiento = False
             #5.5
-            #distrito = Distrito.objects.get(=form.cleaned_data['distrito'])
+            status = Estatus_proveedor.objects.get(nombre="PREALTA")
                 #6 Objeto Proveedor_direcciones
             Proveedor_direcciones.objects.create(
                 nombre=proveedor,
@@ -925,13 +1020,32 @@ def registro_proveedor(request, token):
                 banco=form.cleaned_data['banco'],
                 clabe=form.cleaned_data['clabe'],
                 distrito=invitacion.creado_por.distritos,
+                cuenta = form.cleaned_data['cuenta'],
                 email_opt = form.cleaned_data['email_opt'],
+                estatus = status,
+                 # Aquí capturas los booleanos:
+                producto=form.cleaned_data['producto'],
+                servicio=form.cleaned_data['servicio'],
+                arrendamiento=form.cleaned_data['arrendamiento'],
+                moneda=form.cleaned_data['moneda'],
+                financiamiento=financiamiento,
+                dias_credito=form.cleaned_data['dias_credito'],
+                completo = True,
             )
             #Deshabilitación de la invitación por medio del usado = True
             invitacion.usado = True
             invitacion.fecha_uso = now()
             invitacion.proveedor = proveedor
             invitacion.save()
+           
+            # Datos del correo
+            savia_url = "https://grupovordcab.cloud"
+            correo_destino = invitacion.email
+            enviar_correo_registro_exitoso(
+                usuario_email = correo_destino, 
+                creado_por_nombre = f"{invitacion.creado_por.staff.staff.first_name} {invitacion.creado_por.staff.staff.last_name}", 
+                savia_url = savia_url
+                )
             messages.success(request, 'Registro exitoso. Espera correo de confirmación')    
             return redirect('user-login')  # O alguna página de éxito        
         else:

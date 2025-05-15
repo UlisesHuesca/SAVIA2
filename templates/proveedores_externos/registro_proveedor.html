@@ -96,26 +96,37 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-sm-12 col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.cuenta|add_class:"form-control"|attr:"placeholder=Cuenta"}}
-                            <label for="id_lugar_partida">Cuenta*</label>
+                      <div class="col-sm-12 col-lg-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda"}}
+                                <label for="id_lugar_partida">Moneda*</label>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-                <div class="row">
-                    <div class="col-sm-12 col-lg-6">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.clabe|add_class:"form-control"|attr:"placeholder=Clabe"}}
-                            <label for="id_lugar_partida">Clabe*</label>
+                    <div class="row">
+                        <div class="col-sm-12 col-lg-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.cuenta|add_class:"form-control"|attr:"placeholder=Cuenta"}}
+                                <label for="id_lugar_partida">Cuenta*</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-lg-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.clabe|add_class:"form-control"|attr:"placeholder=Clabe"}}
+                                <label for="id_lugar_partida">Clabe*</label>
+                                </div>
                             </div>
                         </div>
                     </div>
+                    <div class="row">
                     <div class="col-sm-12 col-lg-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
@@ -125,8 +136,8 @@
                             </div>
                         </div>
                     </div>   
-                </div>
-                <div class="row">
+                
+                
                     <div class="col-sm-12 col-lg-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
@@ -138,6 +149,30 @@
                     </div>
                 </div>
                 <hr class="my-4" />
+                
+                <h5 class="mb-3">Condiciones de Compra</h5>
+                    <div class="row">
+                        <div class="col-sm-12 col-lg-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.condiciones|add_class:"form-control"|append_attr:"placeholder=Condiciones de compra"}}
+                                <label for="id_lugar_partida">Condiciones de compra*</label>
+                                </div>
+                            </div>
+                        </div>
+                   
+                        <div class="col-sm-12 col-lg-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
+                                <label for="id_lugar_partida">Días de crédito*</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <hr class="my-4" />
                 <!-- Datos de contacto -->
                 <h5 class="mb-3">Datos de Proveedor y Contacto</h5>
                 <div class ="row">
@@ -180,6 +215,27 @@
                             </div>
                         </div>
                     </div>
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                            {{ form.producto|add_class:"form-check-input" }}
+                            <label for="{{ f.producto.id_for_label }}" class="form-check-label"><strong>Producto</strong></label>
+                        </div>
+                    </div>
+
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                            {{ form.servicio|add_class:"form-check-input" }}
+                            <label for="{{ f.servicio.id_for_label }}" class="form-check-label"><strong>Servicio</strong></label>
+                        </div>
+                    </div>
+
+                    <div class="row ms-3 my-2">
+                        <div class="form-check form-switch col-sm">
+                            {{ form.arrendamiento|add_class:"form-check-input" }}
+                            <label for="{{ f.arrendamiento.id_for_label }}" class="form-check-label"><strong>Arrendamiento</strong></label>
+                        </div>
+                    </div>
+
                 </div>
                 <hr class="my-4" />
 

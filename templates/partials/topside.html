@@ -22,7 +22,11 @@
                     <strong>
                         <img class="rounded-circle" src="{% static 'images/SAVIA_Logo.png' %}" id="logo" alt="SAVIA" style="width: 220px; height: 220px;">
                         <h1 style="color: #122D45">SAVIA 2.0</h1>
-                        {% if usuario.tipo.proveedor_externo %}<h4>Portal de Proveedor de Grupo Vordcab</h4>{% endif %}
+                        {% if usuario.tipo.proveedor_externo %}
+                            {% if prealta %}<h4>Portal de Proveedor de Grupo Vordcab | PREALTA</h4>
+                            {% else %}<h4>Portal de Proveedor de Grupo Vordcab</h4>
+                            {% endif %}
+                        {% endif %}
                     </strong>
                 </div>
                 <div class="card-body">
@@ -110,36 +114,80 @@
                                 </div>
                             </a>
                         </div>   
+                        
                     </div>
                     {% endif %} 
                     {% if usuario.tipo.proveedor_externo %}
-                    <div class="row mt-2">
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}" title="Ordenes de Compra">
+                        {% if prealta %}
+                        <div class="row mt-2">
+                            
+                            <div class="col-md-4">
+                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
+                                    <div class="card my-card shadow text-center p-3">
+                                        
+                                        <h4>Políticas y Códigos 
+                                            {% if mostrar_modal %}<i class="fa-solid fa-circle-1 text-danger"></i>
+                                            {% else %}<i class="fa-solid fa-circle-1 text-success"></i>
+                                            {% endif %}
+                                        </h4>
+                                       
+                                       
+                                        <h3></h3>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a class="text-decoration-none text-dark"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
+                                    <div class="card my-card shadow text-center p-3">
+                                        <h4>Subir Documentos 
+                                            {% if usuario.proveedor.documentos_completos %}<i class="fa-solid fa-circle-2 text-success"></i>
+                                            {% else %}<i class="fa-solid fa-circle-2 text-danger"></i>
+                                            {% endif %}
+                                        </h4>
+                                        <h3></h3>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                            <a class="text-decoration-none text-dark"  href="{% url 'solicitudes-pendientes' %}">
                                 <div class="card my-card shadow text-center p-3">
-                                    <h4>Ordenes de Compra <i class="fa-solid fa-user"></i></h4>
+                                    <h4>{% trans "Cuestionario DD" %} 
+                                        {% if usuario.proveedor.cuestionario_dd %}<i class="fa-solid fa-circle-3 text-success"></i>
+                                        {% else %}<i class="fa-solid fa-circle-3 text-danger"></i>
+                                        {% endif %}
+                                    </h4>
                                     <h3></h3>
                                 </div>
                             </a>
+                        </div>   
                         </div>
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>Información <i class="fa-solid fa-user"></i></h4>
-                                    <h3></h3>
-                                </div>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>Políticas y Códigos <i class="fa-duotone fa-solid fa-book"></i></h4>
-                                    <h3></h3>
-                                </div>
-                            </a>
-                           
-                       
-                        </div>
+                        {% else %}
+                        <div class="row mt-2">
+                            <div class="col-md-4">
+                                <a class="text-decoration-none text-dark"  href="{% url 'matriz-oc-proveedores' %}" title="Ordenes de Compra">
+                                    <div class="card my-card shadow text-center p-3">
+                                        <h4>Ordenes de Compra <i class="fa-solid fa-user"></i></h4>
+                                        <h3></h3>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a class="text-decoration-none text-dark"  href="{% url 'matriz-direcciones' %}" title="Auditoría de Proveedores">
+                                    <div class="card my-card shadow text-center p-3">
+                                        <h4>Información <i class="fa-solid fa-user"></i></h4>
+                                        <h3></h3>
+                                    </div>
+                                </a>
+                            </div>
+                            <div class="col-md-4">
+                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
+                                    <div class="card my-card shadow text-center p-3">
+                                        <h4>Políticas y Códigos <i class="fa-duotone fa-solid fa-book"></i></h4>
+                                        <h3></h3>
+                                    </div>
+                                </a>
+                            </div>
+                            {% endif %}
                     </div>
                    
                     {% endif %}
@@ -235,6 +283,8 @@
                         text: 'Tu aceptación de las políticas ha sido registrada.',
                         confirmButtonColor: '#3085d6',
                         confirmButtonText: 'Entendido'
+                    }).then(() => {
+                        location.reload();
                     });
                 }
             })
