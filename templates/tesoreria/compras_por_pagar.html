@@ -180,7 +180,7 @@
 <div class="card bg-white my-2">
     
     <form id="mass_payment_form" method="post" action="{% url 'compras-por-pagar' %}">
-        {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" or usuario.tipo.nombre == "Admin" %}
+        {% if usuario.tipo.para_pago %}
         <ul class="nav nav-pills">
             <li class="nav-item mx-2">
                 <div col-lg-2>
