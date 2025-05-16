@@ -256,6 +256,55 @@
                             </td>
                             <td class="" id="comentario_4_{{proveedor.id|unlocalize}}" tipo ="opinion" >{% if proveedor.comentario_opinion_cumplimiento %} {{proveedor.comentario_opinion_cumplimiento}} {% endif %}</td>
                         </tr>
+                        <tr>
+                            <td>Carta de Crédito</td>
+                            <td>
+
+                                {% if documentos_count.carta_credito == 0 %}   
+                                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Visita" hx-target="#document" hx-get="{% url 'edit-visita' proveedor.id %}">
+                                        <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                    </a>
+                                {% else %}
+                                    {% for documento in documentos %}
+                                        {% if documento.tipo_documento == "carta_credito" %}
+                                            {% if documento.validada %}
+                                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfVisita{{documento.id|unlocalize }}" title="Ver Documento Visita">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% else %}
+                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfVisita{{documento.id|unlocalize }}" title="Ver Documento Visita">
+                                                    <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                </button>
+                                            {% endif %}
+
+                                
+                                                    <!-- Modal con visor de PDF -->
+                                                    <div class="modal fade" id="pdfCredito{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfCreditoLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-xl">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="pdfCreditoLabel{{documento.id|unlocalize }}">Carta de Crédito</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <iframe src="{{documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                   
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if documentos_count.carta_credito > documentos_validados_count.carta_credito %}
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Carta de Crédito" hx-target="#document" hx-get="{% url 'edit-visita' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                   
+                            </td>
+                            <td class="" id="comentario_12_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_carta_credito %} {{proveedor.comentario_carta_credito}} {% endif %}</td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -323,6 +372,9 @@
                                             {% endif %}
                                         {% endif %}
                                    
+                            </td>
+                            <td class="" id="comentario_7_{{proveedor.id|unlocalize}}" tipo ="contrato" >
+                                {% if proveedor.comentario_contrato %} {{proveedor.comentario_contrato}} {% endif %}
                             </td>
                         </tr>
                         {% endif %}

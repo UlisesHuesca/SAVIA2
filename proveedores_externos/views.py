@@ -171,6 +171,9 @@ def matriz_direcciones(request):
             'contrato',
             'factura_predial',
             'otros',
+            'carta_credito',
+            'visita',
+            'calificacion',
         ]
 
         documentos_count = {tipo: 0 for tipo in tipos_documentos}
@@ -305,6 +308,87 @@ def edit_opinion_cumplimiento(request, pk):
    
     return render(request, 'proveedores_externos/edit_documentos.html',context)
 
+@perfil_seleccionado_required
+def edit_carta_credito(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'carta_credito'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Carta de Crédito subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+
+@perfil_seleccionado_required
+def edit_calificacion(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'calificacion'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Documento calificación subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+@perfil_seleccionado_required
+def edit_visita(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'visita'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Documento visita subido exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
 
 @perfil_seleccionado_required
 def edit_calidad(request, pk):

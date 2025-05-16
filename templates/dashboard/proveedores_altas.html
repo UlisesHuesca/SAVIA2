@@ -184,7 +184,7 @@
                         <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-alta-proveedor' proveedor.id %}">
                             <i class="fa-duotone fa-solid fa-circle-check fa-2x"></i>
                         </a>
-                        <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="#">
+                        <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-alta-proveedor' proveedor.id %}">
                            <i class="fa-duotone fa-solid fa-circle-xmark fa-2x"></i>
                         </a>
                     </td>

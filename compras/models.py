@@ -43,6 +43,9 @@ class Proveedor(models.Model):
     comentario_factura = models.CharField(max_length=200,null=True, blank=True)
     comentario_calidad = models.CharField(max_length=200,null=True, blank=True)
     comentario_otros = models.CharField(max_length=200,null=True, blank=True)
+    comentario_visita = models.CharField(max_length=200,null=True, blank=True)
+    comentario_calificacion = models.CharField(max_length=200,null=True, blank=True)
+    comentario_carta_credito = models.CharField(max_length=200,null=True, blank=True)
     acepto_politica = models.BooleanField(default=False)
     acepto_politica_proveedor = models.BooleanField(default=False)
     acepto_codigo_etica = models.BooleanField(default=False)
@@ -89,6 +92,9 @@ class DocumentosProveedor(models.Model):
             ('contrato', 'Contrato'),
             ('factura_predial', 'Factura del Bien/Predial'),
             ('calidad', 'Calidad'),
+            ('calificacion', 'Calificación'),
+            ('visita', 'Visita'),
+            ('carta_credito', 'Carta de Crédito'),
             ('otros','Otros'),
         ]
     )

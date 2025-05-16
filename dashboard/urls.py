@@ -40,6 +40,6 @@ urlpatterns = [
     path('dashboard/update_comentario/', views.update_comentario, name='update_comentario'),
     path('proveedores/altas', views.proveedores_altas, name='proveedores-altas'),
     path('proveedores/alta_autorizada/<int:pk>/', views.autorizar_alta_proveedor, name='autorizar-alta-proveedor'),
-    #path('proveedores/alta_rechazada/<int:pk>/', views.rechazar_alta_proveedor, name='rechazar-alta-proveedor'),
+    path('proveedores/alta_cancelada/<int:pk>/', views.cancelar_alta_proveedor, name='cancelar-alta-proveedor'),
 ]
 

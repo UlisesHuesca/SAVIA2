@@ -636,16 +636,16 @@ def autorizar_alta_proveedor(request, pk):
          # Asignar folio automáticamente
         # Tomamos el país desde la primera dirección asociada
         
-        pais = proveedor_direcciones.estado.pais.nombre
-        print(f"Pais: {pais}")
+        #pais = proveedor_direcciones.estado.pais.nombre
+        #print(f"Pais: {pais}")
         # Obtener el último folio consecutivo para ese país
-        ultimo_folio = Proveedor.objects.filter(
-            direcciones__estado__pais__nombre__iexact=pais,
-            folio_consecutivo__isnull=False
-        ).aggregate(Max('folio_consecutivo'))['folio_consecutivo__max'] or 0
+        #ultimo_folio = Proveedor.objects.filter(
+        #    direcciones__estado__pais__nombre__iexact=pais,
+        #    folio_consecutivo__isnull=False
+        #).aggregate(Max('folio_consecutivo'))['folio_consecutivo__max'] or 0
 
-        proveedor.folio_consecutivo = ultimo_folio + 1
-        proveedor.save()
+        #proveedor.folio_consecutivo = ultimo_folio + 1
+        #proveedor.save()
         messages.success(request,f'Has autorizado correctamente el alta del proveedor {proveedor.razon_social}')
         return redirect('proveedores-altas')
     
@@ -653,6 +653,40 @@ def autorizar_alta_proveedor(request, pk):
         'proveedor':proveedor,
     }
     return render(request,'dashboard/autorizar_alta_proveedor.html', context)
+
+def cancelar_alta_proveedor(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    proveedor = Proveedor.objects.get(id=pk)
+    proveedor_direcciones = Proveedor_direcciones.objects.filter(nombre=proveedor, estatus__nombre="PREALTA").first()
+    
+    if request.method =='POST':
+        #print('si entra al ciclo')
+        status = Estatus_proveedor.objects.get(nombre="RECHAZADO")
+        
+        
+        proveedor_direcciones.estatus = status
+        proveedor_direcciones.save()
+         # Asignar folio automáticamente
+        # Tomamos el país desde la primera dirección asociada
+        
+        #pais = proveedor_direcciones.estado.pais.nombre
+        #print(f"Pais: {pais}")
+        # Obtener el último folio consecutivo para ese país
+        #ultimo_folio = Proveedor.objects.filter(
+        #    direcciones__estado__pais__nombre__iexact=pais,
+        #    folio_consecutivo__isnull=False
+        #).aggregate(Max('folio_consecutivo'))['folio_consecutivo__max'] or 0
+
+        #proveedor.folio_consecutivo = ultimo_folio + 1
+        #proveedor.save()
+        messages.success(request,f'Has autorizado correctamente el alta del proveedor {proveedor.razon_social}')
+        return redirect('proveedores-altas')
+    
+    context = {
+        'proveedor':proveedor,
+    }
+    return render(request,'dashboard/cancelar_alta_proveedor.html', context)
     
 
 @login_required(login_url='user-login')
@@ -1150,12 +1184,15 @@ def documentacion_proveedores(request, pk):
         'comprobante_domicilio',
         'opinion_cumplimiento',
         'credencial_acta_constitutiva',
+        'calificacion',
         'curriculum',
         'competencias',
         'contrato',
         'factura_predial',
         'calidad',
         'otros',
+        'visita',
+        'carta_credito',
     ]
 
     documentos_count = {tipo: 0 for tipo in tipos_documentos}
@@ -1232,12 +1269,15 @@ def update_comentario(request):
     if tipo == "csf":
         proveedor.comentario_csf = dato
         indice = 2
-    if tipo == "cv":
-        proveedor.comentario_curriculum = dato
-        indice = 5
     if tipo == "domicilio":
         proveedor.comentario_comprobante_domicilio = dato
         indice = 3
+    if tipo == "opinion":
+        proveedor.comentario_opinion_cumplimiento = dato
+        indice = 4
+    if tipo == "cv":
+        proveedor.comentario_curriculum = dato
+        indice = 5
     if tipo == "competencias":
         proveedor.comentario_competencias = dato
         indice = 6
@@ -1247,9 +1287,15 @@ def update_comentario(request):
     if tipo == "factura":
         proveedor.comentario_factura = dato
         indice = 8
-    if tipo == "opinion":
-        proveedor.comentario_opinion_cumplimiento = dato
-        indice = 4
+    if tipo == "calificacion":
+        proveedor.comentario_calificacion = dato
+        indice = 9
+    if tipo == "otros":
+        proveedor.comentario_otros = dato
+        indice = 10
+    if tipo == "visita":
+        proveedor.comentario_visita = dato
+        indice = 11
     proveedor.save()
     # Construye un objeto de respuesta que incluya el dato y el tipo.
     response_data = {
