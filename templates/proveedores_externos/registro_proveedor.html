@@ -215,6 +215,15 @@
                             </div>
                         </div>
                     </div>
+                     <div class="col-lg-6 col-sm-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.pais|add_class:"form-control"|attr:"placeholder=País"}}
+                            <label for="id_lugar_partida">País</label>
+                            </div>
+                        </div>
+                    </div>
                     <div class="row ms-3 my-2">
                         <div class="form-check form-switch col-sm">
                             {{ form.producto|add_class:"form-check-input" }}

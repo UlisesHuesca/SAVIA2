@@ -48,7 +48,7 @@
                 <div class="card-body">
                     <ul class="nav nav-pills">
                         <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores' %}?razon_social={{ razon }}&rfc={{ rfc }}">
+                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{{next}}">
                                 <i class="fa-solid fa-backward"></i>
                             </a>
                             {% if usuario.tipo.proveedores_edicion %}

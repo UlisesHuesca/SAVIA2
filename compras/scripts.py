@@ -1,5 +1,5 @@
 from django.db.models import F, Sum, Q
-from .models import ArticuloComprado
+from .models import ArticuloComprado, Proveedor
 from requisiciones.models import Requis, ArticulosRequisitados 
 from entradas.models import EntradaArticulo
 from decimal import Decimal
@@ -88,3 +88,25 @@ def corregir_entradas_articulos_comprados_y_oc():
     logger.info(f"Total compras evaluadas: {total_compras}")
     logger.info(f"Compras modificadas: {compras_modificadas}")
     logger.info("==== FIN del proceso de corrección ====")
+
+def asignar_folios_por_pais():
+    
+    folios_por_pais = {
+        "México": 1,
+        "Brasil": 1,
+    }
+
+    for pais in folios_por_pais.keys():
+        proveedores = Proveedor.objects.filter(
+            direcciones__estado__pais__nombre__iexact=pais
+        ).exclude(
+            direcciones__estatus__nombre__in=["COTIZACION", "PREALTA"]
+        ).distinct().order_by('id')
+
+        for proveedor in proveedores:
+            proveedor.folio_consecutivo = folios_por_pais[pais]
+            proveedor.save()
+            print(f"{proveedor.razon_social} ({pais}) => Folio {folios_por_pais[pais]}")
+            folios_por_pais[pais] += 1
+
+    print("Asignación completa.")

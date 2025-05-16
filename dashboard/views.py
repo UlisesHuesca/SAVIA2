@@ -4,7 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.forms import inlineformset_factory
-from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper
+from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor
 from solicitudes.models import Subproyecto, Proyecto
@@ -367,6 +367,7 @@ def proveedor_direcciones(request, pk):
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     razon = request.GET.get('razon_social', '')
     rfc = request.GET.get('rfc', '')
+    next_url = request.GET.get('next') or request.POST.get('next')
     #print(almacenes_distritos)
     if usuario.tipo.proveedores:
         proveedor = Proveedor.objects.get(id=pk)
@@ -377,6 +378,7 @@ def proveedor_direcciones(request, pk):
     else:
         raise Http404("No tienes permiso para ver esta vista")
     context = {
+        'next': next_url,
         'proveedor':proveedor,
         'direcciones':direcciones,
         'razon': razon,
@@ -569,11 +571,8 @@ def proveedores(request):
 def proveedores_altas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-    # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
-    #proveedores_dir = Proveedor_direcciones.objects.filter(distrito__id__in = almacenes_distritos)
-    #proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
-    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+   
+   
     #if usuario.tipo.proveedores:
     proveedores = Proveedor.objects.filter(
             #id__in=proveedores_ids, 
@@ -581,8 +580,13 @@ def proveedores_altas(request):
             direcciones__estatus__nombre = "PREALTA",
             #direcciones__distrito__in = almacenes_distritos
             ).exclude(familia__nombre="IMPUESTOS").distinct()
-    #else:
-    #    proveedores = Proveedor.objects.none()
+    for proveedor in proveedores:
+        proveedor.politicas_no_autorizadas = (
+            not proveedor.acepto_politica or
+            not proveedor.acepto_politica_proveedor or
+            not proveedor.acepto_codigo_etica or
+            not proveedor.acepto_aviso_privacidad
+        )
     total_prov = proveedores.count()
 
     myfilter=ProveedorFilter(request.GET, queryset=proveedores)
@@ -616,8 +620,42 @@ def proveedores_altas(request):
         }
 
 
-    return render(request,'dashboard/proveedores.html', context)
+    return render(request,'dashboard/proveedores_altas.html', context)
 
+def autorizar_alta_proveedor(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    proveedor = Proveedor.objects.get(id=pk)
+    proveedor_direcciones = Proveedor_direcciones.objects.filter(nombre=proveedor, estatus__nombre="PREALTA").first()
+    
+    if request.method =='POST':
+        print('si entra al ciclo')
+        status = Estatus_proveedor.objects.get(nombre="NUEVO")
+        
+        
+        proveedor_direcciones.estatus = status
+        proveedor_direcciones.save()
+         # Asignar folio automáticamente
+        # Tomamos el país desde la primera dirección asociada
+        
+        pais = proveedor_direcciones.estado.pais.nombre
+        print(f"Pais: {pais}")
+        # Obtener el último folio consecutivo para ese país
+        ultimo_folio = Proveedor.objects.filter(
+            direcciones__estado__pais__nombre__iexact=pais,
+            folio_consecutivo__isnull=False
+        ).aggregate(Max('folio_consecutivo'))['folio_consecutivo__max'] or 0
+
+        proveedor.folio_consecutivo = ultimo_folio + 1
+        proveedor.save()
+        messages.success(request,f'Has autorizado correctamente el alta del proveedor {proveedor.razon_social}')
+        return redirect('proveedores-altas')
+    
+    context = {
+        'proveedor':proveedor,
+    }
+    return render(request,'dashboard/autorizar_alta_proveedor.html', context)
+    
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
@@ -655,6 +693,7 @@ def proveedores_update(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     razon = request.GET.get('razon_social', '')
     rfc = request.GET.get('rfc', '')
+    next_url = request.GET.get('next') or request.POST.get('next')
 
     if usuario.tipo.proveedores == True:
         proveedores = Proveedor.objects.get(id=pk)
@@ -664,7 +703,8 @@ def proveedores_update(request, pk):
             if form.is_valid():
                 form.save()
                 messages.success(request,f'Has actualizado correctamente el proyecto {proveedores.razon_social}')
-                return redirect(f"{reverse('dashboard-proveedores')}?razon_social={razon}&rfc={rfc}")
+                #return redirect(f"{reverse('dashboard-proveedores')}?razon_social={razon}&rfc={rfc}")
+                return redirect(next_url)
             else:
                 for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
@@ -674,6 +714,7 @@ def proveedores_update(request, pk):
     else:
         raise Http404("No tienes permiso para ver esta vista")
     context = {
+        'next': next_url,
         'error_messages': error_messages,
         'form': form,
         'proveedores':proveedores,

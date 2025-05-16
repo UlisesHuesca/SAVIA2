@@ -160,8 +160,12 @@
                     <td>{{orden.operacion}}</td>
                     <td>{{orden.created_at}}</td>
                     <td><a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'solicitud-detalle-autorizar' orden.id %}">Productos</a>
-                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-autorizada' orden.id %}" ><i class="fa-solid fa-check"></i></a>
-                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-cancelada' orden.id %}"><i class="fa-solid fa-xmark"></i></a>
+                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-autorizada' orden.id %}" >
+                            <i class="fa-duotone fa-solid fa-circle-check fa-2x"></i>
+                        </a>
+                        <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-cancelada' orden.id %}">
+                            <i class="fa-duotone fa-solid fa-circle-xmark fa-2x"></i>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

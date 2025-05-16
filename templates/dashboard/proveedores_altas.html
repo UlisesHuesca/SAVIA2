@@ -4,7 +4,7 @@
 {% load tt_extras %}
 <html>
 <head>
-{% block title %}Proveedores{% endblock %}
+{% block title %}Altas de Proveedores{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -71,29 +71,7 @@
                     </div>
                 </div>
                 </form>
-                {% if usuario.tipo.proveedores %}
-                <hr>
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
-                            {% if usuario.tipo.nombre == "Admin" %}
-                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_proveedores' %}">
-                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
-                            </a>
-                            <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_proveedores_direcciones' %}">
-                                <i class="fa-solid fa-file-arrow-up"> Carga Masiva Direcciones</i>
-                            </a>
-                            {% endif %}
-                            {% if usuario.tipo.proveedores_edicion %}
-                            <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add_proveedores2' %}">
-                                <i class="fa-solid fa-plus"> Agregar Proveedor</i>
-                            </a>
-                           
-                            <a type="button" class="btn btn-outline-info m-1"  href="{% url 'matriz-oc-productos' %}">Reporte Productos OC</a>
-                            {% endif %}
-                        </li>
-
-                    </ul>
-                {% endif %}
+               
             </div>
         </div>  
     </div>
@@ -148,16 +126,18 @@
                     <th scope="col">Contacto</th>
                     <th scope="col">Telefono</th>
                     <th scope="col">Distrito</th>
-                    <th scope="col">Domicilio</th>
-                    <th scope="col">Nombre Comercial</th>
                     <th scope="col">RFC</th>
+                    <th>Políticas</th>
+                    {% if usuario.tipo.proveedores_edicion %}
+                    <th>Documentación</th>
+                    {% endif %}
+                    <th>Cuestionario DD</th>
                     {% if usuario.tipo.proveedores_edicion %}
                     <th scope="col">Edición</th>
                     {% endif %}
                     <th scope="col">Direcciones</th>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <th>Documentación</th>
-                    {% endif %}
+                    <th>Autorizar</th>
+                   
                 </tr>
             </thead>
             <tbody>
@@ -168,13 +148,25 @@
                     <td>{{proveedor.contacto}}</th>
                     <td>{{proveedor.telefono}}</th>
                     <td>{{proveedor.distrito}}</th>
-                    <td>{{proveedor.domicilio}}</th>
-                    {% if not proveedor.nombre_comercial %}
-                    <td></td>
-                    {% else %}
-                    <td>{{proveedor.nombre_comercial}}</td>
-                    {% endif %}
                     <td>{{proveedor.rfc}}</td>
+                    <td>{% if proveedor.politicas_no_autorizadas %}<i class="fa-solid fa-hourglass-half text-warning fa-2x"></i>
+                        {% else %}<i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i></i>{% endif %}</th>
+                    {% if usuario.tipo.proveedores_edicion %}
+                    <td>
+                        {% if proveedor.documentos_completos %}
+                            <a class="btn btn-outline-success" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
+                                <i class="fa-duotone fa-solid fa-file-check fa-2x"></i>
+                            </a>
+                        {% else %}
+                            <a class="btn btn-outline-danger" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
+                               <i class="fa-duotone fa-solid fa-file-xmark fa-2x "></i>
+                            </a>
+                        {% endif %}
+                    </td>
+                    {% endif %}
+                    <td>
+                       <i class="fa-duotone fa-solid text-danger fa-file-xmark fa-2x"></i>
+                    </td>
                     {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
@@ -187,13 +179,15 @@
                             <i class="fa-duotone fa-solid fa-location-dot"></i>
                         </a>
                     </td>
-                    {% if usuario.tipo.proveedores_edicion %}
                     <td>
-                        <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
-                            <i class="fa-duotone fa-solid fa-file-check"></i>
+                        <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-alta-proveedor' proveedor.id %}">
+                            <i class="fa-duotone fa-solid fa-circle-check fa-2x"></i>
+                        </a>
+                        <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="#">
+                           <i class="fa-duotone fa-solid fa-circle-xmark fa-2x"></i>
                         </a>
                     </td>
-                    {% endif %}
+                    
                 </tr>
                 {% endfor %}
             </tbody>

@@ -31,6 +31,7 @@ class Proveedor(models.Model):
     visita = models.BooleanField(default=False)
     familia = models.ForeignKey(Familia, on_delete = models.CASCADE, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+    folio_consecutivo = models.PositiveIntegerField(null=True, blank=True)
     #perfil_proveedor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='prov_perfil')
     comentario_csf = models.CharField(max_length=200,null=True, blank=True)
     comentario_comprobante_domicilio = models.CharField(max_length=200,null=True, blank=True)
