@@ -6,7 +6,7 @@ from gastos.models import Solicitud_Gasto
 from tesoreria.models import Pago
 from compras.models import Compra
 from requisiciones.models import Requis, ValeSalidas, Devolucion
-from compras.models import Compra
+from compras.models import Compra, Proveedor
 from viaticos.models import Solicitud_Viatico
 from user.models import Profile, Tipo_perfil
 from django.db.models import Q
@@ -46,6 +46,7 @@ def contadores_processor(request):
     conteo_devoluciones = 0
     conteo_ordenes = 0
     conteo_pagos2 = 0
+    proveedores_altas = 0
     
     conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
@@ -133,18 +134,7 @@ def contadores_processor(request):
         conteo_requis_pendientes = requis.count()
         conteo_gastos_pendientes = gastos_pendientes.count()
         conteo_viaticos = viaticos_pendientes.count()
-        #if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ":
-
-        #    requisiciones_pendientes = Requis.objects.filter(complete=True, autorizar=None, orden__supervisor = usuario)
-        #    conteo_requis_pendientes = requisiciones_pendientes.count()
-        #elif usuario.tipo.superintendente == True:
-           
-        #if usuario.tipo.almacen == True:
-        #    entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True), req__orden__distrito = usuario.distritos, solo_servicios= False, entrada_completa = False, autorizado2= True).order_by('-folio')
-        #    conteo_entradas = entradas.count()
-        #else:
-        #    entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True),  req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario).order_by('-folio')
-        #    conteo_entradas = entradas.count()
+      
         if usuario.tipo.nombre == 'Admin':
             entradas = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, entrada_completa = False, autorizado2= True, solo_servicios = False)
             servicios = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), req__orden__distrito = usuario.distritos, solo_servicios= True, entrada_completa = False, autorizado2= True)         
@@ -158,7 +148,15 @@ def contadores_processor(request):
             servicios = Compra.objects.filter(Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), solo_servicios= True, entrada_completa = False, autorizado2= True, req__orden__staff = usuario)
         conteo_entradas = entradas.count()
         conteo_servicios = servicios.count()
+
+        if usuario.tipo.proveedores_edicion == True:
+            proveedores_altas = Proveedor.objects.filter(
+            completo=True, 
+            direcciones__estatus__nombre = "PREALTA",
+            ).exclude(familia__nombre="IMPUESTOS").distinct().count()
+
     return {
+    'proveedores_altas':proveedores_altas,
     'conteo_pagos2': conteo_pagos2,
     'conteo_devoluciones': conteo_devoluciones,
     'solicitudes_generadas':solicitudes_generadas,

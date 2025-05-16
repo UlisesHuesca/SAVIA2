@@ -144,6 +144,7 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">ID</th>
+                    <!--<th>Folio</th>-->
                     <th scope="col">Razón Social</th>
                     <th scope="col">Contacto</th>
                     <th scope="col">Telefono</th>
@@ -164,6 +165,7 @@
                 {% for proveedor in proveedores_list %}
                 <tr>
                     <td>{{proveedor.id}}</td>
+                    <!--<td>{{proveedor.folio_consecutivo}}</td>-->
                     <td>{{proveedor.razon_social}}</th>
                     <td>{{proveedor.contacto}}</th>
                     <td>{{proveedor.telefono}}</th>

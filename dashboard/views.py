@@ -575,10 +575,8 @@ def proveedores_altas(request):
    
     #if usuario.tipo.proveedores:
     proveedores = Proveedor.objects.filter(
-            #id__in=proveedores_ids, 
             completo=True, 
             direcciones__estatus__nombre = "PREALTA",
-            #direcciones__distrito__in = almacenes_distritos
             ).exclude(familia__nombre="IMPUESTOS").distinct()
     for proveedor in proveedores:
         proveedor.politicas_no_autorizadas = (
