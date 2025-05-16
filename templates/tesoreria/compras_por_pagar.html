@@ -216,7 +216,8 @@
                     <th class="d-none d-md-table-cell">Condiciones</th>
                     <th>Facturas</th>
                     <th scope="col">Detalles</th>
-                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Alt"%}
+                    <!--if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Alt" -->
+                    {% if usuario.tipo.pagos %}
                     <th>Cancelar</th>
                     <th>Para Pago</th>
                     <th>Parcialidad</th>
