@@ -461,14 +461,18 @@ def compras_pagos(request, pk):
             
             if compra.moneda.nombre == "DOLARES":
                 if pago.cuenta.moneda.nombre == "PESOS": #Si la cuenta es en pesos
+                    #Estoy aca
                     sub.gastado = sub.gastado + monto_actual * pago.tipo_de_cambio
                     monto_actual = monto_actual/pago.tipo_de_cambio
+                    
                 
                 if pago.cuenta.moneda.nombre == "DOLARES":
                     tipo_de_cambio = decimal.Decimal(dof())
                     sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
                 #actualizar la cuenta de la que se paga
+            print('monto_actual:',monto_actual)
             monto_total_pagado= monto_actual + suma_pago
+            print('monto_total_pagado:',monto_total_pagado)
             compra.monto_pagado = monto_total_pagado
             costo_oc = compra.costo_plus_adicionales 
             monto_parcial = compra.parcial + suma_pago
@@ -480,7 +484,7 @@ def compras_pagos(request, pk):
             elif round(monto_total_pagado,0) <= round(costo_oc,0):
                 if round(monto_total_pagado,0) == round(monto_parcial,0):
                     compra.para_pago = False
-                if round(monto_total_pagado,0) == round(costo_oc,0):
+                if round(monto_total_pagado,0) >= round(costo_oc,0):
                     compra.pagada= True
                 archivo_oc = attach_oc_pdf(request, compra.id)
                 pdf_antisoborno = attach_antisoborno_pdf(request)
