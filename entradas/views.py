@@ -389,6 +389,7 @@ def articulos_entrada(request, pk):
                 print('Esta entrado al ciclo de calidad')
                 producto_surtir.surtir = False
                 articulo.liberado = False
+            ############################################################################ Acá empieza el resurtimiento
             if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': # or 
                 #Estas son todas las solicitudes pendientes por surtir que se podrían surtir con el resurtimiento
                 productos_pendientes_surtir = ArticulosparaSurtir.objects.filter(
@@ -401,6 +402,7 @@ def articulos_entrada(request, pk):
                     )
                 inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
                 print(inv_de_producto.cantidad)
+                ################################################################################## Parte crítica del resurtimiento
                 for producto in productos_pendientes_surtir:    #Recorremos todas las solicitudes pendientes por surtir una por una
                     if producto_surtir.cantidad > 0:             #Esto practicamente es un while gracias al for mientras la cantidad del resurtimiento sea mayor que 0
                         cantidad_requisitar = Decimal(producto.cantidad_requisitar).quantize(Decimal('0.01'), rounding=ROUND_DOWN)
@@ -428,6 +430,7 @@ def articulos_entrada(request, pk):
                         if productos_orden == 0:
                             solicitud.requisitar = False
                             solicitud.save()
+            #######################################################################################################
             elif entrada.oc.req.orden.tipo.tipo == 'normal' and articulo.articulo_comprado.producto.producto.articulos.producto.producto.activo == True:
                 print('Activo valores antes de las cuentas')
                 inv_de_producto = Inventario.objects.get(producto = producto_surtir.articulos.producto.producto, distrito = usuario.distritos)
@@ -633,6 +636,7 @@ def update_entrada(request):
     producto_inv = Inventario.objects.get(producto = producto_comprado.producto.producto.articulos.producto.producto, distrito = producto_comprado.oc.req.orden.distrito)
 
     if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': #si es resurtimiento
+        #Esto es solo el artículo original
         producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto_comprado.producto.producto.articulos, surtir=False, articulos__orden__tipo__tipo = 'resurtimiento')
     else:
         #id= producto_comprado.producto.producto.id
@@ -675,10 +679,9 @@ def update_entrada(request):
             ##########################################################InicioEvitar
                 #Esta parte determina el comportamiento de todos las solicitudes que se tienen que activar cuando la entrada es de resurtimiento
                 if entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
-                    if producto_surtir: #producto_surtir es la solicitud de la que proviene el resurtimiento
+                    if producto_surtir: #producto_surtir es la solicitud de la que proviene el resurtimiento (ArticulosparaSurtir)
                         producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #la cantidad de entrada es igual a la sumatoria de la cantidad pendiente_surtir + cantidad de la entrada 
                         producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad 
-                        producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad
                         producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad 
                         if producto_surtir.cantidad_requisitar == 0:
                             producto_surtir.requisitar = False

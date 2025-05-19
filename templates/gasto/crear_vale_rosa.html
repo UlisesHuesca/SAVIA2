@@ -1,0 +1,62 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+{% load i18n %}
+<html>
+<head>
+{% block title %}{% trans "Gasto" %}{% endblock %}
+</head>
+<body>
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="col-lg-6 offset-3">
+<div class="card mt-4" id="cardValeRosa">
+        <div class="card-header">
+            <h4>Agregar Vale Rosa</h4>
+        </div>
+        <div class="card-body">
+            <form method="POST" id="formValeRosa">
+                {% csrf_token %}
+                <div class="mb-2">
+                    <label class="form-label">Motivo</label>
+                    <textarea name="motivo" class="form-control" required></textarea>
+                </div>
+                <div class="mb-2">
+                    <label class="form-label">Monto</label>
+                    <input type="number" name="monto" step="0.01" class="form-control" required>
+                </div>
+                <div class="text-end">
+                    <button type="submit" name="btn_valerosa" class="btn btn-outline-success" title ="Agregar Vale Rosa">
+                        <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
+                    </button>
+                </div>
+            </form>
+            <h5 class="mt-4">Vales Rosa Registrados</h5>
+            <table class="table table-bordered">
+                <thead>
+                    <tr style="background-color: #f8d7da;">
+                        <th>ID</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="valesRosaLista">
+                    {% for vale in gasto.vales_rosa.all %}
+                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>

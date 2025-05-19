@@ -380,11 +380,31 @@ def crear_gasto(request):
     }
     return render(request, 'gasto/crear_gasto.html', context)
 
+@perfil_seleccionado_required
 def agregar_vale_rosa(request, pk):
     gasto = get_object_or_404(Solicitud_Gasto, id=pk)
-    print('pero que')
     
-    return HttpResponse(status=400)
+    if request.method == 'POST':
+        motivo = request.POST.get('motivo')
+        monto = request.POST.get('monto')
+        if motivo and monto:
+            vale = ValeRosa.objects.create(
+                gasto=gasto,
+                motivo=motivo,
+                monto=monto
+            )
+            messages.success(request, 'Vale Rosa agregado exitosamente')
+            return redirect('crear-gasto')
+        else:
+            messages.error(request, 'Por favor completa todos los campos.')
+    else:
+        messages.error(request, 'Método no permitido.')
+    
+    context = {
+        'gasto': gasto,
+    }
+    
+    return render(request, 'gasto/crear_vale_rosa.html', context)
 
 
 
@@ -1198,6 +1218,7 @@ def matriz_facturas_gasto(request, pk):
     gasto = Solicitud_Gasto.objects.get(id = pk)
     articulos_gasto = Articulo_Gasto.objects.filter(gasto = gasto)
     facturas = Factura.objects.filter(solicitud_gasto = gasto, hecho=True)
+    vales_rosa = ValeRosa.objects.filter(gasto = gasto)
     pagos = Pago.objects.filter(gasto = gasto)
     form =  Facturas_Gastos_Form(instance=gasto)
     next_url = request.GET.get('next','mis-gastos')
@@ -1245,7 +1266,7 @@ def matriz_facturas_gasto(request, pk):
         'gasto':gasto,
         'facturas':facturas,
         'usuario':usuario,
-        #'next_url':next_url,
+        'vales_rosa':vales_rosa,
         }
 
     return render(request, 'gasto/matriz_factura_gasto.html', context)

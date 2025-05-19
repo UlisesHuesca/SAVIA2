@@ -249,6 +249,7 @@
                         </a>
                     </li>
                 </ul>
+               
 
                 <!-- Cierre del formulario y botón de cierre de facturas -->
                 {% if usuario.tipo.tesoreria %}
@@ -259,6 +260,25 @@
                     </div>
                 </div>
                 {% endif %}
+
+                 <h6>&nbsp;</h6>
+                <table class="table table-bordered">
+                <thead>
+                    <tr style="background-color: #f8d7da;">
+                        <th>ID</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                    </tr>
+                </thead>
+                <tbody id="valesRosaLista">
+                    {% for vale in gasto.vales_rosa.all %}
+                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                    {% endfor %}
+                </tbody>
+            </table>
 
                 <!-- Botón de cierre -->
                 <hr>

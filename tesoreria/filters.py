@@ -26,7 +26,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
         ('viatico', 'Viatico'),
     ]
 
-    oc = CharFilter(method='my_filter', label='Search')
+    folio = CharFilter(method='my_filter', label='Search')
     proyecto = CharFilter(method ='my_proyecto', label="Search")
     tipo = ChoiceFilter(choices=TIPO_CHOICES, method='filter_by_tipo', label='Tipo') # Changed filter
     facturas_completas = BooleanFilter(method='filter_by_facturas_completas', label='Facturas Completas') # New filter

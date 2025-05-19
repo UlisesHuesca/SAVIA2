@@ -668,6 +668,9 @@ def update_salida(request):
     if action == "add":
         #con cantidad total establezco si la "cantidad" no sobrepasa lo que tengo que surtir(producto.cantidad)     
         cantidad_total = producto.cantidad - cantidad
+        #print('cantidad_total',cantidad_total)
+        #print('cantidad',cantidad)
+        #print('producto.cantidad',producto.cantidad)
         perfil_actual = Profile.objects.get(id=request.session.get('selected_profile_id'))
         
         if producto.seleccionado_salida: #Con esto protejo al proceso de salida de doble selección o selección simultánea	
@@ -676,6 +679,7 @@ def update_salida(request):
             producto.seleccionado_salida = True
             producto.seleccionado_por = perfil_actual
             entradas_dir = EntradaArticulo.objects.filter(articulo_comprado__producto__producto=producto, agotado=False, entrada__oc__req__orden=producto.articulos.orden, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'normal').order_by('id')
+            print('entradas_dir',entradas_dir)
             try:
                 EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False)
                 
@@ -686,10 +690,12 @@ def update_salida(request):
             print('2--->',entrada_res)
             if entradas_dir.exists():
                 entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden)
+                
                 for entrada in entradas:
                     if producto.cantidad > 0:
                         salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
                         salida.precio = entrada.articulo_comprado.precio_unitario
+                        cantidad(entrada.cantidad_por_surtir)
                         if entrada.cantidad_por_surtir >= cantidad:
                             salida.cantidad = cantidad
                             cantidad = 0 #la cantidad se vuelve 0 porque si la condición se cumple indica que la cantidad por surtir es capaz de abastecer toda la cantidad

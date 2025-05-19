@@ -278,9 +278,10 @@ document.getElementById("producto").addEventListener("change", function(element)
             cantidad_pendiente = cantidad_sol
         }
     } else {
-    var cantidad_pendiente = cantidad}
-
-    console.log('stock',stock);
+            cantidad_pendiente = cantidad 
+    }
+    
+    console.log('cantidad_pendiente',cantidad_pendiente);
     var solicitado = document.getElementById('solicitado');
     solicitado.innerHTML = cantidad_pendiente;
 });

@@ -932,6 +932,7 @@ def matriz_pagos(request):
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
             distrito_id = request.POST.get('distrito')
             tesorero_id = request.POST.get('tesorero')
+            folio = request.POST.get('folio')
             tipo_documento = request.POST.get('tipo_documento')
 
             facturas_gastos = Factura.objects.none()
@@ -955,6 +956,11 @@ def matriz_pagos(request):
                     facturas_gastos = facturas_gastos.filter(solicitud_gasto__pagosg__tesorero__id=tesorero_id)
                     facturas_compras = facturas_compras.filter(oc__pagos__tesorero__id=tesorero_id)
                     facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__tesorero__id=tesorero_id)
+                
+                if folio:
+                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__folio__icontains=folio)
+                    facturas_compras = facturas_compras.filter(oc__folio__icontains=folio)
+                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__folio__icontains=folio)
 
             else:
                 facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin], solicitud_gasto__distrito = usuario.distritos)
