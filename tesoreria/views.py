@@ -1446,7 +1446,7 @@ def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, benefici
         'Receptor (Empresa) Nombre': receptor.get('Nombre') if receptor is not None else '',
         'Archivo': nombre_general,
         'EstadoSAT': factura.estado_sat or '',
-        'Fecha Validación SAT': factura.fecha_validacion_sat.strftime("%Y-%m-%d %H:%M:%S") if factura.fecha_validacion_sat else '',
+        'Fecha Validación SAT': timezone.localtime(factura.fecha_validacion_sat).strftime("%Y-%m-%d %H:%M:%S") if factura.fecha_validacion_sat else '',
     }
     return datos
 
