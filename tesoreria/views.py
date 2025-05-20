@@ -958,9 +958,9 @@ def matriz_pagos(request):
                     facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__tesorero__id=tesorero_id)
                 
                 if folio:
-                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__folio__icontains=folio)
-                    facturas_compras = facturas_compras.filter(oc__folio__icontains=folio)
-                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__folio__icontains=folio)
+                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__folio = folio)
+                    facturas_compras = facturas_compras.filter(oc__folio=folio)
+                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__folio = folio)
 
             else:
                 facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin], solicitud_gasto__distrito = usuario.distritos)
