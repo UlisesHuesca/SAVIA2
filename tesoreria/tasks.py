@@ -36,11 +36,13 @@ def extraer_datos_validacion(xml_file_path, factura):
             factura.estado_sat = resultado['EstadoSAT']
             factura.fecha_validacion_sat = now()
             factura.save()
+            
             logging.info(f"✔ Factura ID {factura.id} validada | UUID: {uuid} | Estado: {factura.estado_sat}")
         else:
             factura.estado_sat = 'Datos insuficientes'
             factura.fecha_validacion_sat = now()
             factura.save()
+            
             logging.warning(f"✖ Factura ID {factura.id} sin datos suficientes para validar")
 
 
@@ -77,6 +79,7 @@ def obtener_estado_cfdi(uuid, rfc_emisor, rfc_receptor, total_decimal):
 @shared_task
 def validar_lote_facturas(facturas_gasto_ids, facturas_compra_ids, facturas_viatico_ids):
     logger.info("🚀 Tarea Celery: validar_lote_facturas iniciada")
+    
     for id in facturas_gasto_ids:
         logger.info(f"📄 Procesando GASTO ID: {id}")
         factura = Factura.objects.get(id=id)

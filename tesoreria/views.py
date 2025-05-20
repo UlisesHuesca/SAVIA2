@@ -933,6 +933,7 @@ def matriz_pagos(request):
             distrito_id = request.POST.get('distrito')
             tesorero_id = request.POST.get('tesorero')
             folio = request.POST.get('folio')
+            print(folio)
             tipo_documento = request.POST.get('tipo_documento')
 
             facturas_gastos = Factura.objects.none()
@@ -958,9 +959,15 @@ def matriz_pagos(request):
                     facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__tesorero__id=tesorero_id)
                 
                 if folio:
-                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__folio = folio)
-                    facturas_compras = facturas_compras.filter(oc__folio=folio)
-                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__folio = folio)
+                    #print('folio',int(folio))
+                    viatico = Solicitud_Viatico.objects.get(folio = folio)
+                    facturas_gastos = Factura.objects.filter(solicitud_gasto__folio = folio)
+                    facturas_compras = Facturas.objects.filter(oc__folio= folio)
+                    facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__folio = folio)
+                    #print('viatico',viatico)
+                    #print('facturas_gastos',facturas_gastos)
+                    #print('facturas_compras',facturas_compras)
+                    #print('facturas_viaticos',facturas_viaticos)
 
             else:
                 facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin], solicitud_gasto__distrito = usuario.distritos)
@@ -971,6 +978,7 @@ def matriz_pagos(request):
                 ids_gastos = list(facturas_gastos.values_list('id', flat=True))
                 ids_compras = list(facturas_compras.values_list('id', flat=True))
                 ids_viaticos = list(facturas_viaticos.values_list('id', flat=True))
+                #print(ids_viaticos)
 
                 validar_lote_facturas.delay(ids_gastos, ids_compras, ids_viaticos)
                 
