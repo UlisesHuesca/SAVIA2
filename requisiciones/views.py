@@ -689,16 +689,17 @@ def update_salida(request):
                 entrada_res = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False).order_by('id')
             print('2--->',entrada_res)
             if entradas_dir.exists():
+                #print('Estoy en entradas_dir')
                 entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden)
-                
+                #print('entradas',entradas)
                 for entrada in entradas:
                     if producto.cantidad > 0:
                         salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
                         salida.precio = entrada.articulo_comprado.precio_unitario
-                        cantidad(entrada.cantidad_por_surtir)
+                        print(entrada.cantidad_por_surtir)
                         if entrada.cantidad_por_surtir >= cantidad:
                             salida.cantidad = cantidad
-                            cantidad = 0 #la cantidad se vuelve 0 porque si la condición se cumple indica que la cantidad por surtir es capaz de abastecer toda la cantidad
+                            cantidad = 0 #la cantidad se vuelve 0 porque si la condición se cumple indica que la cantidad_por_surtir es capaz de abastecer toda la cantidad
                             producto.cantidad = producto.cantidad - salida.cantidad
                             salida.entrada = entrada.id
                             entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
