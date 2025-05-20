@@ -309,9 +309,11 @@
                             </a>
                         </li>
                     <!--- aquí iba el endif del fuera de tiempo se quita por indicación de HT 31/12/2024-->
+                        {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" or  usuario.tipo.nombre == "RH" %}
                         <li class="nav-item ms-4">
                             <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
                         </li>
+                        {% endif %}
                         <li class="nav-item ms-4">      
                             <button type="submit" name="salir" class="btn btn-secondary">Cerrar</button>
                         </li>
