@@ -960,7 +960,7 @@ def matriz_pagos(request):
                 
                 if folio:
                     #print('folio',int(folio))
-                    viatico = Solicitud_Viatico.objects.get(folio = folio)
+                    #viatico = Solicitud_Viatico.objects.get(folio = folio)
                     facturas_gastos = Factura.objects.filter(solicitud_gasto__folio = folio)
                     facturas_compras = Facturas.objects.filter(oc__folio= folio)
                     facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__folio = folio)
