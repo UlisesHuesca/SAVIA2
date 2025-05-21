@@ -597,7 +597,7 @@
                             <td>
                             
                             </td>
-                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_calidad %} {{proveedor.comentario_calidad}} {% endif %}</td>
+                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_calificacion %} {{proveedor.comentario_calificacion}} {% endif %}</td>
                             <td class="d-none" id="form_comentario_9_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_9_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -616,14 +616,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "calidad" %}
+                                    {% if documento.tipo_documento == "calificacion" %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "calidad" %}
+                                    {% if documento.tipo_documento == "calificacion" %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -907,11 +907,11 @@
                                     {% for documento in documentos %}
                                         {% if documento.tipo_documento == "carta_credito" %}
                                             {% if documento.validada %}
-                                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfVisita{{documento.id|unlocalize }}" title="Ver Documento Visita">
+                                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfCredito{{documento.id|unlocalize }}" title="Ver Carta de Crédito">
                                                     <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                 </button>
                                             {% else %}
-                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfVisita{{documento.id|unlocalize }}" title="Ver Documento Visita">
+                                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfCredito{{documento.id|unlocalize }}" title="Ver Carta de Crédito">
                                                     <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                 </button>
                                             {% endif %}
@@ -935,7 +935,7 @@
                                                 {% endif %}
                                             {% endfor %}
                                             {% if documentos_count.carta_credito > documentos_validados_count.carta_credito %}
-                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Carta de Crédito" hx-target="#document" hx-get="{% url 'edit-visita' proveedor.id %}">
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Carta de Crédito" hx-target="#document" hx-get="{% url 'edit-carta-credito' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
                                             {% endif %}
@@ -964,14 +964,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "visita" %}
+                                    {% if documento.tipo_documento == "carta_credito" %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "visita" %}
+                                    {% if documento.tipo_documento == "carta_credito" %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
