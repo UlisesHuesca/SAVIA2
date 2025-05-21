@@ -164,7 +164,8 @@ def crear_gasto(request):
     proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
-    tipos = Tipo_Gasto.objects.filter()
+    tipos = Tipo_Gasto.objects.all().exclude(id = 6)
+    print(tipos)
     colaboradores = colaborador.filter(distritos = usuario.distritos, )
     error_messages = {}
 
@@ -761,7 +762,7 @@ def solicitudes_gasto(request):
     elif perfil.tipo.nombre == "Gerente" or perfil.tipo.superintendente == True:
         solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos).order_by('-folio')
     elif perfil.tipo.rh == True and perfil.tipo.documentos == True:    
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos, tipo__tipo__in = ['APOYO DE MANTENIMIENTO', 'APOYO DE RENTA'] ).order_by('-folio')
+        solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos, tipo__tipo__in = ['APOYOS A EMPLEADOS'] ).order_by('-folio')
     else:
         solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
 
@@ -1048,7 +1049,7 @@ def pago_gastos_autorizados(request):
     
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh == True:
-            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYO DE MANTENIMIENTO")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).annotate(
+            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYOS A EMPLEADOS")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).annotate(
                 total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                 )).order_by('-approbado_fecha2')
         else:

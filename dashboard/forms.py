@@ -125,7 +125,7 @@ class Proveedores_Direcciones_BatchForm(forms.ModelForm):
 class AddProduct_Form(forms.ModelForm):
     class Meta:
         model = Product
-        fields = ['codigo','nombre','unidad','familia','subfamilia','iva','activo','critico','servicio','image','gasto']
+        fields = ['codigo','nombre','unidad','familia','subfamilia','iva','activo','critico','servicio','baja_item','image','gasto']
 
 #Sobreescribiendo el método __init__ y configurando el queryset para que esté vacío
     def __init__(self, *args, **kwargs):

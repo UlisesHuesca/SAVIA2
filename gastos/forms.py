@@ -1,5 +1,5 @@
 from django import forms
-from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura
+from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
 from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
 from user.models import Profile
 from dashboard.models import Inventario, Order, Product
@@ -16,6 +16,7 @@ class Solicitud_GastoForm(forms.ModelForm):
         self.fields['colaborador'].queryset = Profile.objects.none()
         self.fields['superintendente'].queryset = Profile.objects.none()
         self.fields['proveedor'].queryset = Proveedor_direcciones.objects.none()
+        self.fields['tipo'].queryset = Tipo_Gasto.objects.none()
 
         if 'superintendente' in self.data:
             try:
@@ -38,6 +39,14 @@ class Solicitud_GastoForm(forms.ModelForm):
                 self.fields['proveedor'].queryset = Proveedor_direcciones.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
+        if 'tipo' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('tipo'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['tipo'].queryset = Tipo_Gasto.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida
+        
 
 class Articulo_GastoForm(forms.ModelForm):
 
