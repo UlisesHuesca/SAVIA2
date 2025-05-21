@@ -475,7 +475,7 @@ def checkout(request):
                     email.content_subtype = "html " # Importante para que se interprete como HTML
                     email.send()
                     messages.success(request, f'La solicitud {order.folio} ha sido creada')
-                except (BadHeaderError, SMTPException) as e:
+                except (BadHeaderError, SMTPException, socket.gaierror) as e:
                     error_message = f'La solicitud {order.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
                     messages.success(request, error_message)
                 order.sol_autorizada_por = Profile.objects.get(id=usuario.id)    
