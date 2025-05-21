@@ -4,6 +4,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
+import socket
 from django.core.paginator import Paginator
 from django.http import HttpResponse, JsonResponse, FileResponse
 from django.conf import settings
@@ -746,7 +747,7 @@ def viaticos_pagos(request, pk):
                     email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
                     email.send()
                     messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
-                except (BadHeaderError, SMTPException) as e:
+                except (BadHeaderError, SMTPException, socket.gaierror) as e:
                     error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
                     messages.success(request, error_message)
                 #Este código es para enviar correo informativo a cada uno de los RH's del distrito del usuario
@@ -781,7 +782,7 @@ def viaticos_pagos(request, pk):
                         email.content_subtype = "html " # Importante para que se interprete como HTML
                         email.attach(f'folio:{viatico.folio}.pdf',archivo_viatico,'application/pdf')
                         email.send()    
-                    except (BadHeaderError, SMTPException) as e:
+                    except (BadHeaderError, SMTPException, socket.gaierror) as e:
                         error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
                         messages.success(request, error_message)
                 return redirect('viaticos-autorizados-pago')
@@ -1147,7 +1148,7 @@ def eliminar_factura_viatico(request, pk):
 
         email.send()
         messages.success(request, f'La factura {factura.id} ha sido eliminada exitosamente')
-    except (BadHeaderError, SMTPException) as e:
+    except (BadHeaderError, SMTPException, socket.gaierror) as e:
         error_message = f'La factura {factura.id} ha sido eliminada, pero el correo no ha sido enviado debido a un error: {e}'
         messages.success(request, error_message)
     factura.delete()
