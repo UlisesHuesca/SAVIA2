@@ -289,7 +289,7 @@
                     </tbody>
                 </table>
                 <div class="row ms-3 my-2">
-                    {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or usuario.tipo.nombre == "Admin"%}
+                    {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
                     <div class="form-check form-switch col-sm">
                         <label for="form.facturas_completas" class="form-check-label"><strong>Facturas Completas</strong></label>
                         {{ form.facturas_completas|add_class:"form-check-input" }}
@@ -309,7 +309,7 @@
                             </a>
                         </li>
                     <!--- aquí iba el endif del fuera de tiempo se quita por indicación de HT 31/12/2024-->
-                        {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" or  usuario.tipo.nombre == "RH" %}
+                        {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                         <li class="nav-item ms-4">
                             <button type="submit" name="btn_factura_completa" class="btn btn-success">Guardar status</button>
                         </li>

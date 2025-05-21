@@ -900,7 +900,7 @@
                             <td>
 
                                 {% if documentos_count.carta_credito == 0 %}   
-                                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Visita" hx-target="#document" hx-get="{% url 'edit-visita' proveedor.id %}">
+                                    <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documento Visita" hx-target="#document" hx-get="{% url 'edit-carta-credito' proveedor.id %}">
                                         <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                     </a>
                                 {% else %}

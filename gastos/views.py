@@ -221,8 +221,8 @@ def crear_gasto(request):
     ]
     
 
-    #articulos_gasto = conceptos.filter(gasto = True, baja_item = False) #Cuando Alberto envie los conceptos se implementa
-    articulos_gasto = conceptos.filter(gasto = True)
+    articulos_gasto = conceptos.filter(gasto = True, baja_item = False) #Cuando Alberto envie los conceptos se implementa
+    #articulos_gasto = conceptos.filter(gasto = True)
     facturas = Factura.objects.filter(solicitud_gasto = gasto)
     form_product = Articulo_GastoForm()
     form = Solicitud_GastoForm()

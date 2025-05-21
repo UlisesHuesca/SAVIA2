@@ -252,7 +252,7 @@
                
 
                 <!-- Cierre del formulario y botón de cierre de facturas -->
-                {% if usuario.tipo.tesoreria %}
+                {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
                 <div class="row ms-3 my-2">
                     <div class="form-check form-switch col-sm">
                         <label for="form.tesoreria_local" class="form-check-label"><strong>Facturas Completas | Validado por: {{ gasto.verificacion_facturas.staff.staff.first_name }} {{ gasto.verificacion_facturas.staff.staff.last_name }}</strong></label>
