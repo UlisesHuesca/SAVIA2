@@ -1648,7 +1648,7 @@ def autorizar_oc1(request, pk):
 
                                     contador += 1  # Incrementar el contador para el siguiente archivo
                         email.send()
-                    except (BadHeaderError, SMTPException) as e:
+                    except (BadHeaderError, SMTPException, socket.gaierror) as e:
                         error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
                 else:
                     html_message = f"""
@@ -1970,7 +1970,7 @@ def autorizar_oc2(request, pk):
 
                                 contador += 1  # Incrementar el contador para el siguiente archivo
                     email.send()
-                except (BadHeaderError, SMTPException) as e:
+                except (BadHeaderError, SMTPException, socket.gaierror) as e:
                     error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  
                 html_message = f"""
                 <html>

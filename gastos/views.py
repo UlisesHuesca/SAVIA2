@@ -1305,7 +1305,7 @@ def matriz_gasto_entrada(request):
 
     #articulos_gasto = Articulo_Gasto.objects.all()
     articulos_gasto = Articulo_Gasto.objects.filter(
-        Q(producto__nombre = "MATERIALES")|Q(producto__nombre = "HERRAMIENTA"), 
+        Q(producto__nombre = "Materiales (Almacén)")|Q(producto__nombre = "HERRAMIENTA"), 
         completo = True, 
         validacion = False, 
         gasto__autorizar = None, 
