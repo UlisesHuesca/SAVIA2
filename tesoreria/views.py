@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, FileResponse, Http404, JsonResponse
 from django.core.mail import EmailMessage, BadHeaderError
+import socket
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
@@ -585,7 +586,7 @@ def compras_pagos(request, pk):
                     )
                     email.content_subtype = "html " # Importante para que se interprete como HTML
                     email.send()
-                except (BadHeaderError, SMTPException) as e:
+                except (BadHeaderError, SMTPException, socket.gaierror) as e:
                     error_message = f'Correo de notificación 1: No enviado'
                 html_message2 = f"""
                 <html>
@@ -674,7 +675,7 @@ def compras_pagos(request, pk):
                                 contador += 1  # Incrementar el contador para el siguiente archivo
                     email.send()
                     messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
-                except (BadHeaderError, SMTPException) as e:
+                except (BadHeaderError, SMTPException, socket.gaierror) as e:
                     error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
                     messages.warning(request, error_message)
             elif round(monto_total_pagado,2) > round(costo_oc,2):
@@ -2006,7 +2007,7 @@ def factura_eliminar(request, pk):
 
         email.send()
         messages.success(request, f'La factura {factura.id} ha sido eliminada exitosamente')
-    except (BadHeaderError, SMTPException) as e:
+    except (BadHeaderError, SMTPException, socket.gaierror) as e:
         error_message = f'La factura {factura.id} ha sido eliminada, pero el correo no ha sido enviado debido a un error: {e}'
         messages.success(request, error_message)
     factura.delete()
@@ -2107,7 +2108,7 @@ def complemento_eliminar(request, pk):
 
         email.send()
         messages.success(request, f'El complemento de pago {complemento.id} ha sido eliminado exitosamente')
-    except (BadHeaderError, SMTPException) as e:
+    except (BadHeaderError, SMTPException, socket.gaierror) as e:
         error_message = f'El complemento {complemento.id} ha sido eliminado, pero el correo no ha sido enviado debido a un error: {e}'
         messages.success(request, error_message)
     complemento.delete()

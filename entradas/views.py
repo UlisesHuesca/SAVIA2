@@ -27,6 +27,7 @@ from io import BytesIO
 from decimal import Decimal, ROUND_DOWN
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
+import socket
 # Import Excel Stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -377,7 +378,7 @@ def articulos_entrada(request, pk):
                 email.content_subtype = "html " # Importante para que se interprete como HTML
                 email.send()
                 messages.success(request, f'La entrada {entrada.folio} ha sido creada')
-            except (BadHeaderError, SMTPException) as e:
+            except (BadHeaderError, SMTPException, socket.gaierror) as e:
                 error_message = f'La entrada {entrada.folio} ha sido creada, pero el correo no ha sido enviado debido a un error: {e}'
                 messages.success(request, error_message)
         for articulo in articulos_entrada:

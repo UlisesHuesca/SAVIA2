@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
+import socket
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.db.models.functions import Concat
@@ -1148,7 +1149,7 @@ def requisicion_autorizar(request, pk):
             email.content_subtype = "html " # Importante para que se interprete como HTML
             email.send()
             messages.success(request,f'Has autorizado la requisición {requi.folio} con éxito')
-        except (BadHeaderError, SMTPException) as e:
+        except (BadHeaderError, SMTPException, socket.gaierror) as e:
             error_message = f'Has autorizado la requisición {requi.folio} con éxito pero el correo de notificación no ha sido enviado debido a un error: {e}'
             messages.success(request, error_message)
         return redirect('requisicion-autorizacion')
@@ -1189,7 +1190,7 @@ def requisicion_cancelar_compras(request, pk):
                     )
                 email.send()
                 messages.success(request,f'Has cancelado la requisición {requis.folio}')
-            except (BadHeaderError, SMTPException) as e:
+            except (BadHeaderError, SMTPException, socket.gaierror) as e:
                 error_message = f'Has cancelado la requisición {requis.folio} con éxito, pero el correo de notificación no ha sido enviado debido a un error: {e}'
                 messages.success(request, error_message)
             return redirect('requisicion-autorizada')
@@ -1230,7 +1231,7 @@ def requisicion_cancelar(request, pk):
                     )
                 email.send()
                 messages.success(request,f'Has cancelado la requisición {requis.folio}')
-            except (BadHeaderError, SMTPException) as e:
+            except (BadHeaderError, SMTPException, socket.gaierror) as e:
                 error_message = f'Has cancelado la requisición {requis.folio} con éxito, pero el correo de notificación no ha sido enviado debido a un error: {e}'
                 messages.success(request, error_message)
             return redirect('requisicion-autorizacion')
