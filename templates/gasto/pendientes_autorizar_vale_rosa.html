@@ -1,0 +1,131 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Solicitudes | Vista: Por orden{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+
+
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                var m = "{{ message }}";
+                swal("Excelente !", m, "success")
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<div class = "row mt-2">
+    <div class="col-md-12">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr style="background-color: #f8d7da;">
+                    <th scope="col">Folio</th>
+                    <th scope="col">Solicitado por</th>
+                    <th>Solicitado para:</th>
+                    <th scope="col">Autorización</th>
+                    <th scope="col">Creado</th>
+                    <th>Comentarios Gasto</th>
+                    <th>Motivo Vale</th>
+                    <th scope="col">Total Gasto</th>
+                    <th>Monto Vale</th>
+                    <th scope="col">Acción</th>
+                   
+                </tr>
+            </thead>
+            <tbody>
+                
+                {% for vale in vales_rosa %}
+                <tr>
+                    <th scope="row">{{vale.gasto.folio}}</th>
+                    <td>{{vale.gasto.staff.staff.staff.first_name}} {{vale.gasto.staff.staff.staff.last_name}}</td>
+                    <td>{% if vale.gasto.colaborador %}{{vale.gasto.colaborador.staff.staff.first_name}} {{vale.gasto.colaborador.staff.staff.last_name}}{% elif vale.gasto.proveedor %} {{vale.gasto.proveedor}} {% endif %}</td>
+                    <td>{{vale.gasto.superintendente.staff.staff.first_name}} {{vale.gasto.superintendente.staff.staff.last_name}}</td>
+                   
+                    <td>{{vale.gasto.created_at}}</td>
+                    <td>{% if vale.gasto.comentario %}
+                        {{vale.gasto.comentario}}
+                        {% else %}
+                            {% for articulo in vale.gasto.articulos.all %}
+                                {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                            No hay comentarios disponibles
+                            {% endfor %}
+                        {% endif %}
+                    </td>
+                    <td>{{vale.motivo}}</td>
+                    <td>${{vale.gasto.get_total_solicitud}}
+                    <td>${{vale.monto}}</td>
+                    <td>
+                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-vale-rosa' vale.id %}" ><i class="fa-solid fa-check fa-xl"></i></a>
+                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="#"><i class="fa-solid fa-xmark fa-xl"></i></a>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if ordenes_list.has_previous %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+                {% for page in ordenes_list.paginator  %}
+                {% if ordenes_list.number == page.number %}
+                <li class="page-item active" aria-current="page"><a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% else %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="?page={{page.number}}" id={{page.number}}>{{page.number}}</a></li>
+                {% endif %}
+                {% endfor %}
+                {% if ordenes_list.has_next %}
+                <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-right"></i></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+
+
+</script>
+{% endblock %}
+</body>
+</html>

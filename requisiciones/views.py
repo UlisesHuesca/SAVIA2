@@ -690,7 +690,7 @@ def update_salida(request):
                 entrada_res = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto = inv_del_producto, articulo_comprado__producto__producto__articulos__orden__tipo__tipo = 'resurtimiento', agotado = False).order_by('id')
             print('2--->',entrada_res)
             if entradas_dir.exists():
-                #print('Estoy en entradas_dir')
+                print('Estoy en entradas_dir')
                 entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden)
                 #print('entradas',entradas)
                 for entrada in entradas:
@@ -755,7 +755,7 @@ def update_salida(request):
                         #    producto.requisitar = False  #Esta línea se considera errónea 04/12/2024
                         if producto.cantidad <= 0:
                             producto.surtir = False
-                        print(salida)
+                        #print(salida)
                         entrada.save()
                         producto.save()
                         inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
@@ -765,6 +765,7 @@ def update_salida(request):
             else:    #si no hay resurtimiento
                 # Verificar si ya existe un registro similar creado en el último segundo
                 now = timezone.now()
+                print('Estoy aca')
                 similar_entries = Salidas.objects.filter(
                     producto=producto,
                     vale_salida=vale_salida,

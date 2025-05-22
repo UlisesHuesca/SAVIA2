@@ -396,7 +396,7 @@ def agregar_vale_rosa(request, pk):
                 monto=monto
             )
             messages.success(request, 'Vale Rosa agregado exitosamente')
-            return redirect('crear-gasto')
+            return redirect('mis-gastos')
         else:
             messages.error(request, 'Por favor completa todos los campos.')
     else:
@@ -880,10 +880,6 @@ def gastos_pendientes_autorizar2(request):
 
         solicitud.proyectos = ', '.join(proyectos)
         solicitud.subproyectos = ', '.join(subproyectos)
-    #Set up pagination
-    p = Paginator(solicitudes, 10)
-    page = request.GET.get('page')
-    ordenes_list = p.get_page(page)
 
     #Set up pagination
     p = Paginator(solicitudes, 10)
@@ -900,6 +896,53 @@ def gastos_pendientes_autorizar2(request):
         }
 
     return render(request, 'gasto/pendientes_autorizar_gasto2.html', context)
+
+@perfil_seleccionado_required
+def vales_rosa_pendientes_autorizar(request):
+
+    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
+    pk = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk)    
+    
+    #vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__superintendente = perfil).order_by('-gasto__folio')
+    vales_rosa = ValeRosa.objects.filter(esta_aprobado = None).order_by('-gasto__folio')
+    
+    #myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
+    #solicitudes = myfilter.qs
+
+    #for solicitud in solicitudes:
+    #   articulos_gasto = Articulo_Gasto.objects.filter(gasto=solicitud)
+
+    #    proyectos = set()
+    #    subproyectos = set()
+
+    #    for articulo in articulos_gasto:
+    #        if articulo.proyecto:
+    #            proyectos.add(str(articulo.proyecto.nombre))
+    #        if articulo.subproyecto:
+    #            subproyectos.add(str(articulo.subproyecto.nombre))
+
+    #    solicitud.proyectos = ', '.join(proyectos)
+    #    solicitud.subproyectos = ', '.join(subproyectos)
+
+
+    #Set up pagination
+    #p = Paginator(solicitudes, 10)
+    #page = request.GET.get('page')
+    #ordenes_list = p.get_page(page)
+
+    #if request.method =='POST' and 'btnExcel' in request.POST:
+
+        #return convert_excel_solicitud_matriz(solicitudes)
+
+    context= {
+        #'ordenes_list':ordenes_list,
+        #'myfilter':myfilter,
+        'vales_rosa':vales_rosa,
+        }
+
+    return render(request, 'gasto/pendientes_autorizar_vale_rosa.html', context)
+
 
 @perfil_seleccionado_required
 def autorizar_gasto(request, pk):
@@ -1029,6 +1072,44 @@ def cancelar_gasto2(request, pk):
 
     return render(request,'gasto/cancelar_gasto2.html', context)
 
+@perfil_seleccionado_required
+def autorizar_vale_rosa(request, pk):
+    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)    
+
+    #productos = Articulo_Gasto.objects.filter(gasto__id=pk)
+    vale = ValeRosa.objects.get(id = pk)
+
+    #context= {
+    #    'productos':productos,
+    #    'facturas':facturas,
+    #    'pk':pk,
+    #   }
+
+    gasto = Solicitud_Gasto.objects.get(id = vale.gasto.id)
+    #productos = Articulo_Gasto.objects.filter(gasto = gasto)
+
+    if request.method =='POST' and 'btn_autorizar' in request.POST:
+        vale.esta_aprobado = True
+        vale.aprobado_en = datetime.now()
+        #gasto.approved_at_time = datetime.now().time()
+        vale.aprobado_por = perfil
+        if perfil.tipo.subdirector == True:
+            gasto.autorizar2 = True
+            gasto.approbado_fecha2 = datetime.now()
+        
+        vale.save()
+        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {vale.id}')
+        return redirect ('gastos-pendientes-autorizar')
+
+
+    context = {
+        'vale': vale,
+        #'productos': productos,
+    }
+
+    return render(request,'gasto/autorizar_vale_rosa.html', context)
 
 def get_subproyectos(request):
     proyecto_id = request.GET.get('proyecto_id')

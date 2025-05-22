@@ -31,5 +31,7 @@ urlpatterns = [
     path('factura_cfdi_gasto/<int:pk>/', views.generar_cfdi_gasto, name='generar_cfdi_gasto'),
     path('prellenar_formulario_gastos/', views.prellenar_formulario_gastos, name='prellenar_formulario_gastos'),
     path('gasto/vale_rosa/<int:pk>', views.agregar_vale_rosa, name='agregar-vale-rosa'),
+    path('gasto/vales_rosa_pendientes_autorizar/', views.vales_rosa_pendientes_autorizar, name='vales-rosa-pendientes-autorizar'),
+    path('gasto/autorizar_vale_rosa/<int:pk>/', views.autorizar_vale_rosa, name = 'autorizar-vale-rosa'),
 ]
     

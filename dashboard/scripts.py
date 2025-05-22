@@ -140,7 +140,7 @@ def corregir_articulos_salida():
             articulo.cantidad = 0
             articulo.save(update_fields=['salida', 'surtir', 'cantidad'])
             modificados += 1
-            logger.info(f"Corregido artículo ID={articulo.id} desde salida ID={salida.id}")
+            logger.info(f"Antes: orden={articulo.articulos.orden.folio} distrito={articulo.articulos.orden.distrito} cantidad={articulo.cantidad} salida={articulo.salida} surtir={articulo.surtir}")
 
     logger.info(f"Evaluadas: {total_salidas} salidas completadas.")
     logger.info(f"Artículos corregidos: {modificados}")
