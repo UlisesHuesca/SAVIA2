@@ -905,7 +905,11 @@ def vales_rosa_pendientes_autorizar(request):
     perfil = Profile.objects.get(id = pk)    
     
     #vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__superintendente = perfil).order_by('-gasto__folio')
-    vales_rosa = ValeRosa.objects.filter(esta_aprobado = None).order_by('-gasto__folio')
+    #print(perfil.tipo.nombre)
+    if perfil.tipo.nombre == "Admin":
+        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None).order_by('-gasto__folio')
+    else:
+        vales_rosa = ValeRosa.objects.none()
     
     #myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
     #solicitudes = myfilter.qs
