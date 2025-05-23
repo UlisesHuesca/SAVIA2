@@ -321,21 +321,22 @@
                 </div>
             </div>
             <div class="row">
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
-                            <label style="color: #121212;" for="id_precio_unitario">{% trans "Precio Unitario" %}*</label>
-                        </div>
-                    </div>
-                </div>
+               
                 <div class="col-lg-4 col-sm-12">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
                             {{form_product.cantidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cantidad"}}
                             <label style="color: #121212;" for="id_cantidad">{% trans "Cantidad" %}*</label>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
+                            <label style="color: #121212;" for="id_precio_unitario">{% trans "Precio Unitario" %}*</label>
                         </div>
                     </div>
                 </div>
@@ -942,10 +943,11 @@ $(document).ready(function() {
         var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
         cambio_en_formulario(data,'tipo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
         // Mostrar o esconder el div basado en el valor seleccionado}
-        console.log(data.text)
-        if (data.text === "4:IMPUESTOS") {
+        console.log(typeof data.text)
+        if (data.text == "IMPUESTOS") {
                 $('#proveedor_parrafo').removeClass('d-none');
         } else {
+            console.log("salí")
             $('#proveedor_parrafo').addClass('d-none');
         }
     

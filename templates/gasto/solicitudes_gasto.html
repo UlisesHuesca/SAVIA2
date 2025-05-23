@@ -113,7 +113,7 @@
 </div>
 
 <div class = "row mt-2">
-    <div class="card">>
+    <div class="card">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -121,7 +121,7 @@
                     <th>Comentario</th>
                     <th scope="col">Solicitado por</th>
                     <th scope="col">Solicitado para:</th>
-                    <th scope="col">Autorización N1</th>
+                    <th scope="col">Autorización<span class="badge bg-primary">1</span></th>
                     <th>Autorización Gerente</th>
                     <th scope="col">Tipo</th>
                     <th scope="col">Creado</th>
@@ -150,7 +150,12 @@
                         {% endif %}
                     </td>
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
-                    <td>{% if orden.colaborador %}{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}{% elif orden.proveedor %} {{orden.proveedor}}{% endif %}</td>
+                    <td>
+                        {% if orden.proveedor %}<span class="badge bg-primary"> {{orden.proveedor}} </span>
+                        {% elif orden.colaborador %}{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}
+                        {% else %}{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}
+                        {% endif %}
+                    </td>
                     {% if orden.get_validado %}
                     <td>{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}
                         {% if orden.autorizar %} 

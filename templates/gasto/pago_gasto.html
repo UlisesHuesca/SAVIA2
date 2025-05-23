@@ -5,7 +5,7 @@
 {% load widget_tweaks %}
 <html>
 <head>
-{% block title %}Autorización OC{% endblock %}
+{% block title %}Pago Gasto{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -42,78 +42,54 @@
     <div class="col-lg-6 offset-md-3">
     <div class="card">
         <div class="card-header">
-            <h5 id="gasto" value="{{gasto.id}}">Gasto: {{gasto.folio}} | Pago: {{pago.id}}</h5>
+            <h5 id="gasto" value="{{gasto.id}}">Gasto: {{pago.gasto.folio}} | Pago: {{pago.id}}</h5>
         </div>
 
         <div class="card-body">
                 <table class='table table-striped'>
                     <thead>
-                        {% if pago.gasto.proveedor %}
+                       
                         <tr>
-                        <th scope="col">Solicitante:</th>
-                        <th scope="col">{{pago.gasto.proveedor.nombre.razon_social}}</th>
+                            <th scope="col">Solicitante:</th>
+                            <th>{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</th>
+                        </tr>
+                        <tr>
+                            <th>Solicitado para:</th>
+                            <th scope="col">
+                                {% if pago.gasto.proveedor %}<span class="badge bg-primary"> {{pago.gasto.proveedor}} </span>
+                                {% elif gasto.colaborador %}{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}}
+                                {% else %} NA
+                                {% endif %}
+                            </th>
                         </tr>
                     </thead>
                     <tbody>
                         
                         <tr>
                             <th scope="col">Banco:</th>
-                            <th scope="col">{{pago.gasto.proveedor.banco}}</th>
+                            <th>{% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.banco}}
+                                 {% else  %}{{pago.gasto.staff.staff.banco}}{% endif %}
+                                
+                            </th>
                         </tr>
                         <tr>
                             <th scope="col">Cuenta:</th>
-                            <th scope="col">{{pago.gasto.proveedor.cuenta}}</th>
+                            <th scope="col">
+                                {% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.cuenta_bancaria}}
+                                 {% else %}{{pago.gasto.staff.staff.cuenta_bancaria}}{% endif %}
+                            </th>
                         </tr>
                         <tr>
                             <th scope="col">Clabe:</th>
-                            <th scope="col">{{pago.gasto.proveedor.clabe}}</th>
+                            <th scope="col">
+                               {% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.clabe}}
+                                 {% else %}{{pago.gasto.staff.staff.clabe}}{% endif %}
+                            </th>
                         </tr>
-                         {% elif pago.gasto.colaborador %}
-                        <tr>
-                        <th scope="col">Solicitante:</th>
-                        <th scope="col">{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.colaborador.staff.staff.staff.last_name}}</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        <tr>
-                            <th>Empresa</th>
-                            <th>{{pago.gasto.colaborador.staff.empresa}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Banco:</th>
-                            <th scope="col">{{pago.gasto.colaborador.staff.banco}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Cuenta:</th>
-                            <th scope="col">{{pago.gasto.colaborador.staff.cuenta_bancaria}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Clabe:</th>
-                            <th scope="col">{{pago.gasto.colaborador.staff.clabe}}</th>
-                        </tr>
-                        {% else %}
-                            
-                        <tr>
-                            <th>Empresa</th>
-                            <th>{{pago.gasto.staff.staff.empresa}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Solicitante:</th>
-                            <th scope="col">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Banco:</th>
-                            <th scope="col">{{pago.gasto.staff.staff.banco}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Cuenta:</th>
-                            <th scope="col">{{pago.gasto.staff.staff.cuenta_bancaria}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Clabe:</th>
-                            <th scope="col">{{pago.gasto.staff.staff.clabe}}</th>
-                        </tr>
-                        {% endif %}
+                   
                     </tbody>
                 </table>
                 <hr>

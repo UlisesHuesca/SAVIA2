@@ -127,7 +127,9 @@
                 {% for gasto in gastos %}
                 <tr>
                     <th>{{gasto.folio}}</th>
-                    <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
+                    <td class="d-none d-lg-table-cell">
+                        {{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}
+                    </td>
                     <td>{% if gasto.comentario %}
                         {{gasto.comentario}}
                         {% else %}
@@ -151,7 +153,9 @@
                     {% else %}
                     <td><span class="badge bg-warning">Llevar Material a Almacén</span></td>
                     {% endif %}
-                    {% if gasto.colaborador %}
+                    {% if gasto.tipo.tipo == "IMPUESTOS" %}
+                    <td class="d-none d-lg-table-cell"> <span class="badge bg-primary"> {{gasto.proveedor.nombre.razon_social}}</span></td>
+                    {% elif gasto.colaborador %}
                     <td class="d-none d-lg-table-cell">{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
                     {% else %}
                     <td class="d-none d-lg-table-cell">{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>

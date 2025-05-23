@@ -200,7 +200,11 @@
                 <tr>
                     <th scope="row">{{gasto.folio}}</th>
                     <td>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
-                    <td>{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>
+                    <td>   
+                        {% if gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
+                        {% elif gasto.colaborador %}{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}
+                        {% endif %}
+                    </td> 
                     <td>{{gasto.proyectos}}</td>
                     <td>{{gasto.subproyectos}}</td>
                     <td>{{gasto.tipo.tipo}}</td>
