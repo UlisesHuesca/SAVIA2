@@ -906,8 +906,8 @@ def vales_rosa_pendientes_autorizar(request):
     
     #vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__superintendente = perfil).order_by('-gasto__folio')
     #print(perfil.tipo.nombre)
-    if perfil.tipo.nombre == "Admin":
-        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None).order_by('-gasto__folio')
+    if perfil.tipo.nombre == "Admin": #Temporalmente hasta que este listo el desarrollo
+        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True  ).order_by('-gasto__folio')
     else:
         vales_rosa = ValeRosa.objects.none()
     
