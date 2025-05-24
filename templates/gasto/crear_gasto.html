@@ -128,6 +128,85 @@
                 </form> 
             </div>
         </div>
+        <div class="card mt-2 d-none" id="cardTxt"> 
+            <div class="card-header">
+                <h4>Nómina</h4>
+            </div>
+            <div class="card-body">  
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if not archivo_bbva %}      
+                    <label>Archivo Lote BBVA:</label> 
+                    <div class="input-group mb-3" title="Archivo BBVA">
+                        <span class="input-group-text" >
+                            <i class="fa-duotone fa-solid fa-file"></i>
+                        </span>
+                        <input type="file" name="archivo_bbva" class="form-control" accept=".txt">
+                    </div> 
+                    {% endif %}
+                    {% if not archivo_ob %}
+                    <label>Archivo Otros Bancos (OB):</label> 
+                    <div class="input-group mb-3" title="Otros Bancos">
+                        <span class="input-group-text" >
+                            <i class="fa-duotone fa-solid fa-file"></i>
+                        </span>
+                        <input type="file" name="archivo_ob" class="form-control" accept=".txt">
+                    </div> 
+                    {% endif %}
+                    {% if not archivo_pensiones %}
+                    <label>Archivo Pensiones:</label> 
+                    <div class="input-group mb-3" title="Pensiones">
+                        <span class="input-group-text" >
+                            <i class="fa-duotone fa-solid fa-file"></i>
+                        </span>
+                        <input type="file" name="archivo_pensiones" class="form-control" accept=".txt">
+                    </div> 
+                    {% endif %}
+                    {% if not archivo_bbva and not archivo_ob and not archivo_pensiones %}
+                    <div class="text-end">
+                        <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_nomina" id="btn_nomina" type="submit" value='Subir Nómina'>
+                    </div>
+                    {% endif %}
+                </form>
+               {% if archivo_bbva or archivo_ob or archivo_pensiones %}
+                    <div class="alert mt-3">
+                        <h5>Totales de Nómina Cargados:</h5>
+                        <ul>
+                            {% if archivo_bbva %}
+                                <li>
+                                    <strong>BBVA:</strong> ${{ archivo_bbva.total|floatformat:2 }}
+                                    <a href="{{ archivo_bbva.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                       <i class="fa-duotone fa-solid fa-file"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if archivo_ob %}
+                                <li>
+                                    <strong>Otros Bancos (OB):</strong> ${{ archivo_ob.total|floatformat:2 }}
+                                    <a href="{{ archivo_ob.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                        <i class="fa-duotone fa-solid fa-file"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if archivo_pensiones %}
+                                <li>
+                                    <strong>Pensiones:</strong> ${{ archivo_pensiones.total|floatformat:2 }}
+                                    <a href="{{ archivo_pensiones.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                        <i class="fa-duotone fa-solid fa-file"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                        {% if total_nomina %}
+                            <div class="alert alert-primary mt-2">
+                                <strong>Total de nómina:</strong> ${{ total_nomina|floatformat:2 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
         <div class="card mt-2 d-none" id="cardFacturas"> 
             <div class="card-header">
 					<h4>{% trans "Subir Facturas" %}</h4>
@@ -943,12 +1022,19 @@ $(document).ready(function() {
         var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
         cambio_en_formulario(data,'tipo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
         // Mostrar o esconder el div basado en el valor seleccionado}
-        console.log(typeof data.text)
+        console.log(data.text)
         if (data.text == "IMPUESTOS") {
                 $('#proveedor_parrafo').removeClass('d-none');
         } else {
             console.log("salí")
             $('#proveedor_parrafo').addClass('d-none');
+        }
+        if (data.text == "NOMINA") {
+            console.log("nomina")
+            $('#cardTxt').removeClass('d-none');
+        } else {
+            console.log("nn")
+            $('#cardTxt').addClass('d-none');
         }
     
     });
@@ -972,6 +1058,13 @@ $(document).ready(function() {
                 $('#proveedor_parrafo').removeClass('d-none');
             } else {
                 $('#proveedor_parrafo').addClass('d-none');
+            }
+            console.log(datos.tipo_text)
+            if (datos.tipo_text == "NOMINA") {
+                
+                $('#cardTxt').removeClass('d-none');
+            } else {
+                $('#cardTxt').addClass('d-none');
             }
         }
     }

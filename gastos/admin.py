@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Porcentaje_iva, ValeRosa
+from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Porcentaje_iva, ValeRosa, TipoArchivoNomina, ArchivoNomina
 # Register your models here.
 class Solicitud_Gasto_Admin(admin.ModelAdmin):
     list_display = ('id','created_at','folio','staff','colaborador', 'superintendente','pagada',)
@@ -38,3 +38,7 @@ admin.site.register(Factura, Factura_Admin)
 admin.site.register(Porcentaje_iva)
 
 admin.site.register(ValeRosa)
+
+admin.site.register(TipoArchivoNomina)
+
+admin.site.register(ArchivoNomina)

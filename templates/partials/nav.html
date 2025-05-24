@@ -333,6 +333,17 @@
                         <div class="dropdown-divider"></div>
                         </div>
                     </div>
+                    {% if usuario.tipo.finanzas == True %}
+                    <div>
+                    {% else %}
+                    <div class="d-none">
+                    {% endif %}
+                        <h6 class="dropdown-header">Finanzas</h6>
+                        <div class="dropdown-divider"></div>
+                        <div>
+                             <a class="dropdown-item" href="#"></a>
+                        </div>
+                    </div>
                     {% if usuario.tipo.autorizacion == True %}
                     <div>
                     {% else %}

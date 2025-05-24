@@ -18,7 +18,7 @@ import zipfile
 from smtplib import SMTPException
 import logging
 import socket
-from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa
+from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoNomina, ArchivoNomina
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile
@@ -142,11 +142,44 @@ def extraer_datos_del_xml(archivo_xml):
         print("Complemento no encontrado")
         return None, None
 ################################################################################################################################
+def procesar_bbva(archivo):
+    total = 0.0
+    for linea in archivo:
+        linea = linea.decode('utf-8').strip()
+        # Encontrar la última secuencia de 15 dígitos seguidos de letras (nombre)
+        import re
+        match = re.search(r'(\d{15})([A-ZÁÉÍÓÚÑ\s]{5,})', linea)
+        if match:
+            sueldo_str = match.group(1)
+            if sueldo_str.isdigit():
+                total += int(sueldo_str) / 100.0
+    return total
+
+def procesar_ob(archivo):
+    total = 0.0
+    for linea in archivo:
+        linea = linea.decode('utf-8').strip()
+        if 'MXP' in linea:
+            try:
+                inicio = linea.index('MXP') + 3
+                fin = inicio
+                while fin < len(linea) and (linea[fin].isdigit() or linea[fin] == '.'):
+                    fin += 1
+                sueldo_str = linea[inicio:fin]
+                total += float(sueldo_str)
+            except:
+                continue
+    return total
+
+def procesar_pensiones(archivo):
+    return procesar_ob(archivo)  # Mismo formato que OB
+
 
 @perfil_seleccionado_required
 def crear_gasto(request):
     colaborador = Profile.objects.all()
     articulos_gasto = Articulo_Gasto.objects.all()
+    
     conceptos = Product.objects.all()
     pk = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk)
@@ -237,6 +270,12 @@ def crear_gasto(request):
             'iva': str(item.iva)
         } for item in articulos_gasto
     ]
+
+    archivos_nomina = ArchivoNomina.objects.filter(solicitud=gasto)
+
+    total_bbva = archivos_nomina.filter(tipo__nombre='BBVA').first()
+    total_ob = archivos_nomina.filter(tipo__nombre='OB').first()
+    total_pensiones = archivos_nomina.filter(tipo__nombre='PENSIONES').first()
 
     if request.method =='POST': 
         if "btn_agregar" in request.POST:
@@ -353,8 +392,47 @@ def crear_gasto(request):
                     creado_por=usuario
                 )
                 return redirect('crear-gasto')
+        if "btn_nomina" in request.POST:
+            total_bbva = total_ob = total_pensiones = 0.0
+            archivo_bbva = request.FILES.get('archivo_bbva')
+            archivo_ob = request.FILES.get('archivo_ob')
+            archivo_pensiones = request.FILES.get('archivo_pensiones')
 
-    #total = sum([factura.emisor['total'] for factura in facturas if factura.emisor and 'total' in factura.emisor and factura.emisor['total']])
+            try:
+                if archivo_bbva:
+                    total_bbva = procesar_bbva(archivo_bbva)
+                    tipo_bbva = TipoArchivoNomina.objects.get(nombre='BBVA')
+                    ArchivoNomina.objects.create(
+                        solicitud=gasto,
+                        tipo=tipo_bbva,
+                        archivo=archivo_bbva,
+                        total=total_bbva
+                    )
+                if archivo_ob:
+                    total_ob = procesar_ob(archivo_ob)
+                    tipo_ob = TipoArchivoNomina.objects.get(nombre='OB')
+                    ArchivoNomina.objects.create(
+                        solicitud=gasto,
+                        tipo=tipo_ob,
+                        archivo=archivo_ob,
+                        total=total_ob
+                    )
+                if archivo_pensiones:
+                    total_pensiones = procesar_pensiones(archivo_pensiones)
+                    tipo_pensiones = TipoArchivoNomina.objects.get(nombre='PENSIONES')
+                    ArchivoNomina.objects.create(
+                        solicitud=gasto,
+                        tipo=tipo_pensiones,
+                        archivo=archivo_pensiones,
+                        total=total_pensiones
+                    )
+
+
+                messages.success(request, f'Total BBVA: ${total_bbva:,.2f}, OB: ${total_ob:,.2f}, Pensiones: ${total_pensiones:,.2f}')
+            except Exception as e:
+                messages.error(request, f'Error al procesar archivos de nómina: {str(e)}')
+
+    total_nomina = archivos_nomina.aggregate(suma=Sum('total'))['suma'] or 0.0
 
 
 
@@ -368,9 +446,11 @@ def crear_gasto(request):
         'proveedores_para_select2':proveedores_para_select2,
         'facturas':facturas,
         'productos':productos,
-        #'colaborador':colaborador,
+        'archivo_bbva': total_bbva,
+        'archivo_ob': total_ob,
+        'archivo_pensiones': total_pensiones,
         'form':form,
-        #'total': total,
+        'total_nomina': total_nomina,
         'form_product': form_product,
         #'articulos':articulos,
         #'articulos_gasto':articulos_gasto,
@@ -906,10 +986,13 @@ def vales_rosa_pendientes_autorizar(request):
     
     #vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__superintendente = perfil).order_by('-gasto__folio')
     #print(perfil.tipo.nombre)
-    if perfil.tipo.nombre == "Admin": #Temporalmente hasta que este listo el desarrollo
-        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True).order_by('-gasto__folio')
+    #if perfil.tipo.nombre == "Admin": #Temporalmente hasta que este listo el desarrollo
+    if perfil.distritos.nombre == 'MATRIZ':
+        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__superintendente = perfil).order_by('-gasto__folio')
     else:
-        vales_rosa = ValeRosa.objects.none()
+        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__autorizado_por2 = perfil ).order_by('-gasto__folio')
+    #else:
+    #   vales_rosa = ValeRosa.objects.none()
     
     #myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
     #solicitudes = myfilter.qs
@@ -1099,13 +1182,13 @@ def autorizar_vale_rosa(request, pk):
         vale.aprobado_en = datetime.now()
         #gasto.approved_at_time = datetime.now().time()
         vale.aprobado_por = perfil
-        if perfil.tipo.subdirector == True:
-            gasto.autorizar2 = True
-            gasto.approbado_fecha2 = datetime.now()
+        #if perfil.tipo.subdirector == True:
+        #    gasto.autorizar2 = True
+        #    gasto.approbado_fecha2 = datetime.now()
         
         vale.save()
         messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {vale.id}')
-        return redirect ('gastos-pendientes-autorizar')
+        return redirect ('vales-rosa-pendientes-autorizar')
 
 
     context = {
@@ -1586,9 +1669,12 @@ def render_pdf_gasto(pk):
     gasto = Solicitud_Gasto.objects.get(id=pk)
     productos = Articulo_Gasto.objects.filter(gasto=gasto, completo=True)
     facturas = Factura.objects.filter(solicitud_gasto = gasto, hecho = True)
+    vales = ValeRosa.objects.filter(gasto = gasto)
 
     data_facturas = [['Datos de XML', 'Nombre', 'Monto']]  # Encabezados de la tabla de facturas
     total_facturas = 0
+    total_vales = 0
+    total_comprobado = 0
     suma_total = Decimal('0.00')
 
     styles = getSampleStyleSheet()
@@ -1599,7 +1685,8 @@ def render_pdf_gasto(pk):
         fontSize=10,
         alignment=1,  # Alineación centrada (0 = izquierda, 1 = centro, 2 = derecha)
     )
-
+    for vale in vales:
+        total_vales += float(vale.monto)
     # Iterar sobre cada factura y sumar el total
     for factura in facturas:
         try:
@@ -1910,21 +1997,22 @@ def render_pdf_gasto(pk):
     """
     #Parrafó de totales
     data_totales = []
-    diferencia_totales = total_facturas - float(gasto.get_total_solicitud)
+    total_comprobado = total_facturas + total_vales
+    diferencia_totales = total_comprobado - float(gasto.get_total_solicitud)
     if diferencia_totales > 0:
         color_diferencia = colors.green
     elif diferencia_totales < 0:
         color_diferencia = colors.red
     else:
         color_diferencia = colors.black 
-    total_str = "${:,.2f}".format(total_facturas)  # Convierte Decimal a string y formatea
+    total_str = "${:,.2f}".format(total_comprobado)  # Convierte Decimal a string y formatea
     # 4. Posición de la tabla de facturas en el PDF
     # Asumiendo que 'y_pos' es la posición Y después de dibujar la tabla secundaria y cualquier otro contenido
     
 
     data_totales = [
     ['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
-    ['$' + str(gasto.get_total_solicitud), f"${total_facturas:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
+    ['$' + str(gasto.get_total_solicitud), f"${total_comprobado:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
     ]
 
     #data_totales.append(['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'])  # Encabezados de la tabla secundaria
