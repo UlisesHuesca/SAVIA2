@@ -94,7 +94,7 @@ def contadores_processor(request):
             conteo_oc1 = oc.count()
             conteo_devoluciones = devoluciones.count()
             conteo_pagos2 = oc_pendientes.count()
-            conteo_vales = vales_rosa.count()
+            
         
         if usuario.tipo.oc_gerencia == True:
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None, req__orden__distrito = usuario.distritos)
@@ -104,6 +104,7 @@ def contadores_processor(request):
             conteo_oc = oc.count()
             conteo_viaticos_gerencia = viaticos_gerencia.count()
             conteo_gastos_gerencia = gastos_gerencia.count()
+            conteo_vales = vales_rosa.count()
            
         if usuario.tipo.tesoreria == True:
             oc_pendientes = Compra.objects.filter(pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos)
