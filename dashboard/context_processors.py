@@ -2,7 +2,7 @@ from genericpath import exists
 from itertools import count
 from dashboard.models import ArticulosparaSurtir, Order, Inventario
 from user.models import Profile
-from gastos.models import Solicitud_Gasto
+from gastos.models import Solicitud_Gasto, ValeRosa
 from tesoreria.models import Pago
 from compras.models import Compra
 from requisiciones.models import Requis, ValeSalidas, Devolucion
@@ -47,6 +47,7 @@ def contadores_processor(request):
     conteo_ordenes = 0
     conteo_pagos2 = 0
     proveedores_altas = 0
+    conteo_vales = 0
     
     conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
@@ -84,6 +85,8 @@ def contadores_processor(request):
             conteo_viaticos = viaticos_pendientes.count()
             viaticos_gerencia = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, autorizar2=None, montos_asignados=True, distrito = usuario.distritos, superintendente = usuario)
             conteo_viaticos_gerencia = viaticos_gerencia.count()
+            vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__superintendente = usuario)
+            conteo_vales = vales_rosa.count()
         elif usuario.tipo.oc_superintendencia == True:
             oc = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos)
             oc_pendientes = Compra.objects.filter(pagada=False, autorizado2=True, req__orden__distrito = usuario.distritos)
@@ -91,13 +94,13 @@ def contadores_processor(request):
             conteo_oc1 = oc.count()
             conteo_devoluciones = devoluciones.count()
             conteo_pagos2 = oc_pendientes.count()
-
+            conteo_vales = vales_rosa.count()
         
         if usuario.tipo.oc_gerencia == True:
             oc = Compra.objects.filter(autorizado1= True, autorizado2 = None, req__orden__distrito = usuario.distritos)
             gastos_gerencia = Solicitud_Gasto.objects.filter(complete=True, autorizar=True, autorizar2=None, distrito = usuario.distritos)
             viaticos_gerencia = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = usuario.distritos, superintendente = usuario)
-           
+            vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__autorizado_por2 = usuario ).order_by('-gasto__folio')
             conteo_oc = oc.count()
             conteo_viaticos_gerencia = viaticos_gerencia.count()
             conteo_gastos_gerencia = gastos_gerencia.count()
@@ -156,6 +159,7 @@ def contadores_processor(request):
             ).exclude(familia__nombre="IMPUESTOS").distinct().count()
 
     return {
+    
     'proveedores_altas':proveedores_altas,
     'conteo_pagos2': conteo_pagos2,
     'conteo_devoluciones': conteo_devoluciones,
@@ -179,6 +183,7 @@ def contadores_processor(request):
     'usuario':usuario,
     'conteo_requis': conteo_requis,
     'conteo_pagos':conteo_pagos,
+    'conteo_vales':conteo_vales,
     }
 
  

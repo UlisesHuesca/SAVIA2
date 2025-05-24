@@ -469,6 +469,9 @@
                             </div>  
                             <div>
                                 <a class="dropdown-item" href="{% url 'vales-rosa-pendientes-autorizar' %}">Autorización Vales Rosa
+                                      {% if conteo_vales > 0 %}
+                                       <span class="badge bg-danger">({{conteo_vales}})</span>
+                                        {% endif %}
                                 </a>
                             </div>
                             
