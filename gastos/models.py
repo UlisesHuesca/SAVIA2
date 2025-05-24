@@ -29,6 +29,7 @@ class Solicitud_Gasto(models.Model):
     complete = models.BooleanField(null=True)
     tipo = models.ForeignKey(Tipo_Gasto, on_delete=models.CASCADE, null=True)
     pagada = models.BooleanField(default=False)
+    transferencia_finanzas = models.BooleanField(default=False)
     autorizar = models.BooleanField(null=True, default=None)
     autorizar2 = models.BooleanField(null=True, default=None)
     created_at = models.DateTimeField(null=True)
@@ -442,3 +443,20 @@ class ValeRosa(models.Model):
 
     def __str__(self):
         return f"Vale Rosa #{self.id} para Gasto #{self.gasto.folio}"
+    
+class TipoArchivoNomina(models.Model):
+    nombre = models.CharField(max_length=20, unique=True)
+
+    def __str__(self):
+        return self.nombre
+    
+class ArchivoNomina(models.Model):
+    solicitud = models.ForeignKey(Solicitud_Gasto, on_delete=models.CASCADE)
+    tipo = models.ForeignKey(TipoArchivoNomina, on_delete=models.PROTECT)
+    archivo = models.FileField(upload_to='nomina')
+    total = models.DecimalField(max_digits=10, decimal_places=2)
+    fecha_subida = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.tipo.nombre} - {self.solicitud.folio if self.solicitud.folio else 'Nueva'}"
+
