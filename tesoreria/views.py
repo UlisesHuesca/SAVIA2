@@ -965,14 +965,14 @@ def matriz_pagos(request):
             processed_docs = set()
 
             with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                zip_file.mkdir("GENERAL_PDFs")
-                zip_file.mkdir("GENERAL_XMLs")
+                #zip_file.mkdir("GENERAL_PDFs")
+                #zip_file.mkdir("GENERAL_XMLs")
 
                 for pago in pagos:
                     if pago.gasto:
                         gasto = pago.gasto
                         carpeta = f'PAGO_G_{gasto.folio}_{gasto.distrito.nombre}_{pago.pagado_real}'
-                        zip_file.mkdir(carpeta)
+                        #zip_file.mkdir(carpeta)
                         for factura in gasto.facturas.all():
                             if factura.archivo_pdf:
                                 zip_file.write(factura.archivo_pdf.path, os.path.join(carpeta, os.path.basename(factura.archivo_pdf.path)))
@@ -991,7 +991,7 @@ def matriz_pagos(request):
                     elif pago.oc:
                         oc = pago.oc
                         carpeta = f'PAGO_OC_{oc.folio}_{oc.req.orden.distrito.nombre}_{pago.pagado_real}'
-                        zip_file.mkdir(carpeta)
+                        #zip_file.mkdir(carpeta)
                         for factura in oc.facturas.all():
                             if factura.factura_pdf:
                                 zip_file.write(factura.factura_pdf.path, os.path.join(carpeta, os.path.basename(factura.factura_pdf.path)))
@@ -1010,7 +1010,7 @@ def matriz_pagos(request):
                     elif pago.viatico:
                         viatico = pago.viatico
                         carpeta = f'PAGO_V_{viatico.folio}_{viatico.distrito.nombre}_{pago.pagado_real}'
-                        zip_file.mkdir(carpeta)
+                        #zip_file.mkdir(carpeta)
                         for factura in viatico.facturas.all():
                             if factura.factura_pdf:
                                 zip_file.write(factura.factura_pdf.path, os.path.join(carpeta, os.path.basename(factura.factura_pdf.path)))
