@@ -936,7 +936,7 @@ def matriz_pagos(request):
             validar_sat = request.POST.get('validacion') == 'on'
             
 
-            if usuario.distritos.nombre != "MATRIZ":
+            if usuario.distritos.nombre == "MATRIZ":
                 pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]))
               
                 if distrito_id:
