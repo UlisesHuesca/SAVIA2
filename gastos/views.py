@@ -287,6 +287,7 @@ def crear_gasto(request):
     total_bbva = archivos_nomina.filter(tipo__nombre='BBVA').first()
     total_ob = archivos_nomina.filter(tipo__nombre='OB').first()
     total_pensiones = archivos_nomina.filter(tipo__nombre='PENSIONES').first()
+    error_messages = {}
 
     if request.method =='POST': 
         if "btn_agregar" in request.POST:
@@ -473,7 +474,7 @@ def crear_gasto(request):
         'form':form,
         'total_nomina': total_nomina,
         'form_product': form_product,
-        #'articulos':articulos,
+        'error_messages': error_messages,
         #'articulos_gasto':articulos_gasto,
         'gasto':gasto,
         #'superintendentes':superintendentes,

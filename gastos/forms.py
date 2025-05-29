@@ -55,6 +55,8 @@ class Solicitud_GastoForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
 
+        self.fields['distrito'].required = False
+
 class Articulo_GastoForm(forms.ModelForm):
 
     class Meta:
