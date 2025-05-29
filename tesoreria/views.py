@@ -933,7 +933,7 @@ def matriz_pagos(request):
             distrito_id = request.POST.get('distrito')
             tesorero_id = request.POST.get('tesorero')
             folio = request.POST.get('folio')
-
+            validar_sat = request.POST.get('validacion') == 'on'
             
 
             if usuario.distritos.nombre != "MATRIZ":
