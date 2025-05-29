@@ -1,7 +1,7 @@
 from django import forms
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
 from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
-from user.models import Profile
+from user.models import Profile, Distrito
 from dashboard.models import Inventario, Order, Product
 from compras.models import Proveedor_direcciones
 from tesoreria.models import Pago, Cuenta
@@ -9,13 +9,14 @@ from tesoreria.models import Pago, Cuenta
 class Solicitud_GastoForm(forms.ModelForm):
     class Meta:
         model = Solicitud_Gasto
-        fields = ['superintendente','colaborador','tipo','proveedor']
+        fields = ['superintendente','colaborador','tipo','proveedor','distrito']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['colaborador'].queryset = Profile.objects.none()
         self.fields['superintendente'].queryset = Profile.objects.none()
         self.fields['proveedor'].queryset = Proveedor_direcciones.objects.none()
+        self.fields['distrito'].queryset = Distrito.objects.none()
         self.fields['tipo'].queryset = Tipo_Gasto.objects.none()
 
         if 'superintendente' in self.data:
@@ -46,7 +47,13 @@ class Solicitud_GastoForm(forms.ModelForm):
                 self.fields['tipo'].queryset = Tipo_Gasto.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
-        
+        if 'distrito' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('distrito'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['distrito'].queryset = Distrito.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida
 
 class Articulo_GastoForm(forms.ModelForm):
 

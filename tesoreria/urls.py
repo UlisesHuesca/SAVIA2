@@ -28,7 +28,7 @@ urlpatterns = [
     path('tesoreria/matriz_mis_gastos/', views.mis_gastos, name='mis-gastos'),
     path('tesoreria/matriz_mis_viaticos/', views.mis_viaticos, name='mis-viaticos'),
     path('tesoreria/saldo_a_favor/<int:pk>', views.saldo_a_favor, name='saldo-a-favor'),
-    path('tesoreria/edit_pago/<int:pk>', views.edit_pago, name='edit-pago'),
+    #path('tesoreria/edit_pago/<int:pk>', views.edit_pago, name='edit-pago'),
     path('tesoreria/edit_comprobante_pago/<int:pk>', views.edit_comprobante_pago, name='edit-comprobante-pago'),
     path('prellenar_formulario/',views.prellenar_formulario, name ='prellenar-formulario'),
     # La URL para el formulario de pagos masivos

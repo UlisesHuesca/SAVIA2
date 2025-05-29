@@ -1,0 +1,324 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load djmoney %}
+{% load widget_tweaks %}
+<html>
+<head>
+{% block title %}Traspaso{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
+<div>
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+</div>
+
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-6 offset-md-3">
+    <div class="card">
+        <div class="card-header">
+            <h5 id="gasto" value="{{gasto.id}}">Gasto: {{pago.gasto.folio}} | Pago: {{pago.id}}</h5>
+        </div>
+
+        <div class="card-body">
+            {% if error_messages %}
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                {% for mensaje in error_messages %}
+                    <li>{{ mensaje }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+                <table class='table table-striped'>
+                    <thead>
+                       
+                        <tr>
+                            <th scope="col">Solicitante:</th>
+                            <th>{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</th>
+                        </tr>
+                        <tr>
+                            <th>Solicitado para:</th>
+                            <th scope="col">
+                                {% if pago.gasto.tipo.tipo == "NOMINA" %}<span class="badge bg-primary"> NOMINA </span>
+                                {% elif pago.gasto.proveedor %}<span class="badge bg-primary"> {{pago.gasto.proveedor}} </span>
+                                {% elif gasto.colaborador %}{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}}
+                                {% else %} NA
+                                {% endif %}
+                            </th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% if pago.gasto.tipo.tipo == "NOMINA" %}
+                        <tr>
+
+                        </tr>
+                        {% else %}
+                        <tr>
+                            <th scope="col">Banco:</th>
+                            <th>{% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.banco}}
+                                 {% else  %}{{pago.gasto.staff.staff.banco}}{% endif %}
+                                
+                            </th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Cuenta:</th>
+                            <th scope="col">
+                                {% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.cuenta_bancaria}}
+                                 {% else %}{{pago.gasto.staff.staff.cuenta_bancaria}}{% endif %}
+                            </th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Clabe:</th>
+                            <th scope="col">
+                               {% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.clabe}}
+                                 {% else %}{{pago.gasto.staff.staff.clabe}}{% endif %}
+                            </th>
+                        </tr>
+                        {% endif %}
+                    </tbody>
+                </table>
+                <hr>
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                        <th scope="col">Importe Gasto</th>
+                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">${{gasto.get_total_solicitud}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">Pagado:</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{gasto.monto_pagado_transferencia}}</th>
+                        </tr>
+                        <tr>
+                            <th scope="col">Remanente:</th>
+                            <th>${{remanente}}</th>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col-3">#</th>
+                            <th scope="col-2">Pagado</th>
+                            <th scope="col-3">Cuenta</th>
+                            <th scope="col-3">Fecha</th>
+                            <th scope="col-2">Pago</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for p in pagos_alt %}
+                        <tr>
+                            <th scope="row">{{p.id}}</th>
+                            <td>{{p.monto}}</td>
+                            <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
+                            <td>{{p.pagado_date}}</td>
+                            <td>
+                                <a href="{{p.comprobante_pago.url}}" download class="btn btn-outline-info">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>
+                            </td>
+                        </tr>
+                   {% endfor %}
+                   </tbody>
+                </table>
+       
+        <form id="id_formulario" method="POST" enctype='multipart/form-data'>
+            <div>
+                {% csrf_token %}
+                <div class="alert alert-primary mt-2" role="alert">
+                        CUENTA DE RETIRO
+                </div>
+                <div class="row">
+                    <div class="col-lg-8 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1"> 
+                                    {{form.cuenta}}
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field form.pagado_real type="date" class="form-control" %}
+                                <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1"> 
+                                    {{form.monto|add_class:'form-control'}}
+                                </div>
+                        </div>
+                    </div>
+                </div>
+                   
+            </div>
+                <div class="alert alert-primary mt-2" role="alert">
+                        CUENTA DE DEPÓSITO
+                        </div>
+                        <div class="row">
+                            <div class="col-lg-12 col-sm-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1"> 
+                                            {{form_transferencia.cuenta}}
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                         <div class="col-8">
+                    <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
+                        {{form.comprobante_pago|add_class:'form-control'}}
+                    </div>
+                <div class="container-fluid text-end">
+                    <button id="myBtn" type = "submit" class="btn btn-success" name="envio">Registrar</button>
+                    <a type="button" class="btn btn-secondary" href="{% url 'pago-gastos-autorizados' %}">Cerrar</a>
+                </div>
+           
+        </form>
+         </div>
+
+    </div>
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+/*document.getElementById("cuentas").addEventListener("change", function(element){
+    var select = document.getElementById("cuentas");
+    //var tipo_cambio_txt = document.getElementById("tipo_de_cambio_0")
+    var current_option = select.options[select.selectedIndex];
+    var target = current_option.getAttribute('target');
+    //var moneda = current_option.getAttribute('moneda');
+    var select_cuenta = document.getElementById('id_cuenta');
+    //Aqui le doy la instruccion para que cambie la seleccion de acuerdo a lo seleccionado en el primer desplegable de cuentas
+    select_cuenta.selectedIndex = target;
+});*/
+
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+
+
+var datosCuenta = {{cuentas_para_select2|safe }};
+
+
+$(document).ready(function() {
+    $('#id_cuenta').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona una cuenta',
+        data: datosCuenta,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+});
+
+$(document).ready(function() {
+  
+  $('#id_abono-cuenta').select2({
+      allowClear: true,
+      width: '100%',
+      placeholder: 'Selecciona una cuenta',
+      templateResult: formatRepo, // Función para renderizar los resultados
+      templateSelection: formatRepoSelection // Función para renderizar la selección
+  });
+});
+
+document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
+  var file = event.target.files[0];
+  var formData = new FormData();
+  formData.append('comprobante_pago', file);
+  
+  // Añadir CSRF token a la solicitud AJAX
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch('/gastos/prellenar_formulario_gastos/', { 
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
+    },
+  })
+  .then(response => response.json()) 
+  .then(data => {
+    console.log(data);
+    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
+    document.querySelector('[name="monto"]').value = data.monto;
+    //document.querySelector('[name="cuenta"]').value = data.cuenta;
+    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
+    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
+    var $selectElement = $('[name="cuenta"]');
+    //var divisa = data.divisa_cuenta
+    //console.log(divisa)
+    $selectElement.val(cuentaId).trigger('change');
+
+    var cuentaDestinoId = data.destino_cuenta;
+    $('[name="abono-cuenta"]').val(cuentaDestinoId).trigger('change');
+    //if (divisa == "MXP" && compra_moneda == "DOLARES" ){
+    //var tipo_cambio = document.getElementById('text_tc')
+    //tipo_cambio.classList.remove('d-none');
+    //}
+  })
+  .catch(error => console.error('Error:', error));
+});
+</script>
+{% endblock %}
+</body>
+</html>

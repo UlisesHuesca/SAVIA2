@@ -125,7 +125,8 @@
                     <th scope="row">{{orden.folio}}</th>
                     <td>{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
                     <td>
-                        {% if orden.proveedor %}<span class="badge bg-primary"> {{orden.proveedor}} </span>
+                        {% if orden.tipo.tipo == 'NOMINA' %}<span class="badge bg-primary">NOMINA </span>
+                        {% elif orden.proveedor %}<span class="badge bg-primary"> {{orden.proveedor}} </span>
                         {% elif orden.colaborador %}{{orden.colaborador.staff.staff.first_name}} {{orden.colaborador.staff.staff.last_name}}
                         {% else %}{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}
                         {% endif %}

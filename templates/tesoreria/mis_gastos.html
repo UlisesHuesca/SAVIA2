@@ -153,7 +153,9 @@
                     {% else %}
                     <td><span class="badge bg-warning">Llevar Material a Almacén</span></td>
                     {% endif %}
-                    {% if gasto.tipo.tipo == "IMPUESTOS" %}
+                    {% if gasto.tipo.tipo == "NOMINA" %}
+                     <td class="d-none d-lg-table-cell"> <span class="badge bg-primary">NOMINA</span></td>
+                    {% elif gasto.tipo.tipo == "IMPUESTOS" %}
                     <td class="d-none d-lg-table-cell"> <span class="badge bg-primary"> {{gasto.proveedor.nombre.razon_social}}</span></td>
                     {% elif gasto.colaborador %}
                     <td class="d-none d-lg-table-cell">{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}</td>

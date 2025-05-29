@@ -87,6 +87,7 @@ class Tipo_perfil(models.Model):
     documentos = models.BooleanField(default = False)
     pagos = models.BooleanField(default = False)
     para_pago = models.BooleanField(default = False)
+    finanzas = models.BooleanField(default = False)
 
     def __str__(self):
         return f'{self.nombre}'

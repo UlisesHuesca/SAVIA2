@@ -10,6 +10,7 @@ from django.core.mail import EmailMessage
 from django.conf import settings
 from django.urls import reverse
 from django.core.mail import EmailMessage, BadHeaderError
+import traceback
 
 
 
@@ -21,14 +22,14 @@ import socket
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoNomina, ArchivoNomina
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
-from user.models import Profile
+from user.models import Profile, Distrito 
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
-from tesoreria.models import Pago, Cuenta, Facturas
+from tesoreria.models import Pago, Cuenta, Facturas, Tipo_Pago
 from compras.models import Proveedor_direcciones
-from tesoreria.forms import Facturas_Gastos_Form 
+from tesoreria.forms import Facturas_Gastos_Form, Transferencia_Form, Cargo_Abono_Form
 from compras.views import attach_oc_pdf
-from tesoreria.utils import extraer_texto_de_pdf, encontrar_variables
+from tesoreria.utils import extraer_texto_de_pdf, encontrar_variables, extraer_bloques_formato_2, detectar_formato_pdf, encontrar_variables_bloques
 from requisiciones.views import get_image_base64
 from viaticos.models import Viaticos_Factura
 import qrcode
@@ -179,11 +180,14 @@ def procesar_pensiones(archivo):
 def crear_gasto(request):
     colaborador = Profile.objects.all()
     articulos_gasto = Articulo_Gasto.objects.all()
+    distritos = Distrito.objects.none()
     
     conceptos = Product.objects.all()
     pk = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk)
     if usuario.distritos.nombre == "MATRIZ":
+        if usuario.tipo.rh:
+            distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
         if usuario.tipo.subdirector:
             superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
         else:    
@@ -233,6 +237,13 @@ def crear_gasto(request):
             'text': str(proveedor.nombre.razon_social)
         } for proveedor in proveedores
     ] 
+    print('distritos',distritos)
+    distritos_para_select2 = [
+        {
+            'id': distrito.id,
+            'text': str(distrito.nombre)
+        } for distrito in distritos 
+    ]
     
     gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False, staff=usuario)
     if not gasto.inicio_form:
@@ -286,10 +297,18 @@ def crear_gasto(request):
                     max_folio = 0
                 gasto = form.save(commit=False)
                 gasto.folio = max_folio + 1
-                gasto.distrito = usuario.distritos
+                
                 gasto.complete = True
                 gasto.created_at = datetime.now()
                 gasto.staff =  usuario
+                if gasto.tipo.tipo == "NOMINA":
+                    gasto.distrito = form.cleaned_data['distrito']
+                    gasto.transferencia_finanzas = True
+                else:
+                    gasto.distrito = usuario.distritos
+
+
+
                 gasto.save()
                 #form.save()
                 messages.success(request, f'La solicitud {gasto.folio} ha sido creada')
@@ -429,6 +448,7 @@ def crear_gasto(request):
 
 
                 messages.success(request, f'Total BBVA: ${total_bbva:,.2f}, OB: ${total_ob:,.2f}, Pensiones: ${total_pensiones:,.2f}')
+                return redirect('crear-gasto')
             except Exception as e:
                 messages.error(request, f'Error al procesar archivos de nómina: {str(e)}')
 
@@ -444,6 +464,7 @@ def crear_gasto(request):
         'proyectos_para_select2':proyectos_para_select2,
         'productos_para_select2':productos_para_select2,
         'proveedores_para_select2':proveedores_para_select2,
+        'distritos_para_select2':distritos_para_select2,
         'facturas':facturas,
         'productos':productos,
         'archivo_bbva': total_bbva,
@@ -753,7 +774,7 @@ def factura_nueva_gasto(request, pk):
     return render(request, 'gasto/registrar_nueva_factura_gasto.html', context)
 
 def prellenar_formulario_gastos(request):
-    print('prellenar_formulario_gastos')
+    #print('prellenar_formulario_gastos')
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         pdf_content = request.FILES.get('comprobante_pago')
         
@@ -761,13 +782,26 @@ def prellenar_formulario_gastos(request):
             return JsonResponse({'error': 'No file uploaded'}, status=400)
         
         pdf_content = pdf_content.read()
-        texto_extraido = extraer_texto_de_pdf(pdf_content)
-        print("Texto extraído:", texto_extraido)
-        datos_extraidos = encontrar_variables(texto_extraido)
-        print("Datos extraídos:", datos_extraidos)
+        formato_detectado = detectar_formato_pdf(pdf_content)
+        
+        if formato_detectado == "formato_1":
+            texto_extraido = extraer_texto_de_pdf(pdf_content)
+            datos_extraidos = encontrar_variables_transferencia(texto_extraido)
+            #divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
+
+        elif formato_detectado == "formato_2":
+            bloques = extraer_bloques_formato_2(pdf_content)
+            datos_extraidos = encontrar_variables_bloques(bloques)
+        divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
+
+        
+        #texto_extraido = extraer_texto_de_pdf(pdf_content)
+        #print("Texto extraído:", texto_extraido)
+        #datos_extraidos = encontrar_variables_transferencia(texto_extraido)
+        #print("Datos extraídos:", datos_extraidos)
         
         fecha_str = datos_extraidos.get('fecha', '').strip()
-
+        #print(fecha_str)
         fecha_formato_correcto = None  # Valor por defecto en caso de que no se pueda procesar la fecha
         
         if fecha_str:
@@ -780,29 +814,98 @@ def prellenar_formulario_gastos(request):
                 pass
         
         numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip().lstrip('0')
+        numero_cuenta_deposito = datos_extraidos.get('cuenta_deposito', '').strip().lstrip('0') 
         cuenta_objeto = None
-        print(numero_cuenta_extraido)
+        cuenta_deposito = None
+        #print('numero_cuenta_extraido',numero_cuenta_extraido)
         if numero_cuenta_extraido:
             try:
-                cuenta_objeto = Cuenta.objects.get(cuenta__contains=numero_cuenta_extraido)
-                print('cuenta_objeto:',cuenta_objeto)
+                if formato_detectado == "formato_1":
+                    cuenta_objeto = Cuenta.objects.get(cuenta__contains=numero_cuenta_extraido)
+                if formato_detectado == "formato_2":
+                    cuenta_objeto = Cuenta.objects.get(cuenta__endswith=numero_cuenta_extraido)
+                print('cuenta_objeto:', cuenta_objeto)
+            except Cuenta.DoesNotExist:
+                print('Cuenta retiro no encontrada:', numero_cuenta_extraido)
+                return JsonResponse({'error': 'Cuenta retiro no encontrada'}, status=404)
+            except Exception as e:
+                print('Error inesperado al buscar cuenta retiro:', e)
+                print(traceback.format_exc())
+                return JsonResponse({'error': 'Error interno'}, status=500)
+            
+        if numero_cuenta_deposito:
+            try:
+                if formato_detectado == "formato_1":
+                    cuenta_deposito = Cuenta.objects.get(cuenta__contains = numero_cuenta_deposito)
+                if formato_detectado == "formato_2":
+                    cuenta_deposito = Cuenta.objects.get(cuenta__endswith = numero_cuenta_deposito)
+                print('cuenta_objeto:',cuenta_deposito)
             except Cuenta.DoesNotExist:
                 # Manejar el caso donde la cuenta no existe
-                print('Entro aca 34')
+                print('Fallo cuenta deposito')
                 return JsonResponse({'error': 'Account not found'}, status=404)
         
-        divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
         
+        #print("destino_cuenta",datos_extraidos.get('cuenta_deposito', '').strip().lstrip('0') or None) 
         datos_para_formulario = {
             'monto': datos_extraidos.get('importe_operacion', '').replace('MXP', '').replace(',', '').strip() or None,
             'pagado_real': fecha_formato_correcto,  # Valor procesado o None
             'cuenta': cuenta_objeto.id if cuenta_objeto else None,
             'divisa_cuenta': divisa_cuenta_extraida or None,
+            'destino_cuenta': cuenta_deposito.id if cuenta_deposito else None,
         }
         
         return JsonResponse(datos_para_formulario)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+
+
+def encontrar_variables_transferencia(texto):
+    datos = {}
+    #print('si entra a encontrar_transferencia')
+    #print('TEXTO EXTRAÍDO:\n', texto)
+
+    if "Cuenta de retiro" in texto:  # Formato 1
+        #print("Formato 1 detectado")
+
+        retiro = re.search(r"Cuenta de retiro:\s*([\d\s]+)", texto)
+        deposito = re.search(r"Cuenta de depósito:\s*([\d\s]+)", texto)
+        importe = re.search(r"(?:Importe|Importe de la operación):\s?([\d,.]+)", texto)
+        fecha = re.search(r"Fecha de creación:\s*([\d/]+)", texto)
+        divisa = re.search(r"Divisa de la cuenta:\s*(\w+)", texto)
+
+        datos['cuenta_retiro'] = retiro.group(1).replace(" ", "") if retiro else None
+        datos['cuenta_deposito'] = deposito.group(1).replace(" ", "") if deposito else None
+        datos['importe_operacion'] = importe.group(1) if importe else None
+        datos['fecha'] = fecha.group(1) if fecha else None
+        datos['divisa_cuenta'] = divisa.group(1) if divisa else None
+
+    elif "Datos de la operación" in texto:  # Formato 2
+        print("Formato 2 detectado")
+
+        cuentas = re.findall(r"Cuenta:\s+•?(\d+)", texto)
+        print("Cuentas encontradas:", cuentas)
+        retiro = cuentas[0] if len(cuentas) > 0 else None
+        deposito = cuentas[1] if len(cuentas) > 1 else None
+
+        importe = re.search(r"Importe\s*\$?\s*([\d,\.]+)", texto)
+        fecha = re.search(r"Fecha y hora de creación:\s*(\d{1,2} de \w+ de \d{4})", texto)
+
+        datos['cuenta_retiro'] = retiro
+        datos['cuenta_deposito'] = deposito
+        datos['importe_operacion'] = importe.group(1) if importe else None
+        datos['fecha'] = fecha.group(1) if fecha else None
+        datos['divisa_cuenta'] = 'MXN'
+
+    #else:
+        #print('No se detectó ningún formato compatible')
+
+    #print('DATOS EXTRAÍDOS:', datos)
+    return datos
+
+
 
 @perfil_seleccionado_required
 def editar_gasto(request, pk):
@@ -1278,13 +1381,84 @@ def pago_gastos_autorizados(request):
 
     return render(request, 'gasto/pago_gastos_autorizados.html',context)
 
+
+@perfil_seleccionado_required
+def finanzas_transferencia_gastos_autorizados(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+
+    proyectos = Proyecto.objects.filter(activo=True, complete=True)
+    subproyectos = Subproyecto.objects.filter(proyecto__in=proyectos)
+    
+    if usuario.tipo.finanzas == True:
+       
+        gastos = Solicitud_Gasto.objects.filter(tipo__tipo = "NOMINA",autorizar=True, autorizar2=True, transferencia_finanzas = True, pagada=False, distrito = usuario.distritos, ).annotate(
+            total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
+            )).order_by('-approbado_fecha2')
+        #else:
+        #    gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).annotate(
+        #        total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
+        #        )).order_by('-approbado_fecha2')
+        myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
+        gastos = myfilter.qs
+
+        for gasto in gastos:
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+
+            proyectos = set()
+            subproyectos = set()
+
+            for articulo in articulos_gasto:
+                if articulo.proyecto:
+                    proyectos.add(str(articulo.proyecto.nombre))
+                if articulo.subproyecto:
+                    subproyectos.add(str(articulo.subproyecto.nombre))
+
+            gasto.proyectos = ', '.join(proyectos)
+            gasto.subproyectos = ', '.join(subproyectos)
+
+        p = Paginator(gastos, 50)
+        page = request.GET.get('page')
+        gastos_list = p.get_page(page)
+
+        for gasto in gastos_list:
+            # Determinar estado basado en total_facturas y autorizadas
+            if gasto.total_facturas == 0:
+                gasto.estado_facturas = 'sin_facturas'
+            elif gasto.autorizadas == gasto.total_facturas:
+                gasto.estado_facturas = 'todas_autorizadas'
+            else:
+                gasto.estado_facturas = 'pendientes'
+
+        context= {
+            'gastos_list':gastos_list,
+            'gastos':gastos,
+            'myfilter':myfilter,
+            'proyectos': proyectos,
+            'subproyectos': subproyectos,
+            'selected_subproyecto': request.GET.get('subproyecto')
+            }
+    else:
+        context= {
+
+         }
+
+
+
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_gasto_matriz(gastos)
+
+        
+
+    return render(request, 'gasto/finanzas_pago_gastos_autorizados.html',context)
+
 @perfil_seleccionado_required
 def pago_gasto(request, pk):
     pk_usuario = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_usuario)
     gasto = Solicitud_Gasto.objects.get(id=pk)
-    
-    pagos_alt = Pago.objects.filter(gasto=gasto, hecho=True)
+    cargos = Tipo_Pago.objects.get(id = 1)
+    pagos_alt = Pago.objects.filter(gasto=gasto, hecho=True, tipo = cargos)
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
 
     pago, created = Pago.objects.get_or_create(tesorero = usuario, gasto__distrito = usuario.distritos, hecho=False, gasto=gasto)
@@ -1312,7 +1486,7 @@ def pago_gasto(request, pk):
             else:
                 flag = False
             if total_pagado > gasto.get_total_solicitud:
-                messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del viático')
+                messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del gasto')
             else:
                 if flag:
                     gasto.pagada = True
@@ -1353,6 +1527,94 @@ def pago_gasto(request, pk):
 
     return render(request,'gasto/pago_gasto.html',context)
 
+@perfil_seleccionado_required
+def finanzas_transferencia(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    gasto = Solicitud_Gasto.objects.get(id=pk)
+    tipos_pago = Tipo_Pago.objects.all()
+    transferencia = tipos_pago.get(id = 3)
+    abono = tipos_pago.get(id = 2)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = transferencia, gasto=gasto)
+    transaccion2, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = abono, gasto=gasto)
+    form = Cargo_Abono_Form(instance=transaccion)
+    form_transferencia = Transferencia_Form(prefix='abono')
+    pagos_alt = Pago.objects.filter(gasto=gasto, hecho=True, tipo = abono)
+    remanente = gasto.get_total_solicitud - gasto.monto_pagado_transferencia
+    error_messages = []
+
+    #form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id = 3)
+    print(Tipo_Pago.objects.filter(id=3))
+    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+      
+    cuentas_para_select2 = [
+        {'id': cuenta.id,
+         'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
+         'moneda': str(cuenta.moneda),
+        } for cuenta in cuentas]
+
+    if request.method == 'POST':
+        if "envio" in request.POST:
+            form = Cargo_Abono_Form(request.POST, request.FILES, instance = transaccion)
+            form_transferencia = Transferencia_Form(request.POST, instance = transaccion2, prefix='abono')
+            
+            if form.is_valid() and form_transferencia.is_valid():
+                cargo = form.save(commit=False)
+                cargo.pagado_date = date.today()
+                #cargo.tipo = Tipo_Pago.objects.get(id = 1)
+                cargo.pagado_hora = datetime.now().time() 
+                cargo.hecho = True
+                
+                abono = form_transferencia.save(commit=False)
+                abono.monto = cargo.monto
+                #abono.tipo = Tipo_Pago.objects.get(id = 2)
+                abono.comentario = f"{cargo.comentario} (Relacionado con cuenta {cargo.cuenta})"
+                abono.pagado_real = cargo.pagado_real
+                abono.pagado_date = date.today()
+                abono.pagado_hora = datetime.now().time()
+                abono.comprobante_pago = cargo.comprobante_pago
+                abono.hecho = True
+               
+
+                cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
+               
+                
+                #Aqui empieza el ciclo de validación de los montos
+                total_pagado = round(gasto.monto_pagado_transferencia  + abono.monto,2)
+                total_sol = round(gasto.get_total_solicitud,2)
+                #El bloque a continuación se generó para resolver los problemas de redondeo, se comparan las dos cantidades redondeadas en una variable y se activa una bandera (flag) que indica si son iguales o no!
+                if total_sol == total_pagado:
+                    flag = True
+                else:
+                    flag = False
+                if total_pagado > gasto.get_total_solicitud:
+                    messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del gasto')
+                else:
+                    if flag:
+                        gasto.transferencia_finanzas = False
+                        gasto.save()
+                    cargo.save()
+                    abono.save()
+                    messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente la transferencia')
+                    return redirect('transferencia-gastos-autorizados')
+            else:
+                for field, errors in form.errors.items():
+                    error_messages.append(f"{field}: {errors.as_text()}")
+                for field, errors in form_transferencia.errors.items():
+                    error_messages.append(f"{field}: {errors.as_text()}")
+
+    context= {
+        'gasto':gasto,
+        'pago':transaccion,
+        'form':form,
+        'pagos_alt':pagos_alt,
+        'remanente':remanente,
+        'form_transferencia': form_transferencia,
+        'cuentas_para_select2': cuentas_para_select2,
+        'error_messages': error_messages,
+    }
+
+    return render(request, 'gasto/transferencia_finanzas.html',context)
 
 def generar_archivo_zip(facturas, gasto):
     nombre = gasto.folio if gasto.folio else ''

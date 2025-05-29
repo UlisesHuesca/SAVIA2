@@ -67,10 +67,18 @@ class Solicitud_Gasto(models.Model):
 
     @property
     def monto_pagado(self):
-        pagado = self.pagosg.all()
+        pagado = self.pagosg.filter(tipo__id = 1)
         pagado= pagado.filter(hecho=True)
         total = sum([pago.monto for pago in pagado])
         return total
+    
+    @property
+    def monto_pagado_transferencia(self):
+        pagado = self.pagosg.filter(tipo__id = 3)
+        pagado= pagado.filter(hecho=True) 
+        total = sum([pago.monto for pago in pagado])
+        return total
+
 
     @property
     def get_subtotal_solicitud(self):

@@ -119,6 +119,34 @@
                     </tr>
                     {% endfor %}
                 </tbody>
+                
+            </table>
+            <h5 class="mt-4">Archivos de Nómina</h5>
+            <table class="table" style="color:white">
+                <thead style="background-color: #d1ecf1;">
+                    <tr>
+                        <th>ID</th>
+                        <th>Tipo</th>
+                        <th>Total</th>
+                        <th>Fecha de Subida</th>
+                        <th>Archivo</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if gasto.archivonomina_set.all.count == 0 %}
+                        <tr><td colspan="5" class="text-center text-muted">No hay archivos de nómina en esta solicitud</td></tr>
+                    {% else %}
+                        {% for archivo in gasto.archivonomina_set.all %}
+                            <tr>
+                                <td>{{ archivo.id }}</td>
+                                <td>{{ archivo.tipo.nombre }}</td>
+                                <td>${{ archivo.total|floatformat:2 }}</td>
+                                <td>{{ archivo.fecha_subida|date:"d/m/Y H:i" }}</td>
+                                <td><a href="{{ archivo.archivo.url }}" target="_blank">Descargar</a></td>
+                            </tr>
+                        {% endfor %}
+                    {% endif %}
+                </tbody>
             </table>
         </div>
     </div>

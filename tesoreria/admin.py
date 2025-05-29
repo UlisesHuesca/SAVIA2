@@ -22,6 +22,9 @@ class ComplementosAdmin(admin.ModelAdmin):
     raw_id_fields = ('facturas',)
     list_display = ('id','complemento_pdf')
 
+class TipoPagoAdmin(admin.ModelAdmin):
+    search_fields = ['nombre']
+    list_display = ('id','nombre')
 
 # Register your models here.
 admin.site.register(Cuenta, CuentaAdmin)
@@ -34,6 +37,6 @@ admin.site.register(Pago, PagoAdmin)
 
 admin.site.register(Comprobante_saldo_favor)
 
-admin.site.register(Tipo_Pago)
+admin.site.register(Tipo_Pago, TipoPagoAdmin)
 
 admin.site.register(Saldo_Cuenta)

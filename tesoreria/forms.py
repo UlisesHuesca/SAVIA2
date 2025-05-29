@@ -66,7 +66,8 @@ class TxtForm(forms.ModelForm):
 class Cargo_Abono_Form(forms.ModelForm):
     class Meta:
         model = Pago
-        fields = ['monto','cuenta','pagado_real','tipo', 'comentario']
+        fields = ['monto','cuenta','pagado_real', 'comentario', 'comprobante_pago']
+        #fields = ['monto','cuenta','pagado_real','comprobante_pago','tipo_de_cambio',] los fields del pago normal
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
