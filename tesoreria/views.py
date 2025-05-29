@@ -975,6 +975,7 @@ def matriz_pagos(request):
                         #zip_file.mkdir(carpeta)
                         for factura in gasto.facturas.all():
                             beneficiario = factura.solicitud_gasto.colaborador.staff.staff.first_name + ' ' + factura.solicitud_gasto.colaborador.staff.staff.last_name  if factura.solicitud_gasto.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
+                            fecha_subida = factura.fecha_subida.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subida else 'No disponible'
                             if factura.archivo_pdf:
                                 zip_file.write(factura.archivo_pdf.path, os.path.join(carpeta, os.path.basename(factura.archivo_pdf.path)))
                                 uuid = factura.uuid if factura.uuid else 'SIN_UUID'
@@ -984,7 +985,7 @@ def matriz_pagos(request):
                                 uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                 gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                 zip_file.write(factura.archivo_xml.path, gen_path)
-                                datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", factura.fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
+                                datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
                         if gasto.id not in processed_docs:
                             pdf_buf = render_pdf_gasto(gasto.id)
                             zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
@@ -1014,6 +1015,7 @@ def matriz_pagos(request):
                         #zip_file.mkdir(carpeta)
                         for factura in viatico.facturas.all():
                             beneficiario = factura.solicitud_viatico.colaborador.staff.staff.first_name + ' ' + factura.solicitud_viatico.colaborador.staff.staff.last_name  if factura.solicitud_viatico.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
+                            fecha_subida = factura.fecha_subido.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
                             if factura.factura_pdf:
                                 zip_file.write(factura.factura_pdf.path, os.path.join(carpeta, os.path.basename(factura.factura_pdf.path)))
                                 uuid = factura.uuid if factura.uuid else 'SIN_UUID'
@@ -1023,7 +1025,7 @@ def matriz_pagos(request):
                                 uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                 gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                 zip_file.write(factura.factura_xml.path, gen_path)
-                                datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"V{viatico.folio}", factura.fecha_subido, viatico.distrito.nombre, beneficiario, gen_path, factura))
+                                datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"V{viatico.folio}", fecha_subida, viatico.distrito.nombre, beneficiario, gen_path, factura))
                         if viatico.id not in processed_docs:
                             pdf_buf = generar_pdf_viatico(viatico.id)
                             zip_file.writestr(os.path.join(carpeta, f'VIATICO_{viatico.folio}.pdf'), pdf_buf.getvalue())
