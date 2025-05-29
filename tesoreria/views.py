@@ -971,7 +971,7 @@ def matriz_pagos(request):
                 for pago in pagos:
                     if pago.gasto:
                         gasto = pago.gasto
-                        carpeta = f'PAGO_G_{gasto.folio}_{gasto.distrito.nombre}_{pago.pagado_real}'
+                        carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
                         #zip_file.mkdir(carpeta)
                         for factura in gasto.facturas.all():
                             beneficiario = factura.solicitud_gasto.colaborador.staff.staff.first_name + ' ' + factura.solicitud_gasto.colaborador.staff.staff.last_name  if factura.solicitud_gasto.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
@@ -992,7 +992,7 @@ def matriz_pagos(request):
                             processed_docs.add(gasto.id)
                     elif pago.oc:
                         oc = pago.oc
-                        carpeta = f'PAGO_OC_{oc.folio}_{oc.req.orden.distrito.nombre}_{pago.pagado_real}'
+                        carpeta = f'{pago.pagado_real}_COMPRA_{oc.folio}_{oc.req.orden.distrito.nombre}'
                         #zip_file.mkdir(carpeta)
                         for factura in oc.facturas.all():
                             if factura.factura_pdf:
@@ -1011,7 +1011,7 @@ def matriz_pagos(request):
                             processed_docs.add(oc.id)
                     elif pago.viatico:
                         viatico = pago.viatico
-                        carpeta = f'PAGO_V_{viatico.folio}_{viatico.distrito.nombre}_{pago.pagado_real}'
+                        carpeta = f'{pago.pagado_real}_VIATICO_{viatico.folio}_{viatico.distrito.nombre}'
                         #zip_file.mkdir(carpeta)
                         for factura in viatico.facturas.all():
                             beneficiario = factura.solicitud_viatico.colaborador.staff.staff.first_name + ' ' + factura.solicitud_viatico.colaborador.staff.staff.last_name  if factura.solicitud_viatico.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
