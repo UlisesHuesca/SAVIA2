@@ -400,13 +400,15 @@ def compras_pagos(request, pk):
     suma_pago_usd = 0
     
     for pago in pagos:
-        suma_pago = suma_pago + pago.monto
+        
         if pago.oc.moneda.nombre == "DOLARES":
             if pago.cuenta.moneda.nombre == "PESOS":
+                suma_pago = suma_pago + pago.monto
                 monto_pago_usd = pago.monto/pago.tipo_de_cambio
                 suma_pago_usd = suma_pago_usd + monto_pago_usd
             else:
-                suma_pago_usd = suma_pago + pago.monto
+                suma_pago = suma_pago + pago.monto * (pago.tipo_de_cambio or compra.tipo_de_cambio)
+                suma_pago_usd = suma_pago_usd + pago.monto
 
 
     if compra.moneda.nombre == 'PESOS':

@@ -225,17 +225,17 @@
                    </tbody>
                 </table>
                 </div>
-        </div>
-        <div>
+        
+      
         <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="col">
                 {% csrf_token %}
-                <div class="row my-2">
+                <!--<div class="row">
                     <div class="card-footer text-end">
                         <button onclick="pagarTodo()"  class="btn btn-outline-info">Pagar todo</button>
                     </div>
-                    
-                    <div class="row">
+                </div>-->
+                <div class="row">
                         <div class="col-lg-12 col-sm-12">
                             <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
@@ -244,8 +244,8 @@
                                     </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="col-lg-4 col-sm-12">
+                </div>
+                <div class="col-lg-4 col-sm-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -253,20 +253,21 @@
                                 <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
                             </div>
                         </div>
-                    </div>
+                </div>
 
-                    <div class="row my-2">
+                <div class="row my-2">
                         <div class="col-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                             <input type="text" class="form-control d-none" id="monto_dolares" placeholder="Dolares...">      
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
-                                    <label style="color: #121212;" for="id_area">Monto*</label>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
+                                        <label style="color: #121212;" for="id_area">Monto*</label>
+                                </div>
                             </div>
                         </div>
-                    </div>
                 </div>
+               
                 <div class="row my-2">
                     <div class="col-lg-6 col-md-12 d-none" id="text_tc">
                         <div class="input-group mb-3">
@@ -290,13 +291,13 @@
                         </div>
                     </div>
                 </div>
-                    <div class="row my-2">
+                <div class="row my-2">
                         <div class="col-12">
                             {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
                         </div>
-                    </div>
-                    
                 </div>
+                    
+                
             </div>
             <div class="card-footer text-end">
                 <h6>Registrar pago: {{compra.folio}}</h6>
@@ -304,7 +305,7 @@
                 <a type="button" class="btn btn-secondary" href="{% url 'compras-autorizadas' %}">Cerrar</a>
             </div>
         </form>
-
+        </div>
     </div>
 </div>
 <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
@@ -360,21 +361,50 @@ var monto_moneda = document.getElementById("id_monto");
 //});
 document.getElementById('myForm').addEventListener('submit', function(event) { 
     // Obtiene los valores de los campos
-    const monto = document.getElementById('id_monto').value || 0;
+    let monto = document.getElementById('id_monto').value || 0;
     const remanente_field = document.getElementById('remanente');
-    remanente = remanente_field.getAttribute('remanente');
-   
+    let remanente = remanente_field.getAttribute('remanente');
+    let tipo_cambio_element = document.getElementById('id_tipo_de_cambio');
+    let tipo_cambio_visible = tipo_cambio_element.offsetParent !== null; // Devuelve true si es visible
+    console.log(tipo_cambio_visible)
+    let tipo_cambio = document.getElementById('id_tipo_de_cambio').value || 0;
     console.log(parseFloat(remanente))
-    if (compra_moneda == "DOLARES"){
-        var tipo_cambio = document.getElementById('id_tipo_de_cambio').value || 0;
-        console.log(parseFloat(tipo_cambio))
-        monto = monto / tipo_cambio
+
+    // Obtén la moneda seleccionada en el Select2
+    let cuenta_select = $('#id_cuenta').select2('data')[0]; // primer item
+    let moneda_cuenta = cuenta_select ? cuenta_select.moneda : "";
+    
+    if (tipo_cambio_visible) {
+        if (!tipo_cambio || parseFloat(tipo_cambio) === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'El tipo de cambio no puede estar vacío o ser 0.',
+                confirmButtonText: 'Entendido'
+            });
+            event.preventDefault(); // Detiene el envío del formulario
+            return;
+        }
     }
-    console.log(parseFloat(monto).toFixed(0))
-    console.log(parseFloat(remanente).toFixed(0))
+   // Si la compra es en dólares y la moneda de la cuenta es "PESOS", hace la conversión
+    if (compra_moneda == "DOLARES" && moneda_cuenta == "PESOS") {
+        console.log(`TC: ${parseFloat(tipo_cambio)}`);
+        monto = monto / tipo_cambio;
+    } else {
+        // No hace conversión si la cuenta es en DÓLARES
+        monto = monto;
+    }
+    
+    monto = parseFloat(monto);
+    remanente = parseFloat(remanente);
+
+   
+
+    console.log(monto.toFixed(0))
+    console.log(remanente.toFixed(0))
+
     // Verifica si el monto es mayor que el remanente
-    if (parseFloat(parseFloat(monto).toFixed(0)) > parseFloat(parseFloat(remanente).toFixed(0))) {
-        // Muestra una alerta y previene el envío del formulario
+    if (parseFloat(monto.toFixed(0)) > parseFloat(remanente.toFixed(0))) {
         Swal.fire({
             icon: 'error',
             title: 'Error de validación',
@@ -383,15 +413,9 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
         });
         event.preventDefault(); // Detiene el envío del formulario
         return;
-    }
-
-    // Espera 50 milisegundos antes de deshabilitar el botón de envío
-    else {
+    } else {
         mostrarIndicadorCarga();
         return true; // Permite
-        //setTimeout(function() {
-        //    document.getElementById('myBtn').disabled = true;
-        //}, 50);
     }
 });
 /* *******************NO BORRAR EL CODIGO**********************
