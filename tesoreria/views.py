@@ -939,7 +939,9 @@ def matriz_pagos(request):
             
 
             if usuario.distritos.nombre == "MATRIZ":
-                pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]))
+                pagos = Pago.objects.filter(hecho=True)
+                if fecha_inicio and fecha_fin:
+                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]))
               
                 if distrito_id:
                     pagos = pagos.filter(
@@ -952,11 +954,13 @@ def matriz_pagos(request):
                     pagos = pagos.filter(tesorero_id=tesorero_id)
 
                 if folio:
+                    print('folio', folio)
                     pagos = pagos.filter(
                         Q(gasto__folio=folio) |
                         Q(oc__folio=folio) |
                         Q(viatico__folio=folio)
                     )
+                    print('pagos',pagos)
             else:
                 pagos = pagos.filter(
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
@@ -970,7 +974,7 @@ def matriz_pagos(request):
                 ids_gastos = set()
                 ids_compras = set()
                 ids_viaticos = set()
-
+                print(f"Pagos: {pagos.count()}")
                 for pago in pagos:
                     if pago.gasto:
                         ids_gastos.update(pago.gasto.facturas.values_list('id', flat=True))
@@ -978,8 +982,8 @@ def matriz_pagos(request):
                         ids_compras.update(pago.oc.facturas.values_list('id', flat=True))
                     elif pago.viatico:
                         ids_viaticos.update(pago.viatico.facturas.values_list('id', flat=True))
-
-                validar_lote_facturas.delay(list(ids_gastos), list(ids_compras), list(ids_viaticos))
+                print(ids_gastos, ids_compras, ids_viaticos)
+                #validar_lote_facturas.delay(list(ids_gastos), list(ids_compras), list(ids_viaticos))
             else:
                 zip_buffer = BytesIO()
                 datos_xml_lista = []

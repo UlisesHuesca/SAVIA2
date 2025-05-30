@@ -1459,7 +1459,12 @@ def pago_gasto(request, pk):
     usuario = Profile.objects.get(id = pk_usuario)
     gasto = Solicitud_Gasto.objects.get(id=pk)
     cargos = Tipo_Pago.objects.get(id = 1)
-    pagos_alt = Pago.objects.filter(gasto=gasto, hecho=True, tipo = cargos)
+    pagos_alt = Pago.objects.filter(
+        gasto=gasto,
+        hecho=True
+    ).filter(
+    Q(tipo=cargos) | Q(tipo__isnull=True)
+    )
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
 
     pago, created = Pago.objects.get_or_create(tesorero = usuario, gasto__distrito = usuario.distritos, hecho=False, gasto=gasto)
