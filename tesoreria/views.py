@@ -1190,11 +1190,7 @@ def matriz_pagos(request):
                             zip_file.write(factura.archivo_xml.path, os.path.join(general_xmls_folder, general_file_name)) #Está línea guarda en el zip general de xml's
                             datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, folio, fecha_subida, distrito, beneficiario, general_file_name, factura))
 
-                           # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
-                        for complemento in factura.complementos.all():
-                            if complemento.complemento_xml:
-                                complemento_file_name = os.path.basename(complemento.complemento_xml.path)
-                                zip_file.write(complemento.complemento_xml.path, os.path.join(folder_name, complemento_file_name))
+                       
 
                         if factura.solicitud_gasto.id not in processed_gastos:
                             buf = render_pdf_gasto(factura.solicitud_gasto.id)
@@ -1271,9 +1267,7 @@ def matriz_pagos(request):
                                 #pago_file_name = os.path.basename(pago.comprobante_pago.path)
 
                                 zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
-                                processed_pagos.add(pago.id)
-
-                             
+                                processed_pagos.add(pago.id) 
                         
                         # Generar e incluir la OC en el ZIP solo si no ha sido procesada
                         if factura.oc.id not in processed_ocs:
@@ -1281,6 +1275,12 @@ def matriz_pagos(request):
                             oc_file_name = f'OC_{factura.oc.folio}.pdf'
                             zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
                             processed_ocs.add(factura.oc.id)
+                        
+                           # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
+                        for complemento in factura.complementos.all():
+                            if complemento.complemento_xml:
+                                complemento_file_name = os.path.basename(complemento.complemento_xml.path)
+                                zip_file.write(complemento.complemento_xml.path, os.path.join(folder_name, complemento_file_name))   
                     
 
                     for factura in facturas_viaticos:
