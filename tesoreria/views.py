@@ -2285,6 +2285,8 @@ def mis_gastos(request):
     myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
     gastos = myfilter.qs
 
+
+
     for gasto in gastos:
         articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
 
@@ -2300,12 +2302,17 @@ def mis_gastos(request):
         gasto.proyectos = ', '.join(proyectos)
         gasto.subproyectos = ', '.join(subproyectos)
 
+    p = Paginator(gastos, 20)
+    page = request.GET.get('page')
+    gastos_list = p.get_page(page)
+
     if request.method =='POST' and 'btnExcel' in request.POST:
         return convert_excel_gasto(gastos)
 
     context= {
         'gastos':gastos,
         'myfilter':myfilter,
+        'gastos_list': gastos_list,
         }
 
     return render(request, 'tesoreria/mis_gastos.html',context)
