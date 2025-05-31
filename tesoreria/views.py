@@ -960,7 +960,15 @@ def matriz_pagos(request):
                         Q(oc__folio=folio) |
                         Q(viatico__folio=folio)
                     )
-                    print('pagos',pagos)
+                    if distrito_id:
+                        pagos = pagos.filter(
+                            Q(gasto__distrito_id=distrito_id) |
+                            Q(oc__req__orden__distrito_id=distrito_id) |
+                            Q(viatico__distrito_id=distrito_id)
+                        )
+
+                    if tesorero_id:
+                        pagos = pagos.filter(tesorero_id=tesorero_id)
             else:
                 pagos = pagos.filter(
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
