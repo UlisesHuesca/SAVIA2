@@ -941,20 +941,20 @@ def matriz_pagos(request):
             if usuario.distritos.nombre == "MATRIZ":
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
-                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]))
+                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
               
-                if distrito_id:
-                    pagos = pagos.filter(
-                        Q(gasto__distrito_id=distrito_id) |
-                        Q(oc__req__orden__distrito_id=distrito_id) |
-                        Q(viatico__distrito_id=distrito_id)
-                    )
+                    if distrito_id:
+                        pagos = pagos.filter(
+                            Q(gasto__distrito_id=distrito_id) |
+                            Q(oc__req__orden__distrito_id=distrito_id) |
+                            Q(viatico__distrito_id=distrito_id)
+                        )
 
-                if tesorero_id:
-                    pagos = pagos.filter(tesorero_id=tesorero_id)
+                    if tesorero_id:
+                        pagos = pagos.filter(tesorero_id=tesorero_id)
 
                 if folio:
-                    print('folio', folio)
+                    pagos = Pago.objects.filter(hecho = True)
                     pagos = pagos.filter(
                         Q(gasto__folio=folio) |
                         Q(oc__folio=folio) |
@@ -974,7 +974,7 @@ def matriz_pagos(request):
                 ids_gastos = set()
                 ids_compras = set()
                 ids_viaticos = set()
-                print(f"Pagos: {pagos.count()}")
+                #print(f"Pagos: {pagos.count()}")
                 for pago in pagos:
                     if pago.gasto:
                         ids_gastos.update(pago.gasto.facturas.values_list('id', flat=True))
@@ -983,7 +983,7 @@ def matriz_pagos(request):
                     elif pago.viatico:
                         ids_viaticos.update(pago.viatico.facturas.values_list('id', flat=True))
                 print(ids_gastos, ids_compras, ids_viaticos)
-                #validar_lote_facturas.delay(list(ids_gastos), list(ids_compras), list(ids_viaticos))
+                validar_lote_facturas.delay(list(ids_gastos), list(ids_compras), list(ids_viaticos))
             else:
                 zip_buffer = BytesIO()
                 datos_xml_lista = []
