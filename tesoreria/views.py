@@ -1041,7 +1041,7 @@ def matriz_pagos(request):
                                 for complemento in factura.complementos.all():
                                     if complemento.complemento_xml:
                                         complemento_file_name = os.path.basename(complemento.complemento_xml.path)
-                                        zip_file.write(complemento.complemento_xml.path, os.path.join(folder_name, complemento_file_name))
+                                        zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
                             if oc.id not in processed_docs:
                                 pdf_buf = generar_pdf(oc)
                                 zip_file.writestr(os.path.join(carpeta, f'OC_{oc.folio}.pdf'), pdf_buf.getvalue())
