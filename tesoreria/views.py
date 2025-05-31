@@ -1038,10 +1038,16 @@ def matriz_pagos(request):
                                     gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                     zip_file.write(factura.factura_xml.path, gen_path)
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", gen_path, factura))
+                                for complemento in factura.complementos.all():
+                                    if complemento.complemento_xml:
+                                        complemento_file_name = os.path.basename(complemento.complemento_xml.path)
+                                        zip_file.write(complemento.complemento_xml.path, os.path.join(folder_name, complemento_file_name))
                             if oc.id not in processed_docs:
                                 pdf_buf = generar_pdf(oc)
                                 zip_file.writestr(os.path.join(carpeta, f'OC_{oc.folio}.pdf'), pdf_buf.getvalue())
                                 processed_docs.add(oc.id)
+                                     # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
+                              
                         elif pago.viatico:
                             viatico = pago.viatico
                             carpeta = f'{pago.pagado_real}_VIATICO_{viatico.folio}_{viatico.distrito.nombre}'
@@ -1284,11 +1290,7 @@ def matriz_pagos(request):
                             zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
                             processed_ocs.add(factura.oc.id)
                         
-                           # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
-                        for complemento in factura.complementos.all():
-                            if complemento.complemento_xml:
-                                complemento_file_name = os.path.basename(complemento.complemento_xml.path)
-                                zip_file.write(complemento.complemento_xml.path, os.path.join(folder_name, complemento_file_name))   
+                      
                     
 
                     for factura in facturas_viaticos:
