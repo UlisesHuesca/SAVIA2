@@ -7,6 +7,7 @@ from django.core.validators import FileExtensionValidator
 from decimal import Decimal
 import decimal
 import xml.etree.ElementTree as ET
+from django.db.models import Q
 import os
 # Create your models here.
 
@@ -67,7 +68,7 @@ class Solicitud_Gasto(models.Model):
 
     @property
     def monto_pagado(self):
-        pagado = self.pagosg.filter(tipo__id = 1)
+        pagado = self.pagosg.filter(Q(tipo__id = 1)| Q(tipo__isnull=True))
         pagado= pagado.filter(hecho=True)
         total = sum([pago.monto for pago in pagado])
         return total
