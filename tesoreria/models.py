@@ -55,6 +55,8 @@ class Pago(models.Model):
     comprobante_pago = models.FileField(null=True, upload_to='comprobante',validators=[FileExtensionValidator(['pdf'])])
     saldo = models.DecimalField(max_digits=14,decimal_places=4, null=True, default=0)
     indice = models.IntegerField(null=True, blank=True)  # Nuevo campo para el índice
+    control_documentos = models.BooleanField(default=False)
+    fecha_control_documentos = models.DateField(null=True, blank=True)
 
     @property
     def get_facturas(self):

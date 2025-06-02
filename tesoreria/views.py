@@ -97,9 +97,9 @@ def compras_por_pagar(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-    if usuario.tipo.tesoreria == True:
+    if usuario.tipo.tesoreria == True or usuario.tipo.finanzas == True:
         compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
-   
+    
     
     #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
     myfilter = CompraFilter(request.GET, queryset=compras)
@@ -129,7 +129,7 @@ def compras_por_pagar(request):
                         parcial = float(parcial)
                     except ValueError:
                         parcial = 0  # O algún valor por defecto en caso de error
-                Compra.objects.filter(id=compra_id).update(para_pago=True, parcial = parcial)
+                Compra.objects.filter(id=compra_id).update(para_pago=True, parcial = parcial, tesorero =usuario)
             # Después de la actualización, redirige para restablecer el conteo y sumatoria
             return redirect('compras-por-pagar')
 
@@ -150,10 +150,29 @@ def compras_autorizadas(request):
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh:
             compras = Compra.objects.none()
-        else: 
-            compras = Compra.objects.filter(para_pago=True,pagada=False,autorizado2=True, req__orden__distrito = usuario.distritos).annotate(
-                total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
-                ).order_by('-folio')
+        elif usuario.tipo.tesoreria: 
+            compras = Compra.objects.filter(
+                para_pago=True,
+                pagada=False,
+                autorizado2=True, 
+                tesorero__tipo__tesoreria=True,  # 👈 Filtra que quien envió a pago sea Tesorería
+                req__orden__distrito = usuario.distritos
+            ).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
+                autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
+            ).order_by('-folio')
+        elif usuario.tipo.finanzas:
+            compras = Compra.objects.filter(
+                para_pago=True,
+                pagada=False,
+                autorizado2=True, 
+                tesorero__tipo__finanzas=True,  # 👈 Filtra que quien envió a pago sea Tesorería
+                req__orden__distrito = usuario.distritos
+            ).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
+                autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
+            ).order_by('-folio')
+        
     
    
     
@@ -1385,6 +1404,16 @@ def matriz_pagos(request):
             pago.estado_facturas = 'todas_autorizadas'
         else:
             pago.estado_facturas = 'pendientes'
+        if 'enviar_a_control' in request.POST:
+            ids = request.POST.getlist('compra_ids')
+            if ids:
+                pagos = Pago.objects.filter(id__in=ids)
+                for pago in pagos:
+                    pago.control_documentos = True
+                    pago.fecha_control_documentos = datetime.today()
+                    pago.save()
+
+            return redirect('matriz-pagos')  # Ajusta a donde quieres redirigir
     context= {
         'pagos_list':pagos_list,
         'pagos':pagos,
