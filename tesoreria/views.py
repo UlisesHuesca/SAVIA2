@@ -4180,14 +4180,39 @@ def layout_pagos(request):
 
             xml_bytes = ET.tostring(root, encoding='utf-8', method='xml')
 
+            # Generar secuencial único (persistente en un archivo)
+            secuencial_file = '/home/savia/pagos_xml/secuencial.txt'
+
+            # Leer el último secuencial
+            if not os.path.exists(secuencial_file):
+                ultimo_secuencial = 0
+            else:
+                with open(secuencial_file, 'r') as f:
+                    ultimo_secuencial = int(f.read().strip())
+
+            # Incrementar
+            nuevo_secuencial = (ultimo_secuencial + 1) % 1000  # Máximo 3 dígitos: 000-999
+
+            # Guardar el nuevo secuencial para la próxima vez
+            with open(secuencial_file, 'w') as f:
+                f.write(str(nuevo_secuencial))
+
+            # Formatear a 3 dígitos
+            secuencia = '{:03d}'.format(nuevo_secuencial)
+            bei = 'VORDCA00H2H'
+            country = 'MX'
+            fecha_actual = datetime.datetime.now().strftime('%y%m%d')
+            extension = 'CAN'
+            nombre_base = f'{bei}_{country}_{fecha_actual}_{secuencia}'
+            nombre_final = f'{nombre_base}.{extension}'
             # Guardar XML en disco
-            xml_path = '/home/savia/pagos_xml/pagos.xml'
+            xml_path = '/home/savia/pagos_xml/temporal.xml'
             with open(xml_path, 'wb') as f:
                 f.write(xml_bytes)
             logging.info(f'Archivo XML generado: {xml_path}')
 
             # Encriptar el archivo XML con GPG
-            encrypted_path = '/home/savia/pagos_encrypted/pagos.xml.gpg'
+            encrypted_path = '/home/savia/pagos_encrypted/{nombre_final}.gpg'
             subprocess.run([
                 '/usr/bin/gpg', '--yes', '--batch', '--trust-model', 'always',
                 '--output', encrypted_path,
