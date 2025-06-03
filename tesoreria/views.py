@@ -428,7 +428,8 @@ def compras_pagos(request, pk):
             else:
                 suma_pago = suma_pago + pago.monto * (pago.tipo_de_cambio or compra.tipo_de_cambio)
                 suma_pago_usd = suma_pago_usd + pago.monto
-
+        else:
+            suma_pago = suma_pago + pago.monto
 
     if compra.moneda.nombre == 'PESOS':
         cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
