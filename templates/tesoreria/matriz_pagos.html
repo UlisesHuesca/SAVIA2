@@ -315,6 +315,7 @@
                     <th scope="col">Fecha</th>
                     <th scope="col">Acción</th>
                     <th>Control de Documentos</th>
+                    <th>Fecha Control</th>
                 </tr>
             </thead>
             <tbody>
@@ -505,6 +506,14 @@
                          <input class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                         {% endif %}
                     </td>
+                   <td>
+                        {% if pago.fecha_control_documentos %}
+                            {{ pago.fecha_control_documentos|date:"d/m/Y" }}
+                        {% else %}
+                            No enviado a control
+                        {% endif %}
+                    </td>
+
                 </tr>
                 {% endfor %}
             </tbody>

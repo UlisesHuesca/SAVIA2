@@ -36,6 +36,7 @@ urlpatterns = [
     path('tesoreria/layout_pagos/', views.layout_pagos, name='layout_pagos'),
     path('factura_cfdi/<int:pk>/', views.generar_cfdi, name='generar_cfdi'),
     path('mostrar-pdf/', views.mostrar_pdf, name='mostrar-pdf'),
+    path('tesoreria/control_documentos/', views.control_documentos, name='control-documentos'),
     #path('tesoreria/impresion_factura/', views.impresion_facturas, name='impresion-factura'),
    
     ]
