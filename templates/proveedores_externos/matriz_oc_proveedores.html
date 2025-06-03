@@ -258,12 +258,12 @@
                                             <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
                                                 <i class="fa-solid fa-file-circle-xmark"></i>
                                             </a>
-                                        {% elif compra.estado_facturas == "todas_autorizadas" %}
+                                        <!--{% elif compra.estado_facturas == "todas_autorizadas" %}
                                             <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
                                                 <i class="fa-solid fa-file-circle-check"></i>
-                                            </a>
-                                        {% elif compra.estado_facturas == "pendientes" %}
-                                            <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
+                                            </a>-->
+                                        {% elif compra.estado_facturas == "pendientes" or compra.estado_facturas == "todas_autorizadas" %}
+                                            <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
                                                 <i class="fa-solid fa-file-circle-exclamation"></i>
                                             </a>
                                         {% endif %}

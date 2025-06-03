@@ -186,7 +186,7 @@
                     <th class="d-none d-lg-table-cell">Autorizado</th>
                     <th scope="col">Proveedor</th>
                     <th scope="col">Acción</th>
-                    <th scope="col">Atraso</th>
+                    <th scope="col">Evidencia</th>
                 </tr>
             </thead>
             <tbody>
@@ -219,7 +219,10 @@
                             </li> 
                         </ul>
                     </td>
-                    <td id="retraso_{{compra.folio}}"  class="d-none">
+                    <td>
+                        <a type="button" class="btn btn-outline-info" href="{% url 'evidencias-proveedor' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Evidencias de Compra"><i class="fa-regular fa-images"></i></a>
+                    </td>
+                    <!--<td id="retraso_{{compra.folio}}"  class="d-none">
                         <ul class="nav nav-pills">
                             <li>
                                 <div  class="alert alert-warning" role="alert">
@@ -227,7 +230,7 @@
                                 </div>
                             </li>
                         </ul>
-                    </td>
+                    </td>-->
                 </tr>
 
                 {% endfor %}
