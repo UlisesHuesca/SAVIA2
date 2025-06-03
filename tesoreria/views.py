@@ -4212,7 +4212,7 @@ def layout_pagos(request):
             logging.info(f'Archivo XML generado: {xml_path}')
 
             # Encriptar el archivo XML con GPG
-            encrypted_path = '/home/savia/pagos_encrypted/{nombre_final}.gpg'
+            encrypted_path = f'/home/savia/pagos_encrypted/{nombre_final}.gpg'
             subprocess.run([
                 '/usr/bin/gpg', '--yes', '--batch', '--trust-model', 'always',
                 '--output', encrypted_path,
