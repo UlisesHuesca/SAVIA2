@@ -458,6 +458,26 @@ class Compra(models.Model):
 
     def __str__(self):
         return f'oc:{self.folio} - {self.id}'
+    
+    @property
+    def entrada_parcial(self):
+        entrada_total = 0
+        entrada = 0
+
+        if self.costo_oc and self.costo_iva is not None and (self.costo_oc - self.costo_iva) != 0:
+            articulos = self.articulocomprado_set.all()
+            for articulo in articulos:
+                if articulo.cantidad is not None and articulo.cantidad_pendiente is not None and articulo.precio_unitario is not None:
+                    cantidad_entregada = articulo.cantidad - articulo.cantidad_pendiente
+                    if cantidad_entregada < 0:
+                        cantidad_entregada = 0  # Para evitar negativos
+                    parcial = cantidad_entregada * (articulo.precio_unitario / (self.costo_oc - self.costo_iva))
+                    entrada += parcial
+            
+            entrada_total = round(entrada * 100,2) 
+        
+        return entrada_total
+
 
 
 class ArticuloComprado(models.Model):
