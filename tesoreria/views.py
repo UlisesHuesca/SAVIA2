@@ -51,6 +51,8 @@ import zipfile
 import xml.etree.ElementTree as ET
 
 
+
+
 #Excel stuff
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
@@ -4179,7 +4181,7 @@ def layout_pagos(request):
                 ET.SubElement(rmt_inf, 'Ustrd').text = f"F-{compra.folio}"
 
             xml_bytes = ET.tostring(root, encoding='utf-8', method='xml')
-
+            #print(xml_bytes)
             # Generar secuencial único (persistente en un archivo)
             secuencial_file = '/home/savia/pagos_xml/secuencial.txt'
 
@@ -4201,10 +4203,13 @@ def layout_pagos(request):
             secuencia = '{:03d}'.format(nuevo_secuencial)
             bei = 'VORDCA00H2H'
             country = 'MX'
-            fecha_actual = datetime.datetime.now().strftime('%y%m%d')
+            #print(country)
+            fecha_actual = datetime.now().strftime('%y%m%d')
+            #print(fecha_actual)
             extension = 'CAN'
             nombre_base = f'{bei}_{country}_{fecha_actual}_{secuencia}'
-            nombre_final = f'{nombre_base}.{extension}'
+            nombre_final = f'{nombre_base}.{extension}' 
+            #print(nombre_final)
             # Guardar XML en disco
             xml_path = '/home/savia/pagos_xml/temporal.xml'
             with open(xml_path, 'wb') as f:
@@ -4213,6 +4218,7 @@ def layout_pagos(request):
 
             # Encriptar el archivo XML con GPG
             encrypted_path = f'/home/savia/pagos_encrypted/{nombre_final}.gpg'
+            #print(encrypted_path)
             subprocess.run([
                 '/usr/bin/gpg', '--yes', '--batch', '--trust-model', 'always',
                 '--output', encrypted_path,
