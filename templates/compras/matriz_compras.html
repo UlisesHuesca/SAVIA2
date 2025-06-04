@@ -234,6 +234,7 @@
                     <th>Comparativo</th>
                     <th>Devolver</th>
                     <th>Cancelar</th>
+                    <th>Evidencia</th>
                 </tr>
             </thead>
             <tbody>
@@ -331,7 +332,11 @@
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                         {% endif %}     
                     </td>
+                    <td>
+                        <a type="button" class="btn btn-outline-info" href="{% url 'evidencias-proveedor' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Evidencias de Compra"><i class="fa-regular fa-images"></i></a>
+                    </td>
                 </tr>
+               
                 {% endfor %}
             </tbody>
         </table>
