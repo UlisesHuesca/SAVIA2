@@ -4213,10 +4213,10 @@ def layout_pagos(request):
             bei = 'VORDCA00H2H'
             country = 'MX'
             #print(country)
-            fecha_actual = datetime.now().strftime('%y%m%d')
+            fecha_actual = datetime.now().strftime('%Y%m%d')
             #print(fecha_actual)
             extension = 'CAN'
-            nombre_base = f'{bei}_{country}_{fecha_actual}_{secuencia}'
+            nombre_base = f'{bei}_{country}_{fecha_actual}{secuencia}'
             nombre_final = f'{nombre_base}.{extension}' 
             #print(nombre_final)
             # Guardar XML en disco
@@ -4226,7 +4226,7 @@ def layout_pagos(request):
             logging.info(f'Archivo XML generado: {xml_path}')
 
             # Encriptar el archivo XML con GPG
-            encrypted_path = f'/home/savia/pagos_encrypted/{nombre_final}.gpg'
+            encrypted_path = f'/home/savia/pagos_encrypted/{nombre_final}.pgp'
             #print(encrypted_path)
             subprocess.run([
                 '/usr/bin/gpg', '--yes', '--batch', '--trust-model', 'always',
