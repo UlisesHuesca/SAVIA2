@@ -224,7 +224,7 @@
                     
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>{{compra.moneda.nombre}}</td>
-                    <td th class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
+                    <td class="d-none d-lg-table-cell">{% if compra.tipo_de_cambio %} {{compra.tipo_de_cambio}} {% endif %}</td>
                     {% if compra.para_pago %}
                     <td class="d-none d-lg-table-cell"><span class="badge bg-success">Programada para Pago</span></td>
                     {% elif compra.pagada %}

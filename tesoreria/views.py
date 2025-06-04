@@ -959,7 +959,7 @@ def matriz_pagos(request):
             folio = request.POST.get('folio')
             validar_sat = request.POST.get('validacion') == 'on'
             tipo_documento = request.POST.get('tipo_documento') 
-            print('tipo_documento:', tipo_documento)
+            #print('tipo_documento:', tipo_documento)
             
 
             if usuario.distritos.nombre == "MATRIZ":
