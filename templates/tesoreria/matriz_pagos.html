@@ -463,7 +463,7 @@
                                 <a type="button" class="btn btn-outline-info" href="{{pago.comprobante_pago.url}}" download data-bs-toggle="tooltip" data-bs-placement="top" title="Comprobante de pago"><i class="fa-solid fa-file-invoice-dollar"></i></a>
                             </li>
                             <!-- Modal con visor de PDF -->
-                            <!--<div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
+                            <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
                                 <div class="modal-dialog modal-xl">
                                     <div class="modal-content">
                                         <div class="modal-header">
@@ -475,7 +475,7 @@
                                         </div>
                                     </div>
                                 </div>
-                            </div>-->
+                            </div>
                             {% endif %}
                             {% if pago.oc %}
                             {% endif %}
