@@ -968,11 +968,11 @@ def matriz_pagos(request):
                     pagos = Pago.objects.filter(pagado_real__range=[fecha_inicio, fecha_fin], hecho = True) #Se modifica para que ya solo descargue con respecto a la --fecha real--
                     
                     if tipo_documento == "Gastos":
-                        pagos = pagos.filter(gasto__isnull=False)
+                        pagos = pagos.filter(gasto__isnull=False, oc__isnull=True, viatico__isnull=True)
                     elif tipo_documento == "Compras":
-                        pagos = pagos.filter(oc__isnull=False)
+                        pagos = pagos.filter(oc__isnull=False, gasto__isnull=True, viatico__isnull=True)
                     elif tipo_documento == "Viáticos":
-                        pagos = pagos.filter(viatico__isnull=False)
+                        pagos = pagos.filter(viatico__isnull=False, gasto__isnull=True, oc__isnull=True)
 
                     if distrito_id:
                         pagos = pagos.filter(
