@@ -959,6 +959,7 @@ def matriz_pagos(request):
             folio = request.POST.get('folio')
             validar_sat = request.POST.get('validacion') == 'on'
             tipo_documento = request.POST.get('tipo_documento') 
+            print('tipo_documento:', tipo_documento)
             
 
             if usuario.distritos.nombre == "MATRIZ":
@@ -967,11 +968,11 @@ def matriz_pagos(request):
                     #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
                     pagos = Pago.objects.filter(pagado_real__range=[fecha_inicio, fecha_fin], hecho = True) #Se modifica para que ya solo descargue con respecto a la --fecha real--
                     
-                    if tipo_documento == "Gastos":
+                    if tipo_documento == "gastos":
                         pagos = pagos.filter(gasto__isnull=False)
-                    elif tipo_documento == "Compras":
+                    elif tipo_documento == "compras":
                         pagos = pagos.filter(oc__isnull=False)
-                    elif tipo_documento == "Viáticos":
+                    elif tipo_documento == "viaticos":
                         pagos = pagos.filter(viatico__isnull=False)
 
                     if distrito_id:
