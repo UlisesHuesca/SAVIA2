@@ -3,7 +3,11 @@ from django.http import HttpResponse, Http404, JsonResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.utils import translation
+from django.urls import reverse
+from django.conf import settings
 from django.forms import inlineformset_factory
+from django.utils.http import urlencode
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor
@@ -22,9 +26,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
-from django.utils import translation
-from django.urls import reverse
-from django.conf import settings
+
 import os
 #import decimal
 from openpyxl import Workbook
@@ -1024,6 +1026,8 @@ def edit_proveedor_direccion(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     colaborador = Profile.objects.all()
     usuario = colaborador.get(id = pk_perfil)
+    next_param = request.POST.get('next') or request.GET.get('next')
+    print('next_param:', next_param)
     if usuario.tipo.proveedores == True:
         direccion = Proveedor_direcciones.objects.get(id = pk)
         proveedor = Proveedor.objects.get(id = direccion.nombre.id)
@@ -1035,8 +1039,20 @@ def edit_proveedor_direccion(request, pk):
                 direccion.actualizado_por = usuario
                 direccion.completo = True
                 direccion.save()
+                base_url = reverse('proveedor-direcciones', kwargs={'pk': proveedor.id})
                 messages.success(request,'Has actualizado correctamente la direccion del proveedor')
-                return redirect('proveedor-direcciones', pk= proveedor.id)
+                  # Agregamos el `next` a la URL si existe
+                if next_param:
+                    print('next_param:', next_param)
+                    query_params = {'next': next_param}
+                    url = f"{base_url}?{urlencode(query_params)}"
+                else:
+                    print('no hay next_param')
+                    url = base_url
+
+                # Redirigimos a la URL final
+                return redirect(url)
+                #return redirect('proveedor-direcciones', pk= proveedor.id)
         else:
             form = ProveedoresDireccionesForm(instance = direccion, profile = usuario)
     else:
