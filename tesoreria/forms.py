@@ -84,7 +84,7 @@ class Cargo_Abono_Form(forms.ModelForm):
 class Saldo_Inicial_Form(forms.ModelForm):
     class Meta:
         model = Saldo_Cuenta
-        fields = ['cuenta','monto_inicial','comentario','fecha_inicial']
+        fields = ['monto_inicial','comentario','fecha_inicial'] #Quito cuenta porque estaría relacionada con el pk de la cuenta que estamos viendo
     
 
 class Transferencia_Form(forms.ModelForm):

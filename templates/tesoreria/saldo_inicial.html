@@ -49,17 +49,12 @@
         <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="col">
                 {% csrf_token %}
-                <div class="row my-2">
-                    <div class="row">
-                        <div class="col-lg-12 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1"> 
-                                        {{form.cuenta}}
-                                    </div>
-                            </div>
-                        </div>
+               
+                    
+                    <div class="alert alert-primary" role="alert">
+                        Cuenta: {{cuenta.banco}} | {{cuenta.cuenta}} | Moneda: {{cuenta.moneda}}
                     </div>
+                    
                     <div class="row">
                         <div class="col-lg-12 col-sm-12">
                             <div class="input-group mb-3">
@@ -96,12 +91,12 @@
                     </div>
                 </div>
                     
-                </div>
+                
             </div>
             <div class="card-footer text-end">
                 <h6>Registrar Movimiento de cuenta</h6>
                 <button id="myBtn" name = "envio" type="submit" class="btn btn-success">Registrar</button>
-                <a type="button" class="btn btn-secondary" href="{% url 'control-bancos' %}">Cerrar</a>
+                <a type="button" class="btn btn-secondary" href="{% url 'control-bancos' cuenta.id %}">Cerrar</a>
             </div>
         </form>
 

@@ -6,7 +6,7 @@
 {% load l10n %}
 <html>
 <head>
-{% block title %}Transferencia entre cuentas{% endblock %}
+{% block title %}Traspaso entre cuentas{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -42,7 +42,7 @@
 <div class="col-lg-6 offset-lg-3 col-sm-12" >
     <div class="card">
         <div class="card-header">
-            <h5 class="modal-title">Transacción</h5>
+            <h5 class="modal-title">Traspaso</h5>
         </div>
 
         <div class="card-body">           
@@ -59,7 +59,7 @@
                 </div>
                 {% endif %}
                    
-                    <div class="row">
+                    <!--<div class="row">
                         <div class="col-lg-12 col-sm-12">
                             <div class="input-group mb-3">
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
@@ -69,7 +69,7 @@
                                     </div>
                             </div>
                         </div>
-                    </div>
+                    </div>-->
                     <div class="alert alert-primary" role="alert">
                         CARGO
                     </div>
@@ -139,12 +139,14 @@
                                 </div>
                             </div>
                         </div>
+                        <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
+                        {{form.comprobante_pago|add_class:'form-control'}}
                    
             </div>
             <div class="card-footer text-end">
-                <h6>Registrar Transacción|Movimiento de cuenta</h6>
+                <h6>Registrar Traspaso|Movimiento de cuenta</h6>
                 <button id="myBtn" name = "envio" type="submit" class="btn btn-success">Registrar</button>
-                <a type="button" class="btn btn-secondary" href="{% url 'control-bancos' %}">Cerrar</a>
+                <a type="button" class="btn btn-secondary" href="{% url 'control-bancos' cuenta %}">Cerrar</a>
             </div>
         </form>
 
@@ -284,6 +286,44 @@ function formatRepo (repo) {
 function formatRepoSelection (repo) {
     return repo.text || repo.id;
 }
+
+document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
+  var file = event.target.files[0];
+  var formData = new FormData();
+  formData.append('comprobante_pago', file);
+  
+  // Añadir CSRF token a la solicitud AJAX
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+
+  fetch('/gastos/prellenar_formulario_gastos/', { 
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
+    },
+  })
+  .then(response => response.json()) 
+  .then(data => {
+    console.log(data);
+    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
+    document.querySelector('[name="monto"]').value = data.monto;
+    //document.querySelector('[name="cuenta"]').value = data.cuenta;
+    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
+    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
+    var $selectElement = $('[name="cuenta"]');
+    //var divisa = data.divisa_cuenta
+    //console.log(divisa)
+    $selectElement.val(cuentaId).trigger('change');
+
+    var cuentaDestinoId = data.destino_cuenta;
+    $('[name="abono-cuenta"]').val(cuentaDestinoId).trigger('change');
+    //if (divisa == "MXP" && compra_moneda == "DOLARES" ){
+    //var tipo_cambio = document.getElementById('text_tc')
+    //tipo_cambio.classList.remove('d-none');
+    //}
+  })
+  .catch(error => console.error('Error:', error));
+});
 //This is the function that remove any product from render product table and remove the specific element from the array
 /*function deleteRow(element) {
      producto="{{p.id|unlocalize}}"

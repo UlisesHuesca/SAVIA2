@@ -108,17 +108,17 @@
                             </button>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info"  href="{% url 'transferencia-cuentas' %}" data-toggle="tooltip" data-placement="top" title="Transferencia">
+                            <a type="button" class="btn btn-lg btn-outline-info"  href="{% url 'transferencia-cuentas' %}?cuenta = {{cuenta.id}}" data-toggle="tooltip" data-placement="top" title="Transferencia">
                               <i class="fa-solid fa-money-bill-transfer"></i>
                             </a>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'saldo-inicial' %}" data-toggle="tooltip" data-placement="top" title="Saldo Inicial">
+                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'saldo-inicial' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Saldo Inicial">
                                 <i class="fa-solid fa-sack-dollar"></i>
                             </a>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'cargo-abono' %}" data-toggle="tooltip" data-placement="top" title="Cargo/Abono">
+                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'cargo-abono' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Cargo/Abono">
                                 <i class="fa-solid fa-money-bill-trend-up"></i>
                             </a>
                         </li>
@@ -186,7 +186,7 @@
                     <th>Distrito</th>
                     <th>Cargo</th>
                     <th>Abono</th>
-                    <th>Saldo</th>
+                    <!--<th>Saldo</th>-->
                 </tr>
             </thead>
             <tbody>
@@ -221,7 +221,7 @@
                     
                     <td>{% if pago.tipo.nombre == null or pago.tipo.nombre == "CARGO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
                     <td>{% if pago.tipo.nombre == "ABONO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
-                    <td class="saldo">{{pago.saldo|floatformat:2}}</td>
+                    <!--<td class="saldo">{{pago.saldo|floatformat:2}}</td>-->
                 </tr>
                 {% endfor %}
             </tbody>

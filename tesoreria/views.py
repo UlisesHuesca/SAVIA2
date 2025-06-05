@@ -211,16 +211,18 @@ def transferencia_cuentas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     tipos_pago = Tipo_Pago.objects.all()
-    cargo = tipos_pago.get(id = 1)
+    transferencia = tipos_pago.get(id = 3)
     abono = tipos_pago.get(id = 2)
-    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = cargo)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = transferencia)
     transaccion2, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = abono)
     form = Cargo_Abono_Form(instance=transaccion)
     form_transferencia = Transferencia_Form(prefix='abono')
+    pk_cuenta = request.GET.get('cuenta')
+    #cuenta = get_object_or_404(Cuenta, id=pk_cuenta)
 
     error_messages = []
 
-    form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id = 3)
+    #form.fields['tipo_pago'].queryset = Tipo_Pago.objects.get(id = 3)
     print(Tipo_Pago.objects.filter(id=3))
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
       
@@ -232,19 +234,19 @@ def transferencia_cuentas(request):
 
     if request.method == 'POST':
         if "envio" in request.POST:
-            form = Cargo_Abono_Form(request.POST, instance = transaccion)
+            form = Cargo_Abono_Form(request.POST, request.FILES, instance = transaccion)
             form_transferencia = Transferencia_Form(request.POST, instance = transaccion2, prefix='abono')
             
             if form.is_valid() and form_transferencia.is_valid():
                 cargo = form.save(commit=False)
                 cargo.pagado_date = date.today()
-                cargo.tipo = Tipo_Pago.objects.get(id = 1)
+                cargo.tipo = Tipo_Pago.objects.get(id = 3)
                 cargo.pagado_hora = datetime.now().time() 
                 cargo.hecho = True
                 
                 abono = form_transferencia.save(commit=False)
                 abono.monto = cargo.monto
-                #abono.tipo = Tipo_Pago.objects.get(id = 2)
+                abono.tipo = Tipo_Pago.objects.get(id = 2)
                 abono.comentario = f"{cargo.comentario} (Relacionado con cuenta {cargo.cuenta})"
                 abono.pagado_real = cargo.pagado_real
                 abono.pagado_date = date.today()
@@ -255,7 +257,7 @@ def transferencia_cuentas(request):
                 cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
                 cargo.save()
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente la transferencia')
-                return redirect('control-bancos')
+                return redirect('control-bancos', pk = pk_cuenta)
             else:
                 for field, errors in form.errors.items():
                     error_messages.append(f"{field}: {errors.as_text()}")
@@ -265,6 +267,7 @@ def transferencia_cuentas(request):
     context= {
         'form':form,
         'form_transferencia': form_transferencia,
+        'cuenta': pk_cuenta,
         'cuentas_para_select2': cuentas_para_select2,
         'error_messages': error_messages,
     }
@@ -272,24 +275,25 @@ def transferencia_cuentas(request):
     return render(request, 'tesoreria/transferencia_cuentas.html',context)
 
 @perfil_seleccionado_required
-def cargo_abono(request):
+def cargo_abono(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     enproceso = Tipo_Pago.objects.get(id = 3)
-    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = enproceso)
+    cuenta = get_object_or_404(Cuenta, id=pk)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = enproceso, cuenta = cuenta)
     form = Cargo_Abono_Form(instance=transaccion)
     #form_transferencia = Transferencia_Form(instance = tran)
 
 
-    form.fields['tipo'].queryset = Tipo_Pago.objects.exclude(id=3)
+    #form.fields['tipo'].queryset = Tipo_Pago.objects.exclude(id=3)
     #print(Tipo_Pago.objects.filter(id=3))
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
       
-    cuentas_para_select2 = [
-        {'id': cuenta.id,
-         'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
-         'moneda': str(cuenta.moneda),
-        } for cuenta in cuentas]
+    #cuentas_para_select2 = [
+    #    {'id': cuenta.id,
+    #     'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
+    #     'moneda': str(cuenta.moneda),
+    #    } for cuenta in cuentas]
 
     if request.method == 'POST':
         if "envio" in request.POST:
@@ -309,26 +313,27 @@ def cargo_abono(request):
     context= {
         'form':form,
         #'form_transferencia': form_transferencia,
-        'cuentas_para_select2': cuentas_para_select2,
+        'cuenta': cuenta,
     }
 
     return render(request, 'tesoreria/cargo_abono.html',context)
 
 
 @perfil_seleccionado_required
-def saldo_inicial(request):
+def saldo_inicial(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    saldo, created = Saldo_Cuenta.objects.get_or_create(hecho=False)
+    cuenta = Cuenta.objects.get(id = pk)
+    saldo, created = Saldo_Cuenta.objects.get_or_create(hecho=False, cuenta = cuenta)
     form = Saldo_Inicial_Form(instance = saldo)
 
-    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+   
       
-    cuentas_para_select2 = [
-        {'id': cuenta.id,
-         'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
-         'moneda': str(cuenta.moneda),
-        } for cuenta in cuentas]
+    #cuentas_para_select2 = [
+    #    {'id': cuenta.id,
+    #     'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
+    #     'moneda': str(cuenta.moneda),
+    #    } for cuenta in cuentas]
     
     if request.method == 'POST' and "envio" in request.POST:
         form = Saldo_Inicial_Form(request.POST, instance = saldo)
@@ -347,7 +352,7 @@ def saldo_inicial(request):
             messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
 
     context = {
-        'cuentas_para_select2':cuentas_para_select2,
+        'cuenta':cuenta,
         'form':form,
     }
 
@@ -1986,6 +1991,7 @@ def control_bancos(request, pk):
     # Obtener la cuenta seleccionada en el filtro
     
     cuenta = Cuenta.objects.get(id=pk)
+    #print(cuenta)
     pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('-indice')
 
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
@@ -2002,6 +2008,7 @@ def control_bancos(request, pk):
 
     context= {
         'pagos_list':pagos_list,
+        'cuenta': cuenta,
         'pagos':pagos,
         'myfilter':myfilter,
         'latest_balance': saldo_inicial,
@@ -4496,7 +4503,7 @@ def convert_excel_control_bancos(pagos):
     worksheet.write('J12', '', header_format)
     
 
-    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Comentarios','Saldo']
+    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Comentarios','Saldo']
 
     columna_max = len(columns)+2
 
@@ -4525,9 +4532,12 @@ def convert_excel_control_bancos(pagos):
             if pago.viatico.colaborador:
                 proveedor = f"{pago.viatico.colaborador.staff.staff.first_name} {pago.viatico.colaborador.staff.staff.last_name}"
             else:
-                proveedor = f"{pago.viatico.staff.staff.first_name} {pago.viatico.staff.staff.last_name}"
+                proveedor = f"{pago.viatico.staff.staff.staff.first_name} {pago.viatico.staff.staff.staff.last_name}"
         else:
-            proveedor = f"{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}"
+            if pago.tesorero:
+                proveedor = f"{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}" 
+            else:
+                proveedor = "No disponible"
 
         cuenta = pago.cuenta.cuenta
         if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'cuenta_retiro') and pago.detalles_comprobante.cuenta_retiro != "No disponible":
@@ -4570,9 +4580,11 @@ def convert_excel_control_bancos(pagos):
         
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else ''))
         cargo = ''
+        abono = ''
         if pago.tipo == None or pago.tipo.nombre == "CARGO":
             cargo = pago.monto
-        abono = pago.monto if pago.tipo and pago.tipo.nombre == "ABONO"  else ''
+        elif pago.tipo.nombre == "ABONO" or pago.tipo.nombre == "TRANSFERENCIA":
+            abono = pago.monto
         #saldo = pago.saldo
         
    
@@ -4588,21 +4600,42 @@ def convert_excel_control_bancos(pagos):
         worksheet.write(row_num, 6, distrito)
         worksheet.write(row_num, 7, cargo, money_style)
         worksheet.write(row_num, 8, abono, money_style)
-        worksheet.write(row_num, 8, comentarios)
-        #if row_num == 13:
-        #    worksheet.write(row_num, 9, saldo_acumulado, money_style)
-        #else:
-        #    if row_num > 13:
-                # Restar la celda (row_num - 1, 10) - (row_num, 8)
-        #        formula = f'=IF(H{row_num + 1}>0,  J{row_num} - H{row_num + 1}, J{row_num} + I{row_num + 1} )'
-        #        worksheet.write_formula(row_num, 9, formula, money_style)
+        worksheet.write(row_num, 9, comentarios)
+        # Saldo en la columna 9 (índice 9 = columna J)
+        if row_num <= 13:
+            # Primera fila de saldo, usa saldo inicial
+            # Ya está escrito en J13
+            pass
+        elif row_num == 14:
+            # Fila 14: saldo inicial en J10 - cargo actual + abono actual
+            fila_actual_excel = row_num + 1  # Excel indexa desde 1
+            celda_saldo_inicial = 'J10'
+            celda_cargo_actual = f'H{fila_actual_excel}'
+            celda_abono_actual = f'I{fila_actual_excel}'
 
-        last_filled_row = row_num
+            formula_saldo = f'={celda_saldo_inicial} - {celda_cargo_actual} + {celda_abono_actual}'
+            worksheet.write_formula(row_num, 9, formula_saldo, money_style)
+
+        else:
+            # Desde la fila 14 en adelante, calcula el saldo dinámico
+            fila_actual_excel = row_num + 1  # Excel indexa desde 1
+            fila_anterior_excel = fila_actual_excel - 1
+
+            # Celdas relevantes
+            celda_saldo_anterior = f'J{fila_anterior_excel}'
+            celda_cargo_actual = f'H{fila_actual_excel}'
+            celda_abono_actual = f'I{fila_actual_excel}'
+
+            # Fórmula: saldo anterior - cargo + abono
+            formula_saldo = f'={celda_saldo_anterior} - {celda_cargo_actual} + {celda_abono_actual}'
+            worksheet.write_formula(row_num, 9, formula_saldo, money_style)
+
+        #last_filled_row = row_num
         row_num += 1
 
-    last_filled_cell = f'A{last_filled_row+1}'
+    #last_filled_cell = f'A{last_filled_row+1}'
     worksheet.write_formula('J11', '=J14', h_money_style)
-    worksheet.write_formula('I9', f'={last_filled_cell}', h_money_style)
+    #worksheet.write_formula('I9', f'={last_filled_cell}', h_money_style)
     worksheet.write_formula('J9', '=A14', h_money_style)
      # Agregar el marco general desde A1 hasta J12
     border_format = workbook.add_format({

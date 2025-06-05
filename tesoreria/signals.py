@@ -3,7 +3,7 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from .models import Pago, Saldo_Cuenta
 
-@receiver(post_save, sender=Pago)
+#@receiver(post_save, sender=Pago)
 def actualizar_saldos(sender, instance, created, **kwargs):
     # Evitar recursión infinita
     if hasattr(instance, '_avoid_signal'):
@@ -45,4 +45,4 @@ def actualizar_saldos(sender, instance, created, **kwargs):
             del pago._avoid_signal
 
     # Volver a conectar la señal
-    post_save.connect(actualizar_saldos, sender=Pago)
+    #post_save.connect(actualizar_saldos, sender=Pago)
