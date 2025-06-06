@@ -3,6 +3,8 @@ from requisiciones.models import Salidas
 #from dashboard.models import ArticulosparaSurtir  # Ajusta el import
 from django.db.models import Sum
 from decimal import Decimal
+from django.utils import timezone
+from datetime import datetime
 import logging
 
 logger = logging.getLogger(__name__)
@@ -13,7 +15,8 @@ class Command(BaseCommand):
     def handle(self, *args, **kwargs):
         total_salidas = 0
         modificados = 0
-        salidas = Salidas.objects.filter(cancelada=False, complete=True)
+        fecha_inicio = datetime(2024, 1, 1, tzinfo=timezone.utc)
+        salidas = Salidas.objects.filter(cancelada=False, complete=True, created_at__gte=fecha_inicio)
 
         for salida in salidas:
             total_salidas += 1

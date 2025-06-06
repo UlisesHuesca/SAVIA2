@@ -378,7 +378,7 @@ class ArticulosOrdenados(models.Model):
     orden = models.ForeignKey(Order, on_delete = models.CASCADE, null=True, related_name= "productos")
     cantidad = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     created_at = models.DateTimeField(auto_now_add=True)
-    comentario = models.TextField(max_length=100, null=True, blank=True)
+    comentario = models.TextField(max_length=200, null=True, blank=True)
 
     def __str__(self):
         return f'{self.orden}|{self.producto}'
