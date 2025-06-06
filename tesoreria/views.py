@@ -1991,9 +1991,19 @@ def control_bancos(request, pk):
     # Obtener la cuenta seleccionada en el filtro
     
     cuenta = Cuenta.objects.get(id=pk)
-    #print(cuenta)
-    pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('-indice')
+    cuenta_saldos = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial')
+    ultimo_saldo = cuenta_saldos.first() if cuenta_saldos.exists() else None
 
+    if ultimo_saldo is not None:
+        fecha_saldo = ultimo_saldo.fecha_inicial
+        pagos = Pago.objects.filter(
+            cuenta = cuenta,
+            hecho=True,
+            pagado_real__gte= fecha_saldo # Filtrar pagos hechos después del último saldo
+        ).order_by('-indice')
+    else:
+        pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('-indice')
+    
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
     
@@ -2003,7 +2013,7 @@ def control_bancos(request, pk):
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
         #pagos = pagos.order_by('pagado_real')
-        return convert_excel_control_bancos(pagos)
+        return convert_excel_control_bancos(pagos, ultimo_saldo)
            
 
     context= {
@@ -2011,7 +2021,7 @@ def control_bancos(request, pk):
         'cuenta': cuenta,
         'pagos':pagos,
         'myfilter':myfilter,
-        'latest_balance': saldo_inicial,
+        #'latest_balance': saldo_inicial,
         }
 
     return render(request, 'tesoreria/control_bancos.html',context)
@@ -4411,8 +4421,14 @@ def escanear_todo_bbva():
     except Exception as e:
         logging.error(f"❌ Error en escaneo de SFTP: {str(e)}")
         
-def convert_excel_control_bancos(pagos):
+def convert_excel_control_bancos(pagos, saldo_inicial_objeto):
     # Reordenar los pagos en orden ascendente por 'pagado_real'
+    if saldo_inicial_objeto is None:
+        saldo_inicial = 0
+        fecha_saldo_inicial = "No definido"
+    else:
+        saldo_inicial = saldo_inicial_objeto.monto_inicial
+        fecha_saldo_inicial = saldo_inicial_objeto.fecha_inicial
     pagos = pagos.order_by('pagado_real')
     static_path = settings.STATIC_ROOT
     img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
@@ -4497,13 +4513,12 @@ def convert_excel_control_bancos(pagos):
    
     
     worksheet.write('I10', 'SALDO INICIAL' , header_format)
-    #worksheet.write('J10', saldo_inicial, h_money_style)
+    worksheet.write('G10', 'Fecha Saldo Inicial')
+    worksheet.write('H10', fecha_saldo_inicial, date_style)
+    worksheet.write('J10', saldo_inicial, h_money_style)
     worksheet.write('I11', 'SALDO FINAL', header_format)
-    
-    worksheet.write('J12', '', header_format)
-    
 
-    columns = ['Fecha','Empresa/Colaborador','Cuenta','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Comentarios','Saldo']
+    columns = ['Fecha','Empresa/Colaborador','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Comentarios','Saldo']
 
     columna_max = len(columns)+2
 
@@ -4593,25 +4608,25 @@ def convert_excel_control_bancos(pagos):
         worksheet.write(row_num, 0, fecha.strftime('%d/%m/%Y') if fecha else '', date_style)
         worksheet.write(row_num, 1, empresa)
         worksheet.write(row_num, 1, proveedor)
-        worksheet.write(row_num, 2, cuenta)
-        worksheet.write(row_num, 3, concepto_servicio)
-        worksheet.write(row_num, 4, contrato)
-        worksheet.write(row_num, 5, sector)
-        worksheet.write(row_num, 6, distrito)
-        worksheet.write(row_num, 7, cargo, money_style)
-        worksheet.write(row_num, 8, abono, money_style)
-        worksheet.write(row_num, 9, comentarios)
+        #worksheet.write(row_num, 2, cuenta)
+        worksheet.write(row_num, 2, concepto_servicio)
+        worksheet.write(row_num, 3, contrato)
+        worksheet.write(row_num, 4, sector)
+        worksheet.write(row_num, 5, distrito)
+        worksheet.write(row_num, 6, cargo, money_style)
+        worksheet.write(row_num, 7, abono, money_style)
+        worksheet.write(row_num, 8, comentarios)
         # Saldo en la columna 9 (índice 9 = columna J)
-        if row_num <= 13:
+        if row_num <= 12:
             # Primera fila de saldo, usa saldo inicial
             # Ya está escrito en J13
             pass
-        elif row_num == 14:
+        elif row_num == 13:
             # Fila 14: saldo inicial en J10 - cargo actual + abono actual
             fila_actual_excel = row_num + 1  # Excel indexa desde 1
             celda_saldo_inicial = 'J10'
-            celda_cargo_actual = f'H{fila_actual_excel}'
-            celda_abono_actual = f'I{fila_actual_excel}'
+            celda_cargo_actual = f'G{fila_actual_excel}'
+            celda_abono_actual = f'H{fila_actual_excel}'
 
             formula_saldo = f'={celda_saldo_inicial} - {celda_cargo_actual} + {celda_abono_actual}'
             worksheet.write_formula(row_num, 9, formula_saldo, money_style)
@@ -4623,8 +4638,8 @@ def convert_excel_control_bancos(pagos):
 
             # Celdas relevantes
             celda_saldo_anterior = f'J{fila_anterior_excel}'
-            celda_cargo_actual = f'H{fila_actual_excel}'
-            celda_abono_actual = f'I{fila_actual_excel}'
+            celda_cargo_actual = f'G{fila_actual_excel}'
+            celda_abono_actual = f'H{fila_actual_excel}'
 
             # Fórmula: saldo anterior - cargo + abono
             formula_saldo = f'={celda_saldo_anterior} - {celda_cargo_actual} + {celda_abono_actual}'
