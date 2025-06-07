@@ -108,7 +108,7 @@
                             </button>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info"  href="{% url 'transferencia-cuentas' %}?cuenta = {{cuenta.id}}" data-toggle="tooltip" data-placement="top" title="Transferencia">
+                            <a type="button" class="btn btn-lg btn-outline-info"  href="{% url 'transferencia-cuentas' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Transferencia">
                               <i class="fa-solid fa-money-bill-transfer"></i>
                             </a>
                         </li>

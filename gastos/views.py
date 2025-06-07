@@ -185,8 +185,10 @@ def crear_gasto(request):
     conceptos = Product.objects.all()
     pk = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk)
+    tipos = Tipo_Gasto.objects.filter(id__in=[1, 2, 3, 5])
     if usuario.distritos.nombre == "MATRIZ":
         if usuario.tipo.rh:
+            tipos = Tipo_Gasto.objects.filter(id__in=[1, 2, 3, 5, 7, 8])
             distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
         if usuario.tipo.subdirector:
             superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
@@ -202,8 +204,8 @@ def crear_gasto(request):
     proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
-    tipos = Tipo_Gasto.objects.all().exclude(id = 6)
-    print(tipos)
+    #tipos = Tipo_Gasto.objects.all().exclude(id = 6)
+    print('tipos:',tipos)
     colaboradores = colaborador.filter(distritos = usuario.distritos, )
     error_messages = {}
 
@@ -454,7 +456,7 @@ def crear_gasto(request):
                 messages.error(request, f'Error al procesar archivos de nómina: {str(e)}')
 
     total_nomina = archivos_nomina.aggregate(suma=Sum('total'))['suma'] or 0.0
-
+    #print(distritos_para_select2)
 
 
     context= {

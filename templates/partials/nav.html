@@ -264,7 +264,7 @@
                                     <span class="badge bg-danger">({{proveedores_altas}})</span>
                             {% endif %}
                         </a>
-                        <a class="dropdown-item" href="{% url 'invitar-proveedor' %}">{% trans "Invitar proveedor" %}</a>-->
+                        <a class="dropdown-item" href="{% url 'invitar-proveedor' %}">{% trans "Invitar proveedor (Alta)" %}</a>-->
                         <!--{% if usuario.tipo.nombre != "ADQUISICIONES" %}
                             <a class="dropdown-item" href="{% url 'matriz-revision-proveedor' %}">Matriz Revision Proveedores</a>
                         {% endif %}-->
@@ -272,7 +272,7 @@
 
                     <div class="dropdown-divider"></div>
                     </div>
-                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.tesoreria %}
+                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                         <div>
                     {% else %}
                         <div class="d-none">
@@ -345,10 +345,10 @@
                         <h6 class="dropdown-header">Finanzas</h6>
                         <div class="dropdown-divider"></div>
                             <a class="dropdown-item" href="{% url 'compras-autorizadas' %}">
-                                Compras
-                                <!--{% if conteo_pagos > 0 %}
+                                Compras Autorizadas
+                                {% if conteo_pagos > 0 %}
                                     <span class="badge bg-danger">({{conteo_pagos}})</span>
-                                {% endif %}-->
+                                {% endif %}
                             </a>
                         <div>
                              <a class="dropdown-item" href="{% url 'transferencia-gastos-autorizados' %}">Gastos Autorizados</a>

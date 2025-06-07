@@ -207,7 +207,7 @@ def compras_autorizadas(request):
     return render(request, 'tesoreria/compras_autorizadas.html',context)
 
 @perfil_seleccionado_required
-def transferencia_cuentas(request):
+def transferencia_cuentas(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     tipos_pago = Tipo_Pago.objects.all()
@@ -217,9 +217,9 @@ def transferencia_cuentas(request):
     transaccion2, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = abono)
     form = Cargo_Abono_Form(instance=transaccion)
     form_transferencia = Transferencia_Form(prefix='abono')
-    pk_cuenta = request.GET.get('cuenta')
-    #cuenta = get_object_or_404(Cuenta, id=pk_cuenta)
-
+    #pk_cuenta = request.GET.get('cuenta')
+    cuenta = get_object_or_404(Cuenta, id=pk)
+    #cuenta = Cuenta.objects.get(id=pk_cuenta)
     error_messages = []
 
     #form.fields['tipo_pago'].queryset = Tipo_Pago.objects.get(id = 3)
@@ -257,7 +257,7 @@ def transferencia_cuentas(request):
                 cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
                 cargo.save()
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente la transferencia')
-                return redirect('control-bancos', pk = pk_cuenta)
+                return redirect('control-bancos', pk = cuenta.id)
             else:
                 for field, errors in form.errors.items():
                     error_messages.append(f"{field}: {errors.as_text()}")
@@ -267,7 +267,7 @@ def transferencia_cuentas(request):
     context= {
         'form':form,
         'form_transferencia': form_transferencia,
-        'cuenta': pk_cuenta,
+        'cuenta': cuenta,
         'cuentas_para_select2': cuentas_para_select2,
         'error_messages': error_messages,
     }

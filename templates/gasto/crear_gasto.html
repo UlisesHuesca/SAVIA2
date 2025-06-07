@@ -1050,17 +1050,37 @@ $(document).ready(function() {
         if (data.text == "IMPUESTOS") {
                 $('#proveedor_parrafo').removeClass('d-none');
         } else {
-            console.log("salí")
+            //console.log("salí")
             $('#proveedor_parrafo').addClass('d-none');
         }
         if (data.text == "NOMINA") {
             console.log("nomina")
             $('#cardTxt').removeClass('d-none');
             $('#distrito').removeClass('d-none');
+             // Filtrar las opciones del select de superintendentes
+            // Filtra solo la opción de Margarita Ruiz Cruz
+            var margarita = datosSuperintendentes.find(function(item) {
+                return item.text.trim() === "Margarita Ruiz Cruz";
+            });
+
+            // Reconstruye el Select2 con solo Margarita
+            $('#id_superintendente').empty();
+            if (margarita) {
+                var newOption = new Option(margarita.text, margarita.id, true, true);
+                $('#id_superintendente').append(newOption).trigger('change');
+            }
+
+        
         } else {
             console.log("nn")
             $('#cardTxt').addClass('d-none');
             $('#distrito').addClass('d-none');
+                    // Reconstruye el Select2 con todas las opciones originales
+            $('#id_superintendente').empty();
+            datosSuperintendentes.forEach(function(item) {
+                var newOption = new Option(item.text, item.id, false, false);
+                $('#id_superintendente').append(newOption);
+            });
         }
     
     });

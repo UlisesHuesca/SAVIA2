@@ -105,9 +105,19 @@ def contadores_processor(request):
             conteo_viaticos_gerencia = viaticos_gerencia.count()
             conteo_gastos_gerencia = gastos_gerencia.count()
             conteo_vales = vales_rosa.count()
-           
+
+        if usuario.tipo.finanzas:
+            oc_pendientes = Compra.objects.filter(
+                para_pago=True,
+                pagada=False,
+                autorizado2=True, 
+                tesorero__tipo__finanzas=True,  # 👈 Filtra que quien envió a pago sea Finanzas
+                req__orden__distrito = usuario.distritos
+                )
+            conteo_pagos = oc_pendientes.count()
+
         if usuario.tipo.tesoreria == True:
-            oc_pendientes = Compra.objects.filter(pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos)
+            oc_pendientes = Compra.objects.filter(Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos)
             viaticos_por_asignar = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, montos_asignados=False, distrito = usuario.distritos)
             gastos_por_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, distrito = usuario.distritos  )
             viaticos_por_pagar = Solicitud_Viatico.objects.filter(complete = True, autorizar2=True, pagada=False, distrito = usuario.distritos)

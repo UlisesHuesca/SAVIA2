@@ -118,6 +118,8 @@
                                <i class="fa-solid fa-file-pdf fa-2xl"></i>
                             </button>
                         </li>-->
+                        {% if usuario.tipo.finanzas == True %}
+                        {% else %}
                         <li class="nav-item mx-2">
                             <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                 <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-autorizadas' %}">Compras</a>
@@ -126,6 +128,7 @@
                                 
                             </div>
                         </li>
+                        {% endif %}
                     </ul>
                 </form>
             </div>
@@ -163,7 +166,9 @@
 
 <div class="card bg-white my-2">
     <form id="mass_payment_form" method="post" action="{% url 'vista_pagos_masivos' %}">
-    <input type="submit" value="Layout Pagos" class="btn btn-primary">
+    {% if usuario.tipo.tesoreria %}
+        <input type="submit" value="Layout Pagos" class="btn btn-primary">
+    {% endif %}
     {% csrf_token %}
     <div class="col-md-12">
         <div class ="table-responsive-sm">
@@ -268,7 +273,11 @@
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
-                    <td><input type="checkbox" name="compra_id" value="{{ compra.id|unlocalize }}"></td>
+                        {% if usuario.tipo.finanzas or usuario.tipo.nombre == "CONTADOR" %}
+                            <td></td>
+                        {% else %}
+                            <td><input type="checkbox" name="compra_id" value="{{ compra.id|unlocalize }}"></td>
+                        {% endif %}
                     {% endif %}
                   
                 </tr>
