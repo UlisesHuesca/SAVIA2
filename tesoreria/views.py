@@ -3828,7 +3828,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
     wb.add_named_style(percent_style)
 
     columns = ['Folio OC','Fecha Autorización OC','Folio UUID','Fecha_Timbrado','Proyecto','Subproyecto','Distrito','Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda',
-                'Tipo de cambio','Importe','Total en Pesos','Importe Pagado','Importe Restante','C. Pago', 'Días de Crédito','Fecha Creación','Recibida','Factura']
+                'Tipo de cambio','Importe','Total en Pesos','Importe Pagado','Importe Restante','C. Pago', 'Días de Crédito','Fecha Creación','Recibida','Factura','Fecha Entrada']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -3860,6 +3860,11 @@ def convert_excel_matriz_compras_tesoreria(compras):
     for compra in compras:
         row_num = row_num + 1    
         productos = ArticuloComprado.objects.filter(oc = compra)
+        ultima_fecha_entrada = compra.vale_entrada.filter(entrada_date__isnull=False).order_by('-entrada_date').values_list('entrada_date', flat=True).first()
+        if ultima_fecha_entrada:
+            ultima_fecha_entrada_naive = ultima_fecha_entrada.replace(tzinfo=None)
+        else:
+            ultima_fecha_entrada_naive = None
 
         # Unir los nombres de los productos en una sola cadena separada por comas
         productos_texto = ', '.join([producto.producto.producto.articulos.producto.producto.nombre for producto in productos])
@@ -3915,12 +3920,13 @@ def convert_excel_matriz_compras_tesoreria(compras):
             created_at_naive,
             recibida,
             tiene_facturas,
+            ultima_fecha_entrada_naive or '',
         ]
 
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num in [1, 20]:
+            if col_num in [1, 20, 23]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num in [13, 14,15, 16, 17]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style

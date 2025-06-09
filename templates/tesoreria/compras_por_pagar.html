@@ -240,7 +240,16 @@
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
-                    <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% elif compra.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{compra.entrada_parcial}}%</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
+                    <td class="d-none d-lg-table-cell">
+                        {% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>
+                            {% for entrada in compra.vale_entrada.all %}
+                                {% if entrada.entrada_date %}
+                                    {{ entrada.entrada_date|default_if_none:''|date:'d/m/Y' }}
+                                {% endif %}
+                            {% endfor %}
+                        {% elif compra.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{compra.entrada_parcial}}%</span>
+                        {% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}
+                    </td>
                     {% if compra.facturas.exists %}
                         {% if compra.facturas.all.count > 1 %}
                             <td><a type="button" href="{% url 'matriz-facturas-nomodal' compra.id %}?next={{ request.path }}&proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}" class="btn btn-outline-info" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></button></td>
