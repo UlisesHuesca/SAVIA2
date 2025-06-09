@@ -139,6 +139,88 @@
                 </form> 
             </div>
         </div>
+        <div class="card mt-2 d-none" id="cardRH"> 
+            <div class="card-header">
+                <h4>RH Documentos</h4>
+            </div>
+            <div class="card-body">  
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <label id="archivo_rh_label">Archivo:</label> 
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" >
+                            <i class="fa-solid fa-file-pdf fa-xl" style="color: #990f0f"></i>
+                        </span>
+                        <input type="file" id="archivo_rh_input" name="" class="form-control" accept=".pdf">
+                    </div> 
+                    <div class="text-end">
+                            <button class="btn btn-outline-success btn-block my-2" type="submit" name="btn_documentos_rh" title = "Subir Documentos">
+                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
+                            </button>
+                    </div>
+                 
+                </form>
+                {% if archivos_rh %}
+                    <div class="mt-4">
+                        <h5>Archivos RH cargados:</h5>
+                        <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                            <th>Tipo de Archivo</th>
+                            <th>Nombre del Archivo</th>
+                            <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for archivo in archivos_rh %}
+                            <tr>
+                                <td>{{ archivo.tipo.nombre }}</td>
+                                <td>{{ archivo.archivo.name }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <!-- Botón para ver el PDF en modal -->
+                                        <button type="button" class="btn btn-outline-info btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#pdfModal{{ archivo.id }}" title="Ver archivo">
+                                        <i class="fa-solid fa-eye"></i>
+                                        </button>
+
+                                        <!-- Botón para descargar el archivo -->
+                                        <a href="{{ archivo.archivo.url }}" class="btn btn-outline-info btn-sm mx-1" download data-bs-toggle="tooltip" title="Descargar archivo">
+                                        <i class="fa-solid fa-download"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'eliminar_archivo' archivo.id %}" class="mx-1">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" title="Eliminar archivo" onclick="return confirm('¿Estás seguro de que deseas eliminar este archivo?');">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Modal para visor de PDF -->
+                                    <div class="modal fade" id="pdfModal{{ archivo.id }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ archivo.id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfModalLabel{{ archivo.id }}">Archivo: {{ archivo.tipo.nombre }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ archivo.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                                
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+                                
+            </div>
+        </div>
         <div class="card mt-2 d-none" id="cardTxt"> 
             <div class="card-header">
                 <h4>Nómina</h4>
@@ -173,6 +255,7 @@
                         </span>
                         <input type="file" name="archivo_pensiones" class="form-control" accept=".txt">
                     </div> 
+                    
                     {% endif %}
                     {% if not archivo_bbva and not archivo_ob and not archivo_pensiones %}
                     <div class="text-end">
@@ -644,6 +727,19 @@ $(document).ready(function(){
             cardValeRosa.classList.remove("d-none");
         }
 
+        $(document).ready(function() {
+            var tipoActual = localStorage.getItem('tipoDocumentoActual');
+
+            if (tipoActual) {
+                // Restaurar label y name
+                $('#archivo_rh_label').text('Archivo ' + tipoActual + ':');
+                $('#archivo_rh_input').attr('name', 'archivo_' + tipoActual.toLowerCase());
+
+                // Asegurarse que el cardRH esté visible
+                $('#cardRH').removeClass('d-none');
+            }
+        });
+
         // Escuchar cambios para guardar en localStorage
         chkFacturas.addEventListener("change", function () {
             const activo = this.checked;
@@ -1046,17 +1142,40 @@ $(document).ready(function() {
         var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
         cambio_en_formulario(data,'tipo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
         // Mostrar o esconder el div basado en el valor seleccionado}
-        console.log(data.text)
-        if (data.text == "IMPUESTOS") {
+        console.log(data.familia)
+        if (data.familia == "contabilidad") {
                 $('#proveedor_parrafo').removeClass('d-none');
         } else {
             //console.log("salí")
             $('#proveedor_parrafo').addClass('d-none');
         }
-        if (data.text == "NOMINA") {
+        if (data.familia == "rh_nomina") {
             console.log("nomina")
             $('#cardTxt').removeClass('d-none');
             $('#distrito').removeClass('d-none');
+             // Filtrar las opciones del select de superintendentes
+            // Filtra solo la opción de Margarita Ruiz Cruz
+            var margarita = datosSuperintendentes.find(function(item) {
+                return item.text.trim() === "Margarita Ruiz Cruz";
+            });
+            $('#cardRH').addClass('d-none');
+            localStorage.removeItem('tipoDocumentoActual');
+            localStorage.removeItem('mostrarCardRH');
+            // Reconstruye el Select2 con solo Margarita
+            $('#id_superintendente').empty();
+            if (margarita) {
+                var newOption = new Option(margarita.text, margarita.id, true, true);
+                $('#id_superintendente').append(newOption).trigger('change');
+            }
+        } else if (data.familia == "rh") {
+            console.log("nomina")
+            $('#archivo_rh_label').text('Archivo ' + data.text + ':');
+            $('#archivo_rh_input').attr('name', data.text.toLowerCase());
+            $('#cardRH').removeClass('d-none'); // Mostrar cardRH si corresponde
+            $('#cardTxt').addClass('d-none');
+            // ✅ Guardarlo en localStorage
+            localStorage.setItem('mostrarCardRH', 'true');
+            localStorage.setItem('tipoDocumentoActual', data.text);
              // Filtrar las opciones del select de superintendentes
             // Filtra solo la opción de Margarita Ruiz Cruz
             var margarita = datosSuperintendentes.find(function(item) {
@@ -1075,6 +1194,9 @@ $(document).ready(function() {
             console.log("nn")
             $('#cardTxt').addClass('d-none');
             $('#distrito').addClass('d-none');
+            $('#cardRH').addClass('d-none');
+            localStorage.removeItem('tipoDocumentoActual');
+            localStorage.removeItem('mostrarCardRH');
                     // Reconstruye el Select2 con todas las opciones originales
             $('#id_superintendente').empty();
             datosSuperintendentes.forEach(function(item) {

@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Porcentaje_iva, ValeRosa, TipoArchivoNomina, ArchivoNomina
+from .models import Solicitud_Gasto, Articulo_Gasto, Tipo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Porcentaje_iva, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
 # Register your models here.
 class Solicitud_Gasto_Admin(admin.ModelAdmin):
     list_display = ('id','created_at','folio','staff','colaborador', 'superintendente','pagada',)
@@ -22,12 +22,15 @@ class Factura_Admin(admin.ModelAdmin):
     raw_id_fields = ('solicitud_gasto',) 
     search_fields = ('id','solicitud_gasto__id', 'solicitud_gasto__folio','uuid')
 
+class Tipo_Admin(admin.ModelAdmin):
+    list_display = ('id','tipo', 'familia')   
+    search_fields = ('id','familia')
 
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)
 
 admin.site.register(Articulo_Gasto, Articulo_Gasto_Admin)
 
-admin.site.register(Tipo_Gasto)
+admin.site.register(Tipo_Gasto, Tipo_Admin)
 
 admin.site.register(Entrada_Gasto_Ajuste, Entrada_Gasto_Ajuste_Admin)
 
@@ -39,6 +42,6 @@ admin.site.register(Porcentaje_iva)
 
 admin.site.register(ValeRosa)
 
-admin.site.register(TipoArchivoNomina)
+admin.site.register(TipoArchivoSoporte)
 
-admin.site.register(ArchivoNomina)
+admin.site.register(ArchivoSoporte)

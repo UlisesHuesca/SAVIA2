@@ -19,7 +19,7 @@ import zipfile
 from smtplib import SMTPException
 import logging
 import socket
-from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoNomina, ArchivoNomina
+from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile, Distrito 
@@ -185,10 +185,10 @@ def crear_gasto(request):
     conceptos = Product.objects.all()
     pk = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk)
-    tipos = Tipo_Gasto.objects.filter(id__in=[1, 2, 3, 5])
+    tipos = Tipo_Gasto.objects.filter(familia = 'usuario')
     if usuario.distritos.nombre == "MATRIZ":
         if usuario.tipo.rh:
-            tipos = Tipo_Gasto.objects.filter(id__in=[1, 2, 3, 5, 7, 8])
+            tipos = Tipo_Gasto.objects.filter(familia__in=['usuario', 'rh', 'rh_nomina'])
             distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
         if usuario.tipo.subdirector:
             superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
@@ -213,7 +213,8 @@ def crear_gasto(request):
     tipos_para_select2 = [
         {
             'id': item.id,
-            'text': str(item.tipo)
+            'text': str(item.tipo),
+            'familia': str(item.familia),
         } for item in tipos
     ]
 
@@ -284,11 +285,13 @@ def crear_gasto(request):
         } for item in articulos_gasto
     ]
 
-    archivos_nomina = ArchivoNomina.objects.filter(solicitud=gasto)
+    archivos_nomina = ArchivoSoporte.objects.filter(solicitud=gasto)
 
     total_bbva = archivos_nomina.filter(tipo__nombre='BBVA').first()
     total_ob = archivos_nomina.filter(tipo__nombre='OB').first()
     total_pensiones = archivos_nomina.filter(tipo__nombre='PENSIONES').first()
+    # ⚠️ Al final, obtener todos los archivos RH cargados de este gasto
+    archivos_rh = ArchivoSoporte.objects.filter(solicitud=gasto)
     error_messages = {}
 
     if request.method =='POST': 
@@ -414,6 +417,32 @@ def crear_gasto(request):
                     creado_por=usuario
                 )
                 return redirect('crear-gasto')
+        if 'btn_documentos_rh' in request.POST:
+            archivo = None
+            tipo_documento = None
+            
+            # Iterar sobre los archivos enviados en el form
+            for key, uploaded_file in request.FILES.items():
+                if uploaded_file:
+                    archivo = uploaded_file
+                    tipo_documento = key  # ¡Aquí está el tipo de documento!
+                    print(f'Tipo de documento: {tipo_documento}, Archivo: {archivo.name}')
+                    break  # Solo tomamos el primero (en este caso es uno solo)
+
+            if archivo and tipo_documento:
+                try:
+                    tipo = TipoArchivoSoporte.objects.get(nombre=tipo_documento)
+                    ArchivoSoporte.objects.create(
+                        solicitud=gasto,
+                        tipo=tipo,
+                        archivo=archivo,
+                        total=0.0  # Asignar un total de 0.0 por defecto
+                    )
+                    messages.success(request, f'Archivo {tipo_documento} subido exitosamente.')
+                    return redirect('crear-gasto')
+                except TipoArchivoSoporte.DoesNotExist:
+                    messages.error(request, f'Tipo de documento {tipo_documento} no encontrado.')
+               
         if "btn_nomina" in request.POST:
             total_bbva = total_ob = total_pensiones = 0.0
             archivo_bbva = request.FILES.get('archivo_bbva')
@@ -423,8 +452,8 @@ def crear_gasto(request):
             try:
                 if archivo_bbva:
                     total_bbva = procesar_bbva(archivo_bbva)
-                    tipo_bbva = TipoArchivoNomina.objects.get(nombre='BBVA')
-                    ArchivoNomina.objects.create(
+                    tipo_bbva = TipoArchivoSoporte.objects.get(nombre='BBVA')
+                    ArchivoSoporte.objects.create(
                         solicitud=gasto,
                         tipo=tipo_bbva,
                         archivo=archivo_bbva,
@@ -432,8 +461,8 @@ def crear_gasto(request):
                     )
                 if archivo_ob:
                     total_ob = procesar_ob(archivo_ob)
-                    tipo_ob = TipoArchivoNomina.objects.get(nombre='OB')
-                    ArchivoNomina.objects.create(
+                    tipo_ob = TipoArchivoSoporte.objects.get(nombre='OB')
+                    ArchivoSoporte.objects.create(
                         solicitud=gasto,
                         tipo=tipo_ob,
                         archivo=archivo_ob,
@@ -441,8 +470,8 @@ def crear_gasto(request):
                     )
                 if archivo_pensiones:
                     total_pensiones = procesar_pensiones(archivo_pensiones)
-                    tipo_pensiones = TipoArchivoNomina.objects.get(nombre='PENSIONES')
-                    ArchivoNomina.objects.create(
+                    tipo_pensiones = TipoArchivoSoporte.objects.get(nombre='PENSIONES')
+                    ArchivoSoporte.objects.create(
                         solicitud=gasto,
                         tipo=tipo_pensiones,
                         archivo=archivo_pensiones,
@@ -473,6 +502,7 @@ def crear_gasto(request):
         'archivo_bbva': total_bbva,
         'archivo_ob': total_ob,
         'archivo_pensiones': total_pensiones,
+        'archivos_rh': archivos_rh,
         'form':form,
         'total_nomina': total_nomina,
         'form_product': form_product,
@@ -485,6 +515,13 @@ def crear_gasto(request):
         'factura_form': factura_form,
     }
     return render(request, 'gasto/crear_gasto.html', context)
+
+def eliminar_archivo(request, archivo_id):
+    archivo = get_object_or_404(ArchivoSoporte, id=archivo_id)
+    if request.method == 'POST':
+        archivo.delete()
+        messages.success(request, 'Archivo eliminado correctamente.')
+    return redirect('crear-gasto')  # Ajusta al nombre real de tu vista de gasto
 
 @perfil_seleccionado_required
 def agregar_vale_rosa(request, pk):

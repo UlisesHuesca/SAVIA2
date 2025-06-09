@@ -14,6 +14,7 @@ import os
 #Este modelo se refiere a si es Gasto o Reembolso
 class Tipo_Gasto(models.Model):
     tipo = models.CharField(max_length=30, null=True)
+    familia = models.CharField(max_length=30, null=True, blank=True)
 
     def __str__(self):
         return f'{self.id}:{self.tipo}'
@@ -453,16 +454,16 @@ class ValeRosa(models.Model):
     def __str__(self):
         return f"Vale Rosa #{self.id} para Gasto #{self.gasto.folio}"
     
-class TipoArchivoNomina(models.Model):
+class TipoArchivoSoporte(models.Model):
     nombre = models.CharField(max_length=20, unique=True)
 
     def __str__(self):
         return self.nombre
     
-class ArchivoNomina(models.Model):
+class ArchivoSoporte(models.Model):
     solicitud = models.ForeignKey(Solicitud_Gasto, on_delete=models.CASCADE)
-    tipo = models.ForeignKey(TipoArchivoNomina, on_delete=models.PROTECT)
-    archivo = models.FileField(upload_to='nomina')
+    tipo = models.ForeignKey(TipoArchivoSoporte, on_delete=models.PROTECT)
+    archivo = models.FileField(upload_to='soportes')
     total = models.DecimalField(max_digits=10, decimal_places=2)
     fecha_subida = models.DateTimeField(auto_now_add=True)
 
