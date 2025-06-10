@@ -9,4 +9,12 @@
             ⏳ Pendiente
         {% endif %}
     </td>
+    <td>
+        <form action="{% url 'eliminar_vale_rosa' vale.id %}" method="post" style="display: inline;">
+            {% csrf_token %}
+            <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar este vale?')">
+                <i class="fa-solid fa-trash-can"></i>
+            </button>
+        </form>
+    </td>
 </tr>

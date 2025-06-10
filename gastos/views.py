@@ -520,6 +520,8 @@ def crear_gasto(request):
     }
     return render(request, 'gasto/crear_gasto.html', context)
 
+
+
 def eliminar_archivo(request, archivo_id):
     archivo = get_object_or_404(ArchivoSoporte, id=archivo_id)
     if request.method == 'POST':
@@ -562,6 +564,12 @@ def delete_gasto(request, pk):
     articulo.delete()
 
     return redirect('crear-gasto')
+
+def eliminar_vale_rosa(request, pk):
+    vale = get_object_or_404(ValeRosa, pk=pk)
+    gasto_id = vale.gasto.id  # Asumiendo que ValeRosa tiene FK a Gasto
+    vale.delete()
+    return redirect('crear-gasto') 
 
 @perfil_seleccionado_required
 def eliminar_factura(request, pk):
