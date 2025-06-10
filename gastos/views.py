@@ -190,6 +190,8 @@ def crear_gasto(request):
         if usuario.tipo.rh:
             tipos = Tipo_Gasto.objects.filter(familia__in=['usuario', 'rh', 'rh_nomina'])
             distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
+        if usuario.tipo.tesoreria:
+            tipos = Tipo_Gasto.objects.filter(familia__in = ['usuario','tesoreria'])
         if usuario.tipo.subdirector:
             superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
         else:    
@@ -822,6 +824,71 @@ def prellenar_formulario_gastos(request):
             return JsonResponse({'error': 'No file uploaded'}, status=400)
         
         pdf_content = pdf_content.read()
+        
+        
+        texto_extraido = extraer_texto_de_pdf(pdf_content)
+        datos_extraidos = encontrar_variables(texto_extraido)
+            #divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
+
+     
+        divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
+
+        
+        fecha_str = datos_extraidos.get('fecha', '').strip()
+        #print(fecha_str)
+        fecha_formato_correcto = None  # Valor por defecto en caso de que no se pueda procesar la fecha
+        
+        if fecha_str:
+            try:
+                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y')
+                fecha_formato_correcto = fecha_obj.strftime('%Y-%m-%d')
+            except ValueError:
+                # Opcional: Agregar alguna forma de logging o notificación de que la fecha no es válida
+                print('Se lo llevó madres')
+                pass
+        
+        numero_cuenta_extraido = datos_extraidos.get('cuenta_retiro', '').strip().lstrip('0')
+       
+        cuenta_objeto = None
+       
+        #print('numero_cuenta_extraido',numero_cuenta_extraido)
+        if numero_cuenta_extraido:
+            try:
+                
+                cuenta_objeto = Cuenta.objects.get(cuenta__contains=numero_cuenta_extraido)
+                print('cuenta_objeto:', cuenta_objeto)
+            except Cuenta.DoesNotExist:
+                print('Cuenta retiro no encontrada:', numero_cuenta_extraido)
+                return JsonResponse({'error': 'Cuenta retiro no encontrada'}, status=404)
+            except Exception as e:
+                print('Error inesperado al buscar cuenta retiro:', e)
+                print(traceback.format_exc())
+                return JsonResponse({'error': 'Error interno'}, status=500)
+            
+        
+        
+        #print("destino_cuenta",datos_extraidos.get('cuenta_deposito', '').strip().lstrip('0') or None) 
+        datos_para_formulario = {
+            'monto': datos_extraidos.get('importe_operacion', '').replace('MXP', '').replace(',', '').strip() or None,
+            'pagado_real': fecha_formato_correcto,  # Valor procesado o None
+            'cuenta': cuenta_objeto.id if cuenta_objeto else None,
+            'divisa_cuenta': divisa_cuenta_extraida or None,
+        }
+        
+        return JsonResponse(datos_para_formulario)
+    
+    return JsonResponse({'error': 'Invalid request'}, status=400)
+
+
+def prellenar_formulario_transferencia(request):
+    #print('prellenar_formulario_gastos')
+    if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
+        pdf_content = request.FILES.get('comprobante_pago')
+        
+        if not pdf_content:
+            return JsonResponse({'error': 'No file uploaded'}, status=400)
+        
+        pdf_content = pdf_content.read()
         formato_detectado = detectar_formato_pdf(pdf_content)
         
         if formato_detectado == "formato_1":
@@ -898,8 +965,6 @@ def prellenar_formulario_gastos(request):
         return JsonResponse(datos_para_formulario)
     
     return JsonResponse({'error': 'Invalid request'}, status=400)
-
-
 
 
 def encontrar_variables_transferencia(texto):

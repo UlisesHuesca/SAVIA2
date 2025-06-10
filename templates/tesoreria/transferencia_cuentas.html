@@ -295,7 +295,7 @@ document.getElementById('id_comprobante_pago').addEventListener('change', functi
   // Añadir CSRF token a la solicitud AJAX
   formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-  fetch('/gastos/prellenar_formulario_gastos/', { 
+  fetch('/gastos/prellenar_formulario_transferencia/', { 
     method: 'POST',
     body: formData,
     headers: {
