@@ -187,13 +187,15 @@ def crear_gasto(request):
     usuario = colaborador.get(id = pk)
     tipos = Tipo_Gasto.objects.filter(familia = 'usuario')
     if usuario.distritos.nombre == "MATRIZ":
-        if usuario.tipo.rh:
-            tipos = Tipo_Gasto.objects.filter(familia__in=['usuario', 'rh', 'rh_nomina'])
-            distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
+        
         if usuario.tipo.tesoreria:
             tipos = Tipo_Gasto.objects.filter(familia__in = ['usuario','tesoreria'])
+        if usuario.tipo.rh: #Se pone a lo útimo para que sea el último filtro que haga
+            tipos = Tipo_Gasto.objects.filter(familia__in=['usuario', 'rh', 'rh_nomina'])
+            distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
         if usuario.tipo.subdirector:
             superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
+      
         else:    
             superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
     elif usuario.distritos.nombre == "BRASIL":
@@ -2886,15 +2888,18 @@ def crear_pdf_cfdi_buffer(factura):
          # Inicializar las variables impuesto y tasa
         impuesto = item['impuesto']
         tasa = item['tasa_cuota']
-        if impuesto != 'N/A':
+       # Convertir impuesto a float, o 0.0 si es 'N/A' o None
+        try:
             impuesto = float(impuesto)
-        else:
-            impuesto = 0.0  # o cualquier valor predeterminado que consideres adecuado
-        
-        if tasa != 'N/A':
+        except (TypeError, ValueError):
+            impuesto = 0.0
+
+        # Convertir tasa a float, o 0.0 si es 'N/A' o None
+        try:
             tasa = float(tasa)
-        else:
-            tasa = 0.0  # o cualquier valor predeterminado que consideres adecuado
+        except (TypeError, ValueError):
+            tasa = 0.0
+
         clave = item['clave']
          # Crear un párrafo para la descripción
         descripcion_paragraph = Paragraph(descripcion, custom_style)
