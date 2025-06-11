@@ -119,7 +119,7 @@ def verificar_pagos(folio_prueba=None):
     - Si la suma es >= 95% del costo_plus_adicionales, marca la compra como pagada=True.
     """
     factor_inferior = Decimal('0.95')
-    compras_pendientes = Compra.objects.filter(pagada=False, autorizado2=True)
+    compras_pendientes = Compra.objects.filter(pagada=False, autorizado2=True, regresar_oc = False)
 
     if folio_prueba:
         compras_pendientes = compras_pendientes.filter(folio=folio_prueba)
