@@ -111,14 +111,14 @@ def asignar_folios_por_pais():
 
     print("Asignación completa.")
 
-def verificar_pago_y_marcar_pagada(folio_prueba=None):
+def verificar_pagos(folio_prueba=None):
     """
-    Verifica que la suma de pagos sea mayor o igual al 95% del costo_plus_adicionales.
-    Si lo es, marca la compra como pagada=True y guarda.
-    Si se pasa un folio_prueba, solo verifica ese; si no, revisa todas las compras autorizadas y no pagadas.
+    Para cada compra pendiente (autorizada2=True, pagada=False):
+    - Calcula la suma de pagos ajustada a la moneda de la compra.
+    - Actualiza compra.monto_pagado con esa suma.
+    - Si la suma es >= 95% del costo_plus_adicionales, marca la compra como pagada=True.
     """
     factor_inferior = Decimal('0.95')
-
     compras_pendientes = Compra.objects.filter(pagada=False, autorizado2=True)
 
     if folio_prueba:
@@ -130,13 +130,35 @@ def verificar_pago_y_marcar_pagada(folio_prueba=None):
             print(f"⚠️ Compra {compra.id} (folio {compra.folio}) no tiene costo_total definido.")
             continue
 
-        suma_pagos = compra.pagos.aggregate(total=Sum('monto'))['total'] or Decimal('0')
+        suma_pago = Decimal('0')
+        pagos = compra.pagos.all()
+
+        for pago in pagos:
+            if compra.moneda and compra.moneda.nombre == "DOLARES":
+                # OC en dólares
+                if pago.cuenta and pago.cuenta.moneda and pago.cuenta.moneda.nombre == "PESOS":
+                    # Pago en pesos -> convertir a USD
+                    tipo_cambio = pago.tipo_de_cambio or compra.tipo_de_cambio or Decimal('1')
+                    monto_usd = pago.monto / tipo_cambio
+                    suma_pago += monto_usd
+                else:
+                    # Pago en dólares o sin cuenta
+                    suma_pago += pago.monto
+            else:
+                # OC en pesos
+                suma_pago += pago.monto
+
+        # Actualizar compra.monto_pagado con la suma ajustada
+        compra.monto_pagado = suma_pago
+
+        # Calcular el límite inferior para considerar la compra pagada
         limite_inferior = costo_total * factor_inferior
 
-        if suma_pagos >= limite_inferior:
-            # Marcar como pagada
+        if suma_pago >= limite_inferior:
             compra.pagada = True
-            compra.save()
-            print(f"✅ Compra {compra.id} (folio {compra.folio}) marcada como pagada: suma de pagos {suma_pagos} >= 95% ({limite_inferior})")
+            print(f"✅ Compra {compra.id} (folio {compra.folio}) marcada como pagada. monto_pagado={suma_pago}, mínimo={limite_inferior}")
         else:
-            print(f"❌ Compra {compra.id} (folio {compra.folio}): suma de pagos {suma_pagos} < 95% ({limite_inferior})")
+            print(f"❌ Compra {compra.id} (folio {compra.folio}): monto_pagado={suma_pago}, mínimo={limite_inferior}")
+
+        # Guardar los cambios en la compra
+        compra.save()
