@@ -1,5 +1,5 @@
 from django.db.models import F, Sum, Q
-from .models import ArticuloComprado, Proveedor
+from .models import ArticuloComprado, Proveedor, Compra
 from requisiciones.models import Requis, ArticulosRequisitados 
 from entradas.models import EntradaArticulo
 from decimal import Decimal
@@ -110,3 +110,33 @@ def asignar_folios_por_pais():
             folios_por_pais[pais] += 1
 
     print("Asignación completa.")
+
+def verificar_pago_y_marcar_pagada(folio_prueba=None):
+    """
+    Verifica que la suma de pagos sea mayor o igual al 95% del costo_plus_adicionales.
+    Si lo es, marca la compra como pagada=True y guarda.
+    Si se pasa un folio_prueba, solo verifica ese; si no, revisa todas las compras autorizadas y no pagadas.
+    """
+    factor_inferior = Decimal('0.95')
+
+    compras_pendientes = Compra.objects.filter(pagada=False, autorizado2=True)
+
+    if folio_prueba:
+        compras_pendientes = compras_pendientes.filter(folio=folio_prueba)
+
+    for compra in compras_pendientes:
+        costo_total = compra.costo_plus_adicionales
+        if costo_total is None:
+            print(f"⚠️ Compra {compra.id} (folio {compra.folio}) no tiene costo_total definido.")
+            continue
+
+        suma_pagos = compra.pagos.aggregate(total=Sum('monto'))['total'] or Decimal('0')
+        limite_inferior = costo_total * factor_inferior
+
+        if suma_pagos >= limite_inferior:
+            # Marcar como pagada
+            compra.pagada = True
+            compra.save()
+            print(f"✅ Compra {compra.id} (folio {compra.folio}) marcada como pagada: suma de pagos {suma_pagos} >= 95% ({limite_inferior})")
+        else:
+            print(f"❌ Compra {compra.id} (folio {compra.folio}): suma de pagos {suma_pagos} < 95% ({limite_inferior})")
