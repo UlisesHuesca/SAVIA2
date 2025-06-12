@@ -133,7 +133,7 @@ class Cargo_Abono_Tipo_Form(forms.ModelForm):
                 # Lógica para determinar el nuevo queryset basado en la selección actual
         #        self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
         #    except (ValueError, TypeError):
-        #        pass  # Manejo de errores en caso de entrada no válida   #def __init__(self,*args, **kwargs):
+        #           pass  # Manejo de errores en caso de entrada no válida   #def __init__(self,*args, **kwargs):
 
 class Saldo_Inicial_Form(forms.ModelForm):
     class Meta:
