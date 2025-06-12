@@ -283,7 +283,7 @@ def cargo_abono(request, pk):
     usuario = Profile.objects.get(id = pk_profile)
     enproceso = Tipo_Pago.objects.get(id = 3)
     cuenta = get_object_or_404(Cuenta, id=pk)
-    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = enproceso, cuenta = cuenta)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, cuenta = cuenta)
     form = Cargo_Abono_Tipo_Form(instance=transaccion)
     #form_transferencia = Transferencia_Form(instance = tran)
 
