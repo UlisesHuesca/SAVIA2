@@ -283,7 +283,7 @@ def cargo_abono(request, pk):
     usuario = Profile.objects.get(id = pk_profile)
     enproceso = Tipo_Pago.objects.get(id = 3)
     cuenta = get_object_or_404(Cuenta, id=pk)
-    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, cuenta = cuenta)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, cuenta = cuenta, tipo = enproceso)
     form = Cargo_Abono_Tipo_Form(instance=transaccion)
     #form_transferencia = Transferencia_Form(instance = tran)
 
@@ -311,7 +311,8 @@ def cargo_abono(request, pk):
                 pago.save()   
                 return redirect('control-bancos')
             else:
-                messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
+                error_str = form.errors.as_text()
+                messages.error(request, f'{usuario.staff.staff.first_name}, el formulario tiene errores: {error_str}')
 
     context= {
         'form':form,

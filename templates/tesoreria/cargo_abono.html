@@ -49,6 +49,13 @@
         <form id="myForm" method="post" enctype="multipart/form-data">
             <div class="col">
                 {% csrf_token %}
+                        {% if form.errors %}
+                            <ul class="text-danger">
+                            {% for field, errors in form.errors.items %}
+                                <li><strong>{{ field }}:</strong> {{ errors|join:", " }}</li>
+                            {% endfor %}
+                            </ul>
+                        {% endif %}
                            
                         <div class="alert alert-primary" role="alert">
                             Cuenta: {{cuenta.banco}} | {{cuenta.cuenta}} | Moneda: {{cuenta.moneda}}
