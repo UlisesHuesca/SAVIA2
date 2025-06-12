@@ -24,7 +24,7 @@ from gastos.views import render_pdf_gasto,crear_pdf_cfdi_buffer
 from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -195,7 +195,10 @@ def compras_autorizadas(request):
             compra.estado_facturas = 'pendientes'
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        return convert_excel_matriz_compras_autorizadas(compras)
+        if usuario.tipo.tesoreria:
+            return convert_excel_matriz_compras_tesoreria(compras)
+        else:
+            return convert_excel_matriz_compras_autorizadas(compras)
     
 
     context= {
@@ -213,7 +216,7 @@ def transferencia_cuentas(request, pk):
     tipos_pago = Tipo_Pago.objects.all()
     transferencia = tipos_pago.get(id = 3)
     abono = tipos_pago.get(id = 2)
-    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = transferencia)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = transferencia, cuenta=None)
     transaccion2, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = abono)
     form = Cargo_Abono_Form(instance=transaccion)
     form_transferencia = Transferencia_Form(prefix='abono')
@@ -281,14 +284,14 @@ def cargo_abono(request, pk):
     enproceso = Tipo_Pago.objects.get(id = 3)
     cuenta = get_object_or_404(Cuenta, id=pk)
     transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, tipo = enproceso, cuenta = cuenta)
-    form = Cargo_Abono_Form(instance=transaccion)
+    form = Cargo_Abono_Tipo_Form(instance=transaccion)
     #form_transferencia = Transferencia_Form(instance = tran)
 
 
     #form.fields['tipo'].queryset = Tipo_Pago.objects.exclude(id=3)
     #print(Tipo_Pago.objects.filter(id=3))
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
-      
+    form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id__in=[1, 2])
     #cuentas_para_select2 = [
     #    {'id': cuenta.id,
     #     'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
@@ -297,7 +300,7 @@ def cargo_abono(request, pk):
 
     if request.method == 'POST':
         if "envio" in request.POST:
-            form = Cargo_Abono_Form(request.POST, instance = transaccion)
+            form = Cargo_Abono_Tipo_Form(request.POST, instance = transaccion)
             if form.is_valid():
                 pago = form.save(commit = False)
                 pago.pagado_date = date.today()

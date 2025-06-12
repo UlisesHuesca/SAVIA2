@@ -81,6 +81,60 @@ class Cargo_Abono_Form(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida   #def __init__(self,*args, **kwargs):
 
+class Cargo_Abono_Form(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['monto','cuenta','pagado_real', 'comentario', 'comprobante_pago']
+        #fields = ['monto','cuenta','pagado_real','comprobante_pago','tipo_de_cambio',] los fields del pago normal
+    
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cuenta'].queryset = Cuenta.objects.none()
+
+        if 'cuenta' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('cuenta'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida   #def __init__(self,*args, **kwargs):
+
+class Cargo_Abono_Form(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['monto','cuenta','pagado_real', 'comentario', 'comprobante_pago']
+        #fields = ['monto','cuenta','pagado_real','comprobante_pago','tipo_de_cambio',] los fields del pago normal
+    
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cuenta'].queryset = Cuenta.objects.none()
+
+        if 'cuenta' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('cuenta'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida   #def __init__(self,*args, **kwargs):
+
+class Cargo_Abono_Tipo_Form(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['monto','cuenta','pagado_real', 'tipo', 'comentario', 'comprobante_pago']
+        #fields = ['monto','cuenta','pagado_real','comprobante_pago','tipo_de_cambio',] los fields del pago normal
+    
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cuenta'].queryset = Cuenta.objects.none()
+
+        if 'cuenta' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('cuenta'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida   #def __init__(self,*args, **kwargs):
+
 class Saldo_Inicial_Form(forms.ModelForm):
     class Meta:
         model = Saldo_Cuenta

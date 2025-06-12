@@ -311,8 +311,11 @@
                    
                     <th scope="col">Facturas Completas</th>
                     <th>Facturas</th>
+                    <th class="d-none d-md-table-cell">Status Entrada</th>
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha</th>
+                    
+                    
                     <th scope="col">Acción</th>
                     <th>Control de Documentos</th>
                     <th>Fecha Control</th>
@@ -329,7 +332,7 @@
                         <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
                         <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
                         <td>{{pago.oc.proveedor}}</td>
-                        
+                       
                         {% if pago.oc.facturas_completas == True %}
                             <td>Completas</td>
                         {% else %}
@@ -354,6 +357,16 @@
                                         {% endif %}
                                     </li>
                                 </ul>
+                            </td>
+                             <td class="d-none d-lg-table-cell">
+                                {% if pago.oc.entrada_completa %}<span class="badge bg-primary">Entregada</span>
+                                    {% for entrada in pago.oc.vale_entrada.all %}
+                                        {% if entrada.entrada_date %}
+                                            {{ entrada.entrada_date|default_if_none:''|date:'d/m/Y' }}
+                                        {% endif %}
+                                    {% endfor %}
+                                {% elif pago.oc.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{pago.oc.entrada_parcial}}%</span>
+                                {% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}
                             </td>
                            
                     {% endif %}
@@ -393,6 +406,7 @@
                                     </li>
                                 </ul>
                             </td>
+                            <td></td>
                     {% endif %}
 
                     {% if pago.viatico %}
@@ -430,6 +444,7 @@
                                     </li>
                                 </ul>
                             </td>
+                            <td></td>
                     {% endif %}
                     <td>{{pago.monto|floatformat:2}}</td>
                     <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
