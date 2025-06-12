@@ -309,7 +309,7 @@ def cargo_abono(request, pk):
                 #Se elimina el concepto del movimiento directo a la cuenta, todos son movimientos separados que suman y restan cuando deba sacarse el cálculo
                 #cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)               
                 pago.save()   
-                return redirect('control-bancos')
+                return redirect('control-bancos', pk = cuenta.id)
             else:
                 error_str = form.errors.as_text()
                 messages.error(request, f'{usuario.staff.staff.first_name}, el formulario tiene errores: {error_str}')
@@ -351,7 +351,7 @@ def saldo_inicial(request, pk):
             #cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)               
             saldo.save()   
             messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente el saldo inicial de la cuenta')
-            return redirect('control-bancos')
+            return redirect('control-bancos', pk = cuenta.id)
         else:
             messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
 
