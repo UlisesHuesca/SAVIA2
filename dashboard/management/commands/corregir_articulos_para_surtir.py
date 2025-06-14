@@ -3,8 +3,8 @@ from requisiciones.models import Salidas
 #from dashboard.models import ArticulosparaSurtir  # Ajusta el import
 from django.db.models import Sum
 from decimal import Decimal
-from django.utils import timezone
-from datetime import datetime
+#from django.utils import timezone
+from datetime import datetime, timezone
 import logging
 
 logger = logging.getLogger(__name__)
