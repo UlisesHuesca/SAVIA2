@@ -483,7 +483,7 @@ def compras_pagos(request, pk):
         if form.is_valid():
             pago = form.save(commit = False)
             pago.pagado_date = date.today()
-            pago.pagado_hora = datetime.now().time()
+            #pago.pagado_hora = datetime.now().time()
             pago.hecho = True
             #Traigo la cuenta que se capturo en el form
             cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)
