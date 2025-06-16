@@ -1997,7 +1997,7 @@ def control_bancos(request, pk):
     
     cuenta = Cuenta.objects.get(id=pk)
     cuenta_saldos = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial')
-    ultimo_saldo = cuenta_saldos.first() if cuenta_saldos.exists() else None
+    ultimo_saldo = cuenta_saldos.filter(hecho =True).first() if cuenta_saldos.exists() else None
 
     if ultimo_saldo is not None:
         fecha_saldo = ultimo_saldo.fecha_inicial
@@ -2017,8 +2017,9 @@ def control_bancos(request, pk):
     pagos_list = p.get_page(page)
 
     if request.method == 'POST' and 'btnReporte' in request.POST:
+        start_date = request.GET.get('start_date')
         #pagos = pagos.order_by('pagado_real')
-        return convert_excel_control_bancos(pagos, ultimo_saldo)
+        return convert_excel_control_bancos(pagos, ultimo_saldo, start_date)
            
 
     context= {
@@ -4432,14 +4433,48 @@ def escanear_todo_bbva():
     except Exception as e:
         logging.error(f"❌ Error en escaneo de SFTP: {str(e)}")
         
-def convert_excel_control_bancos(pagos, saldo_inicial_objeto):
-    # Reordenar los pagos en orden ascendente por 'pagado_real'
+def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=None):
+    # Paso 1: determinar la fecha de inicio real
+
+    start_date = None
+
+    if start_date_str:
+        try:
+            start_date = datetime.strptime(start_date_str, '%Y-%m-%d').date()
+        except ValueError:
+            pass  # fecha inválida o malformada
+
+    if not start_date and saldo_inicial_objeto:
+        start_date = saldo_inicial_objeto.fecha_inicial
+
+    if not start_date and pagos.exists():
+        start_date = pagos.order_by('pagado_real').first().pagado_real.date()
+
+    # Paso 2: calcular el saldo inicial ajustado
     if saldo_inicial_objeto is None:
         saldo_inicial = 0
         fecha_saldo_inicial = "No definido"
     else:
         saldo_inicial = saldo_inicial_objeto.monto_inicial
         fecha_saldo_inicial = saldo_inicial_objeto.fecha_inicial
+
+        if start_date and start_date > saldo_inicial_objeto.fecha_inicial:
+            pagos_intermedios = Pago.objects.filter(
+                cuenta=pagos.first().cuenta,
+                hecho=True,
+                pagado_real__gte=saldo_inicial_objeto.fecha_inicial,
+                pagado_real__lt=start_date
+            )
+
+            total_intermedios = sum(
+                -p.monto if p.tipo is None or p.tipo.nombre == "CARGO"
+                else p.monto
+                for p in pagos_intermedios
+            )
+
+            saldo_inicial += total_intermedios
+            fecha_saldo_inicial = start_date
+    print(start_date)
     pagos = pagos.order_by('pagado_real', 'pagado_hora')
     static_path = settings.STATIC_ROOT
     img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
