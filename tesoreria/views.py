@@ -4440,7 +4440,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto):
     else:
         saldo_inicial = saldo_inicial_objeto.monto_inicial
         fecha_saldo_inicial = saldo_inicial_objeto.fecha_inicial
-    pagos = pagos.order_by('pagado_real')
+    pagos = pagos.order_by('pagado_real', 'pagado_hora')
     static_path = settings.STATIC_ROOT
     img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
     # Crea un objeto BytesIO para guardar el archivo Excel
