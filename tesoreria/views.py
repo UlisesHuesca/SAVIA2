@@ -407,6 +407,7 @@ def prellenar_formulario(request):
             'pagado_real': fecha_formato_correcto,  # Valor procesado o None
             'cuenta': cuenta_objeto.id if cuenta_objeto else None,
             'divisa_cuenta': divisa_cuenta_extraida or None,
+            'hora_operacion': datos_extraidos.get('hora_operacion', '') or None,
         }
         
         return JsonResponse(datos_para_formulario)

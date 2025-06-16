@@ -8,7 +8,7 @@ from tesoreria.models import Comprobante_saldo_favor, Saldo_Cuenta
 class PagoForm(forms.ModelForm):
     class Meta:
         model = Pago
-        fields = ['monto','comprobante_pago','tipo_de_cambio','cuenta','pagado_real']
+        fields = ['monto','comprobante_pago','tipo_de_cambio','cuenta','pagado_real','pagado_hora']
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)

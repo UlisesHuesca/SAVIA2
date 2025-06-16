@@ -254,6 +254,15 @@
                             </div>
                         </div>
                 </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-clock"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {% render_field form.pagado_hora type="time" class="form-control" %}
+                            <label style="color: #121212;" for="id_pagado_hora">Hora Pago:</label>
+                        </div>
+                    </div>
+                </div>
 
                 <div class="row my-2">
                         <div class="col-12">
@@ -519,6 +528,12 @@ document.getElementById('id_comprobante_pago').addEventListener('change', functi
     document.querySelector('[name="monto"]').value = data.monto;
     //document.querySelector('[name="cuenta"]').value = data.cuenta;
     document.querySelector('[name="pagado_real"]').value = data.pagado_real;
+    if (data.hora_operacion) {
+    // Solo deja HH:mm
+    console.log(data.hora_operacion)
+    const horaSinSegundos = data.hora_operacion.slice(0, 5);
+    document.querySelector('[name="pagado_hora"]').value=  horaSinSegundos;
+    }
     var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
     var $selectElement = $('[name="cuenta"]');
     var divisa = data.divisa_cuenta

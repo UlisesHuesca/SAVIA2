@@ -690,7 +690,7 @@ def viaticos_pagos(request, pk):
             pago = form.save(commit = False)
             #pago.viatico = viatico
             pago.pagado_date = date.today()
-            pago.pagado_hora = datetime.now().time()
+            #pago.pagado_hora = datetime.now().time()
             pago.hecho = True
             total_pagado = round(viatico.monto_pagado  + pago.monto, 2)
             total_sol = round(viatico.get_total,2)

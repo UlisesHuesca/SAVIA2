@@ -56,7 +56,7 @@ class Concepto_ViaticoForm(forms.ModelForm):
 class Pago_Viatico_Form(forms.ModelForm):
     class Meta:
         model = Pago
-        fields = ['monto','comprobante_pago','cuenta','pagado_real']
+        fields = ['monto','comprobante_pago','cuenta','pagado_real','pagado_hora']
 
 class Viaticos_Factura_Form(forms.ModelForm):
     class Meta:

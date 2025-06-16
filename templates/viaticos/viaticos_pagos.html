@@ -5,7 +5,7 @@
 {% load widget_tweaks %}
 <html>
 <head>
-{% block title %}Autorización OC{% endblock %}
+{% block title %}Pagar Viático{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -42,7 +42,7 @@
     <div class="col-lg-6 offset-md-3">
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">Autorizar Viático: {{viatico.id}}</h5>
+            <h5 class="card-title">Pagar Viático: {{viatico.id}}</h5>
         </div>
 
         <div class="card-body">
@@ -169,8 +169,7 @@
                    {% endfor %}
                    </tbody>
                 </table>
-        </div>
-
+       
         <form method="POST" enctype='multipart/form-data'>
             <div>
                 {% csrf_token %}
@@ -205,7 +204,17 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="col-lg-4 col-sm-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-clock"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {% render_field form.pagado_hora type="time" class="form-control" %}
+                                    <label style="color: #121212;" for="id_pagado_hora">Hora Pago:</label>
+                                </div>
+                            </div>
+                        </div>
                     </div>  
+                   
                     <div class="col-8">
                     <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
                         {{form.comprobante_pago|add_class:'form-control'}}
@@ -219,6 +228,8 @@
                 <a type="button" class="btn btn-secondary"  href="{% url 'viaticos-autorizados-pago' %}">Cerrar</a>
             </div>
         </form>
+         </div>
+
     </div>
     </div>
 </div>
@@ -303,7 +314,49 @@ $(document).ready(function() {
     });
 });
 
+document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
+  var file = event.target.files[0];
+  var formData = new FormData();
+  formData.append('comprobante_pago', file);
+  
+  // Añadir CSRF token a la solicitud AJAX
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
+  fetch('/gastos/prellenar_formulario_gastos/', { 
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
+    },
+  })
+  .then(response => response.json()) 
+  .then(data => {
+    console.log(data);
+    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
+    document.querySelector('[name="monto"]').value = data.monto;
+    //document.querySelector('[name="cuenta"]').value = data.cuenta;
+    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
+    
+    if (data.hora_operacion) {
+    // Solo deja HH:mm
+    console.log(data.hora_operacion)
+    const horaSinSegundos = data.hora_operacion.slice(0, 5);
+    document.querySelector('[name="pagado_hora"]').value=  horaSinSegundos;
+    }
+    
+    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
+    var $selectElement = $('[name="cuenta"]');
+    
+    //var divisa = data.divisa_cuenta
+    //console.log(divisa)
+    $selectElement.val(cuentaId).trigger('change');
+    //if (divisa == "MXP" && compra_moneda == "DOLARES" ){
+    //var tipo_cambio = document.getElementById('text_tc')
+    //tipo_cambio.classList.remove('d-none');
+    //}
+  })
+  .catch(error => console.error('Error:', error));
+});
 </script>
 {% endblock %}
 </body>

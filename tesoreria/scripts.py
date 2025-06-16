@@ -11,6 +11,9 @@ import os
 from datetime import datetime
 import openpyxl
 from openpyxl.utils import get_column_letter
+import fitz  # PyMuPDF
+import re
+
 
 def update_pagado_real():
     pagos = Pago.objects.all()
@@ -828,3 +831,36 @@ def eliminar_facturas_duplicadas_viaticos():
 
     print(f"Total de facturas eliminadas: {total_eliminadas}")
 
+def extraer_texto_de_pdf(pdf_path):
+    with fitz.open(pdf_path) as doc:
+        texto = ""
+        for pagina in doc:
+            texto += pagina.get_text() + "\n"
+    return texto
+
+def extraer_hora_operacion(texto):
+    # Busca una hora en formato HH:mm:ss
+    match = re.search(r'(?:Hora de captura en el canal|Hora):\s*(\d{2}:\d{2}:\d{2})', texto)
+    if match:
+        try:
+            return datetime.strptime(match.group(1), "%H:%M:%S").time()
+        except ValueError:
+            return None
+    return None
+
+def actualizar_horas_faltantes():
+    pagos = Pago.objects.filter(comprobante_pago__isnull=False, pagado_hora__isnull=True)
+
+    for pago in pagos:
+        print(f"Procesando pago ID {pago.id}")
+        try:
+            texto = extraer_texto_de_pdf(pago.comprobante_pago.path)
+            hora = extraer_hora_operacion(texto)
+            if hora:
+                pago.pagado_hora = hora
+                pago.save()
+                print(f"✓ Hora actualizada: {hora}")
+            else:
+                print("⚠️ Hora no encontrada.")
+        except Exception as e:
+            print(f"❌ Error con pago ID {pago.id}: {e}")
