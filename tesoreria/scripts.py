@@ -849,7 +849,7 @@ def extraer_hora_operacion(texto):
     return None
 
 def actualizar_horas_faltantes():
-    pagos = Pago.objects.filter(comprobante_pago__isnull=False, pagado_hora__isnull=True)
+    pagos = Pago.objects.filter(comprobante_pago__isnull=False)
 
     for pago in pagos:
         print(f"Procesando pago ID {pago.id}")
