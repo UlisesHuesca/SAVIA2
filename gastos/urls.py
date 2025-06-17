@@ -37,6 +37,7 @@ urlpatterns = [
     path('finanzas/transferencia_gastos_autorizados/', views.finanzas_transferencia_gastos_autorizados, name='transferencia-gastos-autorizados'),
     path('finanzas/transferencia/<int:pk>', views.finanzas_transferencia, name='finanzas-transferencia'),
     path('archivo/eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
-    path('vale-rosa/<int:pk>/eliminar/', views.eliminar_vale_rosa, name='eliminar_vale_rosa'),
+    path('vale-rosa/eliminar/<int:pk>', views.eliminar_vale_rosa, name='eliminar-vale-rosa'),
+    path('vale-rosa/<int:vale_id>/pdf/', views.descargar_vale_rosa_pdf, name='descargar_vale_rosa_pdf'),
 ]
     

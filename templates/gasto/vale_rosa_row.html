@@ -10,11 +10,16 @@
         {% endif %}
     </td>
     <td>
-        <form action="{% url 'eliminar_vale_rosa' vale.id %}" method="post" style="display: inline;">
+        <form action="{% url 'eliminar-vale-rosa' vale.id %}" method="post" style="display: inline;">
             {% csrf_token %}
             <button type="submit" class="btn btn-danger" onclick="return confirm('¿Estás seguro de que quieres eliminar este vale?')">
                 <i class="fa-solid fa-trash-can"></i>
             </button>
         </form>
+    </td>
+    <td>
+        <a href="{% url 'descargar_vale_rosa_pdf' vale.id %}" class="btn btn-sm btn-danger" target="_blank">
+            <i class="fa fa-file-pdf"></i> PDF
+        </a>
     </td>
 </tr>

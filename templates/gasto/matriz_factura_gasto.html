@@ -211,10 +211,11 @@
                             <!-- Checkbox de autorización -->
                             {% if usuario.tipo.tesoreria %}
                             <td>
-                                <input type="checkbox" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %}>
+                                <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %}>
                             </td>
+                         
                             {% endif %}
-
+                          
                             <!-- Botón de eliminación -->
                             <td>
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize }})">
@@ -269,11 +270,38 @@
                         <th>Motivo</th>
                         <th>Monto</th>
                         <th>Estado</th>
+                        <th>Eliminar</th>
+                        <th>Vale</th>
                     </tr>
                 </thead>
                 <tbody id="valesRosaLista">
                     {% for vale in gasto.vales_rosa.all %}
-                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                    <tr>
+                        <td>{{ vale.id }}</td>
+                        <td>{{ vale.motivo }}</td>
+                        <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
+                        <td>
+                            {% if vale.esta_aprobado %}
+                                ✅ Aprobado
+                            {% else %}
+                                ⏳ Pendiente
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name ="vale_id" value="{{vale.id}}">
+                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale rosa?')" >
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id %}" class="btn btn-sm btn-danger" target="_blank">
+                                <i class="fa fa-file-pdf"></i> PDF
+                            </a>
+                        </td>
+                    </tr>
                     {% empty %}
                         <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
                     {% endfor %}
@@ -378,6 +406,8 @@ function setDeleteUrl(facturaId) {
     // Establecer la acción del formulario
     deleteForm.action = deleteUrl;
 }
+
+
 
 function enviarFormulario() {
     const comentario = document.getElementById('comentario').value;

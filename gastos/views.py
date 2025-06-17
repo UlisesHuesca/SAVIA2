@@ -566,8 +566,9 @@ def delete_gasto(request, pk):
     return redirect('crear-gasto')
 
 def eliminar_vale_rosa(request, pk):
+    print(pk)
     vale = get_object_or_404(ValeRosa, pk=pk)
-    gasto_id = vale.gasto.id  # Asumiendo que ValeRosa tiene FK a Gasto
+    gasto_id = vale.gasto.id  # ValeRosa tiene FK a Gasto
     vale.delete()
     return redirect('crear-gasto') 
 
@@ -1811,6 +1812,15 @@ def matriz_facturas_gasto(request, pk):
             return response
         elif 'salir' in request.POST:
             return redirect(next_url)
+        elif 'btn_deletevalerosa' in request.POST:
+            print('borrando_vale')
+            vale_id = request.POST.get('vale_id')
+            vale = get_object_or_404(ValeRosa, pk=vale_id)
+            #gasto_id = vale.gasto.id  # ValeRosa tiene FK a Gasto
+            vale.delete()
+            return redirect('matriz-facturas-gasto', gasto.id)
+
+            
     context={
         'next_url':next_url,
         'form':form,
@@ -3043,6 +3053,10 @@ def crear_pdf_cfdi_buffer(factura):
     buffer.seek(0)
 
     return buffer
+
+def descargar_vale_rosa_pdf(request, vale_id):
+    buffer = generar_pdf_vale_rosa(vale_id)
+    return FileResponse(buffer, as_attachment=True, filename=f"vale_rosa_{vale_id}.pdf")
     
 def generar_cfdi_gasto(request, pk):
     factura = Factura.objects.get(id=pk)
@@ -3052,3 +3066,58 @@ def generar_cfdi_gasto(request, pk):
     return HttpResponse(buffer, content_type='application/pdf', headers={
         'Content-Disposition': f'attachment; filename="{folio_fiscal}.pdf"'
     })
+
+
+
+def generar_pdf_vale_rosa(vale_id):
+    vale = ValeRosa.objects.select_related('gasto', 'creado_por').get(id=vale_id)
+    
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=letter)
+    width, height = letter
+
+    # Colores y estilos
+    c.setFillColor(red)
+    c.setFont("Helvetica-Bold", 14)
+    c.drawString(30, height - 50, "Vale Provisional de Caja")
+
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+
+    # Importe en letra
+    c.drawString(30, height - 80, "IMPORTE (EN LETRA):")
+    c.drawString(160, height - 80, vale.monto)  # Puedes convertirlo a texto con num2words
+
+    # Concepto
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(30, height - 110, "CONCEPTO")
+    c.setFont("Helvetica", 10)
+    text_object = c.beginText(30, height - 130)
+    text_object.setLeading(14)
+    for line in vale.motivo.splitlines():
+        text_object.textLine(line)
+    c.drawText(text_object)
+
+    # Fecha, autorizado por, recibido por
+    c.setFont("Helvetica", 10)
+    y_footer = 100
+    c.drawString(30, y_footer, "FECHA:")
+    fecha_vale = vale.creado_en.strftime('%d/%m/%Y')
+    c.drawString(80, y_footer, fecha_vale)
+
+    c.drawString(200, y_footer, "AUTORIZADO POR:")
+    autorizado = vale.aprobado_por.get_full_name() if vale.aprobado_por else "PENDIENTE"
+    c.drawString(320, y_footer, autorizado)
+
+    c.drawString(200, y_footer - 20, "RECIBIDO POR:")
+    c.drawString(320, y_footer - 20, vale.gasto.staff.staff.get_full_name())
+
+    # Pie de página opcional
+    c.setFont("Helvetica", 8)
+    c.drawString(30, 30, "Generado por SAVIA")
+
+    c.showPage()
+    c.save()
+    buffer.seek(0)
+
+    return buffer  # Puedes devolverlo como HttpResponse en una vista
