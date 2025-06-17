@@ -3076,45 +3076,69 @@ def generar_pdf_vale_rosa(vale_id):
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Colores y estilos
-    c.setFillColor(red)
+    # Establecer fondo rosa
+    c.setFillColorRGB(1, 0.9, 0.9)
+    c.rect(0, 0, width, height, stroke=0, fill=1)
+
+    # Colores y fuentes
     c.setFont("Helvetica-Bold", 14)
-    c.drawString(30, height - 50, "Vale Provisional de Caja")
+    c.setFillColor(red)
+    c.drawString(40, height - 50, "Vale Provisional de Caja")
 
     c.setFont("Helvetica", 10)
     c.setFillColor(black)
-
-    # Importe en letra
-    c.drawString(30, height - 80, "IMPORTE (EN LETRA):")
-    c.drawString(160, height - 80, vale.monto)  # Puedes convertirlo a texto con num2words
-
-    # Concepto
+    # Recuadro superior derecho para importe en número
+    c.rect(450, height - 60, 90, 20)  # (x, y, width, height)
+    # Escribir el monto en número dentro del recuadro
     c.setFont("Helvetica-Bold", 10)
-    c.drawString(30, height - 110, "CONCEPTO")
+    c.drawRightString(500, height - 55, f"${vale.monto:.2f}")
+    # Rectángulo de importe en letra
+    c.rect(40, height - 80, 500, 20)
+    c.drawString(45, height - 75, "IMPORTE (EN LETRA):")
+
+    monto_entero = int(vale.monto)
+    centavos = int(round((Decimal(vale.monto) - monto_entero) * 100))
+    monto_letras = f"{num2words(monto_entero, lang='es').upper()} PESOS {centavos:02d}/100 M.N."
+    c.drawString(200, height - 75, monto_letras)
+
+
+       # Recuadro de concepto
+    c.setFont("Helvetica-Bold", 11)
+    c.drawString(45, height - 110, "CONCEPTO")
+
+    c.setLineWidth(1)
+    c.rect(40, height - 270, 520, 150)
+
     c.setFont("Helvetica", 10)
-    text_object = c.beginText(30, height - 130)
+    text_object = c.beginText(45, height - 150)
     text_object.setLeading(14)
     for line in vale.motivo.splitlines():
         text_object.textLine(line)
     c.drawText(text_object)
 
-    # Fecha, autorizado por, recibido por
+    # Sección inferior (fecha, autorizado por, recibido por)
+    c.rect(40, 80, 520, 60)
+
+    # Divisiones internas
+    c.line(210, 80, 210, 140)
+    c.line(370, 80, 370, 140)
+
     c.setFont("Helvetica", 10)
-    y_footer = 100
-    c.drawString(30, y_footer, "FECHA:")
+    c.drawString(60, 130, "FECHA")
+    c.drawString(230, 130, "AUTORIZADO POR")
+    c.drawString(410, 130, "RECIBIDO POR")
+   
     fecha_vale = vale.creado_en.strftime('%d/%m/%Y')
-    c.drawString(80, y_footer, fecha_vale)
+    autorizado = str(vale.aprobado_por.staff.staff.first_name+' '+ vale.aprobado_por.staff.staff.last_name) if vale.aprobado_por else "PENDIENTE"
+    recibido = str(vale.gasto.colaborador.staff.staff.first_name+' '+vale.gasto.colaborador.staff.staff.first_name) if vale.gasto.colaborador else str(vale.gasto.staff.staff.staff.first_name+' '+vale.gasto.staff.staff.staff.first_name)
 
-    c.drawString(200, y_footer, "AUTORIZADO POR:")
-    autorizado = vale.aprobado_por.get_full_name() if vale.aprobado_por else "PENDIENTE"
-    c.drawString(320, y_footer, autorizado)
+    c.setFont("Helvetica-Bold", 10)
+    c.drawString(60, 110, fecha_vale)
+    c.drawString(230, 110, autorizado)
+    c.drawString(410, 110, recibido)
 
-    c.drawString(200, y_footer - 20, "RECIBIDO POR:")
-    c.drawString(320, y_footer - 20, vale.gasto.staff.staff.get_full_name())
-
-    # Pie de página opcional
-    c.setFont("Helvetica", 8)
-    c.drawString(30, 30, "Generado por SAVIA")
+    c.setFont("Helvetica", 7)
+    c.drawString(50, 50, "Generado automáticamente por SAVIA")
 
     c.showPage()
     c.save()
