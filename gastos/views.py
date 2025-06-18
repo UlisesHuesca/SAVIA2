@@ -190,7 +190,7 @@ def crear_gasto(request):
         
         if usuario.tipo.tesoreria:
             tipos = Tipo_Gasto.objects.filter(familia__in = ['usuario','tesoreria'])
-        if usuario.tipo.nombre == "CONTADOR":
+        if usuario.tipo.nombre == "CONTADOR" and usuario.tipo.nombre == "SUPERINTENDENCIA_CONTABILIDAD":
             tipos = Tipo_Gasto.objects.filter(familia__in = ['usuario','contabilidad'])
 
 
