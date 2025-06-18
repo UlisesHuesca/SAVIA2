@@ -1675,7 +1675,7 @@ def convert_excel_viatico(viaticos):
         else: 
             pagada ="No tiene pago"
 
-        if viaticos.facturas.filter(factura_xml__isnull=False).exists():
+        if viatico.facturas.filter(factura_xml__isnull=False).exists():
             tiene_facturas = 'Sí'
         else:
             tiene_facturas = 'No'
