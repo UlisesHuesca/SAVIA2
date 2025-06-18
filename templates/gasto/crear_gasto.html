@@ -728,17 +728,21 @@ $(document).ready(function(){
             cardValeRosa.classList.remove("d-none");
         }
 
-        $(document).ready(function() {
-            var tipoActual = localStorage.getItem('tipoDocumentoActual');
+       
 
-            if (tipoActual) {
-                // Restaurar label y name
-                $('#archivo_rh_label').text('Archivo ' + tipoActual + ':');
-                $('#archivo_rh_input').attr('name', 'archivo_' + tipoActual.toLowerCase());
+            $(document).ready(function() {
+                var tipoActual = localStorage.getItem('tipoDocumentoActual');
+              
 
-                // Asegurarse que el cardRH esté visible
-                $('#cardRH').removeClass('d-none');
-            }
+                if (tipoActual) {
+                    // Restaurar label y name
+                    $('#archivo_rh_label').text('Archivo ' + tipoActual + ':');
+                    $('#archivo_rh_input').attr('name', 'archivo_' + tipoActual.toLowerCase());
+
+                    // Asegurarse que el cardRH esté visible
+                    $('#cardRH').removeClass('d-none');
+                }
+               
         });
 
         // Escuchar cambios para guardar en localStorage
@@ -1048,6 +1052,18 @@ $(document).ready(function() {
         var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
         cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
     });
+     $('#id_superintendente').on('select2:unselect', function(e){
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+        delete datos.superintendente;
+        delete datos.superintendente_text;
+        delete datos.tipo;
+        delete datos.tipo_text;
+        delete datos.distrito;
+        delete datos.distrito_text;
+        localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
+    });
+
+
     var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
     var superintendenteSelect = $('#id_superintendente');
     //Si hay datos se rellena el campo con los datos del local storage
@@ -1114,15 +1130,33 @@ $(document).ready(function() {
 });
 
 $(document).ready(function() {
-    //var gasto = document.getElementById('Gasto');
-    //var gasto_id = gasto.getAttribute('gasto');
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+
+    // Inicializa el select2
     $('#id_distrito').select2({
         allowClear: true,
         width: '100%',
         placeholder: 'Distrito',
         data: datosDistritos,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
+        templateResult: formatRepo,
+        templateSelection: formatRepoSelection
+    });
+
+    // Cargar valor desde localStorage (si existe)
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id));
+    if (datosGuardados && datosGuardados.distrito && datosGuardados.distrito_text) {
+        var newOption = new Option(datosGuardados.distrito_text, datosGuardados.distrito, true, true);
+        $('#id_distrito').append(newOption).trigger('change');
+    }
+
+    // Guardar valor cuando se selecciona
+    $('#id_distrito').on('select2:select', function(e) {
+        var data = e.params.data;
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id)) || {};
+        datos.distrito = data.id;
+        datos.distrito_text = data.text;
+        localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
     });
 });
 
@@ -1162,11 +1196,17 @@ $(document).ready(function() {
             $('#cardRH').addClass('d-none');
             localStorage.removeItem('tipoDocumentoActual');
             localStorage.removeItem('mostrarCardRH');
+            //localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
+           
             // Reconstruye el Select2 con solo Margarita
             $('#id_superintendente').empty();
             if (margarita) {
                 var newOption = new Option(margarita.text, margarita.id, true, true);
                 $('#id_superintendente').append(newOption).trigger('change');
+                var datos = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id)) || {};
+                datos.superintendente = margarita.id;
+                datos.superintendente_text = margarita.text;
+                localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
             }
         } else if (data.familia == "rh") {
             console.log("nomina")
@@ -1177,12 +1217,12 @@ $(document).ready(function() {
             // ✅ Guardarlo en localStorage
             localStorage.setItem('mostrarCardRH', 'true');
             localStorage.setItem('tipoDocumentoActual', data.text);
+           
              // Filtrar las opciones del select de superintendentes
             // Filtra solo la opción de Margarita Ruiz Cruz
             var margarita = datosSuperintendentes.find(function(item) {
                 return item.text.trim() === "Margarita Ruiz Cruz";
             });
-
             // Reconstruye el Select2 con solo Margarita
             $('#id_superintendente').empty();
             if (margarita) {
@@ -1198,20 +1238,50 @@ $(document).ready(function() {
             $('#cardRH').addClass('d-none');
             localStorage.removeItem('tipoDocumentoActual');
             localStorage.removeItem('mostrarCardRH');
+            delete datos.distrito;
+            delete datos.distrito_text;
+            localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
                     // Reconstruye el Select2 con todas las opciones originales
             $('#id_superintendente').empty();
+            //$('#id_superintendente').val('').trigger('change');
             datosSuperintendentes.forEach(function(item) {
                 var newOption = new Option(item.text, item.id, false, false);
                 $('#id_superintendente').append(newOption);
             });
+            // Forzar que no haya selección activa en el Select2
+            $('#id_superintendente').val('').trigger('change');     
         }
     
     });
+    $('#id_tipo').on('select2:unselect', function(e) {
+        var gasto = document.getElementById('Gasto');
+        var gasto_id = gasto.getAttribute('gasto');
 
+        // Eliminar superintendente del localStorage
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id)) || {};
+        delete datos.superintendente;
+        delete datos.superintendente_text;
+        delete datos.tipo;
+        delete datos.tipo_text;
+        delete datos.distrito;
+        delete datos.distrito_text;
+        localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
+        
+        // Limpiar también el select visualmente
+        $('#id_superintendente').val(null).trigger('change');
+
+        // Opcional: ocultar elementos asociados
+        $('#cardTxt').addClass('d-none');
+        $('#distrito').addClass('d-none');
+        $('#cardRH').addClass('d-none');
+        localStorage.removeItem('tipoDocumentoActual');
+        localStorage.removeItem('mostrarCardRH');
+    });
 
     var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
     var tipoSelect = $('#id_tipo');
-    //Si hay datos se rellena el campo con los datos del local storage
+    
+        //Si hay datos se rellena el campo con los datos del local storage
     if (datos) {
         if (datos.tipo){
             var option = new Option(datos.tipo_text, datos.tipo, true, true);
@@ -1222,6 +1292,7 @@ $(document).ready(function() {
                 datos.tipo_text ='';
                 localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
             });
+            
              // Verificar el valor inicial para mostrar/ocultar el div
             if (datos.tipo_text === "IMPUESTOS") {
                 $('#proveedor_parrafo').removeClass('d-none');
@@ -1239,6 +1310,13 @@ $(document).ready(function() {
             }
 
         }
+        //console.log('Datos:',datos)
+        //if (datos.superintendente){
+        //    var data = e.params.data;
+         //   cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+         //   console.log('DAtos:',datos)
+        //    SuperSelect.append(option_super).trigger('change');
+        //}
     }
 });
 
