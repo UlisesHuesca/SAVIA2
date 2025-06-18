@@ -5,7 +5,7 @@
 {% load widget_tweaks %}
 <html>
 <head>
-{% block title %}Traspaso{% endblock %}
+{% block title %}Traspaso entre cuentras{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -289,7 +289,7 @@ document.getElementById('id_comprobante_pago').addEventListener('change', functi
   // Añadir CSRF token a la solicitud AJAX
   formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-  fetch('/gastos/prellenar_formulario_gastos/', { 
+  fetch('/gastos/prellenar_formulario_transferencia/', { 
     method: 'POST',
     body: formData,
     headers: {

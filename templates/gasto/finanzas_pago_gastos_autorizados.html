@@ -5,7 +5,7 @@
 {% load tt_extras %}
 <html>
 <head>
-{% block title %}Matriz de gastos autorizados{% endblock %}
+{% block title %}Matriz de gastos - Traspasos{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -132,7 +132,7 @@
                             <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                 <a type="button" class="btn btn-outline-info" href="{% url 'compras-autorizadas' %}">Compras</a>
                                 <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viáticos</a>
+                                <!--<a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viáticos</a>-->
                               </div>
                         </li>
                     </ul>
@@ -185,14 +185,14 @@
                     <th scope="col">Importe Gasto</th>
                     <th scope="col">Pagado</th>
                     <th scope="col">Acción</th>
-                    <th>Status de Facturas</th>
+                    <!--<th>Status de Facturas</th>-->
                     <th scope="col">Comprobación</th>
                     <th>PDF</th>
-                    {% if usuario.tipo.nombre == 'CONTADOR' %}
+                    <!--{% if usuario.tipo.nombre == 'CONTADOR' %}
                     <div></div>
                     {% else %}
                     <th>Cancelar</th>
-                    {% endif %}
+                    {% endif %}-->
                 </tr>
             </thead>
             <tbody>
@@ -201,7 +201,8 @@
                     <th scope="row">{{gasto.folio}}</th>
                     <td>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
                     <td>   
-                        {% if gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
+                        {% if gasto.tipo.tipo == "NOMINA" %}<span class="badge bg-primary"> NOMINA </span>
+                        {% elif gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
                         {% elif gasto.colaborador %}{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}
                         {% endif %}
                     </td> 
@@ -215,18 +216,18 @@
                         {% if usuario.tipo.pagos == True %}
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'finanzas-transferencia' gasto.id %}">Transferencia</a>
+                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'finanzas-transferencia' gasto.id %}">Traspaso entre cuentas</a>
                             </li>
                         </ul>
                         {% endif %}
                     </td>
-                    <td>
+                    <!--<td>
                         {% if gasto.facturas_completas %}
                         <span class="badge bg-primary">Validadas</span>
                         {% else %}
                         <span class="badge bg-warning">No Validadas Aún</span> 
                         {% endif %}
-                    </td>
+                    </td>-->
                     <td>
                         {% if gasto.autorizar2 %}
                             <ul class="nav nav-pills">
@@ -262,13 +263,13 @@
                             
                         </ul>
                     </td>
-                    {% if usuario.tipo.nombre == 'CONTADOR' %}
+                    <!--{% if usuario.tipo.nombre == 'CONTADOR' %}
                     <div></div>
                     {% else %}
                     <td>
                         <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog"  hx-swap="innerHTML" hx-target="#document" hx-get="{% url 'cancelar-gasto2' gasto.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
-                    {% endif %}
+                    {% endif %}-->
                 </tr>
 
                 {% endfor %}
