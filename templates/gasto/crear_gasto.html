@@ -131,11 +131,13 @@
 
 
                         {% if productos %}
-                        <div class="text-end">
-                            <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Crear Solicitud" %}'>
-                        </div>
+                            <div class="text-end">
+                     
+                        
+                                <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Crear Solicitud" %}'>
+                            </div>
                         {% endif %}
-
+                            
                 </form> 
             </div>
         </div>
@@ -918,37 +920,6 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
 
-/* document.getElementById('SwitchUsarXML').addEventListener('change', function() {
-// Obtener los formularios
-var form_product = document.getElementById('form_product');
-var form_product2 = document.getElementById('form_product2');
-
-// Obtener los campos de los formularios
-var inputs_form_product = form_product.getElementsByTagName('input');
-var inputs_form_product2 = form_product2.getElementsByTagName('input');
-
-if(this.checked) {
-// Limpiar los campos del formulario form_product
-for (var i = 0; i < inputs_form_product.length; i++) {
-    if (inputs_form_product[i].type == "text") {
-        inputs_form_product[i].value = "";
-        }
-    }
-
-    form_product.classList.add('d-none');
-    form_product2.classList.remove('d-none');
-    } else {
-    // Limpiar los campos del formulario form_product2
-    for (var i = 0; i < inputs_form_product2.length; i++) {
-    if (inputs_form_product2[i].type == "text") {
-        inputs_form_product2[i].value = "";
-        }
-    }
-
-    form_product.classList.remove('d-none');
-    form_product2.classList.add('d-none');
-    }
-}); */
 
 
 var datosProyectos = {{proyectos_para_select2|safe}}
@@ -1186,6 +1157,7 @@ $(document).ready(function() {
         }
         if (data.familia == "rh_nomina") {
             console.log("nomina")
+            
             $('#cardTxt').removeClass('d-none');
             $('#distrito').removeClass('d-none');
              // Filtrar las opciones del select de superintendentes
@@ -1210,6 +1182,7 @@ $(document).ready(function() {
             }
         } else if (data.familia == "rh") {
             console.log("nomina")
+            
             $('#archivo_rh_label').text('Archivo ' + data.text + ':');
             $('#archivo_rh_input').attr('name', data.text.toLowerCase());
             $('#cardRH').removeClass('d-none'); // Mostrar cardRH si corresponde
@@ -1233,6 +1206,7 @@ $(document).ready(function() {
         
         } else {
             console.log("nn")
+            
             $('#cardTxt').addClass('d-none');
             $('#distrito').addClass('d-none');
             $('#cardRH').addClass('d-none');
@@ -1310,13 +1284,6 @@ $(document).ready(function() {
             }
 
         }
-        //console.log('Datos:',datos)
-        //if (datos.superintendente){
-        //    var data = e.params.data;
-         //   cambio_en_formulario(data,'superintendente') //Acá lo que hago es mediante esta función guardo los valores en el local storage
-         //   console.log('DAtos:',datos)
-        //    SuperSelect.append(option_super).trigger('change');
-        //}
     }
 });
 
