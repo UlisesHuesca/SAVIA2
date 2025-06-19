@@ -6,6 +6,7 @@ from compras.models import Compra
 from datetime import datetime
 from decimal import Decimal
 import logging
+from django.db.models import Sum
 
 logger = logging.getLogger('dashboard')
 
@@ -146,3 +147,49 @@ def corregir_articulos_salida():
     logger.info(f"Artículos corregidos: {modificados}")
     #print(f"Evaluadas: {total_salidas} salidas completadas.")
     #print(f"Proceso completado. Se actualizaron {modificados} artículos.")
+
+def analizar_articulos_incompletos_distrito_1():
+    fecha_inicio = datetime(2024, 6, 14)
+    pendientes = []
+
+    articulos = ArticulosparaSurtir.objects.filter(
+        articulos__orden__distrito__id=1,
+        created_at__date__gte=fecha_inicio,
+        surtir=False,
+        requisitar=False
+    )
+
+    for articulo in articulos:
+        if not articulo.articulos:
+            continue
+
+        cantidad_ordenada = articulo.articulos.cantidad
+
+        total_surtido = Salidas.objects.filter(
+            producto=articulo,
+            cancelada=False
+        ).aggregate(total=Sum('cantidad'))['total'] or Decimal('0')
+
+        if total_surtido < cantidad_ordenada:
+            pendiente = cantidad_ordenada - total_surtido
+            pendientes.append({
+                'articulo_id': articulo.id,
+                'orden_id': articulo.articulos.orden.id if articulo.articulos.orden else 'Sin orden',
+                'cantidad_ordenada': cantidad_ordenada,
+                'total_surtido': total_surtido,
+                'pendiente_por_surtir': pendiente
+            })
+
+    # Imprimir resultados
+    for item in pendientes:
+        logger.info(
+            f"Artículo ID: {item['articulo_id']} | "
+            f"Orden ID: {item['orden_id']} | "
+            f"Ordenado: {item['cantidad_ordenada']} | "
+            f"Surtido: {item['total_surtido']} | "
+            f"Pendiente: {item['pendiente_por_surtir']}"
+        )
+
+    logger.info(f"Total artículos en este estado: {len(pendientes)}")
+
+    

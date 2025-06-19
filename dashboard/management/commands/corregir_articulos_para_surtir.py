@@ -39,6 +39,7 @@ class Command(BaseCommand):
                 articulo.salida = True
                 articulo.surtir = False
                 articulo.cantidad = 0
+                articulo._change_reason = f"Corregido automáticamente desde salida ID={salida.id} | Total surtido: {total_surtido}"
                 articulo.save(update_fields=['salida', 'surtir', 'cantidad'])
                 modificados += 1
                 logger.info(f"Corregido artículo ID={articulo.id} desde salida ID={salida.id} | Total surtido: {total_surtido}")
