@@ -180,6 +180,12 @@ def analizar_articulos_incompletos_distrito_1():
                 'pendiente_por_surtir': pendiente
             })
 
+    logger.info(f"🔎 Evaluación desde 14-jun-2024 | Distrito 1")
+    logger.info(f"Total artículos evaluados: {total_articulos}")
+    logger.info(f"Total salidas evaluadas: {total_salidas}")
+    logger.info(f"Total cantidad surtida en salidas: {total_salida_cantidad}")
+    logger.info(f"Artículos con pendiente por surtir: {len(pendientes)}")
+
     # Imprimir resultados
     for item in pendientes:
         logger.info(
