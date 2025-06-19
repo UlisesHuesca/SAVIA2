@@ -148,10 +148,13 @@ def corregir_articulos_salida():
     #print(f"Evaluadas: {total_salidas} salidas completadas.")
     #print(f"Proceso completado. Se actualizaron {modificados} artículos.")
 
-def analizar_articulos_incompletos_distrito_1():
+def analizar_articulos_y_salidas():
     fecha_inicio = datetime(2024, 6, 14)
-    pendientes = []
+    total_articulos = 0
+    total_salidas = 0
+    total_salida_cantidad = Decimal('0')
 
+    # Artículos del distrito 1, creados a partir del 14 de junio, marcados como surtir=False y requisitar=False
     articulos = ArticulosparaSurtir.objects.filter(
         articulos__orden__distrito__id=1,
         created_at__date__gte=fecha_inicio,
@@ -159,16 +162,24 @@ def analizar_articulos_incompletos_distrito_1():
         requisitar=False
     )
 
+    total_articulos = articulos.count()
+
+    pendientes = []
+
     for articulo in articulos:
         if not articulo.articulos:
             continue
 
         cantidad_ordenada = articulo.articulos.cantidad
 
-        total_surtido = Salidas.objects.filter(
+        salidas = Salidas.objects.filter(
             producto=articulo,
             cancelada=False
-        ).aggregate(total=Sum('cantidad'))['total'] or Decimal('0')
+        )
+
+        total_surtido = salidas.aggregate(total=Sum('cantidad'))['total'] or Decimal('0')
+        total_salidas += salidas.count()
+        total_salida_cantidad += total_surtido
 
         if total_surtido < cantidad_ordenada:
             pendiente = cantidad_ordenada - total_surtido
@@ -186,7 +197,6 @@ def analizar_articulos_incompletos_distrito_1():
     logger.info(f"Total cantidad surtida en salidas: {total_salida_cantidad}")
     logger.info(f"Artículos con pendiente por surtir: {len(pendientes)}")
 
-    # Imprimir resultados
     for item in pendientes:
         logger.info(
             f"Artículo ID: {item['articulo_id']} | "
@@ -195,7 +205,5 @@ def analizar_articulos_incompletos_distrito_1():
             f"Surtido: {item['total_surtido']} | "
             f"Pendiente: {item['pendiente_por_surtir']}"
         )
-
-    logger.info(f"Total artículos en este estado: {len(pendientes)}")
 
     
