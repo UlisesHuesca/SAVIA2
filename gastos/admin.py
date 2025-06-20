@@ -28,6 +28,7 @@ class Tipo_Admin(admin.ModelAdmin):
 
 class Vale_Rosa_Admin(admin.ModelAdmin):
     raw_id_fields = ('creado_por','aprobado_por') 
+    list_display = ('id','gasto', 'aprobado_por','esta_aprobado')   
 
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)
 
