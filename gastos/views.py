@@ -544,6 +544,7 @@ def agregar_vale_rosa(request, pk):
             vale = ValeRosa.objects.create(
                 gasto=gasto,
                 motivo=motivo,
+                creado_por = gasto.staff,
                 monto=monto
             )
             messages.success(request, 'Vale Rosa agregado exitosamente')
