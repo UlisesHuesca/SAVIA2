@@ -4631,7 +4631,14 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             comentarios = (pago.viatico.comentario_general or '').upper()
         elif hasattr(pago, 'gasto') and pago.gasto:
             articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
-            comentarios = (pago.gasto.comentario or '').upper()
+            if pago.gasto.comentario:
+                comentarios = pago.gasto.comentario.strip().upper()
+            else:
+                comentarios_articulos = [
+                    (a.comentario or '').strip().upper()
+                    for a in articulos_gasto if a.comentario
+                ]
+                comentarios = ', '.join(comentarios_articulos) if comentarios_articulos else 'NO HAY COMENTARIOS DISPONIBLES'
             proyectos = set()
             subproyectos = set()
             for articulo in articulos_gasto:
