@@ -26,6 +26,9 @@ class Tipo_Admin(admin.ModelAdmin):
     list_display = ('id','tipo', 'familia')   
     search_fields = ('id','familia')
 
+class Vale_Rosa_Admin(admin.ModelAdmin):
+    raw_id_fields = ('creado_por',) 
+
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)
 
 admin.site.register(Articulo_Gasto, Articulo_Gasto_Admin)
@@ -40,7 +43,7 @@ admin.site.register(Factura, Factura_Admin)
 
 admin.site.register(Porcentaje_iva)
 
-admin.site.register(ValeRosa)
+admin.site.register(ValeRosa, Vale_Rosa_Admin)
 
 admin.site.register(TipoArchivoSoporte)
 
