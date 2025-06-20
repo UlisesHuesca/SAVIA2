@@ -156,10 +156,12 @@ def analizar_articulos_y_salidas():
 
     # Artículos del distrito 1, creados a partir del 14 de junio, marcados como surtir=False y requisitar=False
     articulos = ArticulosparaSurtir.objects.filter(
-        articulos__orden__distrito__id=1,
-        created_at__date__gte=fecha_inicio,
+        articulos__orden__distrito__nombre = "ALTAMIRA",
+        articulos__orden__tipo__tipo = "NORMAL",
+        articulos__orden__created_at__gte=fecha_inicio,
         surtir=False,
-        requisitar=False
+        requisitar=False,
+        salida = True,
     )
 
     total_articulos = articulos.count()
@@ -185,7 +187,7 @@ def analizar_articulos_y_salidas():
             pendiente = cantidad_ordenada - total_surtido
             pendientes.append({
                 'articulo_id': articulo.id,
-                'orden_id': articulo.articulos.orden.id if articulo.articulos.orden else 'Sin orden',
+                'orden_id': articulo.articulos.orden.folio if articulo.articulos.orden else 'Sin orden',
                 'cantidad_ordenada': cantidad_ordenada,
                 'total_surtido': total_surtido,
                 'pendiente_por_surtir': pendiente
@@ -200,7 +202,7 @@ def analizar_articulos_y_salidas():
     for item in pendientes:
         logger.info(
             f"Artículo ID: {item['articulo_id']} | "
-            f"Orden ID: {item['orden_id']} | "
+            f"Orden Folio: {item['orden_id']} | "
             f"Ordenado: {item['cantidad_ordenada']} | "
             f"Surtido: {item['total_surtido']} | "
             f"Pendiente: {item['pendiente_por_surtir']}"
