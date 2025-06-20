@@ -1287,6 +1287,7 @@ def autorizar_gasto(request, pk):
                     vale_id = int(key.split("_")[1])
                     vale = ValeRosa.objects.get(id=vale_id, gasto=gasto)
                     vale.aprobado_por = perfil
+                    vale.aprobado_en = datetime.now()
                     if value == "aprobar":
                         vale.esta_aprobado = True
                         
