@@ -4602,7 +4602,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
                 proveedor = "No disponible"
 
         cuenta = pago.cuenta.cuenta
-        motivo = pago.detalles_comprobante.get('motivo_pago')
+        concepto_servicio = pago.detalles_comprobante.get('motivo_pago')
         #if motivo and motivo != 'No disponible':
             # usar motivo
         #    print(motivo)
