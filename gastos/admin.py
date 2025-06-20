@@ -27,7 +27,7 @@ class Tipo_Admin(admin.ModelAdmin):
     search_fields = ('id','familia')
 
 class Vale_Rosa_Admin(admin.ModelAdmin):
-    raw_id_fields = ('creado_por','autorizado_por') 
+    raw_id_fields = ('creado_por','aprobado_por') 
 
 admin.site.register(Solicitud_Gasto, Solicitud_Gasto_Admin)
 
