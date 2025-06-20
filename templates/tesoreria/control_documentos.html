@@ -303,6 +303,7 @@
                 <tr>
                     <th class="d-none d-lg-table-cell">Id</th>
                     <th scope="col">Compra/Gasto</th>
+                    <th>Distrito</th>
                     <th class="d-none d-lg-table-cell">Solicitado</th>
                     <th scope="col">Proyecto</th>
                     <th class="d-none d-lg-table-cell">Subproyecto</th>
@@ -322,7 +323,9 @@
                 <tr>
                     <th class="d-none d-lg-table-cell">{{pago.id}}</th>
                     {% if pago.oc %}
+                        
                         <td>{{pago.oc.folio}}</td>
+                        <td>{{pago.oc.req.orden.distrito.nombre}}</td>
                         <td class="d-none d-lg-table-cell">{{pago.oc.req.orden.staff.staff.staff.first_name}} {{pago.oc.req.orden.staff.staff.staff.last_name}}</td>
                         <td>{{pago.oc.req.orden.proyecto.nombre}}</td>
                         <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
@@ -359,6 +362,7 @@
                    
                     {% if pago.gasto %}
                         <td>G{{pago.gasto.folio}}</td>
+                        <td>{{pago.gasto.distrito.nombre}}</td>
                         <td class="d-none d-lg-table-cell">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
                         <td>{{pago.gasto.proyecto.nombre}}</td>
                         <td  class="d-none d-lg-table-cell">{{pago.gasto.subproyecto.nombre}}</td>
@@ -396,6 +400,7 @@
 
                     {% if pago.viatico %}
                         <td>V{{pago.viatico.folio}}</td>
+                        <td>{{pago.viatico.dsitrito.nombre}}</td>
                         <td class="d-none d-lg-table-cell">{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
                         <td>{{pago.viatico.proyecto.nombre}}</td>
                         <td  class="d-none d-lg-table-cell">{{pago.viatico.subproyecto.nombre}}</td>

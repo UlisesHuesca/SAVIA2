@@ -450,11 +450,17 @@ class Compra(models.Model):
     def estatus_original(self):
         primer_historico = self.history.first()  # Obtiene el primer registro histórico
 
-        if primer_historico and primer_historico.proveedor and primer_historico.proveedor.estatus:
-            return primer_historico.proveedor.estatus.nombre  # Retorna el estatus del primer historial
-        
-        # Si no hay historial, marca el estatus actual con "*"
-        return f"{self.proveedor.estatus.nombre}*"
+        try:
+            if primer_historico and primer_historico.proveedor and primer_historico.proveedor.estatus:
+                return primer_historico.proveedor.estatus.nombre  # Retorna el estatus del primer historial
+        except Exception as e:
+            # Puedes registrar el error si lo deseas con print/logging
+            pass
+
+        try:
+            return f"{self.proveedor.estatus.nombre}*"
+        except Exception as e:
+            return "Sin estatus*"
 
     def __str__(self):
         return f'oc:{self.folio} - {self.id}'
