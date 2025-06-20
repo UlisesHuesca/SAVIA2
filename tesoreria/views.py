@@ -4602,12 +4602,12 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
                 proveedor = "No disponible"
 
         cuenta = pago.cuenta.cuenta
-        if hasattr(pago, 'detalles_comprobante') and pago.detalles_comprobante and hasattr(pago.detalles_comprobante, 'cuenta_retiro') and pago.detalles_comprobante.cuenta_retiro != "No disponible":
-            concepto_servicio = pago.detalles_comprobante.motivo_pago
-        elif pago.comentario != None:
-            concepto_servicio = str(concepto_servicio) + ' '+ str(pago.comentario)
-        else:
-            concepto_servicio = "No hay comentarios"
+        motivo = pago.detalles_comprobante.get('motivo_pago')
+        #if motivo and motivo != 'No disponible':
+            # usar motivo
+        #    print(motivo)
+        #else:
+        #    print("No hay motivo de pago disponible")
       
         
         if hasattr(pago, 'oc') and pago.oc:
