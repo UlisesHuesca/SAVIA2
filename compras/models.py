@@ -375,6 +375,11 @@ class Compra(models.Model):
     saldo_a_favor = models.DecimalField(max_digits=14,decimal_places=2, default=0)
     para_pago = models.BooleanField(default=False)
     parcial = models.DecimalField(max_digits=14,decimal_places=2, default=0)
+    cerrar_sin_pago_completo = models.BooleanField(default=False)
+    persona_cierre = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Cierre')
+    fecha_cierre = models.DateField(null=True, blank = True)
+    comentario_cierre = models.TextField(blank=True, null=True)
+
 
     @property
     def costo_plus_adicionales(self):

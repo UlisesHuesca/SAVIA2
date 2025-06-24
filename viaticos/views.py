@@ -635,7 +635,7 @@ def viaticos_autorizados_pago(request):
         if perfil.tipo.rh:
             viaticos = Solicitud_Viatico.objects.none()
         else:
-            viaticos = Solicitud_Viatico.objects.filter(complete=True,distrito=perfil.distritos,autorizar=True,autorizar2=True,pagada=False).annotate(
+            viaticos = Solicitud_Viatico.objects.filter(complete=True,distrito=perfil.distritos,autorizar=True,autorizar2=True,pagada=False, cerrar_sin_pago_completo = False).annotate(
                 total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
                 ).order_by('-folio')
 
@@ -684,75 +684,36 @@ def viaticos_pagos(request, pk):
         } for cuenta in cuentas]
 
     if request.method == 'POST':
-        form = Pago_Viatico_Form(request.POST or None, request.FILES or None, instance = pago)
+        if "myBtn" in request.POST:
+            form = Pago_Viatico_Form(request.POST or None, request.FILES or None, instance = pago)
 
-        if form.is_valid():
-            pago = form.save(commit = False)
-            #pago.viatico = viatico
-            pago.pagado_date = date.today()
-            #pago.pagado_hora = datetime.now().time()
-            pago.hecho = True
-            total_pagado = round(viatico.monto_pagado  + pago.monto, 2)
-            total_sol = round(viatico.get_total,2)
-            if total_sol == total_pagado:
-                flag = True
-            else:
-                flag = False
-            if total_pagado > viatico.get_total:
-                messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del viático')
-            else:
-                if flag:
-                    viatico.pagada = True
-                    viatico.save()
-                pago.save()
-                pagos = Pago.objects.filter(viatico=viatico, hecho=True)
-                static_path = settings.STATIC_ROOT
-                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-        
-                image_base64 = get_image_base64(img_path)
-                logo_v_base64 = get_image_base64(img_path2)
-                # Crear el mensaje HTML
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body>
-                        <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                        <p>Estimado {viatico.staff.staff.staff.first_name} {viatico.staff.staff.staff.last_name},</p>
-                        <p>Estás recibiendo este correo porque el viático solicitado: {viatico.folio} ha sido pagado,</p>
-                        <p>por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
-                        <p>Buen viaje!</p>
-                        <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
-                        <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
-                    </body>
-                </html>
-                """
-                archivo_viatico = attach_viatico_pdf(request, viatico.id)
-                try:
-                    email = EmailMessage(
-                        f'Viatico Autorizado {viatico.folio}',
-                        body=html_message,
-                        from_email = settings.DEFAULT_FROM_EMAIL,
-                        to = ['ulises_huesc@hotmail.com',viatico.staff.staff.staff.email],
-                        headers={'Content-Type': 'text/html'}
-                        )
-                    #if pagos.count() > 0:
-                    #for pago in pagos:
-                        #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
-                    
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    email.attach(f'folio:{viatico.folio}.pdf',archivo_viatico,'application/pdf')
-                    email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
-                    email.send()
-                    messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
-                    messages.success(request, error_message)
-                #Este código es para enviar correo informativo a cada uno de los RH's del distrito del usuario
-                personal_rh = colaborador.filter(distritos = viatico.staff.distritos, tipo__rh =True)
-                for persona in personal_rh:
+            if form.is_valid():
+                pago = form.save(commit = False)
+                #pago.viatico = viatico
+                pago.pagado_date = date.today()
+                #pago.pagado_hora = datetime.now().time()
+                pago.hecho = True
+                total_pagado = round(viatico.monto_pagado  + pago.monto, 2)
+                total_sol = round(viatico.get_total,2)
+                if total_sol == total_pagado:
+                    flag = True
+                else:
+                    flag = False
+                if total_pagado > viatico.get_total:
+                    messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del viático')
+                else:
+                    if flag:
+                        viatico.pagada = True
+                        viatico.save()
+                    pago.save()
+                    pagos = Pago.objects.filter(viatico=viatico, hecho=True)
+                    static_path = settings.STATIC_ROOT
+                    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+                    img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+            
+                    image_base64 = get_image_base64(img_path)
+                    logo_v_base64 = get_image_base64(img_path2)
+                    # Crear el mensaje HTML
                     html_message = f"""
                     <html>
                         <head>
@@ -760,32 +721,80 @@ def viaticos_pagos(request, pk):
                         </head>
                         <body>
                             <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
-                            <p>Estimado {persona.staff.staff.first_name} {persona.staff.staff.last_name},</p>
-                            <p>Para notificarte que el viático: {viatico.folio} ha sido pagado y se considere para los efectos y fines que para el departamento de RH sean aplicables</p>
-                            <p>Tesorero que paga:{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
+                            <p>Estimado {viatico.staff.staff.staff.first_name} {viatico.staff.staff.staff.last_name},</p>
+                            <p>Estás recibiendo este correo porque el viático solicitado: {viatico.folio} ha sido pagado,</p>
+                            <p>por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
+                            <p>Buen viaje!</p>
                             <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
                             <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
                         </body>
                     </html>
                     """
+                    archivo_viatico = attach_viatico_pdf(request, viatico.id)
                     try:
                         email = EmailMessage(
-                            f'Viatico Autorizado {viatico.folio} |Correo informativo para RH',
+                            f'Viatico Autorizado {viatico.folio}',
                             body=html_message,
                             from_email = settings.DEFAULT_FROM_EMAIL,
-                            to = ['ulises_huesc@hotmail.com',persona.staff.staff.email],
+                            to = ['ulises_huesc@hotmail.com',viatico.staff.staff.staff.email],
                             headers={'Content-Type': 'text/html'}
                             )
                         #if pagos.count() > 0:
                         #for pago in pagos:
                             #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                        
                         email.content_subtype = "html " # Importante para que se interprete como HTML
                         email.attach(f'folio:{viatico.folio}.pdf',archivo_viatico,'application/pdf')
-                        email.send()    
+                        email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
+                        email.send()
+                        messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
                     except (BadHeaderError, SMTPException, socket.gaierror) as e:
                         error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
                         messages.success(request, error_message)
-                return redirect('viaticos-autorizados-pago')
+                    #Este código es para enviar correo informativo a cada uno de los RH's del distrito del usuario
+                    personal_rh = colaborador.filter(distritos = viatico.staff.distritos, tipo__rh =True)
+                    for persona in personal_rh:
+                        html_message = f"""
+                        <html>
+                            <head>
+                                <meta charset="UTF-8">
+                            </head>
+                            <body>
+                                <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                                <p>Estimado {persona.staff.staff.first_name} {persona.staff.staff.last_name},</p>
+                                <p>Para notificarte que el viático: {viatico.folio} ha sido pagado y se considere para los efectos y fines que para el departamento de RH sean aplicables</p>
+                                <p>Tesorero que paga:{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
+                                <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                                <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                            </body>
+                        </html>
+                        """
+                        try:
+                            email = EmailMessage(
+                                f'Viatico Autorizado {viatico.folio} |Correo informativo para RH',
+                                body=html_message,
+                                from_email = settings.DEFAULT_FROM_EMAIL,
+                                to = ['ulises_huesc@hotmail.com',persona.staff.staff.email],
+                                headers={'Content-Type': 'text/html'}
+                                )
+                            #if pagos.count() > 0:
+                            #for pago in pagos:
+                                #email.attach(f'Pago_folio_{pago.id}.pdf',pago.comprobante_pago.path,'application/pdf')
+                            email.content_subtype = "html " # Importante para que se interprete como HTML
+                            email.attach(f'folio:{viatico.folio}.pdf',archivo_viatico,'application/pdf')
+                            email.send()    
+                        except (BadHeaderError, SMTPException, socket.gaierror) as e:
+                            error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
+                            messages.success(request, error_message)
+                    return redirect('viaticos-autorizados-pago')
+        if "cerrar_sin_pago" in request.POST:
+            viatico.comentario_cierre = request.POST.get('comentario_cierre')
+            viatico.cerrar_sin_pago_completo = True
+            viatico.fecha_cierre = date.today()
+            viatico.persona_cierre = usuario  # Asegúrate de tener esta variable ya disponible en tu vista
+            viatico.save()
+            messages.success(request, f'Viatico {viatico.folio} cerrada sin pago completo.')
+            return redirect('pago-gastos-autorizados')
         else:
             form = Pago_Viatico_Form()
             messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')

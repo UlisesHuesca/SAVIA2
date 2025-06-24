@@ -42,22 +42,33 @@
     <div class="col-lg-6 offset-md-3">
     <div class="card">
         <div class="card-header">
-            <h5 id="gasto" value="{{gasto.id}}">Gasto: {{pago.gasto.folio}} | Pago: {{pago.id}}</h5>
+            <h5 id="gasto" value="{{gasto.id}}">Gasto: {{gasto.folio}} </h5>
         </div>
-
+        <form id="id_formulario" method="POST" enctype='multipart/form-data'>
+             {% csrf_token %}
         <div class="card-body">
+           {% if error_messages %}
+            <div class="alert alert-danger">
+                <ul class="mb-0">
+                {% for mensaje in error_messages %}
+                    <li>{{ mensaje }}</li>
+                {% endfor %}
+                </ul>
+            </div>
+            {% endif %}
+             
                 <table class='table table-striped'>
                     <thead>
                        
                         <tr>
                             <th scope="col">Solicitante:</th>
-                            <th>{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</th>
+                            <th>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</th>
                         </tr>
                         <tr>
                             <th>Solicitado para:</th>
                             <th scope="col">
-                                {% if pago.gasto.proveedor %}<span class="badge bg-primary"> {{pago.gasto.proveedor}} </span>
-                                {% elif gasto.colaborador %}{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}}
+                                {% if gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
+                                {% elif gasto.colaborador %}{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}
                                 {% else %} NA
                                 {% endif %}
                             </th>
@@ -67,26 +78,26 @@
                         
                         <tr>
                             <th scope="col">Banco:</th>
-                            <th>{% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
-                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.banco}}
-                                 {% else  %}{{pago.gasto.staff.staff.banco}}{% endif %}
+                            <th>{% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif gasto.colaborador %}{{gasto.colaborador.staff.banco}}
+                                 {% else  %}{{gasto.staff.staff.banco}}{% endif %}
                                 
                             </th>
                         </tr>
                         <tr>
                             <th scope="col">Cuenta:</th>
                             <th scope="col">
-                                {% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
-                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.cuenta_bancaria}}
-                                 {% else %}{{pago.gasto.staff.staff.cuenta_bancaria}}{% endif %}
+                                {% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif gasto.colaborador %}{{gasto.colaborador.staff.cuenta_bancaria}}
+                                 {% else %}{{gasto.staff.staff.cuenta_bancaria}}{% endif %}
                             </th>
                         </tr>
                         <tr>
                             <th scope="col">Clabe:</th>
                             <th scope="col">
-                               {% if pago.gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
-                                 {% elif pago.gasto.colaborador %}{{pago.gasto.colaborador.staff.clabe}}
-                                 {% else %}{{pago.gasto.staff.staff.clabe}}{% endif %}
+                               {% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                                 {% elif gasto.colaborador %}{{gasto.colaborador.staff.clabe}}
+                                 {% else %}{{gasto.staff.staff.clabe}}{% endif %}
                             </th>
                         </tr>
                    
@@ -140,11 +151,11 @@
                 </table>
        
 
-        <form id="id_formulario" method="POST" enctype='multipart/form-data'>
+       
             <div>
-                {% csrf_token %}
+               
                 <div class="row">
-                    <div class="col-lg-8 col-sm-12">
+                    <div class="col-lg-12 col-sm-12  col-md-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1"> 
@@ -154,7 +165,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-lg-4 col-sm-12">
+                    <div class="col-lg-6 col-sm-12 col-md-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -163,7 +174,7 @@
                             </div>
                         </div>
                     </div>
-                     <div class="col-lg-4 col-sm-12">
+                     <div class="col-lg-6 col-sm-12 col-md-12">
                     <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-clock"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
@@ -172,7 +183,7 @@
                         </div>
                     </div>
                 </div>
-                    <div class="col-lg-4 col-sm-12">
+                    <div class="col-lg-12 col-sm-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1"> 
@@ -181,19 +192,26 @@
                         </div>
                     </div>
                 </div>
-                    <div class="col-8">
+                    <div class="col-12">
                     <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
                         {{form.comprobante_pago|add_class:'form-control'}}
                     </div>
             </div>
-           
-                <div class="container-fluid text-end">
-                    <button id="myBtn" type = "submit" class="btn btn-success">Registrar</button>
-                    <a type="button" class="btn btn-secondary" href="{% url 'pago-gastos-autorizados' %}">Cerrar</a>
-                </div>
+        </div>   
+        <div class="card-footer text-end">
+            {% if usuario.tipo.superintendente %}
+                   
+                    <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
+                        Cerrar Gasto
+                    </button>
+                    
+            {% endif %}
+            <button id="myBtn" name="myBtn" type = "submit" class="btn btn-success">Registrar</button>
+            <a type="button" class="btn btn-secondary" href="{% url 'pago-gastos-autorizados' %}">Cerrar</a>
+        </div>
            
         </form>
-         </div>
+        
     </div>
     </div>
 </div>
@@ -202,16 +220,54 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-/*document.getElementById("cuentas").addEventListener("change", function(element){
-    var select = document.getElementById("cuentas");
-    //var tipo_cambio_txt = document.getElementById("tipo_de_cambio_0")
-    var current_option = select.options[select.selectedIndex];
-    var target = current_option.getAttribute('target');
-    //var moneda = current_option.getAttribute('moneda');
-    var select_cuenta = document.getElementById('id_cuenta');
-    //Aqui le doy la instruccion para que cambie la seleccion de acuerdo a lo seleccionado en el primer desplegable de cuentas
-    select_cuenta.selectedIndex = target;
-});*/
+{% if usuario.tipo.superintendente %}
+document.getElementById("btnCerrar").addEventListener("click", function (e) {
+    Swal.fire({
+    title: '¿Cerrar gasto sin pago completo?',
+    html: `
+        <p>Recuerda que esta acción marcará el gasto como cerrado sin pago completo.</p>
+        <textarea id="comentarioCierre" class="swal2-textarea" placeholder="Escribe un comentario de cierre..." required></textarea>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, cerrar Gasto',
+    cancelButtonText: 'Cancelar',
+    preConfirm: () => {
+        const comentario = document.getElementById('comentarioCierre').value.trim();
+        if (!comentario) {
+            Swal.showValidationMessage('Por favor escribe un comentario de cierre.');
+            return false;
+        }
+        return comentario;
+    }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const comentario = result.value;
+
+            const form = document.getElementById('id_formulario');
+
+            // Input oculto para marcar el cierre sin pago
+            const inputCerrar = document.createElement('input');
+            inputCerrar.type = 'hidden';
+            inputCerrar.name = 'cerrar_sin_pago';
+            inputCerrar.value = 'true';
+
+            // Input oculto para el comentario
+            const inputComentario = document.createElement('input');
+            inputComentario.type = 'hidden';
+            inputComentario.name = 'comentario_cierre';
+            inputComentario.value = comentario;
+
+            form.appendChild(inputCerrar);
+            form.appendChild(inputComentario);
+
+            form.submit();
+        }
+    });
+});
+{% endif %}
 
 
 function formatRepo (repo) {

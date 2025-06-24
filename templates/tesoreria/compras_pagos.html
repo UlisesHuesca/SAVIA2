@@ -6,7 +6,7 @@
 {% load l10n %}
 <html>
 <head>
-{% block title %}Autorización OC{% endblock %}
+{% block title %}Pago OC{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -245,7 +245,8 @@
                             </div>
                         </div>
                 </div>
-                <div class="col-lg-4 col-sm-12">
+                <div class="row">
+                    <div class="col-lg-4 col-sm-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -253,13 +254,14 @@
                                 <label style="color: #121212;" for="id_subproyecto">Fecha Pago:</label>
                             </div>
                         </div>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-clock"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field form.pagado_hora type="time" class="form-control" %}
-                            <label style="color: #121212;" for="id_pagado_hora">Hora Pago:</label>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-clock"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field form.pagado_hora type="time" class="form-control" %}
+                                <label style="color: #121212;" for="id_pagado_hora">Hora Pago:</label>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -309,10 +311,19 @@
                 
             </div>
             <div class="card-footer text-end">
+                
                 <h6>Registrar pago: {{compra.folio}}</h6>
+                {% if usuario.tipo.superintendente %}
+                   
+                    <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
+                        Cerrar OC
+                    </button>
+                    
+                {% endif %}
                 <button id="myBtn" name = "envio" type="submit" class="btn btn-success">Registrar</button>
                 <a type="button" class="btn btn-secondary" href="{% url 'compras-autorizadas' %}">Cerrar</a>
             </div>
+
         </form>
         </div>
     </div>
@@ -327,6 +338,55 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+{% if usuario.tipo.superintendente %}
+document.getElementById("btnCerrar").addEventListener("click", function (e) {
+    Swal.fire({
+    title: '¿Cerrar gasto sin pago completo?',
+    html: `
+        <p>Recuerda que esta acción marcará el gasto como cerrado sin pago completo.</p>
+        <textarea id="comentarioCierre" class="swal2-textarea" placeholder="Escribe un comentario de cierre..." required></textarea>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, cerrar Gasto',
+    cancelButtonText: 'Cancelar',
+    preConfirm: () => {
+        const comentario = document.getElementById('comentarioCierre').value.trim();
+        if (!comentario) {
+            Swal.showValidationMessage('Por favor escribe un comentario de cierre.');
+            return false;
+        }
+        return comentario;
+    }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const comentario = result.value;
+
+            const form = document.getElementById('myForm');
+
+            // Input oculto para marcar el cierre sin pago
+            const inputCerrar = document.createElement('input');
+            inputCerrar.type = 'hidden';
+            inputCerrar.name = 'cerrar_sin_pago';
+            inputCerrar.value = 'true';
+
+            // Input oculto para el comentario
+            const inputComentario = document.createElement('input');
+            inputComentario.type = 'hidden';
+            inputComentario.name = 'comentario_cierre';
+            inputComentario.value = comentario;
+
+            form.appendChild(inputCerrar);
+            form.appendChild(inputComentario);
+
+            form.submit();
+        }
+    });
+});
+{% endif %}
+
 function mostrarIndicadorCarga() {
     // Mostrar el indicador de carga
     document.getElementById('loadingIndicator').style.display = 'block';

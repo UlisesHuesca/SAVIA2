@@ -42,7 +42,7 @@
     <div class="col-lg-6 offset-md-3">
     <div class="card">
         <div class="card-header">
-            <h5 class="card-title">Pagar Viático: {{viatico.id}}</h5>
+            <h5 class="card-title">Pagar Viático: {{viatico.folio}}</h5>
         </div>
 
         <div class="card-body">
@@ -170,7 +170,7 @@
                    </tbody>
                 </table>
        
-        <form method="POST" enctype='multipart/form-data'>
+        <form id="id_formulario" method="POST" enctype='multipart/form-data'>
             <div>
                 {% csrf_token %}
                 
@@ -223,7 +223,14 @@
             </div>
 
             <div class="modal-footer">
-                <h6>Registrar pago del viático: {{viático.id}}</h6>
+                <!--<h6>Registrar pago del viático: {{viático.id}}</h6>-->
+                {% if usuario.tipo.superintendente %}
+                   
+                    <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
+                        Cerrar Viático
+                    </button>
+                    
+                {% endif %}
                 <button id="myBtn" type = "submit" class="btn btn-success">Registrar</button>
                 <a type="button" class="btn btn-secondary"  href="{% url 'viaticos-autorizados-pago' %}">Cerrar</a>
             </div>
@@ -238,46 +245,54 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-/*var compra = document.getElementById("importe");
-var compra_moneda = compra.getAttribute("moneda");
-var monto_moneda = document.getElementById("id_monto_1");
-var tipo_cambio = document.getElementById("id_tipo_de_cambio_1");
-if (tipo_cambio) {
-    tipo_cambio.setAttribute("class","form-control d-none");
-}
-
-
-
-if (compra_moneda == "Dólares"){
-    monto_moneda.selectedIndex = 1;
-}
-
-document.getElementById("cuentas").addEventListener("change", function(element){
-    var select = document.getElementById("cuentas");
-    var tipo_cambio_txt = document.getElementById("tipo_de_cambio_0")
-    var current_option = select.options[select.selectedIndex];
-    var target = current_option.getAttribute('target');
-    var moneda = current_option.getAttribute('moneda');
-    var select_cuenta = document.getElementById('id_cuenta');
-
-
-    //Aquí hago que desaparezca o aparezca el campo de tipo de cambio según la moneda seleccionada
-    var lbl_tipo_cambio = document.getElementById('lbl_tipo');
-    var txt_tipo_cambio = document.getElementById('id_tipo_de_cambio_0');
-        if (moneda == "Dólares"){
-            lbl_tipo_cambio.removeAttribute("class");
-            txt_tipo_cambio.removeAttribute("class");
-            lbl_tipo_cambio.setAttribute("class","col-auto col-form-label my-1 d-none");
-            txt_tipo_cambio.setAttribute("class","form-control d-none");
-        } else if (compra_moneda == "Dólares"){
-            lbl_tipo_cambio.removeAttribute("class");
-            txt_tipo_cambio.removeAttribute("class");
-            lbl_tipo_cambio.setAttribute("class","col-auto col-form-label my-1");
-            txt_tipo_cambio.setAttribute("class","form-control");
+{% if usuario.tipo.superintendente %}
+document.getElementById("btnCerrar").addEventListener("click", function (e) {
+    Swal.fire({
+    title: '¿Cerrar viático sin pago completo?',
+    html: `
+        <p>Recuerda que esta acción marcará el viático como cerrado sin pago completo.</p>
+        <textarea id="comentarioCierre" class="swal2-textarea" placeholder="Escribe un comentario de cierre..." required></textarea>
+    `,
+    icon: 'warning',
+    showCancelButton: true,
+    confirmButtonColor: '#d33',
+    cancelButtonColor: '#6c757d',
+    confirmButtonText: 'Sí, cerrar Viático',
+    cancelButtonText: 'Cancelar',
+    preConfirm: () => {
+        const comentario = document.getElementById('comentarioCierre').value.trim();
+        if (!comentario) {
+            Swal.showValidationMessage('Por favor escribe un comentario de cierre.');
+            return false;
         }
-    //Aqui le doy la instruccion para que cambie la seleccion de acuerdo a lo seleccionado en el primer desplegable de cuentas
-    select_cuenta.selectedIndex = target;
-});*/
+        return comentario;
+    }
+    }).then((result) => {
+        if (result.isConfirmed) {
+            const comentario = result.value;
+
+            const form = document.getElementById('id_formulario');
+
+            // Input oculto para marcar el cierre sin pago
+            const inputCerrar = document.createElement('input');
+            inputCerrar.type = 'hidden';
+            inputCerrar.name = 'cerrar_sin_pago';
+            inputCerrar.value = 'true';
+
+            // Input oculto para el comentario
+            const inputComentario = document.createElement('input');
+            inputComentario.type = 'hidden';
+            inputComentario.name = 'comentario_cierre';
+            inputComentario.value = comentario;
+
+            form.appendChild(inputCerrar);
+            form.appendChild(inputComentario);
+
+            form.submit();
+        }
+    });
+});
+{% endif %}
 
 function formatRepo (repo) {
     if (repo.loading) {

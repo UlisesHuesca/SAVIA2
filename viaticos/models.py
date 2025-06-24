@@ -47,6 +47,10 @@ class Solicitud_Viatico(models.Model):
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
     motivo = models.TextField(null =True, blank=False)
     comentarios_cancelacion = models.TextField(null =True, blank=False)
+    cerrar_sin_pago_completo = models.BooleanField(default=False)
+    persona_cierre = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Cierre_Viatico')
+    fecha_cierre = models.DateField(null=True, blank = True)
+    comentario_cierre = models.TextField(blank=True, null=True)
 
     unique_together = ["folio", "distrito"]
 
