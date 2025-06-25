@@ -57,6 +57,7 @@ INSTALLED_APPS = [
     'gastos.apps.GastosConfig',
     'viaticos.apps.ViaticosConfig',
     'activos.apps.ActivosConfig',
+    'finanzas.apps.FinanzasConfig',
     'api.apps.ApiConfig',
     'proveedores_externos.apps.ProveedoresExternosConfig',
     

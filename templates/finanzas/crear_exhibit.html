@@ -1,0 +1,211 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+{% load i18n %}
+<html>
+<head>
+{% block title %}{% trans "Exhibit" %}{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title": "Error",
+                    "text": "{{ message }}",
+                    "icon": "error",
+                })
+                </script>
+                {% elif message.tags == "warning" %}
+                <script>
+                Swal.fire({
+                    "title": "Facturas repetidas",
+                    "text": "{{ message }}",
+                    "icon": "warning",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title": "Excelente",
+                    "text": "{{ message }}",
+                    "icon": "success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-6 offset-lg-3">
+        <div class="card" id="form-wrapper"> 
+            <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
+					<h2>{% trans "Solicitud de Exhibit" %}</h2>
+            </div>
+            <div class="card-body">   
+				<form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        {% if error_messages %}
+                        <div class="alert alert-danger" role="alert">
+                            {{error_messages}}
+                        </div>
+                        {% endif %}
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.tipo}}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                           
+                            <div class="row d-none" id="proveedor_parrafo">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.proveedor}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>
+                    
+                            <div class="row" >
+                                <div class="col-12">
+                                    <div id="otros_impuestos" class="input-group mb-3 mt-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.descripcion|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
+                                            <label style="color: #121212;" for="id_otros_impuestos">{% trans "Descripción" %}*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-lg-12 col-sm-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
+                                        <label style="color: #121212;" for="id_precio_unitario">{% trans "Monto" %}*</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="row" >
+                                <div class="col-12">
+                                    <div id="otros_impuestos" class="input-group mb-3 mt-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.observaciones|add_class:"form-control"|append_attr:"placeholder= Observaciones"}}
+                                            <label style="color: #121212;" for="id_otros_impuestos">{% trans "Observaciones" %}</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+
+                
+
+
+                            
+                </form> 
+            </div>
+        </div>
+       
+            
+           
+        
+    
+    </div>
+</div>
+
+    
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+$(document).ready(function() {
+   
+
+    $('#id_proveedor').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Proveedor',
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+
+    // Mostrar u ocultar el campo proveedor según el valor seleccionado en tipo
+    $('#id_tipo').on('select2:select', function (e) {
+      const valorSeleccionado = e.params.data.id;
+      if (valorSeleccionado === 'PROVEEDOR') {
+        $('#proveedor_parrafo').removeClass('d-none');
+      } else {
+        $('#proveedor_parrafo').addClass('d-none');
+        $('#id_proveedor').val(null).trigger('change');
+      }
+    });
+
+    // Ejecutar al cargar (por si el campo ya está prellenado)
+    const tipoInicial = $('#id_tipo').val();
+    if (tipoInicial === 'PROVEEDOR') {
+      $('#proveedor_parrafo').removeClass('d-none');
+        }
+    
+    $('#id_tipo').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Tipo de Exhibit',
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+  
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+</script>
+
+{% endblock %}
+</body>
+</html>

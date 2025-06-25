@@ -688,6 +688,7 @@ def viaticos_pagos(request, pk):
             form = Pago_Viatico_Form(request.POST or None, request.FILES or None, instance = pago)
 
             if form.is_valid():
+                print('Formulario válido')
                 pago = form.save(commit = False)
                 #pago.viatico = viatico
                 pago.pagado_date = date.today()
@@ -697,11 +698,15 @@ def viaticos_pagos(request, pk):
                 total_sol = round(viatico.get_total,2)
                 if total_sol == total_pagado:
                     flag = True
+                    print('flag')
                 else:
                     flag = False
+                    print('No flag')
                 if total_pagado > viatico.get_total:
+                    print('Entonces que')
                     messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del viático')
                 else:
+                    print('Donde escapa')
                     if flag:
                         viatico.pagada = True
                         viatico.save()
@@ -787,7 +792,7 @@ def viaticos_pagos(request, pk):
                             error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
                             messages.success(request, error_message)
                     return redirect('viaticos-autorizados-pago')
-        if "cerrar_sin_pago" in request.POST:
+        elif "cerrar_sin_pago" in request.POST:
             viatico.comentario_cierre = request.POST.get('comentario_cierre')
             viatico.cerrar_sin_pago_completo = True
             viatico.fecha_cierre = date.today()
