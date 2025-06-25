@@ -801,7 +801,6 @@ def viaticos_pagos(request, pk):
             messages.success(request, f'Viatico {viatico.folio} cerrada sin pago completo.')
             return redirect('pago-gastos-autorizados')
         else:
-            form = Pago_Viatico_Form()
             messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
 
     context= {
