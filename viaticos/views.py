@@ -677,6 +677,7 @@ def viaticos_pagos(request, pk):
     pago, created = Pago.objects.get_or_create(tesorero = usuario, viatico__distrito = usuario.distritos, hecho=False, viatico=viatico)
     form = Pago_Viatico_Form()
     remanente = viatico.get_total - viatico.monto_pagado
+    error_messages = []
 #'text': str(super.staff.staff.first_name) + (' ') + str(super.staff.staff.last_name)
     cuentas_para_select2 = [
         {'id': cuenta.id,
@@ -691,7 +692,7 @@ def viaticos_pagos(request, pk):
                 print('Formulario válido')
                 pago = form.save(commit = False)
                 #pago.viatico = viatico
-                pago.pagado_date = date.today()
+                pago.pagado_date = datetime.now()
                 #pago.pagado_hora = datetime.now().time()
                 pago.hecho = True
                 total_pagado = round(viatico.monto_pagado  + pago.monto, 2)
@@ -792,7 +793,7 @@ def viaticos_pagos(request, pk):
                             error_message = f'{usuario.staff.staff.first_name}, Has generado el pago correctamente pero el correo de notificación no ha sido enviado debido a un error: {e}'
                             messages.success(request, error_message)
                     return redirect('viaticos-autorizados-pago')
-        elif "cerrar_sin_pago" in request.POST:
+        if "cerrar_sin_pago" in request.POST:
             viatico.comentario_cierre = request.POST.get('comentario_cierre')
             viatico.cerrar_sin_pago_completo = True
             viatico.fecha_cierre = date.today()
@@ -801,7 +802,11 @@ def viaticos_pagos(request, pk):
             messages.success(request, f'Viatico {viatico.folio} cerrada sin pago completo.')
             return redirect('pago-gastos-autorizados')
         else:
-            messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
+            print('No está entrando')
+            for field, errors in form.errors.items():
+                error_messages.append(f"{field}: {errors.as_text()}")
+            
+            print('Error messages:', error_messages)
 
     context= {
         'viatico':viatico,
@@ -810,7 +815,7 @@ def viaticos_pagos(request, pk):
         'conceptos': conceptos,
         'pagos':pagos,
         'cuentas_para_select2':cuentas_para_select2,
-        #'cuentas':cuentas,
+        'error_messages': error_messages,
         'remanente':remanente,
     }
 
