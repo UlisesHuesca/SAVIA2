@@ -157,6 +157,7 @@ def compras_autorizadas(request):
                 Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), # 👈 Filtra que quien envió a pago sea Tesorería
                 para_pago=True,
                 pagada=False,
+                cerrar_sin_pago_completo = False,
                 autorizado2=True, 
                 req__orden__distrito = usuario.distritos
             ).annotate(
@@ -167,6 +168,7 @@ def compras_autorizadas(request):
         compras = Compra.objects.filter(
             para_pago=True,
             pagada=False,
+            cerrar_sin_pago_completo = False,
             autorizado2=True, 
             tesorero__tipo__finanzas=True,  # 👈 Filtra que quien envió a pago sea Finanzas
             req__orden__distrito = usuario.distritos
@@ -478,257 +480,266 @@ def compras_pagos(request, pk):
     redirect_url = f"{base_url}?{query_string}" if query_string else base_url
     print('redirect_url',redirect_url)
     
-    if request.method == 'POST' and "envio" in request.POST:
-        form = PagoForm(request.POST, request.FILES or None, instance = pago)
-        if form.is_valid():
-            pago = form.save(commit = False)
-            pago.pagado_date = date.today()
-            #pago.pagado_hora = datetime.now().time()
-            pago.hecho = True
-            #Traigo la cuenta que se capturo en el form
-            cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)
-            #La utilizo para sacar la información de todos los pagos relacionados con esa cuenta y sumarlos
+    if request.method == 'POST':
+        if "envio" in request.POST:
+            form = PagoForm(request.POST, request.FILES or None, instance = pago)
+            if form.is_valid():
+                pago = form.save(commit = False)
+                pago.pagado_date = date.today()
+                #pago.pagado_hora = datetime.now().time()
+                pago.hecho = True
+                #Traigo la cuenta que se capturo en el form
+                cuenta = Cuenta.objects.get(cuenta = pago.cuenta.cuenta, moneda = pago.cuenta.moneda)
+                #La utilizo para sacar la información de todos los pagos relacionados con esa cuenta y sumarlos
 
-            # Actualizo el saldo de la cuenta, no es necesario actualizar el saldo de la cuenta
-            monto_actual = pago.monto
-            if compra.moneda.nombre == "PESOS":
-                sub.gastado = sub.gastado + monto_actual
-            
-            if compra.moneda.nombre == "DOLARES":
-                if pago.cuenta.moneda.nombre == "PESOS": #Si la cuenta es en pesos
-                    #Estoy aca
-                    sub.gastado = sub.gastado + monto_actual * pago.tipo_de_cambio
-                    monto_actual = monto_actual/pago.tipo_de_cambio
-                    
+                # Actualizo el saldo de la cuenta, no es necesario actualizar el saldo de la cuenta
+                monto_actual = pago.monto
+                if compra.moneda.nombre == "PESOS":
+                    sub.gastado = sub.gastado + monto_actual
                 
-                if pago.cuenta.moneda.nombre == "DOLARES":
-                    tipo_de_cambio = decimal.Decimal(dof())
-                    sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
-                #actualizar la cuenta de la que se paga
-            print('monto_actual:',monto_actual)
-            monto_total_pagado= monto_actual + suma_pago
-            print('monto_total_pagado:',monto_total_pagado)
-            compra.monto_pagado = monto_total_pagado
-            costo_oc = compra.costo_plus_adicionales 
-            monto_parcial = compra.parcial + suma_pago
-            print('costo_oc:',round(costo_oc,0))
-            print('monto_total_pagado',round(monto_total_pagado,0))
-            print('monto_parcial:', round(monto_parcial,0))
-            if monto_actual <= 0:
-                messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
-            elif round(monto_total_pagado,0) <= round(costo_oc,0):
-                if round(monto_total_pagado,0) == round(monto_parcial,0):
-                    compra.para_pago = False
-                if round(monto_total_pagado,0) >= round(costo_oc,0):
-                    compra.pagada= True
-                archivo_oc = attach_oc_pdf(request, compra.id)
-                pdf_antisoborno = attach_antisoborno_pdf(request)
-                pdf_privacidad = attach_aviso_privacidad_pdf(request)
-                pdf_etica = attach_codigo_etica_pdf(request)
-                pdf_politica_proveedor = attach_politica_proveedor(request)
-                static_path = settings.STATIC_ROOT
-                img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
-                img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
-                image_base64 = get_image_base64(img_path)
-                logo_v_base64 = get_image_base64(img_path2)
-                articulos_html = """
-                <table border="1" style="border-collapse: collapse; width: 100%;">
-                    <thead>
-                        <tr>
-                            <th>Producto Crítico</th>
-                            <th>Requisitos</th>
-                            <th>Requerimiento</th>
-                        </tr>
-                    </thead>        
-                    <tbody>
-                """
-                productos_criticos = productos_criticos
-                for articulo in productos_criticos:
-                    producto = articulo.producto.producto.articulos.producto.producto
-                    requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                if compra.moneda.nombre == "DOLARES":
+                    if pago.cuenta.moneda.nombre == "PESOS": #Si la cuenta es en pesos
+                        #Estoy aca
+                        sub.gastado = sub.gastado + monto_actual * pago.tipo_de_cambio
+                        monto_actual = monto_actual/pago.tipo_de_cambio
+                        
+                    
+                    if pago.cuenta.moneda.nombre == "DOLARES":
+                        tipo_de_cambio = decimal.Decimal(dof())
+                        sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
+                    #actualizar la cuenta de la que se paga
+                print('monto_actual:',monto_actual)
+                monto_total_pagado= monto_actual + suma_pago
+                print('monto_total_pagado:',monto_total_pagado)
+                compra.monto_pagado = monto_total_pagado
+                costo_oc = compra.costo_plus_adicionales 
+                monto_parcial = compra.parcial + suma_pago
+                print('costo_oc:',round(costo_oc,0))
+                print('monto_total_pagado',round(monto_total_pagado,0))
+                print('monto_parcial:', round(monto_parcial,0))
+                if monto_actual <= 0:
+                    messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
+                elif round(monto_total_pagado,0) <= round(costo_oc,0):
+                    if round(monto_total_pagado,0) == round(monto_parcial,0):
+                        compra.para_pago = False
+                    if round(monto_total_pagado,0) >= round(costo_oc,0):
+                        compra.pagada= True
+                    archivo_oc = attach_oc_pdf(request, compra.id)
+                    pdf_antisoborno = attach_antisoborno_pdf(request)
+                    pdf_privacidad = attach_aviso_privacidad_pdf(request)
+                    pdf_etica = attach_codigo_etica_pdf(request)
+                    pdf_politica_proveedor = attach_politica_proveedor(request)
+                    static_path = settings.STATIC_ROOT
+                    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+                    img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+                    image_base64 = get_image_base64(img_path)
+                    logo_v_base64 = get_image_base64(img_path2)
+                    articulos_html = """
+                    <table border="1" style="border-collapse: collapse; width: 100%;">
+                        <thead>
+                            <tr>
+                                <th>Producto Crítico</th>
+                                <th>Requisitos</th>
+                                <th>Requerimiento</th>
+                            </tr>
+                        </thead>        
+                        <tbody>
+                    """
+                    productos_criticos = productos_criticos
+                    for articulo in productos_criticos:
+                        producto = articulo.producto.producto.articulos.producto.producto
+                        requerimientos = producto.producto_calidad.requerimientos_calidad.all()
 
-                    # Si el producto tiene requerimientos, agregar una fila por cada uno
-                    if requerimientos.exists():
-                        for requerimiento in requerimientos:
+                        # Si el producto tiene requerimientos, agregar una fila por cada uno
+                        if requerimientos.exists():
+                            for requerimiento in requerimientos:
+                                articulos_html += f"""
+                                    <tr>
+                                        <td>{producto.codigo}</td>
+                                        <td>{producto.producto_calidad.requisitos}</td>
+                                        <td>{requerimiento.nombre}</td>
+                                    </tr>
+                                """
+                        else:
                             articulos_html += f"""
                                 <tr>
                                     <td>{producto.codigo}</td>
                                     <td>{producto.producto_calidad.requisitos}</td>
-                                    <td>{requerimiento.nombre}</td>
+                                    <td>Sin requerimiento</td>
                                 </tr>
                             """
-                    else:
-                        articulos_html += f"""
-                            <tr>
-                                <td>{producto.codigo}</td>
-                                <td>{producto.producto_calidad.requisitos}</td>
-                                <td>Sin requerimiento</td>
-                            </tr>
-                        """
-                articulos_html += """
-                    </tbody>
-                </table>
-                """
-                #if compra.cond_de_pago.nombre == "CONTADO":
-                pagos = Pago.objects.filter(oc=compra, hecho=True)
-                html_message = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido pagada por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name},</p>
-                                                <p>El siguiente paso del sistema: Recepción por parte de Almacén</p>
-                                                </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
-                try:
-                    email = EmailMessage(
-                    f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
-                    body=html_message,
-                    from_email = settings.DEFAULT_FROM_EMAIL,
-                    to= [compra.req.orden.staff.staff.staff.email,],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    email.send()
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'Correo de notificación 1: No enviado'
-                html_message2 = f"""
-                <html>
-                    <head>
-                        <meta charset="UTF-8">
-                    </head>
-                    <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-                        <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                            <tr>
-                                <td align="center">
-                                    <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                                        <tr>
-                                            <td align="center">
-                                                <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
-                                            </td>
-                                        </tr>
-                                        <tr>
-                                            <td style="padding: 20px;">
-                                                <p style="font-size: 18px; text-align: justify;">
-                                                    <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
-                                                </p>
-                                                <p style="font-size: 16px; text-align: justify;">
-                                                    Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.</p>
-                                                    <p>&nbsp;</p>
-                                                    <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
-                                                    <p>GRUPO VORDCAB S.A. de C.V.</p>
-                                                    {f"{articulos_html}" if productos_criticos.exists() else ""}
-                                                </p>
-                                                <p style="text-align: center; margin: 20px 0;">
-                                                    <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                                </p>
-                                                <p style="font-size: 14px; color: #999; text-align: justify;">
-                                                    Este mensaje ha sido automáticamente generado por SAVIA 2.0
-                                                </p>
-                                            </td>
-                                        </tr>
-                                    </table>
-                                </td>
-                            </tr>
-                        </table>
-                    </body>
-                </html>
-                """
-                try:
-                    email = EmailMessage(
-                    f'Compra Autorizada {compra.folio}|SAVIA',
-                    body=html_message2,
-                    from_email =settings.DEFAULT_FROM_EMAIL,
-                    to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email,],
-                    headers={'Content-Type': 'text/html'}
-                    )
-                    #print('Correo enviadoooooooooooo')
-                    #print(compra.creada_por.staff.staff.email)
-                    email.content_subtype = "html " # Importante para que se interprete como HTML
-                    if compra.entrada_completa == False:
-                        email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
-                    email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
-                    email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
-                    email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
-                    email.attach(f'Politica_de_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
-                    #email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
-                    archivo_comprobante = request.FILES.get('comprobante_pago')
-                    if archivo_comprobante:  # Verifica que el archivo exista en el request
-                        archivo_contenido = archivo_comprobante.read()
-                        email.attach('Pago.pdf', archivo_contenido, 'application/pdf')
-                    for archivo in pagos:
-                        if archivo.comprobante_pago:  # Verificar que el archivo exista
-                                with open(archivo.comprobante_pago.path, 'rb') as file:  # Abrir el archivo
-                                    archivo_contenido = file.read()  # Leer el contenido
-                                    nombre_archivo = f'Pago_{archivo.id}.pdf'  
-                                    email.attach(nombre_archivo, archivo_contenido, 'application/pdf') 
-                    # Adjuntar los archivos con nombres personalizados
-                    for articulo in productos:
-                        producto = articulo.producto.producto.articulos.producto.producto
-                        if producto.critico:
-                            requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-                            contador = 1  # Contador para evitar nombres duplicados
-                            for requerimiento in requerimientos:
-                                archivo_path = requerimiento.url.path
-                                nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
-                                
-                                # Abrir el archivo en modo binario y adjuntarlo directamente
-                                with open(archivo_path, 'rb') as archivo:
-                                    email.attach(nombre_archivo, archivo.read())
+                    articulos_html += """
+                        </tbody>
+                    </table>
+                    """
+                    #if compra.cond_de_pago.nombre == "CONTADO":
+                    pagos = Pago.objects.filter(oc=compra, hecho=True)
+                    html_message = f"""
+                    <html>
+                        <head>
+                            <meta charset="UTF-8">
+                        </head>
+                        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                            <tr>
+                                                <td align="center">
+                                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 20px;">
+                                                    <p style="font-size: 18px; text-align: justify;">
+                                                        <p>Estimado {compra.req.orden.staff.staff.staff.first_name} {compra.req.orden.staff.staff.staff.last_name},</p>
+                                                    </p>
+                                                    <p style="font-size: 16px; text-align: justify;">
+                                                        Estás recibiendo este correo porque tu OC {compra.folio} | RQ: {compra.req.folio} |Sol: {compra.req.orden.folio} ha sido pagada por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name},</p>
+                                                    <p>El siguiente paso del sistema: Recepción por parte de Almacén</p>
+                                                    </p>
+                                                    <p style="text-align: center; margin: 20px 0;">
+                                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                    </p>
+                                                    <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </body>
+                    </html>
+                    """
+                    try:
+                        email = EmailMessage(
+                        f'OC Pagada {compra.folio}|RQ: {compra.req.folio} |Sol: {compra.req.orden.folio}',
+                        body=html_message,
+                        from_email = settings.DEFAULT_FROM_EMAIL,
+                        to= [compra.req.orden.staff.staff.staff.email,],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        email.send()
+                    except (BadHeaderError, SMTPException, socket.gaierror) as e:
+                        error_message = f'Correo de notificación 1: No enviado'
+                    html_message2 = f"""
+                    <html>
+                        <head>
+                            <meta charset="UTF-8">
+                        </head>
+                        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                                <tr>
+                                    <td align="center">
+                                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                            <tr>
+                                                <td align="center">
+                                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                                </td>
+                                            </tr>
+                                            <tr>
+                                                <td style="padding: 20px;">
+                                                    <p style="font-size: 18px; text-align: justify;">
+                                                        <p>Estimado(a) {compra.proveedor.contacto}| Proveedor {compra.proveedor.nombre}:,</p>
+                                                    </p>
+                                                    <p style="font-size: 16px; text-align: justify;">
+                                                        Estás recibiendo este correo porque has sido seleccionado para surtirnos la OC adjunta con folio: {compra.folio}.</p>
+                                                        <p>&nbsp;</p>
+                                                        <p> Atte. {compra.creada_por.staff.staff.first_name} {compra.creada_por.staff.staff.last_name}</p> 
+                                                        <p>GRUPO VORDCAB S.A. de C.V.</p>
+                                                        {f"{articulos_html}" if productos_criticos.exists() else ""}
+                                                    </p>
+                                                    <p style="text-align: center; margin: 20px 0;">
+                                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                                    </p>
+                                                    <p style="font-size: 14px; color: #999; text-align: justify;">
+                                                        Este mensaje ha sido automáticamente generado por SAVIA 2.0
+                                                    </p>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
+                        </body>
+                    </html>
+                    """
+                    try:
+                        email = EmailMessage(
+                        f'Compra Autorizada {compra.folio}|SAVIA',
+                        body=html_message2,
+                        from_email =settings.DEFAULT_FROM_EMAIL,
+                        to= ['ulises_huesc@hotmail.com', compra.creada_por.staff.staff.email, compra.proveedor.email,],
+                        headers={'Content-Type': 'text/html'}
+                        )
+                        #print('Correo enviadoooooooooooo')
+                        #print(compra.creada_por.staff.staff.email)
+                        email.content_subtype = "html " # Importante para que se interprete como HTML
+                        if compra.entrada_completa == False:
+                            email.attach(f'OC_folio_{compra.folio}.pdf',archivo_oc,'application/pdf')
+                        email.attach(f'Politica_antisoborno.pdf', pdf_antisoborno, 'application/pdf')
+                        email.attach(f'Aviso_de_privacidad.pdf', pdf_privacidad, 'application/pdf')
+                        email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
+                        email.attach(f'Politica_de_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
+                        #email.attach('Pago.pdf',request.FILES['comprobante_pago'].read(),'application/pdf')
+                        archivo_comprobante = request.FILES.get('comprobante_pago')
+                        if archivo_comprobante:  # Verifica que el archivo exista en el request
+                            archivo_contenido = archivo_comprobante.read()
+                            email.attach('Pago.pdf', archivo_contenido, 'application/pdf')
+                        for archivo in pagos:
+                            if archivo.comprobante_pago:  # Verificar que el archivo exista
+                                    with open(archivo.comprobante_pago.path, 'rb') as file:  # Abrir el archivo
+                                        archivo_contenido = file.read()  # Leer el contenido
+                                        nombre_archivo = f'Pago_{archivo.id}.pdf'  
+                                        email.attach(nombre_archivo, archivo_contenido, 'application/pdf') 
+                        # Adjuntar los archivos con nombres personalizados
+                        for articulo in productos:
+                            producto = articulo.producto.producto.articulos.producto.producto
+                            if producto.critico:
+                                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                                contador = 1  # Contador para evitar nombres duplicados
+                                for requerimiento in requerimientos:
+                                    archivo_path = requerimiento.url.path
+                                    nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
+                                    
+                                    # Abrir el archivo en modo binario y adjuntarlo directamente
+                                    with open(archivo_path, 'rb') as archivo:
+                                        email.attach(nombre_archivo, archivo.read())
 
-                                contador += 1  # Incrementar el contador para el siguiente archivo
-                    email.send()
-                    messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
-                except (BadHeaderError, SMTPException, socket.gaierror) as e:
-                    error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
-                    messages.warning(request, error_message)
-            elif round(monto_total_pagado,2) > round(costo_oc,2):
-                messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total_pagado} > {costo_oc}')
+                                    contador += 1  # Incrementar el contador para el siguiente archivo
+                        email.send()
+                        messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                    except (BadHeaderError, SMTPException, socket.gaierror) as e:
+                        error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
+                        messages.warning(request, error_message)
+                elif round(monto_total_pagado,2) > round(costo_oc,2):
+                    messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total_pagado} > {costo_oc}')
 
-            pago.save()
+                pago.save()
+                compra.save()
+                form.save()
+                sub.save()
+                cuenta.save()
+                messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                return redirect(redirect_url)#No content to render nothing and send a "signal" to javascript in order to close window
+                #elif monto_pagado > compra.costo_oc:
+                #    messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_pagado} > {compra.costo_oc}')
+            else:
+                form = PagoForm()
+                messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
+        if "cerrar_sin_pago" in request.POST:
+            compra.comentario_cierre = request.POST.get('comentario_cierre')
+            compra.cerrar_sin_pago_completo = True
+            compra.fecha_cierre = date.today()
+            compra.persona_cierre = usuario  # Asegúrate de tener esta variable ya disponible en tu vista
+            compra.para_pago = False  # (si aplica para cerrar la compra)
             compra.save()
-            form.save()
-            sub.save()
-            cuenta.save()
-            messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
-            return redirect(redirect_url)#No content to render nothing and send a "signal" to javascript in order to close window
-            #elif monto_pagado > compra.costo_oc:
-            #    messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_pagado} > {compra.costo_oc}')
-        else:
-            form = PagoForm()
-            messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
-    #else:
-    #    messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
+            messages.success(request, f'Compra {compra.folio} cerrada sin pago completo.')
+            return redirect('compras-autorizadas')  # o donde desees redirigir
+        #    messages.error(request,f'{usuario.staff.staff.first_name}, No está validando')
 
     context= {
         'compra':compra,

@@ -1445,11 +1445,11 @@ def pago_gastos_autorizados(request):
     
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh == True:
-            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYOS A EMPLEADOS")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).annotate(
+            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYOS A EMPLEADOS")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False).annotate(
                 total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                 )).order_by('-approbado_fecha2')
         else:
-            gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True).annotate(
+            gastos = Solicitud_Gasto.objects.filter(autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False).annotate(
                 total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                 )).order_by('-approbado_fecha2')
         myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
@@ -1589,8 +1589,8 @@ def pago_gasto(request, pk):
     Q(tipo=cargos) | Q(tipo__isnull=True)
     )
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
-
-    pago, created = Pago.objects.get_or_create(tesorero = usuario, gasto__distrito = usuario.distritos, hecho=False, gasto=gasto)
+    error_messages = []
+    
     form = Pago_Gasto_Form()
     remanente = gasto.get_total_solicitud - gasto.monto_pagado
     
@@ -1600,57 +1600,71 @@ def pago_gasto(request, pk):
         } for cuenta in cuentas]
 
     if request.method == 'POST':
-        form = Pago_Gasto_Form(request.POST or None, request.FILES or None, instance = pago)
-        if form.is_valid():
-            pago = form.save(commit = False)
-            #pago.gasto = gasto
-            pago.pagado_date = datetime.now()
-            #pago.pagado_hora = datetime.now().time()
-            pago.hecho = True
-            total_pagado = round(gasto.monto_pagado  + pago.monto,2)
-            total_sol = round(gasto.get_total_solicitud,2)
-            #El bloque a continuación se generó para resolver los problemas de redondeo, se comparan las dos cantidades redondeadas en una variable y se activa una bandera (flag) que indica si son iguales o no!
-            if total_sol == total_pagado:
-                flag = True
-            else:
-                flag = False
-            if total_pagado > gasto.get_total_solicitud:
-                messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del gasto')
-            else:
-                if flag:
-                    gasto.pagada = True
-                    gasto.save()
-                pago.save()
-                pagos = Pago.objects.filter(gasto=gasto, hecho=True)
-                archivo_gasto = attach_gasto_pdf(request, gasto.id)
-                email = EmailMessage(
-                    f'Gasto Autorizado {gasto.id}',
-                    f'Estimado(a) {gasto.staff.staff.staff.first_name} {gasto.staff.staff.staff.last_name}:\n\nEstás recibiendo este correo porque ha sido pagado el gasto con folio: {gasto.folio}.\n\n\nGrupo Vordcab S.A de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
-                    'savia@grupovordcab.com',
-                    ['ulises_huesc@hotmail.com',gasto.staff.staff.staff.email],
-                    )
-                email.attach(f'Gasto_folio_{gasto.id}.pdf',archivo_gasto,'application/pdf')
-                email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
-                
-                #if pagos.count() > 0:
-                    #for item in pagos:
-                    #    email.attach(f'Gasto{gasto.folio}_P{item.id}.pdf',item.comprobante_pago.read(),'application/pdf')
-                email.send()
+        if "myBtn" in request.POST:
+            pago, created = Pago.objects.get_or_create(tesorero = usuario, gasto__distrito = usuario.distritos, hecho=False, gasto=gasto)
+            form = Pago_Gasto_Form(request.POST or None, request.FILES or None, instance = pago)
+            if form.is_valid():
+                pago = form.save(commit = False)
+                 
+                pago.pagado_date = datetime.now()
+                #pago.pagado_hora = datetime.now().time()
+                pago.hecho = True
+                total_pagado = round(gasto.monto_pagado  + pago.monto,2)
+                total_sol = round(gasto.get_total_solicitud,2)
+                #El bloque a continuación se generó para resolver los problemas de redondeo, se comparan las dos cantidades redondeadas en una variable y se activa una bandera (flag) que indica si son iguales o no!
+                if total_sol == total_pagado:
+                    flag = True
+                else:
+                    flag = False
+                if total_pagado > gasto.get_total_solicitud:
+                    messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del gasto')
+                else:
+                    if flag:
+                        gasto.pagada = True
+                        gasto.save()
+                    
+                    pago.save()
+                    pagos = Pago.objects.filter(gasto=gasto, hecho=True)
+                    archivo_gasto = attach_gasto_pdf(request, gasto.id)
+                    email = EmailMessage(
+                        f'Gasto Autorizado {gasto.id}',
+                        f'Estimado(a) {gasto.staff.staff.staff.first_name} {gasto.staff.staff.staff.last_name}:\n\nEstás recibiendo este correo porque ha sido pagado el gasto con folio: {gasto.folio}.\n\n\nGrupo Vordcab S.A de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
+                        'savia@grupovordcab.com',
+                        ['ulises_huesc@hotmail.com',gasto.staff.staff.staff.email],
+                        )
+                    email.attach(f'Gasto_folio_{gasto.id}.pdf',archivo_gasto,'application/pdf')
+                    email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
+                    
+                    #if pagos.count() > 0:
+                        #for item in pagos:
+                        #    email.attach(f'Gasto{gasto.folio}_P{item.id}.pdf',item.comprobante_pago.read(),'application/pdf')
+                    email.send()
 
-                messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
-                return redirect('pago-gastos-autorizados')
-
+                    messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
+                    return redirect('pago-gastos-autorizados')
+        if "cerrar_sin_pago" in request.POST:
+            gasto.comentario_cierre = request.POST.get('comentario_cierre')
+            gasto.cerrar_sin_pago_completo = True
+            gasto.fecha_cierre = date.today()
+            gasto.persona_cierre = usuario  # Asegúrate de tener esta variable ya disponible en tu vista
+            gasto.save()
+            messages.success(request, f'Gasto {gasto.folio} cerrada sin pago completo.')
+            return redirect('pago-gastos-autorizados')
         else:
-            form = Pago_Gasto_Form()
-            messages.error(request,f'{usuario.staff.staff.first_name}, No se pudo subir tu documento')
+            print('No está entrando')
+            for field, errors in form.errors.items():
+                error_messages.append(f"{field}: {errors.as_text()}")
+            
+            print('Error messages:', error_messages)
+         
 
     context= {
         'gasto':gasto,
-        'pago':pago,
+        #'pago':pago,
         'cuentas_para_select2':cuentas_para_select2,
         'form':form,
         'pagos_alt':pagos_alt,
-        #'cuentas':cuentas,
+        'error_messages': error_messages,
         'remanente':remanente,
     }
 

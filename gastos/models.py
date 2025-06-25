@@ -48,6 +48,10 @@ class Solicitud_Gasto(models.Model):
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
     proveedor = models.ForeignKey(Proveedor_direcciones, on_delete = models.CASCADE, null=True, blank = True)
     verificacion_facturas = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='rh', blank = True)
+    cerrar_sin_pago_completo = models.BooleanField(default=False)
+    persona_cierre = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Cierre_Gasto')
+    fecha_cierre = models.DateField(null=True, blank = True)
+    comentario_cierre = models.TextField(blank=True, null=True)
 
     class Meta:
         unique_together = ('folio', 'distrito',)

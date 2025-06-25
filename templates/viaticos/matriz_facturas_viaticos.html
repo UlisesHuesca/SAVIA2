@@ -215,7 +215,7 @@
                             </td>
                             {% if usuario.tipo.tesoreria %}
                             <td>
-                                <input type="checkbox" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %} onchange="actualizarTotales()">
+                                <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %} onchange="actualizarTotales()">
                             </td>
                             {% endif %}
                             <td>
