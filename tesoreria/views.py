@@ -4220,7 +4220,8 @@ def layout_pagos(request):
                 ET.SubElement(rmt_inf, 'Ustrd').text = f"F-{compra.folio}"
 
             xml_bytes = ET.tostring(root, encoding='utf-8', method='xml')
-            #print(xml_bytes)
+            #logging.info("XML generado (primeros 500 caracteres):")
+            #logging.info(xml_bytes.decode()[:500])
             # Generar secuencial único (persistente en un archivo)
             secuencial_file = '/home/savia/pagos_xml/secuencial.txt'
 
@@ -4256,12 +4257,16 @@ def layout_pagos(request):
             logging.info(f'Archivo XML generado: {xml_path}')
 
             # Encriptar el archivo XML con GPG
-            encrypted_path = f'/home/savia/pagos_encrypted/{nombre_final}.pgp'
+            encrypted_path = f'/home/savia/pagos_encrypted/{nombre_final}'
             #print(encrypted_path)
+            
             subprocess.run([
                 '/usr/bin/gpg', '--yes', '--batch', '--trust-model', 'always',
                 '--output', encrypted_path,
-                '--encrypt', '--recipient', 'gruvor1i', xml_path
+                '--encrypt', '--sign', 
+                '--recipient', 'gruvor1i', 
+                '--local-user', 'A5B3FE060FE7283919E6B10732C9AA4231DB66B8',  # clave privada GPG
+                xml_path
             ], check=True)
             logging.info(f'Archivo encriptado: {encrypted_path}')
             # 5. Enviar por SFTP
@@ -4284,9 +4289,17 @@ def layout_pagos(request):
             messages.success(request, 'Archivo encriptado y enviado por SFTP a BBVA correctamente.')
             return redirect('compras-autorizadas')  # Cambiar por el nombre real de tu vista
         except Exception as e:
-            logging.error(f'Error durante el proceso de envío: {str(e)}')
-            messages.error(request, 'Ocurrió un error al enviar el archivo.')
+            import traceback
+            error_trace = traceback.format_exc()
+
+            # Mostrar en pantalla
+            messages.error(request, f"❌ Ocurrió un error al ejecutar GPG.")
+            messages.error(request, f"🔧 STDOUT: {e.stdout}")
+            messages.error(request, f"💥 STDERR: {e.stderr}")
+            logger = logging.getLogger('pagos_sftp')
+            logger.error("Error al firmar y cifrar el XML con GPG", exc_info=True)
             return redirect('compras-autorizadas')
+
 
     context = {
         'compras': compras,
