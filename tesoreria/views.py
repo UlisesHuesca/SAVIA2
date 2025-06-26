@@ -2141,16 +2141,18 @@ def extraer_datos_del_complemento(ruta_xml):
             uuid = timbre_fiscal.get('UUID', '')
 
     # Buscar el IdDocumento dentro de DoctoRelacionado
-    docto_relacionado_id = None
+    # Obtener todos los IdDocumento
+    ids_documentos = []
     pagos = complemento.find('pago20:Pagos', ns) if complemento is not None else None
     if pagos is not None:
-        pago = pagos.find('pago20:Pago', ns)
-        if pago is not None:
-            docto_relacionado = pago.find('pago20:DoctoRelacionado', ns)
-            if docto_relacionado is not None:
-                docto_relacionado_id = docto_relacionado.get('IdDocumento', '')
+        for pago in pagos.findall('pago20:Pago', ns):
+            doctos = pago.findall('pago20:DoctoRelacionado', ns)
+            for docto in doctos:
+                id_doc = docto.get('IdDocumento')
+                if id_doc:
+                    ids_documentos.append(id_doc)
 
-    return uuid, docto_relacionado_id  # Devolver UUID y IdDocumento
+    return uuid, ids_documentos
 
 
 def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, beneficiario, nombre_general, factura):
@@ -2589,7 +2591,7 @@ def complemento_nuevo(request, pk):
 
                         try:
                             # Extraer datos desde el archivo temporal
-                            uuid_complemento, _ = extraer_datos_del_complemento(tmp_path)
+                            uuid_complemento, uuids_facturas = extraer_datos_del_complemento(tmp_path)
                         finally:
                             # Asegurar que el archivo temporal se borre aunque falle
                             os.remove(tmp_path)
@@ -2616,22 +2618,22 @@ def complemento_nuevo(request, pk):
                                 hecho=True
                             )
                             # Llamar la property que extrae los UUIDs de facturas
-                            info_xml = complemento_final.emisor
-                            if info_xml and 'doctos_relacionados_uuids' in info_xml:
-                                uuids_facturas = info_xml['doctos_relacionados_uuids']
-                                facturas_relacionadas = Facturas.objects.filter(uuid__in=uuids_facturas)
+                            #info_xml = complemento_final.emisor
+                            #if info_xml and 'doctos_relacionados_uuids' in info_xml:
+                            #    uuids_facturas = info_xml['doctos_relacionados_uuids']
+                            facturas_relacionadas = Facturas.objects.filter(uuid__in=uuids_facturas)
 
-                                if facturas_relacionadas.exists():
-                                    complemento_final.facturas.set(facturas_relacionadas)
-                                    complementos_registrados.append(uuid_complemento)
-                                else:
-                                    complemento_final.delete()  # limpia si no hay facturas válidas
-                                    complementos_invalidos.append(f"No se encontraron facturas relacionadas con UUIDs: {', '.join(uuids_facturas)}")
-                                    continue
+                            if facturas_relacionadas.exists():
+                                complemento_final.facturas.set(facturas_relacionadas)
+                                complementos_registrados.append(uuid_complemento)
                             else:
-                                complemento_final.delete()
-                                complementos_invalidos.append(f"{archivo_xml.name} no contiene facturas relacionadas.")
+                                complemento_final.delete()  # limpia si no hay facturas válidas
+                                complementos_invalidos.append(f"No se encontraron facturas relacionadas con UUIDs: {', '.join(uuids_facturas)}")
                                 continue
+                            #else:
+                            #    complemento_final.delete()
+                             #   complementos_invalidos.append(f"{archivo_xml.name} no contiene facturas relacionadas.")
+                             #   continue
 
 
                           
