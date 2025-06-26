@@ -225,20 +225,21 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
-    ;(function(){
-        const modal = new bootstrap.Modal(document.getElementById('dialog'))
-    
-        htmx.on('htmx:beforeSwap',(e)=>{
-            if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-        })
-    })()
-    var myModal = document.getElementById('dialog')
-    
-    myModal.addEventListener('hidden.bs.modal', function (event) {
-      location.reload();
-    })
 
+htmx.on('htmx:afterSwap', function (e) {
+    if (e.detail.target.id === "document") {
+        const successMessage = e.detail.target.querySelector('.alert-success');
+        if (successMessage) {
+            const modal = bootstrap.Modal.getInstance(document.getElementById('dialog'));
+            modal.hide();
+
+            // Recargar la página después de cerrar el modal exitosamente
+            modal._element.addEventListener('hidden.bs.modal', function () {
+                location.reload();
+            }, { once: true });
+        }
+    }
+});
 //Parte del modal factura eliminar
 function setDeleteUrl(facturaId) {
     const deleteForm = document.getElementById('deleteForm');
@@ -268,14 +269,7 @@ function enviarFormulario() {
         document.getElementById('deleteForm').submit();  
     }
 }
-;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
-})()
 
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');
