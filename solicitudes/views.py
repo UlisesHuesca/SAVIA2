@@ -355,25 +355,25 @@ def checkout(request):
                     ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
                    
                     if not ordensurtir.procesado:
-                        if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
+                        if producto.producto.producto.servicio == True: #or producto.producto.producto.activo == True: Se comenta para evitar que se creen requisiciones de activos
                             ordensurtir.requisitar = True
                             ordensurtir.cantidad_requisitar = producto.cantidad
                             ordensurtir.procesado = True
                             print(producto.producto.producto.servicio)
-                            if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
-                                requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-                                requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad, almacenista = usuario)
-                                #requis = Requis.objects.filter(orden__distrito = usuario.distritos, complete = True)
-                                #last_requi = requis.order_by('-folio').first()
-                                max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-                                requi.folio = max_folio + 1
-                                numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
-                                if productos.count() == numero_servicios: 
-                                    order.requisitar=False
-                                    order.requisitado = True
-                                ordensurtir.requisitar = False
-                                requi.save()
-                                requitem.save()
+                            #if producto.producto.producto.servicio == True: #or producto.producto.producto.activo == True:
+                            requi, created = Requis.objects.get_or_create(complete = True, orden = order)
+                            requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto = ordensurtir, cantidad = producto.cantidad, almacenista = usuario)
+                            #requis = Requis.objects.filter(orden__distrito = usuario.distritos, complete = True)
+                            #last_requi = requis.order_by('-folio').first()
+                            max_folio = Requis.objects.filter(orden__distrito=usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+                            requi.folio = max_folio + 1
+                            numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
+                            if productos.count() == numero_servicios: 
+                                order.requisitar=False
+                                order.requisitado = True
+                            ordensurtir.requisitar = False
+                            requi.save()
+                            requitem.save()
                             ordensurtir.save()
                             #order.fin = datetime.now()
                             order.save()
