@@ -4734,7 +4734,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         
         row_num += 1
 
-    last_filled_row = row_num - 1
+    last_filled_row = row_num
     worksheet.write_formula('K11', f'K{last_filled_row}', h_money_style)
     #worksheet.write_formula('I9', f'={last_filled_cell}', h_money_style)
     worksheet.write_formula('J9', 'A14', date_style)
