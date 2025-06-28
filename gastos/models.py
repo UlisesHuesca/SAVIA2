@@ -5,10 +5,12 @@ from user.models import Profile, Distrito
 from compras.models import Proveedor_direcciones
 from django.core.validators import FileExtensionValidator
 from decimal import Decimal
+from viaticos.models import Solicitud_Viatico
 import decimal
 import xml.etree.ElementTree as ET
 from django.db.models import Q
 import os
+
 # Create your models here.
 
 #Este modelo se refiere a si es Gasto o Reembolso
@@ -110,6 +112,7 @@ class Solicitud_Gasto(models.Model):
 
     def __str__(self):
         return f'{self.folio}'
+    
     
 class Porcentaje_iva(models.Model):
     porcentaje = models.DecimalField(max_digits=2, decimal_places=0, null=True)
@@ -442,7 +445,8 @@ class Conceptos_Entradas(models.Model):
         return subtotal 
 
 class ValeRosa(models.Model):
-    gasto = models.ForeignKey(Solicitud_Gasto, on_delete=models.CASCADE, related_name='vales_rosa')
+    gasto = models.ForeignKey(Solicitud_Gasto, on_delete=models.CASCADE, related_name='vales_rosa', null=True, blank=True)
+    viatico = models.ForeignKey(Solicitud_Viatico, on_delete=models.CASCADE, related_name='vales_rosa_viatico', null=True, blank=True)
     motivo = models.TextField()
     monto = models.DecimalField(max_digits=12, decimal_places=2)
 
@@ -456,7 +460,11 @@ class ValeRosa(models.Model):
     comentarios = models.TextField(null=True, blank=True)
 
     def __str__(self):
-        return f"Vale Rosa #{self.id} para Gasto #{self.gasto.folio}"
+        if self.gasto:
+            return f"Vale Rosa #{self.id} para Gasto #{self.gasto.folio}"
+        elif self.viatico:
+            return f"Vale Rosa #{self.id} para Viático #{self.viatico.folio}"
+        return f"Vale Rosa #{self.id} (sin destino)"
     
 class TipoArchivoSoporte(models.Model):
     nombre = models.CharField(max_length=20, unique=True)

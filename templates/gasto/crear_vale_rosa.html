@@ -6,7 +6,7 @@
 {% load i18n %}
 <html>
 <head>
-{% block title %}{% trans "Gasto" %}{% endblock %}
+{% block title %}{% trans "Vale Rosa" %}{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -46,11 +46,19 @@
                     </tr>
                 </thead>
                 <tbody id="valesRosaLista">
-                    {% for vale in gasto.vales_rosa.all %}
-                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
-                    {% empty %}
-                        <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
-                    {% endfor %}
+                   {% if tipo == 'gasto' %}
+                        {% for vale in objeto.vales_rosa.all %}
+                            {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                        {% endfor %}
+                    {% elif tipo == 'viatico' %}
+                        {% for vale in objeto.vales_rosa_viatico.all %}
+                            {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                        {% endfor %}
+                    {% endif %}
                 </tbody>
             </table>
         </div>

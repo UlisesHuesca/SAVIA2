@@ -43,7 +43,8 @@ from openpyxl.styles import numbers
 from .tasks import validar_lote_facturas
 from urllib.parse import urlencode
 
-from datetime import date, datetime
+
+from datetime import date, datetime, timedelta
 import decimal
 import os
 import io
@@ -2918,7 +2919,7 @@ def mis_gastos(request):
 
         proyectos = set()
         subproyectos = set()
-
+        gasto.creado_reciente = gasto.created_at >= timezone.now() - timedelta(days=30)
         for articulo in articulos_gasto:
             if articulo.proyecto:
                 proyectos.add(str(articulo.proyecto.nombre))
@@ -2951,6 +2952,9 @@ def mis_viaticos(request):
     myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
 
+    for viatico in viaticos:
+        viatico.creado_reciente = viatico.created_at >= timezone.now() - timedelta(days=30)
+        
     context= {
         'viaticos':viaticos,
         'myfilter':myfilter,

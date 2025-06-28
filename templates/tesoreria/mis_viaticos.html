@@ -138,7 +138,10 @@
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha Autorizado</th>
                     <th>Detalle</th>
-                    <th scope="col">Comprobación</th>
+                    <th scope="col">Facturas</th>
+                    <th>
+                        Agregar
+                    </th>
                     <th>Pago</th>
                     <th>Registro</th>
                 </tr>
@@ -165,6 +168,13 @@
                             <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Tiene Facturas"><i class="fa-solid fa-file-circle-check"></i></a>
                         {% else %}
                             <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if viatico.creado_reciente %}
+                        <a type="button" class="btn" style="background-color: #f8d7da; border: 1px solid #721c24; color: #721c24;" href="{% url 'agregar-vale-rosa' viatico.id %}?tipo=viatico&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Rosa">
+                            <i class="fa-regular fa-file-import"></i>
+                        </a> 
                         {% endif %}
                     </td>
                     <td>

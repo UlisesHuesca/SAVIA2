@@ -31,7 +31,7 @@ from tesoreria.forms import Facturas_Gastos_Form, Transferencia_Form, Cargo_Abon
 from compras.views import attach_oc_pdf
 from tesoreria.utils import extraer_texto_de_pdf, encontrar_variables, extraer_bloques_formato_2, detectar_formato_pdf, encontrar_variables_bloques
 from requisiciones.views import get_image_base64
-from viaticos.models import Viaticos_Factura
+from viaticos.models import Viaticos_Factura, Solicitud_Viatico
 import qrcode
 from num2words import num2words
 import tempfile
@@ -535,27 +535,41 @@ def eliminar_archivo(request, archivo_id):
 
 @perfil_seleccionado_required
 def agregar_vale_rosa(request, pk):
-    gasto = get_object_or_404(Solicitud_Gasto, id=pk)
+    tipo = request.GET.get('tipo')  # puede ser 'gasto' o 'viatico'
+    print(tipo)
+    if tipo == 'gasto':
+        objeto = get_object_or_404(Solicitud_Gasto, id=pk)
+    elif tipo == 'viatico':
+        objeto = get_object_or_404(Solicitud_Viatico, id=pk)
+    else:
+        messages.error(request, 'Tipo de vale no reconocido.')
+        return redirect('mis-gastos')  # o cualquier página segura
     
     if request.method == 'POST':
         motivo = request.POST.get('motivo')
         monto = request.POST.get('monto')
         if motivo and monto:
-            vale = ValeRosa.objects.create(
-                gasto=gasto,
+            vale = ValeRosa(
                 motivo=motivo,
-                creado_por = gasto.staff,
-                monto=monto
+                monto=monto,
+                creado_por=objeto.staff
             )
+            if tipo == 'gasto':
+                vale.gasto = objeto
+            elif tipo == 'viatico':
+                vale.viatico = objeto
+                print(objeto)
+            vale.save()
             messages.success(request, 'Vale Rosa agregado exitosamente')
-            return redirect('mis-gastos')
+            next_url = request.GET.get('next') or 'mis-gastos'
+            return redirect(next_url)
         else:
             messages.error(request, 'Por favor completa todos los campos.')
-    else:
-        messages.error(request, 'Método no permitido.')
+ 
     
     context = {
-        'gasto': gasto,
+        'objeto': objeto,
+        'tipo': tipo,
     }
     
     return render(request, 'gasto/crear_vale_rosa.html', context)
@@ -1212,13 +1226,21 @@ def vales_rosa_pendientes_autorizar(request):
     #vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__superintendente = perfil).order_by('-gasto__folio')
     #print(perfil.tipo.nombre)
     #if perfil.tipo.nombre == "Admin": #Temporalmente hasta que este listo el desarrollo
-    if perfil.distritos.nombre == 'MATRIZ':
+    if perfil.distritos.nombre == 'MATRIZ' and perfil.tipo.nombre == "Admin":
+        print('entra a matriz')
+        vales_rosa = ValeRosa.objects.filter(
+            Q(gasto__complete=True, gasto__autorizar2=True) |
+            Q(viatico__autorizar2=True),
+            esta_aprobado=None
+        ).order_by(
+            '-gasto__folio'  # o '-viatico__folio' si quieres alternar según tipo
+        )
+    elif perfil.distritos.nombre == 'MATRIZ':
         vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__superintendente = perfil).order_by('-gasto__folio')
     else:
         vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__autorizado_por2 = perfil ).order_by('-gasto__folio')
     #else:
     #   vales_rosa = ValeRosa.objects.none()
-    
     #myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
     #solicitudes = myfilter.qs
 

@@ -33,12 +33,13 @@
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr style="background-color: #f8d7da;">
+                    <th>Tipo</th>
                     <th scope="col">Folio</th>
                     <th scope="col">Solicitado por</th>
                     <th>Solicitado para:</th>
                     <th scope="col">Autorización</th>
                     <th scope="col">Creado</th>
-                    <th>Comentarios Gasto</th>
+                    <th>Comentarios Gasto/</th>
                     <th>Motivo Vale</th>
                     <th scope="col">Total Gasto</th>
                     <th>Monto Vale</th>
@@ -50,24 +51,61 @@
                 
                 {% for vale in vales_rosa %}
                 <tr>
-                    <th scope="row">{{vale.gasto.folio}}</th>
-                    <td>{{vale.gasto.staff.staff.staff.first_name}} {{vale.gasto.staff.staff.staff.last_name}}</td>
-                    <td>{% if vale.gasto.colaborador %}{{vale.gasto.colaborador.staff.staff.first_name}} {{vale.gasto.colaborador.staff.staff.last_name}}{% elif vale.gasto.proveedor %} {{vale.gasto.proveedor}} {% endif %}</td>
-                    <td>{{vale.gasto.superintendente.staff.staff.first_name}} {{vale.gasto.superintendente.staff.staff.last_name}}</td>
+                    <th>{% if vale.gasto %} Gasto {% elif vale.viatico %} Viático {% endif %}</th>
+                    <th scope="row">{% if vale.gasto %}{{vale.gasto.folio}} {% elif vale.viatico %}{{vale.viatico.folio}} {% endif %}</th>
+                    <td>
+                        {% if vale.gasto %}{{vale.gasto.staff.staff.staff.first_name}} {{vale.gasto.staff.staff.staff.last_name}}
+                        {% elif vale.viatico %}{{vale.viatico.staff.staff.staff.first_name}} {{vale.viatico.staff.staff.staff.last_name}}
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if vale.gasto %}
+                            {% if vale.gasto.colaborador %}{{vale.gasto.colaborador.staff.staff.first_name}} {{vale.gasto.colaborador.staff.staff.last_name}}
+                            {% elif vale.gasto.proveedor %} {{vale.gasto.proveedor}} 
+                            {% endif %}
+                        {% elif vale.viatico %}
+                            {% if vale.viatico.colaborador %}{{vale.viatico.colaborador.staff.staff.first_name}} {{vale.viatico.colaborador.staff.staff.last_name}}
+                            {% endif %}
+                        {% endif %}
+                    
+                    </td>
+                    <td> {% if vale.gasto %}{{vale.gasto.superintendente.staff.staff.first_name}} {{vale.gasto.superintendente.staff.staff.last_name}}
+                        {% elif vale.viatico %}{{vale.viatico.superintendente.staff.staff.first_name}} {{vale.viatico.superintendente.staff.staff.last_name}}
+                        {% endif %}
+                    </td>
                    
-                    <td>{{vale.gasto.created_at}}</td>
-                    <td>{% if vale.gasto.comentario %}
-                        {{vale.gasto.comentario}}
-                        {% else %}
-                            {% for articulo in vale.gasto.articulos.all %}
-                                {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
-                            {% empty %}
-                            No hay comentarios disponibles
-                            {% endfor %}
+                    <td>{% if vale.gasto %}{{vale.gasto.created_at}} 
+                        {% elif vale.viatico %}{{vale.viatico.created_at}} 
+                        {% endif %}
+                    </td>
+                    <td>
+                        {% if vale.gasto %}
+                            {% if vale.gasto.comentario %}
+                            {{vale.gasto.comentario}}
+                            {% else %}
+                                {% for articulo in vale.gasto.articulos.all %}
+                                    {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                No hay comentarios disponibles
+                                {% endfor %}
+                            {% endif %}
+                        {% elif vale.viatico %}
+                            {% if vale.viatico.comentario_general %}
+                            {{vale.viatico.comentario_general}}
+                            {% else %}
+                                {% for articulo in vale.viatico.articulos.all %}
+                                    {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                No hay comentarios disponibles
+                                {% endfor %}
+                            {% endif %}
                         {% endif %}
                     </td>
                     <td>{{vale.motivo}}</td>
-                    <td>${{vale.gasto.get_total_solicitud}}
+                    <td> {% if vale.gasto %}${{vale.gasto.get_total_solicitud}}
+                         {% elif vale.viatico %}${{vale.viatico.get_total|floatformat:2}}
+                        {% endif %}
+
                     <td>${{vale.monto}}</td>
                     <td>
                     <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-vale-rosa' vale.id %}" ><i class="fa-solid fa-check fa-xl"></i></a>
