@@ -177,19 +177,20 @@ updateBtn.addEventListener('click',function(){
         var label_producto = document.getElementById('producto');
         let id = label_producto.getAttribute('valor')
         
-        var cantidad = label_producto.getAttribute('cantidad');
+        let cantidad = parseFloat(label_producto.getAttribute('cantidad'));
         console.log('cantidad solicitada:',cantidad)
         //Esta es la cantidad que se está devolviendo
         var quantity = document.getElementById('id_cantidad');
-        var val_cantidad = quantity.value;
+        let val_cantidad = parseFloat(quantity.value);
          console.log('cantidad a devolver:',val_cantidad)
 
         var comentario = document.getElementById("id_comentario").value
 
         var action = "add";
 
-       
-        //Si la "cantidad requisitada" es menor que "la cantidad comprada"
+        
+        
+        //Si la "cantidad devuelta" es mayor que "la cantidad recibida"
         if (val_cantidad > cantidad)  {
             Swal.fire({
                     "title":"Error",
