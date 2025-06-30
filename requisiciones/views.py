@@ -258,7 +258,7 @@ def update_devolucion(request):
     comentario = data["comentario"]
     devolucion = Devolucion.objects.get(id = devolucion)
     
-    
+    #print('devolucion', devolucion.tipo.nombre)
     if devolucion.tipo.nombre == "SALIDA":
         producto = Salidas.objects.get(vale_salida=devolucion.salida.vale_salida, producto__id = producto_id)
         inv_del_producto = Inventario.objects.get(producto = producto.producto.articulos.producto.producto, distrito =producto.vale_salida.solicitud.distrito)
