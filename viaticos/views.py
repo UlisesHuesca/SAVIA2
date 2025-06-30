@@ -18,7 +18,7 @@ from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Punto
 from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form
 from tesoreria.forms import Facturas_Viaticos_Form
 #from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
-from gastos.models import Factura
+from gastos.models import Factura, ValeRosa
 #from tesoreria.views import generar_cfdi
 from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
@@ -26,6 +26,7 @@ from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from api.models import TablaFestivos
 from django.db.models import Count, Q, Case, When, Value, CharField
 from django.http import HttpResponseRedirect
+
 
 import io
 import json
@@ -1225,6 +1226,7 @@ def generar_pdf_viatico(pk):
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho = True, autorizada=True)
+    vales = ValeRosa.objects.filter(viatico = viatico)
 
     #Configuraciones por default 
     styles = getSampleStyleSheet()
@@ -1516,6 +1518,11 @@ def generar_pdf_viatico(pk):
     #c.setFillColor(prussian_blue)
     #c.drawString(290, high-20, 'Total:')
     #c.drawString(320, high-20, '$' + str(total))
+    total_vales = 0
+    for vale in vales:
+        if vale.esta_aprobado:
+            total_vales += float(vale.monto)
+
     total_facturas = 0
     suma_total = Decimal('0.00')
     data_facturas = [['Datos de XML', 'Nombre', 'Monto']]  # Encabezados de la tabla de facturas
@@ -1546,7 +1553,8 @@ def generar_pdf_viatico(pk):
             ])
     #Parrafó de totales
     data_totales = []
-    diferencia_totales = total_facturas - float(viatico.get_total)
+    total_comprobado = total_facturas + total_vales
+    diferencia_totales = total_comprobado - float(viatico.get_total)
     if diferencia_totales > 0:
         color_diferencia = colors.green
     elif diferencia_totales < 0:
@@ -1558,8 +1566,8 @@ def generar_pdf_viatico(pk):
     # Asumiendo que 'y_pos' es la posición Y después de dibujar la tabla secundaria y cualquier otro contenido
     
     data_totales = [
-    ['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
-    ['$' + str(viatico.get_total), f"${total_facturas:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
+    ['Total solicitado', 'Total Facturado', 'Total No deducible', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
+    ['$' + str(viatico.get_total), f"${total_facturas:,.2f}",f"{total_vales:,.2f}", f"{total_comprobado:,.2f}",Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
     ]
 
     # Estilo para la tabla secundaria
@@ -1574,7 +1582,7 @@ def generar_pdf_viatico(pk):
         # Añade aquí más estilos si lo necesitas
     ])
 
-    table_totales = Table(data_totales, colWidths=[5 * cm, 5 * cm, 5 * cm])  # Ajusta las medidas según necesites
+    table_totales = Table(data_totales, colWidths=[3 * cm, 3 * cm, 3* cm, 3*cm, 5 * cm])  # Ajusta las medidas según necesites
     table_totales.setStyle(table_secundaria_style)
     # Añadir filas de proyectos y subproyectos
    

@@ -2122,7 +2122,8 @@ def render_pdf_gasto(pk):
         alignment=1,  # Alineación centrada (0 = izquierda, 1 = centro, 2 = derecha)
     )
     for vale in vales:
-        total_vales += float(vale.monto)
+        if vale.esta_aprobado:
+            total_vales += float(vale.monto)
     # Iterar sobre cada factura y sumar el total
     for factura in facturas:
         try:
@@ -2447,13 +2448,13 @@ def render_pdf_gasto(pk):
     
 
     data_totales = [
-    ['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
-    ['$' + str(gasto.get_total_solicitud), f"${total_comprobado:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
+    ['Total solicitado', 'Total Facturado', 'Total No deducible', 'Total Comprobado', 'Saldo A cargo/Favor en Pesos'],  # Encabezados
+    ['$' + str(gasto.get_total_solicitud), f"${total_facturas:,.2f}", f"${total_vales:,.2f}",f"${total_comprobado:,.2f}", Paragraph(f'${diferencia_totales:,.2f}', ParagraphStyle('CustomStyle', textColor=color_diferencia))]
     ]
 
     #data_totales.append(['Total solicitado', 'Total comprobado', 'Saldo A cargo/Favor en Pesos'])  # Encabezados de la tabla secundaria
     #data_totales.append(['$' + str(gasto.get_total_solicitud), total_str, '$' + str(diferencia_totales) ])
-    table_totales = Table(data_totales, colWidths=[5 * cm, 5 * cm, 5 * cm])  # Ajusta las medidas según necesites
+    table_totales = Table(data_totales, colWidths=[3 * cm, 3 * cm, 3 * cm, 3 * cm, 5 * cm])  # Ajusta las medidas según necesites
     table_totales.setStyle(table_secundaria_style)
     # Añadir filas de proyectos y subproyectos
    

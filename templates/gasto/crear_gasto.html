@@ -668,26 +668,26 @@ $(document).ready(function(){
         document.getElementById('total-sum').textContent = total.toFixed(2); // Puedes ajustar el número de decimales según necesites
     }*/
     function sumarTotales() {
-        let totalFacturas = 0;
-        let totalVales = 0;
+    let totalFacturas = 0;
+    let totalVales = 0;
 
-        const totalesFacturas = document.querySelectorAll('.factura-total');
-        const montosVales = document.querySelectorAll('.monto-vale');
+    const totalesFacturas = document.querySelectorAll('.factura-total');
+    const montosVales = document.querySelectorAll('.monto-vale');
 
-        totalesFacturas.forEach((element) => {
-            const value = parseFloat(element.textContent.trim().replace('$', '')) || 0;
-            totalFacturas += value;
-        });
+    totalesFacturas.forEach((element) => {
+        const value = parseFloat(element.textContent.trim().replace('$', '').replace(',', '')) || 0;
+        totalFacturas += value;
+    });
 
-        montosVales.forEach((element) => {
-            const value = parseFloat(element.textContent.trim().replace('$', '')) || 0;
-            totalVales += value;
-        });
+    montosVales.forEach((element) => {
+        const value = parseFloat(element.textContent.trim().replace('$', '').replace(',', '')) || 0;
+        totalVales += value;
+    });
 
-        const total = totalFacturas + totalVales;
+    const total = totalFacturas + totalVales;
 
-        document.getElementById('total-sum').textContent = total.toFixed(2);
-    }
+    document.getElementById('total-sum').textContent = total.toFixed(2);
+}
 
     
     
