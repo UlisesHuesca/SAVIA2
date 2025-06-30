@@ -3177,7 +3177,19 @@ def generar_pdf_vale_rosa(vale_id):
    
     fecha_vale = vale.creado_en.strftime('%d/%m/%Y')
     autorizado = str(vale.aprobado_por.staff.staff.first_name+' '+ vale.aprobado_por.staff.staff.last_name) if vale.aprobado_por else "PENDIENTE"
-    recibido = str(vale.gasto.colaborador.staff.staff.first_name+' '+vale.gasto.colaborador.staff.staff.first_name) if vale.gasto.colaborador else str(vale.gasto.staff.staff.staff.first_name+' '+vale.gasto.staff.staff.staff.first_name)
+    if vale.gasto:
+        if vale.gasto.colaborador:
+            recibido = str(vale.gasto.colaborador.staff.staff.first_name + ' ' + vale.gasto.colaborador.staff.staff.last_name)
+        else:
+            recibido = str(vale.gasto.staff.staff.first_name + ' ' + vale.gasto.staff.staff.last_name)
+    elif vale.viatico:
+        if vale.viatico.colaborador:
+            recibido = str(vale.viatico.colaborador.staff.staff.first_name + ' ' + vale.viatico.colaborador.staff.staff.last_name)
+        else:
+            recibido = str(vale.viatico.staff.staff.first_name + ' ' + vale.viatico.staff.staff.last_name)
+    else:
+        recibido = "No asignado"
+
 
     c.setFont("Helvetica-Bold", 10)
     c.drawString(60, 110, fecha_vale)
