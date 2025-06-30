@@ -2991,11 +2991,12 @@ def mis_comprobaciones_gasto(request):
     #p = Paginator(pagos, 25)
     #page = request.GET.get('page')
     #pagos_list = p.get_page(page)
-    gasto.suma_total_facturas = decimal.Decimal(0)
+   
     suma = decimal.Decimal(0)
     total_monto_gastos = decimal.Decimal(0)
     total_todas_facturas = decimal.Decimal(0)
     for gasto in gastos:
+        gasto.suma_total_facturas = decimal.Decimal(0)
         suma = decimal.Decimal('0')
        
         total_monto_gastos += gasto.get_total_solicitud
