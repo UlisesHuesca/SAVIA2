@@ -2997,6 +2997,7 @@ def mis_comprobaciones_gasto(request):
     total_todas_facturas = decimal.Decimal(0)
     for gasto in gastos:
         suma = decimal.Decimal('0')
+        gasto.suma_total_facturas = decimal.Decimal(0)
         total_monto_gastos += gasto.get_total_solicitud
         for factura in gasto.facturas.all():
             if factura.archivo_xml and factura.hecho: 
