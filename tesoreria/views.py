@@ -2996,7 +2996,7 @@ def mis_comprobaciones_gasto(request):
     total_monto_gastos = decimal.Decimal(0)
     total_todas_facturas = decimal.Decimal(0)
     for gasto in gastos:
-        gasto.suma_total_facturas = decimal.Decimal(0)
+        
         suma = decimal.Decimal('0')
        
         total_monto_gastos += gasto.get_total_solicitud
@@ -3041,6 +3041,7 @@ def mis_comprobaciones_gasto(request):
            
             for gasto in gastos_enviar:
                 # 1. Generar la carátula en memoria
+                gasto.suma_total_facturas = decimal.Decimal(0)
                 buffer = render_pdf_gasto(gasto.id)
                 with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_caratula:
                     temp_caratula.write(buffer.read())
