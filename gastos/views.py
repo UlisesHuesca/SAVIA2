@@ -1236,10 +1236,39 @@ def vales_rosa_pendientes_autorizar(request):
             '-gasto__folio'  # o '-viatico__folio' si quieres alternar según tipo
         )
     elif perfil.distritos.nombre == 'MATRIZ':
-        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__superintendente = perfil).order_by('-gasto__folio')
+        vales_rosa = ValeRosa.objects.filter(
+        esta_aprobado=None
+        ).filter(
+            Q(
+                gasto__isnull=False,
+                gasto__complete=True,
+                gasto__autorizar2=True,
+                gasto__superintendente=perfil
+            ) |
+            Q(
+                viatico__isnull=False,
+                viatico__complete=True,
+                viatico__autorizar2=True,
+                viatico__superintendente=perfil
+            )
+        ).order_by('-gasto__folio', '-viatico__folio')
     else:
-        vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__autorizado_por2 = perfil ).order_by('-gasto__folio')
-    #else:
+        vales_rosa = ValeRosa.objects.filter(
+        esta_aprobado=None
+        ).filter(
+            Q(
+                gasto__isnull=False,
+                gasto__complete=True,
+                gasto__autorizar2=True,
+                gasto__autorizado_por2=perfil
+            ) |
+            Q(
+                viatico__isnull=False,
+                viatico__complete=True,
+                viatico__autorizar2=True,
+                viatico__autorizado_por2=perfil
+            )
+        ).order_by('-gasto__folio', '-viatico__folio')
     #   vales_rosa = ValeRosa.objects.none()
     #myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
     #solicitudes = myfilter.qs
