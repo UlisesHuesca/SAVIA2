@@ -1417,14 +1417,9 @@ def autorizar_vale_rosa(request, pk):
     #productos = Articulo_Gasto.objects.filter(gasto__id=pk)
     vale = ValeRosa.objects.get(id = pk)
 
-    #context= {
-    #    'productos':productos,
-    #    'facturas':facturas,
-    #    'pk':pk,
-    #   }
-
-    gasto = Solicitud_Gasto.objects.get(id = vale.gasto.id)
-    #productos = Articulo_Gasto.objects.filter(gasto = gasto)
+    ## Determinar si es gasto o viático
+    objeto = vale.gasto if vale.gasto else vale.viatico
+    tipo_objeto = 'gasto' if vale.gasto else 'viatico'
 
     if request.method =='POST' and 'btn_autorizar' in request.POST:
         vale.esta_aprobado = True
@@ -1442,7 +1437,8 @@ def autorizar_vale_rosa(request, pk):
 
     context = {
         'vale': vale,
-        #'productos': productos,
+        'objeto': objeto,
+        'tipo': tipo_objeto,
     }
 
     return render(request,'gasto/autorizar_vale_rosa.html', context)
@@ -3181,12 +3177,12 @@ def generar_pdf_vale_rosa(vale_id):
         if vale.gasto.colaborador:
             recibido = str(vale.gasto.colaborador.staff.staff.first_name + ' ' + vale.gasto.colaborador.staff.staff.last_name)
         else:
-            recibido = str(vale.gasto.staff.staff.first_name + ' ' + vale.gasto.staff.staff.last_name)
+            recibido = str(vale.gasto.staff.staff.staff.first_name + ' ' + vale.gasto.staff.staff.staff.last_name)
     elif vale.viatico:
         if vale.viatico.colaborador:
             recibido = str(vale.viatico.colaborador.staff.staff.first_name + ' ' + vale.viatico.colaborador.staff.staff.last_name)
         else:
-            recibido = str(vale.viatico.staff.staff.first_name + ' ' + vale.viatico.staff.staff.last_name)
+            recibido = str(vale.viatico.staff.staff.staff.first_name + ' ' + vale.viatico.staff.staff.staff.last_name)
     else:
         recibido = "No asignado"
 
