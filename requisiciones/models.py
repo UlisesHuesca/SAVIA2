@@ -129,7 +129,7 @@ class Salidas(models.Model):
     seleccionado = models.BooleanField(null=True, default=False)
     activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True, blank=True)
     cancelada = models.BooleanField(default = False)
-    cancelada_at = models.DateTimeField(null=True)
+    cancelada_at = models.DateTimeField(null=True, blank=True)
 
     @property
     def get_costo_salida(self):
