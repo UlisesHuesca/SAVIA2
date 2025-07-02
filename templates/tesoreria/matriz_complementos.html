@@ -147,9 +147,9 @@
                                     <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                                 </a>
                             </td>-->
-                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            {% if usuario.tipo.tesoreria == True or usuario.tipo.nombre == "Admin" %}
                             <td>
-                                <input type="checkbox" name="autorizar_factura_{{ p.id | unlocalize }}" {% if p.autorizada %}checked{% endif %}>
+                                <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ p.id | unlocalize }}" {% if p.autorizada %}checked{% endif %}>
                             </td>
                             {% endif %}
                             <td>
