@@ -4657,6 +4657,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             folio = f"V{pago.viatico.folio}"
         else:
             concepto_servicio = str(pago.tipo)
+            folio = f'NA - {pago.tipo.nombre}'
        
 
         # Determinar contrato y sector
