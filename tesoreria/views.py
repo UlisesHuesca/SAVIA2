@@ -4691,6 +4691,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         else:
             contrato = ''
             sector = ''
+            comentarios = pago.comentario
         
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else ''))
         cargo = ''
