@@ -368,6 +368,9 @@ def saldo_inicial(request, pk):
 
 
 def prellenar_formulario(request):
+    #print("Método:", request.method)
+    #print("X-Requested-With:", request.headers.get('X-Requested-With'))
+
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         pdf_content = request.FILES.get('comprobante_pago')
         
@@ -4580,7 +4583,10 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
     
     worksheet.merge_range('A5:K8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
   
-    worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
+    if not pagos.exists():
+        worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: NO HAY PAGOS DISPONIBLES', header_format)
+    else:
+        worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: '+ str(cuenta.banco.nombre), header_format)
    
     
     worksheet.merge_range('A10:B10', 'CUENTA BANCARIA: '+ str(cuenta.cuenta), header_format)

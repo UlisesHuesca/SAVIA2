@@ -282,6 +282,13 @@
                         <tr>
                             <td></td>
                             <td></td>
+                            <th>Total Vales Rosa </th>
+                            <td scope="col" id="vales-rosa"></td>
+                            <td scope="col" id="vales-rosa-autorizados"></td>
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
                             <th>Total</th>
                             <td scope="col" id="total2"></td>
                             <td scope="col" id="total3"></td>
@@ -301,7 +308,7 @@
                 </thead>
                 <tbody id="valesRosaLista">
                     {% for vale in viatico.vales_rosa_viatico.all %}
-                    <tr>
+                    <tr data-aprobado="{{ vale.esta_aprobado }}">
                         <td>{{ vale.id }}</td>
                         <td>{{ vale.motivo }}</td>
                         <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
@@ -331,6 +338,13 @@
                         <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
                     {% endfor %}
                 </tbody>
+                <tfoot>
+                    <tr style="background-color: #f8d7da; font-weight: bold;">
+                        <td colspan="2" class="text-end">Total Vales Rosa:</td>
+                        <td id="total-vales-rosa-aprobados"></td>
+                        <td colspan="3"></td>
+                    </tr>
+                </tfoot>
             </table>
                 <div class="row ms-3 my-2">
                     {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}
@@ -407,6 +421,9 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
       location.reload();
     })
 
+
+
+
 // Funciones para la primera tabla
 var xml = document.getElementsByClassName('total-xml');
 var elementos_t = document.getElementsByClassName('total-linea');
@@ -418,7 +435,10 @@ function calcularTotal(elementos, id) {
     for (var i = 0; i < elementos.length; i++) {
         total += Number(elementos[i].getAttribute('total'));
     }
+    // 🔁 Aquí sumas los vales rosa aprobados
+    total += calcularMontoValesRosaAprobados();
     lbltotal.innerText = `$${total.toFixed(2)}`;
+
 }
 
 calcularTotal(elementos_t, 'total');
@@ -450,6 +470,7 @@ mostrarTotalPorClasificacion('Gasolina', 'gasolina');
 mostrarTotalPorClasificacion('Peaje', 'peaje');
 mostrarTotalPorClasificacion('Hospedaje', 'hospedaje');
 mostrarTotalPorClasificacion('Otros', 'otros');
+mostrarTotalValesRosaAutorizados()
 
 // Funciones para la tabla de autorizados
 function calcularTotalesPorClasificacionAutorizadas(elementos, clasificacion) {
@@ -482,7 +503,7 @@ mostrarTotalPorClasificacionAutorizadas('Gasolina', 'gasolina-autorizadas');
 mostrarTotalPorClasificacionAutorizadas('Peaje', 'peaje-autorizadas');
 mostrarTotalPorClasificacionAutorizadas('Hospedaje', 'hospedaje-autorizadas');
 mostrarTotalPorClasificacionAutorizadas('Otros', 'otros-autorizadas');
-
+mostrarTotalValesRosaAprobados('total-vales-rosa-aprobados');
 // Total general autorizadas
 function calcularTotalAutorizadas() {
     var total = 0;
@@ -494,20 +515,26 @@ function calcularTotalAutorizadas() {
             var totalElementoEl = elementos[i].closest('tr').querySelector('.total-xml');
             var totalElemento = totalElementoEl ? Number(totalElementoEl.getAttribute('total')) : 0; 
             total += totalElemento;
+            console.log(total)
         }
     }
-
-    var lblTotal = document.getElementById('total3');
-    lblTotal.innerText = `$${total.toFixed(2)}`;
+    // 🔁 Aquí sumas los vales rosa aprobados
+    total += calcularMontoValesRosaAprobados();
+    //var lblTotal = document.getElementById('total3');
+    //lblTotal.innerText = `$${(total || 0).toFixed(2)}`;
+    return total; 
 }
 
-document.getElementById('total3').innerText = `$${calcularTotalAutorizadas().toFixed(2)}`;
+
+var totalAutorizadas = calcularTotalAutorizadas();
+document.getElementById('total3').innerText = `$${totalAutorizadas.toFixed(2)}`;
 
 // Actualizar totales
 function actualizarTotales() {
     // Actualiza totales generales
     calcularTotal(xml, 'total2');
     calcularTotal(elementos_t, 'total');
+   
 
     // Actualiza totales por clasificación
     mostrarTotalPorClasificacion('Alimentos', 'alimentos');
@@ -525,6 +552,7 @@ function actualizarTotales() {
 
     // Actualiza total general autorizadas
     calcularTotalAutorizadas();
+    
 }
 
 //Parte del modal factura eliminar
@@ -571,6 +599,44 @@ function enviarFormulario() {
         }
     });
 })();
+
+function calcularMontoValesRosaAprobados() {
+    var total = 0;
+    var filas = document.querySelectorAll('#valesRosaLista tr');
+
+    filas.forEach(function (fila) {
+        var aprobado = fila.getAttribute('data-aprobado');
+        if (aprobado === "True" || aprobado === "true") {
+            var montoCell = fila.querySelector('.monto-vale');
+            if (montoCell) {
+                var texto = montoCell.innerText.replace('$', '').replace(',', '').trim();
+                var monto = parseFloat(texto);
+                if (!isNaN(monto)) {
+                    total += monto;
+                }
+            }
+        }
+    });
+
+    return total;
+}
+
+function mostrarTotalValesRosaAprobados(idElemento) {
+    var total = calcularMontoValesRosaAprobados();
+    var lblTotal = document.getElementById(idElemento);
+    if (lblTotal) {
+        lblTotal.innerText = `$${total.toFixed(2)}`;
+    }
+}
+function mostrarTotalValesRosaAutorizados() {
+    var total = calcularMontoValesRosaAprobados();
+    var lbl = document.getElementById('vales-rosa-autorizados');
+    var lbl2 = document.getElementById('vales-rosa');
+    if (lbl) {
+        lbl.innerText = `$${total.toFixed(2)}`;
+        lbl2.innerText = `$${total.toFixed(2)}`;
+    }
+}
 
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');

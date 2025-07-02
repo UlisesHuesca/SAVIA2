@@ -573,13 +573,14 @@ document.getElementById('id_comprobante_pago').addEventListener('change', functi
   formData.append('comprobante_pago', file);
   
   // Añadir CSRF token a la solicitud AJAX
-  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
+  //formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
-  fetch('/tesoreria/prellenar_formulario/', { // Asegúrate de que esta es la URL correcta para tu vista
+  fetch("{% url 'prellenar-formulario' %}", { // Asegúrate de que esta es la URL correcta para tu vista
     method: 'POST',
     body: formData,
     headers: {
-      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
+      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX    
+      'X-CSRFToken': '{{ csrf_token }}', // Añadir el token CSRF
     },
   })
   .then(response => response.json()) // Asegúrate de que el backend devuelva un JSON
