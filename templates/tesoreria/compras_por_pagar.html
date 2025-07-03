@@ -280,19 +280,23 @@
                     </td>
                     <!--if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" or usuario.tipo.nombre == "Admin" % -->
                     {% if usuario.tipo.para_pago %}
-                    <td>
-                        <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
-                    </td>
-                    <td>
                         
-                        <input class="oc_checkbox form-check-input" style="transform: scale(2); margin: 5px;" data-id="{{ compra.id|unlocalize }}" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
+                        <td>
+                            
+                            <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
+                        </td>
+                        <td>
+                            {% if compra.cond_de_pago.nombre == "CREDITO" and not compra.entrada_completa and not compra.entrada_parcial %}
+                            {% else %}
+                            <input class="oc_checkbox form-check-input" style="transform: scale(2); margin: 5px;" data-id="{{ compra.id|unlocalize }}" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
+                            {% endif %}
+                        </td>
+                        <td>
+                            <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="costo_plus_adicionales" value="{{ compra.costo_plus_adicionales|unlocalize }}">
+                            <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
+                            <input class="form-control diferencia" type="textbox" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
+                        </td>
                         
-                    </td>
-                    <td>
-                        <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="costo_plus_adicionales" value="{{ compra.costo_plus_adicionales|unlocalize }}">
-                        <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
-                        <input class="form-control diferencia" type="textbox" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
-                    </td>
                     {% endif %}
                 </tr>
                
