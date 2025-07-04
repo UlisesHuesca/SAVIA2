@@ -81,14 +81,13 @@
                             <th>Distrito</th>
                             <th>{{gasto.distrito.nombre}}</th>
                         </tr>
-                         {% for soporte in solicitud.archivosoporte_set.all %}
-                        <tr>
-                           
-                                <p>{{ soporte.tipo.nombre }} - {{ soporte.total }} - {{ soporte.fecha_subida }}</p>
-                                <a href="{{ soporte.archivo.url }}" target="_blank">Ver archivo</a>
-                            
-                        </tr>
-                        {% endfor %}
+                            {% for soporte in solicitud.archivosoporte_set.all %}
+                                <tr>
+                                    <th>{{ soporte.tipo.nombre }}:</th>
+                                    <th> <a href="{{ soporte.archivo.url }}" target="_blank">Ver archivo</th>
+                                    
+                                </tr>
+                            {% endfor %}
                         {% else %}
                         </tr>
                             <th scope="col">Banco:</th>
