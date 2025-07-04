@@ -84,8 +84,9 @@
                             {% for soporte in gasto.archivosoporte_set.all %}
                                 <tr>
                                     <th>{{ soporte.tipo.nombre }}:</th>
-                                    <th> <a href="{{ soporte.archivo.url }}" target="_blank">Ver archivo</th>
-                                    
+                                    <th> <a href="{{ soporte.archivo.url }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa-solid fa-eye"></i></a>
+                                        <a href="{{ soporte.archivo.url }}" download class="btn btn-sm btn-success"><i class="fa-solid fa-arrow-down-to-line"></i></a>
+                                    </th>
                                 </tr>
                             {% endfor %}
                         {% else %}
