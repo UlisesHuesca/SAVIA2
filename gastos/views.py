@@ -1260,13 +1260,13 @@ def vales_rosa_pendientes_autorizar(request):
                 gasto__isnull=False,
                 gasto__complete=True,
                 gasto__autorizar2=True,
-                gasto__autorizado_por2=perfil
+                gasto__autorizado_por2 = perfil
             ) |
             Q(
                 viatico__isnull=False,
                 viatico__complete=True,
                 viatico__autorizar2=True,
-                viatico__autorizado_por2=perfil
+                viatico__gerente = perfil
             )
         ).order_by('-gasto__folio', '-viatico__folio')
     #   vales_rosa = ValeRosa.objects.none()
