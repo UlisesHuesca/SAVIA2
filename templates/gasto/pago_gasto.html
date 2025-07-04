@@ -81,7 +81,7 @@
                             <th>Distrito</th>
                             <th>{{gasto.distrito.nombre}}</th>
                         </tr>
-                            {% for soporte in solicitud.archivosoporte_set.all %}
+                            {% for soporte in gasto.archivosoporte_set.all %}
                                 <tr>
                                     <th>{{ soporte.tipo.nombre }}:</th>
                                     <th> <a href="{{ soporte.archivo.url }}" target="_blank">Ver archivo</th>
