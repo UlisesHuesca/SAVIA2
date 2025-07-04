@@ -68,6 +68,7 @@
                             <th>Solicitado para:</th>
                             <th scope="col">
                                 {% if gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
+                                {% elif pago.tipo.tipo =="NOMINA" %}<span class="badge bg-primary"> NOMINA </span>
                                 {% elif gasto.colaborador %}{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}
                                 {% else %} NA
                                 {% endif %}
@@ -75,16 +76,31 @@
                         </tr>
                     </thead>
                     <tbody>
-                        
+                         {% if gasto.tipo.familia == "rh_nomina" %}
                         <tr>
+                            <th>Distrito</th>
+                            <th>{{gasto.distrito.nombre}}</th>
+                        </tr>
+                         {% for soporte in solicitud.archivosoporte_set.all %}
+                        <tr>
+                           
+                                <p>{{ soporte.tipo.nombre }} - {{ soporte.total }} - {{ soporte.fecha_subida }}</p>
+                                <a href="{{ soporte.archivo.url }}" target="_blank">Ver archivo</a>
+                            
+                        </tr>
+                        {% endfor %}
+                        {% else %}
+                        </tr>
                             <th scope="col">Banco:</th>
                             <th>{% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
                                  {% elif gasto.colaborador %}{{gasto.colaborador.staff.banco}}
                                  {% else  %}{{gasto.staff.staff.banco}}{% endif %}
-                                
                             </th>
+                           
                         </tr>
+
                         <tr>
+                          
                             <th scope="col">Cuenta:</th>
                             <th scope="col">
                                 {% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
@@ -100,7 +116,7 @@
                                  {% else %}{{gasto.staff.staff.clabe}}{% endif %}
                             </th>
                         </tr>
-                   
+                         {% endif %}
                     </tbody>
                 </table>
                 <hr>
