@@ -68,7 +68,7 @@
                             <th>Solicitado para:</th>
                             <th scope="col">
                                 {% if gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
-                                {% elif pago.tipo.tipo =="NOMINA" %}<span class="badge bg-primary"> NOMINA </span>
+                                {% elif pago.tipo.familia == "rh_nomina" %}<span class="badge bg-primary"> NOMINA </span>
                                 {% elif gasto.colaborador %}{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}
                                 {% else %} NA
                                 {% endif %}
