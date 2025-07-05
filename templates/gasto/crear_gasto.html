@@ -1128,7 +1128,35 @@ $(document).ready(function() {
         datos.distrito = data.id;
         datos.distrito_text = data.text;
         localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
+        var tipo = $('#id_tipo').select2('data')[0];
+        console.log(tipo.text)
+        if (tipo.text === 'NOMINA') {
+            console.log("Tipo NOMINA detectado. Lanzando AJAX...");
+            const url = "{% url 'proyectos-por-distrito' %}"
+            $.ajax({
+                url: url,
+                data: {
+                    'distrito_id': data.id
+                },
+                success: function (proyectos) {
+                    console.log("Proyectos recibidos:", proyectos);
+                    var proyectoSelect = $('#id_proyecto');
+                    proyectoSelect.empty();
+
+                    proyectos.forEach(function (proy) {
+                        var newOption = new Option(proy.nombre, proy.id, false, false);
+                        proyectoSelect.append(newOption);
+                    });
+
+                    proyectoSelect.val(null).trigger('change');
+                },
+                error: function (xhr, status, error) {
+                    console.error("Error AJAX:", status, error);
+                }
+            });
+        }
     });
+        
 });
 
 
@@ -1278,6 +1306,7 @@ $(document).ready(function() {
                 
                 $('#cardTxt').removeClass('d-none');
                 $('#distrito').removeClass('d-none');
+                
             } else {
                 $('#cardTxt').addClass('d-none');
                 $('#distrito').addClass('d-none');

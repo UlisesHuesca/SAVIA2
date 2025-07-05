@@ -186,8 +186,9 @@ def crear_gasto(request):
     pk = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk)
     tipos = Tipo_Gasto.objects.filter(familia = 'usuario')
+    proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito = usuario.distritos)     
     if usuario.distritos.nombre == "MATRIZ":
-        
+         
         if usuario.tipo.tesoreria:
             tipos = Tipo_Gasto.objects.filter(familia__in = ['usuario','tesoreria'])
         if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "SUPERINTENDENCIA_CONTABILIDAD":
@@ -209,7 +210,7 @@ def crear_gasto(request):
     else:
         superintendentes = colaborador.filter(tipo__superintendente=True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(tipo__nombre="Admin").exclude(tipo__nombre="GERENCIA")
 
-    proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito = usuario.distritos)
+   
     #subproyectos = Subproyecto.objects.all()
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
     #tipos = Tipo_Gasto.objects.all().exclude(id = 6)
@@ -1479,6 +1480,18 @@ def get_subproyectos(request):
         subproyecto_list = list(subproyectos.values('id', 'nombre'))  
         return JsonResponse(subproyecto_list, safe=False)
     return JsonResponse([], safe=False)
+
+@login_required
+def ajax_load_proyectos_por_distrito(request):
+    distrito_id = request.GET.get('distrito_id')
+    proyectos = Proyecto.objects.filter(
+        ~Q(status_de_entrega__status="INACTIVO"),
+        activo=True,
+        distrito_id=distrito_id
+    ).values('id', 'nombre')
+
+    return JsonResponse(list(proyectos), safe=False)
+
 
 # Create your views here.
 #@login_required(login_url='user-login')

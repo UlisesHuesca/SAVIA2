@@ -19,6 +19,7 @@ urlpatterns = [
     path('gasto/cancelar_gasto2/<int:pk>/', views.cancelar_gasto2, name='cancelar-gasto2'),
     path('gasto/pago_gastos_autorizados/', views.pago_gastos_autorizados, name='pago-gastos-autorizados'),
     path('get-subproyectos/', views.get_subproyectos, name='get_subproyectos'),
+    path('ajax/proyectos-por-distrito/', views.ajax_load_proyectos_por_distrito, name='proyectos-por-distrito'),
     path('prellenar_formulario_gastos/',views.prellenar_formulario_gastos, name ='prellenar-formulario-gastos'),
     path('gasto/pago_gasto/<int:pk>/', views.pago_gasto, name='pago-gasto'),
     path('gasto/matriz_facturas_gasto/<int:pk>', views.matriz_facturas_gasto, name='matriz-facturas-gasto'),
@@ -39,5 +40,6 @@ urlpatterns = [
     path('archivo/eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
     path('vale-rosa/eliminar/<int:pk>', views.eliminar_vale_rosa, name='eliminar-vale-rosa'),
     path('vale-rosa/<int:vale_id>/pdf/', views.descargar_vale_rosa_pdf, name='descargar_vale_rosa_pdf'),
+
 ]
     
