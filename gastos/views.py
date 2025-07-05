@@ -307,7 +307,7 @@ def crear_gasto(request):
         if "btn_agregar" in request.POST:
             form = Solicitud_GastoForm(request.POST, instance=gasto)
             if form.is_valid():
-                max_folio = Solicitud_Gasto.objects.filter(distrito = usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+                
                 if max_folio == None:
                     max_folio = 0
                 gasto = form.save(commit=False)
@@ -322,7 +322,12 @@ def crear_gasto(request):
                 else:
                     gasto.distrito = usuario.distritos
 
-
+                max_folio = Solicitud_Gasto.objects.filter(
+                distrito=gasto.distrito, 
+                complete=True
+                ).aggregate(Max('folio'))['folio__max'] or 0
+                
+                gasto.folio = max_folio + 1
 
                 gasto.save()
                 #form.save()
