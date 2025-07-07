@@ -1632,7 +1632,7 @@ def control_documentos(request):
 
                                 # 👇 Solo guarda el objeto tipo date
                                 if not pago.pagado_real:
-                                    pago.pagado_real = fecha_obj
+                                    pago.pagado_real = fecha_obj.date()
                                     pago.save()
                             carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
