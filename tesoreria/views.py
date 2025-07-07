@@ -1625,14 +1625,15 @@ def control_documentos(request):
                             fecha_pago = ''
 
                             if fecha_obj:
-                                # Si es objeto datetime.date, lo convertimos a string con formato
                                 if isinstance(fecha_obj, date):
-                                    fecha_pago = fecha_obj.strftime('%d-%m-%Y')
+                                    fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
                                 else:
-                                    # Si ya es cadena (por ejemplo, por error de extracción)
                                     fecha_pago = str(fecha_obj).replace('/', '-')
-                                pago.pagado_real = fecha_pago
-                                pago.save()
+
+                                # 👇 Solo guarda el objeto tipo date
+                                if not pago.pagado_real:
+                                    pago.pagado_real = fecha_obj
+                                    pago.save()
                             carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
                             for factura in gasto.facturas.all():
