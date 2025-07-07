@@ -4484,7 +4484,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         start_date = saldo_inicial_objeto.fecha_inicial
 
     if not start_date and pagos.exists():
-        start_date = pagos.order_by('pagado_real').first().pagado_real.date()
+        start_date = pagos.order_by('pagado_real').first().pagado_real
 
     # Paso 2: calcular el saldo inicial ajustado
     if saldo_inicial_objeto is None:
