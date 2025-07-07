@@ -1846,6 +1846,8 @@ def control_documentos(request):
                                     else:
                                         # Si ya es cadena (por ejemplo, por error de extracción)
                                         fecha_pago = str(fecha_obj).replace('/', '-')
+                                    pago.pagado_real = fecha_pago
+                                    pago.save()
                                 titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                                 importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
