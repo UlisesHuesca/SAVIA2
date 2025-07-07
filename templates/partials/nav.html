@@ -329,9 +329,11 @@
                             <a class="dropdown-item" href="{% url 'control-documentos' %}">
                                 Control de Documentos
                             </a>
+                            {% if usuario.tipo.rh %}
                             <a class="dropdown-item" href="{% url 'matriz-gasto-rh' %}">
                                 Dispersiones Nómina
                             </a>
+                            {% endif %}
                           
                             <!--<a class="dropdown-item" href="{% url 'cobranza-pagos' %}">
                                 Cobranza
