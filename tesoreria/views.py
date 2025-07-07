@@ -1332,8 +1332,16 @@ def matriz_pagos(request):
                             if pago.comprobante_pago and pago.id not in processed_pagos:
                                 texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                                 variables_pago = encontrar_variables(texto_pago)
-
-                                fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                                
+                                fecha_obj = variables_pago.get('fecha')
+                                fecha_pago = ''
+                                if fecha_obj:
+                                # Si es objeto datetime.date, lo convertimos a string con formato
+                                    if isinstance(fecha_obj, datetime.date):
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')
+                                    else:
+                                        # Si ya es cadena (por ejemplo, por error de extracción)
+                                        fecha_pago = str(fecha_obj).replace('/', '-')
                                 titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                                 importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
@@ -1403,7 +1411,16 @@ def matriz_pagos(request):
                                 texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                                 variables_pago = encontrar_variables(texto_pago)
 
-                                fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                                fecha_obj = variables_pago.get('fecha')
+                                fecha_pago = ''
+
+                                if fecha_obj:
+                                    # Si es objeto datetime.date, lo convertimos a string con formato
+                                    if isinstance(fecha_obj, datetime.date):
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')
+                                    else:
+                                        # Si ya es cadena (por ejemplo, por error de extracción)
+                                        fecha_pago = str(fecha_obj).replace('/', '-')
                                 titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                                 importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
