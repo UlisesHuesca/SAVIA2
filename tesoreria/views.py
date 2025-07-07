@@ -1279,6 +1279,10 @@ def matriz_pagos(request):
                                 variables_pago = encontrar_variables(texto_pago)
 
                                 fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
+                                if not pago.pagado_real:
+                                    if fecha_pago:
+                                        pago.pagado_real = fecha_pago
+                                        pago.save()
                                 titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                                 importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
 
@@ -1332,6 +1336,11 @@ def matriz_pagos(request):
                                 fecha_pago = variables_pago.get('fecha', '').replace('/', '-')
                                 titular_cuenta_2 = variables_pago.get('titular_cuenta_2', '')
                                 importe_operacion = variables_pago.get('importe_operacion', '').split('.')[0].replace(',', '')
+
+                                if not pago.pagado_real:
+                                    if fecha_pago:
+                                        pago.pagado_real = fecha_pago
+                                        pago.save()
 
 
                                 if fecha_pago and fecha_pago != 'No disponible' and titular_cuenta_2 and titular_cuenta_2 != 'No disponible' and importe_operacion and importe_operacion != 'No disponible':
@@ -1402,6 +1411,11 @@ def matriz_pagos(request):
                                     pago_file_name = f'{fecha_pago} {titular_cuenta_2} ${importe_operacion}.pdf'
                                 else:
                                     pago_file_name = os.path.basename(pago.comprobante_pago.path)
+
+                                if not pago.pagado_real:
+                                    if fecha_pago:
+                                        pago.pagado_real = fecha_pago
+                                        pago.save()
                                 
                                 #pago_file_name = os.path.basename(pago.comprobante_pago.path)
                                 zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
