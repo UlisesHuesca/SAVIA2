@@ -4511,7 +4511,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             saldo_inicial += total_intermedios
             fecha_saldo_inicial = start_date
     print(start_date)
-    print(saldo_inicial_objeto.fecha_inicial)
+    #print(saldo_inicial_objeto.fecha_inicial)
     pagos = pagos.order_by('pagado_real', 'pagado_hora')
     static_path = settings.STATIC_ROOT
     img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')

@@ -54,6 +54,7 @@ class Solicitud_Gasto(models.Model):
     persona_cierre = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Cierre_Gasto')
     fecha_cierre = models.DateField(null=True, blank = True)
     comentario_cierre = models.TextField(blank=True, null=True)
+    dispersion = models.BooleanField(default=False)
 
     class Meta:
         unique_together = ('folio', 'distrito',)

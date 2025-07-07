@@ -520,7 +520,7 @@ def crear_gasto(request):
         'form':form,
         'total_nomina': total_nomina,
         'form_product': form_product,
-        'error_messages': error_messages,
+        
         #'articulos_gasto':articulos_gasto,
         'gasto':gasto,
         #'superintendentes':superintendentes,
@@ -3259,3 +3259,123 @@ def generar_pdf_vale_rosa(vale_id):
     buffer.seek(0)
 
     return buffer  # Puedes devolverlo como HttpResponse en una vista
+
+@perfil_seleccionado_required
+def matriz_gasto_rh(request):
+    pk_usuario = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_usuario)
+    solicitudes = Solicitud_Gasto.objects.filter(
+        tipo__familia = 'rh_nomina',
+        dispersion = False,
+    ).order_by('-id').distinct()
+    myfilter=Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
+       #Set up pagination
+    p = Paginator(solicitudes, 10)
+    page = request.GET.get('page')
+    ordenes_list = p.get_page(page)
+
+    #Set up pagination
+    p = Paginator(solicitudes, 10)
+    page = request.GET.get('page')
+    ordenes_list = p.get_page(page)
+
+    context={
+        'ordenes_list': ordenes_list,
+        'myfilter': myfilter,
+        
+    }
+
+    return render(request, 'gasto/matriz_gasto_rh.html', context)
+
+@perfil_seleccionado_required
+def editar_gasto_rh(request, pk):
+    articulos_gasto = Articulo_Gasto.objects.all()
+    #distritos = Distrito.objects.none()
+    
+    conceptos = Product.objects.all()
+    pk_usuario = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_usuario)
+    gasto = Solicitud_Gasto.objects.get(id=pk)
+    proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito = gasto.distrito) 
+    productos = articulos_gasto.filter(gasto=gasto, completo = True) 
+    
+    error_messages = {}
+    archivos_nomina = ArchivoSoporte.objects.filter(solicitud=gasto)
+
+    total_bbva = archivos_nomina.filter(tipo__nombre='BBVA').first()
+    total_ob = archivos_nomina.filter(tipo__nombre='OB').first()
+    total_pensiones = archivos_nomina.filter(tipo__nombre='PENSIONES').first()
+    # ⚠️ Al final, obtener todos los archivos RH cargados de este gasto
+    archivos_rh = ArchivoSoporte.objects.filter(solicitud=gasto)
+
+
+    proyectos_para_select2 = [
+        {
+            'id': item.id, 
+            'text': str(item.nombre)
+        } for item in proyectos
+    ]
+
+    articulos_gasto_select = conceptos.filter(gasto = True, baja_item = False)
+   
+
+    productos_para_select2 = [
+        {
+            'id': item.id,
+            'text': str(item.nombre),
+            'iva': str(item.iva)
+        } for item in articulos_gasto_select
+    ]
+
+    form_product = Articulo_GastoForm()
+
+    if request.method =='POST': 
+        
+        if "btn_agregar" in request.POST:
+            gasto.dispersion = True
+            gasto.save()
+               
+            messages.success(request, f'La solicitud {gasto.folio} ha sido editada')
+            return redirect('matriz-gasto-rh')
+        else:
+            messages.error(request, f'La solicitud {gasto.folio} no ha sido guardada correctamente, verifica los campos')
+    
+        if "btn_producto" in request.POST:
+            articulo, created = articulos_gasto.get_or_create(completo = False, staff=usuario)
+            form_product = Articulo_GastoForm(request.POST, instance=articulo)
+            if form_product.is_valid():
+                articulo = form_product.save(commit=False)
+                articulo.gasto = gasto
+                articulo.completo = True
+                articulo.save()
+                messages.success(request, 'Haz agregado un artículo correctamente')
+                return redirect('editar-gasto-rh', pk = gasto.id)
+            else:
+                for field, errors in form_product.errors.items():
+                    error_messages[f'Líneas de Gasto| Campo:{field}'] = errors.as_text()
+ 
+    total_nomina = archivos_nomina.aggregate(suma=Sum('total'))['suma'] or 0.0
+    context={
+        'proyectos_para_select2': proyectos_para_select2,
+        'productos_para_select2': productos_para_select2,
+        'gasto': gasto,
+        'productos': productos,
+        'form_product': form_product,
+        'archivo_bbva': total_bbva,
+        'archivo_ob': total_ob,
+        'archivo_pensiones': total_pensiones,
+        'archivos_rh': archivos_rh,
+        'total_nomina': total_nomina,
+
+    }
+
+    return render(request, 'gasto/editar_gasto_rh.html', context)
+
+@perfil_seleccionado_required
+def delete_gasto_rh(request, pk):
+    articulo = Articulo_Gasto.objects.get(id=pk)
+    gasto = Solicitud_Gasto.objects.get(id=articulo.gasto.id)
+    messages.success(request,f'El articulo {articulo.producto} ha sido eliminado exitosamente')
+    articulo.delete()
+
+    return redirect('editar-gasto-rh', pk = gasto.id)

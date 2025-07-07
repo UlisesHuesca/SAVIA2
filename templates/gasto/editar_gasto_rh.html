@@ -1,0 +1,824 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+{% load i18n %}
+<html>
+<head>
+{% block title %}{% trans "Gasto" %}{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title": "Error",
+                    "text": "{{ message }}",
+                    "icon": "error",
+                })
+                </script>
+                {% elif message.tags == "warning" %}
+                <script>
+                Swal.fire({
+                    "title": "Facturas repetidas",
+                    "text": "{{ message }}",
+                    "icon": "warning",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title": "Excelente",
+                    "text": "{{ message }}",
+                    "icon": "success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-5">
+        <div class="card" id="form-wrapper"> 
+            <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
+					<h2>{% trans "Gasto" %}:{{gasto.folio}}</h2>
+            </div>
+            <div class="card-body">   
+				<form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        {% if error_messages %}
+                        <div class="alert alert-danger" role="alert">
+                            {{error_messages}}
+                        </div>
+                        {% endif %}
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="alert alert-primary mt-2">Solicitado por: {{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</div>    
+                            </div>
+                        </div>
+                         <div class="row my-2">
+                            <div class="col-12">
+                                <div class="alert alert-primary mt-2">Autorizado por: {{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}</div>    
+                            </div>
+                        </div> 
+                         <div class="row my-2">
+                            <div class="col-12">
+                                <div class="alert alert-primary mt-2">Distrito: {{gasto.distrito.nombre}}</div>    
+                            </div>
+                        </div> 
+                         
+
+
+                        {% if productos %}
+                            <div class="text-end">
+                     
+                        
+                                <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Terminar" %}'>
+                            </div>
+                        {% endif %}
+                            
+                </form> 
+            </div>
+        </div>
+        <div class="card mt-2 d-none" id="cardRH"> 
+            <div class="card-header">
+                <h4>RH Documentos</h4>
+            </div>
+            <div class="card-body">  
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    <label id="archivo_rh_label">Archivo:</label> 
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" >
+                            <i class="fa-solid fa-file-pdf fa-xl" style="color: #990f0f"></i>
+                        </span>
+                        <input type="file" id="archivo_rh_input" name="" class="form-control" accept=".pdf">
+                    </div> 
+                    <div class="text-end">
+                            <button class="btn btn-outline-success btn-block my-2" type="submit" name="btn_documentos_rh" title = "Subir Documentos">
+                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl"></i>
+                            </button>
+                    </div>
+                 
+                </form>
+                {% if archivos_rh %}
+                    <div class="mt-4">
+                        <h5>Archivos RH cargados:</h5>
+                        <table class="table table-bordered table-sm">
+                        <thead class="table-light">
+                            <tr>
+                            <th>Tipo de Archivo</th>
+                            <th>Nombre del Archivo</th>
+                            <th>Acciones</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for archivo in archivos_rh %}
+                            <tr>
+                                <td>{{ archivo.tipo.nombre }}</td>
+                                <td>{{ archivo.archivo.name }}</td>
+                                <td>
+                                    <div class="d-flex align-items-center">
+                                        <!-- Botón para ver el PDF en modal -->
+                                        <button type="button" class="btn btn-outline-info btn-sm mx-1" data-bs-toggle="modal" data-bs-target="#pdfModal{{ archivo.id }}" title="Ver archivo">
+                                        <i class="fa-solid fa-eye"></i>
+                                        </button>
+
+                                        <!-- Botón para descargar el archivo -->
+                                        <a href="{{ archivo.archivo.url }}" class="btn btn-outline-info btn-sm mx-1" download data-bs-toggle="tooltip" title="Descargar archivo">
+                                        <i class="fa-solid fa-download"></i>
+                                        </a>
+                                        <form method="post" action="{% url 'eliminar_archivo' archivo.id %}" class="mx-1">
+                                            {% csrf_token %}
+                                            <button type="submit" class="btn btn-outline-danger btn-sm" data-bs-toggle="tooltip" title="Eliminar archivo" onclick="return confirm('¿Estás seguro de que deseas eliminar este archivo?');">
+                                                <i class="fa-solid fa-trash"></i>
+                                            </button>
+                                        </form>
+                                    </div>
+
+                                    <!-- Modal para visor de PDF -->
+                                    <div class="modal fade" id="pdfModal{{ archivo.id }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ archivo.id }}" aria-hidden="true">
+                                        <div class="modal-dialog modal-xl">
+                                            <div class="modal-content">
+                                                <div class="modal-header">
+                                                    <h5 class="modal-title" id="pdfModalLabel{{ archivo.id }}">Archivo: {{ archivo.tipo.nombre }}</h5>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                                </div>
+                                                <div class="modal-body">
+                                                    <iframe src="{{ archivo.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </td>
+                            </tr>
+                                
+                            {% endfor %}
+                        </tbody>
+                        </table>
+                    </div>
+                {% endif %}
+                                
+            </div>
+        </div>
+        <div class="card mt-2" id="cardTxt"> 
+            <div class="card-header">
+                <h4>Nómina</h4>
+            </div>
+            <div class="card-body">  
+                <form method="post" enctype="multipart/form-data">
+                    {% csrf_token %}
+
+                    {% if not archivo_bbva %}      
+                    <label>Archivo Lote BBVA:</label> 
+                    <div class="input-group mb-3" title="Archivo BBVA">
+                        <span class="input-group-text" >
+                            <i class="fa-duotone fa-solid fa-file"></i>
+                        </span>
+                        <input type="file" name="archivo_bbva" class="form-control" accept=".txt">
+                    </div> 
+                    {% endif %}
+                    {% if not archivo_ob %}
+                    <label>Archivo Otros Bancos (OB):</label> 
+                    <div class="input-group mb-3" title="Otros Bancos">
+                        <span class="input-group-text" >
+                            <i class="fa-duotone fa-solid fa-file"></i>
+                        </span>
+                        <input type="file" name="archivo_ob" class="form-control" accept=".txt">
+                    </div> 
+                    {% endif %}
+                    {% if not archivo_pensiones %}
+                    <label>Archivo Pensiones:</label> 
+                    <div class="input-group mb-3" title="Pensiones">
+                        <span class="input-group-text" >
+                            <i class="fa-duotone fa-solid fa-file"></i>
+                        </span>
+                        <input type="file" name="archivo_pensiones" class="form-control" accept=".txt">
+                    </div> 
+                    
+                    {% endif %}
+                    {% if not archivo_bbva and not archivo_ob and not archivo_pensiones %}
+                    <div class="text-end">
+                        <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_nomina" id="btn_nomina" type="submit" value='Subir Nómina'>
+                    </div>
+                    {% endif %}
+                </form>
+               {% if archivo_bbva or archivo_ob or archivo_pensiones %}
+                    <div class="alert mt-3">
+                        <h5>Totales de Nómina Cargados:</h5>
+                        <ul>
+                            {% if archivo_bbva %}
+                                <li>
+                                    <strong>BBVA:</strong> ${{ archivo_bbva.total|floatformat:2 }}
+                                    <a href="{{ archivo_bbva.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                       <i class="fa-duotone fa-solid fa-file"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if archivo_ob %}
+                                <li>
+                                    <strong>Otros Bancos (OB):</strong> ${{ archivo_ob.total|floatformat:2 }}
+                                    <a href="{{ archivo_ob.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                        <i class="fa-duotone fa-solid fa-file"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                            {% if archivo_pensiones %}
+                                <li>
+                                    <strong>Pensiones:</strong> ${{ archivo_pensiones.total|floatformat:2 }}
+                                    <a href="{{ archivo_pensiones.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
+                                        <i class="fa-duotone fa-solid fa-file"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                        {% if total_nomina %}
+                            <div class="alert alert-primary mt-2">
+                                <strong>Total de nómina:</strong> ${{ total_nomina|floatformat:2 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+       
+           
+        
+   
+</div>
+<div class="col-lg-7">
+        <div class="card">
+            <div class="card-header">
+                <h2 id="linea_gasto">{% trans "Líneas de Gasto" %}</h2>
+            </div>
+            <!--<div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
+                <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
+                <label class="form-check-label" for="SwitchUsarXML">{% trans "Usar XML" %}</label>
+            </div>--> 
+        <div class ="card-body">
+        <div>
+                <form id="form_product" method="post" enctype="multipart/form-data">
+                {% csrf_token %}    
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.proyecto}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+               
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.subproyecto}}
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="row">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.producto}}
+                            </div>
+                    </div>
+                </div>
+               
+                <div class="form-check form-switch col-auto mx-4 d-none">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchGasto">
+                        <label class="form-check-label" for="SwitchGasto" id="LabelAlmacén">Almacén</label>
+                </div>
+
+            
+            <div class="row my-2">
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.comentario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Comentario"}}
+                            <label style="color: #121212;" for="id_comentario">{% trans "Comentario" %}*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+               
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.cantidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_cantidad">{% trans "Cantidad" %}*</label>
+                        </div>
+                    </div>
+                </div>
+                 <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.precio_unitario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Precio Unitario"}}
+                            <label style="color: #121212;" for="id_precio_unitario">{% trans "Precio Unitario" %}*</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1">IVA</span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_product.iva|add_class:"form-select grupo-entrada"}}
+                            </div>
+                            <span class="input-group-text">%</span>
+                        </div>
+                    </div>
+                </div>
+                <div id='etiqueta_responsable' class="col-lg-4 col-sm-12">
+                    <div class="alert alert-primary" role="alert">
+                        <h6 style="color: #121212;">&nbsp;{% trans "Cálculo Previo" %}:&nbsp;<div id="calculo_previo"> </div></h6>   
+                    </div>
+                </div>
+            </div>
+
+            <div  class="row">
+                <div class="form-check form-switch col-auto mx-4 mt-3" id="Otros_impuestos">
+                        <input class="form-check-input" type="checkbox" role="switch" id="Switch_Otros_impuestos">
+                        <label class="form-check-label" for="Switch_Otros_impuestos" id="LabelOtros_Impuestos">{% trans "Otros Impuestos" %}</label>
+                </div>
+                <div class="col-4">
+                    <div id="otros_impuestos" class="input-group mb-3 mt-3 d-none">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-plus"></i>&nbsp;$</span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.otros_impuestos|add_class:"form-control"|append_attr:"placeholder= Otros Impuestos"}}
+                            <label style="color: #121212;" for="id_otros_impuestos">{% trans "Otros Impuestos" %}*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+                
+            <div  class="row my-1">
+                <div class="form-check form-switch col-auto mx-4" id="Impuestos_retenidos">
+                        <input class="form-check-input" type="checkbox" role="switch" id="Switch_Impuestos_retenidos">
+                        <label class="form-check-label" for="Switch_Impuestos_retenidos" id="LabelOtros_Impuestos">Impuestos Retenidos</label>
+                </div>
+                <div class="col-4">
+                    <div id="impuestos_retenidos" class="input-group mb-3 d-none">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-minus"></i>&nbsp;$</span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form_product.impuestos_retenidos|add_class:"form-control form1"|append_attr:"placeholder= Impuestos Retenidos"}}
+                        <label style="color: #121212;" for="id_impuestos_retenidos">{% trans "Impuestos Retenidos" %}*</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-check form-switch col-auto mx-4 d-none" id="Entrada_Salida">
+                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
+                        <label class="form-check-label" for="SwitchEntrada_Salida" id="LabelAlmacén">Entrada-Salida Express</label>
+                </div>
+            <div class="text-end my-2">
+                    <input class="btn btn-outline-info btn-block btn-lg" name="btn_producto" id="btn_producto" type="submit" value="Agregar">
+            </div>
+        </form>
+        </div>
+        
+        <div class ="table-responsive-sm">
+            <table class="table table-light table-striped table-hover">
+            <thead>
+                <tr>
+                    <th scope="col">#</th>
+                    <th scope="col">{% trans "Producto" %}</th>
+                    <th scope="col">{% trans "Descripción/Comentario" %}</th>
+                    <th>{% trans "Proyecto" %}</th>
+                    <th>{% trans "Subproyecto" %}</th>
+                    <th scope="col">{% trans "Cantidad" %}</th>
+                    <th scope="col">{% trans "P.U." %}</th>
+                    <th scope="col">{% trans "Subtotal" %}</th>
+                    <th scope="col">{% trans "Total" %}</th>
+                    <!--<th scope="col">Facturas</th>-->
+                    <th scope="col" class="col-sm-2">{% trans "Acción" %}</th>
+                </tr>
+            </thead>
+            <tbody id="mytbl">
+                {% for producto in productos%}
+
+                <tr>
+                    <td scope="col">{{producto.producto.codigo}}</td>
+                    <td scope="col">{{producto.producto.nombre}}</td>
+                    <td scope="col">{{producto.comentario}}</td>
+                    <td>{{producto.proyecto.nombre}}</td>
+                    <td>{{producto.subproyecto.nombre}}</td>
+                    <td scope="col">{{producto.cantidad|floatformat:2}}</td>
+                    <td scope="col">${{producto.precio_unitario|floatformat:4}}</td>
+                    <td scope="col">${{ producto.get_subtotal|floatformat:2 }}</td>
+                    <td scope="col">${{ producto.total_parcial|floatformat:2 }}</td>
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-gasto-rh' producto.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <!--<a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'editar-gasto' producto.id %}">
+                                    <i class="fa-solid fa-pen-to-square"></i></td>-->
+                </tr>
+                {% endfor %}
+            </tbody>
+            </table>
+        </div>
+            <table class="table table-light table-striped">
+            <thead>
+                <tr>
+                    <th scope="col">{% trans "Subtotal" %}</th>
+                    <td scope="col" id="subtotal">${{gasto.get_subtotal_solicitud}}</td>
+                </tr>
+                </thead>
+            <tbody>
+                <tr>
+                    <th scope="col">{% trans "Impuestos" %}</th>
+                    <td scope="col" id="iva">${{gasto.get_total_impuesto}}</td>
+                </tr>
+                <tr>
+                    <th scope="col">{% trans "Total" %}</th>
+                    <td scope="col" id="total">${{gasto.get_total_solicitud|floatformat:2}}</td>
+                </tr>
+                
+            </tbody>
+            </table>
+        </div>
+    </div>
+    
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+$(document).ready(function(){
+    $('#examplePopover').popover(); // Esto activa el popover en el botón con id="examplePopover"
+});
+
+
+    /*function sumarTotales() {
+        let total = 0;
+        const totales = document.querySelectorAll('.factura-total');
+        
+        totales.forEach((element) => {
+            const value = parseFloat(element.textContent.trim()) || 0;
+            total += value;
+        });
+
+        // Mostrar el total en el elemento correspondiente
+        document.getElementById('total-sum').textContent = total.toFixed(2); // Puedes ajustar el número de decimales según necesites
+    }*/
+
+
+    
+    
+    function validarCampo(event) {
+    var valor = event.target.value;
+    
+    // Convertir a número para asegurar la comparación correcta
+    valor = parseInt(valor, 10);
+
+    // Si la cantidad es 0, borra el valor del campo
+    if (valor === 0) {
+        event.target.value = '';
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de introducir un valor mayor que 0",
+                    "icon":"error",
+                })
+    }
+   
+    };
+
+    document.getElementById('id_cantidad').addEventListener('change', validarCampo);
+    document.getElementById('id_precio_unitario').addEventListener('change', validarCampo);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        
+
+
+            $(document).ready(function() {
+                var tipoActual = localStorage.getItem('tipoDocumentoActual');
+              
+
+                if (tipoActual) {
+                    // Restaurar label y name
+                    $('#archivo_rh_label').text('Archivo ' + tipoActual + ':');
+                    $('#archivo_rh_input').attr('name', 'archivo_' + tipoActual.toLowerCase());
+
+                    // Asegurarse que el cardRH esté visible
+                    $('#cardRH').removeClass('d-none');
+                }
+               
+        });
+
+
+        const form = document.getElementById('OrderForm');
+        const btnAgregar = document.getElementById('btn_agregar');
+       
+
+        form.addEventListener('submit', function() {
+            setTimeout(function() {
+                btnAgregar.disabled = true;
+            }, 50); // desactivar el botón 50ms después del clic
+        });
+    });
+    
+    function f_calculo_previo(){
+        cantidad = document.getElementById('id_cantidad').value
+        precio = document.getElementById('id_precio_unitario').value
+        otros_impuestos = document.getElementById('id_otros_impuestos').value
+        retenidos = document.getElementById('id_impuestos_retenidos').value
+        iva = document.getElementById('id_iva').value
+        console.log(iva)
+        calculo_previo = document.getElementById('calculo_previo')
+
+        var valor_iva;
+        switch(iva) {
+            case "1":
+                valor_iva = 0.10;
+                break;
+            case "2":
+                valor_iva = 0.16;
+                break;
+            default:
+                valor_iva = 0;
+                break;
+        }
+        
+        console.log(precio, cantidad, otros_impuestos, retenidos)
+        subtotal = (Number(precio) * Number(cantidad) + Number(otros_impuestos) - Number(retenidos)) * (1 + valor_iva) 
+        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
+        
+
+    }
+
+    document.getElementById('id_otros_impuestos').addEventListener('change',f_calculo_previo);
+    document.getElementById('id_impuestos_retenidos').addEventListener('change',f_calculo_previo);
+    document.getElementById('id_cantidad').addEventListener('change', f_calculo_previo);
+    document.getElementById('id_precio_unitario').addEventListener('change',f_calculo_previo);
+    document.getElementById('id_iva').addEventListener('change',f_calculo_previo);
+
+
+
+    if (document.getElementById('btn_agregar')){
+    document.getElementById('btn_agregar').addEventListener('submit', (event)=>{
+
+    if ((check_colaborador.checked) &&  (!txt_colaborador.value)) {
+
+        Swal.fire({
+                "title":"Error",
+                "text":"Favor de agregar un colaborador",
+                "icon":"error",
+            })
+        event.preventDefault()
+    }
+
+    });
+    }
+
+
+
+var precio_mod = document.getElementById("id_precio_unitario")
+
+
+
+
+
+
+var check_gasto = document.getElementById("SwitchGasto");
+
+
+document.getElementById("SwitchGasto").addEventListener("change", function(element){
+	let articulos = document.getElementById('txt_articulos');
+	let articulos_gasto = document.getElementById('txt_articulos_gasto');
+	let form_art = document.getElementById('id_producto')
+	let entrada_salida = document.getElementById('Entrada_Salida')
+
+
+	articulos.value = ""
+	articulos_gasto.value=""
+	form_art.value = ""
+
+	if (check_gasto.checked){
+	    articulos.setAttribute('class','form-control')
+	    articulos_gasto.setAttribute('class','form-control d-none')
+	    entrada_salida.setAttribute('class','form-check form-switch col-auto mx-4')
+	    //impuestos_retenidos.setAttribute('class','form-check form-switch col-auto mx-4')
+	} else {
+	    articulos.setAttribute('class','form-control d-none')
+	    articulos_gasto.setAttribute('class','form-control')
+	    entrada_salida.setAttribute('class','form-check form-switch col-auto mx-4 d-none')
+	    //impuestos_retenidos.setAttribute('class','form-check form-switch col-auto mx-4 d-none')
+	}
+});
+
+var check_otros_imp = document.getElementById("Switch_Otros_impuestos")
+
+check_otros_imp.addEventListener("change", function(element){
+    var otros_impuestos = document.getElementById('otros_impuestos')
+    var text_otros_impuestos = document.getElementById('id_otros_impuestos')
+
+    if (check_otros_imp.checked){
+        otros_impuestos.classList.remove('d-none')
+       
+    } else {
+        otros_impuestos.classList.add('d-none')
+        text_otros_impuestos.value = 0
+        f_calculo_previo()
+    }
+    
+
+});
+
+let check_impuestos_retenidos = document.getElementById('Switch_Impuestos_retenidos')
+
+check_impuestos_retenidos.addEventListener("change", function(element){
+    let impuestos_retenidos = document.getElementById('impuestos_retenidos');
+    let text_impuestos_retenidos = document.getElementById('id_impuestos_retenidos');
+
+    if (check_impuestos_retenidos.checked){
+        impuestos_retenidos.classList.remove('d-none')
+    } else {
+        impuestos_retenidos.classList.add('d-none')
+        text_impuestos_retenidos.value = 0;
+        f_calculo_previo()
+    }
+
+
+});
+
+
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+
+
+var datosProyectos = {{proyectos_para_select2|safe}}
+var datosProductos = {{productos_para_select2|safe}}
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    
+    $('#id_proyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Proyecto',
+        data: datosProyectos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_proyecto').on('select2:select', function(e){
+        var data = e.params.data;
+        proyecto_id = data.id;
+        //console.log(proyecto_id)
+        if (proyecto_id != ""){
+            mini_ajax(proyecto_id)  //Esta función la llamo cuando se selecciona un nuevo proyecto o cuando ya está seleccionado
+        }
+    }); //Aquí termina el select2:select
+    var proyectoSelect = $('#id_proyecto');
+    var subproyectoSelect = $('#id_subproyecto');
+    var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+});
+
+function actualizarSubproyectos(data) {
+    //console.log(data)
+    var $subproyectoSelect = $('#id_subproyecto');
+    $subproyectoSelect.empty(); // Limpiar las opciones actuales
+
+    // Añadir una opción placeholder
+    $subproyectoSelect.append(new Option('Seleccione un subproyecto', '', true, true));
+
+    // Añadir nuevas opciones
+    $.each(data, function(index, subproyecto) {
+        $subproyectoSelect.append(new Option(subproyecto.nombre, subproyecto.id, false, false));
+    });
+
+    // Necesitas reinicializar el select2 para reflejar los cambios
+    $subproyectoSelect.trigger('change');
+}
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    $('#id_subproyecto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Subproyecto',
+        //data: ,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+});
+
+$(document).ready(function() {
+    var gasto = document.getElementById('Gasto');
+    var gasto_id = gasto.getAttribute('gasto');
+    $('#id_producto').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Conceptos',
+        data: datosProductos,
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    $('#id_producto').on('select2:select', function(e){
+        var data = e.params.data;
+        var iva = data.iva
+        var linea_gasto = document.getElementById('linea_gasto');
+        linea_gasto.setAttribute('iva_producto',iva)
+        var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
+        cambio_en_formulario(data,'producto') //Acá lo que hago es mediante esta función guardo los valores en el local storage
+    });
+});
+
+
+
+function mini_ajax(proyecto_id){
+    //console.log(proyecto_id)
+    $.ajax({
+            url: "{% url 'ajax_load_subproyectos' %}",
+            datatype: 'json',
+            data: {
+                'proyecto_id':proyecto_id
+            },
+            success: function (data) {
+                actualizarSubproyectos(data); 
+                //console.log(data)            
+            }  
+        })    
+
+};
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+function cambio_en_formulario(data,key) {
+    var gasto = document.getElementById('Gasto')
+    var gasto_id = gasto.getAttribute('gasto')
+    var datosGuardados = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id )) || {};
+    var value = data.id;
+    var text = data.text;
+    datosGuardados[key] = value;
+    datosGuardados[key+'_text'] = text; 
+    localStorage.setItem("id_solicitud_" + gasto_id , JSON.stringify(datosGuardados));
+    
+};
+
+
+</script>
+{% endblock %}
+</body>
+</html>

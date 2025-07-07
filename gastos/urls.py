@@ -40,6 +40,9 @@ urlpatterns = [
     path('archivo/eliminar/<int:archivo_id>/', views.eliminar_archivo, name='eliminar_archivo'),
     path('vale-rosa/eliminar/<int:pk>', views.eliminar_vale_rosa, name='eliminar-vale-rosa'),
     path('vale-rosa/<int:vale_id>/pdf/', views.descargar_vale_rosa_pdf, name='descargar_vale_rosa_pdf'),
+    path('gasto/matriz_gasto_rh', views.matriz_gasto_rh, name='matriz-gasto-rh'),
+    path('gasto/editar_gasto_rh/<int:pk>/', views.editar_gasto_rh, name='editar-gasto-rh'),
+     path('gasto/delete_rh/<int:pk>', views.delete_gasto_rh, name='delete-gasto-rh'),
 
 ]
     
