@@ -1619,6 +1619,19 @@ def control_documentos(request):
                     for pago in pagos:
                         if pago.gasto:
                             gasto = pago.gasto
+                            
+                            fecha_obj = variables_pago.get('fecha')
+                            fecha_pago = ''
+
+                            if fecha_obj:
+                                # Si es objeto datetime.date, lo convertimos a string con formato
+                                if isinstance(fecha_obj, datetime.date):
+                                    fecha_pago = fecha_obj.strftime('%d-%m-%Y')
+                                else:
+                                    # Si ya es cadena (por ejemplo, por error de extracción)
+                                    fecha_pago = str(fecha_obj).replace('/', '-')
+                                pago.pagado_real = fecha_pago
+                                pago.save()
                             carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
                             for factura in gasto.facturas.all():
