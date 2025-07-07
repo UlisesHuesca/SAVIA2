@@ -1632,9 +1632,6 @@ def control_documentos(request):
                                         fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
                                     else:
                                         fecha_pago = str(fecha_obj).replace('/', '-')
-
-                                    # 👇 Solo guarda el objeto tipo date
-                              
                                     pago.pagado_real = fecha_obj
                                     pago.save()
                             carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
@@ -1658,6 +1655,15 @@ def control_documentos(request):
                                 processed_docs.add(gasto.id)
                         elif pago.oc:
                             oc = pago.oc
+                            if not pago.pagado_real:
+                                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
+                                if fecha_obj:
+                                    if isinstance(fecha_obj, date):
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
+                                    else:
+                                        fecha_pago = str(fecha_obj).replace('/', '-')
+                                    pago.pagado_real = fecha_obj
+                                    pago.save()
                             carpeta = f'{pago.pagado_real}_COMPRA_{oc.folio}_{oc.req.orden.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
                             for factura in oc.facturas.all():
@@ -1686,6 +1692,15 @@ def control_documentos(request):
                               
                         elif pago.viatico:
                             viatico = pago.viatico
+                            if not pago.pagado_real:
+                                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
+                                if fecha_obj:
+                                    if isinstance(fecha_obj, date):
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
+                                    else:
+                                        fecha_pago = str(fecha_obj).replace('/', '-')
+                                    pago.pagado_real = fecha_obj
+                                    pago.save()
                             carpeta = f'{pago.pagado_real}_VIATICO_{viatico.folio}_{viatico.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
                             for factura in viatico.facturas.all():
