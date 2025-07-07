@@ -1621,7 +1621,8 @@ def control_documentos(request):
                             gasto = pago.gasto
                             texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                             variables_pago = encontrar_variables(texto_pago)
-                            fecha_obj = variables_pago.get('fecha')
+                            fecha_str = variables_pago.get('fecha')
+                            fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
                             fecha_pago = ''
 
                             if fecha_obj:
