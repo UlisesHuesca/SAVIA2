@@ -1622,10 +1622,11 @@ def control_documentos(request):
                             texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                             variables_pago = encontrar_variables(texto_pago)
                             fecha_str = variables_pago.get('fecha')
-                            fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
+                            
                             fecha_pago = ''
 
                             if not pago.pagado_real:
+                                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
                                 if fecha_obj:
                                     if isinstance(fecha_obj, date):
                                         fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
