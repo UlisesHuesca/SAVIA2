@@ -1626,7 +1626,7 @@ def control_documentos(request):
 
                             if fecha_obj:
                                 # Si es objeto datetime.date, lo convertimos a string con formato
-                                if isinstance(fecha_obj, datetime.date):
+                                if isinstance(fecha_obj, date):
                                     fecha_pago = fecha_obj.strftime('%d-%m-%Y')
                                 else:
                                     # Si ya es cadena (por ejemplo, por error de extracción)
