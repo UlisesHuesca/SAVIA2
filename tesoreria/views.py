@@ -1625,14 +1625,15 @@ def control_documentos(request):
                             fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
                             fecha_pago = ''
 
-                            if fecha_obj:
-                                if isinstance(fecha_obj, date):
-                                    fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
-                                else:
-                                    fecha_pago = str(fecha_obj).replace('/', '-')
+                            if not pago.pagado_real:
+                                if fecha_obj:
+                                    if isinstance(fecha_obj, date):
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
+                                    else:
+                                        fecha_pago = str(fecha_obj).replace('/', '-')
 
-                                # 👇 Solo guarda el objeto tipo date
-                                if not pago.pagado_real:
+                                    # 👇 Solo guarda el objeto tipo date
+                              
                                     pago.pagado_real = fecha_obj
                                     pago.save()
                             carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
