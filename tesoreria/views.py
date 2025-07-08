@@ -1686,7 +1686,7 @@ def control_documentos(request):
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", gen_path, factura))
                                     if not factura.factura_pdf or not os.path.exists(factura.factura_pdf.path):
                                         # Si no hay PDF, generamos uno
-                                        ruta_pdf = cfdi_compras(None, factura.id)
+                                        ruta_pdf = crear_pdf_cfdi_buffer(None, factura.id)
                                         zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
                                         uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                         zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
@@ -5146,10 +5146,12 @@ def generar_cfdi(request, pk):
     })
     # Crear la respuesta HTTP con el PDF
     #folio_fiscal = data['uuid']
-    #response = HttpResponse(buffer, content_type='application/pdf')
-    #response['Content-Disposition'] = f'attachment; filename="{folio_fiscal}.pdf"'
+def crear_pdf_cfdi_buffer(factura):
+    buffer = cfdi_compras(factura.id)
 
-    #return response
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        tmp_file.write(buffer.read())
+        return tmp_file.name
 
 def generar_qr(data):
     # URL del acceso al servicio
