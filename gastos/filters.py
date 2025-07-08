@@ -14,8 +14,8 @@ class Solicitud_Gasto_Filter(django_filters.FilterSet):
     solicitado_para = CharFilter(method = 'filter_solicitado_para',  label = "Solicitado para")
     #solicitado_para = CharFilter(field_name = 'colaborador__staff__staff__first_name',  lookup_expr='icontains')
     tipo = django_filters.ModelChoiceFilter(queryset=Tipo_Gasto.objects.all(), label="Tipo Gasto")
-    start_date = DateFilter(field_name ='created_at', lookup_expr='gte')
-    end_date = DateFilter(field_name='created_at', lookup_expr='lte')
+    start_date = DateFilter(field_name ='approbado_fecha2', lookup_expr='gte')
+    end_date = DateFilter(field_name='approbado_fecha2', lookup_expr='lte')
     #Busqueda parcial para la parte de gasto
     proyecto = django_filters.ModelChoiceFilter(queryset=Proyecto.objects.filter(activo=True, complete=True), method='filter_by_proyecto', label="Proyecto")
     subproyecto = django_filters.ModelChoiceFilter(queryset=Subproyecto.objects.all(), method='filter_by_subproyecto', label="Subproyecto")
