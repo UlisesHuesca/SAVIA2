@@ -1686,7 +1686,7 @@ def control_documentos(request):
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", gen_path, factura))
                                     if not factura.factura_pdf or not os.path.exists(factura.factura_pdf.path):
                                         # Si no hay PDF, generamos uno
-                                        ruta_pdf = generar_cfdi(None, factura.id)
+                                        ruta_pdf = cfdi_compras(None, factura.id)
                                         zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
                                         uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                         zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
@@ -4885,7 +4885,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
     return response
 
 
-def generar_cfdi(request, pk):
+def cfdi_compras(request, pk):
     factura = Facturas.objects.get(id=pk)
     data = factura.emisor
     # Verificar y asignar un valor predeterminado para impuestos si es None
@@ -5133,12 +5133,23 @@ def generar_cfdi(request, pk):
     c.save()
 
     buffer.seek(0)
-    # Crear la respuesta HTTP con el PDF
-    folio_fiscal = data['uuid']
-    response = HttpResponse(buffer, content_type='application/pdf')
-    response['Content-Disposition'] = f'attachment; filename="{folio_fiscal}.pdf"'
+    return buffer
 
-    return response
+def generar_cfdi(request, pk):
+    #
+    buffer = cfdi_compras(pk)
+    # Crear la respuesta HTTP con el PDF
+    factura = Factura.objects.get(id=pk)
+    folio_fiscal = factura.emisor.get('uuid', f'factura_{factura.id}')
+    return HttpResponse(buffer, content_type='application/pdf', headers={
+        'Content-Disposition': f'attachment; filename="{folio_fiscal}.pdf"'
+    })
+    # Crear la respuesta HTTP con el PDF
+    #folio_fiscal = data['uuid']
+    #response = HttpResponse(buffer, content_type='application/pdf')
+    #response['Content-Disposition'] = f'attachment; filename="{folio_fiscal}.pdf"'
+
+    #return response
 
 def generar_qr(data):
     # URL del acceso al servicio
