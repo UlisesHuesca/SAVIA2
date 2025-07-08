@@ -316,7 +316,7 @@ def crear_gasto(request):
                 gasto.complete = True
                 gasto.created_at = datetime.now()
                 gasto.staff =  usuario
-                if gasto.tipo.tipo == "NOMINA":
+                if gasto.tipo.familia == "rh_nomina" or gasto.tipo.familia == "rh":
                     gasto.distrito = form.cleaned_data['distrito']
                     gasto.transferencia_finanzas = True
                 else:

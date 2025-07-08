@@ -1,6 +1,6 @@
 from django import forms
 from compras.models import Proveedor, Evidencia, DocumentosProveedor, Cond_pago, Moneda, Estado
-from user.models import Banco, Distrito
+from user.models import Banco, Distrito, Pais
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 
@@ -42,6 +42,7 @@ class RegistroProveedorForm(forms.Form):
     telefono = forms.CharField(max_length=14)
     domicilio = forms.CharField(max_length=200)
     email_opt = forms.EmailField(max_length=100)
+    pais = forms.ModelChoiceField(queryset=Pais.objects.all())
     estado = forms.ModelChoiceField(queryset=Estado.objects.all())
 
     producto = forms.BooleanField(required=False, label='Producto')

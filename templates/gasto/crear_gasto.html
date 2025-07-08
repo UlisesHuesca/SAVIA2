@@ -1209,12 +1209,13 @@ $(document).ready(function() {
                 localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
             }
         } else if (data.familia == "rh") {
-            console.log("nomina")
+            
             
             $('#archivo_rh_label').text('Archivo ' + data.text + ':');
             $('#archivo_rh_input').attr('name', data.text.toLowerCase());
             $('#cardRH').removeClass('d-none'); // Mostrar cardRH si corresponde
             $('#cardTxt').addClass('d-none');
+            $('#distrito').removeClass('d-none');
             // ✅ Guardarlo en localStorage
             localStorage.setItem('mostrarCardRH', 'true');
             localStorage.setItem('tipoDocumentoActual', data.text);
