@@ -531,7 +531,7 @@
                             <a class="dropdown-item" href="{% url 'matriz-compras' %}">{% trans "Matriz Compras" %}</a>
                             </div>
                         <!--    or usuario.tipo.comprador == True --> 
-                        {% if usuario.tipo.tesoreria or usuario.tipo.gerente or usuario.tipo.comprador or usuario.tipo.subdirector %}
+                        {% if usuario.tipo.tesoreria or usuario.tipo.gerente or usuario.tipo.comprador or usuario.tipo.subdirector or usuario.tipo.finanzas %}
                         <div>
                         {% else %}
                             <div class="d-none">
