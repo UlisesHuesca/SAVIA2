@@ -5137,7 +5137,7 @@ def cfdi_compras(request, pk):
 
 def generar_cfdi(request, pk):
     #
-    buffer = cfdi_compras(pk)
+    buffer = cfdi_compras(None, pk)
     # Crear la respuesta HTTP con el PDF
     factura = Factura.objects.get(id=pk)
     folio_fiscal = factura.emisor.get('uuid', f'factura_{factura.id}')
@@ -5147,7 +5147,7 @@ def generar_cfdi(request, pk):
     # Crear la respuesta HTTP con el PDF
     #folio_fiscal = data['uuid']
 def crear_pdf_cfdi_buffer(factura):
-    buffer = cfdi_compras(factura.id)
+    buffer = cfdi_compras(None, factura.id)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
         tmp_file.write(buffer.read())
