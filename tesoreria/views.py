@@ -21,7 +21,7 @@ from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto,crear_pdf_cfdi_buffer
-from viaticos.views import generar_pdf_viatico
+from viaticos.views import generar_pdf_viatico, generar_cfdi_viaticos
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
@@ -1649,6 +1649,13 @@ def control_documentos(request):
                                     gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                     zip_file.write(factura.archivo_xml.path, gen_path)
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
+                                    if not factura.archivo_pdf or not os.path.exists(factura.archivo_pdf.path):
+                                        # Si no hay PDF, generamos uno
+                                        ruta_pdf = crear_pdf_cfdi_buffer(factura)
+                                        zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
+                                        uuid = factura.uuid if factura.uuid else 'SIN_UUID'
+                                        zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
+
                             if gasto.id not in processed_docs:
                                 pdf_buf = render_pdf_gasto(gasto.id)
                                 zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
@@ -1677,6 +1684,12 @@ def control_documentos(request):
                                     gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                     zip_file.write(factura.factura_xml.path, gen_path)
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", gen_path, factura))
+                                    if not factura.archivo_pdf or not os.path.exists(factura.archivo_pdf.path):
+                                        # Si no hay PDF, generamos uno
+                                        ruta_pdf = generar_cfdi(factura.id)
+                                        zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
+                                        uuid = factura.uuid if factura.uuid else 'SIN_UUID'
+                                        zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
                                 for complemento in factura.complementos.all():
                                     if complemento.complemento_pdf:     #Encarpeta el complemento_pdf
                                         complemento_file_name = os.path.basename(complemento.complemento_pdf.path)
@@ -1716,6 +1729,12 @@ def control_documentos(request):
                                     gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                     zip_file.write(factura.factura_xml.path, gen_path)
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"V{viatico.folio}", fecha_subida, viatico.distrito.nombre, beneficiario, gen_path, factura))
+                                    if not factura.archivo_pdf or not os.path.exists(factura.archivo_pdf.path):
+                                        # Si no hay PDF, generamos uno
+                                        ruta_pdf = generar_cfdi_viaticos(factura.id)
+                                        zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
+                                        uuid = factura.uuid if factura.uuid else 'SIN_UUID'
+                                        zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
                             if viatico.id not in processed_docs:
                                 pdf_buf = generar_pdf_viatico(viatico.id)
                                 zip_file.writestr(os.path.join(carpeta, f'VIATICO_{viatico.folio}.pdf'), pdf_buf.getvalue())
