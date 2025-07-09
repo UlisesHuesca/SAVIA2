@@ -197,11 +197,13 @@
                 {% for item in activos %}
                 <tr>
                     <th scope="row">{{item.eco_unidad}}</th>
-                    <th scope="row">{{item.activo.producto.nombre}}</th>
+                    
+                    <th scope="row">{% if item.activo %}{{item.activo.producto.nombre}} {% endif %}</th>
+
                     <td>{{item.responsable.staff.staff.first_name}} {{item.responsable.staff.staff.last_name}}</td>
                     <td>{{item.tipo_activo}}</td>
                     <td>{% if item.serie %} {{item.serie}} {% endif %}</td>
-                    <td>{% if item.marca == Null %} NR {% else %} {{item.marca}} {% endif %}</td>
+                    <td>{% if not item.marca %} NR {% else %} {{item.marca}} {% endif %}</td>
                     <td>{% if item.modelo %} {{item.modelo}} {% endif %}</td>
                     <td>{{item.descripcion}}</td>
                     <td>{% if item.estatus.nombre == "ALTA" %}<span class="badge bg-primary"> {{item.estatus.nombre}}</span> {% elif item.estatus.nombre == "BAJA" %}<span class="badge bg-danger">{{item.estatus.nombre}}</span>{% else %} <span class="badge bg-warning">{{item.estatus.nombre}}</span> {% endif %}</td>
