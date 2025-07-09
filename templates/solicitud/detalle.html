@@ -21,7 +21,7 @@
                     <div class="accordion accordion-flush" id="accordionExample">
                         <div class="accordion-item">
                             <h2 class="accordion-header" id="headingOne">
-                                {% if solicitud.autorizar == null %}
+                                {% if solicitud.autorizar == None %}
                                 <button class="accordion-button collapsed btn-warning" type="button" data-bs-toggle="collapse" data-bs-target="#collapseOne" aria-expanded="false" aria-controls="collapseOne">
                                 Solicitud No Autorizada aún&nbsp <strong>{{solicitud.folio}}</strong>&nbsp <i class="fa-solid fa-hourglass-empty"></i>
                                 {% elif solicitud.autorizar %}
