@@ -18,7 +18,7 @@
     <div class = "card">
         
             <div class="card-header">
-                <h5>Filtro de Compras {{num_approved_requis}} {{num_requis_atendidas}}</h5>
+                <h5>Filtro de Compras</h5>
             </div>
             <div class="card-body">
                
@@ -154,7 +154,7 @@
                         <div class="card text-white" style="background-color:#3E92CC">
                             <div class="card-body">
                                 <h5 class="card-title">Indicador de Cumplimiento</h5>
-                                <p class="card-text display-4">{{ cumplimiento|floatformat:2 }}%</p>
+                               
                             </div>
                         </div>
                     </div>-->
@@ -463,25 +463,22 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    //var task_id = '{{task_id}}'
-    var cantidad = '{{cantidad| unlocalize}}'
-    //if (task_id){
-    //    localStorage.setItem('task_id', task_id)
-    //}
     
-    //var task= localStorage.getItem('task_id')
-    //console.log(task_id)
-    //console.log(task)
+    
+    
+    
+    
+   
     var fileDownloadUrl = localStorage.getItem('fileDownloadUrl');
     var downloadButton = document.getElementById('downloadButton');
     var btn_reporte = document.getElementById('reporte_compras');
     var reporte = localStorage.getItem('reporte_compras') 
-    if (task){
+    /*if (task){
         intentos(cantidad)
         localStorage.removeItem('reporte_compras')
         var reporte = false 
         btn_reporte.classList.add('d-none');
-    }
+    }*/
     
     if (reporte){
         btn_reporte.classList.remove('d-none');
