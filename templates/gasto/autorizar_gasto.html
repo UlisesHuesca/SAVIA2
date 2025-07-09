@@ -46,9 +46,7 @@
                             </div>
                     {% endif %}
                     <div style="flex:6">{{producto.comentario}}</div>
-                    {% if producto.entrada_salida_express == True %}
-                    <div style="flex:2; color:#f2d13d;">Este producto fue marcado para realizar una entrada-salida express</div>
-                    {% endif %}
+                   
                 </div>
                 {% endfor %}
             </div>
@@ -116,7 +114,7 @@
                     {% if gasto.archivonomina_set.all.count == 0 %}
                         <tr><td colspan="5" class="text-center text-muted">No hay archivos de nómina en esta solicitud</td></tr>
                     {% else %}
-                        {% for archivo in gasto.archivonomina_set.all %}
+                        {% for archivo in gasto.archivosoporte_set.all %}
                             <tr>
                                 <td>{{ archivo.id }}</td>
                                 <td>{{ archivo.tipo.nombre }}</td>
