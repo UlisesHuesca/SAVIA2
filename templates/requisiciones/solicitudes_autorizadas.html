@@ -210,15 +210,7 @@
                     <td class="d-none d-lg-table-cell">{{producto.articulos.orden.created_at}}</td>
                     <td>
                         <ul class="nav nav-pills">
-                            <!--<li class="nav-item mx-2">
-                                {% if orden.requisitar == True and producto.requisitar == True %}
-                                <div class='visible'>
-                                {% else %}
-                                <div class='invisible'>
-                                {% endif %}
-                                    <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-detalle' producto.articulos.orden.id %}">Requisitar</a>
-                                </div>
-                            </li>-->
+                           
                             <li class="nav-item m-1">
                                 {% if producto.surtir == True  or producto.seleccionado_por == usuario%}
                                 <div class='visible'>
