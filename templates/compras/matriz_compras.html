@@ -270,7 +270,7 @@
                     <td>
                         {% with tiene_complemento=False %}
                             {% for factura in compra.facturas.all %}
-                                {% if not tiene_complemento and factura.complemento.exists %}
+                                {% if not tiene_complemento and factura.complementos.exists %}
                                     <p>Sí</p>
                                     {% with tiene_complemento=True %}{% endwith %}
                                 {% endif %}
