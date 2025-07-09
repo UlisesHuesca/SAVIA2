@@ -374,8 +374,8 @@
                     {% if pago.gasto %}
                         <td>G{{pago.gasto.folio}}</td>
                         <td class="d-none d-lg-table-cell">{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
-                        <td>{{pago.gasto.proyecto.nombre}}</td>
-                        <td  class="d-none d-lg-table-cell">{{pago.gasto.subproyecto.nombre}}</td>
+                        <td>{{pago.proyectos}}</td>
+                        <td  class="d-none d-lg-table-cell">{{pago.subproyectos}}</td>
                         <td>{{pago.gasto.superintendente.staff.staff.first_name}} {{pago.gasto.superintendente.staff.staff.last_name}}</td>
                         {% if pago.gasto.colaborador %}
                             <td>{{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}}</td>

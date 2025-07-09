@@ -964,6 +964,9 @@ def matriz_pagos(request):
         ).order_by('-pagado_real')
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
+    
+
+    
     #Los distritos se definen de forma "dinámica" de acuerdo a los almacenes que tiene el usuario en el perfil
     distritos = Distrito.objects.filter(id__in=almacenes_distritos)
     tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos" ], st_activo = True, distritos__in = almacenes_distritos)
@@ -971,7 +974,22 @@ def matriz_pagos(request):
     p = Paginator(pagos, 50)
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
-    
+    for pago in pagos_list:
+        if pago.gasto:
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
+
+            proyectos = set()
+            subproyectos = set()
+
+            for articulo in articulos_gasto:
+                if articulo.proyecto:
+                    proyectos.add(str(articulo.proyecto.nombre))
+                if articulo.subproyecto:
+                    subproyectos.add(str(articulo.subproyecto.nombre))
+            pago.proyectos = ', '.join(proyectos)
+            pago.subproyectos = ', '.join(subproyectos)
+        
+            #print('pago.proyectos:', pago.proyectos)
 
     if request.method == 'POST': 
         if 'btnReporte' in request.POST:
