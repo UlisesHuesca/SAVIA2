@@ -48,7 +48,10 @@
                         <img id="cart-icon" src="{% static 'images/cart.png' %}">
                         </a>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{productosordenados}}
+                            {% if productosordenados %}
+                            
+                                {{productosordenados}}
+                            {% endif %}
                         </span>
                     </div>
                     <div class="form-inline my-2 my-lg-0 position-relative d-none" id="cart2">
@@ -56,7 +59,10 @@
                         <img id="cart-icon" src="{% static 'images/cart.png' %}">
                         </a>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {{productosordenadosres}}
+                            {% if productosordenadosres %}
+                        
+                                {{productosordenadosres}}
+                            {% endif %}
                         </span>
                     </div>
                 </div>
@@ -160,15 +166,11 @@
                             <a class="dropdown-item" href="{% url 'product_selection_resurtimiento' %}">Resurtimiento: Seleccionar Productos</a>
                             <a class="dropdown-item" href="{% url 'solicitud-autorizada-orden' %}">
                                 Pendientes por requisitar
-                                {% if conteo_ordenes > 0 %}
-                                <span class="badge bg-danger">({{conteo_ordenes}})</span>
-                                {% endif %}
+                               
                             </a>
                             <a class="dropdown-item" href="{% url 'solicitud-autorizada' %}">
                                 Salidas | Matriz Solicitudes
-                                {% if conteo_ordenes > 0 %}
-                                <span class="badge bg-danger">({{conteo_ordenes}})</span>
-                                {% endif %}
+                            
                             </a>
                         </div>
                         <div class="dropdown-divider"></div>
