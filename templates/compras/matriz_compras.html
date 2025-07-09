@@ -463,15 +463,15 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    var task_id = '{{task_id}}'
+    //var task_id = '{{task_id}}'
     var cantidad = '{{cantidad| unlocalize}}'
-    if (task_id){
-        localStorage.setItem('task_id', task_id)
-    }
+    //if (task_id){
+    //    localStorage.setItem('task_id', task_id)
+    //}
     
-    var task= localStorage.getItem('task_id')
-    console.log(task_id)
-    console.log(task)
+    //var task= localStorage.getItem('task_id')
+    //console.log(task_id)
+    //console.log(task)
     var fileDownloadUrl = localStorage.getItem('fileDownloadUrl');
     var downloadButton = document.getElementById('downloadButton');
     var btn_reporte = document.getElementById('reporte_compras');
@@ -510,7 +510,7 @@ function downloadLimpiar(){
    
 }
 
-function limpiarBack(){
+/*function limpiarBack(){
     localStorage.removeItem('task_id')
     const url = '/compras/clear_task_id/';
     fetch( url, {  // Reemplaza con la URL correcta
@@ -533,7 +533,7 @@ function limpiarBack(){
     .catch(error => {
         console.error('Error al borrar task_id:', error);
     });
-}
+}*/
 
 
 
@@ -563,7 +563,7 @@ const statusEndpoint = '/compras/verificar_estado/'; // Asegúrate de cambiar es
 esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint)
 }
 
-function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
+/*function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
     setTimeout(async () => {
         try {
             const response = await fetch(statusEndpoint);
@@ -598,7 +598,7 @@ function esperarYVerificar(intervalo, maxIntentos, intentos, statusEndpoint) {
             console.error('Error al verificar el estado de la tarea:', error);
         }
     }, intervalo);
-}
+}*/
 
 
 
