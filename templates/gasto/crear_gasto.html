@@ -1127,10 +1127,11 @@ $(document).ready(function() {
         var datos = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id)) || {};
         datos.distrito = data.id;
         datos.distrito_text = data.text;
+        
         localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
         var tipo = $('#id_tipo').select2('data')[0];
-        console.log(tipo.text)
-        if (tipo.text === 'NOMINA') {
+        
+        if (tipo.familia === 'nomina_rh' || tipo.familia === 'rh')  {
             console.log("Tipo NOMINA detectado. Lanzando AJAX...");
             const url = "{% url 'proyectos-por-distrito' %}"
             $.ajax({
