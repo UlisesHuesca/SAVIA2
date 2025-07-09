@@ -49,7 +49,7 @@ def matriz_oc_proveedores(request):
     #print(proveedor)
     if usuario.tipo.proveedor_externo and proveedor is not None:
         compras = Compra.objects.filter(
-            Q(autorizado2 = True, cond_de_pago__nombre = "CREDITO"| Q(pagada = True, cond_de_pago__nombre = "CONTADO"),
+            Q(autorizado2 = True, cond_de_pago__nombre = "CREDITO")| Q(pagada = True, cond_de_pago__nombre = "CONTADO"),
             complete = True, 
             proveedor__nombre = proveedor,
             req__orden__distrito__id__in = almacenes_distritos, 
