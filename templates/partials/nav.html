@@ -48,21 +48,15 @@
                         <img id="cart-icon" src="{% static 'images/cart.png' %}">
                         </a>
                         <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {% if productosordenados %}
-                            
                                 {{productosordenados}}
-                            {% endif %}
                         </span>
                     </div>
                     <div class="form-inline my-2 my-lg-0 position-relative d-none" id="cart2">
                         <a href="{% url 'solicitud-checkout-resurtimiento' %}">
                         <img id="cart-icon" src="{% static 'images/cart.png' %}">
                         </a>
-                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">
-                            {% if productosordenadosres %}
-                        
+                        <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger">     
                                 {{productosordenadosres}}
-                            {% endif %}
                         </span>
                     </div>
                 </div>

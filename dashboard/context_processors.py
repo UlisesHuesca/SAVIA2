@@ -25,7 +25,7 @@ def contadores_processor(request):
     #print("Idioma en sesión al cargar la página:", request.session.get(settings.LANGUAGE_SESSION_KEY))
     language = request.session.get(settings.LANGUAGE_SESSION_KEY, settings.LANGUAGE_CODE)
     translation.activate(language)
-
+    conteo = 0
     conteo_requis = 0
     conteo_oc = 0
     conteo_pagos = 0
@@ -48,6 +48,8 @@ def contadores_processor(request):
     conteo_pagos2 = 0
     proveedores_altas = 0
     conteo_vales = 0
+    productosordenados = 0 #Se agregan solo para dejar de generar el error de que no existe la variable pero habrá que analizar si es la manera correcta
+    productosordenadosres = 0 #Se agregan solo para dejar de generar el error de que no existe la variable pero habrá que analizar si es la manera correcta
     
     conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
@@ -69,7 +71,7 @@ def contadores_processor(request):
         ordenes = Order.objects.filter(complete=True, autorizar = True)
 
         requis = Requis.objects.filter(complete = True)
-        conteo = requis.count()
+        #conteo = requis.count()
         #if usuario.staff.staff.is_staff:
             #requis.
         if usuario.tipo.compras == True:
@@ -170,7 +172,8 @@ def contadores_processor(request):
             ).exclude(familia__nombre="IMPUESTOS").distinct().count()
 
     return {
-    
+    'productosordenados':productosordenados,
+    'productosordenadosres':productosordenadosres,
     'proveedores_altas':proveedores_altas,
     'conteo_pagos2': conteo_pagos2,
     'conteo_devoluciones': conteo_devoluciones,
