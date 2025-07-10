@@ -308,6 +308,11 @@
                                 <span class="badge bg-danger">({{conteo_viaticos_pagar}})</span>
                                 {% endif %}
                             </a>
+                            {% if usuario.tipo.rh %}
+                            <a class="dropdown-item" href="{% url 'matriz-gasto-rh' %}">
+                                Dispersiones Nómina
+                            </a>
+                            {% endif %}
                             {% if usuario.tipo.rh or usuario.tipo.nombre == 'CONTADOR' %}
                             <div class="d-none">
                             {% else %}
@@ -325,11 +330,8 @@
                             <a class="dropdown-item" href="{% url 'control-documentos' %}">
                                 Control de Documentos
                             </a>
-                            {% if usuario.tipo.rh %}
-                            <a class="dropdown-item" href="{% url 'matriz-gasto-rh' %}">
-                                Dispersiones Nómina
-                            </a>
-                            {% endif %}
+                           
+                           
                           
                             <!--<a class="dropdown-item" href="{% url 'cobranza-pagos' %}">
                                 Cobranza
@@ -354,7 +356,7 @@
                         <div>
                              <a class="dropdown-item" href="{% url 'transferencia-gastos-autorizados' %}">Gastos Autorizados</a>
                         </div>
-                        <a class="dropdown-item" href="{% url 'control-cuentas' %}">
+                          <a class="dropdown-item" href="{% url 'control-cuentas' %}">
                                 Control de Bancos
                         </a>
 

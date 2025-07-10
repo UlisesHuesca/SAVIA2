@@ -113,7 +113,7 @@ def compras_por_pagar(request):
     compras_list = p.get_page(page)
     
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        if usuario.tipo.tesoreria:
+        if usuario.tipo.tesoreria or usuario.tipo.finanzas:
             return convert_excel_matriz_compras_tesoreria(compras)
         else:
             return convert_excel_matriz_compras_autorizadas(compras)
@@ -3976,8 +3976,9 @@ def convert_excel_matriz_compras_tesoreria(compras):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Folio OC','Fecha Autorización OC','Folio UUID','Fecha_Timbrado','Proyecto','Subproyecto','Distrito','Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda',
-                'Tipo de cambio','Importe','Total en Pesos','Importe Pagado','Importe Restante','C. Pago', 'Días de Crédito','Fecha Creación','Recibida','Factura','Fecha Entrada']
+    columns = ['Folio OC','Fecha Creación','Fecha Autorización OC','Proyecto','Subproyecto','Distrito',
+               'Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda','Tipo de cambio','Importe','Total en Pesos','Importe Pagado',
+               'Importe Restante','C. Pago', 'Días de Crédito','Recibida','Fecha Entrada','Factura','Folio UUID', 'Fecha Timbrado']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -4046,9 +4047,8 @@ def convert_excel_matriz_compras_tesoreria(compras):
 
         row = [
             compra.folio,
+            created_at_naive,
             autorizado_at_2_naive,
-            uuid_string,
-            fecha_timbrado_string,
             compra.req.orden.proyecto.nombre,
             compra.req.orden.subproyecto.nombre,
             compra.req.orden.distrito.nombre,
@@ -4061,23 +4061,25 @@ def convert_excel_matriz_compras_tesoreria(compras):
             compra.tipo_de_cambio if compra.tipo_de_cambio else '',
             compra.costo_plus_adicionales,
             # Calcula total en pesos usando la fórmula de Excel
-            f'=IF(N{row_num}="",O{row_num},O{row_num}*N{row_num})', 
+            f'=IF(M{row_num}="",N{row_num},M{row_num}*N{row_num})', 
             compra.monto_pagado,
-            f'=P{row_num} - Q{row_num}',
+            f'=O{row_num} - P{row_num}',
             compra.cond_de_pago.nombre,
             compra.dias_de_credito if compra.dias_de_credito else '',
-            created_at_naive,
             recibida,
-            tiene_facturas,
             ultima_fecha_entrada_naive or '',
+            tiene_facturas,
+            uuid_string,
+            fecha_timbrado_string,
+            
         ]
 
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num in [1, 20, 23]:
+            if col_num in [1, 2, 26]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [13, 14,15, 16, 17]:
+            if col_num in [12, 13, 14, 15, 16]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
@@ -4133,7 +4135,7 @@ def convert_excel_matriz_pagos(pagos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Id','Compra/Gasto','Solicitado','Proyecto','Subproyecto','Proveedor/Colaborador','Facturas Completas','Tiene Facturas',
+    columns = ['Compra/Gasto','Solicitado','Proyecto','Subproyecto','Proveedor/Colaborador','Facturas Completas','Tiene Facturas',
                'Importe','Fecha', 'Moneda','Tipo de cambio', 'Total en Pesos']
 
     for col_num in range(len(columns)):
@@ -4218,7 +4220,6 @@ def convert_excel_matriz_pagos(pagos):
        
 
         row = [
-            pago.id,
             get_transaction_id(pago),
             pago.oc.req.orden.staff.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.staff.last_name if pago.oc else '',
             pago.oc.req.orden.proyecto.nombre if pago.oc else '',
