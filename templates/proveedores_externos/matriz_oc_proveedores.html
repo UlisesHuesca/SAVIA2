@@ -399,26 +399,12 @@ document.addEventListener('DOMContentLoaded', function() {
 
 
 document.addEventListener('DOMContentLoaded', function() {
-    var task_id = '{{task_id}}'
-    var cantidad = '{{cantidad| unlocalize}}'
-    if (task_id){
-        localStorage.setItem('task_id', task_id)
-    }
-    
-    var task= localStorage.getItem('task_id')
-    console.log(task_id)
-    console.log(task)
+  
     var fileDownloadUrl = localStorage.getItem('fileDownloadUrl');
     var downloadButton = document.getElementById('downloadButton');
     var btn_reporte = document.getElementById('reporte_compras');
     var reporte = localStorage.getItem('reporte_compras') 
-    if (task){
-        intentos(cantidad)
-        localStorage.removeItem('reporte_compras')
-        var reporte = false 
-        btn_reporte.classList.add('d-none');
-    }
-    
+   
     if (reporte){
         btn_reporte.classList.remove('d-none');
     }
