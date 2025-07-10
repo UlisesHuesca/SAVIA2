@@ -354,9 +354,13 @@
                         <div>
                              <a class="dropdown-item" href="{% url 'transferencia-gastos-autorizados' %}">Gastos Autorizados</a>
                         </div>
-                        <div>
+                        <a class="dropdown-item" href="{% url 'control-cuentas' %}">
+                                Control de Bancos
+                        </a>
+
+                        <!--<div>
                             <a class="dropdown-item" href="{% url 'crear-exhibit' %}">Crear Exhibit</a>
-                        </div>
+                        </div>-->
                         <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.autorizacion == True %}
