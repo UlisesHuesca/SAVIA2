@@ -217,7 +217,6 @@
                     <th class="d-none d-md-table-cell">Status Entrada</th>
                     <th>Facturas</th>
                     <th scope="col">Detalles</th>
-                    <!--if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Alt" -->
                     {% if usuario.tipo.para_pago %}
                     <th>Cancelar</th>
                     <th>Para Pago</th>
@@ -248,7 +247,9 @@
                                 {% endif %}
                             {% endfor %}
                         {% elif compra.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{compra.entrada_parcial}}%</span>
+                        
                         {% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}
+                        {% if compra.monto_anticipo > 0 %} <span class="badge bg-success">Anticipo: ${{compra.monto_anticipo}}</span>{% endif %}
                     </td>
                     {% if compra.facturas.exists %}
                         {% if compra.facturas.all.count > 1 %}
@@ -286,7 +287,9 @@
                             <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                         </td>
                         <td>
-                            {% if compra.cond_de_pago.nombre == "CREDITO" and not compra.entrada_completa and not compra.entrada_parcial %}
+                           
+                            {% if compra.cond_de_pago.nombre == "CREDITO" and not compra.entrada_completa and not compra.entrada_parcial and not compra.monto_anticipo  %}
+                           
                             {% else %}
                             <input class="oc_checkbox form-check-input" style="transform: scale(2); margin: 5px;" data-id="{{ compra.id|unlocalize }}" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
                             {% endif %}
