@@ -220,6 +220,7 @@
             </div>
         </div>
     </div>
+    
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
@@ -230,11 +231,11 @@ htmx.on('htmx:afterSwap', function (e) {
     if (e.detail.target.id === "document") {
         const successMessage = e.detail.target.querySelector('.alert-success');
         if (successMessage) {
-            const modal = bootstrap.Modal.getInstance(document.getElementById('dialog'));
+            const modalEl = document.getElementById('dialog');
+            const modal = bootstrap.Modal.getInstance(modalEl);
             modal.hide();
 
-            // Recargar la página después de cerrar el modal exitosamente
-            modal._element.addEventListener('hidden.bs.modal', function () {
+            modalEl.addEventListener('hidden.bs.modal', function () {
                 location.reload();
             }, { once: true });
         }
