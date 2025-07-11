@@ -227,20 +227,22 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
-htmx.on('htmx:afterSwap', function (e) {
-    if (e.detail.target.id === "document") {
-        const successMessage = e.detail.target.querySelector('.alert-success');
-        if (successMessage) {
-            const modalEl = document.getElementById('dialog');
-            const modal = bootstrap.Modal.getInstance(modalEl);
-            modal.hide();
+ ;(function(){
+        const modal = new bootstrap.Modal(document.getElementById('dialog'))
+    
+        htmx.on('htmx:beforeSwap',(e)=>{
+            if (e.detail.target.id === "document" && !e.detail.xhr.response)
+            modal.hide()
+        })
+    })()
 
-            modalEl.addEventListener('hidden.bs.modal', function () {
-                location.reload();
-            }, { once: true });
-        }
-    }
-});
+    var myModal = document.getElementById('dialog')
+    
+    myModal.addEventListener('hidden.bs.modal', function (event) {
+        setTimeout(function() {
+            location.reload();  // Recargar la página después de 2 segundos
+        }, 2000);  // 2000 milisegundos = 2 segundos
+    })
 //Parte del modal factura eliminar
 function setDeleteUrl(facturaId) {
     const deleteForm = document.getElementById('deleteForm');
