@@ -1124,14 +1124,15 @@ $(document).ready(function() {
     // Guardar valor cuando se selecciona
     $('#id_distrito').on('select2:select', function(e) {
         var data = e.params.data;
+        
         var datos = JSON.parse(localStorage.getItem("id_solicitud_" + gasto_id)) || {};
         datos.distrito = data.id;
         datos.distrito_text = data.text;
         
         localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
         var tipo = $('#id_tipo').select2('data')[0];
-        
-        if (tipo.familia === 'nomina_rh' || tipo.familia === 'rh')  {
+        console.log(tipo.familia)
+        if (tipo.familia === 'rh_nomina' || tipo.familia === 'rh')  {
             console.log("Tipo NOMINA detectado. Lanzando AJAX...");
             const url = "{% url 'proyectos-por-distrito' %}"
             $.ajax({
