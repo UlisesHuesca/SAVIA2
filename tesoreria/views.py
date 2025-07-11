@@ -22,7 +22,7 @@ from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuent
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto,crear_pdf_cfdi_buffer
 from viaticos.views import generar_pdf_viatico, generar_cfdi_viaticos
-from viaticos.models import Solicitud_Viatico, Viaticos_Factura
+from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
 from .filters import PagoFilter, Matriz_Pago_Filter
@@ -4135,8 +4135,8 @@ def convert_excel_matriz_pagos(pagos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Compra/Gasto','Solicitado','Proyecto','Subproyecto','Proveedor/Colaborador','Facturas Completas','Tiene Facturas',
-               'Importe','Fecha', 'Moneda','Tipo de cambio', 'Total en Pesos']
+    columns = ['Distrito','Compra/Gasto','Solicitado','Autorizado','Fecha Creación','Fecha Autorización','Proyecto','Subproyecto','Proveedor/Colaborador',
+               'Producto/Concepto','Importe', 'Moneda','Tipo de cambio', 'Total en Pesos','Fecha de pago', 'Tiene Facturas',]
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -4158,7 +4158,7 @@ def convert_excel_matriz_pagos(pagos):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(M:M)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(N:N)").style = money_resumen_style
   
 
    # Aquí debes extraer el conjunto completo de pagos en lugar de solo ciertos valores
@@ -4167,14 +4167,22 @@ def convert_excel_matriz_pagos(pagos):
         row_num = row_num + 1
         # Define los valores de las columnas basándote en el tipo de pago
         if pago.oc:
+            articulos_compra = ArticuloComprado.objects.filter(oc=pago.oc)
+            solicitado = pago.oc.req.orden.staff.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.staff.last_name if pago.oc else ''
+            distrito = pago.oc.req.orden.distrito.nombre
             proveedor = pago.oc.proveedor
-            facturas_completas = pago.oc.facturas_completas
+            #facturas_completas = pago.oc.facturas_completas
             cuenta_moneda = pago.cuenta.moneda.nombre if pago.cuenta else None
-            #if pago.oc.facturas.exists():
-                #print(pago.oc.facturas)
-            #    tiene_facturas = 'Sí'
-            #else:
-            #    tiene_facturas = 'No'
+            proyectos = pago.oc.req.orden.proyecto.nombre if pago.oc else ''
+            subproyectos = pago.oc.req.orden.subproyecto.nombre if pago.oc else ''
+            autorizado = pago.oc.oc_autorizada_por2.staff.staff.first_name + ' ' + pago.oc.oc_autorizada_por2.staff.staff.last_name if pago.oc.oc_autorizada_por2 else ''
+            fecha_creacion = pago.oc.created_at.replace(tzinfo=None)
+            fecha_autorizacion = pago.oc.autorizado_at_2.replace(tzinfo=None)
+            productos = set()
+            for articulo in articulos_compra:
+                if articulo.producto:
+                    productos.add(str(articulo.producto.producto.articulos.producto.producto.nombre))
+            productos = ', '.join(productos)
 
 
             if pago.oc.facturas.filter(factura_xml__isnull=False).exists():
@@ -4189,57 +4197,102 @@ def convert_excel_matriz_pagos(pagos):
             else:
                 tipo_de_cambio = ''  # default si no se cumplen las condiciones anteriores
         elif pago.gasto:
+            distrito = pago.gasto.distrito.nombre
+            solicitado = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
+            fecha_creacion = pago.gasto.created_at.replace(tzinfo=None)
+            fecha_autorizacion = pago.gasto.approbado_fecha2.replace(tzinfo=None)
             if pago.gasto.colaborador:
                 proveedor = pago.gasto.colaborador.staff.staff.first_name + ' ' + pago.gasto.colaborador.staff.staff.last_name
             else:
                 proveedor = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
-            facturas_completas = pago.gasto.facturas_completas
+            
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
+            if pago.gasto.distrito.nombre == 'MATRIZ':
+                autorizado = pago.gasto.superintendente.staff.staff.first_name + ' ' + pago.gasto.superintendente.staff.staff.last_name if pago.gasto.superintendente else ''
+            else:
+                autorizado = pago.gasto.autorizado_por2.staff.staff.first_name + ' ' + pago.gasto.autorizado_por2.staff.staff.last_name if pago.gasto.autorizado_por2 else ''
+            proyectos = set()
+            subproyectos = set()
+            productos = set()
+
+            for articulo in articulos_gasto:
+                if articulo.proyecto:
+                    proyectos.add(str(articulo.proyecto.nombre))
+                if articulo.subproyecto:
+                    subproyectos.add(str(articulo.subproyecto.nombre))
+                if articulo.producto:
+                    productos.add(str(articulo.producto.nombre))
+            proyectos = ', '.join(proyectos)
+            subproyectos = ', '.join(subproyectos)
+            productos = ', '.join(productos)
+            #facturas_completas = pago.gasto.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para gastos
             if pago.gasto.facturas.exists():
                 
                 tiene_facturas = 'Sí'
             else:
                 tiene_facturas = 'No'
+
+           
             
         elif pago.viatico:
+            articulos_viatico = Concepto_Viatico.objects.filter(viatico=pago.viatico)
+            proyectos = pago.viatico.proyecto.nombre if pago.viatico else ''
+            subproyectos = pago.viatico.subproyecto.nombre if pago.viatico else ''
+            distrito = pago.viatico.distrito.nombre
+            fecha_creacion = pago.viatico.created_at.replace(tzinfo=None)
+            fecha_autorizacion = pago.viatico.approved_at.replace(tzinfo=None)
+            autorizado = pago.viatico.gerente.staff.staff.first_name + ' ' + pago.viatico.gerente.staff.staff.last_name if pago.viatico.gerente else ''
             if pago.viatico.colaborador:
                 proveedor = pago.viatico.colaborador.staff.staff.first_name + ' ' + pago.viatico.colaborador.staff.staff.last_name
             else:
                 proveedor = pago.viatico.staff.staff.staff.first_name + ' ' + pago.viatico.staff.staff.staff.last_name
-            facturas_completas = pago.viatico.facturas_completas
+            solicitado = pago.viatico.staff.staff.staff.first_name + ' ' + pago.viatico.staff.staff.staff.last_name
+            #facturas_completas = pago.viatico.facturas_completas
             tipo_de_cambio = '' # Asume que no se requiere tipo de cambio para viáticos
+            
             if pago.viatico.facturas.exists():
                 tiene_facturas = 'Sí'
             else:
                 tiene_facturas = 'No'
+            productos = set()
+            for articulo in articulos_viatico:
+                if articulo.producto:
+                    productos.add(str(articulo.producto.nombre))
+            productos = ', '.join(productos)
         else:
             proveedor = None
-            facturas_completas = None
+            #facturas_completas = None
             tipo_de_cambio = ''
+
 
        
 
         row = [
+            distrito,
             get_transaction_id(pago),
-            pago.oc.req.orden.staff.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.staff.last_name if pago.oc else '',
-            pago.oc.req.orden.proyecto.nombre if pago.oc else '',
-            pago.oc.req.orden.subproyecto.nombre if pago.oc else '',
+            solicitado,
+            autorizado,
+            fecha_creacion,
+            fecha_autorizacion,
+            proyectos,
+            subproyectos,
             proveedor,
-            facturas_completas,
-            tiene_facturas,
+            productos,
             pago.monto,
-            pago.pagado_date.strftime('%d/%m/%Y') if pago.pagado_date else '',
-            pago.oc.moneda.nombre if pago.oc else '',  # Modificación aquí
+            pago.oc.moneda.nombre if pago.oc else 'PESOS',  # Modificación aquí
             tipo_de_cambio,
-            f'=IF(L{row_num}="",I{row_num},I{row_num}*L{row_num})'  # Calcula total en pesos usando la fórmula de Excel
+            f'=IF(M{row_num}="",K{row_num},K{row_num}*M{row_num})',  # Calcula total en pesos usando la fórmula de Excel
+            pago.pagado_date.replace(tzinfo=None),
+            tiene_facturas,
         ]
 
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 9:
+            if col_num in (4, 5, 14):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 8 or col_num == 11 or col_num == 12:
+            if col_num in (10, 12, 13):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
