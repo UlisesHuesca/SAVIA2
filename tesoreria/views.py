@@ -1768,7 +1768,7 @@ def control_documentos(request):
                     ws.title = "Resumen XML"
                     columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
                                 'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                                'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
+                                'Receptor (Empresa) Nombre', 'Beneficiario', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
                     ws.append(columnas)
                     for dato in datos_xml_lista:
                         ws.append([dato.get(col, '') for col in columnas])
