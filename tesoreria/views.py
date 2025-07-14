@@ -1636,7 +1636,6 @@ def control_documentos(request):
                 content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
             )
             response['Content-Disposition'] = 'attachment; filename=reporte_facturas.xlsx'
-            response = HttpResponse(zip_buffer, content_type='application/zip')
             response.set_cookie('descarga_iniciada', 'true', max_age=20)
             return response
                        
