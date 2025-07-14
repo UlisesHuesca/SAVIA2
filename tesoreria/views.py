@@ -20,7 +20,7 @@ from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_cod
 from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
-from gastos.views import render_pdf_gasto, generar_cfdi_gasto
+from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto
 from viaticos.views import generar_pdf_viatico, generar_cfdi_viaticos
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
 from requisiciones.views import get_image_base64
@@ -1669,7 +1669,7 @@ def control_documentos(request):
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
                                     if not factura.archivo_pdf or not os.path.exists(factura.archivo_pdf.path):
                                         # Si no hay PDF, generamos uno
-                                        ruta_pdf = generar_cfdi_gasto(request, factura.id)
+                                        ruta_pdf = crear_pdf_cfdi_gasto(factura)
                                         zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
                                         uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                         zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")

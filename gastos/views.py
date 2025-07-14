@@ -3169,7 +3169,12 @@ def generar_cfdi_gasto(request, pk):
         'Content-Disposition': f'attachment; filename="{folio_fiscal}.pdf"'
     })
 
+def crear_pdf_cfdi_gasto(factura):
+    buffer = crear_pdf_cfdi_buffer(factura)
 
+    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
+        tmp_file.write(buffer.read())
+        return tmp_file.name
 
 def generar_pdf_vale_rosa(vale_id):
     vale = ValeRosa.objects.select_related('gasto', 'creado_por').get(id=vale_id)
