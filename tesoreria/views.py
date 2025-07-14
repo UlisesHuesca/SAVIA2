@@ -1562,6 +1562,82 @@ def control_documentos(request):
     if request.method == 'POST': 
         if 'btnReporte' in request.POST:
             return convert_excel_matriz_pagos(pagos)
+        elif 'btnReporteXML' in request.POST:
+            fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
+            fecha_fin = parse_date(request.POST.get('fecha_fin'))
+            distrito_id = request.POST.get('distrito')
+            tesorero_id = request.POST.get('tesorero')
+            folio = request.POST.get('folio')
+            validar_sat = request.POST.get('validacion') == 'on'
+
+            if usuario.distritos.nombre == "MATRIZ":
+                pagos = Pago.objects.filter(hecho=True)
+                if fecha_inicio and fecha_fin:
+                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
+              
+                    if distrito_id:
+                        pagos = pagos.filter(
+                            Q(gasto__distrito_id=distrito_id) |
+                            Q(oc__req__orden__distrito_id=distrito_id) |
+                            Q(viatico__distrito_id=distrito_id)
+                        )
+
+                    if tesorero_id:
+                        pagos = pagos.filter(tesorero_id=tesorero_id)
+
+                if folio:
+                    pagos = Pago.objects.filter(hecho = True)
+                    pagos = pagos.filter(
+                        Q(gasto__folio=folio) |
+                        Q(oc__folio=folio) |
+                        Q(viatico__folio=folio)
+                    )
+                    if distrito_id:
+                        pagos = pagos.filter(
+                            Q(gasto__distrito_id=distrito_id) |
+                            Q(oc__req__orden__distrito_id=distrito_id) |
+                            Q(viatico__distrito_id=distrito_id)
+                        )
+
+                    if tesorero_id:
+                        pagos = pagos.filter(tesorero_id=tesorero_id)
+            else:
+                pagos = pagos.filter(
+                    Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
+                    Q(gasto__distrito=usuario.distritos) |
+                    Q(oc__req__orden__distrito=usuario.distritos) |
+                    Q(viatico__distrito=usuario.distritos)
+                )
+             
+            datos_xml_lista = []
+            for pago in pagos:
+                if pago.gasto:
+                    gasto = pago.gasto
+                    for factura in gasto.facturas.all():
+                        beneficiario = factura.solicitud_gasto.colaborador.staff.staff.first_name + ' ' + factura.solicitud_gasto.colaborador.staff.staff.last_name  if factura.solicitud_gasto.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
+                        fecha_subida = factura.fecha_subida.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subida else 'No disponible'      
+                        if factura.archivo_xml:     
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, "NA", factura))    
+                elif pago.oc:
+                    oc = pago.oc
+                    for factura in oc.facturas.all():
+                        if factura.factura_xml:
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", "NA", factura))
+                elif pago.viatico:
+                    viatico = pago.viatico
+                    for factura in viatico.facturas.all():
+                        beneficiario = factura.solicitud_viatico.colaborador.staff.staff.first_name + ' ' + factura.solicitud_viatico.colaborador.staff.staff.last_name  if factura.solicitud_viatico.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
+                        fecha_subida = factura.fecha_subido.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
+                        if factura.factura_xml:
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"V{viatico.folio}", fecha_subida, viatico.distrito.nombre, beneficiario, "NA", factura))
+                output = generar_excel_xmls(datos_xml_lista)
+                response = HttpResponse(
+                    output.getvalue(),
+                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+                )
+                response['Content-Disposition'] = 'attachment; filename=reporte_facturas.xlsx'
+                return response
+                       
         elif 'btnDescargarFacturas' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
@@ -1609,6 +1685,7 @@ def control_documentos(request):
                     Q(oc__req__orden__distrito=usuario.distritos) |
                     Q(viatico__distrito=usuario.distritos)
                 )
+            
 
 
             if validar_sat:
@@ -1762,20 +1839,22 @@ def control_documentos(request):
                             zip_file.write(pago.comprobante_pago.path, os.path.join(carpeta, os.path.basename(pago.comprobante_pago.path)))
 
                         # Excel de resumen
-                    output = BytesIO()
-                    wb = Workbook()
-                    ws = wb.active
-                    ws.title = "Resumen XML"
-                    columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
-                                'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                                'Receptor (Empresa) Nombre', 'Beneficiario', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
-                    ws.append(columnas)
-                    for dato in datos_xml_lista:
-                        ws.append([dato.get(col, '') for col in columnas])
-                    for col in ['G']:
-                        for row in range(2, ws.max_row + 1):
-                            ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
-                    wb.save(output)
+                    #output = BytesIO()
+                    #wb = Workbook()
+                    #ws = wb.active
+                    #ws.title = "Resumen XML"
+                    #columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
+                    #            'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                    #            'Receptor (Empresa) Nombre', 'Beneficiario', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
+                    #ws.append(columnas)
+                    #for dato in datos_xml_lista:
+                    #    ws.append([dato.get(col, '') for col in columnas])
+                    #for col in ['G']:
+                    #    for row in range(2, ws.max_row + 1):
+                    #        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+                    #wb.save(output)
+                    #zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
+                    output = generar_excel_xmls(datos_xml_lista)
                     zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
 
                 zip_buffer.seek(0)
