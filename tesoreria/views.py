@@ -1669,7 +1669,7 @@ def control_documentos(request):
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
                                     if not factura.archivo_pdf or not os.path.exists(factura.archivo_pdf.path):
                                         # Si no hay PDF, generamos uno
-                                        ruta_pdf = generar_cfdi_gasto(factura)
+                                        ruta_pdf = generar_cfdi_gasto(request, factura)
                                         zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
                                         uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                         zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
