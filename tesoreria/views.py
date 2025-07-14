@@ -2055,26 +2055,26 @@ def control_documentos(request):
                                 processed_pagos.add(pago.id)
 
                     # Crear archivo Excel con los datos extraídos
-                    output = BytesIO()
-                    wb = Workbook()
-                    ws = wb.active
-                    ws.title = "Resumen XML"
+                    #output = BytesIO()
+                    #wb = Workbook()
+                    #ws = wb.active
+                    #ws.title = "Resumen XML"
 
-                    columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
-                                'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                                'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT'
-                                ]
-                    ws.append(columnas)
+                    #columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
+                    #            'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                    #            'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT'
+                    #            ]
+                    #ws.append(columnas)
 
-                    for dato in datos_xml_lista:
-                        ws.append([dato.get(col, '') for col in columnas])
+                    #for dato in datos_xml_lista:
+                    #    ws.append([dato.get(col, '') for col in columnas])
 
                     # Formatos de Excel
-                    for col in ['G']:  # Monto Total Factura
-                        for row in range(2, ws.max_row + 1):
-                            ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+                    #for col in ['G']:  # Monto Total Factura
+                    #    for row in range(2, ws.max_row + 1):
+                    #        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
 
-                    wb.save(output)
+                    output = generar_excel_xmls(datos_xml_lista)
                     zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
 
                 zip_buffer.seek(0)
@@ -2166,6 +2166,32 @@ def control_bancos(request, pk):
         }
 
     return render(request, 'tesoreria/control_bancos.html',context)
+
+
+def generar_excel_xmls(datos_xml_lista):
+    output = BytesIO()
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Resumen XML"
+
+    columnas = [
+        'Distrito', 'Folio', 'Fecha subida', 'Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)',
+        'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago', 'Método de Pago',
+        'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento',
+        'Fecha Validación SAT', 'EstadoSAT'
+    ]
+    ws.append(columnas)
+
+    for dato in datos_xml_lista:
+        ws.append([dato.get(col, '') for col in columnas])
+
+    # Aplicar formato monetario a la columna G (Monto Total Factura)
+    for row in range(2, ws.max_row + 1):
+        ws[f"G{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+
+    wb.save(output)
+    output.seek(0)
+    return output
 
 
 def eliminar_caracteres_invalidos(archivo_xml):
