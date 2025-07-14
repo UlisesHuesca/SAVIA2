@@ -1630,13 +1630,13 @@ def control_documentos(request):
                         fecha_subida = factura.fecha_subido.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
                         if factura.factura_xml:
                             datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"V{viatico.folio}", fecha_subida, viatico.distrito.nombre, beneficiario, "NA", factura))
-                output = generar_excel_xmls(datos_xml_lista)
-                response = HttpResponse(
-                    output.getvalue(),
-                    content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-                )
-                response['Content-Disposition'] = 'attachment; filename=reporte_facturas.xlsx'
-                return response
+            output = generar_excel_xmls(datos_xml_lista)
+            response = HttpResponse(
+                output.getvalue(),
+                content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+            )
+            response['Content-Disposition'] = 'attachment; filename=reporte_facturas.xlsx'
+            return response
                        
         elif 'btnDescargarFacturas' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
