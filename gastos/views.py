@@ -3021,7 +3021,7 @@ def crear_pdf_cfdi_buffer(factura):
         except (TypeError, ValueError):
             tasa = 0.0
 
-        clave = item['clave_prod_serv']
+        clave = item.get('clave') or item.get('clave_prod_serv', 'SIN_CLAVE')
          # Crear un párrafo para la descripción
         descripcion_paragraph = Paragraph(descripcion, custom_style)
         unidad_paragraph = Paragraph(unidad, custom_style)
