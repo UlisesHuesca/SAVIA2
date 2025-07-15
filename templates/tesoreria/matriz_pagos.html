@@ -295,7 +295,8 @@
                     <div class="alert alert-primary" role="alert">Suma total: <span id="oc_sum">0.00</span></div>
                 </div>
             </li>
-                <input type="submit" value="Control de Documentos" name="enviar_a_control" id="enviar_a_control" class="btn btn-primary">
+                <input type="submit" value="Control de Documentos" name="enviar_a_control" id="enviar_a_control" class="btn btn-primary mx-2">
+                <input type="submit" value="Validación" name="validacion" id="validacion" class="btn btn-primary mx-2">
         </ul>
        
    
@@ -318,7 +319,7 @@
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha</th>
                     
-                    
+                    <th>Validar Facturas</th>
                     <th scope="col">Acción</th>
                     <th>Control de Documentos</th>
                     <th>Fecha Control</th>
@@ -361,6 +362,7 @@
                                     </li>
                                 </ul>
                             </td>
+                           
                              <td class="d-none d-lg-table-cell">
                                 {% if pago.oc.entrada_completa %}<span class="badge bg-primary">Entregada</span>
                                     {% for entrada in pago.oc.vale_entrada.all %}
@@ -451,6 +453,9 @@
                     {% endif %}
                     <td>{{pago.monto|floatformat:2}}</td>
                     <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
+                    <td>
+                        <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}">             
+                    </td>
                     <td>
                         <ul class="nav nav-pills">
                             {% if pago.oc %}
@@ -656,6 +661,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const ocCountElement = document.getElementById('oc_count');  // Ajusta el id si es necesario
     const ocSumElement = document.getElementById('oc_sum');
     const layoutPagosButton = document.getElementById('enviar_a_pago_button');
+    const ValidacionButton = document.getElementById('validacion');
     const form = document.getElementById('mass_payment_form');
 
     // Inicializar o recuperar la lista de IDs seleccionados como strings
@@ -741,6 +747,26 @@ document.addEventListener('DOMContentLoaded', function() {
         form.submit();
     });
     
+     // Al enviar el formulario
+    ValidacionButton.addEventListener('click', function(event) {
+        // Evitar envío inmediato
+        event.preventDefault();
+
+        // Añadir inputs ocultos al form con los IDs seleccionados
+        selectedIds.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'pagos_ids';  // Django espera una lista con este nombre
+            input.value = id;
+            form.appendChild(input);
+        });
+
+        // Limpiar el localStorage para el siguiente ciclo
+        localStorage.removeItem('selectedPayments');
+
+        // Enviar el formulario
+        form.submit();
+    });
 
 
 

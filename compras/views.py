@@ -1313,6 +1313,10 @@ def cancelar_oc2(request, pk):
                                             <p style="font-size: 16px; text-align: justify;">
                                                 Estás recibiendo este correo porque tu OC con folio: <strong>{compra.folio}</strong> solicitud con folio: <strong>{compra.req.orden.folio} ha sido cancelada.</p>
                                             </p>
+                                            <p style="font-size: 16px; text-align: justify;">Comentario:</p>
+                                            <p style="font-size: 16px; text-align: justify;">
+                                                {compra.comentarios}
+                                            </p>
                                         <p style="font-size: 16px; text-align: justify;">
                                             Att: {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}
                                         </p>
@@ -1336,7 +1340,7 @@ def cancelar_oc2(request, pk):
                     f'OC Cancelada',
                     body=html_message,
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=[compra.req.orden.staff.staff.staff.email],
+                    to=["ulises_huesc@hotmail.com"],#compra.req.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML

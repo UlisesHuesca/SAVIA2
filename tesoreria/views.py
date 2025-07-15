@@ -1559,6 +1559,27 @@ def matriz_pagos(request):
                 response.set_cookie('descarga_iniciada', 'true', max_age=20)
                 response['Content-Disposition'] = 'attachment; filename=facturas.zip'
                 return response
+        elif 'validacion' in request.POST:
+            pago_ids = request.POST.getlist('pago_ids')
+            pagos = Pago.objects.filter(id__in=pago_ids)
+
+            for pago in pagos:
+                facturas = []
+                if pago.gasto:
+                    facturas = pago.gasto.facturas.filter(hecho=True)
+                elif pago.oc:
+                    facturas = pago.oc.facturas.filter(hecho=True)
+                elif pago.viatico:
+                    facturas = pago.viatico.facturas.filter(hecho=True)
+
+                for factura in facturas:
+                    if not factura.autorizada:
+                        factura.autorizada = True
+                        factura.autorizada_el = timezone.now()  # Opcional
+                        factura.save()
+
+            messages.success(request, f'{len(pago_ids)} pagos validados correctamente.')
+            return redirect('matriz-pagos') 
     for pago in pagos_list:
         if pago.total_facturas == 0:
             pago.estado_facturas = 'sin_facturas'
@@ -1566,6 +1587,7 @@ def matriz_pagos(request):
             pago.estado_facturas = 'todas_autorizadas'
         else:
             pago.estado_facturas = 'pendientes'
+        
         if 'enviar_a_control' in request.POST:
             ids = request.POST.getlist('compra_ids')
             if ids:
@@ -1575,7 +1597,8 @@ def matriz_pagos(request):
                     pago.fecha_control_documentos = datetime.today()
                     pago.save()
 
-            return redirect('matriz-pagos')  # Ajusta a donde quieres redirigir
+            return redirect('matriz-pagos')  
+        
     context= {
         'pagos_list':pagos_list,
         'pagos':pagos,
