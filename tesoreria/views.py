@@ -5471,7 +5471,7 @@ def generar_cfdi(request, pk):
     #
     buffer = cfdi_compras(None, pk)
     # Crear la respuesta HTTP con el PDF
-    factura = Factura.objects.get(id=pk)
+    factura = Facturas.objects.get(id=pk)
     folio_fiscal = factura.emisor.get('uuid', f'factura_{factura.id}')
     return HttpResponse(buffer, content_type='application/pdf', headers={
         'Content-Disposition': f'attachment; filename="{folio_fiscal}.pdf"'
