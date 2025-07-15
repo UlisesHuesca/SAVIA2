@@ -1340,7 +1340,7 @@ def cancelar_oc2(request, pk):
                     f'OC Cancelada',
                     body=html_message,
                     from_email=settings.DEFAULT_FROM_EMAIL,
-                    to=["ulises_huesc@hotmail.com"],#compra.req.orden.staff.staff.staff.email],
+                    to=[compra.req.orden.staff.staff.staff.email],
                     headers={'Content-Type': 'text/html'}
                     )
                 email.content_subtype = "html " # Importante para que se interprete como HTML
