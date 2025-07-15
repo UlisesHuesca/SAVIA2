@@ -2632,7 +2632,7 @@ def generar_archivo_zip(facturas, compra):
                 zip_file.write(pdf_path, os.path.basename(pdf_path))
             if factura.factura_xml:
                 # Generar el PDFreader
-                response = cfdi_compras(factura)
+                response = cfdi_compras(None, factura.id)
                 pdf_filename = f"{factura.id}.pdf" if factura.id else f"factura_{factura.id}.pdf"
                 # Añadir el contenido del PDF al ZIP
                 zip_file.writestr(pdf_filename, response.content)
