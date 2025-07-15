@@ -297,6 +297,9 @@
             </li>
                 <input type="submit" value="Control de Documentos" name="enviar_a_control" id="enviar_a_control" class="btn btn-primary mx-2">
                 <input type="submit" value="Validación" name="validacion" id="validacion" class="btn btn-primary mx-2">
+                <button type="submit" class="btn btn-outline-primary me-2" title="Imprimir seleccionados" name="btnImprimir" id="btnImprimir">  
+                    <i class="fa-solid fa-print fa-xl"></i>
+                </button>
         </ul>
        
    
@@ -454,7 +457,7 @@
                     <td>{{pago.monto|floatformat:2}}</td>
                     <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
                     <td>
-                        <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}">             
+                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}">             
                     </td>
                     <td>
                         <ul class="nav nav-pills">
@@ -658,15 +661,19 @@ document.addEventListener('DOMContentLoaded', function() {
     var endDateField = document.getElementById('id_end_date');
     
     const checkboxes = document.querySelectorAll('.payment_checkbox');
+    const checkboxes_validation = document.querySelectorAll('.validacion_checkbox');
     const ocCountElement = document.getElementById('oc_count');  // Ajusta el id si es necesario
     const ocSumElement = document.getElementById('oc_sum');
     const layoutPagosButton = document.getElementById('enviar_a_pago_button');
     const ValidacionButton = document.getElementById('validacion');
+    const ImprimirButton = document.getElementById('btnImprimir');
     const form = document.getElementById('mass_payment_form');
 
     // Inicializar o recuperar la lista de IDs seleccionados como strings
     let selectedIds = JSON.parse(localStorage.getItem('selectedPayments')) || [];
+    let selectedIds_validation = JSON.parse(localStorage.getItem('selectedPaymentsValidation')) || [];
     selectedIds = selectedIds.map(id => id.toString().trim());
+    selectedIds_validation = selectedIds_validation.map(id => id.toString().trim());
 
     // Al cargar la página, marcar los checkboxes ya guardados
     checkboxes.forEach(checkbox => {
@@ -675,11 +682,16 @@ document.addEventListener('DOMContentLoaded', function() {
             checkbox.checked = true;
         }
     });
+    checkboxes_validation.forEach(checkbox => {
+        const id = checkbox.getAttribute('data-id').toString().trim();
+        if (selectedIds_validation.includes(id)) {
+            checkbox.checked = true;
+        }
+    });
     // Actualizar conteo y suma al cargar
     updateCountAndSum();
 
-    // Actualizar el contador al cargar la página
-    updateCount();
+    
 
     // Manejar selección/deselección
     checkboxes.forEach(checkbox => {
@@ -753,7 +765,7 @@ document.addEventListener('DOMContentLoaded', function() {
         event.preventDefault();
 
         // Añadir inputs ocultos al form con los IDs seleccionados
-        selectedIds.forEach(id => {
+        selectedIds_validation.forEach(id => {
             const input = document.createElement('input');
             input.type = 'hidden';
             input.name = 'pagos_ids';  // Django espera una lista con este nombre
@@ -762,7 +774,29 @@ document.addEventListener('DOMContentLoaded', function() {
         });
 
         // Limpiar el localStorage para el siguiente ciclo
-        localStorage.removeItem('selectedPayments');
+        //localStorage.removeItem('selectedPayments');
+
+        // Enviar el formulario
+        form.submit();
+    });
+
+     // Al enviar el formulario
+    ImprimirButton.addEventListener('click', function(event) {
+        // Evitar envío inmediato
+        event.preventDefault();
+
+        // Añadir inputs ocultos al form con los IDs seleccionados
+        selectedIds_validation.forEach(id => {
+            const input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'pagos_ids';  // Django espera una lista con este nombre
+            input.value = id;
+            form.appendChild(input);
+        });
+
+        // Abrir en nueva pestaña
+        form.setAttribute('target', '_blank');
+
 
         // Enviar el formulario
         form.submit();

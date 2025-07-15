@@ -21,7 +21,7 @@ from dashboard.models import Subproyecto
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto
-from viaticos.views import generar_pdf_viatico, generar_cfdi_viaticos
+from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
@@ -1580,6 +1580,63 @@ def matriz_pagos(request):
 
             messages.success(request, f'{len(pago_ids)} pagos validados correctamente.')
             return redirect('matriz-pagos') 
+        elif 'btnImprimir' in request.POST:
+            pago_ids = request.POST.getlist('pago_ids')
+            pagos = Pago.objects.filter(id__in=pago_ids)
+
+            if not pagos.exists():
+                return HttpResponse("No se seleccionaron pagos válidos.", content_type="text/plain")
+
+            merger = PdfMerger()
+
+            for pago in pagos:
+                # 1. Comprobante de pago
+                if pago.comprobante_pago and os.path.exists(pago.comprobante_pago.path):
+                    merger.append(pago.comprobante_pago.path, import_outline=False)
+
+                # 2. Carátula + facturas
+                if pago.gasto:
+                    buffer = render_pdf_gasto(pago.gasto.id)
+                    facturas = pago.gasto.facturas.filter(hecho=True)
+                elif pago.oc:
+                    buffer = generar_pdf(pago.oc)
+                    facturas = pago.oc.facturas.filter(hecho=True)
+                elif pago.viatico:
+                    buffer = generar_pdf_viatico(pago.viatico.id)
+                    facturas = pago.viatico.facturas.filter(hecho=True)
+                else:
+                    buffer = None
+                    facturas = []
+
+                # Carátula (guardar buffer en archivo temporal)
+                if buffer:
+                    with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_caratula:
+                        temp_caratula.write(buffer.read())
+                        temp_caratula.flush()
+                        caratula_path = temp_caratula.name
+                    merger.append(caratula_path, import_outline=False)
+
+                # Facturas
+                for factura in facturas:
+                    if pago.gasto and factura.archivo_pdf and os.path.exists(factura.archivo_pdf.path):
+                        merger.append(factura.archivo_pdf.path, import_outline=False)
+                    elif (pago.oc or pago.viatico) and factura.factura_pdf and os.path.exists(factura.factura_pdf.path):
+                        merger.append(factura.factura_pdf.path, import_outline=False)
+
+            # Guardar PDF combinado final en archivo temporal
+            with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_final:
+                merger.write(temp_final.name)
+                temp_file_path = temp_final.name
+
+            merger.close()
+
+            # Guardar ruta del PDF final en la sesión
+            request.session['temp_pdf_path'] = temp_file_path
+            return redirect('mostrar-pdf')
+
+            
+           
+           
     for pago in pagos_list:
         if pago.total_facturas == 0:
             pago.estado_facturas = 'sin_facturas'
