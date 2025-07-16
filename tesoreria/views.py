@@ -12,7 +12,7 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils.dateparse import parse_date
 from django.urls import reverse, NoReverseMatch
-from user.models import Distrito
+from user.models import Distrito, Empresa
 from compras.models import ArticuloComprado, Compra
 from compras.forms import CompraForm
 from compras.filters import CompraFilter
@@ -1708,6 +1708,8 @@ def control_documentos(request):
     #Los distritos se definen de forma "dinámica" de acuerdo a los almacenes que tiene el usuario en el perfil
     distritos = Distrito.objects.filter(id__in=almacenes_distritos)
     tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos" ], st_activo = True, distritos__in = almacenes_distritos)
+    cuentas = Cuenta.objects.filter(distrito__in=almacenes_distritos)
+    empresas = Empresa.objects.all()
     #Set up pagination
     p = Paginator(pagos, 50)
     page = request.GET.get('page')
@@ -1798,6 +1800,9 @@ def control_documentos(request):
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
             distrito_id = request.POST.get('distrito')
             tesorero_id = request.POST.get('tesorero')
+            empresa_id = request.POST.get('empresa')
+            tipo_documento_id = request.POST.get('tipo_documento')
+            cuenta_bancaria_id = request.POST.get('cuenta_bancaria')
             folio = request.POST.get('folio')
             validar_sat = request.POST.get('validacion') == 'on'
             
@@ -1806,7 +1811,13 @@ def control_documentos(request):
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
                     pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
-              
+
+                    if cuenta_bancaria_id:
+                        pagos = pagos.filter(cuenta__id = cuenta_bancaria_id)
+                    
+                    if empresa_id:
+                        pagos = pagos.filter(cuenta__empresa__id = empresa_id)
+
                     if distrito_id:
                         pagos = pagos.filter(
                             Q(gasto__distrito_id=distrito_id) |
@@ -1992,23 +2003,6 @@ def control_documentos(request):
 
                         if pago.comprobante_pago:
                             zip_file.write(pago.comprobante_pago.path, os.path.join(carpeta, os.path.basename(pago.comprobante_pago.path)))
-
-                        # Excel de resumen
-                    #output = BytesIO()
-                    #wb = Workbook()
-                    #ws = wb.active
-                    #ws.title = "Resumen XML"
-                    #columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
-                    #            'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                    #            'Receptor (Empresa) Nombre', 'Beneficiario', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
-                    #ws.append(columnas)
-                    #for dato in datos_xml_lista:
-                    #    ws.append([dato.get(col, '') for col in columnas])
-                    #for col in ['G']:
-                    #    for row in range(2, ws.max_row + 1):
-                    #        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
-                    #wb.save(output)
-                    #zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
                     output = generar_excel_xmls(datos_xml_lista)
                     zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
 
@@ -2056,10 +2050,7 @@ def control_documentos(request):
                     facturas_gastos = Factura.objects.filter(solicitud_gasto__folio = folio)
                     facturas_compras = Facturas.objects.filter(oc__folio= folio)
                     facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__folio = folio)
-                    #print('viatico',viatico)
-                    #print('facturas_gastos',facturas_gastos)
-                    #print('facturas_compras',facturas_compras)
-                    #print('facturas_viaticos',facturas_viaticos)
+                 
 
             else:
                 facturas_gastos = Factura.objects.filter(solicitud_gasto__approbado_fecha2__range=[fecha_inicio, fecha_fin], solicitud_gasto__distrito = usuario.distritos)
@@ -2074,18 +2065,6 @@ def control_documentos(request):
 
                 validar_lote_facturas.delay(ids_gastos, ids_compras, ids_viaticos)
                 
-                
-                #for factura in facturas_gastos:
-                #    if factura.archivo_xml:
-                #        extraer_datos_validacion(factura.archivo_xml.path, factura)
-                #for factura in facturas_compras:
-                #    if factura.factura_xml:
-                #        extraer_datos_validacion(factura.factura_xml.path, factura)
-                
-                #for factura in facturas_viaticos:
-                #    if factura.factura_xml:
-                #        extraer_datos_validacion(factura.factura_xml.path, factura)  
-
             else:
                 zip_buffer = BytesIO()
                 processed_ocs = set()  # Mantén un conjunto de OCs procesadas
@@ -2288,26 +2267,6 @@ def control_documentos(request):
                                 zip_file.write(pago.comprobante_pago.path, os.path.join(folder_name, f'{pago_file_name}'))
                                 processed_pagos.add(pago.id)
 
-                    # Crear archivo Excel con los datos extraídos
-                    #output = BytesIO()
-                    #wb = Workbook()
-                    #ws = wb.active
-                    #ws.title = "Resumen XML"
-
-                    #columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
-                    #            'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                    #            'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT'
-                    #            ]
-                    #ws.append(columnas)
-
-                    #for dato in datos_xml_lista:
-                    #    ws.append([dato.get(col, '') for col in columnas])
-
-                    # Formatos de Excel
-                    #for col in ['G']:  # Monto Total Factura
-                    #    for row in range(2, ws.max_row + 1):
-                    #        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
-
                     output = generar_excel_xmls(datos_xml_lista)
                     zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
 
@@ -2339,7 +2298,9 @@ def control_documentos(request):
         'myfilter':myfilter,
         'tesoreros':tesoreros,
         'distritos':distritos,
+        'cuentas':cuentas,
         'usuario':usuario,
+        'empresas':empresas,
         }
 
     return render(request, 'tesoreria/control_documentos.html',context)

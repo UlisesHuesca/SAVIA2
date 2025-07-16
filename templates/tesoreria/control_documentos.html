@@ -208,6 +208,34 @@
                     </div>
                 </div>
             </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-building"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <select id="empresa" name="empresa" class="form-select">
+                            <option value="">Todas</option>
+                            {% for empresa in empresas %}
+                                <option value="{{ empresa.id }}">{{ empresa.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <label style="color: #121212;" for="empresa">Empresa</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                    <span class="input-group-text"><i class="fa-solid fa-bank"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <select id="cuenta_bancaria" name="cuenta_bancaria" class="form-select">
+                            <option value="">Todas</option>
+                            {% for cuenta in cuentas %}
+                                <option value="{{ cuenta.id }}">{{ cuenta.cuenta }} |({{ cuenta.moneda }})</option>
+                            {% endfor %}
+                        </select>
+                        <label style="color: #121212;" for="cuenta_bancaria">Cuenta bancaria</label>
+                    </div>
+                </div>
+            </div>
             {% endif %}
                 <div class="col-lg-4 col-sm-12">
                
