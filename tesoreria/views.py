@@ -520,14 +520,18 @@ def compras_pagos(request, pk):
                 compra.monto_pagado = monto_total_pagado
                 costo_oc = compra.costo_plus_adicionales 
                 monto_parcial = compra.parcial + suma_pago
-                print('costo_oc:',round(costo_oc,0))
-                print('monto_total_pagado',round(monto_total_pagado,0))
-                print('monto_parcial:', round(monto_parcial,0))
+                
+                print('costo_oc:',costo_oc)
+                print('monto_total_pagado',monto_total_pagado,)
+                print('monto_parcial:', monto_parcial)
+                print(monto_total_pagado - monto_parcial)
                 TOLERANCIA = Decimal(0.2)
                 if monto_actual <= 0:
                     messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
-                elif abs(monto_total_pagado - costo_oc) <= TOLERANCIA:
-                    if abs(monto_total_pagado - monto_parcial) <= TOLERANCIA:
+                #monto_total_pagado
+                elif (monto_total_pagado <= abs(costo_oc+TOLERANCIA)) and (abs(monto_total_pagado - costo_oc) <= TOLERANCIA or abs(monto_total_pagado - monto_parcial) <= TOLERANCIA):
+                    print('dentro',monto_total_pagado - monto_parcial)
+                    if (monto_total_pagado - monto_parcial) <= TOLERANCIA:
                         compra.para_pago = False
                     if monto_total_pagado >= (costo_oc - TOLERANCIA):
                         compra.pagada = True
@@ -722,9 +726,9 @@ def compras_pagos(request, pk):
                     except (BadHeaderError, SMTPException, socket.gaierror) as e:
                         error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
                         messages.warning(request, error_message)
-                elif round(monto_total_pagado,2) > round(costo_oc,2):
-                    messages.error(request,f'El monto total pagado es mayor que el costo de la compra {monto_total_pagado} > {costo_oc}')
-
+                else:
+                    messages.error(request,f'El monto total pagado es mayor que el costo de la compra o que el monto parcial')
+                    return redirect(redirect_url)
                 pago.save()
                 compra.save()
                 form.save()
