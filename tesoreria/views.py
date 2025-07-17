@@ -45,6 +45,7 @@ from urllib.parse import urlencode
 
 
 from datetime import date, datetime, timedelta
+from decimal import Decimal
 import decimal
 import os
 import io
@@ -522,7 +523,7 @@ def compras_pagos(request, pk):
                 print('costo_oc:',round(costo_oc,0))
                 print('monto_total_pagado',round(monto_total_pagado,0))
                 print('monto_parcial:', round(monto_parcial,0))
-                TOLERANCIA = 0.2
+                TOLERANCIA = Decimal(0.2)
                 if monto_actual <= 0:
                     messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
                 elif abs(monto_total_pagado - costo_oc) <= TOLERANCIA:
