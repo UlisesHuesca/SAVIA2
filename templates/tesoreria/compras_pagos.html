@@ -156,7 +156,7 @@
                         </tr>
                         <tr>
                             <th>Parcialidad</th>
-                            <th  style="color:#3e92cc">${{compra.parcial|floatformat:4}}</th>
+                            <th  id="parialidad" parcialidad="{{compra.parcial|unlocalize}}" style="color:#3e92cc">${{compra.parcial|floatformat:4}}</th>
                         </tr>
                     </tbody>
                 </table>
@@ -432,7 +432,9 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
     // Obtiene los valores de los campos
     let monto = document.getElementById('id_monto').value || 0;
     const remanente_field = document.getElementById('remanente');
+    const parcialidad_field = document.getElementById('parcialidad')
     let remanente = remanente_field.getAttribute('remanente');
+    let parcialidad = parcialidad_field.getAttribute('parcialidad')
     let tipo_cambio_element = document.getElementById('id_tipo_de_cambio');
     let tipo_cambio_visible = tipo_cambio_element.offsetParent !== null; // Devuelve true si es visible
     console.log(tipo_cambio_visible)
@@ -469,11 +471,19 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
 
    
 
-    console.log(monto)
-    console.log(remanente)
+    console.log(monto.toFixed(2))
+    console.log(remanente.toFixed(2))
     const tolerancia = 0.2;
+    if (parcialidad > 0 && parcialidad < remanente) {
+        //Si existe parcialidad entonces el valor con el que se compara es contra la parcialidad
+        valor_a_comparar = parcialidad
+    } else {
+        valor_a_comparar = remanente
+    }
+    
     // Verifica si el monto es mayor que el remanente
-    if (Math.abs(monto - remanente) > tolerancia)  {
+    if (Math.abs(monto - valor_a_comparar) > tolerancia)  {
+    if (parseFloat(monto.toFixed(2)) > parseFloat(remanente.toFixed(2))) {
         Swal.fire({
             icon: 'error',
             title: 'Error de validación',
