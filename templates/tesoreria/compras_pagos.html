@@ -469,11 +469,11 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
 
    
 
-    console.log(monto.toFixed(0))
-    console.log(remanente.toFixed(0))
-
+    console.log(monto)
+    console.log(remanente)
+    const tolerancia = 0.2;
     // Verifica si el monto es mayor que el remanente
-    if (parseFloat(monto.toFixed(0)) > parseFloat(remanente.toFixed(0))) {
+    if (Math.abs(monto - remanente) > tolerancia)  {
         Swal.fire({
             icon: 'error',
             title: 'Error de validación',
