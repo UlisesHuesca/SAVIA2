@@ -483,7 +483,7 @@ document.getElementById('myForm').addEventListener('submit', function(event) {
     
     // Verifica si el monto es mayor que el remanente
     if (Math.abs(monto - valor_a_comparar) > tolerancia)  {
-    if (parseFloat(monto.toFixed(2)) > parseFloat(remanente.toFixed(2))) {
+    //if (parseFloat(monto.toFixed(2)) > parseFloat(remanente.toFixed(2))) {
         Swal.fire({
             icon: 'error',
             title: 'Error de validación',
