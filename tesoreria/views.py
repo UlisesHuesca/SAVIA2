@@ -512,6 +512,7 @@ def compras_pagos(request, pk):
                         tipo_de_cambio = decimal.Decimal(dof())
                         sub.gastado = sub.gastado + monto_actual * tipo_de_cambio
                     #actualizar la cuenta de la que se paga
+                
                 print('monto_actual:',monto_actual)
                 monto_total_pagado= monto_actual + suma_pago
                 print('monto_total_pagado:',monto_total_pagado)
@@ -521,13 +522,14 @@ def compras_pagos(request, pk):
                 print('costo_oc:',round(costo_oc,0))
                 print('monto_total_pagado',round(monto_total_pagado,0))
                 print('monto_parcial:', round(monto_parcial,0))
+                TOLERANCIA = 0.2
                 if monto_actual <= 0:
                     messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
-                elif round(monto_total_pagado,0) <= round(costo_oc,0):
-                    if round(monto_total_pagado,0) == round(monto_parcial,0):
+                elif abs(monto_total_pagado - costo_oc) <= TOLERANCIA:
+                    if abs(monto_total_pagado - monto_parcial) <= TOLERANCIA:
                         compra.para_pago = False
-                    if round(monto_total_pagado,0) >= round(costo_oc,0):
-                        compra.pagada= True
+                    if monto_total_pagado >= (costo_oc - TOLERANCIA):
+                        compra.pagada = True
                     archivo_oc = attach_oc_pdf(request, compra.id)
                     pdf_antisoborno = attach_antisoborno_pdf(request)
                     pdf_privacidad = attach_aviso_privacidad_pdf(request)

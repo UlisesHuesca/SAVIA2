@@ -72,7 +72,26 @@
                                 </div>
                             </div>
                         </div>
-
+                         <div class="col-lg-12 col-sm-12">
+                                <div class="input-group mb-3">
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
+                                        <label style="color: #121212;" for="id_precio_unitario">{% trans "Monto" %}*</label>
+                                    </div>
+                                </div>
+                            </div>
+                         <div class="row" >
+                                <div class="col-12">
+                                    <div id="otros_impuestos" class="input-group mb-3 mt-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.tipo_pago_exhibit|add_class:"form-control"|append_attr:"placeholder= Tipo de Pago"}}
+                                            <label style="color: #121212;" for="id_otros_impuestos">{% trans "Tipo de Pago Exhibit" %}*</label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
                            
                             <div class="row d-none" id="proveedor_parrafo">
                                 <div class="col-12">
@@ -96,15 +115,8 @@
                                     </div>
                                 </div>
                             </div>
-                            <div class="col-lg-12 col-sm-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.monto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
-                                        <label style="color: #121212;" for="id_precio_unitario">{% trans "Monto" %}*</label>
-                                    </div>
-                                </div>
-                            </div>
+                           
+                            
                             <div class="row" >
                                 <div class="col-12">
                                     <div id="otros_impuestos" class="input-group mb-3 mt-3">
@@ -116,14 +128,47 @@
                                     </div>
                                 </div>
                             </div>
-
-
-                
-
-
+                            <div class="text-end my-2">
+                                <input class="btn btn-outline-info btn-block btn-lg" name="btn_linea" id="btn_linea" type="submit" value="Agregar">
+                            </div>   
+                </form>
+            {% if lineas %}
+            <hr>
+            <h5 class="mt-4">{% trans "Líneas del Exhibit" %}</h5>
+            <div class="table-responsive">
+                <table class="table table-bordered table-hover table-sm">
+                    <thead class="table-light">
+                        <tr>
+                            <th>ID DETALLE</th>  
+                            <th>Monto</th>
+                            <th>Concepto Flujo</th>
+                            <th>Descripción</th>
+                            <th>Observaciones</th>
+                            <th>Nombre del Proveedor</th>
+                            <th>Tipo Proveedor</th>
+                            <th>RFC</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for linea in lineas %}
+                        <tr>
+                            <td>{{ linea.id_detalle }}</td>
+                            <td>${{ linea.monto|floatformat:2 }}</td>
+                            <td>{{ linea.tipo_pago_exhibit }}</td>
+                            <td>{{ linea.descripcion }}</td>
+                            <td>{{ linea.observaciones }}</td>
+                            <td>{{ linea.proveedor }}</td>
+                            <td>{{linea.tipo_proveedor}}</td>
+                            <td>{{linea.proveedor.nombre.rfc}}</td>
                             
-                </form> 
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
             </div>
+            {% endif %} 
+            </div>
+           
         </div>
        
             
@@ -148,6 +193,22 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+document.addEventListener('DOMContentLoaded', function () {
+    const form = document.getElementById('OrderForm');
+    const boton = document.getElementById('btn_linea');
+
+    if (form && boton) {
+        form.addEventListener('submit', function () {
+            // Esperar unos milisegundos para permitir que el formulario se envíe
+            setTimeout(function () {
+                boton.disabled = true;
+                boton.value = 'Agregando...';
+            }, 100);  // 50 ms es suficiente
+        });
+    }
+});
+
+
 $(document).ready(function() {
    
 
@@ -204,6 +265,7 @@ function formatRepo (repo) {
 function formatRepoSelection (repo) {
     return repo.text || repo.id;
 }
+
 </script>
 
 {% endblock %}

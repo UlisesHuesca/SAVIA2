@@ -1,19 +1,16 @@
 from django import forms
-from .models import Exhibit
+from .models import Linea_Exhibit
 
-class ExhibitForm(forms.ModelForm):
+class Linea_Exhibit_Form(forms.ModelForm):
     class Meta:
-        model = Exhibit
+        model = Linea_Exhibit
         fields = [
             'tipo',
+            'tipo_pago_exhibit',
             'proveedor',
-            'solicitud',
-            'id_detalle',
             'monto',
-            'concepto_flujo',
             'descripcion',
             'observaciones',
-            'nombre_proveedor',
         ]
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),
