@@ -62,6 +62,7 @@ class Linea_Exhibit(models.Model):
     direccion_banco = models.CharField(max_length=255, blank=True, null=True)
     observaciones_cuenta = models.TextField(blank=True, null=True)
     referencia = models.CharField(max_length=30, blank=True, null=True)
+    pagina_web = models.CharField(max_length=50, blank=True, null=True)
 
     def __str__(self):
         return str(self.exhibit)

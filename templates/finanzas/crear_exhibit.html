@@ -49,7 +49,7 @@
 <hr>
 <h6>&nbsp;</h6>
 <div class="row">
-    <div class="col-lg-6 offset-lg-3">
+    <div class="col-lg-8 offset-lg-2">
         <div class="card" id="form-wrapper"> 
             <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
 					<h2>{% trans "Solicitud de Exhibit" %}</h2>
@@ -147,6 +147,13 @@
                             <th>Nombre del Proveedor</th>
                             <th>Tipo Proveedor</th>
                             <th>RFC</th>
+                            <th>Página Web</th>
+                            <th>email</th>
+                            <th>Calle</th>
+                            <th>Colonia</th>
+                            <th>Municipio</th>
+                            <th>Estado</th>
+                            <th>C.P.</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -160,6 +167,8 @@
                             <td>{{ linea.proveedor }}</td>
                             <td>{{linea.tipo_proveedor}}</td>
                             <td>{{linea.proveedor.nombre.rfc}}</td>
+                            <td>{{linea.pagina_web}}</td>
+                            <td>{{linea.email}}</td>
                             
                         </tr>
                         {% endfor %}

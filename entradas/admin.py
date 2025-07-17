@@ -21,7 +21,8 @@ class Reporte_CalidadAdmin(admin.ModelAdmin):
 
 class NC_ArticuloAdmin(admin.ModelAdmin):
     raw_id_fields = ('articulo_comprado',)
-
+    search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre',]
+    
 class EntradaArticuloAdmin(admin.ModelAdmin):
     list_display = ('id','get_entrada_folio','articulo_comprado','liberado','cantidad','cantidad_por_surtir','referencia')
     search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre', 'entrada__folio','entrada__oc__folio']

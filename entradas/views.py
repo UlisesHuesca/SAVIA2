@@ -936,7 +936,7 @@ def cierre_nc(request, pk):
                 producto.save()
             else:
                 oc.entrada_completa = False
-                oc.pagada = False
+                #oc.pagada = False
                 oc.save()
                 producto.entrada_completa = False
                 producto.cantidad_pendiente = producto.cantidad_pendiente - articulos_nc.cantidad
@@ -1136,10 +1136,13 @@ def update_no_conformidad(request):
     nc_item.cantidad = cantidad
 
     if action == "add":
+        print(pendientes_surtir)
+        print(suma_nc_producto)
+        print(nc_item.cantidad)
         total_entradas_nc = pendientes_surtir + suma_nc_producto + nc_item.cantidad
 
         if total_entradas_nc > producto_comprado.cantidad: #Si la cantidad de las entradas es mayor a la cantidad de la compra se rechaza
-            messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {suma_entradas} > {cantidad}')
+            messages.error(request,f'La cantidad de entradas sobrepasa la cantidad comprada {total_entradas_nc} > {cantidad}')
         else:
             #producto_comprado.cantidad_pendiente = producto_comprado.cantidad - total_entradas_nc
             #Cree una variable booleana temporal para quitarlo del seleccionable

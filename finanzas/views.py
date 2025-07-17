@@ -38,6 +38,7 @@ def crear_exhibit(request):
                     linea.proveedor = vordcab
                     linea.tipo_proveedor = 'PM'
                     linea.email = vordcab.email
+                    linea.pagina_web = "www.grupovordcab.com"
                     #print(linea.email)
                     direccion = vordcab.domicilio
                     partes = descomponer_direccion(direccion)

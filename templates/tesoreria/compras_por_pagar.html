@@ -240,6 +240,11 @@
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
                     <td class="d-none d-lg-table-cell">
+                        {% if compra.no_conformidad.all|length > 0 %}
+                            <span class="badge bg-danger">
+                                NC: {{ compra.no_conformidad.first.tipo_nc }}
+                            </span>
+                        {% endif %}
                         {% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>
                             {% for entrada in compra.vale_entrada.all %}
                                 {% if entrada.entrada_date %}
@@ -287,6 +292,8 @@
                             <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                         </td>
                         <td>
+                            
+
                            
                             {% if compra.cond_de_pago.nombre == "CREDITO" and not compra.entrada_completa and not compra.entrada_parcial and not compra.monto_anticipo  %}
                            

@@ -61,7 +61,7 @@ class Cierre_Nc(models.Model):
 
 class No_Conformidad(models.Model):
     almacenista = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True)
-    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True)
+    oc = models.ForeignKey(Compra, on_delete = models.CASCADE, null=True, related_name= "no_conformidad")
     comentario = models.TextField(max_length=250, null=True)
     tipo_nc = models.ForeignKey(Tipo_Nc, on_delete = models.CASCADE, null=True)
     nc_date = models.DateField(null=True, blank=True)
