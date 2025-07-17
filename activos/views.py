@@ -800,7 +800,12 @@ def render_pdf_responsiva_activos(request, pk):
     #c.drawString(280,caja_proveedor-60,'Firma:')
     if activo.responsable:
         c.drawCentredString(200,180, activo.responsable.staff.staff.first_name +' '+activo.responsable.staff.staff.last_name )
-        activo_resp = Profile.objects.get(Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS"), distritos = activo.responsable.distritos, tipo__activos = True, st_activo = True)
+        activo_resp = Profile.objects.filter(
+            Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS"), 
+            distritos = activo.responsable.distritos, 
+            tipo__activos = True, 
+            st_activo = True
+            ).first()
         c.drawCentredString(400,180, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
         # Obtener la fecha actual
         fecha_actual = datetime.now().strftime('%d/%m/%Y')
