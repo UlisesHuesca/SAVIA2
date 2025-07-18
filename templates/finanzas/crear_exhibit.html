@@ -154,6 +154,29 @@
                             <th>Municipio</th>
                             <th>Estado</th>
                             <th>C.P.</th>
+                            <th>País</th>
+                            <th>Area</th>
+                            <th>Teléfono</th>
+                            <th>Nombre</th>
+                            <th>Apellido</th>
+                            <th>email</th>
+                            <th>Contacto</th>
+                            <th>Pais</th>
+                            <th>Área</th>
+                            <th>Teléfono</th>
+                            <th>Extensión</th>
+                            <th>Banco</th>
+                            <th>Moneda</th>
+                            <th>Numero Cuenta</th>
+                            <th>Clabe</th>
+                            <th>Swift</th>
+                            <th>Aba</th>
+                            <th>Iban</th>
+                            <th>Dirección Banco</th>
+                            <th>Observaciones CTA</th>
+                            <th>Beneficiario</th>
+                            <th>Referencia</th>
+                            <th></th>
                         </tr>
                     </thead>
                     <tbody>
@@ -169,7 +192,46 @@
                             <td>{{linea.proveedor.nombre.rfc}}</td>
                             <td>{{linea.pagina_web}}</td>
                             <td>{{linea.email}}</td>
-                            
+                            <td>{{linea.calle}}</td>
+                            <td>{{linea.colonia}}</td>
+                            <td>{{linea.municipio}}</td>
+                            <td>{{linea.estado}}</td>
+                            <td>{{linea.cp}}</td>
+                            <td>{{linea.pais}}</td>
+                            {% if linea.pais == "MEXICO" %}
+                            <td>52</td>
+                            {% else %}
+                            <td>Definir</td>
+                            {% endif %}
+                            <td>{{linea.telefono}}</td>
+                            <td>{{linea.contacto_nombre}}</td>
+                            <td>{{linea.contacto_apellido}}</td>
+                            <td>{{linea.email}}</td>
+                            <td>NA</td>
+                            <td>{{linea.pais}}</td>
+                            <td>{{linea.area}}</td>
+                            <td>{{linea.telefono}}</td>
+                            <td>{{linea.extension}}</td>
+                            <td>{{linea.banco}}</td>
+                            <td>{{linea.moneda}}</td>
+                            <td>{{linea.cuenta}}</td>
+                            <td>{{linea.clabe}}</td>
+                            <td>{{linea.swift}}</td>
+                            <td>{{linea.aba}}</td>
+                            <td>{{linea.iban}}</td>
+                            <td>{{linea.direccion_banco}}</td>
+                            <td>{{linea.observaciones_cuenta}}</td>
+                            <td>{{linea.proveedor}}</td>
+                            <td>{{linea.referencia}}</td>
+                            <td>
+                                <form method="POST" action="{% url 'eliminar_linea_exhibit' linea.id %}" style="display:inline;">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn" style="color:ghostwhite; background-color:#980F0F;">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </button>
+                                </form>
+                            </td>
+
                         </tr>
                         {% endfor %}
                     </tbody>

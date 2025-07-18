@@ -8,7 +8,8 @@ from django.shortcuts import render
 from .models import Exhibit, Linea_Exhibit
 from .forms import Linea_Exhibit_Form
 from user.models import Profile
-from compras.models import Proveedor_direcciones
+from compras.models import Proveedor_direcciones, Moneda
+import re
 
 def crear_exhibit(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -35,6 +36,7 @@ def crear_exhibit(request):
                 linea = form.save(commit=False)
                 if linea.tipo == 'Vordcab':
                     vordcab = Proveedor_direcciones.objects.get(id = 5115)
+                    moneda = Moneda.objects.get(id=2)
                     linea.proveedor = vordcab
                     linea.tipo_proveedor = 'PM'
                     linea.email = vordcab.email
@@ -55,7 +57,7 @@ def crear_exhibit(request):
                     linea.contacto_apellido = contacto_partes.get('apellido', '')
                     linea.area = "TESORERIA"
                     linea.banco = vordcab.banco
-                    linea.moneda = 2
+                    linea.moneda = moneda.nombre
                     linea.cuenta_bancaria = vordcab.cuenta
                     linea.clabe = vordcab.clabe
                     linea.swift = vordcab.swift
@@ -91,7 +93,14 @@ def generar_folio_unico():
     ultimo = Exhibit.objects.order_by('-folio').first()
     return (ultimo.folio + 1) if ultimo and ultimo.folio else 1
 
-import re
+
+def eliminar_linea_exhibit(request, linea_id):
+    if request.method == "POST":
+        linea = get_object_or_404(Linea_Exhibit, id=linea_id)
+        exhibit_id = linea.exhibit.id  # si necesitas volver al exhibit actual
+        linea.delete()
+        messages.success(request, "Línea eliminada correctamente.")
+    return redirect('nombre_de_la_vista_donde_estás')  # cambia por la vista actual
 
 def descomponer_direccion(direccion):
     resultado = {

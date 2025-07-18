@@ -1,6 +1,6 @@
 from django.db import models
 from user.models import Profile
-from compras.models import Proveedor_direcciones, Banco
+from compras.models import Proveedor_direcciones, Banco, Moneda
 
 
 class Tipo_Pago_Exhibit(models.Model):
@@ -53,7 +53,7 @@ class Linea_Exhibit(models.Model):
     telefono = models.CharField(max_length=20, blank=True, null=True)
     area = models.CharField(max_length=50, blank=True, null=True)
     banco = models.ForeignKey(Banco, on_delete=models.CASCADE, null=True)
-    moneda = models.IntegerField(default=2)  # 1 for MXN, 2 for USD
+    moneda = models.ForeignKey(Moneda, on_delete=models.CASCADE, default=2)
     cuenta_bancaria = models.CharField(max_length=20, null=True)
     clabe = models.CharField(max_length=18, null=True)
     swift = models.CharField(max_length=11, null=True)
