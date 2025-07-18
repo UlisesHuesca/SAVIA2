@@ -275,7 +275,14 @@
                                     <a href="{{ archivo_bbva.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
                                        <i class="fa-duotone fa-solid fa-file"></i>
                                     </a>
+                                    <form action="{% url 'eliminar_archivo_pago' archivo_bbva.id %}" method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Eliminar archivo">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </li>
+
                             {% endif %}
                             {% if archivo_ob %}
                                 <li>
@@ -283,6 +290,12 @@
                                     <a href="{{ archivo_ob.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
                                         <i class="fa-duotone fa-solid fa-file"></i>
                                     </a>
+                                       <form action="{% url 'eliminar_archivo_pago' archivo_ob.id %}" method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Eliminar archivo">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </li>
                             {% endif %}
                             {% if archivo_pensiones %}
@@ -291,6 +304,12 @@
                                     <a href="{{ archivo_pensiones.archivo.url }}" target="_blank" class="btn btn-sm btn-outline-primary ml-2">
                                         <i class="fa-duotone fa-solid fa-file"></i>
                                     </a>
+                                    <form action="{% url 'eliminar_archivo_pago' archivo_pensiones.id %}" method="post" style="display:inline;">
+                                        {% csrf_token %}
+                                        <button type="submit" class="btn btn-sm btn-outline-danger ml-2" title="Eliminar archivo">
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </form>
                                 </li>
                             {% endif %}
                         </ul>

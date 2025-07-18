@@ -42,7 +42,7 @@ urlpatterns = [
     path('vale-rosa/<int:vale_id>/pdf/', views.descargar_vale_rosa_pdf, name='descargar_vale_rosa_pdf'),
     path('gasto/matriz_gasto_rh', views.matriz_gasto_rh, name='matriz-gasto-rh'),
     path('gasto/editar_gasto_rh/<int:pk>/', views.editar_gasto_rh, name='editar-gasto-rh'),
-     path('gasto/delete_rh/<int:pk>', views.delete_gasto_rh, name='delete-gasto-rh'),
-
+    path('gasto/delete_rh/<int:pk>', views.delete_gasto_rh, name='delete-gasto-rh'),
+    path('eliminar-archivo-pago/<int:archivo_id>/', views.eliminar_archivo_pago, name='eliminar_archivo_pago'),
 ]
     

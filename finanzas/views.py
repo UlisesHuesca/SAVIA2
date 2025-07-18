@@ -1,4 +1,5 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, get_object_or_404, redirect
+from django.contrib import messages
 from user.models import Profile
 from .forms import Linea_Exhibit_Form
 from .models import Exhibit
@@ -100,7 +101,7 @@ def eliminar_linea_exhibit(request, linea_id):
         exhibit_id = linea.exhibit.id  # si necesitas volver al exhibit actual
         linea.delete()
         messages.success(request, "Línea eliminada correctamente.")
-    return redirect('nombre_de_la_vista_donde_estás')  # cambia por la vista actual
+    return redirect('crear-exhibit')  # cambia por la vista actual
 
 def descomponer_direccion(direccion):
     resultado = {

@@ -530,6 +530,13 @@ def crear_gasto(request):
     }
     return render(request, 'gasto/crear_gasto.html', context)
 
+def eliminar_archivo_pago(request, archivo_id):
+    if request.method == 'POST':
+        archivo = get_object_or_404(ArchivoSoporte, id=archivo_id)  # cambia ArchivoPago por el modelo real
+        archivo.archivo.delete()  # borra el archivo físico
+        archivo.delete()          # borra el registro
+        messages.success(request, 'Archivo eliminado correctamente.')
+    return redirect(request.META.get('HTTP_REFERER', '/'))
 
 
 def eliminar_archivo(request, archivo_id):
