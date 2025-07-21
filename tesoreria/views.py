@@ -264,7 +264,7 @@ def transferencia_cuentas(request, pk):
 
                 cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
                 cargo.save()
-                messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente la transferencia')
+                messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente el traspaso')
                 return redirect('control-bancos', pk = cuenta.id)
             else:
                 for field, errors in form.errors.items():
@@ -5099,9 +5099,9 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else ''))
         cargo = ''
         abono = ''
-        if pago.tipo == None or pago.tipo.nombre == "CARGO":
+        if pago.tipo == None or pago.tipo.nombre == "CARGO" or pago.tipo.nombre == "TRANSFERENCIA":
             cargo = pago.monto
-        elif pago.tipo.nombre == "ABONO" or pago.tipo.nombre == "TRANSFERENCIA":
+        elif pago.tipo.nombre == "ABONO":
             abono = pago.monto
         #saldo = pago.saldo
         
