@@ -728,7 +728,7 @@ def compras_pagos(request, pk):
                         error_message = f'Gracias por registrar tu pago, {usuario.staff.staff.first_name} Atencion: el correo de notificación no ha sido enviado debido a un error: {e}'
                         messages.warning(request, error_message)
                 else:
-                    messages.error(request,f'El monto total pagado es mayor que el costo de la compra o que el monto parcial')
+                    messages.error(request,f'El monto total pagado es mayor que el costo de la compra o que el monto parcial {monto_total_pagado} - {monto_parcial} - {costo_oc}')
                     return redirect(redirect_url)
                 pago.save()
                 compra.save()
