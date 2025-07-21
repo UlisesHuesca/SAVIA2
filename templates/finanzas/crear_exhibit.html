@@ -103,6 +103,16 @@
                                     </div>  
                                 </div>
                             </div>
+                            <div class="row d-none" id="proveedor_tipo">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.tipo_proveedor|add_class:"form-control"|append_attr:"placeholder= Tipo de Proveedor"}}    
+                                        </div>
+                                    </div>  
+                                </div>
+                            </div>
                     
                             <div class="row" >
                                 <div class="col-12">
@@ -133,6 +143,8 @@
                             </div>   
                 </form>
             {% if lineas %}
+            <label><strong>Total Exhibit:</strong> ${{ total_exhibit|floatformat:2 }}</label>
+
             <hr>
             <h5 class="mt-4">{% trans "Líneas del Exhibit" %}</h5>
             <div class="table-responsive">
@@ -237,8 +249,16 @@
                     </tbody>
                 </table>
             </div>
+            <form method="post" action="{% url 'crear-exhibit' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-outline-info btn-block btn-lg" name="btn_crear_exhibit">
+                    Crear Exhibit
+                </button>
+            </form>
             {% endif %} 
             </div>
+           
+
            
         </div>
        
@@ -296,8 +316,11 @@ $(document).ready(function() {
       const valorSeleccionado = e.params.data.id;
       if (valorSeleccionado === 'PROVEEDOR') {
         $('#proveedor_parrafo').removeClass('d-none');
+        $('#proveedor_tipo').removeClass('d-none');
+
       } else {
         $('#proveedor_parrafo').addClass('d-none');
+        $('#proveedor_tipo').addClass('d-none');
         $('#id_proveedor').val(null).trigger('change');
       }
     });
@@ -306,6 +329,7 @@ $(document).ready(function() {
     const tipoInicial = $('#id_tipo').val();
     if (tipoInicial === 'PROVEEDOR') {
       $('#proveedor_parrafo').removeClass('d-none');
+      $('#proveedor_tipo').removeClass('d-none');
         }
     
     $('#id_tipo').select2({

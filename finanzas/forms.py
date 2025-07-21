@@ -11,6 +11,7 @@ class Linea_Exhibit_Form(forms.ModelForm):
             'monto',
             'descripcion',
             'observaciones',
+            'tipo_proveedor',
         ]
         widgets = {
             'descripcion': forms.Textarea(attrs={'rows': 3}),

@@ -1,5 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
+from django.db.models import Sum
 from user.models import Profile
 from .forms import Linea_Exhibit_Form
 from .models import Exhibit
@@ -36,37 +37,44 @@ def crear_exhibit(request):
             if form.is_valid():
                 linea = form.save(commit=False)
                 if linea.tipo == 'Vordcab':
-                    vordcab = Proveedor_direcciones.objects.get(id = 5115)
-                    moneda = Moneda.objects.get(id=2)
-                    linea.proveedor = vordcab
-                    linea.tipo_proveedor = 'PM'
-                    linea.email = vordcab.email
-                    linea.pagina_web = "www.grupovordcab.com"
-                    #print(linea.email)
-                    direccion = vordcab.domicilio
-                    partes = descomponer_direccion(direccion)
-                    linea.calle = partes.get('calle', '')
-                    linea.colonia = partes.get('colonia', '')
-                    linea.cp = partes.get('cp', '')
-                    linea.municipio = partes.get('municipio', '')
-                    linea.estado = vordcab.estado.nombre
-                    linea.pais = vordcab.estado.pais.nombre
-                    linea.telefono = vordcab.telefono
-                    contacto = vordcab.contacto
-                    contacto_partes = descomponer_contacto(contacto)
-                    linea.contacto_nombre = contacto_partes.get('nombre', '')
-                    linea.contacto_apellido = contacto_partes.get('apellido', '')
+                    proveedor = Proveedor_direcciones.objects.get(id = 5115)
                     linea.area = "TESORERIA"
-                    linea.banco = vordcab.banco
-                    linea.moneda = moneda.nombre
-                    linea.cuenta_bancaria = vordcab.cuenta
-                    linea.clabe = vordcab.clabe
-                    linea.swift = vordcab.swift
-                    linea.aba = "NA"
-                    linea.iban = "NA"
-                    linea.direccion_banco = vordcab.domicilio_banco
+                    linea.pagina_web = "www.grupovordcab.com"
                     linea.observaciones_cuenta = "MONEX"
-                    linea.referencia = "NA"
+                else:
+                    proveedor = linea.proveedor
+                    linea.pagina_web = "NA"
+                    linea.observaciones_cuenta = "NA"
+
+                moneda = Moneda.objects.get(id=2)
+                linea.proveedor = proveedor
+                linea.tipo_proveedor = 'PM'
+                linea.email = proveedor.email
+                
+                #print(linea.email)
+                direccion = proveedor.domicilio
+                partes = descomponer_direccion(direccion)
+                linea.calle = partes.get('calle', '')
+                linea.colonia = partes.get('colonia', '')
+                linea.cp = partes.get('cp', '')
+                linea.municipio = partes.get('municipio', '')
+                linea.estado = proveedor.estado.nombre if proveedor.estado else "ND"
+                linea.pais = proveedor.estado.pais.nombre if proveedor.estado else "ND"
+                linea.telefono = proveedor.telefono
+                contacto = proveedor.contacto
+                contacto_partes = descomponer_contacto(contacto)
+                linea.contacto_nombre = contacto_partes.get('nombre', '')
+                linea.contacto_apellido = contacto_partes.get('apellido', '')
+                linea.banco = proveedor.banco
+                linea.moneda = moneda
+                linea.cuenta_bancaria = proveedor.cuenta
+                linea.clabe = proveedor.clabe
+                linea.swift = proveedor.swift
+                linea.aba = "NA"
+                linea.iban = "NA"
+                linea.direccion_banco = proveedor.domicilio_banco
+                linea.referencia = "NA"
+               
 
                 linea.exhibit = exhibit
                 linea.id_detalle = exhibit.lineas.count() + 1
@@ -82,8 +90,10 @@ def crear_exhibit(request):
            
 
     lineas = exhibit.lineas.all()
+    total_exhibit = lineas.aggregate(Sum('monto'))['monto__sum'] or 0
 
     context = {
+        'total_exhibit':total_exhibit,
         'exhibit': exhibit,
         'form': form,
         'lineas': lineas,
