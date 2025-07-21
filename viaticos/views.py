@@ -2040,7 +2040,7 @@ def generar_cfdi_viaticos(request, pk):
     })
 
 def crear_pdf_cfdi_viaticos(factura):
-    buffer = generar_cfdi_buffer(factura)
+    buffer = generar_cfdi_buffer(None, factura.id)
 
     with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as tmp_file:
         tmp_file.write(buffer.read())
