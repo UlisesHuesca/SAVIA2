@@ -520,7 +520,7 @@ def compras_pagos(request, pk):
                 print('monto_total_pagado:',monto_total_pagado)
                 compra.monto_pagado = monto_total_pagado
                 costo_oc = compra.costo_plus_adicionales 
-                monto_parcial = compra.parcial + suma_pago
+                monto_parcial = compra.parcial
                 
                 print('costo_oc:',costo_oc)
                 print('monto_total_pagado',monto_total_pagado,)
@@ -530,11 +530,11 @@ def compras_pagos(request, pk):
                 if monto_actual <= 0:
                     messages.error(request,f'El pago {monto_actual} debe ser mayor a 0')
                 #monto_total_pagado
-                elif (monto_total_pagado <= abs(costo_oc+TOLERANCIA)) and (abs(monto_total_pagado - costo_oc) <= TOLERANCIA or abs(monto_total_pagado - monto_parcial) <= TOLERANCIA):
+                elif (monto_total_pagado <= abs(costo_oc + TOLERANCIA)) or (monto_total_pagado <= abs(monto_parcial + TOLERANCIA)):
                     print('dentro',monto_total_pagado - monto_parcial)
                     if (monto_total_pagado - monto_parcial) <= TOLERANCIA:
                         compra.para_pago = False
-                    if monto_total_pagado >= (costo_oc - TOLERANCIA):
+                    if abs(monto_total_pagado - costo_oc) <= TOLERANCIA:
                         compra.pagada = True
                     archivo_oc = attach_oc_pdf(request, compra.id)
                     pdf_antisoborno = attach_antisoborno_pdf(request)
