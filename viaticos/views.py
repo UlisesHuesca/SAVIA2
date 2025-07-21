@@ -2032,7 +2032,7 @@ def generar_cfdi_buffer(request, pk):
 
 def generar_cfdi_viaticos(request, pk):
     factura = Viaticos_Factura.objects.get(id=pk)
-    buffer = generar_cfdi_buffer(factura)
+    buffer = generar_cfdi_buffer(None, factura.id)
     # Crear la respuesta HTTP con el PDF
     folio_fiscal = factura.emisor.get('uuid', f'factura_{factura.id}')
     return HttpResponse(buffer, content_type='application/pdf', headers={
