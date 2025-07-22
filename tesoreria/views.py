@@ -532,7 +532,7 @@ def compras_pagos(request, pk):
                 #monto_total_pagado
                 elif (monto_total_pagado <= abs(costo_oc + TOLERANCIA)) or (monto_total_pagado <= abs(monto_parcial + TOLERANCIA)):
                     print('dentro',monto_total_pagado - monto_parcial)
-                    if (monto_total_pagado - monto_parcial) <= TOLERANCIA:
+                    if abs(monto_total_pagado - monto_parcial) <= TOLERANCIA:
                         compra.para_pago = False
                     if abs(monto_total_pagado - costo_oc) <= TOLERANCIA:
                         compra.pagada = True
