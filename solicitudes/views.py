@@ -774,7 +774,7 @@ def solicitud_pendiente(request):
     elif perfil.tipo.gerente == True or perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control" or perfil.tipo.almacenista == True:
         ordenes = Order.objects.filter(complete=True, distrito=perfil.distritos).order_by('-created_at','-folio')
     elif perfil.tipo.supervisor == True:
-        ordenes = Order.objects.filter(complete=True, distrito=perfil.distritos, supervisor=perfil).order_by('-created_at','-folio')
+        ordenes = Order.objects.filter(Q(supervisor=perfil)|Q(staff = perfil), complete=True, distrito=perfil.distritos).order_by('-created_at','-folio')
     else:
         ordenes = Order.objects.filter(complete=True, staff = perfil).order_by('-created_at','-folio')
 
@@ -813,7 +813,7 @@ def solicitud_matriz(request):
     elif perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control":
         ordenes = Order.objects.filter(complete=True, distrito=perfil.distritos).order_by('-created_at','-folio')
     elif perfil.tipo.supervisor == True:
-        ordenes = Order.objects.filter(complete=True, distrito=perfil.distritos, supervisor = perfil).order_by('-created_at','-folio')
+        ordenes = Order.objects.filter(Q(supervisor = perfil) | Q(staff = perfil), complete=True, distrito=perfil.distritos).order_by('-created_at','-folio')
     else:
         ordenes = Order.objects.filter(complete=True, staff = perfil).order_by('-created_at','-folio')
 
