@@ -1,6 +1,6 @@
 from django.shortcuts import render, get_object_or_404, redirect
 from django.contrib import messages
-from django.db.models import Sum
+from django.db.models import Sum, Max
 from user.models import Profile
 from .forms import Linea_Exhibit_Form
 from .models import Exhibit
@@ -84,6 +84,10 @@ def crear_exhibit(request):
             else:
                 print("Formulario inválido:", form.errors)
         elif 'btn_cerrar' in request.POST:
+            ultimo_folio = Exhibit.objects.aggregate(Max('folio'))['folio__max']
+            nuevo_folio = (ultimo_folio or 0) + 1
+
+            exhibit.folio = nuevo_folio
             exhibit.hecho = True
             exhibit.save()
             return redirect('dashboard-index')  # o a donde quieras mandar al usuario
