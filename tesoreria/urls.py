@@ -38,6 +38,7 @@ urlpatterns = [
     path('factura_cfdi/<int:pk>/', views.generar_cfdi, name='generar_cfdi'),
     path('mostrar-pdf/', views.mostrar_pdf, name='mostrar-pdf'),
     path('tesoreria/control_documentos/', views.control_documentos, name='control-documentos'),
+    path('tesoreria/tiempo_proceso_autorizacion/', views.tiempo_proceso_autorizacion, name='tiempo-proceso-autorizacion'),
     #path('tesoreria/impresion_factura/', views.impresion_facturas, name='impresion-factura'),
    
     ]

@@ -40,6 +40,7 @@ from django.utils import timezone
 from django.urls import reverse
 import re
 from openpyxl.styles import numbers
+from openpyxl.chart import BarChart, Reference
 from .tasks import validar_lote_facturas
 from urllib.parse import urlencode
 
@@ -152,6 +153,8 @@ def compras_por_pagar(request):
 def compras_autorizadas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh:
             compras = Compra.objects.none()
@@ -162,7 +165,7 @@ def compras_autorizadas(request):
                 pagada=False,
                 cerrar_sin_pago_completo = False,
                 autorizado2=True, 
-                req__orden__distrito = usuario.distritos
+                req__orden__distrito__in = almacenes_distritos
             ).annotate(
                 total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
                 autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
@@ -213,6 +216,43 @@ def compras_autorizadas(request):
         }
 
     return render(request, 'tesoreria/compras_autorizadas.html',context)
+
+
+# Create your views here.
+@perfil_seleccionado_required
+def tiempo_proceso_autorizacion(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    num_almacenes = usuario.almacen.count()
+    if usuario.tipo.nombre == "Admin":  
+        compras = Compra.objects.filter(
+            autorizado2 = True, 
+            req__orden__distrito__in = almacenes_distritos
+        ).order_by('-folio')#.annotate(
+   
+    else: 
+        compras = Compra.objects.none()
+     
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
+    
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
+
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        return convert_excel_matriz_tiempo_proceso(compras)
+    
+
+    context= {
+        'num_almacenes': num_almacenes,
+        'compras':compras,
+        'myfilter':myfilter,
+        'compras_list':compras_list,
+        }
+
+    return render(request, 'tesoreria/tiempos_proceso.html',context)
 
 @perfil_seleccionado_required
 def transferencia_cuentas(request, pk):
@@ -4170,6 +4210,157 @@ def convert_excel_matriz_compras_autorizadas(compras):
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     return(response)
 
+def convert_excel_matriz_tiempo_proceso(compras):
+    response= HttpResponse(content_type = "application/ms-excel")
+    response['Content-Disposition'] = 'attachment; filename = Tiempos_proceso_sol-oc' + str(dt.date.today())+'.xlsx'
+    wb = Workbook()
+    ws = wb.create_sheet(title='Compras Autorizadas')
+    #Comenzar en la fila 1
+    row_num = 1
+
+    #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
+    head_style = NamedStyle(name = "head_style")
+    head_style.font = Font(name = 'Arial', color = '00FFFFFF', bold = True, size = 11)
+    head_style.fill = PatternFill("solid", fgColor = '00003366')
+    wb.add_named_style(head_style)
+    #Create body style and adding to workbook
+    body_style = NamedStyle(name = "body_style")
+    body_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(body_style)
+    #Create messages style and adding to workbook
+    messages_style = NamedStyle(name = "mensajes_style")
+    messages_style.font = Font(name="Arial Narrow", size = 11)
+    wb.add_named_style(messages_style)
+    #Create date style and adding to workbook
+    date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+    date_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(date_style)
+    money_style = NamedStyle(name='money_style', number_format='$ #,##0.00')
+    money_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(money_style)
+    money_resumen_style = NamedStyle(name='money_resumen_style', number_format='$ #,##0.00')
+    money_resumen_style.font = Font(name ='Calibri', size = 14, bold = True)
+    wb.add_named_style(money_resumen_style)
+    percent_style = NamedStyle(name='percent_style', number_format='0.00%')
+    percent_style.font = Font(name ='Calibri', size = 10)
+    wb.add_named_style(percent_style)
+
+    columns = ['Folio OC','Folio Req','Folio Sol','Distrito','Fecha Creación Sol','Fecha Autorización Sol', 'Fecha Creación Req',
+               'Fecha Autorización Req','Fecha Creación OC','Fecha Autorización OC','Fecha Autorización OC 2','Tiempo Autorización Sol (horas)',
+               'Tiempo Proceso Req (horas)', 'Tiempo Autorización Req (horas)', 'Tiempo Proceso OC (horas)', 'Tiempo Proceso OC Autorización 1 (horas)',
+               'Tiempo OC Autorización 2 (horas)', 'Total',
+               ]
+
+    for col_num in range(len(columns)):
+        (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
+        ws.column_dimensions[get_column_letter(col_num + 1)].width = 16
+        if col_num == 5: #Columna del proveedor
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 30
+        if col_num == 2:
+            ws.column_dimensions[get_column_letter(col_num + 1)].width = 20
+
+    columna_max = len(columns)+2
+
+    # Agregar los mensajes
+    ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA 2.0. UH}').style = messages_style
+    ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}').style = messages_style
+    ws.column_dimensions[get_column_letter(columna_max)].width = 30
+
+    # Agregar los encabezados de las nuevas columnas debajo de los mensajes
+    ws.cell(row=3, column = columna_max, value="Total de OC's").style = head_style
+    #ws.cell(row=4, column = columna_max, value="Sumatoria de Pagos Pendientes").style = head_style
+   
+
+    # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
+    ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
+    #ws.cell(row=4, column=columna_max + 1, value=f"=SUM(R:R)").style = money_resumen_style
+  
+    for compra in compras:
+        row_num = row_num + 1    
+       
+        if compra.autorizado_at_2 and isinstance(compra.autorizado_at_2, datetime):
+        # Si autorizado_at_2 es timezone-aware, conviértelo a timezone-naive
+            autorizado_at_2_naive = compra.autorizado_at_2.astimezone(pytz.utc).replace(tzinfo=None)
+        else:
+            autorizado_at_2_naive = ''
+        
+        # Manejar created_at
+        if compra.created_at and isinstance(compra.created_at, datetime):
+        # Si created_at es timezone-aware, conviértelo a timezone-naive
+            created_at_naive = compra.created_at.astimezone(pytz.utc).replace(tzinfo=None)
+        else:
+            created_at_naive = ''
+
+
+        row = [
+            compra.folio,
+            compra.req.folio,
+            compra.req.orden.folio,
+            compra.req.orden.distrito.nombre,
+            compra.req.orden.created_at.date() if compra.req.orden.created_at else '',
+            compra.req.orden.approved_at.date() if compra.req.orden.approved_at  else '',
+            compra.req.created_at.date() if compra.req.created_at else '',
+            compra.req.approved_at,
+            created_at_naive.date(),
+            compra.autorizado_at.date() if compra.autorizado_at else '',
+            autorizado_at_2_naive.date(),
+        ]
+
+    
+        for col_num in range(len(row)):
+            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            if col_num in [4, 5, 6, 7, 8, 9, 10,11]:
+                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+        
+        tiempo_solicitud = ws.cell(row=row_num, column=12, value=f"=F{row_num}-E{row_num}")
+        tiempo_solicitud.style = body_style  # o usa money_style si corresponde
+        tiempo_req_sol = ws.cell(row=row_num, column=13, value=f"=G{row_num}-F{row_num}")
+        tiempo_req_sol.style = body_style  # o usa money_style si corresponde
+        tiempo_autorizacion_req = ws.cell(row=row_num, column=14, value=f"=H{row_num}-G{row_num}")
+        tiempo_autorizacion_req.style = body_style  # o usa money_style si corresponde
+        tiempo_oc_req = ws.cell(row=row_num, column=15, value=f"=I{row_num}-H{row_num}")
+        tiempo_oc_req.style = body_style  # o usa money_style si corresponde
+        tiempo_oc_autorizacion_1 = ws.cell(row=row_num, column=16, value=f"=J{row_num}-I{row_num}")
+        tiempo_oc_autorizacion_1.style = body_style  # o usa money_style si corresponde
+        tiempo_oc_autorizacion_2 = ws.cell(row=row_num, column=17,  value=f"=K{row_num}-J{row_num}")    
+        tiempo_total = ws.cell(row=row_num, column=18, value=f"=SUM(L{row_num}:Q{row_num})")
+        tiempo_total.style = body_style  # o money_style si aplica
+
+    
+    
+    sheet = wb['Sheet']
+    wb.remove(sheet)
+    ws_resumen = wb.create_sheet(title="Resumen")
+
+    # Encabezados
+    headers = ["Tiempo OC - Aprobación Orden", "Tiempo Req - OC", "Tiempo Autorización Req",
+            "Tiempo OC - Req", "OC Autorización 1", "OC Autorización 2", "Total"]
+    ws_resumen.append(["Etapa", "Promedio (días)"])  # encabezado de la tabla
+    for i, titulo in enumerate(headers, start=1):
+        col_letra = chr(76 + i - 1)  # L=76 en ASCII
+        col_index = 12 + i - 1       # de la columna L (12) a la R (18)
+        formula = f"=AVERAGE('{ws.title}'!{col_letra}2:{col_letra}{row_num})"
+        ws_resumen.append([titulo, formula])
+
+    # Crear el gráfico de barras
+    chart = BarChart()
+    chart.title = "Promedio de tiempos por etapa"
+    chart.y_axis.title = "Días"
+    chart.x_axis.title = "Etapas"
+
+    data = Reference(ws_resumen, min_col=2, min_row=2, max_row=8)  # valores
+    cats = Reference(ws_resumen, min_col=1, min_row=2, max_row=8)  # categorías
+    chart.add_data(data, titles_from_data=False)
+    chart.set_categories(cats)
+
+    # Insertar el gráfico en la hoja
+    ws_resumen.add_chart(chart, "D2")
+
+    wb.save(response)
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    return(response)
+
+
 def convert_excel_matriz_compras_tesoreria(compras):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Pendientes_de_pago_' + str(dt.date.today())+'.xlsx'
@@ -4317,6 +4508,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
     wb.save(response)
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     return(response)
+
 
 def convert_excel_matriz_pagos(pagos):
     response= HttpResponse(content_type = "application/ms-excel")
