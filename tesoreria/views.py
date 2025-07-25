@@ -4331,10 +4331,10 @@ def convert_excel_matriz_tiempo_proceso(compras):
     sheet = wb['Sheet']
     wb.remove(sheet)
     ws_resumen = wb.create_sheet(title="Resumen")
-
+    ws_resumen.column_dimensions['A'].width = 30  # o el número que necesites
     # Encabezados
-    headers = ["Tiempo OC - Aprobación Orden", "Tiempo Req - OC", "Tiempo Autorización Req",
-            "Tiempo OC - Req", "OC Autorización 1", "OC Autorización 2", "Total"]
+    headers = ["Tiempo Sol - Autorización", "Tiempo Almacén (Req.)", "Tiempo Autorización Req",
+            "Tiempo Compras (OC)", "OC Autorización Suppte", "OC Autorización Gerente", "Total"]
     ws_resumen.append(["Etapa", "Promedio (días)"])  # encabezado de la tabla
     for i, titulo in enumerate(headers, start=1):
         col_letra = chr(76 + i - 1)  # L=76 en ASCII
@@ -4347,6 +4347,8 @@ def convert_excel_matriz_tiempo_proceso(compras):
     chart.title = "Promedio de tiempos por etapa"
     chart.y_axis.title = "Días"
     chart.x_axis.title = "Etapas"
+    chart.width = 20
+    chart.height = 15
 
     data = Reference(ws_resumen, min_col=2, min_row=2, max_row=8)  # valores
     cats = Reference(ws_resumen, min_col=1, min_row=2, max_row=8)  # categorías

@@ -1693,17 +1693,16 @@ def pago_gasto(request, pk):
                 pago.pagado_date = datetime.now()
                 #pago.pagado_hora = datetime.now().time()
                 pago.hecho = True
-                total_pagado = round(gasto.monto_pagado  + pago.monto,2)
-                total_sol = round(gasto.get_total_solicitud,2)
+                
+                total_pagado = gasto.monto_pagado  + pago.monto
+                total_sol = gasto.get_total_solicitud
+                TOLERANCIA = Decimal(0.2)
                 #El bloque a continuación se generó para resolver los problemas de redondeo, se comparan las dos cantidades redondeadas en una variable y se activa una bandera (flag) que indica si son iguales o no!
-                if total_sol == total_pagado:
-                    flag = True
-                else:
-                    flag = False
-                if total_pagado > gasto.get_total_solicitud:
+
+                if (total_pagado - total_sol) > TOLERANCIA:
                     messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del gasto')
                 else:
-                    if flag:
+                    if abs(total_sol - total_pagado) <= TOLERANCIA:
                         gasto.pagada = True
                         gasto.save()
                     
