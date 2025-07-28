@@ -177,6 +177,7 @@ updateBtn.addEventListener('click',function(){
         var label_producto = document.getElementById('producto');
         let id = label_producto.getAttribute('valor')
         
+        
         let cantidad = parseFloat(label_producto.getAttribute('cantidad'));
         console.log('cantidad solicitada:',cantidad)
         //Esta es la cantidad que se está devolviendo
@@ -210,7 +211,7 @@ updateBtn.addEventListener('click',function(){
             console.log('id:',id)
             console.log('action:',action)
             console.log('comentario:',comentario)
-
+          
             ActualizarArticulos(devolucion,id,val_cantidad,action,comentario);
             //current_option.setAttribute("class","d-none");
             //select.value = default_sel;
