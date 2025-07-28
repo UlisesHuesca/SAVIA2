@@ -10,6 +10,7 @@ from django.db.models.functions import Concat
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from django.utils.timezone import localtime
 from django.utils.dateparse import parse_date
 from django.urls import reverse, NoReverseMatch
 from user.models import Distrito, Empresa
@@ -4274,7 +4275,7 @@ def convert_excel_matriz_tiempo_proceso(compras):
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
     #ws.cell(row=4, column=columna_max + 1, value=f"=SUM(R:R)").style = money_resumen_style
-  
+    
     for compra in compras:
         row_num = row_num + 1    
        
@@ -4291,13 +4292,17 @@ def convert_excel_matriz_tiempo_proceso(compras):
         else:
             created_at_naive = ''
 
-
+        fecha_creacion_orden = (
+            localtime(compra.req.orden.created_at).date()
+            if compra.req.orden and compra.req.orden.created_at
+            else ''
+)
         row = [
             compra.folio,
             compra.req.folio,
             compra.req.orden.folio,
             compra.req.orden.distrito.nombre,
-            compra.req.orden.created_at.date() if compra.req.orden.created_at else '',
+            fecha_creacion_orden,
             compra.req.orden.approved_at.date() if compra.req.orden.approved_at  else '',
             compra.req.created_at.date() if compra.req.created_at else '',
             compra.req.approved_at,

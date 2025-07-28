@@ -678,8 +678,8 @@ def checkout_resurtimiento(request):
         if form.is_valid():
             order = form.save(commit=False)
             order.supervisor = usuario
-            order.created_at = date.today()
-            order.created_at_time = datetime.now().time()
+            order.created_at = datetime.now()
+            #order.created_at_time = datetime.now().time()
             order.complete = True
             order.area = almacen
             order.folio = folio_number
@@ -697,7 +697,7 @@ def checkout_resurtimiento(request):
             order.requisitado = True
             order.autorizar = True
             order.approved_at = date.today()
-            order.approved_at_time = datetime.now().time()
+            #rder.approved_at_time = datetime.now().time()
             requi.save()
             order.save()
             #abrev= usuario.distrito.abreviado
