@@ -93,7 +93,7 @@
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'dashboard-staff' %}">Usuarios</a>
                                     <a class="dropdown-item" href="{% url 'perfiles_rh' %}">Usuarios RH API</a>
-                                    <a class="dropdown-item" href="{% url 'tiempo-proceso-autorizacion' %}">Tiempo Proceso Autorización</a>
+                                    
                                 </div>
                             {% if usuario.tipo.nombre == "SuperAdm" or usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "ALMACEN_VERACRUZ" or usuario.tipo.superintendente == True or usuario.tipo.nombre == "ACTIVOS_SISTEMAS" or usuario.tipo.nombre == "SISTEMAS" or usuario.tipo.nombre == "VIS_ADQ" %}
                                 <div>
@@ -108,6 +108,7 @@
                                 <div class="d-none">
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
+                                    <a class="dropdown-item" href="{% url 'tiempo-proceso-autorizacion' %}">Tiempo Proceso Autorización</a>
                                 </div>
                             {% if usuario.tipo.activos == True or usuario.tipo.nombre == "Admin"%}
                                 <div>
