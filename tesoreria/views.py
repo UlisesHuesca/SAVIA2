@@ -233,7 +233,10 @@ def tiempo_proceso_autorizacion(request):
         ).order_by('-folio')#.annotate(
    
     else: 
-        compras = Compra.objects.none()
+        compras = Compra.objects.filter(
+            autorizado2 = True, 
+            req__orden__distrito__in = almacenes_distritos
+        ).order_by('-folio')#.annotate(
      
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
