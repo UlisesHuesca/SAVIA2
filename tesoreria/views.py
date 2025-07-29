@@ -4634,7 +4634,11 @@ def convert_excel_matriz_pagos(pagos):
             distrito = pago.gasto.distrito.nombre
             solicitado = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             fecha_creacion = pago.gasto.created_at.replace(tzinfo=None)
-            fecha_autorizacion = pago.gasto.approbado_fecha2.replace(tzinfo=None)
+
+            fecha_autorizacion = (
+                pago.gasto.approbado_fecha2.replace(tzinfo=None)
+                if pago.gasto.approbado_fecha2 else ''
+            )
             if pago.gasto.colaborador:
                 proveedor = pago.gasto.colaborador.staff.staff.first_name + ' ' + pago.gasto.colaborador.staff.staff.last_name
             else:
@@ -4675,7 +4679,11 @@ def convert_excel_matriz_pagos(pagos):
             subproyectos = pago.viatico.subproyecto.nombre if pago.viatico else ''
             distrito = pago.viatico.distrito.nombre
             fecha_creacion = pago.viatico.created_at.replace(tzinfo=None)
-            fecha_autorizacion = pago.viatico.approved_at.replace(tzinfo=None)
+            fecha_autorizacion = (
+                pago.viatico.approved_at.replace(tzinfo=None).strftime("%Y-%m-%d")
+                if pago.viatico and pago.viatico.approved_at
+                else ''
+            )
             autorizado = pago.viatico.gerente.staff.staff.first_name + ' ' + pago.viatico.gerente.staff.staff.last_name if pago.viatico.gerente else ''
             if pago.viatico.colaborador:
                 proveedor = pago.viatico.colaborador.staff.staff.first_name + ' ' + pago.viatico.colaborador.staff.staff.last_name
