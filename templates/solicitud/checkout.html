@@ -484,6 +484,7 @@ $(document).ready(function() {
         $('#id_proyecto').on('select2:unselect', function(e){
             //Limpiar las entradas de proyecto y subproyecto en el objeto almacenado
             var datos = JSON.parse(localStorage.getItem("id_solicitud_"+orden_id));
+            
             datos.proyecto_text = '';
             datos.proyecto = '';
             datos.subproyecto = '';
@@ -669,12 +670,19 @@ $(document).ready(function() {
     }
 });
 
+console.log(datosSuperintendentes)
 
 $(document).ready(function() {
+    var productoEspecial = 25949; // ID del producto especial
+    var idMargarita = 437;
     var orden = document.getElementById('order');
     var orden_id = orden.getAttribute('orden');
     var usuarioDistrito = '{{ usuario_distrito }}';
     console.log(usuarioDistrito)
+
+
+
+
     var placeholderText = 'Superintendente';
     if (usuarioDistrito === 'MATRIZ') {
         placeholderText = 'Subdirector';
@@ -699,6 +707,33 @@ $(document).ready(function() {
     var superintendenteSelect = $('#id_superintendente');
     //Si hay datos se rellena el campo con los datos del local storage
     if (datos) {
+        var productoEncontrado = false;
+        $('button[data-product]').each(function () {
+            var productoId = parseInt($(this).data('product'));
+            if (productoId === productoEspecial) {
+                productoDetectado = true;
+                return false;
+            }
+        });
+        
+          // ✅ Si se encuentra el producto y no se ha definido aún el superintendente, seleccionar automáticamente a Margarita
+      // ✅ Si se detecta el producto, filtrar para dejar solo a Margarita
+        if (productoDetectado) {
+          
+            var margarita = datosSuperintendentes.find(function (item) {
+                return item.id === idMargarita || item.text.trim() === "Margarita Ruiz Cruz";
+                });
+
+            if (margarita) {
+                var newOption = new Option(margarita.text, margarita.id, true, true);
+                $('#id_superintendente').append(newOption).trigger('change');
+                var datos = JSON.parse(localStorage.getItem("id_solicitud_" + orden_id)) || {};
+                datos.superintendente = margarita.id;
+                datos.superintendente_text = margarita.text;
+                localStorage.setItem("id_solicitud_" + orden_id, JSON.stringify(datos));
+            }
+        }
+
         if (datos.superintendente){
             var option = new Option(datos.superintendente_text, datos.superintendente, true, true);
             superintendenteSelect.append(option).trigger('change');

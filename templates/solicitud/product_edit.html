@@ -42,7 +42,7 @@
             </thead>
             <tbody>
                 {% for producto in productos %}
-                <tr id="row_{{producto.id|unlocalize}}">
+                <tr id="row_{{producto.id|unlocalize}}" producto_id="{{producto.producto.id|unlocalize}}">
                     <td><img class="row-image" src="{{producto.producto.producto.imageURL}}"></td>
                     <td>{{producto.producto.producto.codigo}}</td>
                     <td>{{producto.producto.producto.nombre}}</td>
