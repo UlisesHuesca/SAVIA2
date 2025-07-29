@@ -673,16 +673,12 @@ $(document).ready(function() {
 console.log(datosSuperintendentes)
 
 $(document).ready(function() {
-    var productoEspecial = 26132; // ID del producto especial
+    var productoEspecial = 25949 //26132; // ID del producto especial
     var idMargarita = 437;
     var orden = document.getElementById('order');
     var orden_id = orden.getAttribute('orden');
     var usuarioDistrito = '{{ usuario_distrito }}';
     //console.log(usuarioDistrito)
-
-
-
-
     var placeholderText = 'Superintendente';
     if (usuarioDistrito === 'MATRIZ') {
         placeholderText = 'Subdirector';
@@ -690,6 +686,17 @@ $(document).ready(function() {
     else if (usuarioDistrito === 'BRASIL') {
         placeholderText = 'Gerente';
     }
+
+    // Detectar si el producto especial ya está cargado en la tabla
+    var productoDetectado = false;
+    $('button[data-product]').each(function () {
+        var productoId = parseInt($(this).data('product'));
+        if (productoId === productoEspecial) {
+            productoDetectado = true;
+            return false;
+        }
+    });
+       
     $('#id_superintendente').select2({
         allowClear: true,
         width: '100%',
@@ -707,15 +714,7 @@ $(document).ready(function() {
     var superintendenteSelect = $('#id_superintendente');
     //Si hay datos se rellena el campo con los datos del local storage
     if (datos) {
-        var productoEncontrado = false;
-        $('button[data-product]').each(function () {
-            var productoId = parseInt($(this).data('product'));
-            if (productoId === productoEspecial) {
-                productoDetectado = true;
-                return false;
-            }
-        });
-        console.log(productoDetectado)
+        
         
           // ✅ Si se encuentra el producto y no se ha definido aún el superintendente, seleccionar automáticamente a Margarita
       // ✅ Si se detecta el producto, filtrar para dejar solo a Margarita
