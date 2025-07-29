@@ -4608,7 +4608,10 @@ def convert_excel_matriz_pagos(pagos):
             subproyectos = pago.oc.req.orden.subproyecto.nombre if pago.oc else ''
             autorizado = pago.oc.oc_autorizada_por2.staff.staff.first_name + ' ' + pago.oc.oc_autorizada_por2.staff.staff.last_name if pago.oc.oc_autorizada_por2 else ''
             fecha_creacion = pago.oc.created_at.replace(tzinfo=None)
-            fecha_autorizacion = pago.oc.autorizado_at_2.replace(tzinfo=None)
+            fecha_autorizacion = (
+                pago.oc.autorizado_at_2.replace(tzinfo=None).strftime("%Y-%m-%d")
+                if pago.oc.autorizado_at_2 else ''
+            )
             productos = set()
             for articulo in articulos_compra:
                 if articulo.producto:
