@@ -673,12 +673,12 @@ $(document).ready(function() {
 console.log(datosSuperintendentes)
 
 $(document).ready(function() {
-    var productoEspecial = 25949; // ID del producto especial
+    var productoEspecial = 26132; // ID del producto especial
     var idMargarita = 437;
     var orden = document.getElementById('order');
     var orden_id = orden.getAttribute('orden');
     var usuarioDistrito = '{{ usuario_distrito }}';
-    console.log(usuarioDistrito)
+    //console.log(usuarioDistrito)
 
 
 
@@ -715,6 +715,7 @@ $(document).ready(function() {
                 return false;
             }
         });
+        console.log(productoDetectado)
         
           // ✅ Si se encuentra el producto y no se ha definido aún el superintendente, seleccionar automáticamente a Margarita
       // ✅ Si se detecta el producto, filtrar para dejar solo a Margarita
