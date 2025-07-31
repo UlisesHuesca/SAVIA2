@@ -286,11 +286,9 @@
                     <div class="dropdown-divider"></div>       
                     </div>
                     {% if usuario.tipo.tesoreria %}
-                        {% if usuario.tipo.rh and not usuario.distritos.nombre == "MATRIZ" %}
-                            <div class="d-none">
-                        {% else %}
-                            <div>
-                        {% endif %}
+                  
+                        <div>
+                       
                     {% else %}
                       <div class="d-none">
                     {% endif %}

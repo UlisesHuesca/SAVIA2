@@ -859,7 +859,7 @@ def factura_nueva_gasto(request, pk):
     return render(request, 'gasto/registrar_nueva_factura_gasto.html', context)
 
 def prellenar_formulario_gastos(request):
-    #print('prellenar_formulario_gastos')
+    print('prellenar_formulario_gastos')
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         pdf_content = request.FILES.get('comprobante_pago')
         
