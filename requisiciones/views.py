@@ -1489,7 +1489,7 @@ def render_pdf_view(request, pk):
 def reporte_entradas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    entradas = EntradaArticulo.objects.filter(entrada__completo = True, articulo_comprado__producto__producto__articulos__producto__producto__servicio = False, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
+    entradas = EntradaArticulo.objects.filter(entrada__completo = True, entrada__cancelada = False, articulo_comprado__producto__producto__articulos__producto__producto__servicio = False, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
     myfilter = EntradasFilter(request.GET, queryset=entradas)
     entradas = myfilter.qs
    
