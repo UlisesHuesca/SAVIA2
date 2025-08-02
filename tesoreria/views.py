@@ -5252,7 +5252,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
                 proveedor = f"{pago.viatico.staff.staff.staff.first_name} {pago.viatico.staff.staff.staff.last_name}"
         else:
             if pago.tesorero:
-                proveedor = f"{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}" 
+                proveedor = pago.detalles_comprobante.get('titular_cuenta_2', 'No disponible') 
             else:
                 proveedor = "No disponible"
 
