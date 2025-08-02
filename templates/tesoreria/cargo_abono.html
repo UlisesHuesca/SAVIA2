@@ -35,7 +35,12 @@
             {% endfor %}
         {% endif %}
 </div>
-
+<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        <p style="color: white; margin: 0;">Por favor espera, cargando transacción...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+    </div>
+</div>
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
@@ -139,153 +144,50 @@ document.getElementById('myForm').addEventListener('submit', function() {
     }, 50);
     // Remover campos no visibles del DOM
     var tipo = document.getElementById('id_tipo').value;
-    if (tipo === '1' || tipo === '2') {
+    /*if (tipo === '1' || tipo === '2') {
         removeFormFields('formulario_transferencia');
-    }
+    }*/
 });
 
 document.getElementById('id_tipo').addEventListener('change', function(event) {
     var tipo = event.target.value;
     console.log(tipo)
-    var formTransferencia = document.getElementById('formulario_transferencia');
+    /*var formTransferencia = document.getElementById('formulario_transferencia'); */
     var btn = document.getElementById('myBtn');
     
     if (tipo === '1' ||  tipo === '2') {
         
-        formTransferencia.classList.add('d-none');
+        //formTransferencia.classList.add('d-none');
         btn.name = 'envio';
     } else if (tipo === '3') {
-        formTransferencia.classList.remove('d-none');
+        //formTransferencia.classList.remove('d-none');
         btn.name = 'envio_transferencia';
     }
 });
 
 
 
-document.getElementById('myForm').addEventListener('submit', function(event) {
-    setTimeout(function() {
-        document.getElementById('myBtn').disabled = true;
-    }, 50);
-
-   
+/*document.getElementById('myForm').addEventListener('submit', function(event) {
+    mostrarIndicadorCarga();
 });
 
+function mostrarIndicadorCarga() {
+    // Mostrar indicador de carga
+    document.getElementById('loadingIndicator').style.display = 'block';
 
-
-
-/* *******************NO BORRAR EL CODIGO**********************
-este era para evitar el envío doble cuando era un modal
-htmx.defineExtension('disable-on-submit', {
-  onEvent: function(name, evt) {
-    if (name === 'htmx:configRequest') {
-      var target = evt.detail.elt;
-      if (target.tagName === 'FORM') {
-        var button = target.querySelector('input[type="submit"]');
-        if (button) {
-          button.disabled = true;
-        }
-      }
+    // Desactivar el botón de envío
+    var btn = document.getElementById('myBtn');
+    if (btn) {
+        btn.disabled = true;
+        btn.innerText = 'Enviando...'; // opcional, mejora visual
+        btn.classList.add('disabled'); // o 'd-none' si quieres ocultarlo
     }
-  },
-});
-document.getElementById('id_monto').addEventListener('change',(event)=>{
-    var tipo = document.getElementById("id_tipo_de_cambio").value;
-    //var monto = document.getElementById('').value;
-    var monto = document.getElementById('id_monto')
-    console.log(tipo)
-    calculo_previo = document.getElementById('lbl_calculo')
-    var alertDiv = document.querySelector('#lbl_calculo .alert');
-    var mybtn = document.getElementById('myBtn')
 
-    if (compra_moneda == "PESOS"){
-        if (monto <= 0 || tipo_cambio <= 0){
-            mybtn.classList.add('d-none')
-        } else {
-            mybtn.classList.remove('d-none')
-        }
-    }
-    if (compra_moneda == "DOLARES"){
-    if (monto <= 0 || tipo <= 0){
-            mybtn.classList.add('d-none')
-        } else {
-            total_dolares = monto.value/tipo
-            console.log(total_dolares)
-            alertDiv.innerHTML = '<h6>Cálculo previo: </h6>$ ' + parseFloat(total_dolares).toFixed(2) + ' USD';
-            //monto_real.value = parseFloat(total_dolares).toFixed(4)
-            mybtn.classList.remove('d-none')
-        }
-    }
-    });
-
-
-document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
-  var file = event.target.files[0];
-  var formData = new FormData();
-  formData.append('comprobante_pago', file);
-  
-  // Añadir CSRF token a la solicitud AJAX
-  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
-
-  fetch('/tesoreria/prellenar_formulario/', { // Asegúrate de que esta es la URL correcta para tu vista
-    method: 'POST',
-    body: formData,
-    headers: {
-      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
-    },
-  })
-  .then(response => response.json()) // Asegúrate de que el backend devuelva un JSON
-  .then(data => {
-    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
-    document.querySelector('[name="monto"]').value = data.monto;
-    //document.querySelector('[name="cuenta"]').value = data.cuenta;
-    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
-    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
-    var $selectElement = $('[name="cuenta"]');
-    $selectElement.val(cuentaId).trigger('change');
-  })
-  .catch(error => console.error('Error:', error));
-});*/
+    return true;
+}*/
 
 
 
-var datosCuenta = {{cuentas_para_select2|safe }};
-
-
-$(document).ready(function() {
-  
-    $('#id_cuenta').select2({
-        allowClear: true,
-        width: '100%',
-        placeholder: 'Selecciona una cuenta',
-        data: datosCuenta,
-        templateResult: formatRepo, // Función para renderizar los resultados
-        templateSelection: formatRepoSelection // Función para renderizar la selección
-    });
-    $('#id_cuenta').on('select2:select', function(e) {
-        var data = e.params.data;
-        var moneda = data.moneda;
-        var tipo_cambio = document.getElementById('text_tc')
-        console.log(moneda)
-    });
-});
-
-$(document).ready(function() {
-  
-  $('#id_abono-cuenta').select2({
-      allowClear: true,
-      width: '100%',
-      placeholder: 'Selecciona una cuenta',
-      data: datosCuenta,
-      templateResult: formatRepo, // Función para renderizar los resultados
-      templateSelection: formatRepoSelection // Función para renderizar la selección
-  });
-  $('#id_abono-cuenta').on('select2:select', function(e) {
-      var data = e.params.data;
-      var moneda = data.moneda;
-      var tipo_cambio = document.getElementById('text_tc')
-      console.log(moneda)
-  });
-});
 
 function formatRepo (repo) {
     if (repo.loading) {
