@@ -1236,6 +1236,8 @@ def vales_rosa_pendientes_autorizar(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)    
     
+    if perfil.sustituto:
+        perfil = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos).first()
     #vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__superintendente = perfil).order_by('-gasto__folio')
     #print(perfil.tipo.nombre)
     #if perfil.tipo.nombre == "Admin": #Temporalmente hasta que este listo el desarrollo

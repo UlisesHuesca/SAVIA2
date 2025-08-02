@@ -1100,8 +1100,8 @@ def autorizacion_oc1(request):
     usuario = Profile.objects.get(id = pk_perfil)
     print(usuario)
     
-    #if usuario.sustituto:
-    #    usuario = Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()
+    if usuario.sustituto:
+        usuario= Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()
 
 
     if usuario.tipo.subdirector == True:
