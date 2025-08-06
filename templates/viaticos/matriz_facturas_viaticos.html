@@ -435,8 +435,14 @@ function calcularTotal(elementos, id) {
     for (var i = 0; i < elementos.length; i++) {
         total += Number(elementos[i].getAttribute('total'));
     }
+    console.log('entra',id,total)
     // 🔁 Aquí sumas los vales rosa aprobados
-    total += calcularMontoValesRosaAprobados();
+    if  (id != "total"){
+        console.log('entra',id,total)
+        
+        total += calcularMontoValesRosaAprobados();
+    }
+    
     lbltotal.innerText = `$${total.toFixed(2)}`;
 
 }

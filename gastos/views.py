@@ -1141,9 +1141,9 @@ def gastos_pendientes_autorizar(request):
     perfil = Profile.objects.get(id = pk)
     
     if perfil.sustituto:
-        perfil = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos).first()
+        perfil_sustituto = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos).first()
 
-    solicitudes = Solicitud_Gasto.objects.filter(complete=True, autorizar = None, superintendente = perfil).order_by('-folio')
+    solicitudes = Solicitud_Gasto.objects.filter( Q(superintendente=perfil) | Q(superintendente = perfil_sustituto),complete=True, autorizar = None).order_by('-folio')
     ids_solicitudes_validadas = [solicitud.id for solicitud in solicitudes if solicitud.get_validado]
 
     solicitudes = Solicitud_Gasto.objects.filter(id__in=ids_solicitudes_validadas)
