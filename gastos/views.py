@@ -1138,6 +1138,7 @@ def detalle_gastos(request, pk):
 @perfil_seleccionado_required
 def gastos_pendientes_autorizar(request):
     pk = request.session.get('selected_profile_id')
+    perfil_sustituto = None 
     perfil = Profile.objects.get(id = pk)
     
     if perfil.sustituto:
