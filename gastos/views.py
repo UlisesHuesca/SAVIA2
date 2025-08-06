@@ -1181,7 +1181,6 @@ def gastos_pendientes_autorizar(request):
 
     context= {
         'perfil':perfil,
-        'perfil_sustituto':perfil_sustituto,
         'ordenes_list':ordenes_list,
         'myfilter':myfilter,
         }
