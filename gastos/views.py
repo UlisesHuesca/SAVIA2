@@ -1138,13 +1138,12 @@ def detalle_gastos(request, pk):
 @perfil_seleccionado_required
 def gastos_pendientes_autorizar(request):
     pk = request.session.get('selected_profile_id')
-    perfil_sustituto = None 
     perfil = Profile.objects.get(id = pk)
     
     if perfil.sustituto:
-        perfil_sustituto = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos).first()
+        perfil = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos).first()
 
-    solicitudes = Solicitud_Gasto.objects.filter( Q(superintendente=perfil) | Q(superintendente = perfil_sustituto),complete=True, autorizar = None).order_by('-folio')
+    solicitudes = Solicitud_Gasto.objects.filter(superintendente=perfil,complete=True, autorizar = None).order_by('-folio')
     ids_solicitudes_validadas = [solicitud.id for solicitud in solicitudes if solicitud.get_validado]
 
     solicitudes = Solicitud_Gasto.objects.filter(id__in=ids_solicitudes_validadas)
@@ -1181,6 +1180,8 @@ def gastos_pendientes_autorizar(request):
         #return convert_excel_solicitud_matriz(solicitudes)
 
     context= {
+        'perfil':perfil,
+        'perfil_sustituto':perfil_sustituto,
         'ordenes_list':ordenes_list,
         'myfilter':myfilter,
         }
