@@ -239,9 +239,9 @@
                             <a class="dropdown-item" href="{% url 'compras-devueltas' %}">
                                 {% trans "Compras Devueltas" %}
                             </a>
-                            <a class="dropdown-item" href="{% url 'add_proveedores2' %}">
+                            <!--<a class="dropdown-item" href="{% url 'add_proveedores2' %}">
                                 Solicitud alta de proveedor
-                            </a>
+                            </a>-->
                             <a class="dropdown-item" href="{% url 'add_proveedores_comparativo' %}">
                                 {% trans "Agregar Proveedor Comparativo" %}
                             </a>
@@ -257,12 +257,12 @@
                         <h6 class="dropdown-header">{% trans "Proveedores" %}</h6>
                         <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'dashboard-proveedores' %}">{% trans "Proveedores" %}</a>
-                        <!--<a class="dropdown-item" href="{% url 'proveedores-altas' %}">{% trans "Altas" %}
+                        <a class="dropdown-item" href="{% url 'proveedores-altas' %}">{% trans "Altas" %}
                             {% if proveedores_altas > 0 %}
                                     <span class="badge bg-danger">({{proveedores_altas}})</span>
                             {% endif %}
                         </a>
-                        <a class="dropdown-item" href="{% url 'invitar-proveedor' %}">{% trans "Invitar proveedor (Alta)" %}</a>-->
+                        <a class="dropdown-item" href="{% url 'invitar-proveedor' %}">{% trans "Invitar proveedor (Alta)" %}</a>
                         <!--{% if usuario.tipo.nombre != "ADQUISICIONES" %}
                             <a class="dropdown-item" href="{% url 'matriz-revision-proveedor' %}">Matriz Revision Proveedores</a>
                         {% endif %}-->
