@@ -957,7 +957,7 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre):
             subject='Invitación para registro de proveedor',
             body=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email_destino],
+            to=[email_destino, "proveedores.sur@grupovordcab.com"],
         )
         email.content_subtype = "html"
         email.send()
