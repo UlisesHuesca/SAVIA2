@@ -1,7 +1,7 @@
 from django.db import models
 from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector
 from dashboard.models import Inventario, Activo, Product
-from user.models import Profile, Distrito
+from user.models import Profile, Distrito, Empresa
 from compras.models import Proveedor_direcciones
 from django.core.validators import FileExtensionValidator
 from decimal import Decimal
@@ -55,6 +55,7 @@ class Solicitud_Gasto(models.Model):
     fecha_cierre = models.DateField(null=True, blank = True)
     comentario_cierre = models.TextField(blank=True, null=True)
     dispersion = models.BooleanField(default=False)
+    empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, null=True, blank=True)
 
     class Meta:
         unique_together = ('folio', 'distrito',)

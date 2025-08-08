@@ -22,7 +22,7 @@ import socket
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
-from user.models import Profile, Distrito 
+from user.models import Profile, Distrito, Empresa 
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta, Facturas, Tipo_Pago
@@ -172,6 +172,31 @@ def procesar_ob(archivo):
                 continue
     return total
 
+def procesar_banorte(archivo):
+    """
+    Procesa un archivo de nómina y devuelve el total de sueldos.
+    
+    Parámetros:
+        archivo: UploadedFile (por ejemplo request.FILES['archivo_nomina'])
+    
+    Retorna:
+        float: total de la nómina
+    """
+    total = 0.0
+    
+    for linea in archivo:
+        linea = linea.decode("utf-8", errors="ignore").strip()
+        if linea.startswith("D"):
+            try:
+                entero_str = linea[107:112]   # parte entera (5 caracteres)
+                decimales_str = linea[112:114]  # parte decimal (2 caracteres)
+                sueldo = int(entero_str) + int(decimales_str) / 100
+                total += sueldo
+            except ValueError:
+                continue
+    
+    return round(total, 2)
+
 def procesar_pensiones(archivo):
     return procesar_ob(archivo)  # Mismo formato que OB
 
@@ -187,6 +212,8 @@ def crear_gasto(request):
     usuario = colaborador.get(id = pk)
     tipos = Tipo_Gasto.objects.filter(familia = 'usuario')
     proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"),activo=True, distrito = usuario.distritos)     
+    empresas = Empresa.objects.all()
+
     if usuario.distritos.nombre == "MATRIZ":
          
         if usuario.tipo.tesoreria:
@@ -214,7 +241,7 @@ def crear_gasto(request):
     #subproyectos = Subproyecto.objects.all()
     proveedores = Proveedor_direcciones.objects.filter(nombre__familia__nombre = "IMPUESTOS")
     #tipos = Tipo_Gasto.objects.all().exclude(id = 6)
-    print('tipos:',tipos)
+    #print('tipos:',tipos)
     colaboradores = colaborador.filter(distritos = usuario.distritos, )
     error_messages = {}
 
@@ -256,13 +283,20 @@ def crear_gasto(request):
             'text': str(distrito.nombre)
         } for distrito in distritos 
     ]
+
+    empresa_para_salect2 = [
+        {
+            'id': empresa.id,
+            'text': str(empresa.nombre)
+        } for empresa in empresas
+    ]
     
     gasto, created = Solicitud_Gasto.objects.get_or_create(complete= False, staff=usuario)
     if not gasto.inicio_form:
         gasto.inicio_form = timezone.now()  # Asigna la fecha y hora con zona horaria
         gasto.save()
 
-    
+    print('gasto', gasto.id)
     max_folio = Solicitud_Gasto.objects.filter(distrito = usuario.distritos, complete=True).aggregate(Max('folio'))['folio__max']
     
     
@@ -294,13 +328,14 @@ def crear_gasto(request):
         } for item in articulos_gasto
     ]
 
-    archivos_nomina = ArchivoSoporte.objects.filter(solicitud=gasto)
+    archivos_nomina = ArchivoSoporte.objects.filter(solicitud = gasto)
 
     total_bbva = archivos_nomina.filter(tipo__nombre='BBVA').first()
     total_ob = archivos_nomina.filter(tipo__nombre='OB').first()
     total_pensiones = archivos_nomina.filter(tipo__nombre='PENSIONES').first()
+    total_banorte = archivos_nomina.filter(tipo__nombre='BANORTE').first()
     # ⚠️ Al final, obtener todos los archivos RH cargados de este gasto
-    archivos_rh = ArchivoSoporte.objects.filter(solicitud=gasto)
+    archivos_rh = ArchivoSoporte.objects.filter(solicitud=gasto).exclude(tipo__nombre__in=['BANORTE', 'OB', 'BBVA', 'PENSIONES'])
     error_messages = {}
 
     if request.method =='POST': 
@@ -453,50 +488,61 @@ def crear_gasto(request):
                         total=0.0  # Asignar un total de 0.0 por defecto
                     )
                     messages.success(request, f'Archivo {tipo_documento} subido exitosamente.')
-                    return redirect('crear-gasto')
+                    return redirect('crear-gasto', pk=gasto.pk)
                 except TipoArchivoSoporte.DoesNotExist:
                     messages.error(request, f'Tipo de documento {tipo_documento} no encontrado.')
                
         if "btn_nomina" in request.POST:
-            total_bbva = total_ob = total_pensiones = 0.0
+            total_bbva = total_ob = total_pensiones = total_banorte = 0.0
             archivo_bbva = request.FILES.get('archivo_bbva')
             archivo_ob = request.FILES.get('archivo_ob')
             archivo_pensiones = request.FILES.get('archivo_pensiones')
+            archivo_banorte = request.FILES.get('archivo_banorte')
 
-            try:
-                if archivo_bbva:
-                    total_bbva = procesar_bbva(archivo_bbva)
-                    tipo_bbva = TipoArchivoSoporte.objects.get(nombre='BBVA')
-                    ArchivoSoporte.objects.create(
-                        solicitud=gasto,
-                        tipo=tipo_bbva,
-                        archivo=archivo_bbva,
-                        total=total_bbva
-                    )
-                if archivo_ob:
-                    total_ob = procesar_ob(archivo_ob)
-                    tipo_ob = TipoArchivoSoporte.objects.get(nombre='OB')
-                    ArchivoSoporte.objects.create(
-                        solicitud=gasto,
-                        tipo=tipo_ob,
-                        archivo=archivo_ob,
-                        total=total_ob
-                    )
-                if archivo_pensiones:
-                    total_pensiones = procesar_pensiones(archivo_pensiones)
-                    tipo_pensiones = TipoArchivoSoporte.objects.get(nombre='PENSIONES')
-                    ArchivoSoporte.objects.create(
-                        solicitud=gasto,
-                        tipo=tipo_pensiones,
-                        archivo=archivo_pensiones,
-                        total=total_pensiones
-                    )
+            
+            if archivo_bbva:
+                total_bbva = procesar_bbva(archivo_bbva)
+                tipo_bbva = TipoArchivoSoporte.objects.get(nombre='BBVA')
+                ArchivoSoporte.objects.create(
+                    solicitud=gasto,
+                    tipo=tipo_bbva,
+                    archivo=archivo_bbva,
+                    total=total_bbva
+                )
+            if archivo_ob:
+                total_ob = procesar_ob(archivo_ob)
+                tipo_ob = TipoArchivoSoporte.objects.get(nombre='OB')
+                ArchivoSoporte.objects.create(
+                    solicitud=gasto,
+                    tipo=tipo_ob,
+                    archivo=archivo_ob,
+                    total=total_ob
+                )
+            if archivo_pensiones:
+                total_pensiones = procesar_pensiones(archivo_pensiones)
+                tipo_pensiones = TipoArchivoSoporte.objects.get(nombre='PENSIONES')
+                ArchivoSoporte.objects.create(
+                    solicitud=gasto,
+                    tipo=tipo_pensiones,
+                    archivo=archivo_pensiones,
+                    total=total_pensiones
+                )
+            if archivo_banorte:
+                total_banorte = procesar_banorte(archivo_banorte)
+                tipo_banorte = TipoArchivoSoporte.objects.get(nombre='BANORTE')
+                ArchivoSoporte.objects.create(
+                    solicitud=gasto,
+                    tipo=tipo_banorte,
+                    archivo=archivo_banorte,
+                    total=total_banorte
+                )
 
 
-                messages.success(request, f'Total BBVA: ${total_bbva:,.2f}, OB: ${total_ob:,.2f}, Pensiones: ${total_pensiones:,.2f}')
-                return redirect('crear-gasto')
-            except Exception as e:
-                messages.error(request, f'Error al procesar archivos de nómina: {str(e)}')
+
+            messages.success(request, f'Total BBVA: ${total_bbva:,.2f}, OB: ${total_ob:,.2f}, Pensiones: ${total_pensiones:,.2f} Banorte: ${total_banorte:,.2f}')
+            return redirect('crear-gasto')
+            #except Exception as e:
+            #    messages.error(request, f'Error al procesar archivos de nómina: {str(e)}')
 
     total_nomina = archivos_nomina.aggregate(suma=Sum('total'))['suma'] or 0.0
     #print(distritos_para_select2)
@@ -517,10 +563,11 @@ def crear_gasto(request):
         'archivo_ob': total_ob,
         'archivo_pensiones': total_pensiones,
         'archivos_rh': archivos_rh,
+        'archivo_banorte': total_banorte,
         'form':form,
         'total_nomina': total_nomina,
         'form_product': form_product,
-        
+        'empresa_para_salect2': empresa_para_salect2,
         #'articulos_gasto':articulos_gasto,
         'gasto':gasto,
         #'superintendentes':superintendentes,
@@ -3320,9 +3367,8 @@ def editar_gasto_rh(request, pk):
     total_ob = archivos_nomina.filter(tipo__nombre='OB').first()
     total_pensiones = archivos_nomina.filter(tipo__nombre='PENSIONES').first()
     # ⚠️ Al final, obtener todos los archivos RH cargados de este gasto
-    archivos_rh = ArchivoSoporte.objects.filter(solicitud=gasto)
-
-
+    archivos_rh = ArchivoSoporte.objects.filter(solicitud=gasto).exclude(tipo__nombre__in=['BANORTE', 'OB', 'BBVA', 'PENSIONES'])
+    
     proyectos_para_select2 = [
         {
             'id': item.id, 

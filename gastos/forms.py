@@ -9,7 +9,7 @@ from tesoreria.models import Pago, Cuenta
 class Solicitud_GastoForm(forms.ModelForm):
     class Meta:
         model = Solicitud_Gasto
-        fields = ['superintendente','colaborador','tipo','proveedor','distrito']
+        fields = ['superintendente','colaborador','tipo','proveedor','distrito','empresa']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
