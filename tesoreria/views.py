@@ -984,13 +984,45 @@ def matriz_pagos(request):
                 When(Q(viatico__facturas__autorizada=True, viatico__facturas__hecho=True), then=Value(1))
             )
         ),
-        ).order_by('-pagado_real')  
+        ).order_by('-pagado_real')
+    elif usuario.distritos.nombre == "MATRIZ":
+        pagos = Pago.objects.filter(
+        Q(oc__req__orden__distrito__in =almacenes_distritos) & Q(oc__autorizado2=True) | 
+        Q(viatico__distrito__in = almacenes_distritos) & Q(viatico__autorizar2=True) |
+        Q(gasto__distrito__in = almacenes_distritos) & Q(gasto__autorizar2 = True)|
+        Q(gasto__tipo__tipo = 'NOMINA'), 
+        hecho=True
+        ).annotate(
+        # Detectar la relación que tiene facturas
+        total_facturas=Count(
+            'oc__facturas', filter=Q(oc__facturas__hecho=True)
+        ) + Count(
+            'gasto__facturas__hecho', filter=Q(gasto__facturas__hecho=True)
+        ) + Count(
+            'viatico__facturas__hecho', filter=Q(viatico__facturas__hecho=True)
+        ),
+        autorizadas=Count(
+            Case(
+                When(Q(oc__facturas__autorizada=True, oc__facturas__hecho=True), then=Value(1))
+            )
+        ) + Count(
+            Case(
+                When(Q(gasto__facturas__autorizada=True, gasto__facturas__hecho=True), then=Value(1))
+            )
+        ) + Count(
+            Case(
+                When(Q(viatico__facturas__autorizada=True, viatico__facturas__hecho=True), then=Value(1))
+            )
+        ),
+        ).order_by('-pagado_real')
     else:    
         pagos = Pago.objects.filter(
         Q(oc__req__orden__distrito__in =almacenes_distritos) & Q(oc__autorizado2=True) | 
         Q(viatico__distrito__in = almacenes_distritos) & Q(viatico__autorizar2=True) |
         Q(gasto__distrito__in = almacenes_distritos) & Q(gasto__autorizar2 = True), 
         hecho=True
+        ).exclude(
+            Q(gasto__tipo__tipo = "NOMINA")
         ).annotate(
         # Detectar la relación que tiene facturas
         total_facturas=Count(
