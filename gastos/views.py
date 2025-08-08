@@ -1650,7 +1650,7 @@ def finanzas_transferencia_gastos_autorizados(request):
     
     if usuario.tipo.finanzas == True:
        
-        gastos = Solicitud_Gasto.objects.filter(tipo__tipo = "NOMINA",autorizar=True, autorizar2=True, transferencia_finanzas = True, pagada=False, distrito = usuario.distritos, ).annotate(
+        gastos = Solicitud_Gasto.objects.filter(tipo__tipo = "NOMINA",autorizar=True, autorizar2=True, transferencia_finanzas = True, pagada=False).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
             )).order_by('-approbado_fecha2')
         #else:

@@ -184,6 +184,8 @@
                     <th scope="col">Autorizado</th>
                     <th scope="col">Importe Gasto</th>
                     <th scope="col">Pagado</th>
+                    <th>Empresa</th>
+                    <th>Distrito</th>
                     <th scope="col">Acción</th>
                     <!--<th>Status de Facturas</th>-->
                     <th scope="col">Comprobación</th>
@@ -212,6 +214,8 @@
                     <td>{{gasto.approbado_fecha2}} </td>
                     <td>${{gasto.get_total_solicitud|floatformat:2}}</td>
                     <td>${{gasto.monto_pagado|floatformat:2}}</td>
+                    <td>{% if not gasto.empresa %}Grupo Vordcab {% else %}{{gasto.empresa}}{% endif %}</td>
+                    <td>{{gasto.distrito}}</td>
                     <td>
                         {% if usuario.tipo.pagos == True %}
                         <ul class="nav nav-pills">

@@ -184,7 +184,11 @@
                     <th scope="col">Autorizado</th>
                     <th scope="col">Importe Gasto</th>
                     <th scope="col">Pagado</th>
+                    {% if usuario.distritos.nombre == "MATRIZ" %}
+                    <th>Distrito/Empresa</th>
+                    {% endif %}
                     <th scope="col">Acción</th>
+                    
                     <th>Status de Facturas</th>
                     <th scope="col">Comprobación</th>
                     <th>PDF</th>
@@ -211,6 +215,10 @@
                     <td>{{gasto.approbado_fecha2}} </td>
                     <td>${{gasto.get_total_solicitud|floatformat:2}}</td>
                     <td>${{gasto.monto_pagado|floatformat:2}}</td>
+                   
+                     {% if usuario.distritos.nombre == "MATRIZ" %}
+                    <td>{{gasto.distrito}}/{% if not gasto.empresa %} VDC {% else%} {{gasto.empresa}} {% endif %} </td>
+                    {% endif %}
                     <td>
                         {% if usuario.tipo.pagos == True %}
                         <ul class="nav nav-pills">
