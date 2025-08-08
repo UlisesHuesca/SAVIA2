@@ -26,6 +26,10 @@ class TipoPagoAdmin(admin.ModelAdmin):
     search_fields = ['nombre']
     list_display = ('id','nombre')
 
+class Saldo_Cuenta_Admin(admin.ModelAdmin):
+    search_fields = ['cuenta__cuenta']
+    list_display = ('id','cuenta','monto_inicial','fecha_inicial')
+
 # Register your models here.
 admin.site.register(Cuenta, CuentaAdmin)
 
@@ -39,4 +43,4 @@ admin.site.register(Comprobante_saldo_favor)
 
 admin.site.register(Tipo_Pago, TipoPagoAdmin)
 
-admin.site.register(Saldo_Cuenta)
+admin.site.register(Saldo_Cuenta, Saldo_Cuenta_Admin)
