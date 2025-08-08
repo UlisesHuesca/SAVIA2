@@ -1135,6 +1135,9 @@ def registro_proveedor(request, token):
             return redirect('user-login')  # O alguna página de éxito        
         else:
             print("El formulario NO es válido")
+            print(form.errors)
+            messages.error(request, f'Error al registrar el proveedor. Por favor, revisa los datos ingresados.{form.errors}')
+            
     else:
         form = RegistroProveedorForm(initial={'email': invitacion.email, 'rfc': invitacion.rfc})
 

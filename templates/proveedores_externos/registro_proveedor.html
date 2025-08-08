@@ -50,6 +50,7 @@
                 </div>
                 {% endif %}
 
+
                 <!-- Datos de acceso -->
                 <h5 class="mb-3">Datos de acceso</h5>
                 <div class="col-12">
@@ -217,10 +218,19 @@
                     </div>
                      <div class="col-lg-6 col-sm-6">
                         <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                             {{form.pais|add_class:"form-control"|attr:"placeholder=País"}}
                             <label for="id_lugar_partida">País</label>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-lg-6 col-sm-6">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.estado|add_class:"form-control"|attr:"placeholder=Estado"}}
+                            <label for="id_lugar_partida">Estado</label>
                             </div>
                         </div>
                     </div>
