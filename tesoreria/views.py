@@ -5,8 +5,8 @@ import socket
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
-from django.db.models import Count, Q, Case, When, Value, CharField
-from django.db.models.functions import Concat
+from django.db.models import Count, Q, Case, When, Value, CharField, Sum, DecimalField, F
+from django.db.models.functions import Concat, Coalesce
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -34,6 +34,7 @@ from .utils import extraer_texto_de_pdf, encontrar_variables, extraer_texto_pdf_
 import pytz  # Si estás utilizando pytz para manejar zonas horarias
 from io import BytesIO
 from num2words import num2words
+import json
 import qrcode
 import tempfile
 from PIL import Image
@@ -2394,13 +2395,30 @@ def control_cuentas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     
-    cuentas = Cuenta.objects.filter(encargado = usuario)
+    if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.supervisor:
+        if usuario.tipo.tesoreria:
+            cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True)
+        elif usuario.tipo.finanzas:
+            cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True)
+    else:
+        cuentas = Cuenta.objects.filter(encargado = usuario)
     
     context= {
         'cuentas': cuentas,
         }
 
     return render(request, 'tesoreria/control_cuentas.html',context)
+
+
+def sum_firmada(qs):
+    return qs.aggregate(total=Coalesce(Sum(Case(
+        When(tipo__isnull=True, then=-F('monto')),
+        When(tipo__nombre='CARGO', then=-F('monto')),
+        # explícito por si usas ABONO
+        When(tipo__nombre='ABONO', then=F('monto')),
+        default=F('monto'),
+        output_field=DecimalField(max_digits=18, decimal_places=2),
+    )), Value(Decimal('0.00'))))['total'] or Decimal('0.00')
 
 
 @perfil_seleccionado_required
@@ -2419,29 +2437,93 @@ def control_bancos(request, pk):
             cuenta = cuenta,
             hecho=True,
             pagado_real__gte= fecha_saldo # Filtrar pagos hechos después del último saldo
-        ).order_by('-indice')
+        ).order_by('pagado_real',  'pagado_hora','-tipo__id')  
     else:
-        pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('-indice')
+        pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('pagado_real', 'pagado_hora','-tipo__id')  
     
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
-    
+
+      # Valores para mostrar solo cuando se calcule
+    saldo_final = None
+    saldo_trasladado = None
+    start_date = None
+    end_date = None
+
     p = Paginator(pagos, 25)
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
 
-    if request.method == 'POST' and 'btnReporte' in request.POST:
+    if request.method == 'POST':
         start_date = request.GET.get('start_date')
-        #pagos = pagos.order_by('pagado_real')
-        return convert_excel_control_bancos(pagos, ultimo_saldo, start_date)
-           
+        if 'btnReporte' in request.POST:
+            
+            #pagos = pagos.order_by('pagado_real')
+            return convert_excel_control_bancos(pagos, ultimo_saldo, start_date)
+        elif 'btnRecalcular' in request.POST:
+            start_date_raw = request.POST.get('start_date') or None
+            end_date_raw = request.POST.get('end_date') or None
+
+            # Si tu campo pagado_real es DateField, esto es suficiente:
+            start_date = start_date_raw or None
+            end_date = end_date_raw or None
+
+            # Último saldo (base)
+            saldo_obj = (Saldo_Cuenta.objects
+                        .filter(cuenta=cuenta, hecho=True)
+                        .order_by('-fecha_inicial')
+                        .first())
+
+            saldo_base = (saldo_obj.monto_inicial if saldo_obj else Decimal('0.00')) or Decimal('0.00')
+            fecha_base = saldo_obj.fecha_inicial if saldo_obj else None
+
+            # 1) TRASLADO: si hay start_date > fecha_base, ajusta saldo base con pagos intermedios
+            if fecha_base and start_date and start_date > str(fecha_base):
+                intermedios = pagos.filter(
+                    pagado_real__gte=fecha_base,
+                    pagado_real__lt=start_date
+                ).aggregate(
+                    cargos=Coalesce(Sum('monto', filter=Q(tipo__isnull=True) | Q(tipo__nombre='CARGO')), Decimal('0.00')),
+                    abonos=Coalesce(Sum('monto', filter=Q(tipo__isnull=False) & ~Q(tipo__nombre='CARGO')), Decimal('0.00')),
+                )
+                saldo_trasladado = saldo_base - intermedios['cargos'] + intermedios['abonos']
+                inicio_periodo = start_date
+            else:
+                # sin start_date o start_date <= saldo base => no hay traslado
+                saldo_trasladado = saldo_base
+                inicio_periodo = str(fecha_base) if fecha_base else None
+
+            # 2) MOVIMIENTOS DEL PERÍODO
+            # - Si no hay end_date, usamos hoy
+            fin_periodo = end_date or date.today()
+
+            movimientos_cargos = Decimal('0.00')
+            movimientos_abonos = Decimal('0.00')
+            print(inicio_periodo, fin_periodo)
+            if inicio_periodo:  # sólo si tenemos un inicio
+                periodo = pagos.filter(
+                    pagado_real__gte=inicio_periodo,
+                    pagado_real__lte=fin_periodo
+                ).aggregate(
+                    cargos=Coalesce(Sum('monto', filter=Q(tipo__isnull=True) | ~Q(tipo__nombre='ABONO')), Decimal('0.00')),
+                    abonos=Coalesce(Sum('monto', filter=Q(tipo__isnull=False) & Q(tipo__nombre='ABONO')), Decimal('0.00')),
+                )
+                movimientos_cargos = periodo['cargos']
+                movimientos_abonos = periodo['abonos']
+
+            # 3) SALDO FINAL
+            saldo_final = saldo_trasladado - movimientos_cargos + movimientos_abonos
 
     context= {
         'pagos_list':pagos_list,
         'cuenta': cuenta,
         'pagos':pagos,
         'myfilter':myfilter,
-        #'latest_balance': saldo_inicial,
+        # Solo aparecen si se calculó
+        'saldo_final': saldo_final,
+        'saldo_trasladado': saldo_trasladado,
+        'start_date': start_date,
+        'end_date': end_date,
         }
 
     return render(request, 'tesoreria/control_bancos.html',context)
@@ -5057,6 +5139,27 @@ def desencriptar_pgp(archivo_pgp):
         logging.error(f"Error desencriptando {archivo_pgp}: {e.stderr.decode()}")
         errores += 1
     
+def update_comentario_control(request):
+    data= json.loads(request.body)
+    pk = data["pago_id"]
+    dato = data["dato"]
+    tipo = data["tipo"]
+    pago = Pago.objects.get(id=pk)
+    if tipo == "comentario": 
+        pago.comentario = dato
+    if tipo == "hora":
+        pago.pagado_hora = dato
+    pago.save()
+    # Construye un objeto de respuesta que incluya el dato y el tipo.
+    response_data = {
+        'dato': dato,
+        'tipo': tipo
+    }
+
+    return JsonResponse(response_data, safe=False)
+
+
+
 
 def escanear_sftp_recursivo(sftp, remote_path, local_path):
     global descargados, errores
@@ -5191,14 +5294,14 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
     #worksheet.set_column('B:B', 20)  # Empresa
     worksheet.set_column('B:B', 35)  # Empresa/Proveedor
     worksheet.set_column('C:C', 25)  # Cuenta
-    worksheet.set_column('D:D', 20)  # Concepto/Servicio
+    worksheet.set_column('D:D', 30)  # Concepto/Servicio
     worksheet.set_column('E:E', 25)  # Contrato
     worksheet.set_column('F:F', 25)  # Sector
     worksheet.set_column('G:G', 20)  # Distrito
     worksheet.set_column('H:H', 20)  # Monto
     worksheet.set_column('I:I', 20)  # Saldo
     worksheet.set_column('J:J', 20)  # Saldo
-    worksheet.set_column('K:K', 20)  # Saldo
+    # worksheet.set_column('K:K', 20)  # Saldo
 
     worksheet.set_row(0, 40)  # Fila 1 (índice 0) con altura 40
     worksheet.set_row(1, 30)  # Fila 2 (índice 1) con altura 30
@@ -5207,12 +5310,12 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
     worksheet.insert_image('A1', img_path2, {'x_scale': 1, 'y_scale': 1})
 
     # Agregar y fusionar celdas para el encabezado
-    worksheet.write('J1', 'Preparado Por:', header_format)
-    worksheet.write('J2', 'SUBD FIN', cell_format)
-    worksheet.write('K1', 'Aprobación', header_format)
-    worksheet.write('K2', 'DG', cell_format)
+    worksheet.write('I1', 'Preparado Por:', header_format)
+    worksheet.write('I2', 'SUBD FIN', cell_format)
+    worksheet.write('J1', 'Aprobación', header_format)
+    worksheet.write('J2', 'DG', cell_format)
 
-    worksheet.merge_range('C1:I2', 'CONTROL DE BANCOS', title_format)
+    worksheet.merge_range('C1:H2', 'CONTROL DE BANCOS', title_format)
     worksheet.merge_range('A3:B3', 'Número de documento', header_format)
     worksheet.merge_range('A4:B4', 'SEOV-TES-N4-01.03', cell_format)
     
@@ -5221,15 +5324,15 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
     worksheet.merge_range('E3:F3', 'Nivel del documento', header_format)
     worksheet.merge_range('E4:F4', 'N5', cell_format)
     
-    worksheet.merge_range('G3:H3', 'Revisión No.', header_format)
-    worksheet.merge_range('G4:H4', '000', cell_format)
-    worksheet.write('I3', 'Fecha de emisión', header_format)
-    worksheet.write('I4', '12/09/2022', d_cell_format)
-    worksheet.merge_range('J3:K3', 'Fecha Revisión', header_format)
-    worksheet.merge_range('J4:K4', '', cell_format)
+    worksheet.write('G3', 'Revisión No.', header_format)
+    worksheet.write('G4', '000', cell_format)
+    worksheet.write('H3', 'Fecha de emisión', header_format)
+    worksheet.write('H4', '12/09/2022', d_cell_format)
+    worksheet.merge_range('I3:J3', 'Fecha Revisión', header_format)
+    worksheet.merge_range('I4:J4', '', cell_format)
     #worksheet.write('I3', 'Fecha de emisión', header_format)
     
-    worksheet.merge_range('A5:K8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
+    worksheet.merge_range('A5:J8', 'GRUPO VORDCAB, S.A. DE C.V.', vordcab_format)
   
     if not pagos.exists():
         worksheet.merge_range('A9:B9', 'INSTITUCIÓN BANCARIA: NO HAY PAGOS DISPONIBLES', header_format)
@@ -5241,18 +5344,18 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
     worksheet.merge_range('A11:B11', 'DISTRITO: ' + str(cuenta.encargado.distritos), header_format)
     worksheet.merge_range('A12:B12', 'RESPONSABLE DE CUENTA: ' + str(cuenta.encargado.staff.staff.first_name)+ ' '+ str(cuenta.encargado.staff.staff.last_name), header_format)
 
-    worksheet.write('I9', 'PERIODO:', header_format)
+    worksheet.write('H9', 'PERIODO:', header_format)
     #worksheet.write('I9', 'MES', cell_format)
     #worksheet.write('J9', 'AÑO', cell_format)
    
     
-    worksheet.write('J10', 'SALDO INICIAL' , header_format)
+    worksheet.write('I10', 'SALDO INICIAL' , header_format)
     worksheet.write('G10', 'Fecha Saldo Inicial')
     worksheet.write('H10', fecha_saldo_inicial, date_style)
-    worksheet.write('K10', saldo_inicial, h_money_style)
-    worksheet.write('J11', 'SALDO FINAL', header_format)
+    worksheet.write('J10', saldo_inicial, h_money_style)
+    worksheet.write('I11', 'SALDO FINAL', header_format)
 
-    columns = ['Fecha','Empresa/Colaborador','Folio','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Comentarios','Saldo']
+    columns = ['Fecha','Empresa/Colaborador','Folio','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo']
 
     columna_max = len(columns)+2
 
@@ -5357,14 +5460,14 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         worksheet.write(row_num, 1, empresa)
         worksheet.write(row_num, 1, proveedor)
         worksheet.write(row_num, 2, folio)
-        worksheet.write(row_num, 3, concepto_servicio)
+        worksheet.write(row_num, 3, comentarios)
 
         worksheet.write(row_num, 4, contrato)
         worksheet.write(row_num, 5, sector)
         worksheet.write(row_num, 6, distrito)
         worksheet.write(row_num, 7, cargo, money_style)
         worksheet.write(row_num, 8, abono, money_style)
-        worksheet.write(row_num, 9, comentarios)
+        #worksheet.write(row_num, 9, comentarios)
         # Saldo en la columna 9 (índice 9 = columna J)
         if row_num <= 12:
             # Primera fila de saldo, usa saldo inicial
@@ -5373,12 +5476,12 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         elif row_num == 13:
             # Fila 14: saldo inicial en J10 - cargo actual + abono actual
             fila_actual_excel = row_num + 1  # Excel indexa desde 1
-            celda_saldo_inicial = 'K10'
+            celda_saldo_inicial = 'J10'
             celda_cargo_actual = f'H{fila_actual_excel}'
             celda_abono_actual = f'I{fila_actual_excel}'
 
             formula_saldo = f'={celda_saldo_inicial} - {celda_cargo_actual} + {celda_abono_actual}'
-            worksheet.write_formula(row_num, 10, formula_saldo, money_style)
+            worksheet.write_formula(row_num, 9, formula_saldo, money_style)
 
         else:
             # Desde la fila 14 en adelante, calcula el saldo dinámico
@@ -5386,22 +5489,22 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             fila_anterior_excel = fila_actual_excel - 1
 
             # Celdas relevantes
-            celda_saldo_anterior = f'K{fila_anterior_excel}'
+            celda_saldo_anterior = f'J{fila_anterior_excel}'
             celda_cargo_actual = f'H{fila_actual_excel}'
             celda_abono_actual = f'I{fila_actual_excel}'
 
             # Fórmula: saldo anterior - cargo + abono
             formula_saldo = f'={celda_saldo_anterior} - {celda_cargo_actual} + {celda_abono_actual}'
-            worksheet.write_formula(row_num, 10, formula_saldo, money_style)
+            worksheet.write_formula(row_num, 9, formula_saldo, money_style)
 
         
         row_num += 1
 
     last_filled_row = row_num
-    worksheet.write_formula('K11', f'K{last_filled_row}', h_money_style)
+    worksheet.write_formula('J11', f'J{last_filled_row}', h_money_style)
     #worksheet.write_formula('I9', f'={last_filled_cell}', h_money_style)
-    worksheet.write_formula('J9', 'A14', date_style)
-    worksheet.write_formula('K9', f'A{last_filled_row}', date_style)
+    worksheet.write_formula('I9', 'A14', date_style)
+    worksheet.write_formula('J9', f'A{last_filled_row}', date_style)
      # Agregar el marco general desde A1 hasta J12
     border_format = workbook.add_format({
         'top': 1,

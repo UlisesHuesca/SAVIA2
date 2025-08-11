@@ -3,6 +3,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
+{% load l10n %}
 <html>
 <head>
 {% block title %}Control Bancos{% endblock %}
@@ -18,7 +19,7 @@
 <div class = "col" id="response-div">
         <div class="card">
             <div class="card-header">
-            <h5>Control de Bancos</h5>
+            <h5>Control de Bancos | Cuenta: {{cuenta}}</h5>
             </div>
             <div class="card-body">
                 
@@ -123,11 +124,17 @@
                             </a>
                         </li>
                         <li class="nav-item mx-2">
-                            {% if latest_balance %}
-                            <div class="alert alert-info" role="alert">
-                                <strong><span id="saldo-inicial">Último Saldo:</strong> $</span>{{ latest_balance|floatformat:2}}</span>
-                            </div>
-                            {% endif %}
+                            <button type="submit" name="btnRecalcular" class="btn btn-primary">
+                                Calcular
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
+                        {% if saldo_final is not None %}
+                            <table class="table table-sm">
+                            <tr><th>Saldo trasladado</th><td class="text-end">{{ saldo_trasladado|floatformat:2 }}</td></tr>
+                            <tr><th>Saldo final</th><td class="text-end"><strong>{{ saldo_final|floatformat:2 }}</strong></td></tr>
+                            </table>
+                        {% endif %}
                         </li>
                     </ul>
                 </form>
@@ -176,11 +183,13 @@
             <thead class="text-black sticky-header" style="background-color: #F5F5F5;">
                 <tr>
                     <th class="d-none d-lg-table-cell">Fecha</th>
+                    <th>Hora</th>
+                    <th>Editar</th>
                     <th>Empresa</th>
                     <th scope="col">Empresa/Proveedor</th>
-                    <th>Cuenta</th>
                     <th scope="col">Concepto/Servicio</th>
                     <th>Comentarios</th>
+                    <th>Editar</th>
                     <th>Proyecto</th>
                     <th>Subproyecto</th>
                     <th>Distrito</th>
@@ -193,6 +202,29 @@
                 {% for pago in pagos_list %}
                 <tr>
                     <td class="d-none d-lg-table-cell">{{ pago.pagado_real }}</td>
+                    <td class="d-none" id="form_pagado_hora_{{ pago.id|unlocalize }}">
+                        <input type="time" class="form-control" 
+                            id="pagado_hora-input_{{ pago.id|unlocalize }}" 
+                            value="{{ pago.pagado_hora|time:'H:i' }}">
+                    </td>
+                   
+
+                    <!-- Campo visible -->
+                    <td class = "" id="pagado_hora_{{ pago.id|unlocalize }}">
+                        {{ pago.pagado_hora|time:'H:i' }}
+                    </td>
+                    <td>
+                       
+                        <button type="button" id="save_hora_{{pago.id|unlocalize}}" onclick="aceptar_edicion_hora('{{pago.id|unlocalize}}')" class="btn btn-outline-primary d-none">
+                            <i class="fa-regular fa-circle-check"></i>
+                        </button>
+                        <button id="cancel_edit_hora_{{pago.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion_hora('{{pago.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                        <a id="modificar_hora_{{pago.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_hora('{{pago.id|unlocalize}}')">
+                            <i class="fa-duotone fa-solid fa-clock"></i>
+                        </a>
+                    </td>
                     <td>{{pago.cuenta.empresa.nombre}}</td>
                     <td>
                         {% if pago.detalles_comprobante and pago.detalles_comprobante.titular_cuenta_2 != "No disponible" %}{{pago.detalles_comprobante.titular_cuenta_2}}
@@ -201,19 +233,34 @@
                         {% elif pago.viatico %} {% if pago.viatico.colaborador %} {{pago.viatico.colaborador.staff.staff.first_name}} {{pago.viatico.colaborador.staff.staff.last_name}}{% else %}{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}} {% endif %}
                         {% else %} {{pago.tesorero.staff.staff.first_name}} {{pago.tesorero.staff.staff.last_name}}
                         {% endif %}</td>
-                    <td>{{pago.cuenta.cuenta}}</td>
                     <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.cuenta_retiro != "No disponible"  %}{{pago.detalles_comprobante.motivo_pago}} 
                         {% elif pago.oc %} OC{{pago.oc.folio}}
                         {% elif pago.gasto %} G{{pago.gasto.folio}}
                         {% elif pago.viatico %} V{{pago.viatico.folio}}
                         {% else %} {{pago.tipo}}
                         {% endif %}
-                        {% if pago.comentario %} {{pago.comentario}} {% endif %}
                     </td>
-                    <td>{% if pago.oc %}{{pago.oc.req.orden.comentario}}
-                        {% elif pago.gasto %}{{pago.gasto.comentario}}
-                        {% elif pago.viatico %}{{pago.viatico.comentario_general}}{% endif %}
+                    <td class="d-none" id="form_comentario_{{pago.id|unlocalize}}">
+                        <input type="textarea" class="form-control" id="comentario-input_{{ pago.id|unlocalize }}" value="{{ pago.comentario }}">
+                    </td>
+                    <td class="" id="comentario_{{pago.id|unlocalize}}">{% if pago.comentario %}Pago: {{pago.comentario}}
+                        {% else %}
+                        {% if pago.oc and pago.oc.req.orden.comentario %}{{pago.oc.req.orden.comentario}} {% endif %}
+                        {% if pago.gasto and pago.gasto.comentario %}{{pago.gasto.comentario}} {% endif %}
+                        {% if pago.viatico and pago.viatico.comentario_general %}{{pago.viatico.comentario_general}}{% endif %}
+                        {% endif %}
 
+                    </td>
+                    <td>
+                        <button type="button" id="save_comment_{{pago.id|unlocalize}}" onclick="aceptar_edicion('{{pago.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
+                            <i class="fa-regular fa-circle-check"></i>
+                        </button>
+                        <button id="cancel_edit_{{pago.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{pago.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                        <a id="modificar_comentario_{{pago.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{pago.id|unlocalize}}')">
+                            <i class="fa-regular fa-comment"></i>
+                        </a>
                     </td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.proyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.proyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.subproyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
@@ -312,11 +359,140 @@ function verificarDescargaIniciada(){
 }
 
 
-//var modal = document.getElementById('dialog')
+function modificar_comentario(pagoId){
+    var form_comentario = document.getElementById("form_comentario_"+pagoId);
+    var comentario = document.getElementById("comentario_"+pagoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+pagoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+pagoId);
+    var delete_row = document.getElementById("delete_row_"+pagoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+pagoId);
+    var save_comment = document.getElementById("save_comment_"+pagoId);
+    
+    form_comentario.classList.remove("d-none");
+    comentario.classList.add("d-none");
+    modificar_comentario.classList.add("d-none");
+    cancel_edit.classList.remove("d-none");
+    save_comment.classList.remove("d-none");
+};
 
-//modal.on('hidden.bs.modal', function () {
- //   location.reload();
-//});
+function modificar_hora(pagoId){
+    var form_hora = document.getElementById("form_pagado_hora_"+pagoId);
+    var hora = document.getElementById("pagado_hora_"+pagoId);
+    //console.log(hora)
+    //var edit_quantity = document.getElementById("edit_quantity_"+pagoId);
+    var modificar_hora = document.getElementById("modificar_hora_"+pagoId);
+    //var delete_row = document.getElementById("delete_row_"+pagoId);
+    var cancel_edit = document.getElementById("cancel_edit_hora_"+pagoId);
+    var save_hora = document.getElementById("save_hora_"+pagoId);
+    
+    form_hora.classList.remove("d-none");
+    hora.classList.add("d-none");
+    modificar_hora.classList.add("d-none");
+    cancel_edit.classList.remove("d-none");
+    save_hora.classList.remove("d-none");
+};
+
+function cancelar_edicion(pagoId){
+    var form_comentario = document.getElementById("form_comentario_"+pagoId);
+    var comentario = document.getElementById("comentario_"+pagoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+pagoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+pagoId);
+    var delete_row = document.getElementById("delete_row_"+pagoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+pagoId);
+    var save_comment = document.getElementById("save_comment_"+pagoId);
+    form_comentario.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function cancelar_edicion_hora(pagoId){
+    var form_hora = document.getElementById("form_pagado_hora_"+pagoId);
+    var hora = document.getElementById("pagado_hora_"+pagoId);
+    //var edit_quantity = document.getElementById("edit_quantity_"+pagoId);
+    var modificar_hora = document.getElementById("modificar_hora_"+pagoId);
+    //var delete_row = document.getElementById("delete_row_"+pagoId);
+    var cancel_edit = document.getElementById("cancel_edit_hora_"+pagoId);
+    var save_hora = document.getElementById("save_hora_"+pagoId);
+    form_hora.classList.add("d-none");
+    hora.classList.remove("d-none");
+    modificar_hora.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_hora.classList.add("d-none");
+};
+
+function aceptar_edicion(pagoId){
+    var form_tag = document.getElementById("form_comentario_"+pagoId);
+    var comentario = document.getElementById("comentario_"+pagoId);
+    var edit_quantity = document.getElementById("edit_quantity_"+pagoId);
+    var modificar_comentario = document.getElementById("modificar_comentario_"+pagoId);
+    var delete_row = document.getElementById("delete_row_"+pagoId);
+    var cancel_edit = document.getElementById("cancel_edit_"+pagoId);
+    var save_comment = document.getElementById("save_comment_"+pagoId);
+    var pk = pagoId
+    var inputElement = document.getElementById('comentario-input_' + pagoId).value;
+    //var form_comentario = document.getElementById('id_form_comentario-comentario').value
+    
+    console.log(inputElement)
+    ActualizarComentario(pk,inputElement,"comentario")
+    form_tag.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    //edit_quantity.classList.remove("d-none");
+    //delete_row.classList.remove("d-none");
+    modificar_comentario.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_comment.classList.add("d-none");
+};
+
+function aceptar_edicion_hora(pagoId){
+    var form_tag = document.getElementById("form_pagado_hora_"+pagoId);
+    var comentario = document.getElementById("pagado_hora_"+pagoId);
+    //var edit_quantity = document.getElementById("edit_quantity_"+pagoId);
+    var modificar_hora = document.getElementById("modificar_hora_"+pagoId);
+    //var delete_row = document.getElementById("delete_row_"+pagoId);
+    var cancel_edit = document.getElementById("cancel_edit_hora_"+pagoId);
+    var save_hora = document.getElementById("save_hora_"+pagoId);
+    var pk = pagoId
+    var inputElement = document.getElementById('pagado_hora-input_' + pagoId).value;
+    //var form_comentario = document.getElementById('id_form_comentario-comentario').value
+    
+    console.log(inputElement)
+    ActualizarComentario(pk,inputElement,"hora")
+    form_tag.classList.add("d-none");
+    comentario.classList.remove("d-none");
+    //edit_quantity.classList.remove("d-none");
+    //delete_row.classList.remove("d-none");
+    modificar_hora.classList.remove("d-none");
+    cancel_edit.classList.add("d-none");
+    save_hora.classList.add("d-none");
+};
+
+function ActualizarComentario(pago_id,dato, tipo){
+    console.log('User is logged in, sending data...' )
+    var url = '/tesoreria/update_comentario_control/'
+    fetch( url, {
+        method:'POST',
+        headers:{
+            'Content-Type':'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body:JSON.stringify({'pago_id':pago_id, 'dato':dato, 'tipo':tipo})
+    })
+    .then((response)=>{
+        return response.json()
+    })
+    .then((data)=>{
+        console.log('data:', data)
+        if (data.tipo == "comentario"){
+            document.getElementById('comentario_'+ pago_id).innerHTML = data.dato;
+        } else if (data.tipo == "hora"){
+            console.log('Actualizando hora en la interfaz')
+            let horaFormateada = data.dato ? data.dato.slice(0, 5) : '';
+            document.getElementById('pagado_hora_'+ pago_id).innerHTML = horaFormateada;
+        }
+    })
+}
 
 </script>
 {% endblock %}

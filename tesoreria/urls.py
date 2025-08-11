@@ -31,7 +31,7 @@ urlpatterns = [
     path('tesoreria/edit_pago/<int:pk>', views.edit_pago, name='edit-pago'),
     path('tesoreria/edit_comprobante_pago/<int:pk>', views.edit_comprobante_pago, name='edit-comprobante-pago'),
     path('prellenar_formulario/',views.prellenar_formulario, name ='prellenar-formulario'),
-    
+    path('update_comentario_control/', views.update_comentario_control, name='update_comentario_control'),
     # La URL para el formulario de pagos masivos
     path('tesoreria/masivos/', views.mass_payment_view, name='vista_pagos_masivos'),
     path('tesoreria/layout_pagos/', views.layout_pagos, name='layout_pagos'),
@@ -39,6 +39,7 @@ urlpatterns = [
     path('mostrar-pdf/', views.mostrar_pdf, name='mostrar-pdf'),
     path('tesoreria/control_documentos/', views.control_documentos, name='control-documentos'),
     path('tesoreria/tiempo_proceso_autorizacion/', views.tiempo_proceso_autorizacion, name='tiempo-proceso-autorizacion'),
+
     #path('tesoreria/impresion_factura/', views.impresion_facturas, name='impresion-factura'),
    
     ]

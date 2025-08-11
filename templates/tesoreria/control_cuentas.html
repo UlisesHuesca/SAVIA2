@@ -30,11 +30,7 @@
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
+                        
                         <li class="nav-item mx-2">
                             <div class="btn-group btn-group" role="group" aria-label="Large button group">
                                 <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="#">Compras</a>
@@ -89,6 +85,7 @@
                     <th class="d-none d-md-table-cell">Moneda</th>
                     <th class="d-none d-md-table-cell">Status</th>
                     <th class="d-none d-md-table-cell">Descripción</th>
+                    <th>Editar</th>
                     <th>Control</th>
                 </tr>
             </thead>
@@ -99,6 +96,11 @@
                     <td class="d-none d-lg-table-cell">{{cuenta.banco.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{cuenta.status}}</td>
                     <td>{{cuenta.descripcion}}</td>
+                    <td>
+                        <a id="modificar_comentario_{{producto.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{producto.id|unlocalize}}')">
+                            <i class="fa-regular fa-comment"></i>
+                        </a>
+                    </td>
                     <td>
                         <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'control-bancos' cuenta.id %}">Control</a>
                     </td>
