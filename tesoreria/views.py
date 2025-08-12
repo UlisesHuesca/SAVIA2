@@ -1308,7 +1308,7 @@ def matriz_pagos(request):
                                 zip_file.writestr(os.path.join(carpeta, f'VIATICO_{viatico.folio}.pdf'), pdf_buf.getvalue())
                                 processed_docs.add(viatico.id)
 
-                        if pago.comprobante_pago:
+                        if pago.comprobante_pago and carpeta:
                             zip_file.write(pago.comprobante_pago.path, os.path.join(carpeta, os.path.basename(pago.comprobante_pago.path)))
 
                         # Excel de resumen

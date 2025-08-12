@@ -53,18 +53,17 @@
                 {% endfor %}
             </div>
             <h5 class="mt-4">Vales Rosa</h5>
-            <table class="table" style="color:white">
+              <table class="table" style="color:white">
                 <thead style="background-color: #f8d7da;">
                     <tr>
                         <th>ID</th>
                         <th>Motivo</th>
                         <th>Monto</th>
                         <th>Estado</th>
-                    
+                        <th>Acción</th>
                     </tr>
                 </thead>
                 <tbody>
-                   
                     {% if gasto.vales_rosa.all.count == 0 %}
                         <tr><td colspan="5" class="text-center text-muted">No hay vales rosa en esta solicitud</td></tr>
                     {% else %}
@@ -81,6 +80,20 @@
                             {% else %} 
                                 <span class="badge bg-warning">No Autorizado Aún</span> 
                             {% endif %}
+                        </td>
+                        <td>
+                            {% if usuario.tipo.oc_gerencia %}
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="vale_{{ vale.id }}" id="aprobar_{{ vale.id }}" value="aprobar">
+                                {% if vale.esta_aprobado == True %}checked{% endif %}
+                                <label class="form-check-label" for="aprobar_{{ vale.id }}">Autorizar</label>
+                            </div>
+                            <div class="form-check form-check-inline">
+                                <input class="form-check-input" type="radio" name="vale_{{ vale.id }}" id="rechazar_{{ vale.id }}" value="rechazar">
+                                {% if vale.esta_aprobado == False %}checked{% endif %}
+                                <label class="form-check-label" for="rechazar_{{ vale.id }}">Rechazar</label>
+                                {% endif %}
+                            </div>
                         </td>
                     </tr>
                     {% empty %}

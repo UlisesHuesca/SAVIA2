@@ -81,6 +81,7 @@
                             {% endif %}
                         </td>
                         <td>
+                            {% if usuario.tipo.oc_gerencia %}
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input" type="radio" name="vale_{{ vale.id }}" id="aprobar_{{ vale.id }}" value="aprobar">
                                 {% if vale.esta_aprobado == True %}checked{% endif %}
@@ -90,6 +91,7 @@
                                 <input class="form-check-input" type="radio" name="vale_{{ vale.id }}" id="rechazar_{{ vale.id }}" value="rechazar">
                                 {% if vale.esta_aprobado == False %}checked{% endif %}
                                 <label class="form-check-label" for="rechazar_{{ vale.id }}">Rechazar</label>
+                                {% endif %}
                             </div>
                         </td>
                     </tr>

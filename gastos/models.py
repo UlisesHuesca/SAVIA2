@@ -460,6 +460,7 @@ class ValeRosa(models.Model):
     esta_aprobado = models.BooleanField(null=True, default=None)
 
     comentarios = models.TextField(null=True, blank=True)
+    comprobante_pdf = models.FileField(upload_to='comprobantes_vales', null=True, blank=True, validators=[FileExtensionValidator(['pdf'])])
 
     def __str__(self):
         if self.gasto:

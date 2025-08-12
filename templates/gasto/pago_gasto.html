@@ -215,7 +215,7 @@
             </div>
         </div>   
         <div class="card-footer text-end">
-            {% if usuario.tipo.superintendente %}
+            {% if usuario.tipo.supervisor and usuario.tipo.tesoreria %}
                    
                     <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
                         Cerrar Gasto
