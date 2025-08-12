@@ -1237,6 +1237,7 @@ def matriz_pagos(request):
                     #zip_file.mkdir("GENERAL_XMLs")
 
                     for pago in pagos:
+                        carpeta = None
                         if pago.gasto:
                             gasto = pago.gasto
                             carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
@@ -1308,7 +1309,7 @@ def matriz_pagos(request):
                                 zip_file.writestr(os.path.join(carpeta, f'VIATICO_{viatico.folio}.pdf'), pdf_buf.getvalue())
                                 processed_docs.add(viatico.id)
 
-                        if pago.comprobante_pago and carpeta:
+                        if pago.comprobante_pago and carpeta is not None:
                             zip_file.write(pago.comprobante_pago.path, os.path.join(carpeta, os.path.basename(pago.comprobante_pago.path)))
 
                         # Excel de resumen
