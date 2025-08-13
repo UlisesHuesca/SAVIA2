@@ -20,7 +20,7 @@ from smtplib import SMTPException
 import logging
 import socket
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
-from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form,  Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form
+from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form, Vale_Rosa_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile, Distrito, Empresa 
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
@@ -317,6 +317,7 @@ def crear_gasto(request):
     #articulos_gasto = conceptos.filter(gasto = True)
     facturas = Factura.objects.filter(solicitud_gasto = gasto)
     form_product = Articulo_GastoForm()
+    form_vale = Vale_Rosa_Form()
     form = Solicitud_GastoForm()
     factura_form = UploadFileForm()
 
@@ -456,15 +457,12 @@ def crear_gasto(request):
             else:
                 messages.error(request,'No se pudo subir tu documento') 
         if "btn_valerosa" in request.POST:
-            motivo = request.POST.get('motivo')
-            monto = request.POST.get('monto')
-            if motivo and monto:
-                vale = ValeRosa.objects.create(
-                    gasto=gasto,
-                    motivo=motivo,
-                    monto=monto,
-                    creado_por=usuario
-                )
+            form_vale = Vale_Rosa_Form(request.POST, request.FILES or None)
+            if form_vale.is_valid():
+                vale = form_vale.save(commit=False)
+                vale.creado_por = gasto.staff
+                vale.gasto = gasto
+                vale.save()
                 return redirect('crear-gasto')
         if 'btn_documentos_rh' in request.POST:
             archivo = None
@@ -568,7 +566,7 @@ def crear_gasto(request):
         'total_nomina': total_nomina,
         'form_product': form_product,
         'empresa_para_salect2': empresa_para_salect2,
-        #'articulos_gasto':articulos_gasto,
+        'form_vale': form_vale,
         'gasto':gasto,
         #'superintendentes':superintendentes,
         #'proyectos':proyectos,
@@ -605,15 +603,13 @@ def agregar_vale_rosa(request, pk):
         messages.error(request, 'Tipo de vale no reconocido.')
         return redirect('mis-gastos')  # o cualquier página segura
     
+    form = Vale_Rosa_Form()
+    
     if request.method == 'POST':
-        motivo = request.POST.get('motivo')
-        monto = request.POST.get('monto')
-        if motivo and monto:
-            vale = ValeRosa(
-                motivo=motivo,
-                monto=monto,
-                creado_por=objeto.staff
-            )
+        form = Vale_Rosa_Form(request.POST, request.FILES or None)
+        if form.is_valid():
+            vale = form.save(commit=False)
+            vale.creado_por = objeto.staff
             if tipo == 'gasto':
                 vale.gasto = objeto
             elif tipo == 'viatico':
@@ -630,6 +626,7 @@ def agregar_vale_rosa(request, pk):
     context = {
         'objeto': objeto,
         'tipo': tipo,
+        'form': form,
     }
     
     return render(request, 'gasto/crear_vale_rosa.html', context)

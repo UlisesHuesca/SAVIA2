@@ -450,16 +450,37 @@
             <h4>Agregar Vale Rosa</h4>
         </div>
         <div class="card-body">
-            <form method="POST" id="formValeRosa">
+                    <form method="POST" id="formValeRosa" enctype="multipart/form-data">
                 {% csrf_token %}
-                <div class="mb-2">
-                    <label class="form-label">Motivo</label>
-                    <textarea name="motivo" class="form-control" required></textarea>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_vale.motivo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Motivo"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Motivo" %}*</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div class="mb-2">
-                    <label class="form-label">Monto</label>
-                    <input type="number" name="monto" step="0.01" class="form-control" required>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_vale.monto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Monto"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Monto" %}*</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
+                <div id="subir_pdf" class="row">
+                    <div class="input-group mb-3" title="Subir Archivo Vale" >
+                        {{form_vale.comprobante_pdf|add_class:"form-control"}}
+                        <label class="input-group-text" for="id_soporte"><i class="fa-solid fa-file-pdf fa-xl" style="color: #990f0f"></i></label>
+                    </div>
+                </div>
+            
                 <div class="text-end">
                     <button type="submit" name="btn_valerosa" class="btn btn-outline-success" title ="Agregar Vale Rosa">
                         <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
@@ -475,6 +496,8 @@
                         <th>Monto</th>
                         <th>Estado</th>
                         <th>Eliminar</th>
+                        <th>Comprobante S2</th>
+                        <th>Comprobante PDF</th>
                     </tr>
                 </thead>
                 <tbody id="valesRosaLista">

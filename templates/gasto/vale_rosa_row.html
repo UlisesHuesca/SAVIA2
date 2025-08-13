@@ -1,3 +1,4 @@
+{% load l10n %}
 <tr>
     <td>{{ vale.id }}</td>
     <td>{{ vale.motivo }}</td>
@@ -18,8 +19,32 @@
         </form>
     </td>
     <td>
-        <a href="{% url 'descargar_vale_rosa_pdf' vale.id %}" class="btn btn-sm btn-danger" target="_blank">
-            <i class="fa fa-file-pdf"></i> PDF
+        <a href="{% url 'descargar_vale_rosa_pdf' vale.id %}" class="btn btn-outline-info" target="_blank">
+            <i class="fa fa-file-pdf"></i>
         </a>
     </td>
+    <td class="text-center">
+        {% if vale.comprobante_pdf %}
+            <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModalVale{{ vale.id|unlocalize }}" title="Ver Comprobante PDF">
+                <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+            </button>
+
+            <div class="modal fade" id="pdfModalVale{{ vale.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabelVale{{ vale.id|unlocalize }}" aria-hidden="true">
+                <div class="modal-dialog modal-xl">
+                    <div class="modal-content">
+                        <div class="modal-header">
+                            <h5 class="modal-title" id="pdfModalLabelVale{{ vale.id|unlocalize }}">Comprobante de Vale Rosa #{{ vale.id }}</h5>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body p-0">
+                            <iframe src="{{ vale.comprobante_pdf.url }}#zoom=80" width="100%" height="750px" style="border: none;"></iframe>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        {% else %}
+            <span class="text-muted">No adjunto</span>
+        {% endif %}
+    </td>
+
 </tr>

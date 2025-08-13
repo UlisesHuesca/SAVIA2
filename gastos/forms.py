@@ -1,5 +1,5 @@
 from django import forms
-from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto
+from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa
 from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
 from user.models import Profile, Distrito
 from dashboard.models import Inventario, Order, Product
@@ -163,3 +163,8 @@ class Autorizacion_Gasto_Form(forms.ModelForm):
     class Meta:
         model = Solicitud_Gasto
         fields = ['comentario']
+
+class Vale_Rosa_Form(forms.ModelForm):
+    class Meta:
+        model = ValeRosa
+        fields = ['motivo','monto','comprobante_pdf']
