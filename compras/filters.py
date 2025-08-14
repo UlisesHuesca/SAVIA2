@@ -25,6 +25,15 @@ class CompraFilter(django_filters.FilterSet):
     ('true', 'Pagada'),
     ('false', 'No pagada'),
     ]
+
+    DISTRITO_CHOICES = [
+    ('ALTAMIRA', 'Altamira'),
+    ('POZA RICA', 'Poza Rica'),
+    ('MATRIZ', 'Matriz'),
+    ('VERACRUZ', 'Veracruz'),
+    ('VILLAHERMOSA', 'Villahermosa'),
+    # etc...
+]
     proveedor = CharFilter(field_name='proveedor__nombre__razon_social', lookup_expr='icontains')
     creada_por = CharFilter(field_name='creada_por', lookup_expr='icontains')
     req = CharFilter(field_name='req__folio', lookup_expr='icontains')
@@ -38,7 +47,7 @@ class CompraFilter(django_filters.FilterSet):
     atrasado = django_filters.BooleanFilter(method='filtro_atrasado')
     pago = ChoiceFilter(choices=PAGO_CHOICES, method='filter_by_pago', label='Pago') # Changed filter
     moneda = ChoiceFilter(choices = MONEDA_CHOICES, method='filter_by_moneda', label ='Moneda')
-    distrito = CharFilter(field_name='req__orden__distrito__nombre', lookup_expr='icontains')
+    distrito = ChoiceFilter(choices = DISTRITO_CHOICES, field_name='req__orden__distrito__nombre', label="Distrito")# Filtra por el nombre exacto)
     pagada = ChoiceFilter(choices=PAGADA_CHOICES, method='filter_by_pagada', label='Pagada') # Changed filter
 
     class Meta:

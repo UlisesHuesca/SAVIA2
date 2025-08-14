@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Compra, ArticuloComprado, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, Estatus_proveedor, Uso_cfdi, Cond_pago, Moneda, Estado, Comparativo, Item_Comparativo, DocumentosProveedor 
+from .models import Compra, ArticuloComprado, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, Estatus_proveedor, Uso_cfdi, Cond_pago, Moneda, Estado, Comparativo, Item_Comparativo, DocumentosProveedor, TipoPrioridad
 
 class CompraAdmin(admin.ModelAdmin):
     list_display = ('id','folio', 'req','proveedor','oc_autorizada_por2','cond_de_pago','autorizado1','autorizado2')
@@ -63,4 +63,6 @@ admin.site.register(Estado)
 admin.site.register(Comparativo, Comparativo_Admin)
 
 admin.site.register(Item_Comparativo, Item_Comparativo_Admin)
+
+admin.site.register(TipoPrioridad)
 

@@ -14,7 +14,7 @@ from django.utils.timezone import localtime
 from django.utils.dateparse import parse_date
 from django.urls import reverse, NoReverseMatch
 from user.models import Distrito, Empresa
-from compras.models import ArticuloComprado, Compra
+from compras.models import ArticuloComprado, Compra, TipoPrioridad
 from compras.forms import CompraForm
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf #convert_excel_matriz_compras
@@ -104,6 +104,7 @@ def compras_por_pagar(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    tipos_prioridad = TipoPrioridad.objects.all()
     if usuario.tipo.tesoreria == True or usuario.tipo.finanzas == True:
         compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, regresar_oc = False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
         
@@ -146,9 +147,22 @@ def compras_por_pagar(request):
         'compras':compras,
         'myfilter':myfilter,
         'compras_list':compras_list,
+        'tipos_prioridad': tipos_prioridad,
         }
 
     return render(request, 'tesoreria/compras_por_pagar.html',context)
+
+def actualizar_prioridad(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        compra_id = data.get('compra_id')
+        tipo_prioridad_id = data.get('tipo_prioridad_id')
+        compra = Compra.objects.get(pk=compra_id)
+        tipo = TipoPrioridad.objects.get(pk=tipo_prioridad_id)
+        compra.tipo_prioridad = tipo
+        compra.save()
+        return JsonResponse({'success': True, 'tipo': tipo.nombre})
+    return JsonResponse({'success': False}, status=400)
 
 # Create your views here.
 @perfil_seleccionado_required

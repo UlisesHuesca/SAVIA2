@@ -218,6 +218,8 @@
                     <th>Facturas</th>
                     <th scope="col">Detalles</th>
                     {% if usuario.tipo.para_pago %}
+                    <th>Prioridad</th>
+                    <th>Editar</th>
                     <th>Cancelar</th>
                     <th>Para Pago</th>
                     <th>Parcialidad</th>
@@ -286,7 +288,29 @@
                     </td>
                     <!--if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" or usuario.tipo.nombre == "Admin" % -->
                     {% if usuario.tipo.para_pago %}
-                        
+                        <td id="prioridad_{{ compra.id|unlocalize }}">
+                            {{ compra.tipo_prioridad.nombre }}
+                        </td>
+                        <td id="form_prioridad_{{ compra.id|unlocalize }}" class="form-select d-none">
+                            <select id="select_prioridad_{{ compra.id|unlocalize }}">
+                                 {% for tipo in tipos_prioridad %}
+                                <option value="{{ tipo.id }}" {% if compra.tipo_prioridad and compra.tipo_prioridad.id == tipo.id %}selected{% endif %}>
+                                    {{ tipo.nombre }}
+                                </option>
+                                {% endfor %}
+                            </select>
+                        </td>
+                        <td>
+                            <button type="button" class="btn btn-outline-primary d-none" id="save_prioridad_{{ compra.id|unlocalize}}" onclick="guardar_prioridad('{{ compra.id|unlocalize }}')">
+                                <i class="fa-regular fa-circle-check"></i>
+                            </button>
+                            <button class="btn add-btn d-none" id="cancel_prioridad_{{ compra.id|unlocalize }}" onclick="cancelar_edicion_prioridad('{{ compra.id|unlocalize }}')" style="color:ghostwhite; background-color:#980F0F;">
+                                <i class="fa-solid fa-circle-xmark"></i>
+                            </button>
+                            <a class="btn btn-outline-info" id="modificar_prioridad_{{ compra.id|unlocalize }}" onclick="modificar_prioridad('{{ compra.id|unlocalize }}')">
+                                <i class="fa-solid fa-pen-to-square"></i>
+                            </a>
+                        </td>
                         <td>
                             
                             <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
@@ -481,8 +505,25 @@ document.addEventListener('DOMContentLoaded', function() {
                 const pagado = parseFloat(pagadoElement.value) || 0;
                 const diferencia = costoPlusAdicionales - pagado;
                 
-                // Asignar la diferencia calculada al input de .diferencia
+                // 1) Propiedad que usa el input
                 diferenciaElement.value = diferencia.toFixed(2);
+
+                // 2) Atributo HTML (para que lo veas en DevTools tal cual)
+                diferenciaElement.setAttribute('value', diferencia.toFixed(2));
+
+                // 3) Guarda el máximo permitido en un data-atributo
+                diferenciaElement.dataset.valor = diferencia.toFixed(2);
+
+                 // Agregar validación en el evento change
+                diferenciaElement.addEventListener('change', function () {
+                    const maxPermitido = parseFloat(this.dataset.valor);
+                    const valorIngresado = parseFloat(this.value) || 0;
+
+                    if (valorIngresado > maxPermitido) {
+                        alert(`El valor no puede ser mayor a ${maxPermitido}`);
+                        this.value = maxPermitido.toFixed(2);
+                    }
+                });
             }
         })
     }
@@ -495,6 +536,8 @@ dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
 })
+
+
 
 // Función para obtener el valor de una cookie por su nombre
 function getCookie(name) {
@@ -531,6 +574,54 @@ function verificarDescargaIniciada(){
         }
     }, 1000); // Revisar cada segundo
 }
+
+function modificar_prioridad(compraId) {
+    document.getElementById("prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("form_prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("save_prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("cancel_prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("modificar_prioridad_" + compraId).classList.add("d-none");
+}
+
+function cancelar_edicion_prioridad(compraId) {
+    document.getElementById("prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("form_prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("save_prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("cancel_prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("modificar_prioridad_" + compraId).classList.remove("d-none");
+}
+
+function guardar_prioridad(compraId) {
+     const select = document.getElementById(`select_prioridad_${compraId}`);
+    if (!select) {
+        console.error('No se encontró el select de prioridad');
+        return;
+    }
+
+    const opt = select.options[select.selectedIndex] || select.options[0];
+    const tipoId = opt.value;
+    const tipoTexto = opt.textContent.trim();
+
+
+
+
+    fetch('/tesoreria/actualizar_prioridad/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({ compra_id: compraId, tipo_prioridad_id: tipoId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("prioridad_" + compraId).textContent = tipoTexto;
+        cancelar_edicion_prioridad(compraId);
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+
 </script>
 {% endblock %}
 </body>

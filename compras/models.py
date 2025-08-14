@@ -326,6 +326,12 @@ class Item_Comparativo(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     completo = models.BooleanField(default=False)
 
+class TipoPrioridad(models.Model):
+    nombre = models.CharField(max_length=20)
+
+    def __str__(self):
+        return self.nombre
+
 class Compra(models.Model):
     req = models.ForeignKey(Requis, on_delete = models.CASCADE, null=True, related_name = 'compras')
     folio = models.IntegerField(null=True)
@@ -379,6 +385,7 @@ class Compra(models.Model):
     persona_cierre = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='Cierre')
     fecha_cierre = models.DateField(null=True, blank = True)
     comentario_cierre = models.TextField(blank=True, null=True)
+    tipo_prioridad = models.ForeignKey(TipoPrioridad, on_delete=models.SET_NULL, null=True, blank=True)
 
 
     @property
