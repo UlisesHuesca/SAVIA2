@@ -217,7 +217,7 @@
                     <td>${{gasto.monto_pagado|floatformat:2}}</td>
                    
                      {% if usuario.distritos.nombre == "MATRIZ" %}
-                    <td>{{gasto.distrito}}/{% if not gasto.empresa %} VDC {% else%} {{gasto.empresa}} {% endif %} </td>
+                    <td>{{gasto.distrito}}/{% if gasto.empresa %} {{gasto.empresa}} {% elif gasto.colaborador.staff.empresa %} {{gasto.colaborador.staff.empresa.nombre}} {% elif gasto.staff.staff.empresa %} {{gasto.staff.staff.empresa.nombre}} {% else%} {{VDC}} {% endif %} </td>
                     {% endif %}
                     <td>
                         {% if usuario.tipo.pagos == True %}

@@ -24,6 +24,7 @@ from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto
 from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
+from finanzas.models import Exhibit, Linea_Exhibit
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
 from .filters import PagoFilter, Matriz_Pago_Filter
@@ -1773,6 +1774,7 @@ def control_documentos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    exhibits = Exhibit.objects.all().order_by('-created_at')  # o algún filtro útil
 
     pagos = Pago.objects.filter(
         Q(oc__req__orden__distrito__in =almacenes_distritos) & Q(oc__autorizado2=True) | 
@@ -1807,7 +1809,7 @@ def control_documentos(request):
     pagos = myfilter.qs
     #Los distritos se definen de forma "dinámica" de acuerdo a los almacenes que tiene el usuario en el perfil
     distritos = Distrito.objects.filter(id__in=almacenes_distritos)
-    tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos" ], st_activo = True, distritos__in = almacenes_distritos)
+    tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos","Admin" ], st_activo = True, distritos__in = almacenes_distritos)
     cuentas = Cuenta.objects.filter(distrito__in=almacenes_distritos)
     empresas = Empresa.objects.all()
     #Set up pagination
@@ -2375,23 +2377,33 @@ def control_documentos(request):
                 response.set_cookie('descarga_iniciada', 'true', max_age=20)
                 response['Content-Disposition'] = 'attachment; filename=facturas.zip'
                 return response
-    for pago in pagos_list:
-        if pago.total_facturas == 0:
-            pago.estado_facturas = 'sin_facturas'
-        elif pago.autorizadas == pago.total_facturas:
-            pago.estado_facturas = 'todas_autorizadas'
-        else:
-            pago.estado_facturas = 'pendientes'
-        if 'enviar_a_control' in request.POST:
-            ids = request.POST.getlist('compra_ids')
-            if ids:
-                pagos = Pago.objects.filter(id__in=ids)
-                for pago in pagos:
-                    pago.control_documentos = True
-                    pago.fecha_control_documentos = datetime.today()
-                    pago.save()
+        elif 'asignar_exhibit' in request.POST:
+            print('entro')
+            exhibit_id = request.POST.get('exhibit_id')
+            exhibit = Exhibit.objects.get(id=exhibit_id)
+            pagos = Pago.objects.filter(id__in=request.POST.getlist('compra_ids'))
+            for pago in pagos:
+                pago.exhibit = exhibit
+                pago.save()
+            return redirect('control-documentos')
+    
+    #for pago in pagos_list:
+    #    if pago.total_facturas == 0:
+    #        pago.estado_facturas = 'sin_facturas'
+    #    elif pago.autorizadas == pago.total_facturas:
+    #        pago.estado_facturas = 'todas_autorizadas'
+    #    else:
+    #        pago.estado_facturas = 'pendientes'
+    #    if 'enviar_a_control' in request.POST:
+    #        ids = request.POST.getlist('compra_ids')
+    #        if ids:
+    #            pagos = Pago.objects.filter(id__in=ids)
+    #            for pago in pagos:
+    #                pago.control_documentos = True
+    #                pago.fecha_control_documentos = datetime.today()
+    #                pago.save()
 
-            return redirect('control-documentos')  # Ajusta a donde quieres redirigir
+    #       return redirect('control-documentos')  # Ajusta a donde quieres redirigir
     context= {
         'pagos_list':pagos_list,
         'pagos':pagos,
@@ -2401,6 +2413,7 @@ def control_documentos(request):
         'cuentas':cuentas,
         'usuario':usuario,
         'empresas':empresas,
+        'exhibits': exhibits,
         }
 
     return render(request, 'tesoreria/control_documentos.html',context)

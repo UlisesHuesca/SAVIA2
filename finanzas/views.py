@@ -1,4 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
+from django.http import HttpResponse
 from django.contrib import messages
 from django.db.models import Sum, Max
 from user.models import Profile
@@ -12,6 +13,8 @@ from .forms import Linea_Exhibit_Form
 from user.models import Profile
 from compras.models import Proveedor_direcciones, Moneda
 import re
+import xml.etree.ElementTree as ET
+from xml.etree.ElementTree import Element, SubElement, ElementTree
 
 def crear_exhibit(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -83,14 +86,14 @@ def crear_exhibit(request):
                 return redirect('crear-exhibit')
             else:
                 print("Formulario inválido:", form.errors)
-        elif 'btn_cerrar' in request.POST:
+        elif 'btn_crear_exhibit' in request.POST:
             ultimo_folio = Exhibit.objects.aggregate(Max('folio'))['folio__max']
             nuevo_folio = (ultimo_folio or 0) + 1
 
             exhibit.folio = nuevo_folio
             exhibit.hecho = True
             exhibit.save()
-            return redirect('dashboard-index')  # o a donde quieras mandar al usuario
+            return redirect('matriz-exhibit')  # o a donde quieras mandar al usuario
            
 
     lineas = exhibit.lineas.all()
@@ -163,3 +166,94 @@ def descomponer_contacto(contacto):
             'nombre': partes[0],
             'apellido': ' '.join(partes[1:])
         }
+    
+def matriz_exhibit(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+
+    exhibits = Exhibit.objects.all().order_by('-created_at')
+
+    context = {
+        'exhibits': exhibits,
+        'usuario': usuario,
+    }
+    return render(request, 'finanzas/exhibits.html', context)
+
+def generar_exhibit_xml(request, pk):
+    exhibit = Exhibit.objects.get(pk=pk)
+    root = Element('Exhibit')
+    SubElement(root, 'Folio').text = str(exhibit.folio)
+    SubElement(root, 'FechaCreacion').text = str(exhibit.created_at)
+
+    lineas_element = SubElement(root, 'Lineas')
+
+    for linea in exhibit.lineas.all():
+        linea_element = SubElement(lineas_element, 'Linea')
+
+        # Cargar proveedor
+        if linea.tipo == 'Vordcab':
+            proveedor = Proveedor_direcciones.objects.get(id=5115)
+            linea.area = "TESORERIA"
+            linea.pagina_web = "www.grupovordcab.com"
+            linea.observaciones_cuenta = "MONEX"
+            linea.tipo_proveedor = 'PM'
+        else:
+            proveedor = linea.proveedor
+            linea.pagina_web = "NA"
+            linea.observaciones_cuenta = "NA"
+            linea.tipo_proveedor = linea.tipo_proveedor or 'PM'
+
+        direccion = proveedor.domicilio or ''
+        partes = descomponer_direccion(direccion)
+        contacto_partes = descomponer_contacto(proveedor.contacto or '')
+
+        SubElement(linea_element, 'Tipo').text = linea.tipo
+        SubElement(linea_element, 'TipoProveedor').text = linea.tipo_proveedor
+        SubElement(linea_element, 'RFC').text = proveedor.nombre.rfc if linea.tipo == 'Vordcab' else (proveedor.nombre.rfc if proveedor.nombre else 'ND')
+        SubElement(linea_element, 'Email').text = proveedor.email or ''
+        SubElement(linea_element, 'Calle').text = partes.get('calle', '')
+        SubElement(linea_element, 'Colonia').text = partes.get('colonia', '')
+        SubElement(linea_element, 'CP').text = partes.get('cp', '')
+        SubElement(linea_element, 'Municipio').text = partes.get('municipio', '')
+        SubElement(linea_element, 'Estado').text = proveedor.estado.nombre if proveedor.estado else 'ND'
+        SubElement(linea_element, 'Pais').text = proveedor.estado.pais.nombre if proveedor.estado and proveedor.estado.pais else 'ND'
+        SubElement(linea_element, 'Telefono').text = proveedor.telefono or ''
+        SubElement(linea_element, 'ContactoNombre').text = contacto_partes.get('nombre', '')
+        SubElement(linea_element, 'ContactoApellido').text = contacto_partes.get('apellido', '')
+        SubElement(linea_element, 'Solicitud').text = linea.solicitud or ''
+        SubElement(linea_element, 'Descripcion').text = linea.descripcion or ''
+        SubElement(linea_element, 'Observaciones').text = linea.observaciones or ''
+        SubElement(linea_element, 'Monto').text = str(linea.monto or '0.00')
+        SubElement(linea_element, 'Cuenta').text = proveedor.cuenta or ''
+        SubElement(linea_element, 'CLABE').text = proveedor.clabe or ''
+        SubElement(linea_element, 'SWIFT').text = proveedor.swift or ''
+        SubElement(linea_element, 'ABA').text = linea.aba or 'NA'
+        SubElement(linea_element, 'IBAN').text = linea.iban or 'NA'
+        SubElement(linea_element, 'DireccionBanco').text = proveedor.domicilio_banco or ''
+        SubElement(linea_element, 'ObservacionesCuenta').text = linea.observaciones_cuenta or ''
+        SubElement(linea_element, 'Referencia').text = linea.referencia or ''
+        SubElement(linea_element, 'Area').text = linea.area or ''
+        SubElement(linea_element, 'PaginaWeb').text = linea.pagina_web or ''
+
+    tree = ElementTree(root)
+    response = HttpResponse(content_type='application/xml')
+    response['Content-Disposition'] = f'attachment; filename="exhibit_{exhibit.folio}.xml"'
+    tree.write(response, encoding='utf-8', xml_declaration=True)
+    return response
+
+def ver_pagos_relacionados(request, exhibit_id):
+    # Usamos get_object_or_404 para obtener el exhibit.
+    # Si no existe, mostrará una página de error 404 automáticamente.
+    exhibit = get_object_or_404(Exhibit, pk=exhibit_id)
+
+    # Gracias al related_name='pagos' en tu modelo Pago,
+    # puedes acceder a todos los pagos relacionados de esta forma.
+    pagos_relacionados = exhibit.pagos.all()
+
+    context = {
+        'exhibit': exhibit,
+        'pagos': pagos_relacionados,
+    }
+
+    # Renderizamos un nuevo template que crearemos en el siguiente paso
+    return render(request, 'finanzas/pagos_por_exhibit.html', context)

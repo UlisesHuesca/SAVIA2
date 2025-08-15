@@ -57,6 +57,7 @@ class Pago(models.Model):
     indice = models.IntegerField(null=True, blank=True)  # Nuevo campo para el índice
     control_documentos = models.BooleanField(default=False)
     fecha_control_documentos = models.DateField(null=True, blank=True)
+    exhibit = models.ForeignKey('finanzas.Exhibit', on_delete=models.SET_NULL, null=True, blank=True, related_name='pagos')
 
     @property
     def get_facturas(self):

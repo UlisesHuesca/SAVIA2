@@ -312,7 +312,7 @@
 </div>
 
 <div class = "card">
-    <form id="mass_payment_form" method="post" action="{% url 'matriz-pagos' %}">
+    <form id="form_asignar_exhibit" method="post" action="{% url 'control-documentos' %}">
        
         <ul class="nav nav-pills">
             <li class="nav-item mx-2">
@@ -325,7 +325,24 @@
                     <div class="alert alert-primary" role="alert">Suma total: <span id="oc_sum">0.00</span></div>
                 </div>
             </li>
-                <input type="submit" value="Control de Documentos" name="enviar_a_control" id="enviar_a_control" class="btn btn-primary">
+            <li class="nav-item mx-2">
+                <div class="form-group">
+                    <label for="exhibit_id"><strong>Selecciona un Exhibit:</strong></label>
+                    <select class="form-control" name="exhibit_id" id="exhibit_id" required>
+                        <option value="">--- Selecciona ---</option>
+                        {% for exhibit in exhibits %}
+                            <option value="{{ exhibit.id }}">Folio {{ exhibit.folio }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+              
+            </li>
+            <li class="nav-item mx-2 mt-4">
+                <button name="asignar_exhibit" type="submit" class="btn btn-outline-info">Asignar</button>
+            </li>
+            <li class="nav-item mx-2 mt-4">
+                 <a href="{% url 'matriz-exhibit' %}" class="btn btn-secondary mb-3"> Exhibits</a>
+            </li>
         </ul>
        
    
@@ -348,7 +365,7 @@
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Acción</th>
-                    <th>Control de Documentos</th>
+                    <th>Asignar Exhibit</th>
                 </tr>
             </thead>
             <tbody>
@@ -535,7 +552,9 @@
                         </ul>
                     </td>
                     <td>
-                        {% if pago.oc %}
+                        {% if pago.exhibit %}
+                        <span class="badge bg-primary">{{pago.exhibit.folio}}</span> 
+                        {% elif pago.oc %}
                         <input style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                         {% elif pago.gasto %}
                         <input style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
@@ -664,8 +683,8 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkboxes = document.querySelectorAll('.payment_checkbox');
     const ocCountElement = document.getElementById('oc_count');  // Ajusta el id si es necesario
     const ocSumElement = document.getElementById('oc_sum');
-    const layoutPagosButton = document.getElementById('enviar_a_pago_button');
-    const form = document.getElementById('mass_payment_form');
+    const layoutPagosButton = document.getElementById('asignar_exhibit'); // Botón para enviar el formulario
+    const form = document.getElementById('form_asignar_exhibit');
 
     // Inicializar o recuperar la lista de IDs seleccionados como strings
     let selectedIds = JSON.parse(localStorage.getItem('selectedPayments')) || [];

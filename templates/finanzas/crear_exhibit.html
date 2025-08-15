@@ -249,7 +249,7 @@
                     </tbody>
                 </table>
             </div>
-            <form method="post" action="{% url 'crear-exhibit' %}">
+            <form id="Crear" method="post" action="{% url 'crear-exhibit' %}">
                 {% csrf_token %}
                 <button type="submit" class="btn btn-outline-info btn-block btn-lg" name="btn_crear_exhibit">
                     Crear Exhibit
@@ -287,6 +287,8 @@
 document.addEventListener('DOMContentLoaded', function () {
     const form = document.getElementById('OrderForm');
     const boton = document.getElementById('btn_linea');
+    const form2 = document.getElementById('Crear');
+    const boton2 = document.getElementById('btn_crear_exhibit');
 
     if (form && boton) {
         form.addEventListener('submit', function () {
@@ -297,6 +299,16 @@ document.addEventListener('DOMContentLoaded', function () {
             }, 100);  // 50 ms es suficiente
         });
     }
+      if (form2 && boton2) {
+        form2.addEventListener('submit', function () {
+            // Esperar unos milisegundos para permitir que el formulario se envíe
+            setTimeout(function () {
+                boton2.disabled = true;
+                boton2.value = 'Agregando...';
+            }, 100);  // 50 ms es suficiente
+        });
+    }
+
 });
 
 

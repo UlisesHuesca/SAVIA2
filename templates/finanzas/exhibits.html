@@ -1,0 +1,190 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Exhibits{% endblock %}
+</head>
+<body>
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row my-4">
+    <div class="col-md-12">
+        <div class="card">
+            <div class="card-header">
+                <h5>Filtro de Exhibits</h5>
+            </div>
+            <div class="card-body">
+           
+            <hr>
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    <!--<li class="nav-item mx-2">
+                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
+                    </li>-->
+                    <!--<li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>-->
+                   
+                    <!--<li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                    </li>-->
+                    <li class="nav-item mx-2">
+                         <a  type="button" class="btn btn-outline-info" class="dropdown-item" href="{% url 'crear-exhibit' %}">Crear Exhibit</a>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a type="button" class="btn btn-outline-info" class="dropdown-item" href="{% url 'control-documentos' %}">Control de Documentos</a>
+
+                    </li>
+                </ul>
+                </form>
+            </div>
+        </div>
+        </div>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                var m = "{{ message }}";
+                swal("Excelente !", m, "success")
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+
+<div class = "row mt-2">
+    <div class="card">
+         <h2>Lista de Exhibits</h2>
+
+    {% for exhibit in exhibits %}
+        <div class="row mt-2">
+            <div class="card w-100">
+                <div class="card-header">
+                    <strong>Folio:</strong> {{ exhibit.folio }} |
+                    <strong>Creado por:</strong> {{exhibit.creada_por.staff.staff.first_name}} {{ exhibit.creada_por.staff.staff.last_name }} |
+                    <strong>Fecha:</strong> {{ exhibit.created_at|date:"d/m/Y H:i" }} |
+                    <strong>Completado:</strong> {{ exhibit.hecho|yesno:"Sí,No" }}
+                    <a href="{% url 'generar-exhibit-xml' exhibit.id %}" class="btn btn-sm btn-outline-success">
+                        Descargar XML
+                    </a>
+                    <a href="{% url 'ver-pagos-relacionados' exhibit.id %}" class="btn btn-sm btn-outline-info">
+                        Pagos
+                    </a>
+
+                </div>
+                <div class="card-body p-0">
+                    {% if exhibit.lineas.all %}
+                        <table class="table mb-0 bg-white">
+                            <thead class="text-black" style="background-color: #F5F5F5;">
+                                <tr>
+                                    <th>Solicitud</th>
+                                    <th>Tipo</th>
+                                    <th>Monto</th>
+                                    <th>Tipo Pago</th>
+                                    <th>Descripción</th>
+                                    <th>Proveedor</th>
+                                    <th>Cuenta CLABE</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for linea in exhibit.lineas.all %}
+                                    <tr>
+                                        <td>{{ linea.exhibit.folio }}</td>
+                                        <td>{{ linea.get_tipo_display }}</td>
+                                        <td>${{ linea.monto }}</td>
+                                        <td>{{ linea.tipo_pago_exhibit }}</td>
+                                        <td>{{ linea.descripcion|truncatechars:60 }}</td>
+                                        <td>
+                                            {% if linea.proveedor %}
+                                                {{ linea.proveedor }}
+                                            {% else %}
+                                                —
+                                            {% endif %}
+                                        </td>
+                                        <td>{{ linea.clabe }}</td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="p-3">No hay líneas para este Exhibit.</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    {% empty %}
+        <p>No hay exhibits registrados.</p>
+    {% endfor %}
+    </div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if ordenes_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in ordenes_list.paginator.page_range %}
+                    {% if ordenes_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > ordenes_list.number|add:'-2' and item < ordenes_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if ordenes_list.paginator.num_pages > ordenes_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{ordenes_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}">{{ordenes_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if ordenes_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url ordenes_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+;(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+
+</script>
+{% endblock %}
+</body>
+</html>
