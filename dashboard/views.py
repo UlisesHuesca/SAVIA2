@@ -575,11 +575,18 @@ def proveedores_altas(request):
     usuario = Profile.objects.get(id = pk_perfil)
    
    
-    #if usuario.tipo.proveedores:
-    proveedores = Proveedor.objects.filter(
-            completo=True, 
-            direcciones__estatus__nombre = "PREALTA",
-            ).exclude(familia__nombre="IMPUESTOS").distinct()
+    if usuario.tipo.proveedores_edicion:
+        proveedores = Proveedor.objects.filter(
+                completo=True, 
+                direcciones__estatus__nombre = "PREALTA",
+                ).exclude(familia__nombre="IMPUESTOS").distinct()
+    else:
+        proveedores = Proveedor.objects.filter(
+                completo=True, 
+                direcciones__estatus__nombre = "PREALTA",
+                direcciones__distrito__id = usuario.distritos.id,
+                ).exclude(familia__nombre="IMPUESTOS").distinct()
+        
     for proveedor in proveedores:
         proveedor.politicas_no_autorizadas = (
             not proveedor.acepto_politica or
