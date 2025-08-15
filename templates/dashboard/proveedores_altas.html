@@ -174,13 +174,12 @@
                             <i class="fa-duotone fa-solid fa-pen-to-square"></i>
                         </a>
                     </td>
-                    {% endif %}
+                  
                     <td>
                         <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'proveedor-direcciones' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
                             <i class="fa-duotone fa-solid fa-location-dot"></i>
                         </a>
                     </td>
-                    {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-alta-proveedor' proveedor.id %}">
                             <i class="fa-duotone fa-solid fa-circle-check fa-2x"></i>
