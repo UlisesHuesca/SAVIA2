@@ -1734,7 +1734,16 @@ def matriz_pagos(request):
             # Guardar ruta del PDF final en la sesión
             request.session['temp_pdf_path'] = temp_file_path
             return redirect('mostrar-pdf')
+        elif 'enviar_a_control' in request.POST:
+            ids = request.POST.getlist('compra_ids')
+            if ids:
+                pagos = Pago.objects.filter(id__in=ids)
+                for pago in pagos:
+                    pago.control_documentos = True
+                    pago.fecha_control_documentos = datetime.today()
+                    pago.save()
 
+            return redirect('matriz-pagos')  
             
            
            
@@ -1746,16 +1755,7 @@ def matriz_pagos(request):
         else:
             pago.estado_facturas = 'pendientes'
         
-        if 'enviar_a_control' in request.POST:
-            ids = request.POST.getlist('compra_ids')
-            if ids:
-                pagos = Pago.objects.filter(id__in=ids)
-                for pago in pagos:
-                    pago.control_documentos = True
-                    pago.fecha_control_documentos = datetime.today()
-                    pago.save()
-
-            return redirect('matriz-pagos')  
+       
         
     context= {
         'pagos_list':pagos_list,
