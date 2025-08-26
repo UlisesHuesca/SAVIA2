@@ -1,0 +1,1410 @@
+{% extends 'partials/base.html' %}
+{% load widget_tweaks %}
+{% load static %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+{% load i18n %}
+<html>
+<head>
+{% block title %}{% trans "Debida Diligencia" %}{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title": "Error",
+                    "text": "{{ message }}",
+                    "icon": "error",
+                })
+                </script>
+                {% elif message.tags == "warning" %}
+                <script>
+                Swal.fire({
+                    "title": "Facturas repetidas",
+                    "text": "{{ message }}",
+                    "icon": "warning",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title": "Excelente",
+                    "text": "{{ message }}",
+                    "icon": "success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<!-- Modal -->
+<div class="modal fade" id="infoModal" tabindex="-1"
+     aria-labelledby="infoModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered modal-lg">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title" id="infoModalLabel">Información</h5>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+      </div>
+      <div class="modal-body">
+        <!-- Tu contenido -->
+        <div class="modal-header">
+            <h5 class="modal-title" id="infoModalLabel">Cuestionario de Debida Diligencia</h5>
+        </div>
+        <div class="modal-body">
+            <p>
+                Grupo Vordcab acorde con las mejores prácticas internacionales en ética solicita a los Terceros con los que lleva a cabo Acuerdos Comerciales, respondan el 
+                presente cuestionario de Debida Diligencia, a fin de fomentar una cultura de cumplimiento y combate a la corrupción y otras prácticas irregulares como
+                una forma de hacer negocios éticos.
+            </p>
+            <p>
+                Para el desarrollo de la Debida Diligencia, solicitamos nos proporciones información con la finalidad de conocer su organización y el Beneficiario Final.
+                Posteriormente al llenado de este cuestionario, personal de Grupo Vordcab lo contactará para solicitar información adicional en caso de que se requiera.
+            </p>
+            <p>
+                Si fuera necesario, se le solicitará aclare las dudas que hubiera sobre su información y comentará con usted cuales son los hallazgos encontrados, proponiéndole
+                la manera de atenderles, para prevenir que en el Acuerdo Comercial se materialicen Hechos de Corrupción que pudieran afectar a su organización y a Grupo Vordcab.
+            </p>
+        <hr>
+        <p>
+            INSTRUCCIONES DE LLENADO DEL CUESTIONARIO:
+        </p>
+        <hr>
+        <p>
+            * Por favor responda todas las preguntas con veracidad.
+        </p>
+        <p>
+            * Si observa que su empresa no reúne características, información requerida u observa alguna problemática, por favor infórmelo.
+        </p>
+        <p>
+            * Previo al llenado de este cuestionario, deberá adjuntar archivos PDF como parte de la información que corresponde, en el portal de proveedores
+            del sistema SAVIA de Grupo Vordcab.
+        </p>
+        <p>
+            * Toda la información que proporciona tiene el carácter de confidencial.
+        </p>
+        <p>
+            * En Grupo Vordcab se tiene implementada una política de TOLERANCIA CERO A LA CORRUPCIÓN. Si cualquier trabajador de Grupo Vordcab o persona que 
+            mencione que trabaja para para o a nombre de Grupo Vordcab le ha solictado u ofrecido algún beneficio, soborno u obsequio de cualquier tipo, se tomarán 
+            accione para imponer las medidas disciplinarias que correspondan. Por favor repórtelo al correo denuncia@grupovordcab.com su reporte pueder ser anónimo
+            si así lo desea. Grupo Vordcab tiene implementada una política de NO REPRESALIAS.
+        </p>
+        <hr>
+        </div>
+        <!-- Ejemplo con datos de Django:
+        <p>{{ objeto.descripcion }}</p>
+        -->
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="row">
+    <div class="col-lg-7">
+        <div class="card" id="form-wrapper"> 
+            <div class="card-header">
+            <h2>
+                Cuestionario de Debida Diligencia 
+                <button type="button"
+                    class="btn btn-info btn-sm"
+                    data-bs-toggle="modal"
+                    data-bs-target="#infoModal">
+                <i class="fa-solid fa-circle-info"></i> Info
+                </button>
+
+            </h2>
+            </div>
+            <form id="f_diligencia_form" method="post">
+            {% csrf_token %}
+            <div class="card-body">
+                 {% if error_messages %}
+                <div class="alert alert-danger" role="alert">
+                    {{error_messages}}
+                </div>
+                {% endif %}
+                <div class="alert alert-primary" role="alert">
+                    <h2>1. Información General</h2>
+                </div>
+               
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{diligencia_form.cargo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cargo"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Cargo" %}*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{diligencia_form.representante_nombre|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Representante "}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Representante, Apoderado legal u oficial de cumplimiento" %}*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-globe"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{diligencia_form.sitio_web|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Sitio web"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Sitio web" %}*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-primary" role="alert">
+                    <h5>SECCIÓN I. Partes Relacionadas/Socios</h5>
+                </div>
+                {% if tipo == Null %}
+                    <div class="alert alert-danger" role="alert">
+                        <h6>
+                            No se ha subido la Constancia de Situación Fiscal o es ilegible por lo que no se puede determinar el tipo de contribuyente.
+                        </h6>
+                    </div>
+                {% elif tipo == "Persona Moral" %}
+                    
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        2. Tratándose de personas morales, proporcione una lista de los accionistas que posean más del 10% de Participación
+                        en el capital social y su nacionalidad.
+                    </h6>
+                </div>
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{accionista_form.nombre|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nombre"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Nombre" %}*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="row my-2">
+                    <div class="col-sm-12 col-md-6">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{accionista_form.porcentaje_participacion|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Porcentaje_Participación"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Porcentaje Participación" %}*</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-sm-12 col-md-6">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{accionista_form.nacionalidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nacionalidad"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Nacionalidad" %}*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-end">
+                    <button type="submit" name="submit_accionista" class="btn btn-outline-success" title ="Agregar Accionista">
+                        <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
+                    </button>
+                </div>         
+                <div class ="table-responsive-sm">
+                    <table class="table table-light table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">Nombre</th>
+                                <th scope="col">%</th>
+                                <th scope="col">Nacionalidad</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mytbl">
+                            {% for accionista in accionistas %}
+
+                            <tr>
+                                <td scope="col">{{accionista.nombre}}</td>
+                                <td scope="col">{{accionista.porcentaje_participacion}}</td>
+                                <td scope="col">{{accionista.nacionalidad}}</td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                   
+                </div>
+                {% elif tipo == "Persona Física" %}
+                    <div class="alert alert-info" role="alert">
+                        <h6>
+                            El proveedor es una persona física por lo que la sección de Accionistas No Aplica.
+                        </h6>
+                    </div>
+                 {% endif %}
+                 <div class="alert alert-dark" role="alert">
+                    <h6>
+                        3. ¿Existe en su compañía una estructura jerárquica definida para los miembros de la alta dirección?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.tiene_alta_direccion |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                       4. ¿Alguno(s) de sus empleados clave, accionista(s) o Miembro(s) de la alta dirección de su empresa es(son) servidor(es) 
+                        o funcionario(s) público(s)? 
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.empleado_funcionarios_publicos |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div> 
+              
+               
+                
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                       5. ¿La empresa, pertenece parcial o totalmente a un "servidor público" o una persona relacionada a uno de ellos,
+                        ya sea como accionista, inversionista, socio de la organización, o de cualquier otra manera?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.pertenece_funcionario_publico |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>        
+                
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        A. ¿Hará del conocimiento a Grupo Vordcab en caso de existir, relaciones familiares de cualquiera de sus empleados,
+                    socios, funcionarios, directores o acccionistas y algún empleado de Grupo Vordcab u otro servidor público del gobierno
+                    mexicano (Personas Políticamente Expuestas) y notificará si surge tal situación durante la vigencia del Acuerdo
+                    Comercial
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.notificar_relacion_familiar |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>        
+            
+                <div class="alert alert-primary" role="alert">
+                    <h5>SECCIÓN II. Fuentes de Financiamiento</h5>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        6. ¿Alguna vez le ha sido suspendida la realización de actos, operaciones o servicios por las instituciones bancarias o de crédito (bloqueo
+                        de cuentas bancarias y/o activos) por orden de la Unidad de Inteligencia Financiera en México o autoridad equivalente en el extranjero?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.cuentas_bloqueadas |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <!--SECCION DE VISIBILIDAD DEPENDIENTE ACCIONISTAS/DUEÑOS SERVIDORES PÚBLICOS--> 
+                <div id="detalle-cuentas-bloqueadas" style="display:none;">
+                    <div class="alert alert-dark" role="alert">
+                        <h6>
+                            Por favor especifique el periodo por el cual tuvo el bloqueo, si fue resuelta
+                            o aclarada su situación financiera o si continua bloqueado.
+                        </h6>
+                    </div>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{diligencia_form.detalle_cuentas_bloqueadas|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Detalle cuentas bloqueadas"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Detalle cuentas bloqueadas" %}</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+             
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        7. ¿Cuenta con fuentes de financiamiento externas para alcanzar la capacidad económina requerida para la proveeduría del producto o servicio?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.financiamiento_externo |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <!--SECCION DE VISIBILIDAD DEPENDIENTE FINANCIAMIENTO EXTERNO--> 
+                <div id="detalle-financiamiento-externo" class="col-12" style="display:none;">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{diligencia_form.fuentes_financiamiento|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Fuentes de Financiamiento"}}
+                            <label style="color: #121212;" for="id_comentario">{% trans "Por favor indique cuáles son sus fuentes de financiamiento" %}</label>
+                        </div>
+                    </div>
+                </div>
+
+            
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        8. ¿Existen en su empresa, controles, políticas y vigilancia de cumplimiento a las disposiciones nacionales e internacionales que prohíben el Lavado de
+                        de Dinero y el financiamiento al terrorismo?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.controles_antilavado |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+
+                    
+                <div class="alert alert-primary" role="alert">
+                    <h5>SECCIÓN III. Conflicto de Intereses</h5>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        10. Alguna de las personas que serán responsable de interactuar con Grupo Vordcab o sus empresas ¿fueron en el pasado trabajdores de Grupo Vordcab?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.responsables_interactuar |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+               <hr>
+                
+                <div class="alert alert-primary" role="alert">
+                    <h5>SECCIÓN IV. Ética</h5>
+                </div>  
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        11. ¿Su empresa apoya y respeta la protección de los derechos humanos fundamentales, reconocidos internacionalmente dentro de su ámbto de influencia?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.respeta_derechos_humanos |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div> 
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                       12. ¿Su empresa promueve y aplica la eliminación de toda forma de trabajo forzoso o realizado bajo coacción?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.elimina_trabajo_forzoso |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div> 
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        13. ¿Todos sus empleados, sin importar su nivel de responsabilidad trabajan con contrato y reciben prestaciones acordes a la ley?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.empleados_contrato_prestaciones |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div> 
+                <!--SECCION DE VISIBILIDAD DEPENDIENTE EMPLEADOS CONTRATO PRESTACIONES--> 
+                <div class="col-12" id="detalle-contrato_prestaciones" >
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{diligencia_form.explicacion_sin_contrato|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Explicación"}}
+                            <label style="color: #121212;" for="id_comentario">{% trans "Por favor explique" %}</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        14. ¿Su empresa promueve y aplica la erradicación del trabajo infantil?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.erradica_trabajo_infantil  |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div> 
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                         15. ¿Su empresa promueve y aplica la abolición de prácticas de discriminación en el empleo y la ocupación?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.elimina_discriminacion |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div> 
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                         16. ¿Su empresa asegura un  enfoque preventivo que favorezca el medio ambiente?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.enfoque_medio_ambiente |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>           
+                <div class="alert alert-primary" role="alert">
+                    <h5>SECCIÓN V. Características de su programa de integridad</h5>
+                </div>                  
+                <div class="alert alert-dark" role="alert">
+                    <h6> A. ¿Cuenta con un código de ética?
+                    <div class="col-sm-12 col-md-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list-radio"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{diligencia_form.codigo_etica|add_class:"form-control grupo-entrada"}}
+                                    <!--<label style="color: #121212;" for="id_comentario">{% trans "I.  " %}</label>-->
+                                </div>
+                        </div>
+                    </div> 
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6> B. ¿Cuenta con un código de conducta?
+                    <div class="col-sm-12 col-md-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list-radio"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{diligencia_form.codigo_conducta|add_class:"form-control grupo-entrada"}}
+                                    <!--<label style="color: #121212;" for="id_comentario">{% trans "I.  " %}</label>-->
+                                </div>
+                        </div>
+                    </div> 
+                    </h6>
+                </div>         
+                <div class="alert alert-dark" role="alert">
+                    <h6> C. ¿Cuenta con una política anticorrupción?
+                    <div class="col-sm-12 col-md-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list-radio"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{diligencia_form.politica_anticorrupcion|add_class:"form-control grupo-entrada"}}
+                                    <!--<label style="color: #121212;" for="id_comentario">{% trans "I.  " %}</label>-->
+                                </div>
+                        </div>
+                    </div> 
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>D. ¿Tiene algún otro documento que regule el comportamiento ético de sus empleados? 
+                    <div class="col-sm-12 col-md-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list-radio"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{diligencia_form.otro_documento_etico|add_class:"form-control grupo-entrada"}}
+                                    <!--<label style="color: #121212;" for="id_comentario">{% trans "I.  " %}</label>-->
+                                </div>
+                        </div>
+                    </div> 
+                    </h6>
+                </div>           
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        E. El documento, la política o los códigos señalados en la pregunta anterior incluyen las siguientes características:
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        * Transparencia en cuanto a donativos 
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.transparencia_donativos |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        * Son de conocimiento público 
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.conocimiento_publico |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        * Son extensivo a sus grupos de interés, partes relacionadas, proveedores y otros
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.extensivo_grupos_interes |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        * Transparencia en cuanto a aportaciones y contribuciones políticas
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.transparencia_contribuciones_politicas|add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        * Establecen expresamente la prohibición de ofrecer o recibir sobornos
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.prohibicion_sobornos|add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        * Establecen expresamente la prohibición de ofrecer o recibir incentivos de cualquier tipo (efectivo, especie, etc.) por trámite,
+                        gestión o facilitación.
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.prohibicion_incentivos|add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        * Establecen expresamente la prohibición de realizar operaciones con rescursos de procedencia o destino ilícito (Lavado de Dinero)
+                        o financiamiento al terrorismo
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.prohibicion_lavado_dinero|add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>F. ¿Cuenta con un manual de organización y procedimientos que describan las funciones y responsabilidade de las áreas? 
+                    <div class="col-sm-12 col-md-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list-radio"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{diligencia_form.manual_organizacion|add_class:"form-control grupo-entrada"}}
+                                    <!--<label style="color: #121212;" for="id_comentario">{% trans "I.  " %}</label>-->
+                                </div>
+                        </div>
+                    </div> 
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        G. ¿Verifica el perfil ético de sus empleados antes de su contratación? 
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.verifica_perfil_etico |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                 <!--SECCION DE VISIBILIDAD DEPENDIENTE VERIFICA PERFIL ETICO--> 
+                <div class="col-12" id="detalle-verifica-perfil"  style="display:none;" >
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{diligencia_form.descripcion_verificacion|add_class:"form-control grupo-entrada"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "Explique como" %}</label>
+                            </div>
+                    </div>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>H. ¿Brinda capacitación a su personal en temas relacionados al combate a la corrupción?   
+                    <div class="col-sm-12 col-md-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list-radio"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{diligencia_form.capacitacion_anticorrupcion|add_class:"form-control grupo-entrada"}}
+                                    <!--<label style="color: #121212;" for="id_comentario">{% trans "I.  " %}</label>-->
+                                </div>
+                        </div>
+                    </div> 
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>I. ¿Cuenta con algún medio o mecanismo institucional para denunciar hechos de corrupción?    
+                    <div class="col-sm-12 col-md-3">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list-radio"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{diligencia_form.medio_denuncia|add_class:"form-control grupo-entrada"}}
+                                    <!--<label style="color: #121212;" for="id_comentario">{% trans "I.  " %}</label>-->
+                                </div>
+                        </div>
+                    </div> 
+                    </h6>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>J. ¿En caso de recibirse una denuncia, se le da seguimiento hasta obtener resultados?                      
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.seguimiento_denuncia |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div>
+                 <!--SECCION DE VISIBILIDAD DEPENDIENTE SEGUIMIENTO DENUNCIA--> 
+                <div class="col-12" id="detalle-seguimiento-denuncia"  style="display:none;" >
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{diligencia_form.descripcion_seguimiento |add_class:"form-control grupo-entrada"}}
+                                <label style="color: #121212;" for="id_comentario">{% trans "¿Puede mencionar a través de que medios se da seguimiento?" %}</label>
+                            </div>
+                    </div>
+                </div>
+                <div class="alert alert-dark" role="alert">
+                    <h6>
+                        ¿Sus directivos hablan  en forma clara sobre temas de corrupción y la responsabilidad de los empleados?
+                        <div class="form-check form-switch col-sm">
+                            <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                            {{diligencia_form.directivos_hablan_de_corrupcion |add_class:"form-check-input"}}
+                        </div>
+                    </h6>
+                </div> 
+                <div class="text-end">
+                    <button type="submit" name="submit_diligencia" class="btn btn-outline-success" title ="Terminar Cuestionario Debida Diligencia">
+                        Terminar Cuestionario
+                    </button>
+                </div>  
+            </div>
+
+            </form>
+        </div> 
+    </div>
+    <!--SECCION DE VISIBILIDAD DEPENDIENTE ALTA DIRECCÓN--> 
+    <div class="col-lg-5">
+        <div id="seccion-alta-direccion" class="card" style="display:none;">
+            <div class="card-header">
+                <h2 id="linea_gasto">
+                    3. Alta Dirección
+                </h2>
+            </div>
+      
+            <div class="card-body"  >
+                <form method="post">
+                    {% csrf_token %}
+                    <div  class="alert alert-dark" role="alert">
+                        <h6>
+                            Señale quienes son los Miembros de alta dirección principales de su organización (director, gerente, administrador, responsable del 
+                            proyecto):
+                        </h6>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{direccion_form.nombre|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nombre"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Nombre" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col-sm-12 col-md-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{direccion_form.anios_servicio|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Años de Servicio"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Años de Servicio" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{direccion_form.nacionalidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nacionalidad"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Nacionalidad" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{direccion_form.cargo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cargo"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Cargo" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" name="submit_direccion" class="btn btn-outline-success" title ="Agregar Alta Dirección">
+                            <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
+                        </button>
+                    </div>  
+                    <div class ="table-responsive-sm">
+                        <table class="table table-light table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nombre</th>
+                                    <th scope="col">Años de Servicio</th>
+                                    <th scope="col">Nacionalidad</th>
+                                    <th>Cargo</th>
+                                    <th>Eliminar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mytbl">
+                                {% for miembro in miembros %}
+
+                                <tr>
+                                    <td scope="col">{{miembro.nombre}}</td>
+                                    <td scope="col">{{miembro.anios_servicio}}</td>
+                                    <td scope="col">{{miembro.nacionalidad}}</td>
+                                    <td>{{miembro.cargo}}</td>
+                                    <td><a type="button" class="btn btn-outline-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'eliminar-miembro' miembro.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div> 
+                    </form>
+                </div>
+               
+        </div>  
+     
+   <!--SECCION DE VISIBILIDAD DEPENDIENTE EMPLEADOS SERVIDORES PÚBLICOS-->  
+    
+        <div id="seccion-empleados-servidores" class="card mt-1" style="display:none;">
+            <div class="card-header">
+                <h2>
+                    4. Empleados - Servidores Públicos
+                </h2>
+            </div>
+      
+            <div class="card-body"  >
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{funcionario_form.nombre|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nombre"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Nombre" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col-sm-12 col-md-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{funcionario_form.puesto_gubernamental|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Puesto Gubernamental"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Puesto Gubernamental" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{funcionario_form.periodo_funciones|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Periodo Funciones"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Periodo Funciones" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{funcionario_form.cargo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Cargo Empresa"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Cargo Empresa" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" name="submit_funcionario" class="btn btn-outline-success" title ="Agregar Funcionario - Empleado">
+                            <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
+                        </button>
+                    </div>  
+                    <div class ="table-responsive-sm">
+                        <table class="table table-light table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nombre</th>
+                                    <th scope="col">Puesto Gubernamental</th>
+                                    <th scope="col">Cargo Empresa</th>
+                                    <th>Periodo Funciones</th>
+                                    <th>Eliminar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mytbl">
+                                {% for funcionario in empleados_funcionarios %}
+
+                                <tr>
+                                    <td scope="col">{{funcionario.nombre}}</td>
+                                    <td scope="col">{{funcionario.puesto_gubernamental}}</td>
+                                    <td scope="col">{{funcionario.cargo}}</td>
+                                    <td>{{funcionario.periodo_funciones}}</td>
+                                    <td><a type="button" class="btn btn-outline-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'eliminar-empleado-funcionario' funcionario.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a></td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                   
+                    
+                </form>
+            </div>
+               
+        </div>
+          <!--SECCION DE VISIBILIDAD DEPENDIENTE ACCIONISTAS/DUEÑOS SERVIDORES PÚBLICOS--> 
+    
+        <div id="seccion-accionistas-servidores" class="card mt-1" style="display:none;">
+            <div class="card-header">
+                <h2>
+                    5. Accionistas - Servidores Públicos
+                </h2>
+            </div>
+      
+            <div class="card-body"  >
+                <form method="post">
+                    {% csrf_token %}
+                    
+                    <div class="row my-2">
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{relacion_form.nombre_servidor|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nombre"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Nombre" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div class="col-sm-12 col-md-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{relacion_form.tipos_relacion|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Tipo de relación"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Tipo de relación" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-sm-12 col-md-6">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{relacion_form.porcentaje_participacion|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Porcentaje Participación"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Porcentaje Participación" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="text-end">
+                        <button type="submit" name="submit_relacion" class="btn btn-outline-success" title ="Agregar Servidor Público">
+                            <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
+                        </button>
+                    </div>  
+                    <div class ="table-responsive-sm">
+                        <table class="table table-light table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nombre</th>
+                                    <th scope="col">Tipo de Relación</th>
+                                    <th>Porcentaje de Participación</th>
+                                    <th>Eliminar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mytbl">
+                                {% for relacionado in accionistas_funcionarios %}
+                                    <tr>
+                                        <td scope="col">{{relacionado.nombre_servidor}}</td>
+                                        <td scope="col">{{relacionado.tipos_relacion}}</td>
+                                        <td scope="col">{{relacionado.porcentaje_participacion}}</td>
+                                        <td><a type="button" class="btn btn-outline-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'eliminar-accionista-funcionario' relacionado.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                   
+                    
+                </form>
+            </div>
+               
+        </div>    
+        <div class="card mt-1" >
+            <div class="card-header">
+                <h2>
+                    10. Interacciones Grupo Vordcab
+                </h2>
+            </div>
+      
+            <div class="card-body" >
+                <form method="post">
+                    {% csrf_token %}
+                     <h6>
+                        Anote los datos de las personas que serán responsables de interactuar con Grupo Vordcab (únicamente los 3 principales), informando si ha sido empleado de Grupo
+                        Vordcab, en su caso el año en que causó baja de trabajar para Grupo Vordcab y el puesto desempeñó
+                    </h6>
+                    <div class="row my-2">
+                        <div class="col-md-6 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{responsable_form.nombre|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nombre"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Nombre" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="alert alert-light" role="alert">
+                        <h6>
+                            ¿Trabajó para Grupo Vordcab?
+                            <div class="form-check form-switch col-sm">
+                                <label for="form.empleado_funcionario" class="form-check-label"><strong>Sí</strong></label>
+                                {{responsable_form.trabajo_previo_vordcab |add_class:"form-check-input"}}
+                            </div>
+                        </h6>
+                    </div>
+               
+                    <div class="row my-2">
+                        <div class="col-md-6 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{responsable_form.anio_baja|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Año de Baja"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Año de Baja" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-6 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{responsable_form.puesto_ocupado|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Puesto Ocupado"}}
+                                    <label style="color: #121212;" for="id_comentario">{% trans "Puesto Ocupado" %}</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="text-end">
+                        <button type="submit" name="submit_responsable" class="btn btn-outline-success" title ="Agregar Responsable Interacción">
+                            <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
+                        </button>
+                    </div>
+                    <hr>
+                    <div class ="table-responsive-sm">
+                        <table class="table table-light table-striped table-hover">
+                            <thead>
+                                <tr>
+                                    <th scope="col">Nombre</th>
+                                    <th>¿Trabajó para Grupo Vordcab?</th>
+                                    <th scope="col">Año de Baja</th>
+                                    <th>Puesto ocupado</th>
+                                    <th>Eliminar</th>
+                                </tr>
+                            </thead>
+                            <tbody id="mytbl">
+                                {% for extrabajador in responsables_interaccion %}
+                                    <tr>
+                                        <td scope="col">{{extrabajador.nombre}}</td>
+                                        <td scope="col">{{extrabajador.trabajo_previo_vordcab}}</td>
+                                        <td scope="col">{{extrabajador.anio_baja| unlocalize}}</td>
+                                        <td>{{extrabajador.puesto_ocupado}}</td>
+                                        <td><a type="button" class="btn btn-outline-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'eliminar-responsable-interaccion' extrabajador.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a></td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>  
+                </form>
+            </div>
+               
+        </div>    
+    </div>           
+</div>
+
+                   
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const checkbox = document.getElementById("id_tiene_alta_direccion"); // ID generado por Django
+    const seccionAltaDireccion = document.getElementById("seccion-alta-direccion");
+    const checkbox_empleado_servidor = document.getElementById("id_empleado_funcionarios_publicos"); // ID generado por Django
+    const seccionEmpleadoServidor = document.getElementById("seccion-empleados-servidores");
+    const checkbox_accionista_servidor = document.getElementById("id_pertenece_funcionario_publico"); // ID generado por Django
+    const seccionAccionistaServidor = document.getElementById("seccion-accionistas-servidores");
+    const checkbox_cuentas_bloqueadas = document.getElementById("id_cuentas_bloqueadas"); // ID generado por Django
+    const seccionCuentasBloqueadas = document.getElementById("detalle-cuentas-bloqueadas");  
+    const checkbox_financiamiento_externo = document.getElementById("id_financiamiento_externo"); // ID generado por Django     
+    const seccionFinanciamientoExterno = document.getElementById("detalle-financiamiento-externo");  
+    const checkbox_contrato_prestaciones = document.getElementById("id_empleados_contrato_prestaciones"); // ID generado por Django
+    const seccionContratoPrestaciones = document.getElementById("detalle-contrato_prestaciones");
+    const checkbox_verifica_perfil = document.getElementById("id_verifica_perfil_etico"); // ID generado por Django
+    const seccionVerificaPerfil = document.getElementById("detalle-verifica-perfil");
+    const checkbox_seguimiento_denuncia = document.getElementById("id_seguimiento_denuncia"); // ID generado por Django
+    const seccionSeguimientoDenuncia = document.getElementById("detalle-seguimiento-denuncia");
+    var datosGuardados = JSON.parse(localStorage.getItem("diligencia_form")) || {};
+    var inputCargo = document.getElementById("id_cargo"); 
+    var input_sitio_web = document.getElementById("id_sitio_web");
+    var inputRepresentante = document.getElementById("id_representante_nombre"); 
+    var chk_relaciones_familiares = document.getElementById("id_notificar_relacion_familiar");
+    var chk_cuentas_bloquedas = document.getElementById("id_cuentas_bloqueadas");
+    var chk_financiamiento_externo = document.getElementById("id_financiamiento_externo");
+    var chk_controles_antilavado = document.getElementById("id_controles_antilavado");
+    var chk_responsable_interactuar = document.getElementById("id_responsables_interactuar");
+    var chk_respeta_derechos_humanos = document.getElementById("id_respeta_derechos_humanos");
+    var chk_elimina_trabajo_forzoso = document.getElementById("id_elimina_trabajo_forzoso");
+    var chk_empeados_contrato_prestaciones = document.getElementById("id_empleados_contrato_prestaciones");
+    var chk_erradica_trabajo_infantil = document.getElementById("id_erradica_trabajo_infantil");
+    var chk_elimina_discriminacion = document.getElementById("id_elimina_discriminacion");
+    var chk_enfoque_medio_ambiente = document.getElementById("id_enfoque_medio_ambiente");
+    var slt_codigo_etica = document.getElementById("id_codigo_etica");
+    var slt_codigo_conducta = document.getElementById("id_codigo_conducta");
+    var slt_politica_anticorrupcion = document.getElementById("id_politica_anticorrupcion");
+    var slt_otro_documento = document.getElementById("id_otro_documento_etico");
+    var chk_transparencia_donativos = document.getElementById("id_transparencia_donativos");
+    var chk_conocimiento_publico = document.getElementById("id_conocimiento_publico");
+    var chk_extensivo_grupo_interes = document.getElementById("id_extensivo_grupos_interes");
+    var chk_transparencia_contribuciones = document.getElementById("id_transparencia_contribuciones_politicas");
+    var chk_prohibicion_sobornos = document.getElementById("id_prohibicion_sobornos");
+    var chk_prohibicion_incentivos = document.getElementById("id_prohibicion_incentivos");
+    var chk_prohibicion_lavado_dinero = document.getElementById("id_prohibicion_lavado_dinero");
+    var slt_manual_organizacion = document.getElementById("id_manual_organizacion");
+    var slt_capacitaion_anticorrupcion = document.getElementById("id_capacitacion_anticorrupcion");
+    var slt_medio_denuncia = document.getElementById("id_medio_denuncia");
+    var chk_verifica_perfil_etico = document.getElementById("id_verifica_perfil_etico");
+    var chk_seguimiento_denuncia = document.getElementById("id_seguimiento_denuncia");
+    var chk_directivos_hablan_de_corrupcion = document.getElementById("id_directivos_hablan_de_corrupcion");
+
+
+ 
+    function toggleAltaDireccion() {
+        if (checkbox.checked) {
+            seccionAltaDireccion.style.display = "block";
+        } else {
+            seccionAltaDireccion.style.display = "none";
+        }
+    }
+    function toggleEmpleadoServidor() {
+        if (checkbox_empleado_servidor.checked) {
+            seccionEmpleadoServidor.style.display = "block";
+        } else {
+            seccionEmpleadoServidor.style.display = "none";
+        }
+    }
+    function toggleAccionistaServidor() {
+        if (checkbox_accionista_servidor.checked) {
+            seccionAccionistaServidor.style.display = "block";
+        } else {
+            seccionAccionistaServidor.style.display = "none";
+        }
+    }
+    function toggleCuentasBloqueadas() {
+        if (checkbox_cuentas_bloqueadas.checked) {
+            seccionCuentasBloqueadas.style.display = "block";
+        } else {
+            seccionCuentasBloqueadas.style.display = "none";
+        }
+    }
+    function toggleFinanciamientoExterno() {
+        if (checkbox_financiamiento_externo.checked) {
+            seccionFinanciamientoExterno.style.display = "block";
+        } else {
+            seccionFinanciamientoExterno.style.display = "none";
+        }
+    }
+    function toggleContratoPrestaciones() {
+        if (checkbox_contrato_prestaciones.checked) {
+            seccionContratoPrestaciones.style.display = "none";
+        } else {
+            seccionContratoPrestaciones.style.display = "block";
+        }
+    }
+    function toggleVerificaPerfil() {
+        if (checkbox_verifica_perfil.checked) {
+            seccionVerificaPerfil.style.display = "block";
+        } else {
+            seccionVerificaPerfil.style.display = "none";
+        }
+    }
+    function toggleSeguimientoDenuncia() {
+        if (checkbox_seguimiento_denuncia.checked) {
+            seccionSeguimientoDenuncia.style.display = "block";
+        } else {
+            seccionSeguimientoDenuncia.style.display = "none";
+        }
+    }
+
+
+    // Ejecutar al cargar la página
+    toggleAltaDireccion();
+    toggleEmpleadoServidor();
+    toggleAccionistaServidor();
+    toggleCuentasBloqueadas();
+    toggleFinanciamientoExterno();
+    toggleContratoPrestaciones();   
+    toggleVerificaPerfil();
+    toggleSeguimientoDenuncia();
+
+    // Ejecutar cada vez que cambie el estado del switch
+    checkbox.addEventListener("change", toggleAltaDireccion);
+    checkbox_empleado_servidor.addEventListener("change", toggleEmpleadoServidor);
+    checkbox_accionista_servidor.addEventListener("change", toggleAccionistaServidor);
+    checkbox_cuentas_bloqueadas.addEventListener("change", toggleCuentasBloqueadas);
+    checkbox_financiamiento_externo.addEventListener("change", toggleFinanciamientoExterno);
+    checkbox_contrato_prestaciones.addEventListener("change", toggleContratoPrestaciones);
+    checkbox_verifica_perfil.addEventListener("change", toggleVerificaPerfil);
+    checkbox_seguimiento_denuncia.addEventListener("change", toggleSeguimientoDenuncia);
+
+    if (datosGuardados["cargo"]) {
+        //console.log("Cargando datos guardados:", datosGuardados);
+        //console.log(inputCargo)
+        inputCargo.value = datosGuardados["cargo"];
+    }
+    if (datosGuardados["representante_nombre"]) {
+        //console.log("Cargando datos guardados:", datosGuardados);
+        //console.log(inputRepresentante)
+        inputRepresentante.value = datosGuardados["representante_nombre"];
+    }
+    if (datosGuardados["sitio_web"]) {
+        //console.log("Cargando datos guardados:", datosGuardados);
+        //console.log(input_sitio_web)
+        input_sitio_web.value = datosGuardados["sitio_web"];
+    }
+    if (datosGuardados["id_notificar_relacion_familiar"]) {
+        chk_relaciones_familiares.checked = datosGuardados["id_notificar_relacion_familiar"];
+    }
+    if (datosGuardados["id_cuentas_bloqueadas"] == true) {
+        chk_cuentas_bloquedas.checked = datosGuardados["id_cuentas_bloqueadas"];
+        toggleCuentasBloqueadas();
+    }
+    if (datosGuardados["id_financiamiento_externo"]) {
+        chk_financiamiento_externo.checked = datosGuardados["id_financiamiento_externo"];
+        toggleFinanciamientoExterno();
+    }
+    if (datosGuardados["id_controles_antilavado"]) {
+        chk_controles_antilavado.checked = datosGuardados["id_controles_antilavado"];
+    }
+    if (datosGuardados["id_responsables_interactuar"]) {
+        chk_responsable_interactuar.checked = datosGuardados["id_responsables_interactuar"];
+    }
+    if (datosGuardados["id_respeta_derechos_humanos"]) {
+        chk_respeta_derechos_humanos.checked = datosGuardados["id_respeta_derechos_humanos"];
+    }
+    if (datosGuardados["id_elimina_trabajo_forzoso"]) {
+        chk_elimina_trabajo_forzoso.checked = datosGuardados["id_elimina_trabajo_forzoso"];
+    }
+    if (datosGuardados["id_empleados_contrato_prestaciones"]) {
+        chk_empeados_contrato_prestaciones.checked = datosGuardados["id_empleados_contrato_prestaciones"];
+        toggleContratoPrestaciones()
+    }
+    if (datosGuardados["id_erradica_trabajo_infantil"]) {
+        chk_erradica_trabajo_infantil.checked = datosGuardados["id_erradica_trabajo_infantil"];
+    }
+    if (datosGuardados["id_elimina_discriminacion"]) {
+        chk_elimina_discriminacion.checked = datosGuardados["id_elimina_discriminacion"];
+    }
+    if (datosGuardados["id_enfoque_medio_ambiente"]) {
+        chk_enfoque_medio_ambiente.checked = datosGuardados["id_enfoque_medio_ambiente"];
+    }
+    if (datosGuardados["id_codigo_etica"]) {
+        slt_codigo_etica.value = datosGuardados["id_codigo_etica"];
+    }
+    if (datosGuardados["id_codigo_conducta"]) {
+        slt_codigo_conducta.value = datosGuardados["id_codigo_conducta"];
+    }
+    if (datosGuardados["id_politica_anticorrupcion"]) {
+        slt_politica_anticorrupcion.value = datosGuardados["id_politica_anticorrupcion"];
+    }
+    if (datosGuardados["id_otro_documento_etico"]) {
+        slt_otro_documento.value = datosGuardados["id_otro_documento_etico"];
+    }
+    if (datosGuardados["id_transparencia_donativos"]) {
+        chk_transparencia_donativos.checked = datosGuardados["id_transparencia_donativos"];
+    }
+    if (datosGuardados["id_conocimiento_publico"]) {
+        chk_conocimiento_publico.checked = datosGuardados["id_conocimiento_publico"];
+    }
+    if (datosGuardados["id_extensivo_grupo_interes"]) {
+        chk_extensivo_grupo_interes.checked = datosGuardados["id_extensivo_grupo_interes"];
+    }
+    if (datosGuardados["id_transparencia_contribuciones_politicas"]) {
+        chk_transparencia_contribuciones.checked = datosGuardados["id_transparencia_contribuciones_politicas"];
+    }
+    if (datosGuardados["id_prohibicion_sobornos"]) {
+        chk_prohibicion_sobornos.checked = datosGuardados["id_prohibicion_sobornos"];
+    }
+    if (datosGuardados["id_prohibicion_incentivos"]) {
+        chk_prohibicion_incentivos.checked = datosGuardados["id_prohibicion_incentivos"];
+    }
+    if (datosGuardados["id_prohibicion_lavado_dinero"]) {
+        chk_prohibicion_lavado_dinero.checked = datosGuardados["id_prohibicion_lavado_dinero"];
+    }
+    if (datosGuardados["id_manual_organizacion"]) {
+        slt_manual_organizacion.value = datosGuardados["id_manual_organizacion"];
+    }
+    if (datosGuardados["id_capacitacion_anticorrupcion"]) {
+        slt_capacitaion_anticorrupcion.value = datosGuardados["id_capacitacion_anticorrupcion"];
+    }
+    if (datosGuardados["id_medio_denuncia"]) {
+        slt_medio_denuncia.value = datosGuardados["id_medio_denuncia"];
+    }
+    if (datosGuardados["id_verifica_perfil_etico"]) {
+        chk_verifica_perfil_etico.checked = datosGuardados["id_verifica_perfil_etico"];
+        toggleVerificaPerfil();
+    }
+    if (datosGuardados["id_seguimiento_denuncia"]) {
+        chk_seguimiento_denuncia.checked = datosGuardados["id_seguimiento_denuncia"];
+        toggleSeguimientoDenuncia();
+    }   
+    if (datosGuardados["id_directivos_hablan_de_corrupcion"]) {
+        chk_directivos_hablan_de_corrupcion.checked = datosGuardados["id_directivos_hablan_de_corrupcion"];
+    }
+
+    // guardar cuando cambie el campo
+    inputCargo.addEventListener("change", function () {
+        datosGuardados["cargo"] = inputCargo.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    inputRepresentante.addEventListener("change", function () {
+        datosGuardados["representante_nombre"] = inputRepresentante.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    input_sitio_web.addEventListener("change", function () {
+        datosGuardados["sitio_web"] = input_sitio_web.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    chk_relaciones_familiares.addEventListener("change", function () {
+        datosGuardados["id_notificar_relacion_familiar"] = chk_relaciones_familiares.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    
+    });
+    chk_cuentas_bloquedas.addEventListener("change", function () {
+        datosGuardados["id_cuentas_bloqueadas"] = chk_cuentas_bloquedas.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    
+    });
+    chk_financiamiento_externo.addEventListener("change", function () {
+        datosGuardados["id_financiamiento_externo"] = chk_financiamiento_externo.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    
+    });
+    chk_controles_antilavado.addEventListener("change", function () {
+        datosGuardados["id_controles_antilavado"] = chk_controles_antilavado.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    
+    });
+    chk_responsable_interactuar.addEventListener("change", function () {
+        datosGuardados["id_responsables_interactuar"] = chk_responsable_interactuar.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    
+    });
+    chk_respeta_derechos_humanos.addEventListener("change", function () {
+        datosGuardados["id_respeta_derechos_humanos"] = chk_respeta_derechos_humanos.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    
+    });
+    chk_elimina_trabajo_forzoso.addEventListener("change", function () {
+        datosGuardados["id_elimina_trabajo_forzoso"] = chk_elimina_trabajo_forzoso.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    chk_empeados_contrato_prestaciones.addEventListener("change", function () {
+        datosGuardados["id_empleados_contrato_prestaciones"] = chk_empeados_contrato_prestaciones.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    chk_erradica_trabajo_infantil.addEventListener("change", function () {
+        datosGuardados["id_erradica_trabajo_infantil"] = chk_erradica_trabajo_infantil.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    chk_elimina_discriminacion.addEventListener("change", function () {
+        datosGuardados["id_elimina_discriminacion"] = chk_elimina_discriminacion.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    chk_enfoque_medio_ambiente.addEventListener("change", function () {
+        datosGuardados["id_enfoque_medio_ambiente"] = chk_enfoque_medio_ambiente.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    slt_codigo_etica.addEventListener("change", function () {
+        datosGuardados["id_codigo_etica"] = slt_codigo_etica.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    slt_codigo_conducta.addEventListener("change", function () {
+        datosGuardados["id_codigo_conducta"] = slt_codigo_conducta.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    slt_politica_anticorrupcion.addEventListener("change", function () {
+        datosGuardados["id_politica_anticorrupcion"] = slt_politica_anticorrupcion.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    slt_otro_documento.addEventListener("change", function () {
+        datosGuardados["id_otro_documento_etico"] = slt_otro_documento.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    chk_transparencia_donativos.addEventListener("change", function () {
+        datosGuardados["id_transparencia_donativos"] = chk_transparencia_donativos.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    chk_conocimiento_publico.addEventListener("change", function () {
+        datosGuardados["id_conocimiento_publico"] = chk_conocimiento_publico.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    chk_extensivo_grupo_interes.addEventListener("change", function () {
+        datosGuardados["id_extensivo_grupo_interes"] = chk_extensivo_grupo_interes.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    chk_transparencia_contribuciones.addEventListener("change", function () {
+        datosGuardados["id_transparencia_contribuciones_politicas"] = chk_transparencia_contribuciones.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));    
+    });
+    chk_prohibicion_sobornos.addEventListener("change", function () {
+        datosGuardados["id_prohibicion_sobornos"] = chk_prohibicion_sobornos.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));    
+    }); 
+    chk_prohibicion_incentivos.addEventListener("change", function () {
+        datosGuardados["id_prohibicion_incentivos"] = chk_prohibicion_incentivos.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));    
+    });
+    chk_prohibicion_lavado_dinero.addEventListener("change", function () {
+        datosGuardados["id_prohibicion_lavado_dinero"] = chk_prohibicion_lavado_dinero.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));    
+    });
+    slt_manual_organizacion.addEventListener("change", function () {
+        datosGuardados["id_manual_organizacion"] = slt_manual_organizacion.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    slt_capacitaion_anticorrupcion.addEventListener("change", function () {
+        datosGuardados["id_capacitacion_anticorrupcion"] = slt_capacitaion_anticorrupcion.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));      
+    });
+    slt_medio_denuncia.addEventListener("change", function () {
+        datosGuardados["id_medio_denuncia"] = slt_medio_denuncia.value;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    chk_verifica_perfil_etico.addEventListener("change", function () {
+        datosGuardados["id_verifica_perfil_etico"] = chk_verifica_perfil_etico.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    chk_seguimiento_denuncia.addEventListener("change", function () {
+        datosGuardados["id_seguimiento_denuncia"] = chk_seguimiento_denuncia.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+    chk_directivos_hablan_de_corrupcion.addEventListener("change", function () {
+        datosGuardados["id_directivos_hablan_de_corrupcion"] = chk_directivos_hablan_de_corrupcion.checked;
+        localStorage.setItem("diligencia_form", JSON.stringify(datosGuardados));
+    });
+
+
+
+    
+    
+  
+ 
+});
+
+
+</script>
+
+{% endblock %}
+</body>
+</html>

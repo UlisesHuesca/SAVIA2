@@ -3289,7 +3289,14 @@ def generar_pdf_vale_rosa(vale_id):
     c.drawString(410, 130, "RECIBIDO POR")
    
     fecha_vale = vale.creado_en.strftime('%d/%m/%Y')
-    autorizado = str(vale.aprobado_por.staff.staff.first_name+' '+ vale.aprobado_por.staff.staff.last_name) if vale.aprobado_por else "PENDIENTE"
+    if vale.esta_aprobado:
+        if vale.aprobado_por:
+            autorizado = str(vale.aprobado_por.staff.staff.first_name+' '+ vale.aprobado_por.staff.staff.last_name)
+        else:
+            autorizado = "AUTORIZADO"
+    else:
+        autorizado = "PENDIENTE"
+    #autorizado = str(vale.aprobado_por.staff.staff.first_name+' '+ vale.aprobado_por.staff.staff.last_name) if vale.aprobado_por else "PENDIENTE"
     if vale.gasto:
         if vale.gasto.colaborador:
             recibido = str(vale.gasto.colaborador.staff.staff.first_name + ' ' + vale.gasto.colaborador.staff.staff.last_name)

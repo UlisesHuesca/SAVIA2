@@ -12,21 +12,32 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.utils.timezone import now
 from django.urls import reverse
-from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor
+from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor, Debida_Diligencia, Miembro_Alta_Direccion, Funcionario_Publico_Relacionado, Relacion_Servidor_Publico, Responsable_Interaccion
 from user.models import Profile, CustomUser, Tipo_perfil, Distrito
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from requisiciones.views import get_image_base64
 from user.decorators import perfil_seleccionado_required
 from datetime import date, datetime, timedelta
-from .forms import SubirDocumentoForm, UploadFileForm, RegistroProveedorForm
-
+#from .forms import SubirDocumentoForm, UploadFileForm, RegistroProveedorForm
+from .forms import (
+    SubirDocumentoForm,
+    UploadFileForm,
+    RegistroProveedorForm,
+    DebidaDiligenciaForm,
+    AccionistaForm,
+    MiembroAltaDireccionForm,
+    FuncionarioPublicoRelacionadoForm,
+    RelacionServidorPublicoForm,
+    ResponsableInteraccionForm
+)
 from io import BytesIO
 
 from tesoreria.models import Pago, Facturas
 import datetime as dt
 import decimal
 import os
+import fitz  # PyMuPDF
 
 # Import Excel Stuff
 import xlsxwriter
@@ -1142,3 +1153,199 @@ def registro_proveedor(request, token):
         form = RegistroProveedorForm(initial={'email': invitacion.email, 'rfc': invitacion.rfc})
 
     return render(request, 'proveedores_externos/registro_proveedor.html', {'form': form})
+
+#@login_required
+def cuestionario_debida_diligencia(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+    hecho = Debida_Diligencia.objects.filter(proveedor=proveedor, terminada=True)
+    if hecho.exists():
+        messages.info(request, 'El cuestionario de Debida Diligencia ya ha sido completado para este proveedor.')
+        return redirect('dashboard-index')
+    else:
+        debida_diligencia, created = Debida_Diligencia.objects.get_or_create(proveedor=proveedor, terminada=False)
+        miembros = Miembro_Alta_Direccion.objects.filter(cuestionario=debida_diligencia)
+        empleados_funcionarios = Funcionario_Publico_Relacionado.objects.filter(cuestionario=debida_diligencia)
+        accionistas_funcionarios = Relacion_Servidor_Publico.objects.filter(cuestionario=debida_diligencia)
+        responsables_interaccion = Responsable_Interaccion.objects.filter(cuestionario=debida_diligencia)
+
+        diligencia_form = DebidaDiligenciaForm(instance=debida_diligencia)
+
+        accionista_form = AccionistaForm()
+        funcionario_form = FuncionarioPublicoRelacionadoForm()
+        relacion_form = RelacionServidorPublicoForm()
+        responsable_form = ResponsableInteraccionForm()
+        direccion_form = MiembroAltaDireccionForm() 
+
+        try:
+            documento_csf = DocumentosProveedor.objects.get(
+                proveedor_id=proveedor_id,
+                tipo_documento="csf",
+                activo=True
+            ) 
+        except DocumentosProveedor.DoesNotExist:
+            documento_csf = None
+
+        if documento_csf == None:
+            print("No se ha subido el documento CSF.")
+            tipo = None
+        else:  
+            tipo = extraer_tipo_contribuyente(documento_csf.archivo.path)
+            print(f"El contribuyente es: {tipo}")
+        
+        error_messages = []
+
+        if request.method == 'POST':
+            if 'submit_diligencia' in request.POST:
+                print('Estoy entrando aquí al diligencia. POST')
+                form = DebidaDiligenciaForm(request.POST, instance = debida_diligencia)
+                if form.is_valid():
+                    debida_diligencia_form = form.save(commit =False)
+                    debida_diligencia.terminada = True
+                    debida_diligencia.fecha = date.today()
+                    debida_diligencia_form.save() 
+                    messages.success(request, f"El cuestionario de Debida Diligencia ha sido llenado exitosamente.")
+                    return redirect('dashboard-index') 
+                else:
+                    print('Estoy entrando aquí a los errores')
+                    # Errores por campo
+                    for field, errors in form.errors.items():
+                        label = form.fields.get(field).label if field in form.fields else field
+                        for err in errors:
+                            error_messages.append(f"{label}: {err}")
+
+                    # Errores generales (non_field_errors)
+                    for err in form.non_field_errors():
+                        error_messages.append(str(err))
+
+            elif 'submit_accionista' in request.POST:
+                form = AccionistaForm(request.POST)
+                if form.is_valid():
+                    accionista_form = form.save(commit=False)
+                    accionista_form.cuestionario = debida_diligencia
+                    accionista_form.save()
+                    
+                return redirect('cuestionario', proveedor_id=proveedor.id)
+
+            elif 'submit_direccion' in request.POST:
+                form = MiembroAltaDireccionForm(request.POST)
+                if form.is_valid():
+                    direccion_form = form.save(commit=False)
+                    direccion_form.cuestionario = debida_diligencia
+                    direccion_form.save()
+                    debida_diligencia.tiene_alta_direccion = True
+                    debida_diligencia.save()
+
+                return redirect('cuestionario', proveedor_id=proveedor.id)
+
+            elif 'submit_funcionario' in request.POST:
+                form = FuncionarioPublicoRelacionadoForm(request.POST)
+                if form.is_valid():
+                    funcionario_form = form.save(commit=False)
+                    funcionario_form.cuestionario = debida_diligencia
+                    funcionario_form.save()
+                    #form.save()
+                    debida_diligencia.empleado_funcionarios_publicos = True
+                    debida_diligencia.save()
+                return redirect('cuestionario', proveedor_id=proveedor.id)
+
+            elif 'submit_relacion' in request.POST:
+                form = RelacionServidorPublicoForm(request.POST)
+                if form.is_valid():
+                    relacion_form = form.save(commit=False)
+                    relacion_form.cuestionario = debida_diligencia
+                    relacion_form.save()
+                    debida_diligencia.pertenece_funcionario_publico = True
+                    debida_diligencia.save()
+                return redirect('cuestionario', proveedor_id=proveedor.id)
+
+            elif 'submit_responsable' in request.POST:
+                form = ResponsableInteraccionForm(request.POST)
+                if form.is_valid():
+                    responsable_form = form.save(commit=False)
+                    responsable_form.cuestionario = debida_diligencia
+                    responsable_form.save() 
+                return redirect('cuestionario', proveedor_id=proveedor.id)
+            else:
+                messages.error(request, 'Formulario no reconocido.')
+    
+        context = {
+            'proveedor': proveedor,
+            'tipo': tipo,
+            'miembros': miembros,
+            'empleados_funcionarios': empleados_funcionarios,
+            'accionistas_funcionarios': accionistas_funcionarios,
+            'responsables_interaccion': responsables_interaccion,
+            'diligencia_form': diligencia_form,
+            'accionista_form' : accionista_form,
+            'funcionario_form' : funcionario_form,
+            'relacion_form' : relacion_form,
+            'responsable_form' : responsable_form,
+            'direccion_form' :  direccion_form, 
+            'error_messages': error_messages,
+        }
+
+        return render(request, 'proveedores_externos/cuestionario.html', context)
+    
+def eliminar_miembro(request, pk):
+    miembro = get_object_or_404(Miembro_Alta_Direccion, id=pk)
+    proveedor_id = miembro.cuestionario.proveedor.id
+    nombre = miembro.nombre
+    miembro.delete()
+    messages.success(request, f"Se eliminó {nombre} de la alta dirección.")
+    return redirect("cuestionario", proveedor_id=proveedor_id)
+
+def eliminar_empleado_funcionario(request, pk):
+    funcionario_empleado = get_object_or_404(Funcionario_Publico_Relacionado, id=pk)
+    proveedor_id = funcionario_empleado.cuestionario.proveedor.id
+    nombre = funcionario_empleado.nombre
+    funcionario_empleado.delete()
+    messages.success(request, f"Se eliminó {nombre} de la sección de empleados que son funcionaríos.")
+    return redirect("cuestionario", proveedor_id=proveedor_id)
+
+def eliminar_accionista_funcionario(request, pk):
+    funcionario_accionista = get_object_or_404(Relacion_Servidor_Publico, id=pk)
+    proveedor_id = funcionario_accionista.cuestionario.proveedor.id
+    nombre = funcionario_accionista.nombre_servidor
+    funcionario_accionista.delete()
+    messages.success(request, f"Se eliminó {nombre} de la sección de accionistas que son funcionarios.")
+    return redirect("cuestionario", proveedor_id=proveedor_id)
+
+def eliminar_responsable_interaccion(request, pk):
+    responsable = get_object_or_404(Responsable_Interaccion, id=pk)
+    proveedor_id = responsable.cuestionario.proveedor.id
+    nombre = responsable.nombre
+    responsable.delete()
+    messages.success(request, f"Se eliminó {nombre} de la sección de responsables de interacción con el gobierno.")
+    return redirect("cuestionario", proveedor_id=proveedor_id)
+
+
+def extraer_tipo_contribuyente(pdf_path):
+    # Abrir el PDF
+    doc = fitz.open(pdf_path)
+    texto_completo = ""
+
+    # Leer todo el texto del PDF
+    for pagina in doc:
+        texto_completo += pagina.get_text()
+
+    doc.close()
+
+    # Buscar la sección de Regímenes
+    inicio = texto_completo.find("Regímenes")
+    if inicio == -1:
+        return "No se encontró la sección de regímenes."
+
+    # Tomamos un fragmento de texto después de 'Regímenes'
+    fragmento = texto_completo[inicio:inicio + 500]
+
+    # Determinar tipo de persona
+    if "Personas Físicas" in fragmento or "Régimen de Sueldos y Salarios" in fragmento:
+        return "Persona Física"
+    elif "Personas Morales" in fragmento:
+        return "Persona Moral"
+    else:
+        return "No se pudo determinar el tipo de contribuyente."
+
+
+
+

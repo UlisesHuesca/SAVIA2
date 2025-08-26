@@ -1,8 +1,22 @@
 from django import forms
-from compras.models import Proveedor, Evidencia, DocumentosProveedor, Cond_pago, Moneda, Estado
+#from compras.models import Proveedor, Evidencia, DocumentosProveedor, Cond_pago, Moneda, Estado
 from user.models import Banco, Distrito, Pais
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
+from django.forms import inlineformset_factory
+from compras.models import (
+    Evidencia,
+    DocumentosProveedor,
+    Cond_pago,
+    Moneda,
+    Estado,
+    Debida_Diligencia,
+    Accionista,
+    Miembro_Alta_Direccion,
+    Funcionario_Publico_Relacionado,
+    Relacion_Servidor_Publico,
+    Responsable_Interaccion
+)
 
 
 
@@ -71,3 +85,39 @@ class RegistroProveedorForm(forms.Form):
         if p1 and p2 and p1 != p2:
             raise forms.ValidationError("Las contraseñas no coinciden.")
         return cleaned_data
+    
+class DebidaDiligenciaForm(forms.ModelForm):
+    class Meta:
+        model = Debida_Diligencia
+        fields = ['cargo', 'representante_nombre', 'sitio_web', 'tiene_alta_direccion','empleado_funcionarios_publicos', 'pertenece_funcionario_publico', 'notificar_relacion_familiar',  \
+        'cuentas_bloqueadas', 'detalle_cuentas_bloqueadas', 'financiamiento_externo', 'fuentes_financiamiento', 'controles_antilavado', 'responsables_interactuar',  \
+        'respeta_derechos_humanos', 'elimina_trabajo_forzoso', 'empleados_contrato_prestaciones', 'explicacion_sin_contrato', 'erradica_trabajo_infantil', 'elimina_discriminacion',  \
+        'enfoque_medio_ambiente', 'codigo_etica', 'codigo_conducta', 'politica_anticorrupcion', 'otro_documento_etico', 'transparencia_donativos', 'conocimiento_publico',  \
+        'extensivo_grupos_interes', 'transparencia_contribuciones_politicas', 'prohibicion_sobornos', 'prohibicion_incentivos', 'prohibicion_lavado_dinero', 'manual_organizacion',  \
+        'verifica_perfil_etico', 'descripcion_verificacion', 'capacitacion_anticorrupcion', 'medio_denuncia', 'seguimiento_denuncia', 'descripcion_seguimiento',  \
+        'directivos_hablan_de_corrupcion']
+
+class AccionistaForm(forms.ModelForm):
+    class Meta:
+        model = Accionista
+        fields = ['nombre', 'porcentaje_participacion', 'nacionalidad',]
+
+class MiembroAltaDireccionForm(forms.ModelForm):
+    class Meta:
+        model = Miembro_Alta_Direccion
+        fields = ['nombre', 'anios_servicio','cargo', 'nacionalidad',]
+
+class FuncionarioPublicoRelacionadoForm(forms.ModelForm):
+    class Meta:
+        model = Funcionario_Publico_Relacionado
+        fields = ['nombre','cargo','puesto_gubernamental','periodo_funciones']
+
+class RelacionServidorPublicoForm(forms.ModelForm):
+    class Meta:
+        model = Relacion_Servidor_Publico
+        fields = ['nombre_servidor','tipos_relacion', 'porcentaje_participacion']
+
+class ResponsableInteraccionForm(forms.ModelForm):
+    class Meta:
+        model = Responsable_Interaccion
+        fields = ['nombre','trabajo_previo_vordcab','anio_baja','puesto_ocupado']

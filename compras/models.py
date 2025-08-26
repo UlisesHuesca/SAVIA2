@@ -546,3 +546,97 @@ class Evidencia(models.Model):
     comentario = models.CharField(max_length=200, null=True, blank=True)
     hecho = models.BooleanField(default=False)
     subido_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True)
+
+class Debida_Diligencia(models.Model):
+    proveedor = models.ForeignKey('Proveedor', on_delete=models.CASCADE, related_name='cuestionarios', null=True)  # <-- vincular al proveedor
+    #elaborado_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, related_name='elaborado_por')
+    cargo = models.CharField(max_length=255)
+    fecha = models.DateField(null=True)
+    representante_nombre = models.CharField(max_length=255)
+    tiene_alta_direccion = models.BooleanField(default=False)
+    sitio_web = models.CharField(max_length=150, blank=True)
+    empleado_funcionarios_publicos = models.BooleanField(default=False)
+    pertenece_funcionario_publico = models.BooleanField(default=False)
+    notificar_relacion_familiar = models.BooleanField(default=False)
+    cuentas_bloqueadas = models.BooleanField(default=False)
+    detalle_cuentas_bloqueadas = models.TextField(blank=True)
+    financiamiento_externo = models.BooleanField(default=False)
+    fuentes_financiamiento = models.TextField(blank=True)
+    controles_antilavado = models.BooleanField(default=False)
+    responsables_interactuar = models.BooleanField(default=False)
+    respeta_derechos_humanos = models.BooleanField(default=False)
+    elimina_trabajo_forzoso = models.BooleanField(default=False)
+    empleados_contrato_prestaciones = models.BooleanField(default=False)
+    explicacion_sin_contrato = models.TextField(blank=True)
+    erradica_trabajo_infantil = models.BooleanField(default=False)
+    elimina_discriminacion = models.BooleanField(default=False)
+    enfoque_medio_ambiente = models.BooleanField(default=False)
+    codigo_etica = models.CharField(max_length=20, choices=[('Sí', 'Sí'), ('No', 'No'), ('En proceso', 'En proceso')])
+    codigo_conducta = models.CharField(max_length=20, choices=[('Sí', 'Sí'), ('No', 'No'), ('En proceso', 'En proceso')])
+    politica_anticorrupcion = models.CharField(max_length=20, choices=[('Sí', 'Sí'), ('No', 'No'), ('En proceso', 'En proceso')])
+    otro_documento_etico = models.CharField(max_length=20, choices=[('Sí', 'Sí'), ('No', 'No'), ('En proceso', 'En proceso')])
+    transparencia_donativos = models.BooleanField(default=False)
+    conocimiento_publico = models.BooleanField(default=False)
+    extensivo_grupos_interes = models.BooleanField(default=False)
+    transparencia_contribuciones_politicas = models.BooleanField(default=False)
+    prohibicion_sobornos = models.BooleanField(default=False)
+    prohibicion_incentivos = models.BooleanField(default=False)
+    prohibicion_lavado_dinero = models.BooleanField(default=False)
+    manual_organizacion = models.CharField(max_length=20, choices=[('Sí', 'Sí'), ('No', 'No'), ('En proceso', 'En proceso')])
+    verifica_perfil_etico = models.BooleanField(default=False)
+    descripcion_verificacion = models.TextField(blank=True)
+    capacitacion_anticorrupcion = models.CharField(max_length=20, choices=[('Sí', 'Sí'), ('No', 'No'), ('En proceso', 'En proceso')])
+    medio_denuncia = models.CharField(max_length=20, choices=[('Sí', 'Sí'), ('No', 'No'), ('En proceso', 'En proceso')])
+    seguimiento_denuncia = models.BooleanField(default=False)
+    descripcion_seguimiento = models.TextField(blank=True)
+    directivos_hablan_de_corrupcion = models.BooleanField(default=False)
+    terminada = models.BooleanField(default=False)
+
+class Accionista(models.Model):
+    cuestionario = models.ForeignKey(Debida_Diligencia, on_delete=models.CASCADE, related_name='accionistas')
+    nombre = models.CharField(max_length=255)
+    porcentaje_participacion = models.DecimalField(max_digits=5, decimal_places=2)
+    nacionalidad = models.CharField(max_length=100, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.nombre} - ({self.porcentaje_participacion}%)"
+
+class Miembro_Alta_Direccion(models.Model):
+    cuestionario = models.ForeignKey(Debida_Diligencia, on_delete=models.CASCADE, related_name='miembros_direccion')
+    nombre = models.CharField(max_length=50)
+    anios_servicio = models.PositiveIntegerField()
+    cargo = models.CharField(max_length=100)
+    nacionalidad = models.CharField(max_length=25, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.cargo}"
+
+class Funcionario_Publico_Relacionado(models.Model):   #Empleados que son funcionarios públicos
+    cuestionario = models.ForeignKey(Debida_Diligencia, on_delete=models.CASCADE, related_name='funcionarios_publicos')
+    nombre = models.CharField(max_length=50, null=True)
+    cargo = models.CharField(max_length=100)
+    puesto_gubernamental = models.CharField(max_length=100)
+    periodo_funciones = models.CharField(max_length=50, blank=True, null=True)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.cargo}"
+    
+class Relacion_Servidor_Publico(models.Model):         #Accionistas que son funcionarios públicos
+    cuestionario = models.ForeignKey(Debida_Diligencia, on_delete=models.CASCADE, related_name='relaciones_servidores')
+    nombre_servidor = models.CharField(max_length=50)
+    tipos_relacion = models.CharField(max_length=50)
+    porcentaje_participacion = models.DecimalField(max_digits=5, decimal_places=2, null=True)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.parentesco} ({self.puesto_ocupado})"
+
+class Responsable_Interaccion(models.Model):
+    cuestionario = models.ForeignKey(Debida_Diligencia, on_delete=models.CASCADE, related_name='responsables_interaccion')
+    nombre = models.CharField(max_length=50)
+    trabajo_previo_vordcab = models.BooleanField(default=False)
+    anio_baja = models.PositiveIntegerField(null=True, blank=True) #Año de baja
+    puesto_ocupado = models.CharField(max_length=100)
+
+    def __str__(self):
+        return f"{self.nombre} - {self.puesto_ocupado}"
+

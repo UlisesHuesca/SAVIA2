@@ -5326,3 +5326,44 @@ def generar_politica_proveedores():
     c.save()
     buf.seek(0)
     return buf 
+
+@login_required
+def debida_diligencia_create(request):
+    if request.method == 'POST':
+        form = DebidaDiligenciaForm(request.POST)
+        if form.is_valid():
+            debida_diligencia = form.save()
+            
+            accionsita_formset = AccionsitaFormSet(request.POST, instance=debida_diligencia, prefix='accionsita')
+            miembro_formset = MiembroAltaDireccionFormSet(request.POST, instance=debida_diligencia, prefix='miembro')
+            funcionario_formset = FuncionarioPublicoRelacionadoFormSet(request.POST, instance=debida_diligencia, prefix='funcionario')
+            relacion_formset = RelacionServidorPublicoFormSet(request.POST, instance=debida_diligencia, prefix='relacion')
+            responsable_formset = ResponsableInteraccionFormSet(request.POST, instance=debida_diligencia, prefix='responsable')
+
+            if (accionsita_formset.is_valid() and miembro_formset.is_valid() and 
+                funcionario_formset.is_valid() and relacion_formset.is_valid() and 
+                responsable_formset.is_valid()):
+                
+                accionsita_formset.save()
+                miembro_formset.save()
+                funcionario_formset.save()
+                relacion_formset.save()
+                responsable_formset.save()
+                
+                return redirect('alguna-url')
+    else:
+        form = DebidaDiligenciaForm()
+        accionsita_formset = AccionsitaFormSet(prefix='accionsita')
+        miembro_formset = MiembroAltaDireccionFormSet(prefix='miembro')
+        funcionario_formset = FuncionarioPublicoRelacionadoFormSet(prefix='funcionario')
+        relacion_formset = RelacionServidorPublicoFormSet(prefix='relacion')
+        responsable_formset = ResponsableInteraccionFormSet(prefix='responsable')
+
+    return render(request, 'ruta/template.html', {
+        'form': form,
+        'accionsita_formset': accionsita_formset,
+        'miembro_formset': miembro_formset,
+        'funcionario_formset': funcionario_formset,
+        'relacion_formset': relacion_formset,
+        'responsable_formset': responsable_formset
+    })

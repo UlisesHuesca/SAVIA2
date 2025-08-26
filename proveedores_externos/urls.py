@@ -25,4 +25,9 @@ urlpatterns = [
     path('politicas/aceptar/', views.aceptar_politica, name='aceptar-politica'),
     path('proveedores/invitar/', views.invitar_proveedor, name='invitar-proveedor'),
     path('registro-proveedor/<uuid:token>/', views.registro_proveedor, name='registro-proveedor'),
+    path('cuestionario/<int:proveedor_id>', views.cuestionario_debida_diligencia, name='cuestionario'),
+    path('elminar_miembro/<int:pk>/', views.eliminar_miembro, name='eliminar-miembro'),
+    path('elminar_empleado_funcionario/<int:pk>/', views.eliminar_empleado_funcionario, name='eliminar-empleado-funcionario'),
+    path('elminar_accionista_funcionario/<int:pk>/', views.eliminar_accionista_funcionario, name='eliminar-accionista-funcionario'), 
+    path('elminar-responsable-interaccion/<int:pk>/', views.eliminar_responsable_interaccion, name='eliminar-responsable-interaccion'),
 ]
