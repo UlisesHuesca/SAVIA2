@@ -1076,7 +1076,12 @@ document.addEventListener("DOMContentLoaded", function() {
     var chk_verifica_perfil_etico = document.getElementById("id_verifica_perfil_etico");
     var chk_seguimiento_denuncia = document.getElementById("id_seguimiento_denuncia");
     var chk_directivos_hablan_de_corrupcion = document.getElementById("id_directivos_hablan_de_corrupcion");
+    const elemento_modal = document.getElementById("infoModal");
 
+    
+    const modal = new bootstrap.Modal(elemento_modal);
+    modal.show();
+    
 
  
     function toggleAltaDireccion() {
