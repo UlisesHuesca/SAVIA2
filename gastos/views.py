@@ -3269,12 +3269,24 @@ def generar_pdf_vale_rosa(vale_id):
     c.setLineWidth(1)
     c.rect(40, height - 270, 520, 150)
 
-    c.setFont("Helvetica", 10)
-    text_object = c.beginText(45, height - 150)
-    text_object.setLeading(14)
-    for line in vale.motivo.splitlines():
-        text_object.textLine(line)
-    c.drawText(text_object)
+    #c.setFont("Helvetica", 10)
+    #text_object = c.beginText(45, height - 150)
+    #text_object.setLeading(14)
+    
+    #for line in vale.motivo.splitlines():
+    #    text_object.textLine(line)
+    #c.drawText(text_object)
+    styles = getSampleStyleSheet()
+    styleN = styles['Normal']
+    styleN.fontName = 'Helvetica'
+    styleN.fontSize = 10
+    styleN.leading = 14  # Espaciado entre líneas
+
+    texto = (vale.motivo or "").replace('\n', '<br/>')  # Reemplaza saltos de línea por etiquetas HTML
+    parrafo = Paragraph(texto, styleN)
+    pad = 6
+    frame = Frame( 40 + pad, height - 270 + pad, 520 - 2 * pad, 150 - 2 * pad, showBoundary=0)
+    frame.addFromList([parrafo], c)
 
     # Sección inferior (fecha, autorizado por, recibido por)
     c.rect(40, 80, 520, 60)
