@@ -2,6 +2,7 @@ from django.contrib import admin
 from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, Saldo_Cuenta, Complemento_Pago
 
 class CuentaAdmin(admin.ModelAdmin):
+    list_display = ('cuenta','banco','distrito','encargado','status')
     raw_id_fields = ('encargado',)
     search_fields = ['cuenta']
 

@@ -936,7 +936,7 @@ def cierre_nc(request, pk):
                 producto.save()
             else:
                 oc.entrada_completa = False
-                #oc.pagada = False
+                oc.pagada = False #Estaba comentada la variable, pareciera que no funcionó en su momento
                 oc.save()
                 producto.entrada_completa = False
                 producto.cantidad_pendiente = producto.cantidad_pendiente - articulos_nc.cantidad
