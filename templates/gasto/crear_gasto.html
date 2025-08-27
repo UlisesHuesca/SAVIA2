@@ -49,7 +49,7 @@
 <hr>
 <h6>&nbsp;</h6>
 <div class="row">
-    <div class="col-lg-5">
+    <div class="col-lg-5 col-sm-12">
         <div class="card" id="form-wrapper"> 
             <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
 					<h2>{% trans "Encabezado Gasto" %}</h2>
@@ -488,31 +488,33 @@
                 </div>
             </form>
             <h5 class="mt-4">Vales Rosa Registrados</h5>
-            <table class="table table-bordered">
-                <thead>
-                    <tr style="background-color: #f8d7da;">
-                        <th>ID</th>
-                        <th>Motivo</th>
-                        <th>Monto</th>
-                        <th>Estado</th>
-                        <th>Eliminar</th>
-                        <th>Comprobante S2</th>
-                        <th>Comprobante PDF</th>
-                    </tr>
-                </thead>
-                <tbody id="valesRosaLista">
-                    {% for vale in gasto.vales_rosa.all %}
-                        {% include "gasto/vale_rosa_row.html" with vale=vale %}
-                    {% empty %}
-                        <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
-                    {% endfor %}
-                </tbody>
-            </table>
+            <div class ="table-responsive-sm">
+                <table class="table table-bordered">
+                    <thead>
+                        <tr style="background-color: #f8d7da;">
+                            <th>ID</th>
+                            <th>Motivo</th>
+                            <th>Monto</th>
+                            <th>Estado</th>
+                            <th>Eliminar</th>
+                            <th>Comprobante S2</th>
+                            <th>Comprobante PDF</th>
+                        </tr>
+                    </thead>
+                    <tbody id="valesRosaLista">
+                        {% for vale in gasto.vales_rosa.all %}
+                            {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                        {% empty %}
+                            <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
         </div>
 
     </div>
 </div>
-<div class="col-lg-7">
+<div class="col-lg-7 col-sm-12">
         <div class="card">
             <div class="card-header">
                 <h2 id="linea_gasto">{% trans "Líneas de Gasto" %}</h2>
