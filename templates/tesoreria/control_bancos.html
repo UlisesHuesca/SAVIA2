@@ -131,7 +131,7 @@
                         <li class="nav-item mx-2">
                         {% if saldo_final is not None %}
                             <table class="table table-sm">
-                            <tr><th>Saldo trasladado</th><td class="text-end">{{ saldo_trasladado|floatformat:2 }}</td></tr>
+                            <tr><th>Saldo trasladado</th><td class="text-end">{{ saldo_inicial|floatformat:2 }}</td></tr>
                             <tr><th>Saldo final</th><td class="text-end"><strong>{{ saldo_final|floatformat:2 }}</strong></td></tr>
                             </table>
                         {% endif %}
@@ -203,15 +203,15 @@
                 <tr>
                     <td class="d-none d-lg-table-cell">{{ pago.pagado_real }}</td>
                     <td class="d-none" id="form_pagado_hora_{{ pago.id|unlocalize }}">
-                        <input type="time" class="form-control" 
+                        <input type="text" class="form-control" 
                             id="pagado_hora-input_{{ pago.id|unlocalize }}" 
-                            value="{{ pago.pagado_hora|time:'H:i' }}">
+                            value="{{ pago.pagado_hora|time:'H:i:s.u' }}">
                     </td>
                    
 
                     <!-- Campo visible -->
                     <td class = "" id="pagado_hora_{{ pago.id|unlocalize }}">
-                        {{ pago.pagado_hora|time:'H:i' }}
+                        {{ pago.pagado_hora|time:'H:i:s.u' }}
                     </td>
                     <td>
                        

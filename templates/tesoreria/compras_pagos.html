@@ -341,16 +341,16 @@
 {% if usuario.tipo.supervisor %}
 document.getElementById("btnCerrar").addEventListener("click", function (e) {
     Swal.fire({
-    title: '¿Cerrar gasto sin pago completo?',
+    title: '¿Cerrar OC sin pago completo?',
     html: `
-        <p>Recuerda que esta acción marcará el gasto como cerrado sin pago completo.</p>
+        <p>Recuerda que esta acción marcará la OC como cerrado sin pago completo.</p>
         <textarea id="comentarioCierre" class="swal2-textarea" placeholder="Escribe un comentario de cierre..." required></textarea>
     `,
     icon: 'warning',
     showCancelButton: true,
     confirmButtonColor: '#d33',
     cancelButtonColor: '#6c757d',
-    confirmButtonText: 'Sí, cerrar Gasto',
+    confirmButtonText: 'Sí, cerrar OC',
     cancelButtonText: 'Cancelar',
     preConfirm: () => {
         const comentario = document.getElementById('comentarioCierre').value.trim();
