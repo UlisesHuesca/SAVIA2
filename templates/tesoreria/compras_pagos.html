@@ -313,7 +313,7 @@
             <div class="card-footer text-end">
                 
                 <h6>Registrar pago: {{compra.folio}}</h6>
-                {% if usuario.tipo.supervisor and usuario.tipo.tesoreria %}
+                {% if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" or usuario.tipo.superintendente %}
                    
                     <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
                         Cerrar OC

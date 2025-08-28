@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.http import HttpResponse, Http404, JsonResponse
+from django.http import HttpResponse, Http404, JsonResponse, FileResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
@@ -10,7 +10,7 @@ from django.forms import inlineformset_factory
 from django.utils.http import urlencode
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
-from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor
+from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia
 from solicitudes.models import Subproyecto, Proyecto
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
@@ -26,7 +26,7 @@ import plotly.express as px
 from plotly.subplots import make_subplots
 import plotly.graph_objects as go
 import pandas as pd
-
+import io
 import os
 #import decimal
 from openpyxl import Workbook
@@ -36,6 +36,19 @@ import datetime as dt
 import json
 import csv
 from charset_normalizer import detect
+
+#PDF generator
+from reportlab.pdfgen import canvas
+from reportlab.lib import colors
+from reportlab.lib.colors import Color, black, blue, red, white
+from reportlab.lib.units import cm
+from reportlab.lib.pagesizes import letter
+from reportlab.rl_config import defaultPageSize
+
+from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
+from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
+from bs4 import BeautifulSoup
 
 # Create your views here.
 @login_required(login_url='user-login')
@@ -525,6 +538,7 @@ def proveedores(request):
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
     proveedores_dir = Proveedor_direcciones.objects.filter(distrito__id__in = almacenes_distritos)
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
+    
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.proveedores:
         proveedores = Proveedor.objects.filter(
@@ -557,6 +571,7 @@ def proveedores(request):
             proveedor.contacto = direccion.contacto
             proveedor.distrito = direccion.distrito
             proveedor.domicilio = direccion.domicilio
+        proveedor.ultimo_cuestionario = proveedor.cuestionarios.order_by('-id').first()
 
     context = {
         'usuario':usuario,
@@ -1846,3 +1861,92 @@ def Add_Product_Critico(request):
         return render(request, 'dashboard/add_product_critico.html', context)
     else:
         raise Http404("No tienes permiso para ver esta vista")
+    
+def descargar_pdf_dd(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    buf = generar_pdf_dd(proveedor, request)
+    return FileResponse(buf, as_attachment=True, filename='cuestionario_debida_diligencia' + str(proveedor.razon_social) + '.pdf')
+    
+def generar_pdf_dd(proveedor, request):
+    #Configuration of the PDF object
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    dd = Debida_Diligencia.objects.filter(proveedor = proveedor).first()
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+    width, height = letter
+    # ===== Colores =====
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    # ===== Encabezado =====
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+   
+
+    caja_proveedor = caja_iso - 65
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,300,20, fill=True, stroke=False) #Barra azul superior Cuestionario de Debida Diligencia
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(300,755,'Cuestionario de Debida Diligencia')
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+    
+    # ===== Estilos de texto =====
+    styles = getSampleStyleSheet()
+    label = ParagraphStyle('label', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=9)
+    value = ParagraphStyle('value', parent=styles['Normal'], fontName='Helvetica', fontSize=9)
+
+    def S(txt): return '' if txt is None else str(txt)
+    elaborado_perfil = proveedor.perfiles.first()
+    proveedor_direcciones = proveedor.direcciones.first()
+    # === Datos de ejemplo ===
+    elaborado_por = f" {usuario.staff.staff.first_name} {usuario.staff.staff.last_name} "
+    cargo         = dd.cargo
+    fecha         = dd.fecha.strftime('%d/%m/%Y') if dd and dd.fecha else ''
+    tel           = proveedor_direcciones.telefono
+    correo        = proveedor_direcciones.email
+    representante  = dd.representante_nombre
+    razon_social  = S(getattr(proveedor, 'razon_social', ''))
+    rfc           = S(getattr(proveedor, 'rfc', ''))
+    nacionalidad   = "MEXICANA" if proveedor_direcciones.pais.nombre == "MEXICO" else "EXTRANJERA"
+    # === Data para tabla ===
+    data = [
+        [Paragraph('Elaborado por (Nombre):', label), Paragraph(elaborado_por, value)],
+        [Paragraph('Cargo:', label), Paragraph(cargo, value)],
+        [Paragraph('Fecha:', label), Paragraph(fecha, value)],
+        [Paragraph('Teléfono:', label), Paragraph(tel, value)],
+        [Paragraph('Correo electrónico:', label), Paragraph(correo, value)],
+        [Paragraph('Representante, apoderado legal u oficial de cumplimiento:', label), Paragraph(representante, value)],
+        [Paragraph('Razón Social:', label), Paragraph(razon_social, value)],
+        [Paragraph('RFC:', label), Paragraph(rfc, value)],
+    ]
+
+    # === Estilo de tabla ===
+    table = Table(data, colWidths=[6*cm, 10*cm], hAlign='LEFT')
+    ts = TableStyle([
+        ('BOX', (0,0), (-1,-1), 0.25, colors.black),
+        ('INNERGRID', (0,0), (-1,-1), 0.25, colors.grey),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('FONTSIZE', (0,0), (-1,-1), 9),
+    ])
+    # Subrayado en la columna de valores
+    for row in range(len(data)):
+        ts.add('LINEBELOW', (1,row), (1,row), 0.6, colors.black)
+    table.setStyle(ts)
+
+    # === Dibuja tabla en el canvas ===
+    # wrapOn calcula ancho/alto que ocupa la tabla
+    w, h = table.wrapOn(c, width, height)
+    # drawOn: (x,y) esquina inferior izquierda
+    table.drawOn(c, 40, 700-h)  
+
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    return buf
