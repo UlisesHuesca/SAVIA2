@@ -1532,6 +1532,41 @@ def autorizar_vale_rosa(request, pk):
 
     return render(request,'gasto/autorizar_vale_rosa.html', context)
 
+@perfil_seleccionado_required
+def cancelar_vale_rosa(request, pk):
+    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
+    pk_perfil = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_perfil)    
+
+    #productos = Articulo_Gasto.objects.filter(gasto__id=pk)
+    vale = ValeRosa.objects.get(id = pk)
+
+    ## Determinar si es gasto o viático
+    objeto = vale.gasto if vale.gasto else vale.viatico
+    tipo_objeto = 'gasto' if vale.gasto else 'viatico'
+
+    if request.method =='POST' and 'btn_cancelar' in request.POST:
+        vale.esta_aprobado = False
+        vale.aprobado_en = datetime.now()
+        #gasto.approved_at_time = datetime.now().time()
+        vale.aprobado_por = perfil
+        #if perfil.tipo.subdirector == True:
+        #    gasto.autorizar2 = True
+        #    gasto.approbado_fecha2 = datetime.now()
+        
+        vale.save()
+        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {vale.id}')
+        return redirect ('vales-rosa-pendientes-autorizar')
+
+
+    context = {
+        'vale': vale,
+        'objeto': objeto,
+        'tipo': tipo_objeto,
+    }
+
+    return render(request,'gasto/cancelar_vale_rosa.html', context)
+
 def get_subproyectos(request):
     proyecto_id = request.GET.get('proyecto_id')
     if proyecto_id:

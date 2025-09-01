@@ -1,0 +1,71 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{& load humanize %}
+<html>
+<head>
+{% block title %}Cancelación Vale Rosa{% endblock %}
+</head>
+<body>
+{% block content %}
+<div class="modal-dialog-lg" role="document">
+    <div class="modal-content">
+        <div class="modal-header">
+            <h5 class="modal-title">Cancelar Vale Rosa: {{objeto.folio}}</h5>
+            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <form action="{% url 'autorizar-vale-rosa' vale.id %}" method=POST>
+        {% csrf_token %}
+        <div class="modal-body">
+        {% if tipo == "gasto" %}  
+        <h6>¿Estás seguro de cancelar el vale rosa {{vale.id}} correspondiente al gasto {{objeto.folio}}?</h6>
+        {% else %}
+            <h6>¿Estás seguro de cancelar el vale rosa {{vale.id}} correspondiente al viático {{objeto.folio}}?</h6>
+        {% endif %}
+        </div>
+            
+        <div class="modal-footer">
+           
+                
+                <button id="approve-btn" name="btn_cancelar" class="btn btn-danger" type="submit" disabled>Cancelar</button>
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+          
+        </div>
+        </form>
+    </div>
+</div>
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+     
+        const btnAutorizar = document.getElementById("approve-btn");
+    
+        function verificarSelecciones() {
+            // Buscar todos los vales
+            const vales = document.querySelectorAll("input[type='radio'][name^='vale_']");
+            console.log(vales);
+            // Agrupar por vale (por nombre)
+            const nombres = [...new Set(Array.from(vales).map(input => input.name))];
+    
+            // Verificar que cada grupo tenga un seleccionado
+            const todosSeleccionados = nombres.every(name => {
+                return document.querySelector(`input[name='${name}']:checked`) !== null;
+            });
+    
+            // Habilitar o deshabilitar el botón
+            btnAutorizar.disabled = !todosSeleccionados;
+        }
+    
+        // Escuchar cambios en todos los radios
+        document.querySelectorAll("input[type='radio'][name^='vale_']").forEach(radio => {
+            radio.addEventListener("change", verificarSelecciones);
+        });
+    
+        // Verificación inicial
+        verificarSelecciones();
+</script>
+{% endblock %}
+</body>
+</html>

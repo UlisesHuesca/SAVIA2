@@ -109,7 +109,7 @@
                     <td>${{vale.monto}}</td>
                     <td>
                     <a type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'autorizar-vale-rosa' vale.id %}" ><i class="fa-solid fa-check fa-xl"></i></a>
-                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="#"><i class="fa-solid fa-xmark fa-xl"></i></a>
+                    <a type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-vale-rosa' vale.id %}"><i class="fa-solid fa-xmark fa-xl"></i></a>
                     </td>
                 </tr>
                 {% endfor %}
