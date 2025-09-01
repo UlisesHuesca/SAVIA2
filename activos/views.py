@@ -1073,7 +1073,7 @@ def render_pdf_responsiva_activos_gerente(request):
     else:
         gerente = Profile.objects.filter(tipo__nombre = "GERENCIA", distritos = usuario.distritos, st_activo = True).first()
     c.drawCentredString(200,170, gerente.staff.staff.first_name +' '+ gerente.staff.staff.last_name )
-    activo_resp = Profile.objects.get(Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS"), distritos = usuario.distritos, tipo__activos = True, st_activo = True)
+    activo_resp = Profile.objects.get(Q(tipo__nombre = "ADMIN_ACTIVOS")|Q(tipo__nombre = "ACTIVOS")|Q(tipo__nombre="ACTIVOS_SISTEMAS"), distritos = usuario.distritos, tipo__activos = True, st_activo = True)
     c.drawCentredString(400,170, activo_resp.staff.staff.first_name +' '+ activo_resp.staff.staff.last_name)
     # Obtener la fecha actual
     fecha_actual = datetime.now().strftime('%d/%m/%Y')

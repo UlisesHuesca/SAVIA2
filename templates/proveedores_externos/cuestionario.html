@@ -186,66 +186,8 @@
                 <div class="alert alert-dark" role="alert">
                     <h6>
                         2. Tratándose de personas morales, proporcione una lista de los accionistas que posean más del 10% de Participación
-                        en el capital social y su nacionalidad.
+                        en el capital social y su nacionalidad en la sección 2. Accionistas
                     </h6>
-                </div>
-                <div class="row my-2">
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{accionista_form.nombre|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nombre"}}
-                                <label style="color: #121212;" for="id_comentario">{% trans "Nombre" %}*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="row my-2">
-                    <div class="col-sm-12 col-md-6">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{accionista_form.porcentaje_participacion|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Porcentaje_Participación"}}
-                                <label style="color: #121212;" for="id_comentario">{% trans "Porcentaje Participación" %}*</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-12 col-md-6">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{accionista_form.nacionalidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nacionalidad"}}
-                                <label style="color: #121212;" for="id_comentario">{% trans "Nacionalidad" %}*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div class="text-end">
-                    <button type="submit" name="submit_accionista" class="btn btn-outline-success" title ="Agregar Accionista">
-                        <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
-                    </button>
-                </div>         
-                <div class ="table-responsive-sm">
-                    <table class="table table-light table-striped table-hover">
-                        <thead>
-                            <tr>
-                                <th scope="col">Nombre</th>
-                                <th scope="col">%</th>
-                                <th scope="col">Nacionalidad</th>
-                            </tr>
-                        </thead>
-                        <tbody id="mytbl">
-                            {% for accionista in accionistas %}
-
-                            <tr>
-                                <td scope="col">{{accionista.nombre}}</td>
-                                <td scope="col">{{accionista.porcentaje_participacion}}</td>
-                                <td scope="col">{{accionista.nacionalidad}}</td>
-                            </tr>
-                            {% endfor %}
-                        </tbody>
-                    </table>
-                   
                 </div>
                 {% elif tipo == "Persona Física" %}
                     <div class="alert alert-info" role="alert">
@@ -666,8 +608,88 @@
             </form>
         </div> 
     </div>
-    <!--SECCION DE VISIBILIDAD DEPENDIENTE ALTA DIRECCÓN--> 
+    
     <div class="col-lg-5">
+        <!--SECCION DE VISIBILIDAD DEPENDIENTA ACCIONISTAS -->
+        {% if tipo == "Persona Moral" %}
+        <div id="seccion-accionistas" class="card">
+            <div class="card-header">
+                <h2 id="linea_gasto">
+                    2. Accionistas
+                </h2>
+                
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    {% csrf_token %}
+                        <h6>
+                            Proporcione una lista de los accionistas que posean más del 10% de Participación en el capital social y su nacionalidad.
+                        </h6>
+                        <div class="row my-2">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{accionista_form.nombre|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nombre"}}
+                                        <label style="color: #121212;" for="id_comentario">{% trans "Nombre" %}*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row my-2">
+                            <div class="col-sm-12 col-md-6">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{accionista_form.porcentaje_participacion|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Porcentaje_Participación"}}
+                                        <label style="color: #121212;" for="id_comentario">{% trans "Porcentaje Participación" %}*</label>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="col-sm-12 col-md-6">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{accionista_form.nacionalidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Nacionalidad"}}
+                                        <label style="color: #121212;" for="id_comentario">{% trans "Nacionalidad" %}*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="text-end">
+                            <button type="submit" name="submit_accionista" class="btn btn-outline-success" title ="Agregar Accionista">
+                                <i class="fa-duotone fa-solid fa-paper-plane-top fa-lx"></i>
+                            </button>
+                        </div>         
+                        <div class ="table-responsive-sm">
+                            <table class="table table-light table-striped table-hover">
+                                <thead>
+                                    <tr>
+                                        <th scope="col">Nombre</th>
+                                        <th scope="col">%</th>
+                                        <th scope="col">Nacionalidad</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="mytbl">
+                                    {% for accionista in accionistas %}
+
+                                    <tr>
+                                        <td scope="col">{{accionista.nombre}}</td>
+                                        <td scope="col">{{accionista.porcentaje_participacion}}</td>
+                                        <td scope="col">{{accionista.nacionalidad}}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        
+                        </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+    
+    <!--SECCION DE VISIBILIDAD DEPENDIENTE ALTA DIRECCÓN--> 
+    
         <div id="seccion-alta-direccion" class="card" style="display:none;">
             <div class="card-header">
                 <h2 id="linea_gasto">
