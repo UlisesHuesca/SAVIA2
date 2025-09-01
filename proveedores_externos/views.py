@@ -38,6 +38,7 @@ import datetime as dt
 import decimal
 import os
 import fitz  # PyMuPDF
+import unicodedata
 
 # Import Excel Stuff
 import xlsxwriter
@@ -1322,29 +1323,23 @@ def eliminar_responsable_interaccion(request, pk):
 def extraer_tipo_contribuyente(pdf_path):
     # Abrir el PDF
     doc = fitz.open(pdf_path)
-    texto_completo = ""
-
-    # Leer todo el texto del PDF
+    texto = []
     for pagina in doc:
-        texto_completo += pagina.get_text()
-
+        texto.append(pagina.get_text() or "")
     doc.close()
 
-    # Buscar la sección de Regímenes
-    inicio = texto_completo.find("Regímenes")
-    if inicio == -1:
-        return "No se encontró la sección de regímenes."
+    texto_plano = _normalize(" ".join(texto))
 
-    # Tomamos un fragmento de texto después de 'Regímenes'
-    fragmento = texto_completo[inicio:inicio + 500]
-
-    # Determinar tipo de persona
-    if "Personas Físicas" in fragmento or "Régimen de Sueldos y Salarios" in fragmento:
-        return "Persona Física"
-    elif "Personas Morales" in fragmento:
+    if "regimen capital" in texto_plano:
         return "Persona Moral"
     else:
-        return "No se pudo determinar el tipo de contribuyente."
+        return "Persona Física"
+    
+
+def _normalize(s: str) -> str:
+    s = s.lower()
+    s = unicodedata.normalize("NFD", s)
+    return "".join(ch for ch in s if not unicodedata.combining(ch))
 
 
 

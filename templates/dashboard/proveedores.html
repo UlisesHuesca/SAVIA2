@@ -159,7 +159,7 @@
                     {% if usuario.tipo.proveedores_edicion %}
                     <th>Documentación</th>
                     {% endif %}
-                    <th>Debida Diligencia</th>
+                    <!-- <th>Debida Diligencia</th> -->
                 </tr>
             </thead>
             <tbody>
@@ -198,13 +198,13 @@
                     </td>
                     
                     {% endif %}
-                    <td>
+                    <!-- <td>
                     {% if proveedor.ultimo_cuestionario %}
                         <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'descargar-pdf-dd' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
                             <i class="fa-duotone fa-solid fa-file-check"></i>
                         </a>
                     {% endif %}
-                    </td>
+                    </td> -->
                 </tr>
                 {% endfor %}
             </tbody>

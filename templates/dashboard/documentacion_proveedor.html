@@ -896,6 +896,33 @@
                             </td>
                         </tr>
                         <tr>
+                            {% if proveedor.ultimo_cuestionario %}
+                            <td>
+                                Cuestionario Debida Diligencia
+                            </td>
+                            <td>
+                                <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'descargar-pdf-dd' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
+                                    <i class="fa-duotone fa-solid fa-file-check"></i>
+                                </a>
+                            </td>
+                            <td>
+                               {{ proveedor.ultimo_cuestionario.fecha}}
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
+
+                            </td>
+                            {% endif %}
+                        </tr>
+                        <tr>
                             <td>Carta de Crédito</td>
                             <td>
 
