@@ -4547,8 +4547,10 @@ def convert_excel_matriz_compras_tesoreria(compras):
     percent_style = NamedStyle(name='percent_style', number_format='0.00%')
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
+    number_style = NamedStyle(name='number_style',number_format ='##0')
+    number_style.font = Font(name ='Calibri', size = 10)
 
-    columns = ['Folio OC','Fecha Creación','Fecha Autorización OC','Proyecto','Subproyecto','Distrito',
+    columns = ['Año','Prioridad','Folio OC','Fecha Creación','Fecha Autorización OC','Proyecto','Subproyecto','Distrito',
                'Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Moneda','Tipo de cambio','Importe','Total en Pesos','Importe Pagado',
                'Importe Restante','C. Pago', 'Días de Crédito','Recibida','Fecha Entrada','Factura','Folio UUID', 'Fecha Timbrado']
 
@@ -4594,9 +4596,15 @@ def convert_excel_matriz_compras_tesoreria(compras):
         if compra.autorizado_at_2 and isinstance(compra.autorizado_at_2, datetime):
         # Si autorizado_at_2 es timezone-aware, conviértelo a timezone-naive
             autorizado_at_2_naive = compra.autorizado_at_2.astimezone(pytz.utc).replace(tzinfo=None)
+            año = autorizado_at_2_naive.year
         else:
             autorizado_at_2_naive = ''
-        
+            año = ''
+
+        if compra.tipo_prioridad:
+            prioridad = compra.tipo_prioridad
+        else:
+            prioridad = '' 
         # Manejar created_at
         if compra.created_at and isinstance(compra.created_at, datetime):
         # Si created_at es timezone-aware, conviértelo a timezone-naive
@@ -4618,6 +4626,8 @@ def convert_excel_matriz_compras_tesoreria(compras):
         recibida = "Recibida" if compra.entrada_completa else "No Recibida"
 
         row = [
+            año,
+            prioridad,
             compra.folio,
             created_at_naive,
             autorizado_at_2_naive,
@@ -4649,9 +4659,11 @@ def convert_excel_matriz_compras_tesoreria(compras):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num in [1, 2, 26]:
+            if col_num in [0,2]:
+                (ws.cell(row= row_num, column = col_num+1, value=row[col_num])).style = number_style
+            if col_num in [3, 4, 28]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [12, 13, 14, 15, 16]:
+            if col_num in [14, 15, 16, 17, 18]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     

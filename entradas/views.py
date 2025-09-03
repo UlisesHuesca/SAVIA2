@@ -132,7 +132,7 @@ def entrada_servicios(request):
         compras = Compra.objects.filter(
                 Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
                 req__orden__staff = usuario,
-                solo_servicios= False,
+                solo_servicios= True,
                 entrada_completa = False, 
                 autorizado2= True, 
                 ).order_by('-folio')
