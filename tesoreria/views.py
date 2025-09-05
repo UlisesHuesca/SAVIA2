@@ -5447,7 +5447,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             sector = pago.oc.req.orden.subproyecto.nombre
         elif hasattr(pago, 'gasto') and pago.gasto:
             folio = f"G{pago.gasto.folio}"
-            
+            articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
             proyectos = set()
             subproyectos = set()
             for articulo in articulos_gasto:
@@ -5478,7 +5478,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         elif hasattr(pago, 'viatico') and pago.viatico:            
             comentarios = (pago.viatico.comentario_general or '').upper()
         elif hasattr(pago, 'gasto') and pago.gasto:
-            articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
+            
             if pago.gasto.comentario:
                 comentarios = pago.gasto.comentario.strip().upper()
             else:
