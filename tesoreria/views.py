@@ -5443,23 +5443,38 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
         
         if hasattr(pago, 'oc') and pago.oc:
             folio = f"OC{pago.oc.folio}"
+            contrato = pago.oc.req.orden.proyecto.nombre
+            sector = pago.oc.req.orden.subproyecto.nombre
         elif hasattr(pago, 'gasto') and pago.gasto:
             folio = f"G{pago.gasto.folio}"
+            contrato = pago.viatico.proyecto.nombre
+            sector = pago.viatico.subproyecto.nombre
+            proyectos = set()
+            subproyectos = set()
+            for articulo in articulos_gasto:
+                if articulo.proyecto:
+                    proyectos.add(str(articulo.proyecto.nombre))
+                if articulo.subproyecto:
+                    subproyectos.add(str(articulo.subproyecto.nombre))
+            contrato = ', '.join(proyectos)
+            sector = ', '.join(subproyectos)
+       
+            
         elif hasattr(pago, 'viatico') and pago.viatico:
             folio = f"V{pago.viatico.folio}"
         else:
             concepto_servicio = str(pago.tipo)
             folio = f'NA - {pago.tipo.nombre}'
+            contrato = ''
+            sector = ''
        
 
         # Determinar contrato y sector
-        if hasattr(pago, 'oc') and pago.oc:
-            contrato = pago.oc.req.orden.proyecto.nombre
-            sector = pago.oc.req.orden.subproyecto.nombre
+        if pago.comentario:
+            comentarios = pago.comentario
+        elif hasattr(pago, 'oc') and pago.oc:
             comentarios = (pago.oc.req.orden.comentario or '').upper()
-        elif hasattr(pago, 'viatico') and pago.viatico:
-            contrato = pago.viatico.proyecto.nombre
-            sector = pago.viatico.subproyecto.nombre
+        elif hasattr(pago, 'viatico') and pago.viatico:            
             comentarios = (pago.viatico.comentario_general or '').upper()
         elif hasattr(pago, 'gasto') and pago.gasto:
             articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
@@ -5471,20 +5486,8 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
                     for a in articulos_gasto if a.comentario
                 ]
                 comentarios = ', '.join(comentarios_articulos) if comentarios_articulos else 'NO HAY COMENTARIOS DISPONIBLES'
-            proyectos = set()
-            subproyectos = set()
-            for articulo in articulos_gasto:
-                if articulo.proyecto:
-                    proyectos.add(str(articulo.proyecto.nombre))
-                if articulo.subproyecto:
-                    subproyectos.add(str(articulo.subproyecto.nombre))
-            contrato = ', '.join(proyectos)
-            sector = ', '.join(subproyectos)
-        else:
-            contrato = ''
-            sector = ''
-            comentarios = pago.comentario
-        
+            
+                    
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else ''))
         cargo = ''
         abono = ''
