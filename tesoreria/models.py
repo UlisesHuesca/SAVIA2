@@ -7,7 +7,7 @@ from viaticos.models import Solicitud_Viatico
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
 import xml.etree.ElementTree as ET
-from .utils import encontrar_variables, extraer_texto_pdf_prop
+from .utils import encontrar_variables, extraer_texto_pdf_prop, extraer_texto_de_pdf
 import os
 # Create your models here.
 
@@ -66,7 +66,7 @@ class Pago(models.Model):
 
     @property
     def detalles_comprobante(self):
-        texto = extraer_texto_pdf_prop(self.comprobante_pago)
+        texto = extraer_texto_de_pdf(self.comprobante_pago)
         return encontrar_variables(texto)
     #def __str__(self):
      #   return f'{self.id} - {self.oc} - {self.cuenta}'
