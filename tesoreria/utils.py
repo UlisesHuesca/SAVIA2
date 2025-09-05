@@ -14,50 +14,34 @@ def encontrar_variables(texto):
         'importe_operacion': r'(?:Importe|Importe de la operación):\s?([\d,.]+)',
         'cuenta_retiro': r'Cuenta de retiro:\s?(\d+)',
         'divisa_cuenta': r'Divisa de la cuenta:\s?([^\n\r]+)',
-        'titular_cuenta_1': r'Titular de la cuenta:\s*([^\n\r]+)',
-        'titular_cuenta_2': r'Titular de la cuenta:\s*([^\n\r]+)\s*Titular de la cuenta:\s*([^\n\r]+)',
+        'titulares': r'Titular de la cuenta:\s*([^\n\r]+)',
+        #'titular_cuenta_2': r'Titular de la cuenta:\s*([^\n\r]+)\s*Titular de la cuenta:\s*([^\n\r]+)',
         'motivo_pago': r'(?:Motivo de pago|Concepto de pago):\s*([^\n\r]+)',
         'folio_unico': r'Folio único:\s*(\d+)'
     }
 
     # Buscar cada patrón y extraer el valor
     for clave, patron in patrones.items():
-        coincidencia = re.search(patron, texto, re.DOTALL)
-        if coincidencia:
-            try:
-                if clave in ['importe_operacion']:
-                    valor = coincidencia.group(1)
-                    if valor:
-                        if clave == 'importe_operacion':
-                            valor = valor.replace('MXP', '').replace(',', '')
-                        variables[clave] = valor
-                    else:
-                        variables[clave] = 'No disponible'
-                elif clave == 'titular_cuenta_2':
-                    valor1 = coincidencia.group(1)
-                    valor2 = coincidencia.group(2)
-                    if valor1 and valor2:
-                        variables['titular_cuenta_1'] = valor1.strip()
-                        variables['titular_cuenta_2'] = valor2.strip()
-                    else:
-                        variables['titular_cuenta_1'] = 'No disponible'
-                        variables['titular_cuenta_2'] = 'No disponible'
-                elif clave == 'titular_cuenta_1':
-                    valor = coincidencia.group(1)
-                    if valor:
-                        variables[clave] = valor.strip()
-                    else:
-                        variables[clave] = 'No disponible'
-                else:
-                    valor = coincidencia.group(1)
-                    if valor:
-                        variables[clave] = valor.strip()
-                    else:
-                        variables[clave] = 'No disponible'
-            except IndexError:
-                variables[clave] = 'No disponible'
+        if clave == 'titulares':
+            coincidencias = re.findall(patron, texto, re.DOTALL)
+            if coincidencias:
+                # Guardamos hasta 2 titulares si existen
+                variables['titular_cuenta_1'] = coincidencias[0].strip() if len(coincidencias) > 0 else 'No disponible'
+                variables['titular_cuenta_2'] = coincidencias[1].strip() if len(coincidencias) > 1 else 'No disponible'
+            else:
+                variables['titular_cuenta_1'] = 'No disponible'
+                variables['titular_cuenta_2'] = 'No disponible'
         else:
-            variables[clave] = 'No disponible'
+            coincidencia = re.search(patron, texto, re.DOTALL)
+            if coincidencia:
+                valor = coincidencia.group(1).strip()
+                if clave == 'importe_operacion':
+                    valor = valor.replace('MXP', '').replace(',', '')
+                variables[clave] = valor
+            else:
+                variables[clave] = 'No disponible'
+
+    return variables
 
 
     # Imprimir para depuración

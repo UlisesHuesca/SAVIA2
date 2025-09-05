@@ -365,7 +365,7 @@ def cargo_abono(request, pk):
 
     if request.method == 'POST':
         if "envio" in request.POST:
-            form = Cargo_Abono_Tipo_Form(request.POST, instance = transaccion)
+            form = Cargo_Abono_Tipo_Form(request.POST, request.FILES, instance = transaccion)
             if form.is_valid():
                 pago = form.save(commit = False)
                 pago.pagado_date = date.today()
@@ -430,7 +430,7 @@ def saldo_inicial(request, pk):
 
 
 def prellenar_formulario(request):
-    #print("Método:", request.method)
+    print("Método:", request.method)
     #print("X-Requested-With:", request.headers.get('X-Requested-With'))
 
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
@@ -5447,8 +5447,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             sector = pago.oc.req.orden.subproyecto.nombre
         elif hasattr(pago, 'gasto') and pago.gasto:
             folio = f"G{pago.gasto.folio}"
-            contrato = pago.viatico.proyecto.nombre
-            sector = pago.viatico.subproyecto.nombre
+            
             proyectos = set()
             subproyectos = set()
             for articulo in articulos_gasto:
@@ -5462,6 +5461,8 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             
         elif hasattr(pago, 'viatico') and pago.viatico:
             folio = f"V{pago.viatico.folio}"
+            contrato = pago.viatico.proyecto.nombre
+            sector = pago.viatico.subproyecto.nombre
         else:
             concepto_servicio = str(pago.tipo)
             folio = f'NA - {pago.tipo.nombre}'

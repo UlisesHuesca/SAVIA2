@@ -111,11 +111,11 @@
                             </div>
                         </div>
               
-                        <!--<div class="row">
+                        <div class="row">
                             <div class="col-12">
                                 {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
                             </div>
-                        </div>-->
+                        </div>
                 
                     </div>
             </div>
@@ -166,7 +166,43 @@ document.getElementById('id_tipo').addEventListener('change', function(event) {
 });
 
 
+document.getElementById('id_comprobante_pago').addEventListener('change', function(event){
+  var file = event.target.files[0];
+  var formData = new FormData();
+  formData.append('comprobante_pago', file);
+  
+  // Añadir CSRF token a la solicitud AJAX
+  formData.append('csrfmiddlewaretoken', '{{ csrf_token }}');
 
+  fetch('/tesoreria/prellenar_formulario/', { 
+    method: 'POST',
+    body: formData,
+    headers: {
+      'X-Requested-With': 'XMLHttpRequest', // Indicar que es una solicitud AJAX
+    },
+  })
+  .then(response => response.json()) 
+  .then(data => {
+    console.log(data);
+    // Ahora puedes actualizar los valores de tu formulario con los datos extraídos
+    document.querySelector('[name="monto"]').value = data.monto;
+    //document.querySelector('[name="cuenta"]').value = data.cuenta;
+    document.querySelector('[name="pagado_real"]').value = data.pagado_real;
+    var cuentaId = data.cuenta; // Asegúrate de que este es el ID de la Cuenta
+    //var $selectElement = $('[name="cuenta"]');
+    //var divisa = data.divisa_cuenta
+    //console.log(divisa)
+    //$selectElement.val(cuentaId).trigger('change');
+
+    //var cuentaDestinoId = data.destino_cuenta;
+    //$('[name="abono-cuenta"]').val(cuentaDestinoId).trigger('change');
+    //if (divisa == "MXP" && compra_moneda == "DOLARES" ){
+    //var tipo_cambio = document.getElementById('text_tc')
+    //tipo_cambio.classList.remove('d-none');
+    //}
+  })
+  .catch(error => console.error('Error:', error));
+});
 /*document.getElementById('myForm').addEventListener('submit', function(event) {
     mostrarIndicadorCarga();
 });

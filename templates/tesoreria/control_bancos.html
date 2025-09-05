@@ -185,7 +185,7 @@
                     <th class="d-none d-lg-table-cell">Fecha</th>
                     <th>Hora</th>
                     <th>Editar</th>
-                    <th>Empresa</th>
+                    <th>Empresa Cuenta</th>
                     <th scope="col">Empresa/Proveedor</th>
                     <th scope="col">Concepto/Servicio</th>
                     <th>Comentarios</th>
@@ -231,7 +231,6 @@
                         {% elif pago.oc %} {{pago.oc.proveedor.nombre.razon_social}} 
                         {% elif pago.gasto %}  {% if pago.gasto.colaborador %} {{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}} {% else %} {{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}{% endif %}
                         {% elif pago.viatico %} {% if pago.viatico.colaborador %} {{pago.viatico.colaborador.staff.staff.first_name}} {{pago.viatico.colaborador.staff.staff.last_name}}{% else %}{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}} {% endif %}
-                        {% else %} {{pago.tesorero.staff.staff.first_name}} {{pago.tesorero.staff.staff.last_name}}
                         {% endif %}</td>
                     <td>{% if pago.detalles_comprobante and pago.detalles_comprobante.cuenta_retiro != "No disponible"  %}{{pago.detalles_comprobante.motivo_pago}} 
                         {% elif pago.oc %} OC{{pago.oc.folio}}
