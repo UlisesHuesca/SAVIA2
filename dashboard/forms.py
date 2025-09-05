@@ -2,7 +2,7 @@ from django import forms
 from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad
 from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, DocumentosProveedor
 from user.models import Distrito
-from solicitudes.models import Proyecto, Subproyecto
+from solicitudes.models import Proyecto, Subproyecto, Contrato
 from user.models import Profile
 
 
@@ -141,10 +141,16 @@ class AddProduct_Form(forms.ModelForm):
         elif self.instance.pk:
             self.fields['subfamilia'].queryset = self.instance.familia.subfamilia_set.order_by('nombre')
 
+class Contrato_form(forms.ModelForm):
+    class Meta:
+        model = Contrato
+        fields = ['nombre', 'descripcion',]
+
 class Proyectos_Form(forms.ModelForm):
     class Meta:
         model = Proyecto
         fields = ['descripcion','nombre','status_de_entrega',] #Se retiran campos 'cliente','factura','fecha_factura','folio_cotizacion','oc_cliente','activo',
+
 
 class Proyectos_Add_Form(forms.ModelForm):
     class Meta:

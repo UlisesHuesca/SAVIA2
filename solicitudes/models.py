@@ -1,7 +1,8 @@
 from django.db import models
 # De django.contrib.auth.models estamos importando el modelo de usuarios de la administration
 from django.contrib.auth.models import User
-from user.models import Distrito
+
+from user.models import Distrito, Profile
 # Create your models here.
 
 class Cliente(models.Model):
@@ -19,6 +20,20 @@ class St_Entrega(models.Model):
 
     def __str__(self):
         return f'{self.status}'
+    
+class Status_Contrato(models.Model):
+    nombre = models.CharField(max_length = 20, null = True)
+    
+    def __str__(self):
+        return f'{self.nombre}'
+    
+class Contrato(models.Model):
+    nombre = models.CharField(max_length = 30, null = True)
+    descripcion = models.CharField(max_length=100, null=True, blank=True)
+    status_contrato = models.ForeignKey(Status_Contrato, on_delete = models.CASCADE, null = True)
+    created_at = models.DateField(null=True)
+    complete = models.BooleanField(default=False)
+    created_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='contratos')
     
 class Tipo_Proyecto(models.Model):
     nombre = models.CharField(max_length=15, null=True)
@@ -39,6 +54,7 @@ class Proyecto(models.Model):
     complete = models.BooleanField(default=False)
     cuenta_contable = models.ForeignKey(Cuenta_Contable, on_delete=models.CASCADE, null=True, blank=True)
     tipo = models.ForeignKey(Tipo_Proyecto, on_delete=models.CASCADE, null=True)
+    contrato = models.ForeignKey(Contrato, on_delete = models.CASCADE, null=True, related_name="proyectos")
 
     class Meta:
         unique_together = ('nombre', 'distrito',)

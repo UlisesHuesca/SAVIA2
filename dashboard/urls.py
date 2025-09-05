@@ -5,6 +5,8 @@ from . import views
 urlpatterns = [
     path('dashboard/', views.index, name= 'dashboard-index'),
     path('profile_selection', views.select_profile, name='select-profile'),
+    path('configuracion/contratos', views.contratos, name='configuracion-contratos'),
+    path('configuracion/contratos/add', views.add_contratos, name='add-contratos'),
     path('configuracion/proyectos', views.proyectos, name='configuracion-proyectos'),
     path('configuracion/subproyectos/<int:pk>', views.subproyectos, name='subproyectos'),
     path('configuracion/proyectos/editar/<int:pk>', views.proyectos_edit, name='proyectos-edit'),

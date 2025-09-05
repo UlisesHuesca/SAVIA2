@@ -11,13 +11,13 @@ from django.utils.http import urlencode
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia
-from solicitudes.models import Subproyecto, Proyecto
+from solicitudes.models import Subproyecto, Proyecto, Contrato
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form
+from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form
 from user.decorators import perfil_seleccionado_required
-from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter
+from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter
 from user.filters import ProfileFilter
 from proveedores_externos.views import extraer_tipo_contribuyente
 import csv
@@ -311,7 +311,8 @@ def proyectos(request):
     
     proyectos_paginados = asignar_totales(proyectos_list, dict_compras, dict_pagos, dict_gastos, dict_salidas)
 
-
+    
+    
     context = {
         'proyectos':proyectos,
         'proyectos_list':proyectos_list,
@@ -319,6 +320,51 @@ def proyectos(request):
         }
     
     return render(request,'dashboard/proyectos.html',context)
+
+@perfil_seleccionado_required
+def contratos(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    contratos = Contrato.objects.all()
+
+    myfilter= ContratoFilter(request.GET, queryset=contratos)
+
+    context = {
+        'contratos':contratos,
+        'myfilter': myfilter,
+    }
+
+    return render(request,'dashboard/contratos.html', context)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def add_contratos(request):
+    #usuario = Profile.objects.get(staff=request.user
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    #distrito = usuario.distritos
+
+    form = Contrato_form()
+
+    if request.method =='POST':
+        contrato, created = Contrato.objects.get_or_create(complete = False)
+        form = Contrato_form(request.POST, instance = contrato)
+        if form.is_valid():
+            contrato = form.save(commit=False)
+            #proyecto.activo = True
+            contrato.complete = True
+            contrato.save()
+            messages.success(request,'Has agregado correctamente el Contrato')
+            return redirect('configuracion-contratos')
+    else:
+        form = Contrato_form()
+
+    context = {
+        'form': form,
+        }
+
+    return render(request,'dashboard/add_contratos.html',context)
+
 
 def asignar_totales(proyectos_queryset, dict_compras, dict_pagos, dict_gastos, dict_salidas):
     for proyecto in proyectos_queryset:

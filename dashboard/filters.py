@@ -1,6 +1,6 @@
 import django_filters
 from .models import Product
-from solicitudes.models import Proyecto, Subproyecto, St_Entrega
+from solicitudes.models import Proyecto, Subproyecto, St_Entrega, Contrato
 from compras.models import Proveedor
 from django_filters import CharFilter, DateTimeFilter, ModelChoiceFilter
 
@@ -42,6 +42,13 @@ class ProyectoFilter(django_filters.FilterSet):
     class Meta:
         model = Proyecto
         fields = ['id','nombre','descripcion','cliente','folio_cotizacion', 'status_entrega','fecha']
+
+class ContratoFilter(django_filters.FilterSet):
+    nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
+
+    class Meta:
+        model = Contrato
+        fields = ['nombre',]
 
 class SubproyectoFilter(django_filters.FilterSet):
     id = CharFilter(field_name='id', lookup_expr='icontains')

@@ -3107,7 +3107,7 @@ def complemento_nuevo(request, pk):
             complementos_registrados = []
             pdf_sin_complemento = []
             comentario = request.POST.get('comentario', '')
-            print(comentario)
+            #print(comentario)
             
             # Determinar el número máximo de archivos a procesar
             max_len = max(len(archivos_pdf), len(archivos_xml))
@@ -3142,6 +3142,7 @@ def complemento_nuevo(request, pk):
                             continue
 
                         complemento_existente = Complemento_Pago.objects.filter(uuid=uuid_complemento).first()
+                        print(complemento_existente)
                         if complemento_existente:
                             complementos_duplicados.append(uuid_complemento)
                             complemento_final = complemento_existente  # Reusar complemento existente
@@ -4643,9 +4644,9 @@ def convert_excel_matriz_compras_tesoreria(compras):
             compra.tipo_de_cambio if compra.tipo_de_cambio else '',
             compra.costo_plus_adicionales,
             # Calcula total en pesos usando la fórmula de Excel
-            f'=IF(M{row_num}="",N{row_num},M{row_num}*N{row_num})', 
+            f'=IF(O{row_num}="",P{row_num},O{row_num}*P{row_num})', 
             compra.monto_pagado,
-            f'=O{row_num} - P{row_num}',
+            f'=Q{row_num} - R{row_num}',
             compra.cond_de_pago.nombre,
             compra.dias_de_credito if compra.dias_de_credito else '',
             recibida,
