@@ -8,6 +8,7 @@ urlpatterns = [
     path('configuracion/contratos', views.contratos, name='configuracion-contratos'),
     path('configuracion/contratos/add', views.add_contratos, name='add-contratos'),
     path('configuracion/proyectos', views.proyectos, name='configuracion-proyectos'),
+    path('configuracion/proyectos_contrato/<int:pk>', views.proyectos_contrato, name='proyectos-contrato'),
     path('configuracion/subproyectos/<int:pk>', views.subproyectos, name='subproyectos'),
     path('configuracion/proyectos/editar/<int:pk>', views.proyectos_edit, name='proyectos-edit'),
     path('configuracion/proyectos/add', views.proyectos_add, name='proyectos-add'),

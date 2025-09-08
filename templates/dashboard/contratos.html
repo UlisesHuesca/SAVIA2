@@ -101,7 +101,7 @@
                     <td>{{contrato.created_by}}</td>
                     <td>{{contrato.created_at}}</td>
                     <td>
-                    <a type="button" class="btn btn-outline-info" href="#"><i class="fa-solid fa-pen-to-square"></i></a>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'proyectos-contrato' contrato.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

@@ -74,6 +74,15 @@
                             </div>
                         </div>
                     </div>
+                    <div class="col-lg-12 col-md-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form.contrato|add_class:"form-control"|append_attr:"placeholder=Contrato"}}
+                                <label style="color: #121212;" for="id_nombre">Contrato</label>
+                            </div>
+                        </div>
+                    </div>
                     <a class="btn btn-outline-secondary" href="{% url 'configuracion-proyectos' %}">Cancelar</a>
                     <input id="submit-button" class="btn btn-outline-info" type='submit' value="Actualizar">
                 </form>

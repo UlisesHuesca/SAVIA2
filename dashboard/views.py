@@ -348,20 +348,21 @@ def proyectos_contrato(request, pk):
     usuario = Profile.objects.get(id = pk_profile)
     contrato = Contrato.objects.get(id = pk)
     proyectos = Proyecto.objects.filter(contrato = contrato)
-    myfilter= ContratoFilter(request.GET, queryset=contratos)
+    myfilter=ProyectoFilter(request.GET, queryset=proyectos)
+    proyectos = myfilter.qs
 
     #Set up pagination
-    p = Paginator(contratos, 10)
+    p = Paginator(proyectos, 10)
     page = request.GET.get('page')
-    contratos_list = p.get_page(page)
+    proyectos_list = p.get_page(page)
 
     context = {
-        'contratos':contratos,
         'myfilter': myfilter,
-        'contratos_list': contratos_list,
-         }
+        'proyectos_list': proyectos_list,
+        'proyectos':proyectos,
+        }
 
-    return render(request,'dashboard/contratos.html', context)
+    return render(request,'dashboard/proyectos.html', context)
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
