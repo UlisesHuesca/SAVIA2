@@ -329,10 +329,37 @@ def contratos(request):
 
     myfilter= ContratoFilter(request.GET, queryset=contratos)
 
+    #Set up pagination
+    p = Paginator(contratos, 10)
+    page = request.GET.get('page')
+    contratos_list = p.get_page(page)
+
     context = {
         'contratos':contratos,
         'myfilter': myfilter,
-    }
+        'contratos_list': contratos_list,
+         }
+
+    return render(request,'dashboard/contratos.html', context)
+
+@perfil_seleccionado_required
+def proyectos_contrato(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    contrato = Contrato.objects.get(id = pk)
+    proyectos = Proyecto.objects.filter(contrato = contrato)
+    myfilter= ContratoFilter(request.GET, queryset=contratos)
+
+    #Set up pagination
+    p = Paginator(contratos, 10)
+    page = request.GET.get('page')
+    contratos_list = p.get_page(page)
+
+    context = {
+        'contratos':contratos,
+        'myfilter': myfilter,
+        'contratos_list': contratos_list,
+         }
 
     return render(request,'dashboard/contratos.html', context)
 
@@ -351,7 +378,9 @@ def add_contratos(request):
         form = Contrato_form(request.POST, instance = contrato)
         if form.is_valid():
             contrato = form.save(commit=False)
-            #proyecto.activo = True
+            contrato.status_contrato.nombre = "Activo"
+            contrato.created_at = date.today()
+            contrato.created_by = usuario
             contrato.complete = True
             contrato.save()
             messages.success(request,'Has agregado correctamente el Contrato')

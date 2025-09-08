@@ -34,6 +34,9 @@ class Contrato(models.Model):
     created_at = models.DateField(null=True)
     complete = models.BooleanField(default=False)
     created_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='contratos')
+
+    def __str__(self):
+        return f'{self.nombre}'
     
 class Tipo_Proyecto(models.Model):
     nombre = models.CharField(max_length=15, null=True)

@@ -14,7 +14,7 @@
 <hr>
 <h6>&nbsp;</h6>
 <div class="col">
-        <div class=" card col-md-12">
+        <div class="card col-md-12">
         <div class="card-header">
             <h5>Filtro de proyectos</h5>
         </div>
@@ -107,8 +107,8 @@
         {% endfor %}
     </div>
 </div>
-<div class = "row mt-2">
-    <div class="col-md-10">
+<div class = "card">
+    <div class ="table-responsive-sm">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
@@ -161,6 +161,8 @@
                 {% endfor %}
             </tbody>
         </table>
+    </div>
+</div>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
                 {% if proyectos_list.has_previous %}
@@ -196,8 +198,7 @@
                 {% endif %}
             </ul>
         </nav>
-    </div>
-</div>
+
 
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
