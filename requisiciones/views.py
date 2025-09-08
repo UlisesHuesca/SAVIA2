@@ -902,7 +902,7 @@ def requisicion_autorizacion(request):
     #perfil = Profile.objects.get(staff__id=request.user.id)
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     if usuario.sustituto:
-        usuario = Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos, st_activo = True).first()
+        usuario = Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     
     #ordenes = Order.objects.filter(complete=True, autorizar=True, staff__distrito=perfil.distrito)
