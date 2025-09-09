@@ -1,0 +1,136 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Costos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="col">
+        <div class="card col-md-12">
+        <div class="card-header">
+            <h5>Filtro de Costos</h5>
+        </div>
+        <div class="card-body">
+        <!--    <form method="GET" class="row g-7">
+                {% csrf_token %}
+    
+            </div>
+            </form>-->
+            <hr>
+            <div class = "row mt-2 bg-white">
+                <form method=POST>
+                    {% csrf_token %}
+                <ul class="nav nav-pills">
+                    
+                    <li class="nav-item mx-2">
+                        <button type="submit" class="btn btn-outline-success" name="btnReporte"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                    </li>
+                    <li class="nav-item mx-2">
+                        <a class="btn btn-outline-info" href="{% url 'add-costo' %}"><i class="fa-solid fa-plus"></i>Agregar Costo</a>
+                    </li>
+                </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row my-4">
+    <div class="col-md-4">
+        {% for message in messages %}
+            {% if message %}
+            <script src="https://unpkg.com/sweetalert/dist/sweetalert.min.js"></script>
+            <script>
+                var m = "{{ message }}";
+                swal("Excelente !", m, "success")
+            </script>
+            {% endif %}
+        {% endfor %}
+    </div>
+</div>
+<div class = "card">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Nombre</th>
+                    <th scope="col">Distrito</th>
+                    <th scope="col">Concepto</th>
+                    <th scope="col">Fecha</th>
+                    <th scope="col">Monto</th>
+                    <th scope="col">Tipo</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for costo in costos %}
+                <tr>
+                    <td>{{costo.nombre}}</td>
+                    <td>${{costo.distrito}}</td>
+                    <td>{{costo.concepto}}</td>
+                    <td>{{costo.fecha}}</td>
+                    <td>{{costo.monto}}</td>
+                    <td>{{costo.tipo}}</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if proyectos_list.has_previous %}
+                    <li class="page-item">
+                        <a class="page-link" style="color:#3E92CC" 
+                            href="{% my_url proyectos_list.previous_page_number 'page' request.GET.urlencode %}">
+                            <i class="fa-solid fa-angle-left"></i>
+                        </a>
+                    </li>
+                {% endif %}
+                {% for page in proyectos_list.paginator.page_range  %}
+                    {% if proyectos_list.number == page.number %}
+                        <li class="page-item active" aria-current="page">
+                            <a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" 
+                                href="{% my_url page 'page' request.GET.urlencode %}" id="{{page}}">{{page}}
+                            </a>
+                        </li>
+                    {% else %}
+                        <li class="page-item">
+                            <a class="page-link" style="color:#3E92CC" 
+                                href="{% my_url page 'page' request.GET.urlencode %}" id="{{page}}">{{page}}
+                            </a>
+                        </li>
+                    {% endif %}
+                {% endfor %}
+                {% if proyectos_list.has_next %}
+                <li class="page-item">
+                    <a class="page-link" style="color:#3E92CC" 
+                        href="{% my_url proyectos_list.next_page_number 'page' request.GET.urlencode %}">
+                        <i class="fa-solid fa-angle-right"></i>
+                    </a>
+                </li>
+                {% endif %}
+            </ul>
+        </nav>
+
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document">
+
+    </div>
+</div>
+
+{% endblock %}
+</body>
+</html>

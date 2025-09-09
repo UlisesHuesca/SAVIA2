@@ -5295,8 +5295,8 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
             )
 
             total_intermedios = sum(
-                -p.monto if p.tipo is None or p.tipo.nombre == "CARGO"
-                else p.monto
+                p.monto if p.tipo.nombre == "ABONO"
+                else -p.monto
                 for p in pagos_intermedios
             )
             print(total_intermedios)

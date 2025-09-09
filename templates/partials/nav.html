@@ -121,6 +121,14 @@
                                 </div>   
                         </div>
                         <div class="dropdown-divider"></div>
+                        <div>
+                        <h6 class="dropdown-header">Configuración</h6>
+                        <div class="dropdown-divider"></div>
+                            <div>
+                                <a class="dropdown-item" href="{% url 'rentabilidad-costos' %}">Costos</a>
+                            </div>
+                        </div>
+                        <div class="dropdown-divider"></div>
                     {% if usuario.tipo.proveedor_externo == False  %}
                     <h6 class="dropdown-header">{% trans "Mis Comprobaciones" %}</h6>
                     <div class="dropdown-divider"></div>

@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     'finanzas.apps.FinanzasConfig',
     'api.apps.ApiConfig',
     'proveedores_externos.apps.ProveedoresExternosConfig',
+    'rentabilidad.apps.RentabilidadConfig',
     
 
 
