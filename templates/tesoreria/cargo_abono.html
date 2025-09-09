@@ -111,11 +111,8 @@
                             </div>
                         </div>
               
-                        <div class="row">
-                            <div class="col-12">
-                                {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
-                            </div>
-                        </div>
+                        <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
+                        {{form.comprobante_pago|add_class:'form-control'}}
                 
                     </div>
             </div>
