@@ -5411,26 +5411,27 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
 
     row_num = 13
     for pago in pagos:
-
+        proveedor = pago.detalles_comprobante.get('titular_cuenta_2','No disponible') 
         fecha = pago.pagado_real
         empresa = pago.cuenta.empresa.nombre
-        if hasattr(pago, 'oc') and pago.oc:
-            proveedor = pago.oc.proveedor.nombre.razon_social
-        elif hasattr(pago, 'gasto') and pago.gasto:
-            if pago.gasto.colaborador:
-                proveedor = f"{pago.gasto.colaborador.staff.staff.first_name} {pago.gasto.colaborador.staff.staff.last_name}"
-            else:
-                proveedor = f"{pago.gasto.staff.staff.staff.first_name} {pago.gasto.staff.staff.staff.last_name}"
-        elif hasattr(pago, 'viatico') and pago.viatico:
-            if pago.viatico.colaborador:
-                proveedor = f"{pago.viatico.colaborador.staff.staff.first_name} {pago.viatico.colaborador.staff.staff.last_name}"
-            else:
-                proveedor = f"{pago.viatico.staff.staff.staff.first_name} {pago.viatico.staff.staff.staff.last_name}"
-        else:
-            if pago.tesorero:
-                proveedor = pago.detalles_comprobante.get('titular_cuenta_2', 'No disponible') 
-            else:
-                proveedor = "No disponible"
+        if proveedor == "No disponible":
+            if hasattr(pago, 'oc') and pago.oc :
+                proveedor = pago.oc.proveedor.nombre.razon_social
+            elif hasattr(pago, 'gasto') and pago.gasto:
+                if pago.gasto.colaborador:
+                    proveedor = f"{pago.gasto.colaborador.staff.staff.first_name} {pago.gasto.colaborador.staff.staff.last_name}"
+                else:
+                    proveedor = f"{pago.gasto.staff.staff.staff.first_name} {pago.gasto.staff.staff.staff.last_name}"
+            elif hasattr(pago, 'viatico') and pago.viatico:
+                if pago.viatico.colaborador:
+                    proveedor = f"{pago.viatico.colaborador.staff.staff.first_name} {pago.viatico.colaborador.staff.staff.last_name}"
+                else:
+                    proveedor = f"{pago.viatico.staff.staff.staff.first_name} {pago.viatico.staff.staff.staff.last_name}"
+        #else:
+        #    if pago.tesorero:
+        #        proveedor = pago.detalles_comprobante.get('titular_cuenta_2', 'No disponible') 
+        #    else:
+        #        proveedor = "No disponible"
 
         cuenta = pago.cuenta.cuenta
         concepto_servicio = pago.detalles_comprobante.get('motivo_pago')
