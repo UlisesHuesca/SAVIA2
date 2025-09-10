@@ -69,8 +69,7 @@
                         {% endif %}
                     
                     </td>
-                    <td> {% if vale.gasto %}{{vale.gasto.superintendente.staff.staff.first_name}} {{vale.gasto.superintendente.staff.staff.last_name}}
-                        {% elif vale.viatico %}{{vale.viatico.superintendente.staff.staff.first_name}} {{vale.viatico.superintendente.staff.staff.last_name}}
+                    <td> {% if vale.aprobado_por %} {{vale.aprobado_por.staff.staff.first_name}} {{vale.aprobado_por.staff.staff.last_name}}
                         {% endif %}
                     </td>
                    

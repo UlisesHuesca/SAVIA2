@@ -41,14 +41,25 @@ def add_costo(request):
     if request.method =='POST':
         costo, created = Costos.objects.get_or_create(complete = False)
         form = Costo_Form(request.POST, instance = costo)
-        if form.is_valid():
-            costo = form.save(commit=False)
-            costo.created_at = date.today()
-            costo.created_by = usuario
-            costo.complete = True
-            costo.save()
-            messages.success(request,'Has agregado correctamente el Costo')
-            return redirect('rentabilidad-costos')
+        if "seguir" in request.POST:
+            if form.is_valid():
+                costo = form.save(commit=False)
+                costo.created_at = date.today()
+                costo.created_by = usuario
+                costo.complete = True
+                costo.save()
+                messages.success(request,'Has agregado correctamente el Costo')
+                return redirect('add-costo')
+
+        if "enviar" in request.POST:
+            if form.is_valid():
+                costo = form.save(commit=False)
+                costo.created_at = date.today()
+                costo.created_by = usuario
+                costo.complete = True
+                costo.save()
+                messages.success(request,'Has agregado correctamente el Costo')
+                return redirect('rentabilidad-costos')
  
 
     context = {
