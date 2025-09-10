@@ -77,7 +77,8 @@ class Pago(models.Model):
                 if pago_proveniente.tipo is not None and pago_proveniente.tipo.nombre == "TRANSFERENCIA":
                     datos['titular_cuenta_2'] = pago_proveniente.detalles_comprobante.get('titular_cuenta_2', 'No disponible')
                 else:
-                    datos['titular_cuenta_2'] = self.detalles_comprobante.get('titular_cuenta_2', 'No disponible')
+                    # Evitar recursión infinita
+                    datos['titular_cuenta_2'] = datos.get('titular_cuenta_2', 'No disponible')
             except Pago.DoesNotExist:
                 datos['titular_cuenta_2'] = 'No disponible'
 
