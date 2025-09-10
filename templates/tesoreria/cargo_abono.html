@@ -87,6 +87,7 @@
                                 </div>
                             </div>
                         </div>
+                        
 
                         <div class="row">
                             <div class="col-12">
@@ -110,7 +111,21 @@
                                 </div>
                             </div>
                         </div>
+                        {% if cargo_abono_solo %}
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-duotone fa-solid fa-user-tie"></i></span>  
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.empresa_beneficiario|add_class:"form-control"|append_attr:"placeholder= Empresa/Beneficiario"}}
+                                        <label style="color: #121212;" for="id_area">Empresa/Beneficiario</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         {% if not cargo_abono_solo %}
+                        
                         <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
                         {{form.comprobante_pago|add_class:'form-control'}}
                         {% endif %}
