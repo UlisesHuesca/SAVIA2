@@ -5412,6 +5412,7 @@ def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=No
     row_num = 13
     for pago in pagos:
         proveedor = pago.detalles_comprobante.get('titular_cuenta_2','No disponible') 
+        print('proveedor:',proveedor)
         fecha = pago.pagado_real
         empresa = pago.cuenta.empresa.nombre
         if proveedor == "No disponible":

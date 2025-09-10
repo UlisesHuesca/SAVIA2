@@ -982,21 +982,24 @@ def prellenar_formulario_transferencia(request):
         if formato_detectado == "formato_1":
             texto_extraido = extraer_texto_de_pdf(pdf_content)
             datos_extraidos = encontrar_variables_transferencia(texto_extraido)
+           
             #divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
 
         elif formato_detectado == "formato_2":
             bloques = extraer_bloques_formato_2(pdf_content)
             datos_extraidos = encontrar_variables_bloques(bloques)
+            datos_extraidos = encontrar_variables(bloques)
         divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
 
         
         #texto_extraido = extraer_texto_de_pdf(pdf_content)
         #print("Texto extraído:", texto_extraido)
         #datos_extraidos = encontrar_variables_transferencia(texto_extraido)
-        #print("Datos extraídos:", datos_extraidos)
-        
+        print("Datos extraídos:", datos_extraidos)
+        titular_cuenta = datos_extraidos.get('titular_cuenta_2','').strip()
         fecha_str = datos_extraidos.get('fecha', '').strip()
-        #print(fecha_str)
+        #titular_cuenta = datos_extraidos.get('titular_cuenta','').strip()
+        #print('titular_cuenta:',titular_cuenta)
         fecha_formato_correcto = None  # Valor por defecto en caso de que no se pueda procesar la fecha
         
         if fecha_str:
@@ -1048,6 +1051,7 @@ def prellenar_formulario_transferencia(request):
             'cuenta': cuenta_objeto.id if cuenta_objeto else None,
             'divisa_cuenta': divisa_cuenta_extraida or None,
             'destino_cuenta': cuenta_deposito.id if cuenta_deposito else None,
+            'titular_cuenta':titular_cuenta or None,
         }
         
         return JsonResponse(datos_para_formulario)
@@ -1068,6 +1072,7 @@ def encontrar_variables_transferencia(texto):
         importe = re.search(r"(?:Importe|Importe de la operación):\s?([\d,.]+)", texto)
         fecha = re.search(r"Fecha de creación:\s*([\d/]+)", texto)
         divisa = re.search(r"Divisa de la cuenta:\s*(\w+)", texto)
+        
 
         datos['cuenta_retiro'] = retiro.group(1).replace(" ", "") if retiro else None
         datos['cuenta_deposito'] = deposito.group(1).replace(" ", "") if deposito else None
@@ -1092,8 +1097,13 @@ def encontrar_variables_transferencia(texto):
         datos['fecha'] = fecha.group(1) if fecha else None
         datos['divisa_cuenta'] = 'MXN'
 
-    #else:
-        #print('No se detectó ningún formato compatible')
+    titulares = re.findall(r"Titular de la cuenta:\s*([^\n\r]+)", texto, re.DOTALL)
+    if titulares:
+        datos['titular_cuenta_1'] = titulares[0].strip()
+        datos['titular_cuenta_2'] = titulares[1].strip() if len(titulares) > 1 else None
+    else:
+        datos['titular_cuenta_1'] = None
+        datos['titular_cuenta_2'] = None
 
     #print('DATOS EXTRAÍDOS:', datos)
     return datos

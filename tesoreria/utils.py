@@ -14,16 +14,17 @@ def encontrar_variables(texto):
         'importe_operacion': r'(?:Importe|Importe de la operación):\s?([\d,.]+)',
         'cuenta_retiro': r'Cuenta de retiro:\s?(\d+)',
         'divisa_cuenta': r'Divisa de la cuenta:\s?([^\n\r]+)',
-        'titulares': r'Titular de la cuenta:\s*([^\n\r]+)',
+        'titulares': r'Titular de la cuenta:\s*([^\n\r]+?)(?=\s*Titular de la cuenta:|\n|\r|$)',
         #'titular_cuenta_2': r'Titular de la cuenta:\s*([^\n\r]+)\s*Titular de la cuenta:\s*([^\n\r]+)',
         'motivo_pago': r'(?:Motivo de pago|Concepto de pago):\s*([^\n\r]+)',
         'folio_unico': r'Folio único:\s*(\d+)'
     }
-
+    
     # Buscar cada patrón y extraer el valor
     for clave, patron in patrones.items():
         if clave == 'titulares':
-            coincidencias = re.findall(patron, texto, re.DOTALL)
+            coincidencias = re.findall(patron, texto, re.DOTALL | re.IGNORECASE)
+            #print(coincidencias)
             if coincidencias:
                 # Guardamos hasta 2 titulares si existen
                 variables['titular_cuenta_1'] = coincidencias[0].strip() if len(coincidencias) > 0 else 'No disponible'
