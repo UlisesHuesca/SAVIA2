@@ -66,8 +66,21 @@ class Pago(models.Model):
 
     @property
     def detalles_comprobante(self):
-        texto = extraer_texto_pdf_prop(self.comprobante_pago)
-        return encontrar_variables(texto)
+        # Extraer variables del PDF
+        datos = encontrar_variables(extraer_texto_pdf_prop(self.comprobante_pago))
+
+        # Ajustar titular_cuenta_2 según el tipo de pago
+        if self.tipo is not None and self.tipo.nombre == "ABONO":
+            try:
+                # Obtener el pago anterior
+                pago_proveniente = Pago.objects.get(id=self.id - 1)
+                datos['titular_cuenta_2'] = pago_proveniente.detalles_comprobante.get(
+                    'titular_cuenta_2', 'No disponible'
+                )
+            except Pago.DoesNotExist:
+                datos['titular_cuenta_2'] = 'No disponible'
+
+        return datos
     #def __str__(self):
      #   return f'{self.id} - {self.oc} - {self.cuenta}'
 
