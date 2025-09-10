@@ -110,10 +110,10 @@
                                 </div>
                             </div>
                         </div>
-              
+                        {% if not cargo_abono_solo %}
                         <label for="form.comprobante_pago" class="col-auto col-form-label my-1"><strong>Comprobante de pago:</strong></label>
                         {{form.comprobante_pago|add_class:'form-control'}}
-                
+                        {% endif %}
                     </div>
             </div>
             <div class="card-footer text-end">

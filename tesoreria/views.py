@@ -26,7 +26,7 @@ from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
 from finanzas.models import Exhibit, Linea_Exhibit
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm, Cargo_Abono_No_Documento_Form
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -344,6 +344,41 @@ def transferencia_cuentas(request, pk):
 
 @perfil_seleccionado_required
 def cargo_abono(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    enproceso = Tipo_Pago.objects.get(id = 3)
+    cuenta = get_object_or_404(Cuenta, id=pk)
+    transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, cuenta = cuenta, tipo = enproceso)
+    form = Cargo_Abono_No_Documento_Form(instance=transaccion)
+    cargo_abono_solo = True
+    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+    form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id__in=[1, 2])
+   
+
+    if request.method == 'POST':
+        if "envio" in request.POST:
+            form = Cargo_Abono_No_Documento_Form(request.POST, instance = transaccion)
+            if form.is_valid():
+                pago = form.save(commit = False)
+                pago.pagado_date = date.today()
+                pago.pagado_hora = datetime.now().time()
+                pago.hecho = True
+                pago.save()   
+                return redirect('control-bancos', pk = cuenta.id)
+            else:
+                error_str = form.errors.as_text()
+                messages.error(request, f'{usuario.staff.staff.first_name}, el formulario tiene errores: {error_str}')
+
+    context= {
+        'form':form,
+        'cuenta': cuenta,
+        'cargo_abono_solo': cargo_abono_solo,
+    }
+
+    return render(request, 'tesoreria/cargo_abono.html',context)
+
+@perfil_seleccionado_required
+def cargo_abono_documento(request, pk):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     enproceso = Tipo_Pago.objects.get(id = 3)

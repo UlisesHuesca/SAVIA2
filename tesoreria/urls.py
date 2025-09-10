@@ -17,6 +17,7 @@ urlpatterns = [
     path('tesoreria/control_bancos/<int:pk>', views.control_bancos, name='control-bancos'),
     path('tesoreria/transferencia_cuentas/<int:pk>', views.transferencia_cuentas, name='transferencia-cuentas'),
     path('tesoreria/cargo_abono/<int:pk>', views.cargo_abono, name='cargo-abono'),
+    path('tesoreria/cargo_abono_documento/<int:pk>', views.cargo_abono_documento, name='cargo-abono-documento'),
     path('tesoreria/saldo_inicial/<int:pk>', views.saldo_inicial, name='saldo-inicial'),
     path('tesoreria/matriz_facturas_nomodal/<int:pk>', views.matriz_facturas_nomodal, name='matriz-facturas-nomodal'),
     path('tesoreria/matriz_complementos/<int:pk>', views.matriz_complementos, name='matriz-complementos'),
