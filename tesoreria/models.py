@@ -74,7 +74,7 @@ class Pago(models.Model):
             try:
                 # Obtener el pago anterior
                 pago_proveniente = Pago.objects.get(id=self.id - 1)
-                if pago_proveniente.tipo.nombre == "TRANSFERENCIA":
+                if pago_proveniente.tipo is not None and pago_proveniente.tipo.nombre == "TRANSFERENCIA":
                     datos['titular_cuenta_2'] = pago_proveniente.detalles_comprobante.get('titular_cuenta_2', 'No disponible')
                 else:
                     datos['titular_cuenta_2'] = self.detalles_comprobante.get('titular_cuenta_2', 'No disponible')
