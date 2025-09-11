@@ -20,15 +20,16 @@ class Solicitud_Costos(models.Model):
     contrato = models.ForeignKey(Contrato, on_delete = models.CASCADE, null = True, related_name = 'sc_contratos')
     created_by = models.ForeignKey(Profile, on_delete= models.CASCADE, null=True, related_name = 'sc_created')
     created_at = models.DateField(null=True)
-    fecha = models.DateField()
+    tipo = models.ForeignKey(Tipo_Costo, on_delete=models.CASCADE, null = True, related_name = 'sc_tipos')
+    fecha = models.DateField(null=True)
     complete = models.BooleanField(default = False)
 
 # Create your models here.
 class Costos(models.Model):
+    solicitud = models.ForeignKey(Solicitud_Costos, on_delete= models.CASCADE, null = True, related_name = "costos" )
     concepto = models.ForeignKey(Concepto, on_delete = models.CASCADE, null = True, related_name = 'costos_conceptos')
     categorizacion = models.CharField(max_length = 150, null = True)
     monto = models.DecimalField(max_digits=14, decimal_places=2, default=0)
-    tipo = models.ForeignKey(Tipo_Costo, on_delete=models.CASCADE, null = True, related_name = 'costos_tipos')
     complete = models.BooleanField(default = False)
 
     def __str__(self):

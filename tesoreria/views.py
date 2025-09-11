@@ -2522,7 +2522,7 @@ def control_bancos(request, pk):
         if 'btnReporte' in request.POST:
             
             #pagos = pagos.order_by('pagado_real')
-            return convert_excel_control_bancos(pagos, ultimo_saldo, start_date)
+            return convert_excel_control_bancos(cuenta.id, pagos, ultimo_saldo, start_date)
         elif 'btnRecalcular' in request.POST:
             start_date_raw = request.POST.get('start_date') or None
             end_date_raw = request.POST.get('end_date') or None
@@ -5296,9 +5296,9 @@ def escanear_todo_bbva():
     except Exception as e:
         logging.error(f"❌ Error en escaneo de SFTP: {str(e)}")
         
-def convert_excel_control_bancos(pagos, saldo_inicial_objeto,  start_date_str=None):
+def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_date_str=None):
     # Paso 1: determinar la fecha de inicio real
-    cuenta =  pagos.first().cuenta if pagos.exists() else None
+    cuenta =  Cuenta.objects.get(id = cuenta_id)
     start_date = None
 
     if start_date_str:
