@@ -5,7 +5,7 @@
 {% load tt_extras %}
 <html>
 <head>
-{% block title %}Costos{% endblock %}
+{% block title %}Depreciaciones{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -17,7 +17,7 @@
     <div class="col-md-5 col-lg-5">
         <div class="card ">
             <div class="card-header">
-                <h5>Filtro de Costos</h5>
+                <h5>Filtro de Depreciaciones</h5>
             </div>
             <div class="card-body">
             <!--    <form method="GET" class="row g-7">
@@ -37,7 +37,7 @@
                             <button type="button" class="btn btn-outline-danger"><i class="fa-duotone fa-solid fa-file-pdf fa-2xl"></i></button>
                         </li>
                         <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" href="{% url 'add-costo' %}"><i class="fa-solid fa-plus"></i>Agregar Costo</a>
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' %}"><i class="fa-solid fa-plus"></i>Agregar Depreciacion</a>
                         </li>
                     </ul>
                     </form>
@@ -48,7 +48,7 @@
     <div class="col-md-7 col-lg-7">
          <div class="card ">
               <div class="card-header">
-                <h5>Reportes por Tipo de Costo/Distrito</h5>
+                <h5>Reportes por Tipo de Depreciaciones</h5>
             </div>
             <div class="card-body">
                 <form method=GET action="{% url 'reporte-costos' %}" class="d-flex mb-3">
@@ -112,13 +112,13 @@
                 </tr>
             </thead>
             <tbody>
-                {% for costo in costos %}
+                {% for depreciacion in depreciaciones %}
                 <tr>
                     
-                    <td>{{costo.distrito}}</td>
-                    <td>{{costo.fecha|date:"F Y"}}</td>
-                    <td>${{costo.get_total}}</td>
-                    <td>{{costo.tipo}}</td>
+                    <td>{{depreciacion.distrito}}</td>
+                    <td>{{depreciacion.fecha|date:"F Y"}}</td>
+                    <td>${{depreciacion.get_total}}</td>
+                    <td>{{depreciacion.tipo}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

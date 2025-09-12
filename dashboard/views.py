@@ -2061,7 +2061,15 @@ def generar_pdf_dd(proveedor, request):
     representante = dd.representante_nombre
     razon_social  = S(getattr(proveedor, 'razon_social', ''))
     rfc           = S(getattr(proveedor, 'rfc', ''))
-    nacionalidad  = "MEXICANA" if proveedor_direcciones.estado.pais.nombre == "MEXICO" else "EXTRANJERA"
+    if proveedor_direcciones.estado:
+        if proveedor_direcciones.estado.pais.nombre == "MEXICO":
+            nacionalidad = "MEXICANA"
+        else:
+            nacionalidad = "EXTRANJERA"
+    else:
+        nacionalidad = "No estado definido"
+
+    #nacionalidad  = "MEXICANA" if proveedor_direcciones.estado.pais.nombre == "MEXICO" else "EXTRANJERA"
     domicilio     =  proveedor_direcciones.domicilio if proveedor_direcciones else ''
     sitio_web     = dd.sitio_web
     # === Data para tabla ===

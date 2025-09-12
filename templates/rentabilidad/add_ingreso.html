@@ -6,7 +6,7 @@
 {% load i18n %}
 <html>
 <head>
-{% block title %}{% trans "Costos" %}{% endblock %}
+{% block title %}{% trans "Ingresos" %}{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -52,7 +52,7 @@
     <div class="col-lg-5 col-sm-12">
         <div class="card" id="form-wrapper"> 
             <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
-					<h2>{% trans "Solicitud de Costos" %}</h2>
+					<h2>{% trans "Solicitud de Ingresos" %}</h2>
             </div>
             <div class="card-body">   
 				<form method="POST" id='OrderForm'>
@@ -62,17 +62,7 @@
                             {{error_messages}}
                         </div>
                         {% endif %}
-                        <div class="row my-2">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.tipo|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Tipo"}}
-                                         <label style="color: #121212;" for="id_precio_unitario">Tipo*</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>         
+                        
                             
                         <div class="row" id="distrito">
                             <div class="col-12">
@@ -85,17 +75,7 @@
                                 </div>
                             </div>
                         </div> 
-                         <div class="row" id="distrito">
-                            <div class="col-12">
-                                <div class="input-group mb-3">
-                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.contrato|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Contrato"}}
-                                         <label style="color: #121212;" for="id_precio_unitario">Contrato*</label>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                    
                         <div class="col-lg-12 col-md-12">
                             <div class="input-group mb-3">
                                 <span class="input-group-text"><i class="fa-solid fa-calendar"></i></span>
@@ -105,7 +85,7 @@
                                 </div>
                             </div>
                         </div> 
-                        {% if costos %}
+                        {% if ingresos %}
                             <div class="text-end">
                      
                         
@@ -120,7 +100,7 @@
 <div class="col-lg-7 col-sm-12">
         <div class="card">
             <div class="card-header">
-                <h2 id="linea_gasto">{% trans "Costos" %}</h2>
+                <h2 id="linea_gasto">{% trans "Ingresos" %}</h2>
             </div>
             <!--<div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
                 <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
@@ -128,51 +108,65 @@
             </div>--> 
         <div class ="card-body">
         <div>
-                <form id="form_costo" method="post">
-                {% csrf_token %}    
+                <form id="form_ingreso" method="post">
+                {% csrf_token %}  
+                <div class="row" >
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ingreso_form.contrato|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Contrato"}}
+                                <label style="color: #121212;" for="id_precio_unitario">Contrato*</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>  
                 <div class="row">
                     <div class="col-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{costo_form.concepto}}
-                               
+                                {{ingreso_form.concepto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Concepto"}}
+                               <label style="color: #121212;" for="id_precio_unitario">{% trans "Concepto" %}</label>
                             </div>
                         </div>
                     </div>
                 </div>
                
-                <div class="row">
-                    <div class="col-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{costo_form.categorizacion|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Categorización"}}
-                                <label style="color: #121212;" for="id_precio_unitario">Categorización*</label>
-                            </div>
-                        </div>
-                    </div>
-                </div>
+                
            
             <div class="row">
-                 <div class="col-lg-4 col-sm-12">
+                <div class="col-lg-6 col-sm-12">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                            {{costo_form.monto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Monto"}}
+                            {{ingreso_form.monto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Monto"}}
                             <label style="color: #121212;" for="id_precio_unitario">{% trans "Monto" %}*</label>
                         </div>
                     </div>
                 </div>
-             
-              
-            </div>
-            <div class="form-check form-switch col-auto mx-4 d-none" id="Entrada_Salida">
-                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
-                        <label class="form-check-label" for="SwitchEntrada_Salida" id="LabelAlmacén">Entrada-Salida Express</label>
+                <div class="col-lg-6  col-sm-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{ingreso_form.moneda|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Moneda"}}
+                            <label style="color: #121212;" for="id_precio_unitario">{% trans "Moneda" %}*</label>
+                        </div>
+                    </div>
                 </div>
+            </div>
+                <div id="tipo_cambio_container" class="col-lg-4  col-sm-12 d-none">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{ingreso_form.tipo_cambio|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Tipo de Cambio"}}
+                            <label style="color: #121212;" for="id_precio_unitario">{% trans "Tipo de Cambio" %}*</label>
+                        </div>
+                    </div>
+                </div>
+
             <div class="text-end my-2">
-                    <input class="btn btn-outline-info btn-block btn-lg" name="btn_costo" id="btn_costo" type="submit" value="Agregar">
+                    <input class="btn btn-outline-info btn-block btn-lg" name="btn_ingreso" id="btn_ingreso" type="submit" value="Agregar">
             </div>
         </form>
         </div>
@@ -181,20 +175,24 @@
             <table class="table table-light table-striped table-hover">
             <thead>
                 <tr>
+                    <th>Contrato</th>
                     <th scope="col">{% trans "Concepto" %}</th>
-                    <th scope="col">{% trans "Categorización" %}</th>
                     <th scope="col">{% trans "Monto" %}</th>
+                    <th scope="col">{% trans "Moneda" %}</th>
+                    <th>Tipo de Cambio</th>
                     <th>Acción</th>
                 </tr>
             </thead>
             <tbody id="mytbl">
-                {% for costo in costos %}
+                {% for ingreso in ingresos %}
 
                 <tr>
-                    <td scope="col">{{costo.concepto}}</td>
-                    <td scope="col">{{costo.categorizacion}}</td>
-                    <td >{{costo.monto}}</td>
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' costo.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <td>{{ingreso.contrato}}</td>
+                    <td scope="col">{{ingreso.concepto}}</td>
+                    <td >{{ingreso.monto}}</td>
+                    <td>{{ingreso.moneda}}</td>
+                    <td>{% if ingreso.tipo_cambio %}{{ingreso.tipo_cambio}}{% endif %}</td>
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-ingreso' ingreso.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -255,26 +253,35 @@
         
         const form = document.getElementById('OrderForm');
         const btnAgregar = document.getElementById('btn_agregar');
+        const monedaSelect = document.getElementById("id_moneda");  // Django asigna "id_<fieldname>"
+        const tipoCambioDiv = document.getElementById("tipo_cambio_container");
         //sumarTotales();
-        console.log('jv')
+        
         form.addEventListener('submit', function() {
             setTimeout(function() {
                 btnAgregar.disabled = true;
             }, 50); // desactivar el botón 50ms después del clic
         });
+
+       
+
+        function toggleTipoCambio() {
+            console.log(monedaSelect.value)
+            if (monedaSelect.value == 2) {
+                tipoCambioDiv.classList.remove("d-none");
+            } else {
+                tipoCambioDiv.classList.add("d-none");
+            }
+        }
+
+        // Ejecutar al cargar
+        toggleTipoCambio();
+
+        // Escuchar cambios
+        monedaSelect.addEventListener("change", toggleTipoCambio);
     });
 
-    $(document).ready(function() {
-       
-        $('#id_concepto').select2({
-            allowClear: true,
-            width: '100%',
-            placeholder: 'Concepto',
-            //data: ,
-            templateResult: formatRepo, // Función para renderizar los resultados
-            templateSelection: formatRepoSelection // Función para renderizar la selección
-        });
-    });
+
 
 function formatRepo (repo) {
     if (repo.loading) {

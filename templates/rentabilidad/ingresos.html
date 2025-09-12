@@ -5,7 +5,7 @@
 {% load tt_extras %}
 <html>
 <head>
-{% block title %}Costos{% endblock %}
+{% block title %}Ingresos{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -17,7 +17,7 @@
     <div class="col-md-5 col-lg-5">
         <div class="card ">
             <div class="card-header">
-                <h5>Filtro de Costos</h5>
+                <h5>Filtro de Ingresos</h5>
             </div>
             <div class="card-body">
             <!--    <form method="GET" class="row g-7">
@@ -37,7 +37,7 @@
                             <button type="button" class="btn btn-outline-danger"><i class="fa-duotone fa-solid fa-file-pdf fa-2xl"></i></button>
                         </li>
                         <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" href="{% url 'add-costo' %}"><i class="fa-solid fa-plus"></i>Agregar Costo</a>
+                            <a class="btn btn-outline-info" href="{% url 'add-ingreso' %}"><i class="fa-solid fa-plus"></i>Agregar Ingresos</a>
                         </li>
                     </ul>
                     </form>
@@ -48,19 +48,11 @@
     <div class="col-md-7 col-lg-7">
          <div class="card ">
               <div class="card-header">
-                <h5>Reportes por Tipo de Costo/Distrito</h5>
+                <h5>Reportes de Ingreso/Distrito</h5>
             </div>
             <div class="card-body">
-                <form method=GET action="{% url 'reporte-costos' %}" class="d-flex mb-3">
+                <form method=GET action="{% url 'reporte-ingresos' %}" class="d-flex mb-3">
                     {% csrf_token %}
-                    <select name="tipo_id" class="form-select mx-2" style="width: 250px;">
-                        <option value="">-- Tipo de costo --</option>
-                        {% for tipo in tipos %}
-                            <option value="{{ tipo.id }}" {% if tipo_id == tipo.id|stringformat:"s" %}selected{% endif %}>
-                                {{ tipo.nombre }}
-                            </option>
-                        {% endfor %}
-                    </select>
                     <select name="distrito_id" class="form-select mx-2" style="width: 250px;">
                         <option value="">-- Distrito --</option>
                         {% for distrito in distritos %}
@@ -108,17 +100,15 @@
                     <th scope="col">Distrito</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
-                    <th scope="col">Tipo</th>
                 </tr>
             </thead>
             <tbody>
-                {% for costo in costos %}
+                {% for ingreso in ingresos %}
                 <tr>
                     
-                    <td>{{costo.distrito}}</td>
-                    <td>{{costo.fecha|date:"F Y"}}</td>
-                    <td>${{costo.get_total}}</td>
-                    <td>{{costo.tipo}}</td>
+                    <td>{{ingreso.distrito}}</td>
+                    <td>{{ingreso.fecha|date:"F Y"}}</td>
+                    <td>${{ingreso.get_total}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

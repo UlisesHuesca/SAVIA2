@@ -1,0 +1,71 @@
+{% extends 'partials/base.html' %}
+{% load tt_extras %}
+
+<html>
+<head>
+{% block title %}Reporte de Ingresos{% endblock %}
+</head>
+
+<body>
+    {% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="card">
+    <div class="card-header">
+        Descargas
+    </div>
+    <div class="card-body">
+        <form method=POST>
+            {% csrf_token %}
+            <ul class="nav nav-pills">
+                <li class="nav-item mx-2">
+                    <a  class="btn btn-outline-info" href="{% url 'rentabilidad-ingresos' %}"><i class="fa-duotone fa-solid fa-backward"></i></a>
+                </li>
+                <li class="nav-item mx-2">
+                    <button type="submit" class="btn btn-outline-success" name="btnReporte"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                </li>
+            </ul>
+        </form>
+    </div>
+
+
+</div>
+
+<div class="card mt-2">
+    <div class = "card-header">
+        <strong>Filtros aplicados:</strong><br>
+        Distrito: {{ distrito_nombre }} <br>
+        Rango de meses: {{ fecha_inicio }} → {{ fecha_fin }}
+    </div>
+    <div class = "card-body">
+        <table class="table table-bordered table-striped">
+            <thead class="table-dark">
+                <tr>
+                    <th>Contrato</th>
+                    {% for mes in meses %}
+                        <th>{{ mes }}</th>
+                    {% endfor %}
+                </tr>
+            </thead>
+            
+        
+            <tbody>
+                {% for contrato, valores in tabla.items %}
+                    <tr>
+                        <td>{{ contrato }}</td>
+                        {% for mes in meses %}
+                            <td>
+                                {{ valores|get_item:mes|default:"-" }}
+                            </td>
+                        {% endfor %}
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+</body>
+
+</html>
