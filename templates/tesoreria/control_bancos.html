@@ -269,7 +269,11 @@
                     </td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.proyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.proyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.subproyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
-                    <td> {% if pago.oc %}{{pago.oc.req.orden.distrito.nombre}}{% elif pago.gasto %}{{pago.gasto.distrito.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
+                    <td> {% if pago.oc %}{{pago.oc.req.orden.distrito.nombre}}
+                        {% elif pago.gasto %}{{pago.gasto.distrito.nombre}}
+                        {% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}
+                        {% elif pago.distrito %} {{pago.distrito}}
+                        {% endif %}</td>
                     
                     <td>{% if pago.tipo.nombre == null or pago.tipo.nombre == "CARGO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
                     <td>{% if pago.tipo.nombre == "ABONO" %}${{pago.monto|floatformat:2}}{% endif %}</td>

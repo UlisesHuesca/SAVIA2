@@ -352,7 +352,9 @@ def cargo_abono(request, pk):
     form = Cargo_Abono_No_Documento_Form(instance=transaccion)
     cargo_abono_solo = True
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+    distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
     form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id__in=[1, 2])
+    form.fields['distrito'].queryset = distritos
    
 
     if request.method == 'POST':
@@ -385,18 +387,11 @@ def cargo_abono_documento(request, pk):
     cuenta = get_object_or_404(Cuenta, id=pk)
     transaccion, created = Pago.objects.get_or_create(tesorero = usuario, hecho=False, cuenta = cuenta, tipo = enproceso)
     form = Cargo_Abono_Tipo_Form(instance=transaccion)
-    #form_transferencia = Transferencia_Form(instance = tran)
-
-
-    #form.fields['tipo'].queryset = Tipo_Pago.objects.exclude(id=3)
-    #print(Tipo_Pago.objects.filter(id=3))
+    distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
+    
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
     form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id__in=[1, 2])
-    #cuentas_para_select2 = [
-    #    {'id': cuenta.id,
-    #     'text': str(cuenta.cuenta) +' '+ str(cuenta.moneda), 
-    #     'moneda': str(cuenta.moneda),
-    #    } for cuenta in cuentas]
+    form.fields['distritos'].queryset = distritos
 
     if request.method == 'POST':
         if "envio" in request.POST:
@@ -5528,7 +5523,7 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
                 comentarios = ', '.join(comentarios_articulos) if comentarios_articulos else 'NO HAY COMENTARIOS DISPONIBLES'
             
                     
-        distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else ''))
+        distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else (pago.distrito.nombre if pago.distrito else '')))
         cargo = ''
         abono = ''
         if pago.tipo == None or pago.tipo.nombre == "CARGO" or pago.tipo.nombre == "TRANSFERENCIA":

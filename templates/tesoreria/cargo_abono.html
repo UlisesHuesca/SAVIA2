@@ -111,6 +111,17 @@
                                 </div>
                             </div>
                         </div>
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-duotone fa-solid fa-user-tie"></i></span>  
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                                        <label style="color: #121212;" for="id_area">Distrito</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                         {% if cargo_abono_solo %}
                         <div class="row">
                             <div class="col-12">

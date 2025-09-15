@@ -85,13 +85,13 @@ class Cargo_Abono_Form(forms.ModelForm):
 class Cargo_Abono_Tipo_Form(forms.ModelForm):
     class Meta:
         model = Pago
-        fields = ['monto','pagado_real', 'tipo', 'comentario','comprobante_pago']
+        fields = ['monto','pagado_real', 'tipo', 'comentario','comprobante_pago','distrito',]
         #fields = ['monto','cuenta','pagado_real','comprobante_pago','tipo_de_cambio',] los fields del pago normal
     
 class Cargo_Abono_No_Documento_Form(forms.ModelForm):
     class Meta:
         model = Pago
-        fields = ['monto','pagado_real', 'tipo', 'comentario','empresa_beneficiario']
+        fields = ['monto','pagado_real', 'tipo', 'comentario','empresa_beneficiario','distrito']
         #fields = ['monto','cuenta','pagado_real','comprobante_pago','tipo_de_cambio',] los fields del pago normal   
 
 class Saldo_Inicial_Form(forms.ModelForm):

@@ -45,7 +45,7 @@ class Pago(models.Model):
     viatico = models.ForeignKey(Solicitud_Viatico, on_delete = models.CASCADE, null=True, blank=True, related_name = 'pagosv')
     cuenta = models.ForeignKey (Cuenta, on_delete = models.CASCADE, null=True)
     monto = models.DecimalField(max_digits=14,decimal_places=4, null=True, default=0)
-    #distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
+    distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True, blank=True)
     comentario = models.CharField(max_length=100, null=True, blank=True)
     pagado_date = models.DateTimeField(null=True, blank=True)
     pagado_real = models.DateField(null=True, blank=True)
