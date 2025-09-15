@@ -108,7 +108,8 @@
                     <th scope="col">Distrito</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
-                    <th scope="col">Tipo</th>
+                    <th scope="col">Meses</th>
+                    <th>Monto Mensual</th>
                 </tr>
             </thead>
             <tbody>
@@ -116,9 +117,10 @@
                 <tr>
                     
                     <td>{{depreciacion.distrito}}</td>
-                    <td>{{depreciacion.fecha|date:"F Y"}}</td>
-                    <td>${{depreciacion.get_total}}</td>
-                    <td>{{depreciacion.tipo}}</td>
+                    <td>{{depreciacion.mes_inicial|date:"F Y"}}</td>
+                    <td>${{depreciacion.monto}}</td>
+                    <td>{{depreciacion.meses_a_depreciar}}</td>
+                    <td>${{depreciacion.get_depreciacion_mensual}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

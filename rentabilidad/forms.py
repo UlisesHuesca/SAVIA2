@@ -116,7 +116,7 @@ class Depreciacion_Form(forms.ModelForm):
         model = Depreciaciones
         fields = ['contrato','distrito','concepto','monto','tipo_unidad','mes_inicial','meses_a_depreciar']
 
-    def clean_fecha(self):
+    def clean_mes_inicial(self):
         """
         Garantiza que lo que guarde sea un objeto date válido.
         Si el navegador envía 'YYYY-MM' lo convertimos a 'YYYY-MM-01'.

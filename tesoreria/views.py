@@ -391,7 +391,7 @@ def cargo_abono_documento(request, pk):
     
     cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
     form.fields['tipo'].queryset = Tipo_Pago.objects.filter(id__in=[1, 2])
-    form.fields['distritos'].queryset = distritos
+    form.fields['distrito'].queryset = distritos
 
     if request.method == 'POST':
         if "envio" in request.POST:

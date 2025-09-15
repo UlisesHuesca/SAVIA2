@@ -5,13 +5,14 @@ from django.conf import settings
 from django.contrib import messages
 from django.http import HttpResponse
 from calendar import month_name,  monthrange
+from collections import defaultdict
 
 from .models import Costos, Solicitud_Costos, Tipo_Costo, Solicitud_Ingresos, Ingresos, Depreciaciones
 from user.models import Profile, Distrito
 from compras.models import Moneda
 from user.decorators import perfil_seleccionado_required
 from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 
 
 
@@ -437,8 +438,8 @@ def generar_ingresos_excel(tabla, meses, distrito_id=None, fecha_inicio=None, fe
 def depreciaciones(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    costos = Solicitud_Costos.objects.filter(complete = True)
-    tipos = Tipo_Costo.objects.all()
+    depreciaciones = Depreciaciones.objects.filter(complete = True)
+    #tipos = Tipo_Costo.objects.all()
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False)
     #myfilter= ContratoFilter(request.GET, queryset=contratos)
 
@@ -448,13 +449,56 @@ def depreciaciones(request):
     #contratos_list = p.get_page(page)
 
     context = {
-        'costos':costos,
+        'depreciaciones': depreciaciones,
         #'myfilter': myfilter,
-        'tipos': tipos,
+        #'tipos': tipos,
         'distritos':distritos,
          }
 
     return render(request,'rentabilidad/depreciaciones.html', context)
+
+def reporte_depreciacion(request, distrito_id):
+    # Obtén todas las depreciaciones del distrito
+    distrito_id = request.GET.get("distrito_id")
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+
+    depreciaciones = Depreciaciones.objects.get(distrito__id = distrito_id, complete = True)
+    # Genera la lista de meses en texto
+    meses = []
+    actual = fecha_inicio
+    while actual <= fecha_fin:
+        meses.append(actual.strftime("%b %Y"))  # Ejemplo: Ene 2025
+        # avanzar un mes
+        days_in_month = monthrange(actual.year, actual.month)[1]
+        actual += timedelta(days=days_in_month)
+
+    # Diccionario: { contrato: {mes: monto} }
+    tabla = defaultdict(dict)
+
+    for dep in depreciaciones:
+        monto_mensual = dep.monto / dep.meses_a_depreciar
+        inicio = date(dep.mes_inicial.year, dep.mes_inicial.month, 1)
+
+        for i in range(dep.meses_a_depreciar):
+            # Calcular el mes correspondiente
+            year = inicio.year + (inicio.month - 1 + i) // 12
+            month = (inicio.month - 1 + i) % 12 + 1
+            fecha_mes = date(year, month, 1)
+
+            mes_str = fecha_mes.strftime("%b %Y")
+
+            if fecha_inicio <= fecha_mes <= fecha_fin:
+                tabla[dep.contrato][mes_str] = f"${monto_mensual:,.2f}"
+
+    context = {
+        "distrito_nombre": depreciaciones.first().distrito.nombre if depreciaciones.exists() else "",
+        "fecha_inicio": fecha_inicio.strftime("%b %Y"),
+        "fecha_fin": fecha_fin.strftime("%b %Y"),
+        "meses": meses,
+        "tabla": tabla,
+    }
+    return render(request, "rentabilidad/reporte_depreciacion.html", context)
 
 @perfil_seleccionado_required
 def add_depreciacion(request):
@@ -462,7 +506,7 @@ def add_depreciacion(request):
     usuario = Profile.objects.get(id = pk_perfil)
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
     #monedas = Moneda.objects.exclude(id__in = [3] )
-    #solicitud, created =  Solicitud_Ingresos.objects.get_or_create(created_by=usuario, complete = False)
+    depreciacion, created =  Depreciaciones.objects.get_or_create(created_by=usuario, complete = False)
     #depreciaciones = Ingresos.objects.filter(solicitud = solicitud)
     form = Depreciacion_Form()
     form.fields['distrito'].queryset = distritos
@@ -471,15 +515,15 @@ def add_depreciacion(request):
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
-            form = Solicitud_Ingreso_Form(request.POST, instance = solicitud)
+            form = Depreciacion_Form(request.POST, instance = depreciacion)
             print('estou aqui')
             if form.is_valid():
-                solicitud = form.save(commit=False)
-                solicitud.created_at = date.today()
-                solicitud.complete = True
-                solicitud.save()
+                depreciacion = form.save(commit=False)
+                depreciacion.created_at = date.today()
+                depreciacion.complete = True
+                depreciacion.save()
                 messages.success(request,'Has agregado correctamente la Solicitud')
-                return redirect('rentabilidad-ingresos')  
+                return redirect('rentabilidad-depreciaciones')  
             else:
                 print('Nao é valido')
                 print(form.errors)  
