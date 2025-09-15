@@ -81,6 +81,8 @@ class Ingresos(models.Model):
         return f'{self.concepto}'
 
 class Depreciaciones(models.Model):
+    contrato = models.ForeignKey(Contrato, on_delete = models.CASCADE, null = True, related_name = 'd_contratos')
+    distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null = True, related_name = 'd_distritos')
     concepto = models.CharField(max_length = 150, null = True,)
     monto = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     tipo_unidad = models.CharField(max_length = 100, null = True,)

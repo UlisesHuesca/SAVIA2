@@ -1,0 +1,248 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+{% load widget_tweaks %}
+{% load crispy_forms_tags %}
+{% load l10n %}
+{% load i18n %}
+<html>
+<head>
+{% block title %}{% trans "Ingresos" %}{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title": "Error",
+                    "text": "{{ message }}",
+                    "icon": "error",
+                })
+                </script>
+                {% elif message.tags == "warning" %}
+                <script>
+                Swal.fire({
+                    "title": "Facturas repetidas",
+                    "text": "{{ message }}",
+                    "icon": "warning",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title": "Excelente",
+                    "text": "{{ message }}",
+                    "icon": "success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-5 col-sm-12">
+        <div class="card" id="form-wrapper"> 
+            <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
+					<h2>{% trans "Depreciación" %}</h2>
+            </div>
+            <div class="card-body">   
+				<form method="POST" id='OrderForm'>
+                        {% csrf_token %}
+                        {% if error_messages %}
+                        <div class="alert alert-danger" role="alert">
+                            {{error_messages}}
+                        </div>
+                        {% endif %}
+                        <div class="row" id="distrito">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.contrato|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Contrato"}}
+                                         <label style="color: #121212;" for="id_precio_unitario">Contrato*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                        <div class="row" id="distrito">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.concepto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Concepto"}}
+                                         <label style="color: #121212;" for="id_precio_unitario">Concepto*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                       
+                            
+                        <div class="row" id="distrito">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.distrito|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Distrito"}}
+                                         <label style="color: #121212;" for="id_precio_unitario">Distrito*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                         <div class="row" id="distrito">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.tipo_unidad|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Tipo de Unidad"}}
+                                         <label style="color: #121212;" for="id_precio_unitario">Tipo de Unidad*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                         <div class="row" id="distrito">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.monto|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Monto"}}
+                                         <label style="color: #121212;" for="id_precio_unitario">Monto*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                        
+                    
+                        <div class="col-lg-12 col-md-12">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text"><i class="fa-solid fa-calendar"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    {{form.mes_inicial}}
+                                    <label style="color: #121212;" for="id_fecha">Mes - Año</label>
+                                </div>
+                            </div>
+                        </div> 
+                         <div class="row" id="distrito">
+                            <div class="col-12">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text"><i class="fa-solid fa-location-dot"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.meses_a_depreciar|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Monto"}}
+                                         <label style="color: #121212;" for="id_precio_unitario">Monto*</label>
+                                    </div>
+                                </div>
+                            </div>
+                        </div> 
+                       
+                            <div class="text-end">
+                     
+                        
+                                <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Crear" %}'>
+                            </div>
+                        
+                            
+                </form> 
+            </div>
+        </div>
+</div>
+
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<!--AJAX CALL-->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+
+
+    function validarCampo(event) {
+    var valor = event.target.value;
+    
+    // Convertir a número para asegurar la comparación correcta
+    valor = parseInt(valor, 10);
+
+    // Si la cantidad es 0, borra el valor del campo
+    if (valor === 0) {
+        event.target.value = '';
+        Swal.fire({
+                    "title":"Error",
+                    "text":"Favor de introducir un valor mayor que 0",
+                    "icon":"error",
+                })
+    }
+   
+    };
+    
+    document.getElementById('id_monto').addEventListener('change', validarCampo);
+
+    document.addEventListener('DOMContentLoaded', function() {
+        
+        const form = document.getElementById('OrderForm');
+        const btnAgregar = document.getElementById('btn_agregar');
+        const monedaSelect = document.getElementById("id_moneda");  // Django asigna "id_<fieldname>"
+        const tipoCambioDiv = document.getElementById("tipo_cambio_container");
+        //sumarTotales();
+        
+        form.addEventListener('submit', function() {
+            setTimeout(function() {
+                btnAgregar.disabled = true;
+            }, 50); // desactivar el botón 50ms después del clic
+        });
+
+       
+
+        function toggleTipoCambio() {
+            console.log(monedaSelect.value)
+            if (monedaSelect.value == 2) {
+                tipoCambioDiv.classList.remove("d-none");
+            } else {
+                tipoCambioDiv.classList.add("d-none");
+            }
+        }
+
+        // Ejecutar al cargar
+        toggleTipoCambio();
+
+        // Escuchar cambios
+        monedaSelect.addEventListener("change", toggleTipoCambio);
+    });
+
+
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
+
+</script>
+{% endblock %}
+</body>
+</html>

@@ -6,11 +6,11 @@ from django.contrib import messages
 from django.http import HttpResponse
 from calendar import month_name,  monthrange
 
-from .models import Costos, Solicitud_Costos, Tipo_Costo, Solicitud_Ingresos, Ingresos
+from .models import Costos, Solicitud_Costos, Tipo_Costo, Solicitud_Ingresos, Ingresos, Depreciaciones
 from user.models import Profile, Distrito
 from compras.models import Moneda
 from user.decorators import perfil_seleccionado_required
-from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form
+from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form
 from datetime import date, datetime
 
 
@@ -455,3 +455,40 @@ def depreciaciones(request):
          }
 
     return render(request,'rentabilidad/depreciaciones.html', context)
+
+@perfil_seleccionado_required
+def add_depreciacion(request):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
+    #monedas = Moneda.objects.exclude(id__in = [3] )
+    #solicitud, created =  Solicitud_Ingresos.objects.get_or_create(created_by=usuario, complete = False)
+    #depreciaciones = Ingresos.objects.filter(solicitud = solicitud)
+    form = Depreciacion_Form()
+    form.fields['distrito'].queryset = distritos
+    #ingreso_form = Ingreso_Form()
+    #ingreso_form.fields['moneda'].queryset = monedas
+
+    if request.method =='POST':
+        if "btn_agregar" in request.POST:
+            form = Solicitud_Ingreso_Form(request.POST, instance = solicitud)
+            print('estou aqui')
+            if form.is_valid():
+                solicitud = form.save(commit=False)
+                solicitud.created_at = date.today()
+                solicitud.complete = True
+                solicitud.save()
+                messages.success(request,'Has agregado correctamente la Solicitud')
+                return redirect('rentabilidad-ingresos')  
+            else:
+                print('Nao é valido')
+                print(form.errors)  
+        
+                
+ 
+
+    context = {
+        'form': form,
+        }
+
+    return render(request,'rentabilidad/add_depreciaciones.html',context)
