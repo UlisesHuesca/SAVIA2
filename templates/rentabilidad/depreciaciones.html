@@ -51,16 +51,8 @@
                 <h5>Reportes por Tipo de Depreciaciones</h5>
             </div>
             <div class="card-body">
-                <form method=GET action="{% url 'reporte-costos' %}" class="d-flex mb-3">
+                <form method=GET action="{% url 'reporte-depreciaciones' %}" class="d-flex mb-3">
                     {% csrf_token %}
-                    <select name="tipo_id" class="form-select mx-2" style="width: 250px;">
-                        <option value="">-- Tipo de costo --</option>
-                        {% for tipo in tipos %}
-                            <option value="{{ tipo.id }}" {% if tipo_id == tipo.id|stringformat:"s" %}selected{% endif %}>
-                                {{ tipo.nombre }}
-                            </option>
-                        {% endfor %}
-                    </select>
                     <select name="distrito_id" class="form-select mx-2" style="width: 250px;">
                         <option value="">-- Distrito --</option>
                         {% for distrito in distritos %}

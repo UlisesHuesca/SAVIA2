@@ -1,0 +1,91 @@
+{% extends 'partials/base.html' %}
+{% load tt_extras %}
+
+<html>
+<head>
+{% block title %}Resumen Rentabilidad{% endblock %}
+</head>
+
+<body>
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="col-sm-12 col-md-8 col-lg-6">
+<div class="card">
+    <div class="card-header">
+        <h3>Filtros</h3>
+    </div>
+    <div class="card-body">
+        <form method="get" class="d-flex mb-3">
+        <select name="distrito_id" class="form-select mx-2" style="width: 250px;">
+            <option value="">-- Distrito --</option>
+            {% for distrito in distritos %}
+                <option value="{{ distrito.id }}" {% if tipo_id == distrito.id|stringformat:"s" %}selected{% endif %}>
+                    {{ distrito.nombre }}
+                </option>
+            {% endfor %}
+        </select>
+        <div class="col-auto">
+            <input type="month" name="mes_anio" value="{{ mes_anio }}" class="form-control">
+        </div>
+
+         <button type="submit" class="btn btn-outline-info mx-2">
+                       Ver Reporte
+        </button>
+       
+        </form>
+        <form method="POST">
+            {% csrf_token %}
+            {% if mes_anio %}
+                <button type="submit" class="btn btn-outline-success mx-2" name="btnReporte"><i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i></button>
+            {% endif %}
+        </form>
+    </div>
+</div>
+</div>
+<div class="card mt-3">
+{% if mes_anio %}
+<h4>Rentabilidad de {{ distrito_nombre }} en {{ fecha_label }}</h4>
+<table class="table table-bordered table-striped">
+    <thead class="table-dark">
+        <tr>
+            <th>Contrato</th>
+            <th>Ingresos</th>
+            {% for tipo, _ in tipos_costos_totales.items %}
+                <th>{{ tipo }}</th>
+            {% endfor %}
+            <th>Amortización de Inversiones</th>
+            <th>Rentabilidad</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for row in contratos_data %}
+        <tr>
+            <td>{{ row.contrato }}</td>
+            <td>${{ row.ingresos|floatformat:2 }}</td>
+            {% for tipo, _ in tipos_costos_totales.items %}
+                <td>${{ row.tipos_costos|get_item:tipo|default_if_none:"0"|floatformat:2 }}</td>
+            {% endfor %}
+            <td>${{ row.depreciaciones|floatformat:2 }}</td>
+            <td><strong>${{ row.rentabilidad|floatformat:2 }}</strong></td>
+        </tr>
+        {% endfor %}
+        <tr class="table-success">
+            <th>Total</th>
+            <th>${{ totales.ingresos|floatformat:2 }}</th>
+            {% for tipo, total in tipos_costos_totales.items %}
+                <th>${{ total|floatformat:2 }}</th>
+            {% endfor %}
+            <th>${{ totales.depreciaciones|floatformat:2 }}</th>
+            <th><strong>${{ totales.rentabilidad|floatformat:2 }}</strong></th>
+        </tr>
+    </tbody>
+</table>
+{% endif %}
+
+</div>
+{% endblock %}
+</body>
+
+</html>

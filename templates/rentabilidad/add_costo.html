@@ -52,7 +52,15 @@
     <div class="col-lg-5 col-sm-12">
         <div class="card" id="form-wrapper"> 
             <div class="card-header" id="Gasto" gasto ="{{gasto.id}}">
-					<h2>{% trans "Solicitud de Costos" %}</h2>
+				<h2>
+                    {% if tipo == "directo" %}
+                        Registro de Costos Directos
+                    {% elif tipo == "indirecto" %}
+                        Registro de Costos Indirectos
+                    {% else %}
+                        Registro de Costos
+                    {% endif %}
+                </h2>
             </div>
             <div class="card-body">   
 				<form method="POST" id='OrderForm'>
@@ -85,6 +93,7 @@
                                 </div>
                             </div>
                         </div> 
+                        {% if tipo == "directo" %}
                          <div class="row" id="distrito">
                             <div class="col-12">
                                 <div class="input-group mb-3">
@@ -96,6 +105,7 @@
                                 </div>
                             </div>
                         </div>
+                        {% endif %}
                         <div class="col-lg-12 col-md-12">
                             <div class="input-group mb-3">
                                 <span class="input-group-text"><i class="fa-solid fa-calendar"></i></span>
@@ -142,7 +152,7 @@
                     </div>
                 </div>
                
-                <div class="row">
+                <!--<div class="row">
                     <div class="col-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
@@ -152,7 +162,7 @@
                             </div>
                         </div>
                     </div>
-                </div>
+                </div>-->
            
             <div class="row">
                  <div class="col-lg-4 col-sm-12">
@@ -194,7 +204,7 @@
                     <td scope="col">{{costo.concepto}}</td>
                     <td scope="col">{{costo.categorizacion}}</td>
                     <td >{{costo.monto}}</td>
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' costo.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' tipo costo.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
                 </tr>
                 {% endfor %}
             </tbody>

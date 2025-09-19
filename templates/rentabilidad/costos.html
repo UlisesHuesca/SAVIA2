@@ -37,7 +37,10 @@
                             <button type="button" class="btn btn-outline-danger"><i class="fa-duotone fa-solid fa-file-pdf fa-2xl"></i></button>
                         </li>
                         <li class="nav-item mx-2">
-                            <a class="btn btn-outline-info" href="{% url 'add-costo' %}"><i class="fa-solid fa-plus"></i>Agregar Costo</a>
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' 'directo' %}"><i class="fa-solid fa-plus"></i>Agregar Costo Directo</a>
+                        </li>
+                         <li class="nav-item mx-2">
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' 'indirecto' %}"><i class="fa-solid fa-plus"></i>Agregar Costo Indirecto</a>
                         </li>
                     </ul>
                     </form>

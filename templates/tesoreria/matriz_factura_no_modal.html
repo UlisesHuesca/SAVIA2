@@ -78,6 +78,10 @@
                     <thead>
                         <th>
                             Fecha
+                            
+                        </th>
+                        <th>
+                            Monto
                         </th>
                         <th>
                             Pago
@@ -89,6 +93,7 @@
                         <tr>
                             {% if pago.comprobante_pago %}
                             <th>{% if pago.fecha_pdf %}Comprobante: {{pago.fecha_pdf}}{% else %}Sistema: {{pago.pagado_date|date:"d/m/Y"}}{% endif %}</th>
+                            <th>{{pago.monto}}</th>
                             <th scope="col">
                                 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
                                     <i class="fa-duotone fa-solid fa-file-invoice-dollar fa-xl"></i>
