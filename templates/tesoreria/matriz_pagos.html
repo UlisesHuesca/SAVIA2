@@ -179,7 +179,7 @@
                     </div>
                 </div>
             </div>
-            {% if usuario.distritos.nombre == "MATRIZ" %}
+            {% if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.nombre != "Tesoreria_Documentos"  %}
             <div class="col-lg-3 col-sm-12">
                 <div class="input-group mb-3">
                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>

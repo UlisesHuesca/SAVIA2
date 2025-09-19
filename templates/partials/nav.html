@@ -135,18 +135,27 @@
                             <span class="badge bg-danger">({{conteo_servicios}})</span>
                              {% endif %}
                         </a>
-                    <div class="dropdown-divider"></div>
-                        <div>
+                    
+                        {% if usuario.tipo.rentabilidad == False %}
+                            <div class="d-none">
+                        {% else %}
+                            <div>
+                        {% endif %}
+                        <div class="dropdown-divider"></div>
                         <h6 class="dropdown-header">Rentabilidad</h6>
                         <div class="dropdown-divider"></div>
                             <div>
                                 <a class="dropdown-item" href="{% url 'rentabilidad-costos' %}">Costos</a>
                             </div>
+
                             <div>
                                 <a class="dropdown-item" href="{% url 'rentabilidad-ingresos' %}">Ingresos</a>
                             </div>
                             <div>
                                 <a class="dropdown-item" href="{% url 'rentabilidad-depreciaciones' %}">Depreciaciones</a>
+                            </div>
+                            <div>
+                                <a class="dropdown-item" href="{% url 'rentabilidad-resumen' %}">Resumen</a>
                             </div>
                         </div>
                     
