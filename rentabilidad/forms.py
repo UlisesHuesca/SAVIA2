@@ -87,6 +87,48 @@ class Solicitud_Costo_Indirecto_Form(forms.ModelForm):
             raise forms.ValidationError("Formato de fecha inválido. Usa Mes-Año (YYYY-MM).")
 
 
+class Solicitud_Costo_Indirecto_Central_Form(forms.ModelForm):
+    # Sobrescribimos el campo para poder usar input_formats y controlar la limpieza
+    fecha = forms.DateField(
+        widget=forms.DateInput(
+            attrs={
+                'type': 'month',
+                'class': 'form-control',
+                'placeholder': 'MM-YYYY',
+            },
+            format='%Y-%m',   # usado para renderizar el valor inicial
+        ),
+        input_formats=['%Y-%m'],  # acepta 'YYYY-MM' desde el POST
+        required=True,
+        help_text='Selecciona mes y año'
+    )
+
+    class Meta:
+        model = Solicitud_Costos
+        fields = ['fecha'] 
+
+    def clean_fecha(self):
+        """
+        Garantiza que lo que guarde sea un objeto date válido.
+        Si el navegador envía 'YYYY-MM' lo convertimos a 'YYYY-MM-01'.
+        """
+        # Intentamos tomar el valor ya limpiado (puede venir como date)
+        val = self.cleaned_data.get('fecha')
+        if isinstance(val, date):
+            # ya es una date (posible si input_formats la parseó bien)
+            return date(val.year, val.month, 1)
+
+        # Si no, tomamos el valor "raw" enviado por el form (ej: '2025-09')
+        raw = self.data.get(self.add_prefix('fecha'))
+        if not raw:
+            raise forms.ValidationError("Debes seleccionar mes y año.")
+
+        try:
+            parsed = datetime.strptime(raw, '%Y-%m')
+            return date(parsed.year, parsed.month, 1)
+        except ValueError:
+            raise forms.ValidationError("Formato de fecha inválido. Usa Mes-Año (YYYY-MM).")
+
 class Costo_Form(forms.ModelForm):
     class Meta:
         model = Costos

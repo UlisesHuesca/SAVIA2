@@ -79,6 +79,8 @@ class Ingresos(models.Model):
 
     def __str__(self):
         return f'{self.concepto}'
+    
+    
 
 class Depreciaciones(models.Model):
     contrato = models.ForeignKey(Contrato, on_delete = models.CASCADE, null = True, related_name = 'd_contratos')

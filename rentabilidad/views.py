@@ -12,7 +12,7 @@ from user.models import Profile, Distrito
 from solicitudes.models import Contrato
 from compras.models import Moneda
 from user.decorators import perfil_seleccionado_required
-from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form, Solicitud_Costo_Indirecto_Form
+from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form, Solicitud_Costo_Indirecto_Form, Solicitud_Costo_Indirecto_Central_Form
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -58,25 +58,35 @@ def add_costo(request, tipo):
     if tipo == "directo":
         form = Solicitud_Costo_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [2,5])
+        form.fields['tipo'].queryset = tipos
+        form.fields['distrito'].queryset = distritos
     elif tipo == "indirecto":
         form = Solicitud_Costo_Indirecto_Form()
-        tipos = Tipo_Costo.objects.filter(id__in = [1,3,4])
+        tipos = Tipo_Costo.objects.filter(id__in = [3,4])
+        form.fields['tipo'].queryset = tipos
+        form.fields['distrito'].queryset = distritos
+    elif tipo == "central":
+        form = Solicitud_Costo_Indirecto_Central_Form()
+        tipos = Tipo_Costo.objects.filter(id__in = [1])
     form.fields['tipo'].queryset = tipos
     form.fields['distrito'].queryset = distritos
     costo_form = Costo_Form()
 
     if request.method =='POST':
-        
-       
         if "btn_agregar" in request.POST:
             if tipo == "directo":
                 form = Solicitud_Costo_Form(request.POST, instance = solicitud)
             elif tipo == "indirecto":
                 form = Solicitud_Costo_Indirecto_Form(request.POST, instance = solicitud)
+            elif tipo == "central":
+                form = Solicitud_Costo_Indirecto_Central_Form(request.POSt, instance = solicitud)
             print('estou aqui')
             if form.is_valid():
+                
                 solicitud = form.save(commit=False)
                 solicitud.created_at = date.today()
+                if tipo == "central":
+                    solicitud.distrito.nombre = "MATRIZ"
                 solicitud.complete = True
                 solicitud.save()
                 messages.success(request,'Has agregado correctamente la Solicitud')
@@ -118,6 +128,10 @@ def delete_costo(request, tipo, pk):
 def reporte_costos(request):
     tipo_id = request.GET.get("tipo_id")  # <- capturamos el valor del select
     distrito_id = request.GET.get("distrito_id", 1)  # puedes hacerlo dinámico también
+    print(tipo_id)
+    if int(tipo_id) == 1:
+        distrito_id = 6
+        
     costos = Costos.objects.filter(solicitud__distrito_id=distrito_id, solicitud__tipo_id=tipo_id)
     fecha_inicio = request.GET.get("fecha_inicio")  # viene como YYYY-MM
     fecha_fin = request.GET.get("fecha_fin")        # viene como YYYY-MM
@@ -143,6 +157,8 @@ def reporte_costos(request):
     }
 
     return render(request, "rentabilidad/reportes_costos.html", context)
+
+
 
 def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fin=None):
     costos = Costos.objects.all()
@@ -365,6 +381,51 @@ def get_tabla_ingresos(distrito_id=None, fecha_inicio=None, fecha_fin=None):
 
     return tabla, meses
 
+def get_tabla_ingresos_contrato(fecha_inicio=None, fecha_fin=None):
+    ingresos = Ingresos.objects.all()
+
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m").date()
+            y, m = [int(x) for x in fecha_fin.split("-")]
+            last_day = monthrange(y, m)[1]
+            fecha_fin = date(y, m, last_day)
+            ingresos = ingresos.filter(solicitud__fecha__range=[fecha_inicio, fecha_fin])
+        except ValueError:
+            pass
+
+    # Totales por contrato y mes
+    data = (
+        ingresos.annotate(mes=TruncMonth("solicitud__fecha"))
+        .values("contrato_id", "contrato__nombre", "mes")
+        .annotate(total=Sum("monto"))
+        .order_by("contrato__nombre", "mes")
+    )
+
+    tabla = {}
+    meses = set()
+    for row in data:
+        contrato_id = row["contrato_id"]
+        contrato_nombre = row["contrato__nombre"]
+        mes = row["mes"].strftime("%B %Y")
+        meses.add(mes)
+
+        year, month = row["mes"].year, row["mes"].month
+        prorrateo = calcular_prorrateo_contrato(contrato_id, year, month)
+
+        if contrato_nombre not in tabla:
+            tabla[contrato_nombre] = {}
+
+        tabla[contrato_nombre][mes] = {
+            "monto": row["total"],
+            "prorrateo": round(prorrateo * 100, 2)
+        }
+
+    meses = sorted(meses, key=lambda m: (m.split()[1], list(month_name).index(m.split()[0])))
+
+    return tabla, meses
+
+
 def reporte_ingresos(request):
     distrito_id = request.GET.get("distrito_id")
     #print(distrito_id)
@@ -386,6 +447,41 @@ def reporte_ingresos(request):
         "fecha_fin": fecha_fin,
     }
     return render(request, "rentabilidad/reporte_ingresos.html", context)
+
+def reporte_ingresos_contrato(request):
+    fecha_inicio = request.GET.get("fecha_inicio")
+    fecha_fin = request.GET.get("fecha_fin")
+
+    tabla, meses = get_tabla_ingresos_contrato(fecha_inicio, fecha_fin)
+
+    if request.method == "POST" and "btnReporte" in request.POST:
+        return generar_ingresos_excel(tabla, meses, None, fecha_inicio, fecha_fin)
+
+    context = {
+        "tabla": tabla,
+        "meses": meses,
+        "fecha_inicio": fecha_inicio,
+        "fecha_fin": fecha_fin,
+    }
+    return render(request, "rentabilidad/reporte_ingresos_contrato.html", context)
+
+
+
+def calcular_prorrateo_contrato(contrato, year, month):
+    """Devuelve la participación del contrato en el total de ingresos del mes."""
+    total_mes = Ingresos.objects.filter(
+        fecha__year=year, fecha__month=month
+    ).aggregate(total=Sum('monto'))['total'] or 0
+
+    total_contrato = Ingresos.objects.filter(
+        contrato=contrato, fecha__year=year, fecha__month=month
+    ).aggregate(total=Sum('monto'))['total'] or 0
+
+    if total_mes == 0:
+        return 0
+
+    return total_contrato / total_mes
+
 
 def generar_ingresos_excel(tabla, meses, distrito_id=None, fecha_inicio=None, fecha_fin=None):
     wb = openpyxl.Workbook()

@@ -597,8 +597,8 @@ def compras_pagos(request, pk):
                     if pago.cuenta.moneda.nombre == "PESOS": #Si la cuenta es en pesos
                         #Estoy aca
                         sub.gastado = sub.gastado + monto_actual * pago.tipo_de_cambio
-                        monto_actual = monto_actual/pago.tipo_de_cambio
-                        
+                        monto_actual = monto_actual/pago.tipo_de_cambio #Lo convierto a dolares
+                        suma_pago = suma_pago_usd
                     
                     if pago.cuenta.moneda.nombre == "DOLARES":
                         tipo_de_cambio = decimal.Decimal(dof())
@@ -608,6 +608,7 @@ def compras_pagos(request, pk):
                 print('monto_actual:',monto_actual)
                 monto_total_pagado= monto_actual + suma_pago
                 print('monto_total_pagado:',monto_total_pagado)
+                
                 compra.monto_pagado = monto_total_pagado
                 costo_oc = compra.costo_plus_adicionales 
                 monto_parcial = compra.parcial
