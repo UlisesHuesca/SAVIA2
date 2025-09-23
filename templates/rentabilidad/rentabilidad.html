@@ -47,41 +47,49 @@
 <div class="card mt-3">
 {% if mes_anio %}
 <h4>Rentabilidad de {{ distrito_nombre }} en {{ fecha_label }}</h4>
-<table class="table table-bordered table-striped">
-    <thead class="table-dark">
-        <tr>
-            <th>Contrato</th>
-            <th>Ingresos</th>
-            {% for tipo, _ in tipos_costos_totales.items %}
-                <th>{{ tipo }}</th>
+    <table class="table table-bordered table-striped">
+        <thead class="table-dark">
+            <tr>
+                <th>Contrato</th>
+                <th>Ingresos</th>
+                <th>Directos</th>
+                <th>Indirectos Operativos</th>
+                <th>Indirectos Administrativos</th>
+                <th>Indirectos Centrales</th>
+                <th>Amortización</th>
+                <th>Rentabilidad</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for row in contratos_data %}
+            <tr>
+                <td>{{ row.contrato }}</td>
+                <td>{{ row.ingresos|floatformat:2 }}</td>
+
+               
+                <td>{{ row.directos|default:"0"|floatformat:2 }}</td>
+
+                <td>{{ row.ind_oper|floatformat:2 }}</td>
+                <td>{{ row.ind_adm|floatformat:2 }}</td>
+                <td>{{ row.ind_central|floatformat:2 }}</td>
+
+                <td>{{ row.depreciaciones|floatformat:2 }}</td>
+                <td><strong>{{ row.rentabilidad|floatformat:2 }}</strong></td>
+            </tr>
             {% endfor %}
-            <th>Amortización de Inversiones</th>
-            <th>Rentabilidad</th>
-        </tr>
-    </thead>
-    <tbody>
-        {% for row in contratos_data %}
-        <tr>
-            <td>{{ row.contrato }}</td>
-            <td>${{ row.ingresos|floatformat:2 }}</td>
-            {% for tipo, _ in tipos_costos_totales.items %}
-                <td>${{ row.tipos_costos|get_item:tipo|default_if_none:"0"|floatformat:2 }}</td>
-            {% endfor %}
-            <td>${{ row.depreciaciones|floatformat:2 }}</td>
-            <td><strong>${{ row.rentabilidad|floatformat:2 }}</strong></td>
-        </tr>
-        {% endfor %}
-        <tr class="table-success">
-            <th>Total</th>
-            <th>${{ totales.ingresos|floatformat:2 }}</th>
-            {% for tipo, total in tipos_costos_totales.items %}
-                <th>${{ total|floatformat:2 }}</th>
-            {% endfor %}
-            <th>${{ totales.depreciaciones|floatformat:2 }}</th>
-            <th><strong>${{ totales.rentabilidad|floatformat:2 }}</strong></th>
-        </tr>
-    </tbody>
-</table>
+
+            <tr class="table-success">
+                <td><strong>Total</strong></td>
+                <td><strong>{{ totales.ingresos|floatformat:2 }}</strong></td>
+                <td><strong>{{totales.directos}}</strong></td>
+                <td><strong>{{ totales.ind_oper|floatformat:2 }}</strong></td>
+                <td><strong>{{ totales.ind_adm|floatformat:2 }}</strong></td>
+                <td><strong>{{ totales.ind_central|floatformat:2 }}</strong></td>
+                <td><strong>{{ totales.depreciaciones|floatformat:2 }}</strong></td>
+                <td><strong>{{ totales.rentabilidad|floatformat:2 }}</strong></td>
+            </tr>
+        </tbody>
+    </table>
 {% endif %}
 
 </div>

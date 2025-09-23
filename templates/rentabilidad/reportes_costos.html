@@ -43,22 +43,27 @@
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
-                    <th>Concepto</th>
+                    <th>Contrato</th>
                     {% for mes in meses %}
-                        <th>{{ mes }}</th>
+                        <th>{{ mes }} (Monto)</th>
+                        <th>{{ mes }} (%)</th>
                     {% endfor %}
                 </tr>
             </thead>
-            
-        
             <tbody>
-                {% for concepto, valores in tabla.items %}
+                {% for contrato, valores in tabla.items %}
                     <tr>
-                        <td>{{ concepto }}</td>
+                        <td>{{ contrato }}</td>
                         {% for mes in meses %}
-                            <td>
-                                {{ valores|get_item:mes|default:"-" }}
-                            </td>
+                            {% with datos=valores|get_item:mes %}
+                                {% if datos %}
+                                    <td>{{ datos.monto|floatformat:2 }}</td>
+                                    <td>{{ datos.porcentaje|floatformat:2 }}%</td>
+                                {% else %}
+                                    <td>-</td>
+                                    <td>-</td>
+                                {% endif %}
+                            {% endwith %}
                         {% endfor %}
                     </tr>
                 {% endfor %}

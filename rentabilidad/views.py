@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect
-from django.db.models import Sum
+from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from django.conf import settings
 from django.contrib import messages
@@ -17,6 +17,7 @@ from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
 
+from decimal import Decimal
 
 import openpyxl
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -68,8 +69,8 @@ def add_costo(request, tipo):
     elif tipo == "central":
         form = Solicitud_Costo_Indirecto_Central_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [1])
-    form.fields['tipo'].queryset = tipos
-    form.fields['distrito'].queryset = distritos
+    #form.fields['tipo'].queryset = tipos
+    #form.fields['distrito'].queryset = distritos
     costo_form = Costo_Form()
 
     if request.method =='POST':
@@ -166,8 +167,10 @@ def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fi
     if distrito_id:
         costos = costos.filter(solicitud__distrito_id=distrito_id)
 
+    tipo_nombre = None
     if tipo_id:
         costos = costos.filter(solicitud__tipo_id=tipo_id)
+        tipo_nombre = Tipo_Costo.objects.get(id=tipo_id).nombre
 
     if fecha_inicio and fecha_fin:
         try:
@@ -179,24 +182,96 @@ def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fi
         except ValueError:
             pass
 
-    # Agrupamos por concepto y mes
+    # 🚩 Agrupamos por concepto y mes
     data = (
         costos.annotate(mes=TruncMonth("solicitud__fecha"))
-        .values("concepto__nombre", "mes")
+        .values("mes")
         .annotate(total=Sum("monto"))
         .order_by("concepto__nombre", "mes")
     )
 
     tabla = {}
     meses = set()
-    for row in data:
-        concepto = row["concepto__nombre"]
-        mes = row["mes"].strftime("%B %Y")
-        meses.add(mes)
-        if concepto not in tabla:
-            tabla[concepto] = {}
-        tabla[concepto][mes] = row["total"]
 
+    for row in data:
+        mes_value = row["mes"]
+        mes = mes_value.strftime("%B %Y")
+        meses.add(mes)
+        total_mes = row["total"]
+
+    # 🚩 Caso especial: Indirecto Central
+    if tipo_nombre == "Indirecto Central":
+        # 🚩 Caso especial: Indirecto Central
+        tabla_ingresos, meses_ingresos = get_tabla_ingresos_contrato(
+            fecha_inicio.strftime("%Y-%m"),
+            fecha_fin.strftime("%Y-%m")
+        )
+
+        tabla_distribuida = {}
+        for mes in meses:
+            total_indirecto_mes = sum(
+                row["total"] for row in data if row["mes"].strftime("%B %Y") == mes
+            )
+
+            for contrato, meses_dict in tabla_ingresos.items():
+                if mes in meses_dict:
+                    prorrateo = meses_dict[mes]["prorrateo"] / Decimal("100.00")
+                    costo_asignado = total_indirecto_mes * prorrateo
+
+                    if contrato not in tabla_distribuida:
+                        tabla_distribuida[contrato] = {}
+                    tabla_distribuida[contrato][mes] = {
+                        "monto": costo_asignado,
+                        "porcentaje": meses_dict[mes]["prorrateo"]  # en %
+                    }
+
+        tabla = tabla_distribuida
+     # 🚩 Caso: indirectos operativos o administrativos → prorrateo por distrito
+    elif tipo_nombre in ["Indirectos Operativos", "Indirectos Administrativos"]:
+        tabla_ingresos, _ = get_tabla_ingresos_contrato(
+            fecha_inicio.strftime("%Y-%m"), fecha_fin.strftime("%Y-%m"), distrito_id
+        )
+
+        costos_mes = (
+            costos.annotate(mes=TruncMonth("solicitud__fecha"))
+            .values("mes")
+            .annotate(total=Sum("monto"))
+        )
+
+        for row in costos_mes:
+            mes = row["mes"].strftime("%B %Y")
+            meses.add(mes)
+            total_costos_mes = row["total"]
+
+            for contrato, meses_dict in tabla_ingresos.items():
+                if mes in meses_dict:
+                    prorrateo = meses_dict[mes]["prorrateo"]
+
+                    if contrato not in tabla:
+                        tabla[contrato] = {}
+                    if mes not in tabla[contrato]:
+                        tabla[contrato][mes] = {"monto": 0, "porcentaje": 0}
+
+                    tabla[contrato][mes]["monto"] += total_costos_mes * (prorrateo / 100)
+                    tabla[contrato][mes]["porcentaje"] = prorrateo
+
+    # 🚩 Caso: cualquier otro tipo → costos normales
+    else:
+        data = (
+            costos.annotate(mes=TruncMonth("solicitud__fecha"))
+            .values("concepto__nombre", "mes")
+            .annotate(total=Sum("monto"))
+            .order_by("concepto__nombre", "mes")
+        )
+
+        for row in data:
+            concepto = row["concepto__nombre"]
+            mes = row["mes"].strftime("%B %Y")
+            meses.add(mes)
+
+            if concepto not in tabla:
+                tabla[concepto] = {}
+            tabla[concepto][mes] = {"monto": row["total"], "porcentaje": 0}
     meses = sorted(meses, key=lambda m: (m.split()[1], list(month_name).index(m.split()[0])))
 
     return tabla, meses
@@ -343,8 +418,64 @@ def delete_ingreso(request, pk):
 
     return redirect('add-ingreso')
 
-def get_tabla_ingresos(distrito_id=None, fecha_inicio=None, fecha_fin=None):
-    ingresos = Ingresos.objects.all()
+def get_tabla_ingresos_distrito(distrito_id, fecha_inicio=None, fecha_fin=None):
+    ingresos = Ingresos.objects.filter(solicitud__complete=True, solicitud__distrito_id=distrito_id)
+
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m").date()
+            y, m = [int(x) for x in fecha_fin.split("-")]
+            last_day = monthrange(y, m)[1]
+            fecha_fin = date(y, m, last_day)
+            ingresos = ingresos.filter(solicitud__fecha__range=[fecha_inicio, fecha_fin])
+        except ValueError:
+            pass
+
+    tabla = {}
+    meses = set()
+    total_distrito = Decimal("0.00")
+
+    # Recorremos ingresos con conversión de moneda
+    for ingreso in ingresos:
+        monto = ingreso.monto
+        if ingreso.moneda and ingreso.moneda.nombre.upper() == "DOLARES":
+            if ingreso.tipo_cambio:
+                monto = monto * ingreso.tipo_cambio
+            else:
+                monto = Decimal("0.00")
+
+        mes_value = ingreso.solicitud.fecha.replace(day=1)
+        mes = mes_value.strftime("%B %Y")
+        meses.add(mes)
+
+        contrato_nombre = ingreso.contrato.nombre
+
+        if contrato_nombre not in tabla:
+            tabla[contrato_nombre] = {}
+
+        if mes not in tabla[contrato_nombre]:
+            tabla[contrato_nombre][mes] = {"monto": Decimal("0.00")}
+
+        tabla[contrato_nombre][mes]["monto"] += monto
+        total_distrito += monto
+
+    # 👉 calcular % participación por contrato
+    participacion = {}
+    for contrato, meses_data in tabla.items():
+        total_contrato = sum([mes_data["monto"] for mes_data in meses_data.values()])
+        if total_distrito > 0:
+            participacion[contrato] = round((total_contrato / total_distrito) * 100, 2)
+        else:
+            participacion[contrato] = 0
+
+    meses = sorted(meses, key=lambda m: datetime.strptime(m, "%B %Y"))
+
+    return tabla, meses, participacion
+
+from decimal import Decimal
+
+def get_tabla_ingresos_contrato(fecha_inicio=None, fecha_fin=None, distrito_id=None):
+    ingresos = Ingresos.objects.filter(solicitud__complete=True)
 
     if distrito_id:
         ingresos = ingresos.filter(solicitud__distrito_id=distrito_id)
@@ -359,42 +490,7 @@ def get_tabla_ingresos(distrito_id=None, fecha_inicio=None, fecha_fin=None):
         except ValueError:
             pass
 
-    data = (
-        ingresos.annotate(mes=TruncMonth("solicitud__fecha"))
-        .values("contrato_id", "contrato__nombre", "mes")  # 👈 usa el campo visible de Contrato
-        .annotate(total=Sum("monto"))
-        .order_by("contrato__nombre", "mes")
-    )
-
-
-    tabla = {}
-    meses = set()
-    for row in data:
-        contrato_nombre = row["contrato__nombre"]
-        mes = row["mes"].strftime("%B %Y")
-        meses.add(mes)
-        if contrato_nombre not in tabla:
-            tabla[contrato_nombre] = {}
-        tabla[contrato_nombre][mes] = row["total"]
-
-    meses = sorted(meses, key=lambda m: (m.split()[1], list(month_name).index(m.split()[0])))
-
-    return tabla, meses
-
-def get_tabla_ingresos_contrato(fecha_inicio=None, fecha_fin=None):
-    ingresos = Ingresos.objects.all()
-
-    if fecha_inicio and fecha_fin:
-        try:
-            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m").date()
-            y, m = [int(x) for x in fecha_fin.split("-")]
-            last_day = monthrange(y, m)[1]
-            fecha_fin = date(y, m, last_day)
-            ingresos = ingresos.filter(solicitud__fecha__range=[fecha_inicio, fecha_fin])
-        except ValueError:
-            pass
-
-    # Totales por contrato y mes
+    # Agrupamos totales por contrato y mes
     data = (
         ingresos.annotate(mes=TruncMonth("solicitud__fecha"))
         .values("contrato_id", "contrato__nombre", "mes")
@@ -404,26 +500,84 @@ def get_tabla_ingresos_contrato(fecha_inicio=None, fecha_fin=None):
 
     tabla = {}
     meses = set()
+
+    # 🔑 necesitamos acumular totales por mes para calcular prorrateos
+    totales_por_mes = {}
+
     for row in data:
         contrato_id = row["contrato_id"]
         contrato_nombre = row["contrato__nombre"]
-        mes = row["mes"].strftime("%B %Y")
+        mes_value = row["mes"]
+
+        if not mes_value:
+            continue
+
+        mes = mes_value.strftime("%B %Y")
         meses.add(mes)
 
-        year, month = row["mes"].year, row["mes"].month
-        prorrateo = calcular_prorrateo_contrato(contrato_id, year, month)
+        # Normalizamos montos considerando tipo de cambio
+        ingresos_mes = Ingresos.objects.filter(
+            contrato_id=contrato_id,
+            solicitud__complete=True,
+            solicitud__fecha__year=mes_value.year,
+            solicitud__fecha__month=mes_value.month,
+        )
+        if distrito_id:
+            ingresos_mes = ingresos_mes.filter(solicitud__distrito_id=distrito_id)
 
+        monto_total = Decimal("0.00")
+        for ingreso in ingresos_mes:
+            monto = ingreso.monto
+            if ingreso.moneda and ingreso.moneda.nombre.upper() == "DOLARES":
+                monto = monto * ingreso.tipo_cambio if ingreso.tipo_cambio else Decimal("0.00")
+            monto_total += monto
+
+        # Guardamos en tabla
         if contrato_nombre not in tabla:
             tabla[contrato_nombre] = {}
+        tabla[contrato_nombre][mes] = {"monto": monto_total}  # prorrateo lo calculamos después
 
-        tabla[contrato_nombre][mes] = {
-            "monto": row["total"],
-            "prorrateo": round(prorrateo * 100, 2)
-        }
+        # Acumulamos totales por mes (para prorrateo)
+        totales_por_mes[mes] = totales_por_mes.get(mes, Decimal("0.00")) + monto_total
 
-    meses = sorted(meses, key=lambda m: (m.split()[1], list(month_name).index(m.split()[0])))
+    # 🔑 Segundo paso: calcular prorrateo (%)
+    for contrato, meses_dict in tabla.items():
+        for mes, valores in meses_dict.items():
+            total_mes = totales_por_mes.get(mes, Decimal("0.00"))
+            if total_mes > 0:
+                valores["prorrateo"] = round(valores["monto"] / total_mes * 100, 2)
+            else:
+                valores["prorrateo"] = 0
 
+    meses = sorted(meses, key=lambda m: datetime.strptime(m, "%B %Y"))
     return tabla, meses
+
+    
+
+def calcular_prorrateo_contrato(contrato_id, year, month):
+    total_mes = Decimal("0.00")
+    total_general = Decimal("0.00")
+
+    # Todos los ingresos de ese contrato
+    ingresos = Ingresos.objects.filter(contrato_id=contrato_id, solicitud__complete = True)
+
+    for ingreso in ingresos:
+        monto = ingreso.monto
+        if ingreso.moneda and ingreso.moneda.nombre.upper() == "DOLARES":
+            if ingreso.tipo_cambio:  # evitar None
+                monto = monto * ingreso.tipo_cambio
+            else:
+                monto = Decimal("0.00")  # o puedes decidir que cuente como monto directo
+
+        total_general += monto
+
+        if ingreso.solicitud.fecha.year == year and ingreso.solicitud.fecha.month == month:
+            total_mes += monto
+
+    if total_general == 0:
+        return Decimal("0.00")
+
+    return (total_mes / total_general).quantize(Decimal("0.0001"))
 
 
 def reporte_ingresos(request):
@@ -431,10 +585,13 @@ def reporte_ingresos(request):
     #print(distrito_id)
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
-
-    tabla, meses = get_tabla_ingresos(distrito_id, fecha_inicio, fecha_fin)
-    distrito_nombre = Distrito.objects.get(id=distrito_id).nombre
-
+    if distrito_id:
+        distrito_nombre = Distrito.objects.get(id = distrito_id).nombre
+    else:
+        distrito_nombre = ""
+    print('distrito',distrito_nombre)
+    tabla, meses = get_tabla_ingresos_contrato(fecha_inicio, fecha_fin, distrito_id)
+    
     if request.method == "POST" and "btnReporte" in request.POST:
         return generar_ingresos_excel(tabla, meses, distrito_id, fecha_inicio, fecha_fin)
 
@@ -449,10 +606,11 @@ def reporte_ingresos(request):
     return render(request, "rentabilidad/reporte_ingresos.html", context)
 
 def reporte_ingresos_contrato(request):
+    distrito_id = request.GET.get("distrito_id")
     fecha_inicio = request.GET.get("fecha_inicio")
     fecha_fin = request.GET.get("fecha_fin")
 
-    tabla, meses = get_tabla_ingresos_contrato(fecha_inicio, fecha_fin)
+    tabla, meses = get_tabla_ingresos_contrato(fecha_inicio, fecha_fin, distrito_id)
 
     if request.method == "POST" and "btnReporte" in request.POST:
         return generar_ingresos_excel(tabla, meses, None, fecha_inicio, fecha_fin)
@@ -465,22 +623,6 @@ def reporte_ingresos_contrato(request):
     }
     return render(request, "rentabilidad/reporte_ingresos_contrato.html", context)
 
-
-
-def calcular_prorrateo_contrato(contrato, year, month):
-    """Devuelve la participación del contrato en el total de ingresos del mes."""
-    total_mes = Ingresos.objects.filter(
-        fecha__year=year, fecha__month=month
-    ).aggregate(total=Sum('monto'))['total'] or 0
-
-    total_contrato = Ingresos.objects.filter(
-        contrato=contrato, fecha__year=year, fecha__month=month
-    ).aggregate(total=Sum('monto'))['total'] or 0
-
-    if total_mes == 0:
-        return 0
-
-    return total_contrato / total_mes
 
 
 def generar_ingresos_excel(tabla, meses, distrito_id=None, fecha_inicio=None, fecha_fin=None):
@@ -855,7 +997,12 @@ def reporte_rentabilidad_mensual(request):
         "ingresos": 0,
         "depreciaciones": 0,
         "rentabilidad": 0,
+        "directos": 0,
+        "ind_adm": 0,
+        "ind_oper": 0,
+        "ind_central": 0,
     }
+
     tipos_costos_totales = {}  # acumulados por tipo de costo
 
     distrito_nombre = ""
@@ -874,59 +1021,152 @@ def reporte_rentabilidad_mensual(request):
                 distrito_nombre = Distrito.objects.get(id=distrito_id).nombre
             except Distrito.DoesNotExist:
                 distrito_nombre = "?"
+            
+            
+            # 👉 Traemos los ingresos prorrateados (por contrato y mes)
+            tabla_ingresos, _ = get_tabla_ingresos_contrato(
+                fecha_inicio=mes_anio, fecha_fin=mes_anio
+            )
+            # total nacional de ingresos (para Indirecto Central)
+            ingreso_total_nacional = sum(
+                v[fecha_label]["monto"]
+                for v in tabla_ingresos.values()
+                if fecha_label in v
+            )
 
+            print('ingreso total nacional', ingreso_total_nacional)
             # Obtener todos los contratos que tienen algo en ese mes
+
+            # total de ingresos del distrito (ya en pesos)
+            solicitudes_ingresos_distrito = Solicitud_Ingresos.objects.filter(
+                distrito_id = distrito_id,
+                fecha__year=y,
+                fecha__month=m,
+            )
+            ingresos_distrito = sum(s.get_total for s in solicitudes_ingresos_distrito)
+            print('ingresos distrito', ingresos_distrito)
+
             contratos = (
                 Contrato.objects.filter(
-                    sc_contratos__distrito__id=distrito_id,
+                    Q(sc_contratos__distrito__id=int(distrito_id),
                     sc_contratos__fecha__year=y,
-                    sc_contratos__fecha__month=m,
+                    sc_contratos__fecha__month=m)
+                    |
+                    Q(i_contratos__solicitud__distrito__id=int(distrito_id),
+                    i_contratos__solicitud__fecha__year=y,
+                    i_contratos__solicitud__fecha__month=m)
                 )
                 .distinct()
             )
+            print('contratos', contratos)
 
             for contrato in contratos:
                 row = {
                     "contrato": contrato.nombre or str(contrato),
                     "ingresos": 0,
                     "depreciaciones": 0,
-                    "tipos_costos": {},  # cada tipo de costo → monto
+                    "directos": 0,  # cada tipo de costo → monto
+                    "ind_oper": 0,
+                    "ind_adm": 0,
+                    "ind_central": 0,
                     "rentabilidad": 0,
                 }
 
-                # Ingresos
-                row["ingresos"] = (
-                    Ingresos.objects.filter(
-                        solicitud__distrito__id=distrito_id,
-                        contrato=contrato,
+                # ------------------------
+                # Ingresos desde tabla_ingresos
+                # ------------------------
+                # usar str() porque en tabla_ingresos la llave es texto
+                contrato_key = str(contrato)
+
+                ingreso_contrato = (
+                    tabla_ingresos.get(contrato_key, {})
+                    .get(fecha_label, {})
+                    .get("monto", 0)
+                )
+                #print('ingreso contrato', ingreso_contrato)
+
+                #prorrateo_distrito = (
+                #    tabla_ingresos.get(contrato_key, {})
+                #    .get(fecha_label, {})
+                #    .get("prorrateo", 0)
+                #)
+                prorrateo_distrito = ingreso_contrato / ingresos_distrito * 100 if ingresos_distrito else 0
+                print('prorrateo distrito', prorrateo_distrito)
+
+                row["ingresos"] = ingreso_contrato
+
+                # ------------------------
+                # Directos (suma directa)
+                # ------------------------
+                row["directos"] = (
+                    Costos.objects.filter(
+                        solicitud__distrito__id= distrito_id,
+                        solicitud__contrato = contrato,
+                        #solicitud__tipo__nombre="Directo",
                         solicitud__fecha__year=y,
                         solicitud__fecha__month=m,
-                    ).aggregate(total=Sum("monto"))["total"] or 0
+                    ).aggregate(total=Sum("monto"))["total"]
+                    or  Decimal("0.00") 
                 )
 
-                # Costos agrupados por tipo
-                costos = (
+                #print('directos', row["directos"])
+                       # ------------------------
+                # Indirectos Operativos / Administrativos (prorrateados en el distrito)
+                # ------------------------
+                total_ind_op = (
                     Costos.objects.filter(
                         solicitud__distrito__id=distrito_id,
-                        solicitud__contrato=contrato,
+                        solicitud__tipo__nombre="Indirectos Operativos",
                         solicitud__fecha__year=y,
                         solicitud__fecha__month=m,
-                    )
-                    .values("solicitud__tipo__nombre")
-                    .annotate(total=Sum("monto"))
+                    ).aggregate(total=Sum("monto"))["total"]
+                    or 0
                 )
 
-                for c in costos:
-                    tipo = c["solicitud__tipo__nombre"] or "Sin tipo"
-                    monto = c["total"] or 0
-                    row["tipos_costos"][tipo] = monto
+                total_ind_adm = (
+                    Costos.objects.filter(
+                        solicitud__distrito__id=distrito_id,
+                        solicitud__tipo__nombre="Indirectos Administrativos",
+                        solicitud__fecha__year=y,
+                        solicitud__fecha__month=m,
+                    ).aggregate(total=Sum("monto"))["total"]
+                    or 0
+                )
 
-                    # acumular totales globales por tipo
-                    tipos_costos_totales[tipo] = (
-                        tipos_costos_totales.get(tipo, 0) + monto
-                    )
+                #print('ind adm',total_ind_adm)
 
-                # Depreciaciones
+                row["ind_oper"] = total_ind_op * (prorrateo_distrito / 100)
+                row["ind_adm"] = total_ind_adm * (prorrateo_distrito / 100)
+
+                # ------------------------
+                # Indirecto Central (prorrateado a nivel nacional)
+                # ------------------------
+                total_ind_central = (
+                    Costos.objects.filter(
+                        solicitud__tipo__nombre="Indirecto Central",
+                        solicitud__fecha__year=y,
+                        solicitud__fecha__month=m,
+                    ).aggregate(total=Sum("monto"))["total"]
+                    or 0
+                )
+
+
+                prorrateo_nacional = (
+                    (ingreso_contrato / ingreso_total_nacional * 100)
+                    if ingreso_total_nacional
+                    else 0
+                )
+                #print('ingreso contrato', ingreso_contrato)
+                #print('ingreso total nacional', ingreso_total_nacional)
+                #print('prorrateo nacional', prorrateo_nacional) >>> verificado, parece estar correcto
+                row["ind_central"] = total_ind_central * (prorrateo_nacional / 100)
+
+               
+                
+
+                 # ------------------------
+                # Depreciaciones (ya lo tenías)
+                # ------------------------
                 depreciaciones_total = 0
                 depreciaciones = Depreciaciones.objects.filter(
                     contrato=contrato, distrito__id=distrito_id, complete=True
@@ -944,25 +1184,42 @@ def reporte_rentabilidad_mensual(request):
                             break
                 row["depreciaciones"] = depreciaciones_total
 
+                # ------------------------
                 # Rentabilidad
+                # ------------------------
                 row["rentabilidad"] = (
                     row["ingresos"]
-                    - sum(row["tipos_costos"].values())
+                    - row["directos"]
+                    - row["ind_oper"]
+                    - row["ind_adm"]
+                    - row["ind_central"]
                     - row["depreciaciones"]
                 )
 
                 contratos_data.append(row)
 
+                     # ------------------------
                 # Totales
+                # ------------------------
                 totales["ingresos"] += row["ingresos"]
+                totales["directos"] += row["directos"]
+                totales["ind_oper"] += row["ind_oper"]
+                totales["ind_adm"] += row["ind_adm"]
+                totales["ind_central"] += row["ind_central"]
                 totales["depreciaciones"] += row["depreciaciones"]
                 totales["rentabilidad"] += row["rentabilidad"]
+
 
     
         # 👉 Si el usuario pidió Excel
     if request.method == "POST" and "btnReporte" in request.POST:
-        return generar_rentabilidad_excel(contratos_data=contratos_data, tipos_costos_totales=tipos_costos_totales, 
-                                          distrito_id=distrito_id, mes_anio=mes_anio, fecha_label=fecha_label)
+        return generar_rentabilidad_excel(
+            contratos_data=contratos_data, 
+            tipos_costos_totales=tipos_costos_totales,
+            distrito_id=distrito_id, 
+            mes_anio=mes_anio, 
+            fecha_label=fecha_label
+            )
 
 
     context = {

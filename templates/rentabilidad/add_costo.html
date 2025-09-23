@@ -58,7 +58,7 @@
                     {% elif tipo == "indirecto" %}
                         Registro de Costos Indirectos
                     {% else %}
-                        Registro de Costos
+                        Registro de Costo
                     {% endif %}
                 </h2>
             </div>
@@ -70,6 +70,7 @@
                             {{error_messages}}
                         </div>
                         {% endif %}
+                        {% if  tipo == "directo" or tipo == "indirecto" %}
                         <div class="row my-2">
                             <div class="col-12">
                                 <div class="input-group mb-3">
@@ -93,6 +94,7 @@
                                 </div>
                             </div>
                         </div> 
+                        {% endif %}
                         {% if tipo == "directo" %}
                          <div class="row" id="distrito">
                             <div class="col-12">

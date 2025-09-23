@@ -11,7 +11,7 @@ from django.utils.http import urlencode
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia
-from solicitudes.models import Subproyecto, Proyecto, Contrato
+from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
@@ -379,7 +379,8 @@ def add_contratos(request):
         form = Contrato_form(request.POST, instance = contrato)
         if form.is_valid():
             contrato = form.save(commit=False)
-            contrato.status_contrato.nombre = "Activo"
+            tipo_activo = Status_Contrato.objects.get(nombre = "Activo")
+            contrato.status_contrato = tipo_activo
             contrato.created_at = date.today()
             contrato.created_by = usuario
             contrato.complete = True

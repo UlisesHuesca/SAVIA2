@@ -35,29 +35,34 @@
 <div class="card mt-2">
     <div class = "card-header">
         <strong>Filtros aplicados:</strong><br>
-        Distrito: {{ distrito_nombre }} <br>
+        {% if distrito_nombre %} Distrito: {{ distrito_nombre }} <br>{% endif %}
         Rango de meses: {{ fecha_inicio }} → {{ fecha_fin }}
     </div>
     <div class = "card-body">
-        <table class="table table-bordered table-striped">
-            <thead class="table-dark">
+        <table class="table table-bordered">
+            <thead>
                 <tr>
                     <th>Contrato</th>
                     {% for mes in meses %}
-                        <th>{{ mes }}</th>
+                        <th>{{ mes }} (Monto)</th>
+                        <th>{{ mes }} (Prorrateo %)</th>
                     {% endfor %}
                 </tr>
             </thead>
-            
-        
             <tbody>
-                {% for contrato, valores in tabla.items %}
+                {% for contrato, meses_dict in tabla.items %}
                     <tr>
                         <td>{{ contrato }}</td>
                         {% for mes in meses %}
-                            <td>
-                                {{ valores|get_item:mes|default:"-" }}
-                            </td>
+                            {% with datos=meses_dict|get_item:mes %}
+                                {% if datos %}
+                                    <td>${{ datos.monto|floatformat:2 }}</td>
+                                    <td>{{ datos.prorrateo }}%</td>
+                                {% else %}
+                                    <td>--</td>
+                                    <td>--</td>
+                                {% endif %}
+                            {% endwith %}
                         {% endfor %}
                     </tr>
                 {% endfor %}
