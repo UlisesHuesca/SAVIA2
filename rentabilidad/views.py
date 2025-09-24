@@ -69,9 +69,10 @@ def add_costo(request, tipo):
     elif tipo == "central":
         form = Solicitud_Costo_Indirecto_Central_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [1])
-    #form.fields['tipo'].queryset = tipos
-    #form.fields['distrito'].queryset = distritos
     costo_form = Costo_Form()
+
+
+    
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
@@ -80,14 +81,16 @@ def add_costo(request, tipo):
             elif tipo == "indirecto":
                 form = Solicitud_Costo_Indirecto_Form(request.POST, instance = solicitud)
             elif tipo == "central":
-                form = Solicitud_Costo_Indirecto_Central_Form(request.POSt, instance = solicitud)
+                form = Solicitud_Costo_Indirecto_Central_Form(request.POST, instance = solicitud)
             print('estou aqui')
             if form.is_valid():
                 
                 solicitud = form.save(commit=False)
                 solicitud.created_at = date.today()
                 if tipo == "central":
-                    solicitud.distrito.nombre = "MATRIZ"
+                    distrito = Distrito.objects.get(nombre = "MATRIZ")
+                    solicitud.distrito = distrito
+                    solicitud.tipo = Tipo_Costo.objects.get(nombre = "Indirecto Central")
                 solicitud.complete = True
                 solicitud.save()
                 messages.success(request,'Has agregado correctamente la Solicitud')
@@ -311,18 +314,39 @@ def generar_costos_excel(tabla, meses, distrito_id=None, tipo_id=None, fecha_ini
     head_style.fill = PatternFill("solid", fgColor = '00003366')
     wb.add_named_style(head_style)
 
+     # Estilo moneda
+    money_style = NamedStyle(name="money_style")
+    money_style.number_format = u'"$"#,##0.00'
+    money_style.font = Font(name="Calibri", size=10)
+
     # Encabezados
     cell = ws.cell(row=fila, column=1, value="Concepto")
     cell.style = head_style
-    for col_idx, mes in enumerate(meses, start=2):
-        cell = ws.cell(row=fila, column=col_idx, value=mes)
-        cell.style = head_style
+
+    col_offset = 2   # 👈 inicializar antes del loop
+    for mes in meses:
+        ws.cell(row=fila, column=col_offset, value=f"{mes} (Monto)").style = head_style
+        ws.cell(row=fila, column=col_offset+1, value=f"{mes} (%)").style = head_style
+        col_offset += 2
 
     # Filas
     for row_idx, (concepto, valores) in enumerate(tabla.items(), start=fila+1):
         ws.cell(row=row_idx, column=1, value=concepto)
-        for col_idx, mes in enumerate(meses, start=2):
-            ws.cell(row=row_idx, column=col_idx, value=valores.get(mes, 0))
+
+        col_offset = 2
+        for mes in meses:
+            val = valores.get(mes, {"monto": 0, "porcentaje": 0})
+            monto = float(val.get("monto", 0))
+            porcentaje = float(val.get("porcentaje", 0))
+
+            # monto
+            cell = ws.cell(row=row_idx, column=col_offset, value=monto)
+            cell.style = money_style
+
+            # porcentaje
+            ws.cell(row=row_idx, column=col_offset+1, value=porcentaje)
+
+            col_offset += 2
 
     # Ajustar ancho columnas
     for i, col in enumerate(ws.columns, start=1):
