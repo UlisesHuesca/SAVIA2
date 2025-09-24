@@ -3,6 +3,7 @@ from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from django.conf import settings
 from django.contrib import messages
+from django.core.paginator import Paginator
 from django.http import HttpResponse
 from calendar import month_name,  monthrange
 from collections import defaultdict
@@ -13,6 +14,7 @@ from solicitudes.models import Contrato
 from compras.models import Moneda
 from user.decorators import perfil_seleccionado_required
 from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form, Solicitud_Costo_Indirecto_Form, Solicitud_Costo_Indirecto_Central_Form
+from .filters import Costos_Form
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 
@@ -33,16 +35,17 @@ def costos(request):
     costos = Solicitud_Costos.objects.filter(complete = True)
     tipos = Tipo_Costo.objects.all()
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False)
-    #myfilter= ContratoFilter(request.GET, queryset=contratos)
+    myfilter= Costos_Form(request.GET, queryset=costos)
 
     #Set up pagination
-    #p = Paginator(contratos, 10)
-    #page = request.GET.get('page')
-    #contratos_list = p.get_page(page)
+    p = Paginator(costos, 20)
+    page = request.GET.get('page')
+    costos_list = p.get_page(page)
 
     context = {
         'costos':costos,
-        #'myfilter': myfilter,
+        'myfilter': myfilter,
+        'costos_list': costos_list,
         'tipos': tipos,
         'distritos':distritos,
          }
@@ -72,7 +75,6 @@ def add_costo(request, tipo):
     costo_form = Costo_Form()
 
 
-    
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:

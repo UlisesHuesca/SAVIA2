@@ -642,11 +642,17 @@ def delete_gasto(request, pk):
     return redirect('crear-gasto')
 
 def eliminar_vale_rosa(request, pk):
+    # No se de donde proviene, por lo tanto me dirije al crear-gasto o crear-viatico, habría que mejorar esto
     print(pk)
     vale = get_object_or_404(ValeRosa, pk=pk)
-    gasto_id = vale.gasto.id  # ValeRosa tiene FK a Gasto
-    vale.delete()
-    return redirect('crear-gasto') 
+    if vale.gasto:
+        gasto_id = vale.gasto.id  # ValeRosa tiene FK a Gasto
+        vale.delete()
+        return redirect('crear-gasto') 
+    elif vale.viatico:
+        viatico_id = vale.viatico.id  # ValeRosa tiene FK a Viatico
+        vale.delete()
+        return redirect('crear-viatico') 
 
 @perfil_seleccionado_required
 def eliminar_factura(request, pk):

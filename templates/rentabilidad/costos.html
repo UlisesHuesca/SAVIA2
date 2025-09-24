@@ -20,11 +20,54 @@
                 <h5>Filtro de Costos</h5>
             </div>
             <div class="card-body">
-            <!--    <form method="GET" class="row g-7">
-                    {% csrf_token %}
-        
+                <form method="GET">
+                {% csrf_token %}
+                <div class="row g-12">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                                <label style="color: #121212;" for="id_id">Distrito</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.contrato|add_class:"form-control"|append_attr:"placeholder= Contrato"}}
+                                <label style="color: #121212;" for="id_id">Contrato</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
+                                <label style="color: #121212;" for="id_id">Tipo</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.fecha type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Fecha:</label>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="col-2">
+                        <!--onclick="regenerar()"-->
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
                 </div>
-                </form>-->
+        
+                
+                </form>
                 <div class = "row mt-2 bg-white">
                     <form method=POST>
                         {% csrf_token %}
@@ -115,7 +158,7 @@
                 </tr>
             </thead>
             <tbody>
-                {% for costo in costos %}
+                {% for costo in costos_list %}
                 <tr>
                     
                     <td>{{costo.distrito}}</td>
@@ -130,16 +173,16 @@
 </div>
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
-                {% if proyectos_list.has_previous %}
+                {% if costos_list.has_previous %}
                     <li class="page-item">
                         <a class="page-link" style="color:#3E92CC" 
-                            href="{% my_url proyectos_list.previous_page_number 'page' request.GET.urlencode %}">
+                            href="{% my_url costos_list.previous_page_number 'page' request.GET.urlencode %}">
                             <i class="fa-solid fa-angle-left"></i>
                         </a>
                     </li>
                 {% endif %}
-                {% for page in proyectos_list.paginator.page_range  %}
-                    {% if proyectos_list.number == page.number %}
+                {% for page in costos_list.paginator.page_range  %}
+                    {% if costos_list.number == page.number %}
                         <li class="page-item active" aria-current="page">
                             <a class="page-link" style="background-color:#3E92CC; border-color:#3E92CC" 
                                 href="{% my_url page 'page' request.GET.urlencode %}" id="{{page}}">{{page}}
@@ -153,10 +196,10 @@
                         </li>
                     {% endif %}
                 {% endfor %}
-                {% if proyectos_list.has_next %}
+                {% if costos_list.has_next %}
                 <li class="page-item">
                     <a class="page-link" style="color:#3E92CC" 
-                        href="{% my_url proyectos_list.next_page_number 'page' request.GET.urlencode %}">
+                        href="{% my_url costos_list.next_page_number 'page' request.GET.urlencode %}">
                         <i class="fa-solid fa-angle-right"></i>
                     </a>
                 </li>
