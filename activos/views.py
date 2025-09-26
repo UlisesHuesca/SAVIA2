@@ -1329,9 +1329,10 @@ def activos_producto(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    print(almacenes_distritos)
     if usuario.tipo.nombre == "ADMIN_ACTIVOS" or usuario.tipo.nombre == "Admin":
         items = Inventario.objects.filter(complete = True, producto__activo = True, distrito__in=almacenes_distritos ).annotate(activo_count=Count('activo')).order_by('producto__codigo')
-    elif usuario.tipo.nombre == "ACTIVOS": 
+    elif usuario.tipo.nombre == "ACTIVOS" or usuario.tipo.nombre == "ACTIVOS_SISTEMAS": 
         items = Inventario.objects.filter(complete = True, producto__activo = True, distrito = usuario.distritos).annotate(activo_count=Count('activo')).order_by('producto__codigo')
     else:
         items = Inventario.objects.none()
