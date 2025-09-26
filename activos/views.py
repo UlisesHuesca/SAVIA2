@@ -629,7 +629,7 @@ def convert_activos_to_xls(activos):
 
     # Crea un libro de trabajo y añade una hoja
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
-    worksheet = workbook.add_worksheet("Matriz_Compras")
+    worksheet = workbook.add_worksheet("Matriz_Activos")
 
      
     date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
@@ -684,7 +684,7 @@ def convert_activos_to_xls(activos):
             activo.activo.producto.nombre if activo.activo else " ",
             familia,
             subfamilia,
-            f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}",
+            f"{activo.responsable.staff.staff.first_name} {activo.responsable.staff.staff.last_name}" if activo.responsable else "No Asignado",
             activo.tipo_activo.nombre,
             activo.serie,
             activo.marca.nombre if activo.marca else " ",
@@ -721,7 +721,7 @@ def convert_activos_to_xls(activos):
         output.read(), 
         content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
         )
-    response['Content-Disposition'] = f'attachment; filename=Matriz_compras_{dt.date.today()}.xlsx'
+    response['Content-Disposition'] = f'attachment; filename=Matriz_Activos_{dt.date.today()}.xlsx'
       # Establecer una cookie para indicar que la descarga ha iniciado
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
