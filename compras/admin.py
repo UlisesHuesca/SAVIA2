@@ -9,7 +9,7 @@ class CompraAdmin(admin.ModelAdmin):
 
 class ArticuloComprado_Admin(admin.ModelAdmin):
     list_display = ('id','oc','producto','cantidad','entrada_completa')
-    search_fields = ['producto__producto__articulos__producto__producto__nombre','oc__folio']
+    search_fields = ['producto__producto__articulos__producto__producto__nombre','oc__folio','tesorero']
     raw_id_fields = ('oc','producto',)
 
 class ProveedorAdmin(admin.ModelAdmin):
