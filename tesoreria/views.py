@@ -1132,7 +1132,7 @@ def matriz_pagos(request):
             tesorero_id = request.POST.get('tesorero')
             folio = request.POST.get('folio')
             print('reporte_xml')
-            if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == True:
+            if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
                     pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
@@ -1253,13 +1253,19 @@ def matriz_pagos(request):
                     if tesorero_id:
                         pagos = pagos.filter(tesorero_id=tesorero_id)
             else:
-                print('Aquí también entró')
+                #print('Aquí también entró')
                 pagos = pagos.filter(
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
                     Q(gasto__distrito=usuario.distritos) |
                     Q(oc__req__orden__distrito=usuario.distritos) |
                     Q(viatico__distrito=usuario.distritos)
                 )
+                if tipo_documento == "gastos":
+                    pagos = pagos.filter(gasto__isnull=False)
+                elif tipo_documento == "compras":
+                    pagos = pagos.filter(oc__isnull=False)
+                elif tipo_documento == "viaticos":
+                    pagos = pagos.filter(viatico__isnull=False)
 
 
             if validar_sat:
