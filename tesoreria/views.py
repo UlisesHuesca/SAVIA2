@@ -1131,7 +1131,7 @@ def matriz_pagos(request):
             distrito_id = request.POST.get('distrito')
             tesorero_id = request.POST.get('tesorero')
             folio = request.POST.get('folio')
-
+            print('reporte_xml')
             if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == True:
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
@@ -1166,9 +1166,9 @@ def matriz_pagos(request):
             else:
                 pagos = pagos.filter(
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
-                    Q(gasto__distrito=usuario.distritos) |
-                    Q(oc__req__orden__distrito=usuario.distritos) |
-                    Q(viatico__distrito=usuario.distritos),
+                    Q(gasto__distrito__nombre=usuario.distritos.nombre) |
+                    Q(oc__req__orden__distrito__nombre=usuario.distritos.nombre) |
+                    Q(viatico__distrito__nombre=usuario.distritos.nombre),
                     hecho = True
                 )
              
