@@ -3384,8 +3384,12 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         tipo_de_cambio = '' if tipo == 0 else tipo
         created_at = compra_list.created_at.replace(tzinfo=None)
         approved_at = compra_list.req.approved_at
-        activo = str(compra_list.req.orden.activo) if compra_list.req.orden.activo else "No definido"
-        print('activo:', activo)
+        try:
+            activo_obj = compra_list.req.orden.activo
+            activo = str(activo_obj) if activo_obj else "No definido"
+        except Activo.DoesNotExist:
+            activo = "No definido"
+
         row = [
             compra_list.folio,
             compra_list.req.folio,
