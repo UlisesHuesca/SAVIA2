@@ -1132,7 +1132,7 @@ def matriz_pagos(request):
             tesorero_id = request.POST.get('tesorero')
             folio = request.POST.get('folio')
 
-            if usuario.distritos.nombre == "MATRIZ":
+            if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == True:
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
                     pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
@@ -1210,8 +1210,9 @@ def matriz_pagos(request):
             tipo_documento = request.POST.get('tipo_documento') 
             #print('tipo_documento:', tipo_documento)
             
-
+            print(usuario.tipo.documentos)
             if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
+                print('Como entró?')
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
                     #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
@@ -1251,6 +1252,7 @@ def matriz_pagos(request):
                     if tesorero_id:
                         pagos = pagos.filter(tesorero_id=tesorero_id)
             else:
+                print('Aquí también entró')
                 pagos = pagos.filter(
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
                     Q(gasto__distrito=usuario.distritos) |
