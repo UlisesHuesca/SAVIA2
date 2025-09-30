@@ -1211,7 +1211,7 @@ def matriz_pagos(request):
             #print('tipo_documento:', tipo_documento)
             
 
-            if usuario.distritos.nombre == "MATRIZ":
+            if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
                     #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
