@@ -1168,7 +1168,8 @@ def matriz_pagos(request):
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
                     Q(gasto__distrito=usuario.distritos) |
                     Q(oc__req__orden__distrito=usuario.distritos) |
-                    Q(viatico__distrito=usuario.distritos)
+                    Q(viatico__distrito=usuario.distritos),
+                    hecho = True
                 )
              
             datos_xml_lista = []
