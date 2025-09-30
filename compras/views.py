@@ -3307,7 +3307,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
 
     columns = ['Compra', 'Requisición', 'Solicitud','Distrito', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
                'Status Proveedor','Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización','Tipo Item', 'Días de entrega', 'Moneda',
-               'Tipo de cambio', 'Entregada','Tiene Facturas', "Total en pesos"]
+               'Tipo de cambio', 'Entregada','Tiene Facturas', 'Activo Fijo', "Total en pesos"]
 
     columna_max = len(columns)+2
 
@@ -3384,7 +3384,8 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
         tipo_de_cambio = '' if tipo == 0 else tipo
         created_at = compra_list.created_at.replace(tzinfo=None)
         approved_at = compra_list.req.approved_at
-
+        activo = str(compra_list.req.orden.activo) if compra_list.req.orden.activo else "No definido"
+        print('activo:', activo)
         row = [
             compra_list.folio,
             compra_list.req.folio,
@@ -3411,6 +3412,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             tipo_de_cambio,  # Asegúrate de que tipo_de_cambio sea un valor que pueda ser escrito directamente
             'Entregada' if compra_list.entrada_completa else 'No Entregada',
             'Sí' if compra_list.facturas.exists() else 'No',
+            activo,
         ]
         
         for col_num, cell_value in enumerate(row):
@@ -3429,7 +3431,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 25, f'=IF(ISBLANK(W{row_num+1}), O{row_num+1}, O{row_num+1}*W{row_num+1})', money_style)
+        worksheet.write_formula(row_num, 26, f'=IF(ISBLANK(W{row_num+1}), O{row_num+1}, O{row_num+1}*W{row_num+1})', money_style)
     
    
     workbook.close()
