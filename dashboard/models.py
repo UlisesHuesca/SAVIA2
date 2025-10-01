@@ -301,7 +301,7 @@ class Activo(models.Model):
         return {'rfc': rfc, 'nombre': nombre, 'regimen_fiscal': regimen_fiscal,'total':total,'resultados':resultados}
 
     def __str__(self):
-        return f'{self.eco_unidad} | {self.nombre}'
+        return f'{self.eco_unidad} | {self.descripcion}'
 
 class Order(models.Model):
     folio = models.IntegerField(null=True)
