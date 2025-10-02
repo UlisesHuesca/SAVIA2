@@ -312,7 +312,7 @@ def transferencia_cuentas(request, pk):
                 cargo.pagado_hora = datetime.now().time() 
                 cargo.hecho = True
                 
-                
+                CUENTA_VOS = "0167229585"
                 abono = form_transferencia.save(commit=False)
                 abono.monto = cargo.monto
                 abono.tipo = Tipo_Pago.objects.get(id = 2)
@@ -325,7 +325,11 @@ def transferencia_cuentas(request, pk):
                 abono.save()
 
                 cargo.distrito = abono.cuenta.encargado.distritos
-                cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
+                if str(abono.cuenta.numero) == CUENTA_VOS:
+                    cargo.comentario = f"VOS - {cargo.comentario}"
+                else:
+                    cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
+
                 cargo.save()
                 messages.success(request,f'{usuario.staff.staff.first_name}, Has agregado correctamente el traspaso')
                 return redirect('control-bancos', pk = cuenta.id)
