@@ -3296,7 +3296,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     worksheet = workbook.add_worksheet("Matriz_Compras")
 
      
-    date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+    #date_format = workbook.add_format({'num_format': 'dd/mm/yyyy'})
     # Define los estilos
     head_style = workbook.add_format({'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366', 'font_name': 'Arial', 'font_size': 11})
     body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
