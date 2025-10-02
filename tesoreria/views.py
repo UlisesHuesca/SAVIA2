@@ -325,7 +325,7 @@ def transferencia_cuentas(request, pk):
                 abono.save()
 
                 cargo.distrito = abono.cuenta.encargado.distritos
-                if str(abono.cuenta.numero) == CUENTA_VOS:
+                if str(abono.cuenta.cuenta) == CUENTA_VOS:
                     cargo.comentario = f"VOS - {cargo.comentario}"
                 else:
                     cargo.comentario = f"{cargo.comentario} (Relacionado con cuenta {abono.cuenta})"
