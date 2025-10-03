@@ -1548,8 +1548,9 @@ def add_product(request):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def product_update(request, pk):
-#def product_update_modal(request, pk):
 
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
     item = Product.objects.get(id=pk)
 
     if request.method =='POST':
@@ -1563,6 +1564,7 @@ def product_update(request, pk):
 
 
     context = {
+        'usuario': usuario,
         'form': form,
         'item':item,
         }

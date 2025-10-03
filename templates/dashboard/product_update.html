@@ -13,21 +13,127 @@
 <div class="container">
     <div class="row mt-5">
         <div class="col-md-6 offset-md-3">
-            <div class="border bg-white p-3">
+          <div class = "card">
+            <div class="card-header text-center">
                 <h3>Actualizar Artículo</h3>
-                <hr>
-                <form method="POST" id='ProductForm' enctype='multipart/form-data' data-subfamilias-url="{% url 'ajax_load_subfamilias' %}" novalidate>
-                    {% csrf_token %}
-                    <label for="form.codigo" class="col-auto col-form-label"><strong>Código: {{item.codigo}}</strong></label>
-                    <br>
-                    <label for="form.nombre" class="col-auto col-form-label"><strong>Producto: {{item.nombre}}</strong></label>
-                    <br>
-                    {{ form | crispy }}
-                    <hr>
-                    <a class="btn btn-outline-secondary" href="{% url 'dashboard-product' %}">Cancelar</a>
-                    <input id="submit-button" class="btn btn-outline-info" type='submit' value="Actualizar">
-                </form>
             </div>
+            <form method="POST" id='ProductForm' enctype='multipart/form-data' data-subfamilias-url="{% url 'ajax_load_subfamilias' %}" novalidate>
+            <div class="card-body">   
+            {% csrf_token %}
+              <div class="row my-2">
+                <div id="etiqueta_domicilio" class="col-12">
+                  <div class="alert alert-secondary" role="alert">
+                    <h6>Código:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.codigo}}</h6>   
+                  </div>
+                </div>
+              </div>
+              <div class="row my-2">
+                <div id="etiqueta_domicilio" class="col-12">
+                    <div class="alert alert-secondary" role="alert">
+                      <h6>Producto:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.nombre}}</h6>   
+                    </div>
+                </div>
+              </div>
+              <div class="col-12">
+                <div class="input-group mb-3">
+                  <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                  <div class="form-floating form-floating-group flex-grow-1">   
+                    {{form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                    <label style="color: #121212;" for="id_cond_de_pago">Código*</label>
+                  </div>
+                </div>
+              </div>
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                      <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.nombre|add_class:"form-control"|append_attr:"placeholder= Nombre"}}
+                        <label style="color: #121212;" for="id_cond_de_pago">Nombre*</label>
+                      </div>
+                    </div>
+                </div>
+                <div id="comparativo" class="row">
+                  <div class="col-12">
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                      <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.unidad}}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="comparativo" class="row">
+                  <div class="col-12">
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                      <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.familia}}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div id="comparativo" class="row">
+                  <div class="col-12">
+                    <div class="input-group mb-3">
+                      <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                      <div class="form-floating form-floating-group flex-grow-1">   
+                        {{form.subfamilia}}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div class="row ms-3 my-2">
+                  <div class="form-check form-switch col-sm">
+                    <label for="form.iva" class="form-check-label"><strong>Iva</strong></label>
+                    {{form.iva|add_class:"form-check-input"}}
+                  </div>
+                </div>
+                <div class="row ms-3 my-2">
+                  <div class="form-check form-switch col-sm">
+                    <label for="form.iva" class="form-check-label"><strong>Activo</strong></label>
+                    {{form.activo|add_class:"form-check-input"}}
+                  </div>
+                </div>
+                <div class="row ms-3 my-2">
+                  <div class="form-check form-switch col-sm">
+                    <label for="form.iva" class="form-check-label"><strong>Crítico</strong></label>
+                    {{form.critico|add_class:"form-check-input"}}
+                  </div>
+                </div>
+                <div class="row ms-3 my-2">
+                  <div class="form-check form-switch col-sm">
+                    <label for="form.servicio" class="form-check-label"><strong>Servicio</strong></label>
+                    {{form.servicio|add_class:"form-check-input"}}
+                  </div>
+                </div>
+                {% if usuario.tipo.nombre == "Admin" %}
+                <div class="row ms-3 my-2">
+                  <div class="form-check form-switch col-sm">
+                    <label for="form.servicio" class="form-check-label"><strong>Gasto</strong></label>
+                    {{form.gasto|add_class:"form-check-input"}}
+                  </div>
+                </div>
+                {% endif %}
+                <div class="row ms-3 my-2">
+                  <div class="form-check form-switch col-sm">
+                    <label for="form.servicio" class="form-check-label"><strong>Baja Item</strong></label>
+                    {{form.baja_item|add_class:"form-check-input"}}
+                  </div>
+                </div>
+                <div class="input-group mb-3" title="Subir imagen del producto">
+                  <span class="input-group-text">
+                    <i class="fa-solid fa-image fa-xl" style="color: #1d6f42"></i>
+                  </span>
+                  {{ form.image|add_class:"form-control" }}
+                </div>
+              </div>
+              <div class ="card-footer text-muted text-center">
+                  <a class="btn btn-outline-secondary" href="{% url 'dashboard-product' %}">Cancelar</a>
+                  <input id="submit-button" class="btn btn-outline-info" type='submit' value="Actualizar">
+              </div>
+              </form>
+            
+          </div>
         </div>
 
     </div>
@@ -76,5 +182,66 @@ document.getElementById('ProductForm').addEventListener('submit', function(event
         this.submit();
     }, 50);
 });
+
+$(document).ready(function() {
+    $('#id_unidad').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona una unidad',
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+  
+});
+
+$(document).ready(function() {
+    $('#id_familia').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona una familia',
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+  
+});
+
+$(document).ready(function() {
+    $('#id_subfamilia').select2({
+        allowClear: true,
+        width: '100%',
+        placeholder: 'Selecciona una subfamilia',
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+  
+});
+
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection(repo) {
+    var maxLength = 80; // Límite de caracteres
+    var text = repo.text || repo.id;
+    
+    if (text.length > maxLength) {
+        text = text.substring(0, maxLength) + '...';
+    }
+    
+    return text;
+}
+
 </script>
 {% endblock %}
