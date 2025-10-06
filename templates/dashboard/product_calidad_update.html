@@ -19,36 +19,43 @@
                 </div>
                 <div class="card-body">
                     <!-- Información del producto -->
-                    <div class="mb-4">
-                        <label class="form-label"><strong>Código:</strong> {{ item.codigo }}</label><br>
-                        <label class="form-label"><strong>Producto:</strong> {{ item.nombre }}</label><br>
-                        <label class="form-label"><strong>Ultima actualización:</strong> {{ item.updated_at }}</label>
+                    <div class="row my-2">
+                        <div id="etiqueta_domicilio" class="col-12">
+                            <div class="alert alert-secondary" role="alert">
+                                <h6>Código:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.codigo}}</h6>   
+                            </div>
+                        </div>
                     </div>
-                    
-                    <!-- Formulario principal -->
-                    <form method="POST" id="ProductForm" enctype="multipart/form-data">
+                    <div class="row my-2">
+                        <div id="etiqueta_domicilio" class="col-12">
+                            <div class="alert alert-secondary" role="alert">
+                                <h6>Producto:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.nombre}}</h6>   
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row my-2">
+                        <div id="etiqueta_domicilio" class="col-12">
+                            <div class="alert alert-secondary" role="alert">
+                                <h6>Última actualización:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{item.updated_at}}</h6>   
+                            </div>
+                        </div>
+                    </div>
+                    <form method="POST">
                         {% csrf_token %}
-                        <div class="form-check form-switch mb-4">
-                            <input class="form-check-input" type="checkbox" id="rev_calidad" name="rev_calidad" {% if form.rev_calidad.value %}checked{% endif %}>
-                            <label class="form-check-label" for="rev_calidad"><strong>Validación de Calidad</strong></label>
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{req_form.nombre|add_class:"form-control"|append_attr:"placeholder= Nombre"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Nombre*</label>
+                            </div>
+                            </div>
                         </div>
-                        <!-- Campo de descripción editable -->
-                        <div class="mb-4">
-                            <label for="requisitos" class="form-label"><strong>Comentario requisitos:</strong></label>
-                            <textarea class="form-control" id="requisitos" name="requisitos" rows="3">{{ requisitos }}</textarea>
-                        </div>
-                        <div class="d-flex justify-content-end mt-4">
-                            <a class="btn btn-outline-secondary me-2" href="{% url 'product_calidad' %}">Cancelar</a>
-                            <input type="submit" id="submit-button" class="btn btn-outline-info" value="Actualizar">
-                        </div>
+                        <button type="submit" class="btn btn-primary" name="requerimiento">
+                            <i class="fa fa-plus me-1"></i> Añadir Requerimiento de Calidad
+                        </button>
                     </form>
-                    <hr>
-                    <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#requerimientoModal">
-                        <i class="fa fa-plus me-1"></i> Añadir Requerimiento de Calidad
-                    </button>
-
-
-                    <!-- Tabla de Requerimientos de Calidad -->
+                        <!-- Tabla de Requerimientos de Calidad -->
                     <h5 class="mt-5">Requerimientos de Calidad:</h5>
                     <div class="table-responsive">
                         <table class="table table-bordered table-striped mt-3">
@@ -56,7 +63,7 @@
                                 <tr>
                                     <th scope="col">Nombre del Requerimiento</th>
                                     <th scope="col">Fecha</th>
-                                    <th scope="col">Archivo</th>
+                                   
                                     <th scope="col">Acciones</th>
                                 </tr>
                             </thead>
@@ -66,9 +73,6 @@
                                         <td>{{ requerimiento.nombre }}</td>
                                         <td>{{ requerimiento.fecha }}</td>
                                         <td>
-                                            <a href="{{ requerimiento.url.url }}" download>Descargar</a>
-                                        </td>
-                                        <td>
                                             <button class="btn btn-danger btn-sm" onclick="eliminarRequerimiento({{ requerimiento.id }})">Eliminar</button>
                                         </td>
                                     </tr>
@@ -76,30 +80,33 @@
                             </tbody>
                         </table>
                     </div>
+                    <hr>
+                    <!-- Formulario principal -->
+                    <form method="POST" id="ProductForm" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="form-check form-switch mb-4">
+                            <input class="form-check-input" type="checkbox" id="rev_calidad" name="rev_calidad" {% if form.rev_calidad.value %}checked{% endif %}>
+                            <label class="form-check-label" for="rev_calidad"><strong>Validación de Calidad</strong></label>
+                        </div>
+                        <!-- Campo de descripción editable -->
+                        <div class="mb-4">
+                            <label for="reFicha quisitos" class="form-label"><strong>Comentario requisitos:</strong></label>
+                            <textarea class="form-control" id="requisitos" name="requisitos" rows="3">{{ requisitos }}</textarea>
+                        </div>
+                        <div class="d-flex justify-content-end mt-4">
+                            <a class="btn btn-outline-secondary me-2" href="{% url 'product_calidad' %}">Cancelar</a>
+                            <input type="submit" id="submit-button" name="action" value="Actualizar" class="btn btn-outline-info" >
+                        </div>
+                    </form>
+                
+
+                
                 </div>
             </div>
         </div>
     </div>
 </div>
-<!-- Modal para Añadir Requerimiento de Calidad -->
-<div class="modal fade" id="requerimientoModal" tabindex="-1" aria-labelledby="requerimientoModalLabel" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h5 class="modal-title" id="requerimientoModalLabel">Añadir Requerimiento de Calidad</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-            </div>
-            <div class="modal-body">
-                <form id="requerimientoForm">
-                    {% csrf_token %}
-                    {{ req_form.nombre|add_class:"form-control mb-3" }}
-                    {{ req_form.url|add_class:"form-control mb-3" }}
-                    <button type="submit" class="btn btn-primary">Guardar</button>
-                </form>
-            </div>
-        </div>
-    </div>
-</div>
+
 <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
         <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
@@ -113,165 +120,23 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
 // Función para mostrar el indicador de carga y evitar el doble clic
-document.getElementById('ProductForm').addEventListener('submit', function(event) {
-    event.preventDefault(); // Previene el envío inmediato
-
+document.getElementById('ProductForm').addEventListener('submit', function() {
     // Mostrar el indicador de carga
     document.getElementById('loadingIndicator').style.display = 'block';
 
-    // Desactivar el botón de envío para evitar doble clic
+    // Inyectar hidden con el name="actualizar"
+    let hidden = document.createElement("input");
+    hidden.type = "hidden";
+    hidden.name = "actualizar";
+    hidden.value = "1"; // o "Actualizar"
+    this.appendChild(hidden);
+
+    // Desactivar y ocultar el botón
     var btn = document.getElementById('submit-button');
     btn.disabled = true;
     btn.classList.add('d-none');
-
-    // Después de una breve pausa, envía el formulario
-    setTimeout(() => {
-        this.submit();
-    }, 50);
 });
 
-document.getElementById('requerimientoForm').addEventListener('submit', function(event) {
-    event.preventDefault();
-    var formData = new FormData(this);
 
-    fetch("{% url 'add_requerimiento_calidad' item.id %}", {
-        method: "POST",
-        body: formData,
-        headers: {
-            'X-CSRFToken': '{{ csrf_token }}',
-        },
-    })
-    .then(response => response.json())
-    .then(data => {
-        if (data.success) {
-            // Cerrar el modal y resetear el formulario
-            $('#requerimientoModal').modal('hide');
-            this.reset();
-            
-            // Añadir el nuevo requerimiento a la tabla
-            const requerimientosList = document.getElementById('requerimientos-list');
-
-            // Crear una nueva fila <tr> para el requerimiento
-            const newRow = document.createElement('tr');
-
-            // Crear las celdas <td> para nombre y fecha
-            const newNombreCell = document.createElement('td');
-            newNombreCell.textContent = data.nombre;
-
-            const newFechaCell = document.createElement('td');
-            newFechaCell.textContent = data.fecha;
-
-            // Crear una celda para el archivo, con un enlace de descarga
-            const newUrlCell = document.createElement('td');
-            const newLink = document.createElement('a');
-            newLink.href = data.url;  // URL del archivo
-            newLink.textContent = 'Descargar';  // Texto del enlace
-            newLink.target = '_blank';  // Abrir en nueva pestaña
-            newUrlCell.appendChild(newLink);
-            // Crear una celda para el botón de eliminación
-            const newActionCell = document.createElement('td');
-            const deleteButton = document.createElement('button');
-            deleteButton.classList.add('btn', 'btn-danger', 'btn-sm');
-            deleteButton.textContent = 'Eliminar';
-            deleteButton.onclick = function() {
-                eliminarRequerimiento(data.id); // Llamar a la función de eliminación
-            };
-            newActionCell.appendChild(deleteButton);
-
-            // Agregar las celdas a la fila
-            newRow.appendChild(newNombreCell);
-            newRow.appendChild(newFechaCell);
-            newRow.appendChild(newUrlCell);  
-            newRow.appendChild(newActionCell); 
-
-            // Agregar la nueva fila a la tabla
-            requerimientosList.appendChild(newRow);
-
-            // Mostrar mensaje de éxito usando SweetAlert
-            Swal.fire({
-                "title": "Excelente",
-                "text": `Se ha agregado el requerimiento: ${data.nombre}`,
-                "icon": "success"
-            });
-        } else {
-            // Mostrar mensaje de error detallado
-            let errorMessage = "Error al añadir el requerimiento. Por favor, revisa el formulario.";
-            
-            if (data.errors) {
-                // Si hay errores específicos, los concatenamos en un solo mensaje
-                errorMessage = Object.values(data.errors).map(errorList => errorList.join(", ")).join("\n");
-            }
-            
-            Swal.fire({
-                "title": "Error",
-                "text": errorMessage,
-                "icon": "error"
-            });
-            console.error('Error:', data.errors);
-        }
-    })
-    .catch(error => {
-        Swal.fire({
-            "title": "Error",
-            "text": "Hubo un problema al procesar la solicitud.",
-            "icon": "error"
-        });
-        console.error('Error:', error);
-    });
-});
-function eliminarRequerimiento(id) {
-    // Mostrar una alerta de confirmación antes de eliminar
-    Swal.fire({
-        title: '¿Estás seguro?',
-        text: "No podrás revertir esta acción",
-        icon: 'warning',
-        showCancelButton: true,
-        confirmButtonText: 'Sí, eliminar',
-        cancelButtonText: 'Cancelar'
-    }).then((result) => {
-        if (result.isConfirmed) {
-            // Enviar la solicitud de eliminación al servidor
-            fetch(`/eliminar_requerimiento_calidad/${id}/`, {
-                method: 'POST',
-                headers: {
-                    'X-CSRFToken': '{{ csrf_token }}',
-                },
-            })
-            .then(response => response.json())
-            .then(data => {
-                if (data.success) {
-                    // Eliminar la fila de la tabla
-                    const row = document.getElementById('requerimiento-' + id);
-                    if (row) {
-                        row.remove();  // Eliminar la fila
-                    }
-
-                    Swal.fire({
-                        title: 'Eliminado',
-                        text: 'El requerimiento ha sido eliminado.',
-                        icon: 'success'
-                    }).then(() => {
-                        // Recargar la página después de eliminar
-                        location.reload();
-                    });
-                } else {
-                    Swal.fire({
-                        title: 'Error',
-                        text: 'Hubo un problema al eliminar el requerimiento.',
-                        icon: 'error'
-                    });
-                }
-            })
-            .catch(error => {
-                Swal.fire({
-                    title: 'Error',
-                    text: 'Hubo un problema al procesar la solicitud.',
-                    icon: 'error'
-                });
-                console.error('Error:', error);
-            });
-        }
-    });
-}
 </script>
 {% endblock %}

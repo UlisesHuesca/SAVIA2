@@ -1809,22 +1809,22 @@ def product_calidad(request):
     else:
         raise Http404("No tienes permiso para ver esta vista")
     
-def add_requerimiento_calidad(request, pk):
-    pk_perfil = request.session.get('selected_profile_id')
-    usuario = Profile.objects.get(id = pk_perfil)
-    producto_calidad = get_object_or_404(Producto_Calidad, producto__id=pk)
-    if request.method == 'POST':
-        req_form = RequerimientoCalidadForm(request.POST, request.FILES)
-        if req_form.is_valid():
-            requerimiento = req_form.save(commit=False)
-            requerimiento.solicitud = producto_calidad
-            requerimiento.updated_by = usuario
-            requerimiento.save()
-            return JsonResponse({'success': True, 'id': requerimiento.id, 'nombre': requerimiento.nombre, 'fecha': requerimiento.fecha.strftime('%Y-%m-%d'), 'url': requerimiento.url.url,})
-        else:
-            errors = req_form.errors.as_json()
-            return JsonResponse({'success': False, 'errors': errors})
-    return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
+#def add_requerimiento_calidad(request, pk):
+    #pk_perfil = request.session.get('selected_profile_id')
+    #usuario = Profile.objects.get(id = pk_perfil)
+    #producto_calidad = get_object_or_404(Producto_Calidad, producto__id=pk)
+    #if request.method == 'POST':
+    #    req_form = RequerimientoCalidadForm(request.POST)
+    #    if req_form.is_valid():
+    #        requerimiento = req_form.save(commit=False)
+    #        requerimiento.solicitud = producto_calidad
+    #        requerimiento.updated_by = usuario
+    #        requerimiento.save()
+    #        return JsonResponse({'success': True, 'id': requerimiento.id, 'nombre': requerimiento.nombre, 'fecha': requerimiento.fecha.strftime('%Y-%m-%d')})
+    #    else:
+    #        errors = req_form.errors.as_json()
+    #        return JsonResponse({'success': False, 'errors': errors})
+    #return JsonResponse({'success': False, 'error': 'Invalid request'}, status=400)
 
 def eliminar_requerimiento_calidad(request, pk):
     try:
@@ -1842,39 +1842,47 @@ def product_calidad_update(request, pk):
     if usuario.tipo.calidad == True:  
         item = get_object_or_404(Product, id=pk)
         error_messages = {}
-        
+        form = ProductCalidadForm(instance=item)
+        req_form = RequerimientoCalidadForm()
+
         # Obtener o crear Producto_Calidad asociado
         producto_calidad, created = Producto_Calidad.objects.get_or_create(producto=item)
         requisitos = producto_calidad.requisitos
+        
+        
         if requisitos is None:
             requisitos = ''
         if request.method == 'POST':
-            form = ProductCalidadForm(request.POST, instance=item)
-            req_form = RequerimientoCalidadForm(request.POST, request.FILES) #Se manda para poder utilizarlo en el modal
-            
-            if form.is_valid():
-                requisitos = request.POST.get('requisitos')
-                if requisitos:
-                    producto_calidad.requisitos = requisitos
-                    producto_calidad.save()
-                producto_calidad.updated_by = usuario  
-                producto_calidad.updated_at = datetime.now()
-                producto_calidad.save()  
-                form.save()
-                
-                messages.success(request, f'Se ha actualizado el producto {item.nombre}')
-                return redirect('product_calidad')
+            print('estoy acá')
+            print(request.POST)
+            if "actualizar" in request.POST:
+                print('estoy acá2')
+                form = ProductCalidadForm(request.POST, instance=item)
+                if form.is_valid():
+                    form.save()
+                    messages.success(request, f'Se ha actualizado el producto {item.nombre}')
+                    return redirect('product_calidad')
+                else:
+                    # Manejo de errores en formularios
+                    for field, errors in form.errors.items():
+                        error_messages[field] = errors.as_text()
+                    for field, errors in req_form.errors.items():
+                        error_messages[field] = errors.as_text()
+            if "requerimiento" in request.POST:
+                req_form = RequerimientoCalidadForm(request.POST)
+                if req_form.is_valid():
+                    requerimiento = req_form.save(commit=False)
+                    requerimiento.solicitud = producto_calidad
+                    requerimiento.updated_by = usuario
+                    requerimiento.save()
+                    return redirect('product_calidad_update',pk=pk)
+
             else:
-                # Manejo de errores en formularios
-                for field, errors in form.errors.items():
-                    error_messages[field] = errors.as_text()
-                for field, errors in req_form.errors.items():
-                    error_messages[field] = errors.as_text()
-        else:
-            form = ProductCalidadForm(instance=item)
-            req_form = RequerimientoCalidadForm()
+                form = ProductCalidadForm(instance=item)
+                req_form = RequerimientoCalidadForm()
 
         context = {
+
             'error_messages': error_messages,
             'form': form,
             'req_form': req_form,

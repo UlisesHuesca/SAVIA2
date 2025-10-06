@@ -978,7 +978,7 @@ def prellenar_formulario_transferencia(request):
     #print('prellenar_formulario_gastos')
     if request.method == 'POST' and request.headers.get('X-Requested-With') == 'XMLHttpRequest':
         pdf_content = request.FILES.get('comprobante_pago')
-        
+        print('pdf_content:',pdf_content)
         if not pdf_content:
             return JsonResponse({'error': 'No file uploaded'}, status=400)
         
@@ -986,21 +986,26 @@ def prellenar_formulario_transferencia(request):
         formato_detectado = detectar_formato_pdf(pdf_content)
         
         if formato_detectado == "formato_1":
+            print('formato 1')
             texto_extraido = extraer_texto_de_pdf(pdf_content)
             datos_extraidos = encontrar_variables_transferencia(texto_extraido)
            
             #divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
 
         elif formato_detectado == "formato_2":
+            print('formato 2')
             bloques = extraer_bloques_formato_2(pdf_content)
             datos_extraidos = encontrar_variables_bloques(bloques)
             datos_extraidos = encontrar_variables(bloques)
+        else:
+            print('formato no detectado')
         divisa_cuenta_extraida = datos_extraidos.get('divisa_cuenta', '').strip()
 
-        
+        print("Formato detectado:", formato_detectado)
+        #print("Datos extraídos iniciales:", datos_extraidos)
         #texto_extraido = extraer_texto_de_pdf(pdf_content)
         #print("Texto extraído:", texto_extraido)
-        #datos_extraidos = encontrar_variables_transferencia(texto_extraido)
+        
         print("Datos extraídos:", datos_extraidos)
         titular_cuenta = datos_extraidos.get('titular_cuenta_2','').strip()
         fecha_str = datos_extraidos.get('fecha', '').strip()

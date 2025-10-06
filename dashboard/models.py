@@ -90,13 +90,23 @@ def validar_size(value):
     filesize = value.size
     if filesize > 2 * 1024 * 1024:  # 10 MB en bytes
         raise ValidationError('El tamaño del archivo no puede ser mayor a 2 MB.')    
+    
+class Tipo_Requerimiento(models.Model):
+    nombre = models.CharField(max_length=50, null=True, unique=True)
+
+    def __str__(self):
+        return f'{self.nombre}'
 
 class Requerimiento_Calidad(models.Model):
-    nombre = models.CharField(max_length=50, null=True, unique=True)
+    requerimiento = models.ForeignKey(Tipo_Requerimiento,on_delete=models.CASCADE,null=True)
+    comentarios = models.CharField(max_length=100, null=True)
+    comentarios = models.CharField(max_length=50, null=True, unique=True)
     solicitud = models.ForeignKey(Producto_Calidad,on_delete=models.CASCADE,null=False, related_name='requerimientos_calidad')
     fecha = models.DateTimeField(null=False,auto_now_add=True)
-    url = models.FileField(upload_to="bonos/",unique=True,null=False,validators=[validar_size,FileExtensionValidator(allowed_extensions=['pdf', 'png', 'jpg','jpeg','xls', 'xlsx'])])
+    
+    #url = models.FileField(upload_to="bonos/",unique=True,null=False,validators=[validar_size,FileExtensionValidator(allowed_extensions=['pdf', 'png', 'jpg','jpeg','xls', 'xlsx'])])
     updated_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+
 
 class Products_Batch(models.Model):
     file_name = models.FileField(upload_to='product_bash', validators = [FileExtensionValidator(allowed_extensions=('csv',))])

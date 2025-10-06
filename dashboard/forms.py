@@ -43,7 +43,7 @@ class ProductCalidadForm(forms.ModelForm):
 class RequerimientoCalidadForm(forms.ModelForm):
     class Meta:
         model = Requerimiento_Calidad
-        fields = ['nombre', 'url']
+        fields = ['comentarios','requerimiento']
 
 
 class PrecioRef_Form(forms.ModelForm):
