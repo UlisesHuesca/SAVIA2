@@ -46,8 +46,17 @@
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{req_form.nombre|add_class:"form-control"|append_attr:"placeholder= Nombre"}}
-                                <label style="color: #121212;" for="id_cond_de_pago">Nombre*</label>
+                                {{req_form.requerimiento|add_class:"form-control"|append_attr:"placeholder= Requerimiento"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Requerimiento*</label>
+                            </div>
+                            </div>
+                        </div>
+                        <div class="col-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{req_form.comentarios|add_class:"form-control"|append_attr:"placeholder= Descripción"}}
+                                <label style="color: #121212;" for="id_cond_de_pago">Descripción*</label>
                             </div>
                             </div>
                         </div>
@@ -62,6 +71,7 @@
                             <thead class="text-black" style="background-color: #F5F5F5;">
                                 <tr>
                                     <th scope="col">Nombre del Requerimiento</th>
+                                    <th>Comentario</th>
                                     <th scope="col">Fecha</th>
                                    
                                     <th scope="col">Acciones</th>
@@ -70,7 +80,8 @@
                             <tbody id="requerimientos-list">
                                 {% for requerimiento in producto_calidad.requerimientos_calidad.all %}
                                     <tr id="requerimiento-{{ requerimiento.id }}">
-                                        <td>{{ requerimiento.nombre }}</td>
+                                        <td>{{ requerimiento.requerimiento }}</td>
+                                        <td>{{ requerimiento.comentarios}}</td>
                                         <td>{{ requerimiento.fecha }}</td>
                                         <td>
                                             <button class="btn btn-danger btn-sm" onclick="eliminarRequerimiento({{ requerimiento.id }})">Eliminar</button>
