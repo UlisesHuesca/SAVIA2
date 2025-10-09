@@ -899,6 +899,9 @@ def requisicion_autorizacion(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
     print(usuario)
+    # 🔹 Inicializamos para evitar UnboundLocalError
+    usuario_sust = None
+
     #perfil = Profile.objects.get(staff__id=request.user.id)
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     if usuario.sustituto:
