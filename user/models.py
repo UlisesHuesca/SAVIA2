@@ -89,6 +89,7 @@ class Tipo_perfil(models.Model):
     para_pago = models.BooleanField(default = False)
     finanzas = models.BooleanField(default = False)
     rentabilidad = models.BooleanField(default = False)
+    cuentas_por_pagar = models.BooleanField(default = False)
 
     def __str__(self):
         return f'{self.nombre}'
