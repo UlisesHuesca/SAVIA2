@@ -297,7 +297,8 @@
 
                     <div class="dropdown-divider"></div>
                     </div>
-                    {% if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.tesoreria or usuario.tipo.finanzas %}
+                    <!-- if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.tipo.nombre == "Admin" or usuario.tipo.tesoreria or usuario.tipo.finanzas -->
+                     {% if usuario.tipo.cuentas_por_pagar %}
                         <div>
                     {% else %}
                         <div class="d-none">
