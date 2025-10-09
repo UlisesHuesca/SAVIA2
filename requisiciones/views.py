@@ -907,6 +907,8 @@ def requisicion_autorizacion(request):
     
     #ordenes = Order.objects.filter(complete=True, autorizar=True, staff__distrito=perfil.distrito)
     if usuario.distritos.nombre == "MATRIZ" or (usuario.distritos.nombre == "BRASIL" and usuario.tipo.supervisor):   
+        q_supervisor = Q(orden__supervisor=usuario)
+        
         if usuario_sust:
             q_supervisor |= Q(orden__supervisor=usuario_sust)
             q_superintendente |= Q(orden__superintendente=usuario_sust)
