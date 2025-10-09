@@ -904,17 +904,15 @@ def requisicion_autorizacion(request):
 
     #perfil = Profile.objects.get(staff__id=request.user.id)
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
-    if usuario.sustituto:
-        usuario_sust =Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()  
+  
+    usuario_sust =Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()  
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     
-    #ordenes = Order.objects.filter(complete=True, autorizar=True, staff__distrito=perfil.distrito)
     if usuario.distritos.nombre == "MATRIZ" or (usuario.distritos.nombre == "BRASIL" and usuario.tipo.supervisor):   
         q_supervisor = Q(orden__supervisor=usuario)
         
-        if usuario_sust:
-            q_supervisor |= Q(orden__supervisor=usuario_sust)
-            q_superintendente |= Q(orden__superintendente=usuario_sust)
+        
+        q_supervisor |= Q(orden__supervisor=usuario_sust)
 
         requis = Requis.objects.filter(autorizar=None, complete =True).filter(
             (q_supervisor & Q(orden__tipo__tipo = 'normal')) | 
