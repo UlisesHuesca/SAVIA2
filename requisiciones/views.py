@@ -904,21 +904,27 @@ def requisicion_autorizacion(request):
 
     #perfil = Profile.objects.get(staff__id=request.user.id)
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
-  
-    usuario_sust =Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()  
+   
+    usuario_sust =Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos)
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     
     if usuario.distritos.nombre == "MATRIZ" or (usuario.distritos.nombre == "BRASIL" and usuario.tipo.supervisor):   
         q_supervisor = Q(orden__supervisor=usuario)
-        
-        
-        q_supervisor |= Q(orden__supervisor=usuario_sust)
+        q_superintendente = Q(orden__superintendente=usuario)
 
-        requis = Requis.objects.filter(autorizar=None, complete =True).filter(
-            (q_supervisor & Q(orden__tipo__tipo = 'normal')) | 
-            (Q(orden__superintendente = usuario)  & Q(orden__tipo__tipo = 'resurtimiento'))
-            )
-        print(requis)
+        if usuario_sust.exists():  # 🔹 Si hay otros perfiles con las mismas características
+            q_supervisor |= Q(orden__supervisor__in=usuario_sust)
+            q_superintendente |= Q(orden__superintendente__in=usuario_sust)
+
+        requis = Requis.objects.filter(
+            autorizar=None,
+            complete=True
+        ).filter(
+            (q_supervisor & Q(orden__tipo__tipo='normal')) |
+            (q_superintendente & Q(orden__tipo__tipo='resurtimiento'))
+        )
+
+        print("Requis encontradas:", requis)
     elif usuario.tipo.superintendente == True and usuario.tipo.nombre != "Admin":
         requis = Requis.objects.filter(autorizar=None, orden__superintendente=usuario, complete =True)
     elif usuario.tipo.nombre == "Admin":
