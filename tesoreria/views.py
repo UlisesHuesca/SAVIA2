@@ -120,10 +120,10 @@ def compras_por_pagar(request):
     compras_list = p.get_page(page)
     
     if request.method == 'POST' and 'btnReporte' in request.POST:
-        if usuario.tipo.tesoreria or usuario.tipo.finanzas:
-            return convert_excel_matriz_compras_tesoreria(compras)
-        else:
-            return convert_excel_matriz_compras_autorizadas(compras)
+        #if usuario.tipo.tesoreria or usuario.tipo.finanzas:
+        return convert_excel_matriz_compras_tesoreria(compras)
+        #else:
+        #    return convert_excel_matriz_compras_autorizadas(compras)
        
     
     if request.method == 'POST':
