@@ -80,7 +80,7 @@ class Producto_Calidad(models.Model):
     updated_at = models.DateTimeField(null=True)
     updated_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
     producto = models.OneToOneField(Product, on_delete = models.CASCADE, null=True,  related_name='producto_calidad')
-    requisitos = models.TextField(blank=True, null=True)
+    #requisitos = models.TextField(blank=True, null=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
 
     def __str__(self):
@@ -99,8 +99,7 @@ class Tipo_Requerimiento(models.Model):
 
 class Requerimiento_Calidad(models.Model):
     requerimiento = models.ForeignKey(Tipo_Requerimiento,on_delete=models.CASCADE,null=True)
-    comentarios = models.CharField(max_length=100, null=True)
-    comentarios = models.CharField(max_length=50, null=True, unique=True)
+    comentarios = models.CharField(max_length=100, null=True)    
     solicitud = models.ForeignKey(Producto_Calidad,on_delete=models.CASCADE,null=False, related_name='requerimientos_calidad')
     fecha = models.DateTimeField(null=False,auto_now_add=True)
     

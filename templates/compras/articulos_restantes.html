@@ -1,62 +1,83 @@
-{% extends 'partials/base_w_nav.html' %}
+{% extends 'partials/base.html' %}
 {% load static %}
 
 <html>
 <head>
-{% block title %}Solicitudes{% endblock %}
+{% block title %}Artículos Requisitados{% endblock %}
 </head>
 
 <body>
 {% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-10 offset-md-1">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="modal-title">Requisicion: {{requis.folio}}</h5>
+            </div>
 
-<div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Requisicion: {{requis.folio}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss ="modal" aria-label="Close"></button>
-        </div>
-
-        <div class="modal-body">
-            <div class='box-element-2'>
-            <table class="table table-dark table-striped table-hover mx-2">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Código</th>
-                    <th scope="col">Artículo</th>
-                    <th scope="col">Unidad</th>
-                    <th scope="col">Cantidad Restante</th>
-                    <th>Comentario Usuario</th>
-                </tr>
-            </thead>
-            <tbody id="mytbl">
-                {% for producto in productos %}
-                <tr>
-                    <td scope="col"><img class='row-image' src="{{producto.producto.articulos.producto.producto.imageURL}}"></td>
-                    <td scope="col">{{producto.producto.articulos.producto.producto.codigo}}</td>
-                    <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
-                    <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
-                    <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
-                    <td>{% if producto.producto.articulos.comentario %}{{producto.producto.articulos.comentario}} {% endif %}</td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            </table>
-            <h6>Activo: {% if requis.orden.activo %} {{requis.orden.activo}} {% else %} No hay activo definido {% endif %} </h6>
-            <h6>Comentario Superintendente:   {%if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentario {%endif%}</h6>
-            <h6>Comentario Almacén: {%if requis.comentario_compras %} {{requis.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
-            <h6>Comentario Usuario: {%if requis.orden.comentario %} {{requis.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
-            <h6>Soporte:{% if requis.orden.soporte %}<a href="{{requis.orden.soporte.url}}" download class="btn btn-outline-info"><i class="fa-solid fa-file-invoice-dollar"></i></a></h6>{%else%}NR{% endif %}
-               
-        </div>
-        </div>
-
-        <div class="modal-footer">
+            <div class="card-body">
+                <div class ="table-responsive-sm">
+                    <table class="table table-ligth table-striped mx-1">
+                        <thead>
+                            <tr>
+                                <th scope="col">Cantidad Restante</th>
+                                <th scope="col">Código</th>
+                                <th scope="col">Artículo</th>
+                                <th>Producto/Serivicio</th>
+                                <th scope="col">Unidad</th>
+                                <th>Comentario Usuario</th>
+                                <th>Criticidad</th>
+                               
+                                <th>
+                                    Calidad
+                                </th>
+                               
+                            </tr>
+                        </thead>
+                        <tbody id="mytbl">
+                            {% for producto in productos %}
+                            <tr>
+                                <td scope="col"><p class='quantity' id='prod_quantity'>{{producto.cantidad}}</p></td>
+                                <td scope="col">{{producto.producto.articulos.producto.producto.codigo}}</td>
+                                <td scope="col">{{producto.producto.articulos.producto.producto.nombre}}</td>
+                                <td scope="col">{% if producto.producto.articulos.producto.producto.servicio %} Servicio {% else %} Producto {% endif %}</td>
+                                <td scope="col">{{producto.producto.articulos.producto.producto.unidad}}</td>
+                                <td>{% if producto.producto.articulos.comentario %}{{producto.producto.articulos.comentario}}{% else %} NR {% endif %}</td>
+                                <td>{% if producto.producto.articulos.producto.producto.critico %}{{producto.producto.articulos.producto.producto.critico}} {% else %} NE {% endif %}</td>
+                                {% if producto.producto.articulos.producto.producto.critico %}
+                                <td>
+                                    <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' producto.producto.articulos.producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
+                                </td>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            
+                <h6>Comentario Superintendente:   {%if requis.comentario_super%} {{requis.comentario_super}} {%else%} No hay comentario {%endif%}</h6>
+                <h6>Comentario Almacén: {%if requis.comentario_compras %} {{requis.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
+                <h6>Comentario Usuario: {%if requis.orden.comentario %} {{requis.orden.comentario}} {% else %} No hay comentario {% endif %}</h6>
+                <h6>Soporte:{% if requis.orden.soporte %}<a href="{{requis.orden.soporte.url}}" download class="btn btn-outline-info"><i class="fa-solid fa-file-invoice-dollar"></i></a></h6>{%else%}NR{% endif %}
+            </div>
+            
+            <div class="card-footer">
+                <div class="container-fluid text-end">
+                    <a id="myBtn" type="button" class="btn btn-lg btn-outline-info col-lg-3 col-md-12 col-sm-12 col-xs-12" href="{% url 'requisicion-autorizada' %}">Cerrar</a>
+                </div>
+            </div>
         </div>
     </div>
 </div>
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
 
-
+    </div>
+</div>
 
 {% endblock %}
 </body>

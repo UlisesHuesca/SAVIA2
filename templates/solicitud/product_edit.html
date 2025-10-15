@@ -43,7 +43,11 @@
             <tbody>
                 {% for producto in productos %}
                 <tr id="row_{{producto.id|unlocalize}}" producto_id="{{producto.producto.id|unlocalize}}">
-                    <td><img class="row-image" src="{{producto.producto.producto.imageURL}}"></td>
+                    <td>
+                        {% if producto.producto.producto.critico %}
+                        <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
+                        {% endif %}
+                    <img class="row-image" src="{{producto.producto.producto.imageURL}}"></td>
                     <td>{{producto.producto.producto.codigo}}</td>
                     <td>{{producto.producto.producto.nombre}}</td>
                     <td class="" id="cantidad_{{producto.id|unlocalize}}">{{producto.cantidad}}</td>

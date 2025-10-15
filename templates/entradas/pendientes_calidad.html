@@ -92,7 +92,7 @@
                     <td>{{articulo.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}}</td>
                     <td>{{articulo.entrada.entrada_date}} </td>
                     <td>
-                        <a class="btn btn-outline-info btn-block mx-auto" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get={% url 'reporte_calidad' articulo.id %}><i class="fa-solid fa-list-ul"></i></a>
+                        <a class="btn btn-outline-info btn-block mx-auto" href="{% url 'reporte_calidad' articulo.id %}"><i class="fa-solid fa-list-ul"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

@@ -1,4 +1,4 @@
-{% extends 'partials/base_w_nav.html' %}
+{% extends 'partials/base.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
 <html>
@@ -7,48 +7,69 @@
 </head>
 <body>
 {% block content %}
-<div class="modal-dialog modal-lg" role="document">
-    <div class="modal-content">
-        <div class="modal-header">
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-10 offset-md-1">
+        <div class ="card">
+        <div class="card-header">
             <h5 class="modal-title">Compra: {{compra.folio}}</h5>
-            <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
 
-        <div class="modal-body">
-            <div class='box-element-2'>
-                <div class='cart-row'>
-                    <div style="flex:2">Artículo</div>
-                    <div style="flex:1">Cantidad Pendiente</div>
-                    <div style="flex:1">Calidad</div>
-                </div>
-                {% for articulo_comprado in articulos_comprados %}
-                <div class='cart-row'>
-                    <div style="flex:1">{{articulo_comprado.producto.producto.articulos.producto.producto.codigo}}
-                    </div>
-                    <div style="flex:2">{{articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</div>
-                    <div style="flex:1">
-                        <p class='quantity' id='prod_quantity'>
-                            {% if articulo_comprado.cantidad_pendiente == None %}
-                                {{articulo_comprado.cantidad}}
-                            {% else %}
-                                {{articulo_comprado.cantidad_pendiente}}
-                            {% endif %}
-                        </p>
-                    </div>
-                    <div style="flex:1">{% if articulo_comprado.producto.producto.articulos.producto.producto.especialista %} 
-                        <a class="btn btn-danger" id="btnActualizar" type="button" href ="#">
-                            <i class="fa-solid fa-q"></i>
-                        </a>
-                        {% endif %}
-                    </div>
-                </div>
-                {% endfor %}
+        <div class="card-body">
+            <div class ="table-responsive-sm">
+                    <table class="table table-ligth table-striped mx-1">
+                        <thead>
+                            <tr>
+                                <th>Código</th>
+                                <th>Artículo</th>
+                                <th>Cantidad Pendiente</th>
+                                <th>Calidad</th>
+                            </tr>
+                        </thead>
+                        {% for articulo_comprado in articulos_comprados %}
+                        <tbody>
+                            <tr>
+                                <td>{{articulo_comprado.producto.producto.articulos.producto.producto.codigo}}</td>
+                                <td>{{articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
+                                <td><p class='quantity' id='prod_quantity'>
+                                    {% if articulo_comprado.cantidad_pendiente == None %}
+                                        {{articulo_comprado.cantidad}}
+                                    {% else %}
+                                        {{articulo_comprado.cantidad_pendiente}}
+                                    {% endif %}
+                                    </p>
+                                </td>
+                                  
+        
+                                <td>
+                                    {% if articulo_comprado.producto.producto.articulos.producto.producto.critico %}
+                                        <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' articulo_comprado.producto.producto.articulos.producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
+                                    {% endif %}
+                                </td>
+                                
+
+                            </tr>
+                        </tbody> 
+                        {% endfor %}
+                    </table>
             </div>
         </div>
+                
 
-        <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+        <div class="card-footer">
+            <a type="button" class="btn btn-secondary" href = "{% url 'pendientes_entrada' %}">Cerrar</a>
         </div>
+
+        </div>
+    </div>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
+
     </div>
 </div>
 {% endblock %}

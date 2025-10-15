@@ -1510,8 +1510,8 @@ def autorizar_oc1(request, pk):
                 <thead>
                     <tr>
                         <th>Producto Crítico</th>
-                        <th>Requisitos</th>
                         <th>Requerimiento</th>
+                        <th>Comentarios</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1524,18 +1524,19 @@ def autorizar_oc1(request, pk):
                 # Si el producto tiene requerimientos, agregar una fila por cada uno
                 if requerimientos.exists():
                     for requerimiento in requerimientos:
+                        #print(requerimiento.requerimiento.nombre)
                         articulos_html += f"""
                             <tr>
-                                <td>{producto.codigo}</td>
-                                <td>{producto.producto_calidad.requisitos}</td>
-                                <td>{requerimiento.nombre}</td>
+                                <td>{producto.nombre}</td>
+                                <td>{requerimiento.requerimiento.nombre}</td>
+                                <td>{requerimiento.comentarios}</td>
+
                             </tr>
                         """
                 else:
                     articulos_html += f"""
                         <tr>
                             <td>{producto.codigo}</td>
-                            <td>{producto.producto_calidad.requisitos}</td>
                             <td>Sin requerimiento</td>
                         </tr>
                     """
@@ -1869,9 +1870,9 @@ def autorizar_oc2(request, pk):
             <table border="1" style="border-collapse: collapse; width: 100%;">
                 <thead>
                     <tr>
-                        <th>Producto Crítico</th>
-                        <th>Requisitos</th>
+                        <th>Producto</th>
                         <th>Requerimiento</th>
+                        <th>Comentarios</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -1886,17 +1887,17 @@ def autorizar_oc2(request, pk):
                     for requerimiento in requerimientos:
                         articulos_html += f"""
                             <tr>
-                                <td>{producto.codigo}</td>
-                                <td>{producto.producto_calidad.requisitos}</td>
-                                <td>{requerimiento.nombre}</td>
+                                <td>{producto.nombre}</td>
+                                <td>{requerimiento.requerimiento.nombre}</td>
+                                <td>{requerimiento.comentarios}</td>
                             </tr>
                         """
                 else:
                     articulos_html += f"""
                         <tr>
-                            <td>{producto.codigo}</td>
-                            <td>{producto.producto_calidad.requisitos}</td>
-                            <td>Sin requerimiento</td>
+                            <td>{producto.nombre}</td>
+                            <td>Sin requerimientos</td>
+                            <td>Sin comentarios</td>
                         </tr>
                     """
             articulos_html += """
@@ -1967,21 +1968,21 @@ def autorizar_oc2(request, pk):
                     email.attach(f'Codigo_de_etica.pdf', pdf_etica, 'application/pdf')
                     email.attach(f'Politica_proveedor.pdf', pdf_politica_proveedor, 'application/pdf')
                     # Adjuntar los archivos con nombres personalizados
-                    articulos = ArticuloComprado.objects.filter(oc=compra)
-                    for articulo in articulos:
-                        producto = articulo.producto.producto.articulos.producto.producto
-                        if producto.critico:
-                            requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-                            contador = 1  # Contador para evitar nombres duplicados
-                            for requerimiento in requerimientos:
-                                archivo_path = requerimiento.url.path
-                                nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
+                    #articulos = ArticuloComprado.objects.filter(oc=compra)
+                    #for articulo in articulos:
+                        #producto = articulo.producto.producto.articulos.producto.producto
+                        #if producto.critico:
+                            #requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                            #contador = 1  # Contador para evitar nombres duplicados
+                            #for requerimiento in requerimientos:
+                            #    archivo_path = requerimiento.url.path
+                            #    nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
                                 
                                 # Abrir el archivo en modo binario y adjuntarlo directamente
-                                with open(archivo_path, 'rb') as archivo:
-                                    email.attach(nombre_archivo, archivo.read())
+                            #    with open(archivo_path, 'rb') as archivo:
+                            #        email.attach(nombre_archivo, archivo.read())
 
-                                contador += 1  # Incrementar el contador para el siguiente archivo
+                            #    contador += 1  # Incrementar el contador para el siguiente archivo
                     email.send()
                 except (BadHeaderError, SMTPException, socket.gaierror) as e:
                     error_message = f'correo de notificación no ha sido enviado debido a un error: {e}'  

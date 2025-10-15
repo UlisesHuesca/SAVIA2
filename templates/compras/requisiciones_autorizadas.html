@@ -176,7 +176,7 @@
                       
                         <ul class="nav nav-pills">
                             <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-restantes' req.id %}">Productos</a>
+                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'articulos-restantes' req.id %}?next={{ request.path }}">Productos</a>
                             </li>
                             {% if perfil.tipo.comprador %}
                             <li id="crear_oc_{{req.id}}" class="nav-item m-1">

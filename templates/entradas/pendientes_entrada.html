@@ -211,7 +211,7 @@
                             </li>
                             <!-- Añadir el botón de productos aquí -->
                             <li class="nav-item m-1">
-                            <a id="productosBtn" type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'productos' compra.id %}">Productos</a>
+                            <a id="productosBtn" type="button" class="btn btn-outline-success" href="{% url 'productos' compra.id %}">Productos</a>
                             </li>
                             <!-- Añadir el botón de NC aquí -->
                             <li class="nav-item m-1">

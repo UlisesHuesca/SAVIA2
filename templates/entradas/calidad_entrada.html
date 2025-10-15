@@ -1,4 +1,4 @@
-{% extends 'partials/base_w_nav.html' %}
+{% extends 'partials/base.html' %}
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
@@ -34,49 +34,200 @@
         {% endif %}
     </div>
 </div>
-<div class="modal-dialog-lg" role="document">
-    <form  hx-post="{{request.path}}" class="modal-content"  hx-encoding="multipart/form-data">
-    <div class="modal-content">
-        <div class="modal-header">
-            <h5 class="modal-title">Reporte Calidad</h5>
-            <button class="btn-close cerrar" type="button" id="cerrar1" data-bs-dismiss="modal" aria-label="Close"></button>
-        </div>
-        <div class="modal-body" style="color:white">
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="row">
+    <div class="col-lg-6">
+        <div class ="card">
+            <div class="card-header">
+                <h5 class="card-title">Reporte Calidad</h5>
+            </div>
+            <form method="POST"  enctype="multipart/form-data">
+            <div class="card-body">
             <div>
                 {% csrf_token %}
-                    <label for="form.producto" class="col-auto col-form-label my-1"><strong>Producto:</strong></label>
-                    <div class="col-8">
-                        <label>{{articulo_entrada.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</label>
+                <div class="row my-2">
+                    <div id="etiqueta_domicilio" class="col-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Producto:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{articulo_entrada.articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</h6>   
+                        </div>
                     </div>
-                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Cantidad Entradas: {{restantes_liberacion}}</strong></label>
-                    <div class="col-12">
-                        {{ form.cantidad|add_class:"form-control"}}
+                </div>
+                <!-- Requerimientos de Calidad -->
+                <div class="row my-3">
+                <div class="col-12">
+                    <h6><strong>Requerimientos de Calidad:</strong></h6>
+                    {% if requerimientos %}
+                    <table class="table table-bordered table-striped table-sm mt-2">
+                        <thead class="table-light">
+                        <tr>
+                            <th>Tipo de Requerimiento</th>
+                            <th>Comentarios</th>
+                            <th>Fecha</th>
+                        </tr>
+                        </thead>
+                        <tbody>
+                        {% for req in requerimientos %}
+                            <tr>
+                            <td>{{ req.requerimiento.nombre }}</td>
+                            <td>{{ req.comentarios }}</td>
+                            <td>{{ req.fecha|date:"d/m/Y H:i" }}</td>
+                            </tr>
+                        {% endfor %}
+                        </tbody>
+                    </table>
+                    {% else %}
+                    <p class="text-muted mb-0">No hay requerimientos registrados para este producto.</p>
+                    {% endif %}
+                </div>
+                </div>
+                 <div class="row my-2">
+                    <div id="etiqueta_domicilio" class="col-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Cantidad Entradas:</h6><h6 style="color: #121212;" id="lbl_domicilio">{{restantes_liberacion}}</h6>   
+                        </div>
                     </div>
-                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Comentarios:</strong></label>
-                    <div class="col-12">
-                        {{ form.comentarios|add_class:"form-control"}}
+                </div>
+                <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
+                            <label style="color: #121212;" for="id_cond_de_pago">Cantidad*</label>
+                        </div>
                     </div>
-                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Imagen:</strong></label>
+                </div>
+                  <div class="col-12">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.comentarios|add_class:"form-control"|append_attr:"placeholder= Comentarios"}}
+                            <label style="color: #121212;" for="id_cond_de_pago">Comentarios*</label>
+                        </div>
+                    </div>
+                </div>  
+                
+                
+               
+                    <label for="form.cantidad" class="col-auto col-form-label my-1"><strong>Evidencia Reporte:</strong></label>
                     <div class="col-12">
                         {{form.image|add_class:"form-control"}}
                     </div>
-                    <label for="form.autorizado" class="col-auto col-form-label my-1"><strong>Liberado:</strong></label>
-                    <div class="col-12">
-                        <select class="form-control" name="autorizado" id="id_autorizado">
-                            <option value="True" {% if form.autorizado.value == True %}selected{% endif %}>Sí</option>
-                            <option value="False" {% if form.autorizado.value == False %}selected{% endif %}>No</option>
-                        </select>
+                    <div class="row ms-3 m-2">
+                        <div class="form-check col-sm d-flex align-items-center gap-2">
+                            {{ form.autorizado|add_class:"form-check-input" }}
+                            <label for="{{ form.autorizado.id_for_label }}" class="form-check-label fs-5 mb-0">
+                            <strong>Liberado</strong>
+                            </label>
+                        </div>
+                    </div>      
+            </div>
+        
+        
+        </div>
+        <div class="card-footer">
+                <button class="btn btn-success col-2" id="crear" name = "reporte" type="submit" >Crear Reporte</button>
+                <a type="button" class="btn btn-secondary" href="{% url 'pendientes_calidad' %}">Cerrar</a>
+        </div>
+        </form>
+    </div>
+
+  
+    </div>
+    <div class="col-lg-6">
+        <div class ="card">
+            <div class="card-header">
+                <h5 class="card-title">Evidencias</h5>
+            </div>
+            <div class="card-body">
+                {% if evidencias %}
+                <table class="table table-bordered table-striped table-sm mt-2">
+                    <thead class="table-light">
+                    <tr>
+                        <th>Archivo</th>
+                        <th>Comentario</th>
+                        <th>Fecha</th>
+                        <th>Acciones</th>
+                    </tr>
+                    </thead>
+                    <tbody>
+                    {% for evidencia in evidencias %}
+                        <tr>
+                            <td>{{ evidencia.file.name|slice:"15:" }}</td>
+                            <td>{{ evidencia.comentario }}</td>
+                            <td>{{ evidencia.uploaded|date:"d/m/Y" }}</td>
+                            <td>
+                                <!-- Botón que abre el visor -->
+                                <button 
+                                    class="btn btn-outline-primary btn-sm" 
+                                    data-bs-toggle="modal" 
+                                    data-bs-target="#verEvidencia{{ evidencia.id }}">
+                                    <i class="fa fa-eye"></i> Ver
+                                </button>
+                            </td>
+                        </tr>
+
+                        <!-- 🔽 Modal dentro del bucle, pero fuera del <tr> -->
+                        <div class="modal fade" 
+                            id="verEvidencia{{ evidencia.id }}" 
+                            tabindex="-1" 
+                            aria-labelledby="verEvidenciaLabel{{ evidencia.id }}" 
+                            aria-hidden="true">
+                            <div class="modal-dialog modal-xl modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title" id="verEvidenciaLabel{{ evidencia.id }}">
+                                            Evidencia: {{ evidencia.file.name|slice:"15:" }}
+                                        </h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
+                                    </div>
+                                    <div class="modal-body text-center">
+                                       {% if ".pdf" in evidencia.file.url|lower %}
+                                            <iframe src="{{ evidencia.file.url }}#zoom=100" width="100%" height="700px" style="border:none;"></iframe>
+                                        {% else %}
+                                            <img src="{{ evidencia.file.url }}" alt="Evidencia" class="img-fluid rounded shadow">
+                                        {% endif %}
+                                    </div>
+                                    <div class="modal-footer">
+                                        <a href="{{ evidencia.file.url }}" target="_blank" class="btn btn-secondary">
+                                            <i class="fa fa-download"></i> Descargar
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
+                                            Cerrar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </tbody>
+                </table>
+                {% else %}
+                    <p class="text-muted">No hay evidencias registradas.</p>
+                {% endif %}
+            </div>
+            
+            <form method="POST" enctype="multipart/form-data" class="mt-4">
+                {% csrf_token %}
+                <div class="row g-2 align-items-center">
+                    <div class="col-md-6">
+                    <input type="file" name="evidencia_file" class="form-control" multiple required>
                     </div>
+                    <div class="col-md-4">
+                    <input type="text" name="comentario" class="form-control" placeholder="Comentario (opcional)">
+                    </div>
+                    <div class="col-md-2 d-grid">
+                    <button type="submit" name="btn_evidencia" class="btn btn-success">
+                        <i class="fa fa-upload me-1"></i> Subir Evidencia
+                    </button>
+                    </div>
+                </div>
+            </form>
             </div>
         </div>
-        <div class="modal-footer">
-                <button class="btn btn-success col-2" id="crear" type="submit" >Crear</button>
-                <a type="button" class="btn btn-secondary" id="cerrar" data-bs-dismiss="modal">Cerrar</a>
-        </div>
     </div>
-    </form>
 </div>
-
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg" id="document" role="document">
@@ -91,16 +242,16 @@
 //var price1 = document.getElementById("id_price")
 //price1.setAttribute("class","form-control d-none")
 
-//document.getElementById("productos").addEventListener("change", function(element){
-//    var select = document.getElementById("productos");
-//    var current_option = select.options[select.selectedIndex];
-//    var target = current_option.getAttribute('target')
-//    var other_select = document.getElementById('id_producto')
-//    other_select.value = target
-//    console.log(current_option)
-//});
-
-document.getElementById("txt_producto").addEventListener("change", (event)=>{
+document.addEventListener("DOMContentLoaded", function() {
+    const check = document.querySelector("#{{ form.autorizado.id_for_label }}");
+    if (check) {
+      check.style.transform = "scale(2.5)";
+      check.style.margin = "5px";
+      check.style.cursor = "pointer";
+      check.style.transition = "all 0.25s ease";
+    }
+  });
+/*document.getElementById("txt_producto").addEventListener("change", (event)=>{
     var select = document.getElementById("txt_producto");
     var browserChildren = document.getElementById('producto').children;
     var other_select = document.getElementById('id_producto');
@@ -123,7 +274,7 @@ document.getElementById("txt_producto").addEventListener("change", (event)=>{
     if ((!select.value) || (cont = 0)){
         other_select.value = 0
     }
-});
+}); */
 
 </script>
 {% endblock %}

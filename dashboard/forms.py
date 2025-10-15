@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad
+from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad, Producto_Calidad
 from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, DocumentosProveedor
 from user.models import Distrito
 from solicitudes.models import Proyecto, Subproyecto, Contrato
@@ -35,15 +35,15 @@ class ProductForm(forms.ModelForm):
         elif self.instance.pk:
             self.fields['subfamilia'].queryset = self.instance.familia.subfamilia_set.order_by('nombre')
 
-class ProductCalidadForm(forms.ModelForm):
-    class Meta:
-        model = Product
-        fields = ['rev_calidad']
+#class ProductCalidadForm(forms.ModelForm):
+#    class Meta:
+#        model = Producto_Calidad
+#        fields = ['requisitos']
 
 class RequerimientoCalidadForm(forms.ModelForm):
     class Meta:
         model = Requerimiento_Calidad
-        fields = ['comentarios','requerimiento']
+        fields = ['requerimiento','comentarios'] #,
 
 
 class PrecioRef_Form(forms.ModelForm):

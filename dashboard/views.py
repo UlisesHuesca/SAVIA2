@@ -15,7 +15,7 @@ from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import ProductCalidadForm, RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form
+from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form
 from user.decorators import perfil_seleccionado_required
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter
 from user.filters import ProfileFilter
@@ -1841,54 +1841,62 @@ def product_calidad_update(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     if usuario.tipo.calidad == True:  
         item = get_object_or_404(Product, id=pk)
+
         error_messages = {}
-        form = ProductCalidadForm(instance=item)
+        
         req_form = RequerimientoCalidadForm()
 
         # Obtener o crear Producto_Calidad asociado
         producto_calidad, created = Producto_Calidad.objects.get_or_create(producto=item)
-        requisitos = producto_calidad.requisitos
+        #form = ProductCalidadForm(instance=producto_calidad)
+        #requisitos = producto_calidad.requisitos
         
         
-        if requisitos is None:
-            requisitos = ''
+        #if requisitos is None:
+        #    requisitos = ''
         if request.method == 'POST':
             print('estoy acá')
             print(request.POST)
             if "actualizar" in request.POST:
-                print('estoy acá2')
-                form = ProductCalidadForm(request.POST, instance=item)
-                if form.is_valid():
-                    form.save()
-                    messages.success(request, f'Se ha actualizado el producto {item.nombre}')
-                    return redirect('product_calidad')
-                else:
-                    # Manejo de errores en formularios
-                    for field, errors in form.errors.items():
-                        error_messages[field] = errors.as_text()
-                    for field, errors in req_form.errors.items():
-                        error_messages[field] = errors.as_text()
-            if "requerimiento" in request.POST:
+                #print('estoy acá2')
+                #form = ProductCalidadForm(request.POST, instance=item)
+                #if form.is_valid():
+                #producto_calidad = form.save(commit=False)
+                producto_calidad.updated_by = usuario
+                producto_calidad.updated_at = date.today()
+                producto_calidad.save()
+                messages.success(request, f'Se ha actualizado el producto {item.nombre}')
+                return redirect('product_calidad')
+                
+            if "requirement" in request.POST:
                 req_form = RequerimientoCalidadForm(request.POST)
+                print('estoy acá3')
                 if req_form.is_valid():
+                    print('estoy acá4')
                     requerimiento = req_form.save(commit=False)
                     requerimiento.solicitud = producto_calidad
                     requerimiento.updated_by = usuario
                     requerimiento.save()
                     return redirect('product_calidad_update',pk=pk)
+                else:
+                    # Manejo de errores en formularios
+                    for field, errors in req_form.errors.items():
+                        error_messages[field] = errors.as_text()
+                    for field, errors in req_form.errors.items():
+                        error_messages[field] = errors.as_text()
 
             else:
-                form = ProductCalidadForm(instance=item)
+                #form = ProductCalidadForm(instance=item)
                 req_form = RequerimientoCalidadForm()
 
         context = {
 
             'error_messages': error_messages,
-            'form': form,
+            #'form': form,
             'req_form': req_form,
             'item': item,
             'producto_calidad': producto_calidad,
-            'requisitos': requisitos,  # Aquí pasas el campo
+            #'requisitos': requisitos,  # Aquí pasas el campo
         }
         return render(request, 'dashboard/product_calidad_update.html', context)
     else:
@@ -2188,7 +2196,7 @@ def generar_pdf_dd(proveedor, request):
     c.drawString(40, y_actual-10, pregunta3); y_actual -= 16
     c.setFont("Helvetica", 10)
     c.setFillColor(azul_claro)
-    c.drawString(60, y_actual-10, respuesta3); y_actual -= 16
+    #c.drawString(60, y_actual-10, respuesta3); y_actual -= 16
 
     if dd and dd.tiene_alta_direccion:
         # Renderizar tabla de Miembro_Alta_Direccion
@@ -2235,7 +2243,7 @@ def generar_pdf_dd(proveedor, request):
             c.showPage(); c.setFillColor(black); y_actual = 750
             #c.setFont('Helvetica-Bold', 12); c.drawString(40, y_actual, titulo3); y_actual -= 18
             c.setFont('Helvetica', 10); c.drawString(40, y_actual, pregunta3); y_actual -= 16
-        c.drawString(60, y_actual, "No")
+        c.drawString(60, y_actual - 10, respuesta3)
         y_actual -= 14
     
         # === Pregunta 4 ===
