@@ -1012,7 +1012,7 @@ def matriz_pagos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-    if usuario.tipo.rh == True and usuario.tipo.documentos == True:
+    if usuario.tipo.rh == True:
         pagos = Pago.objects.filter(
         gasto__distrito__in = almacenes_distritos, gasto__autorizar2 = True, gasto__tipo__tipo__in = ['APOYO DE MANTENIMIENTO', 'APOYO DE RENTA'] , 
         hecho=True
