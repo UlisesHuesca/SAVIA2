@@ -2,7 +2,7 @@ from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
 from django.db.models import Q, Sum, Max, Exists, OuterRef, Subquery, Avg
 from django.contrib import messages
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, Http404
 from django.core.mail import EmailMessage
 from django.core.paginator import Paginator
 from django.core.exceptions import ObjectDoesNotExist
@@ -34,6 +34,15 @@ import socket
 import xlsxwriter
 from xlsxwriter.utility import xl_col_to_name
 import datetime as dt
+
+# views.py
+import io
+from reportlab.pdfgen import canvas
+from reportlab.lib.pagesizes import letter
+from reportlab.lib.colors import Color, black, white
+from reportlab.lib.units import cm
+from reportlab.lib import colors
+
 
 # Create your views here.
 @perfil_seleccionado_required
@@ -1310,3 +1319,321 @@ def convert_excel_matriz_compras_pendientes(articulos_comprados):
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
     return response
+
+
+
+PRUSSIAN_BLUE = Color(0.0859375, 0.1953125, 0.30859375)
+
+def generar_pdf_reporte_calidad_individual(request, reporte_id):
+    try:
+        reporte = Reporte_Calidad.objects.select_related(
+            "articulo__articulo_comprado__oc",
+            "articulo__articulo_comprado__producto__producto__articulos__orden__proyecto",
+            "articulo__articulo_comprado__producto__producto__articulos__orden__subproyecto",
+        ).get(id=reporte_id)
+    except Reporte_Calidad.DoesNotExist:
+        raise Http404("Reporte no encontrado")
+
+    compra = reporte.articulo.articulo_comprado.oc
+    producto = reporte.articulo.articulo_comprado.producto.producto.articulos.producto.producto
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+
+    # --- Encabezado estilo Vordcab ---
+    y = _draw_header(c, compra)
+
+    # --- Título del reporte ---
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawCentredString(300, y - 20, "REPORTE DE CALIDAD")
+    y -= 40
+
+    # --- Datos generales ---
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+    c.drawString(40, y, f"Folio OC: {compra.folio}")
+    c.drawString(250, y, f"Proveedor: {compra.proveedor.nombre if compra.proveedor else ''}")
+    y -= 20
+    c.drawString(40, y, f"Proyecto: {reporte.articulo.articulo_comprado.producto.producto.articulos.orden.proyecto.nombre}")
+    c.drawString(250, y, f"Subproyecto: {reporte.articulo.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}")
+    y -= 30
+
+    # --- Información del producto ---
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawString(40, y, "Producto inspeccionado:")
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+    y -= 15
+    c.drawString(50, y, f"{producto.codigo} | {producto.nombre}")
+    y -= 15
+    c.drawString(50, y, f"Unidad: {producto.unidad.nombre if producto.unidad else ''}")
+    y -= 25
+
+    # --- Información del reporte ---
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawString(40, y, "Detalles del reporte:")
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+    y -= 15
+    c.drawString(50, y, f"Fecha: {reporte.reporte_date or 'N/A'}")
+    c.drawString(250, y, f"Hora: {reporte.reporte_hora or 'N/A'}")
+    y -= 15
+    c.drawString(50, y, f"Cantidad revisada: {reporte.cantidad}")
+    y -= 15
+    c.drawString(50, y, f"Completo: {'Sí' if reporte.completo else 'No'}")
+    c.drawString(250, y, f"Autorizado: {'Sí' if reporte.autorizado else 'Pendiente'}")
+    y -= 15
+    c.drawString(50, y, f"Comentarios: {reporte.comentarios or 'Sin comentarios'}")
+    y -= 30
+
+    # --- Requerimientos de criticidad ---
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawString(40, y, "Requerimientos de criticidad:")
+    y -= 15
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+
+    producto_calidad = getattr(producto, "producto_calidad", None)
+    requerimientos = producto_calidad.requerimientos_calidad.all() if producto_calidad else []
+    if requerimientos:
+        for req in requerimientos:
+            c.drawString(50, y, f"• {req.requerimiento.nombre}: {req.comentarios}")
+            y -= 12
+            if y < 100:
+                c.showPage()
+                y = _draw_header(c, compra)
+                y -= 40
+    else:
+        c.drawString(50, y, "Sin requerimientos definidos.")
+        y -= 20
+
+    # --- Imagen del reporte ---
+    if reporte.image:
+        try:
+            c.setFont("Helvetica-Bold", 11)
+            c.setFillColor(PRUSSIAN_BLUE)
+            c.drawString(40, y, "Evidencia fotográfica:")
+            y -= 10
+            c.drawImage(reporte.image.path, 60, y - 120, width=120, height=120)
+            y -= 140
+        except Exception:
+            c.setFillColor(black)
+            c.drawString(50, y, "(No se pudo cargar la imagen del reporte)")
+            y -= 15
+
+    # --- Pie de página ---
+    c.setFont("Helvetica-Oblique", 8)
+    c.setFillColor(black)
+    c.drawCentredString(300, 40, "Documento generado automáticamente por SAVIA 2.0")
+
+    c.showPage()
+    c.save()
+    pdf = buf.getvalue()
+    buf.close()
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="Reporte_Calidad_{reporte.id}.pdf"'
+    response.write(pdf)
+    return response
+
+
+
+def pdf_reporte_calidad(request, reporte_id):
+    PRUSSIAN_BLUE = Color(0.0859375, 0.1953125, 0.30859375)
+
+    try:
+        reporte = Reporte_Calidad.objects.select_related(
+            "articulo__articulo_comprado__oc",
+            "articulo__articulo_comprado__producto__producto__articulos__orden__proyecto",
+            "articulo__articulo_comprado__producto__producto__articulos__orden__subproyecto",
+        ).get(id=reporte_id)
+    except Reporte_Calidad.DoesNotExist:
+        raise Http404("Reporte no encontrado")
+
+    compra = reporte.articulo.articulo_comprado.oc
+    producto = reporte.articulo.articulo_comprado.producto.producto.articulos.producto.producto
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+
+    # --- Encabezado estilo Vordcab ---
+    y = _draw_header(c, compra)
+
+    # Sello de estado (usa reporte.autorizado)
+    _draw_status_badge(c, reporte.autorizado)
+    # (Opcional) Watermark diagonal suave
+    _draw_watermark_if_needed(c, reporte.autorizado)
+
+
+    # --- Título del reporte ---
+    c.setFont("Helvetica-Bold", 14)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawCentredString(300, y - 20, "REPORTE DE CALIDAD")
+    y -= 40
+
+    # --- Datos generales ---
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+    c.drawString(40, y, f"Folio OC: {compra.folio}")
+    c.drawString(250, y, f"Proveedor: {compra.proveedor.nombre if compra.proveedor else ''}")
+    y -= 20
+    c.drawString(40, y, f"Proyecto: {reporte.articulo.articulo_comprado.producto.producto.articulos.orden.proyecto.nombre}")
+    c.drawString(40, y - 12, f"Subproyecto: {reporte.articulo.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}")
+    y -= 30
+
+    # --- Información del producto ---
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawString(40, y, "Producto inspeccionado:")
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+    y -= 15
+    c.drawString(50, y, f"{producto.codigo} | {producto.nombre}")
+    y -= 15
+    c.drawString(50, y, f"Unidad: {producto.unidad.nombre if producto.unidad else ''}")
+    y -= 25
+
+    # --- Información del reporte ---
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawString(40, y, "Detalles del reporte:")
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+    y -= 15
+    c.drawString(50, y, f"Fecha: {reporte.reporte_date or 'N/A'}")
+    c.drawString(250, y, f"Hora: {reporte.reporte_hora or 'N/A'}")
+    y -= 15
+    c.drawString(50, y, f"Cantidad revisada: {reporte.cantidad}")
+    y -= 15
+    c.drawString(50, y, f"Completo: {'Sí' if reporte.completo else 'No'}")
+    c.drawString(250, y, f"Autorizado: {'Sí' if reporte.autorizado else 'Pendiente'}")
+    y -= 15
+    c.drawString(50, y, f"Comentarios: {reporte.comentarios or 'Sin comentarios'}")
+    y -= 30
+
+    # --- Requerimientos de criticidad ---
+    c.setFont("Helvetica-Bold", 11)
+    c.setFillColor(PRUSSIAN_BLUE)
+    c.drawString(40, y, "Requerimientos de criticidad:")
+    y -= 15
+    c.setFont("Helvetica", 10)
+    c.setFillColor(black)
+
+    producto_calidad = getattr(producto, "producto_calidad", None)
+    requerimientos = producto_calidad.requerimientos_calidad.all() if producto_calidad else []
+    if requerimientos:
+        for req in requerimientos:
+            c.drawString(50, y, f"• {req.requerimiento.nombre}: {req.comentarios}")
+            y -= 12
+            if y < 100:
+                c.showPage()
+                y = _draw_header(c, compra)
+                y -= 40
+    else:
+        c.drawString(50, y, "Sin requerimientos definidos.")
+        y -= 20
+
+    # --- Imagen del reporte ---
+    if reporte.image:
+        try:
+            c.setFont("Helvetica-Bold", 11)
+            c.setFillColor(PRUSSIAN_BLUE)
+            c.drawString(40, y, "Evidencia fotográfica:")
+            y -= 10
+            c.drawImage(reporte.image.path, 60, y - 120, width=120, height=120)
+            y -= 140
+        except Exception:
+            c.setFillColor(black)
+            c.drawString(50, y, "(No se pudo cargar la imagen del reporte)")
+            y -= 15
+
+    # --- Pie de página ---
+    c.setFont("Helvetica-Oblique", 8)
+    c.setFillColor(black)
+    c.drawCentredString(300, 40, "Documento generado automáticamente por SAVIA 2.0")
+
+    c.showPage()
+    c.save()
+    pdf = buf.getvalue()
+    buf.close()
+
+    response = HttpResponse(content_type="application/pdf")
+    response["Content-Disposition"] = f'inline; filename="Reporte_Calidad_{reporte.id}.pdf"'
+    response.write(pdf)
+    return response
+
+
+# Encabezado corporativo reutilizable
+def _draw_header(c, compra):
+    prussian_blue = PRUSSIAN_BLUE
+    c.setFillColor(black)
+    c.setFont('Helvetica', 8)
+    caja_iso = 760
+
+    c.drawString(430, caja_iso, 'Preparado por:')
+    #c.drawString(405, caja_iso - 10, 'SUPT. DE ADQUISIONES')
+    c.drawString(520, caja_iso, 'Aprobación')
+    c.drawString(515, caja_iso - 10, 'SUBD ADTVO')
+    c.drawString(150, caja_iso - 20, 'Número de documento')
+    #c.drawString(160, caja_iso - 30, 'SEOV-ADQ-N4-01.02')
+    c.drawString(245, caja_iso - 20, 'Clasificación del documento')
+    c.drawString(275, caja_iso - 30, 'Controlado')
+    c.drawString(355, caja_iso - 20, 'Nivel del documento')
+    c.drawString(380, caja_iso - 30, 'N5')
+    c.drawString(440, caja_iso - 20, 'Revisión No.')
+    #c.drawString(452, caja_iso - 30, '003')
+    c.drawString(510, caja_iso - 20, 'Fecha de Emisión')
+    #c.drawString(525, caja_iso - 30, '13/11/2017')
+
+    c.setFillColor(prussian_blue)
+    c.rect(150, 750, 250, 20, fill=True, stroke=False)
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 14)
+    c.drawCentredString(280, 755, 'Reporte de Calidad')
+    c.setFillColor(black)
+    c.drawInlineImage('static/images/logo_vordcab.jpg', 45, 730, 3 * cm, 1.5 * cm)
+    return 700
+
+def _draw_status_badge(c, status, x=400, y=705):
+    """
+    Dibuja un badge de estado en la esquina superior derecha.
+    status: True -> AUTORIZADO (verde)
+            False -> NO AUTORIZADO (rojo)
+            None -> PENDIENTE (ámbar)
+    (x,y) es la esquina inferior-izquierda del badge.
+    """
+    if status is True:
+        txt, fill = "LIBERADO POR CALIDAD", colors.green
+    elif status is False:
+        txt, fill = "NO LIBERADO POR CALIDAD", colors.red
+    else:
+        txt, fill = "PENDIENTE", colors.orange
+
+    # Caja
+    c.setFillColor(fill)
+    c.setStrokeColor(fill)
+    c.rect(x- 10, y, 150, 22, fill=True, stroke=False)
+
+    # Texto
+    c.setFillColor(colors.white)
+    c.setFont("Helvetica-Bold", 11)
+    # Centrar horizontalmente en la caja (130 de ancho)
+    c.drawCentredString(x + 65, y + 6, txt)
+
+def _draw_watermark_if_needed(c, status):
+    """
+    Watermark diagonal suave según el estado.
+    Solo para NO AUTORIZADO (rojo) o PENDIENTE (ámbar).
+    """
+    if status is True:
+        return
+    c.saveState()
+    c.setFont("Helvetica-Bold", 60)
+    c.setFillColor(colors.lightcoral if status is False else colors.lightgoldenrodyellow)
+    # Girar y posicionar
+    c.translate(120, 200)
+    c.rotate(30)
+    c.drawString(0, 0, "NO LIBERADO" if status is False else "PENDIENTE")
+    c.restoreState()

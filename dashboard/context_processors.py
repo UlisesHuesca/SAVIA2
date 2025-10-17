@@ -9,6 +9,7 @@ from requisiciones.models import Requis, ValeSalidas, Devolucion
 from compras.models import Compra, Proveedor
 from viaticos.models import Solicitud_Viatico
 from user.models import Profile, Tipo_perfil
+from entradas.models import EntradaArticulo
 from django.db.models import Q
 from django.conf import settings
 from django.utils import translation
@@ -50,10 +51,11 @@ def contadores_processor(request):
     conteo_vales = 0
     productosordenados = 0 #Se agregan solo para dejar de generar el error de que no existe la variable pero habrá que analizar si es la manera correcta
     productosordenadosres = 0 #Se agregan solo para dejar de generar el error de que no existe la variable pero habrá que analizar si es la manera correcta
-    
+    conteo_calidad = 0
     conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
     solicitudes_generadas = Order.objects.filter(complete = True).count()
+
 
 
 
@@ -171,6 +173,12 @@ def contadores_processor(request):
             direcciones__estatus__nombre = "PREALTA",
             ).exclude(familia__nombre="IMPUESTOS").distinct().count()
 
+        if usuario.tipo.calidad == True:
+            conteo_calidad  = EntradaArticulo.objects.filter(
+                articulo_comprado__producto__producto__articulos__producto__producto__critico = True,
+                liberado = False, 
+                articulo_comprado__oc__req__orden__distrito = usuario.distritos).count()
+
     return {
     'productosordenados':productosordenados,
     'productosordenadosres':productosordenadosres,
@@ -198,6 +206,7 @@ def contadores_processor(request):
     'conteo_requis': conteo_requis,
     'conteo_pagos':conteo_pagos,
     'conteo_vales':conteo_vales,
+    'conteo_calidad': conteo_calidad,
     }
 
  

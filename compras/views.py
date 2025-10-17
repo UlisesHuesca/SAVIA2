@@ -1911,6 +1911,7 @@ def autorizar_oc2(request, pk):
                 pdf_privacidad = attach_aviso_privacidad_pdf(request)
                 pdf_etica = attach_codigo_etica_pdf(request)
                 pdf_politica_proveedor = attach_politica_proveedor(request)
+                avisar_calidad_oc(compra)
                 html_message2 = f"""
                 <html>
                     <head>
@@ -2122,6 +2123,143 @@ def autorizar_oc2(request, pk):
         }
 
     return render(request, 'compras/autorizar_oc2.html',context)
+
+def avisar_calidad_oc(compra):
+    """
+    Envía un correo al encargado de calidad del distrito avisando que
+    una OC próxima a llegar contiene productos críticos.
+    """
+    distrito = compra.req.orden.proyecto.distrito  # ajusta según tu modelo
+     # 🔍 Buscar artículos de la OC cuyos productos sean críticos
+    productos_criticos = ArticuloComprado.objects.filter(
+        oc=compra,
+        producto__producto__articulos__producto__producto__critico=True
+    ).distinct()
+    if not productos_criticos.exists():
+        return  # nada que avisar
+
+    encargados = Profile.objects.filter(tipo__calidad=True, distritos=distrito)
+    if not encargados.exists():
+        return
+
+    # Tabla con los productos críticos
+    articulos_html = """
+        <table width="100%" border="1" cellspacing="0" cellpadding="5"
+               style="border-collapse: collapse; font-size: 14px;">
+            <tr style="background-color: #eee;">
+                <th>Nombre</th>
+                <th>Código</th>
+                <th>Unidad</th>
+                <th>Familia</th>
+                <th>Subfamilia</th>
+                <th>Cantidad</th>
+                <th>Requerimientos</th>
+                <th>Comentarios</th>
+            </tr>
+    """
+    for art in productos_criticos:
+        p = art.producto.producto.articulos.producto.producto
+        requerimientos = []
+        if hasattr(p, 'producto_calidad'):  # Verifica que tenga criticidad cargada
+            requerimientos = p.producto_calidad.requerimientos_calidad.all()
+
+        if requerimientos:
+            first_row = True
+            for req in requerimientos:
+                articulos_html += f"""
+                    <tr>
+                        <td>{p.nombre if first_row else ''}</td>
+                        <td>{p.codigo if first_row else ''}</td>
+                        <td>{p.unidad.nombre if first_row and p.unidad else ''}</td>
+                        <td>{p.familia.nombre if first_row and p.familia else ''}</td>
+                        <td>{p.subfamilia.nombre if first_row and p.subfamilia else ''}</td>
+                        <td>{art.cantidad if first_row else ''}</td>
+                        <td>{req.requerimiento.nombre}</td>
+                        <td>{req.comentarios or ''}</td>
+                    </tr>
+                """
+                first_row = False
+        else:
+            articulos_html += f"""
+                <tr>
+                    <td>{p.nombre}</td>
+                    <td>{p.codigo}</td>
+                    <td>{p.unidad.nombre if p.unidad else ''}</td>
+                    <td>{p.familia.nombre if p.familia else ''}</td>
+                    <td>{p.subfamilia.nombre if p.subfamilia else ''}</td>
+                    <td>{art.cantidad}</td>
+                    <td>Sin requerimientos</td>
+                    <td>Sin comentarios</td>
+                </tr>
+            """
+
+    articulos_html += "</table>"
+
+    # Cargar imágenes base64
+    static_path = settings.STATIC_ROOT
+    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+    img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+    image_base64 = get_image_base64(img_path)
+    logo_v_base64 = get_image_base64(img_path2)
+
+    # HTML del correo
+    html_message = f"""
+    <html>
+        <head><meta charset="UTF-8"></head>
+        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                <tr>
+                    <td align="center">
+                        <table width="600px" cellspacing="0" cellpadding="0"
+                               style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                            <tr>
+                                <td align="center">
+                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 100px; height: auto;" />
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="padding: 20px;">
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        Estimado(a) encargado(a) de calidad del distrito <strong>{distrito.nombre}</strong>,
+                                    </p>
+                                    <p style="font-size: 16px; text-align: justify;">
+                                        Está próxima a llegar a almacén una <strong>Orden de Compra</strong> que contiene el siguiente o siguientes productos marcados como <strong>críticos</strong>:
+                                    </p>
+                                    <p style="font-size: 15px; text-align: justify;">
+                                        Folio de OC: <strong>{compra.folio}</strong><br>
+                                        Proveedor: <strong>{compra.proveedor.nombre}</strong>
+                                    </p>
+                                    {articulos_html}
+                                    <p style="text-align: center; margin: 20px 0;">
+                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                    </p>
+                                    <p style="font-size: 13px; color: #777; text-align: justify;">
+                                        Este mensaje ha sido generado automáticamente por <strong>SAVIA 2.0</strong>.
+                                    </p>
+                                </td>
+                            </tr>
+                        </table>
+                    </td>
+                </tr>
+            </table>
+        </body>
+    </html>
+    """
+
+    # Enviar correo a cada encargado de calidad
+    for encargado in encargados:
+        try:
+            email = EmailMessage(
+                subject=f"OC próxima a llegar con productos críticos | {compra.folio}",
+                body=html_message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                to=[encargado.staff.staff.email],
+                headers={'Content-Type': 'text/html'}
+            )
+            email.content_subtype = "html"  # importante para interpretar como HTML
+            email.send()
+        except Exception as e:
+            print(f"Error enviando correo a {encargado.staff.staff.email}: {e}")
 
 def handle_uploaded_file(file, model_instance, field_name):
     setattr(model_instance, field_name, file)

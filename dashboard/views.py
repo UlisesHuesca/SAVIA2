@@ -1911,53 +1911,58 @@ def Add_Product_Critico(request):
         # Filtra los productos disponibles
         productos_filtrados = Product.objects.filter(critico=False)
 
-        # Maneja la solicitud AJAX de Select2
-        if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-            term = request.GET.get('term', '')
-            productos_filtrados = productos_filtrados.filter(nombre__icontains=term)[:10]
-            productos_data = [
-                {
-                    'id': producto.id,
-                    'text': producto.nombre,
-                    'codigo': producto.codigo,
-                    'nombre': producto.nombre,
-                    'unidad': producto.unidad.nombre if producto.unidad else '',
-                    'familia': producto.familia.nombre if producto.familia else '',
-                    'subfamilia': producto.subfamilia.nombre if producto.subfamilia else '',
-                    'servicio': producto.servicio
-                }
-                for producto in productos_filtrados
-            ]
-            return JsonResponse(productos_data, safe=False)
+          # Respuesta AJAX para Select2
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        term = (request.GET.get('term') or '').strip()
+        qs = productos_filtrados
+        if term:
+            qs = qs.filter(Q(nombre__icontains=term) | Q(codigo__icontains=term))[:20]
 
-        # Inicializa el formulario
-        form = Add_Product_CriticoForm()
-        form.fields['product'].queryset = productos_filtrados.none()  # Asegúrate de que el queryset esté configurado antes de validar
+        results = []
+        for p in qs:
+            results.append({
+                "id": p.id,
+                "text": f"{p.nombre} ({p.codigo or ''})",     # lo que muestra Select2
+                "nombre": p.nombre,
+                "codigo": p.codigo or "",
+                "unidad": getattr(p.unidad, "nombre", "") or "",
+                "familia": getattr(p.familia, "nombre", "") or "",
+                "subfamilia": getattr(p.subfamilia, "nombre", "") or "",
+                # si 'servicio' es booleano, conviértelo a texto legible
+                "servicio": ("Sí" if getattr(p, "servicio", False) else "No")
+                         if isinstance(getattr(p, "servicio", None), bool)
+                         else (p.servicio or ""),
+            })
+        return JsonResponse({"results": results})
 
-        if request.method == 'POST':
-            form = Add_Product_CriticoForm(request.POST)
-            form.fields['product'].queryset = productos_filtrados  # Reasigna el queryset para asegurar que esté actualizado
+    # --- resto igual ---
+    form = Add_Product_CriticoForm()
+    form.fields['product'].queryset = productos_filtrados.none()
 
-            if form.is_valid():
-                product = form.cleaned_data['product']
-                product.critico = True
-                product.save()
-                messages.success(request, f'El producto {product.nombre} ha sido marcado como crítico.')
-                return redirect('product_calidad')
-            else:
-                # Mostrar los errores de validación
-                error_message = "Hubo un error con el formulario. Los siguientes campos no son válidos:\n"
-                for field, errors in form.errors.items():
-                    for error in errors:
-                        error_message += f" - {field}: {error}\n"
-                messages.error(request, error_message)
+    if request.method == 'POST':
+        form = Add_Product_CriticoForm(request.POST)
+        form.fields['product'].queryset = productos_filtrados  # Reasigna el queryset para asegurar que esté actualizado
 
-        context = {
-            'form': form,
-        }
-        return render(request, 'dashboard/add_product_critico.html', context)
-    else:
-        raise Http404("No tienes permiso para ver esta vista")
+        if form.is_valid():
+            product = form.cleaned_data['product']
+            product.critico = True
+            product.save()
+            messages.success(request, f'El producto {product.nombre} ha sido marcado como crítico.')
+            return redirect('product_calidad')
+        else:
+            # Mostrar los errores de validación
+            error_message = "Hubo un error con el formulario. Los siguientes campos no son válidos:\n"
+            for field, errors in form.errors.items():
+                for error in errors:
+                    error_message += f" - {field}: {error}\n"
+            messages.error(request, error_message)
+
+    context = {
+        'form': form,
+    }
+    return render(request, 'dashboard/add_product_critico.html', context)
+#else:
+#    raise Http404("No tienes permiso para ver esta vista")
     
 
 import fitz

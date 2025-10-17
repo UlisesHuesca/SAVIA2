@@ -92,7 +92,9 @@
                     <td>{{reporte.articulo.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}}</td>
                     <td>{{reporte.articulo.entrada.entrada_date}} </td>
                     <td>
-                        <a class="btn btn-outline-info btn-block mx-auto" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get=#><i class="fa-solid fa-list-ul"></i></a>
+                        <a class="btn btn-outline-danger btn-block mx-auto" href="{% url 'pdf_reporte_calidad' reporte.id %}" target="_blank">
+                            <i class="fa-solid fa-file-pdf"></i>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

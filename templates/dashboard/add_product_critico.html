@@ -59,18 +59,6 @@
                             <div class="row my-2">
                                 <div class="col-lg-6 col-md-6">
                                     <div class="alert alert-secondary" role="alert">
-                                        <h6>Nombre:</h6><h6 style="color: #121212;" id="producto-nombre"></h6>
-                                    </div>
-                                </div>
-                                <div class="col-lg-6 col-md-6">
-                                    <div class="alert alert-secondary" role="alert">
-                                        <h6>Código:</h6><h6 style="color: #121212;" id="producto-codigo"></h6>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="row my-2">
-                                <div class="col-lg-6 col-md-6">
-                                    <div class="alert alert-secondary" role="alert">
                                         <h6>Unidad:</h6><h6 style="color: #121212;" id="producto-unidad"></h6>
                                     </div>
                                 </div>
@@ -114,54 +102,49 @@
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script>
-$(document).ready(function() {
-    $('.select2').select2({
-        placeholder: "Selecciona un producto",
-        allowClear: true,
-        ajax: {
-            url: "{% url 'product_calidad_add' %}",  // Usa la misma URL que la vista
-            dataType: 'json',
-            delay: 250,  // Retraso para evitar múltiples llamadas al escribir
-            data: function (params) {
-                return {
-                    term: params.term  // Pasa el término de búsqueda al servidor
-                };
-            },
-            processResults: function (data) {
-                return {
-                    results: data  // Retorna los resultados procesados
-                };
-            },
-            cache: true
-        },
-        minimumInputLength: 1,  // Número mínimo de caracteres antes de buscar
-        width: '100%',  // Hace que el campo de selección ocupe todo el ancho disponible
-        dropdownAutoWidth: true,  // Ajusta el ancho del dropdown automáticamente
-    });
+$(document).ready(function () {
+  const $sel = $('#id_product');
 
-    // Función para actualizar la visualización del producto seleccionado
-    $('.select2').on('select2:select', function (e) {
-        var selectedData = e.params.data;  // Datos del producto seleccionado
+  $sel.select2({
+    placeholder: 'Producto',
+    allowClear: true,
+    width: '100%',
+    ajax: {
+      url: "{% url 'product_calidad_add' %}",
+      dataType: 'json',
+      delay: 250,
+      data: params => ({ term: params.term }),
+      processResults: data => ({ results: (data && data.results) || [] }),
+      cache: true
+    },
+    templateResult: item => item.loading ? item.text : `${item.nombre || item.text} ${item.codigo ? `(${item.codigo})` : ''}`,
+    templateSelection: item => (item.nombre || item.text) + (item.codigo ? ` (${item.codigo})` : '')
+  });
 
-        // Actualiza los divs con la información del producto
-        $('#producto-nombre').text(selectedData.nombre);
-        $('#producto-codigo').text(selectedData.codigo);
-        $('#producto-unidad').text(selectedData.unidad);
-        $('#producto-familia').text(selectedData.familia);
-        $('#producto-subfamilia').text(selectedData.subfamilia);
-        $('#producto-servicio').text(selectedData.servicio);
-    });
+   function setLabels(d) {
+    // Si "servicio" es booleano, muéstralo como Sí/No. Ajusta si necesitas otro formato.
+    const servicioTxt = typeof d.servicio === 'boolean'
+      ? (d.servicio ? 'Sí' : 'No')
+      : (d.servicio || '');
 
-    // Función para limpiar los divs cuando se deselecciona el producto
-    $('.select2').on('select2:unselect', function (e) {
-        // Limpia los valores de los divs cuando se deselecciona el producto
-        $('#producto-nombre').text('');
-        $('#producto-codigo').text('');
-        $('#producto-unidad').text('');
-        $('#producto-familia').text('');
-        $('#producto-subfamilia').text('');
-        $('#producto-servicio').text('');
-    });
+    $('#producto-unidad').text(d.unidad || '—');
+    $('#producto-familia').text(d.familia || '—');
+    $('#producto-subfamilia').text(d.subfamilia || '—');
+    $('#producto-servicio').text(servicioTxt || '—');
+  }
+
+  function clearLabels() {
+    $('#producto-unidad, #producto-familia, #producto-subfamilia, #producto-servicio').text('—');
+  }
+
+  $sel.on('select2:select', function (e) {
+    const d = e.params.data || {};
+    setLabels(d);
+  });
+
+  $sel.on('select2:clear select2:unselect', function () {
+    clearLabels();
+  });
 });
 </script>
 {% endblock %}
