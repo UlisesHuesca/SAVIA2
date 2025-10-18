@@ -1542,7 +1542,7 @@ def pdf_reporte_calidad(request, reporte_id):
             c.setFillColor(PRUSSIAN_BLUE)
             c.drawString(40, y, "Evidencia fotográfica:")
             y -= 10
-            c.drawImage(reporte.image.path, 60, y - 120, width=120, height=120)
+            c.drawImage(reporte.image.path, 60, y - 200, width=200, height=200, preserveAspectRatio=True, mask='auto')
             y -= 140
         except Exception:
             c.setFillColor(black)

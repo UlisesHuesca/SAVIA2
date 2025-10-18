@@ -18,7 +18,7 @@ from compras.models import ArticuloComprado, Compra, TipoPrioridad
 from compras.forms import CompraForm
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf #convert_excel_matriz_compras
-from dashboard.models import Subproyecto
+from dashboard.models import Subproyecto, Producto_Calidad
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto
@@ -658,10 +658,20 @@ def compras_pagos(request, pk):
                     productos_criticos = productos_criticos
                     for articulo in productos_criticos:
                         producto = articulo.producto.producto.articulos.producto.producto
-                        requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                        try:
+                            pc = producto.producto_calidad  # <-- aquí puede lanzar DoesNotExist
+                            requerimientos = pc.requerimientos_calidad.all()
+                        except Producto_Calidad.DoesNotExist:
+                            pc = None
+                            requerimientos = None
+
+                        # Si no existe producto_calidad, simplemente seguimos con el siguiente
+                        if not pc:
+                            continue
+
 
                         # Si el producto tiene requerimientos, agregar una fila por cada uno
-                        if requerimientos.exists():
+                        if  requerimientos and requerimientos.exists():
                             for requerimiento in requerimientos:
                                 articulos_html += f"""
                                     <tr>
