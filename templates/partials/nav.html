@@ -205,12 +205,11 @@
                     {% endif %}
                         <h6 class="dropdown-header">Calidad</h6>
                         <div class="dropdown-divider"></div>
-                        <div>
-                            {% if usuario.tipo.nombre == "Superintendente_Calidad" %}
+                        {% if usuario.tipo.nombre == "Superintendente_Calidad" %}
                             <div>
-                            {% else %}
+                        {% else %}
                             <div class="d-none">
-                            {% endif %}
+                        {% endif %}
                             <a class="dropdown-item" href="{% url 'product_calidad' %}">Productos Críticos</a>    
                             </div>
                         <a class="dropdown-item" href="{% url 'pendientes_calidad' %}">Liberación
