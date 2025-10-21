@@ -100,6 +100,26 @@
                             </div>
                         </div>
                     </div>
+                    {% if usuario.tipo.nombre == "VIS_ADQ" %}
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                                <label style="color: #121212;" for="id_id">Distrito</label>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.pagada|add_class:"form-control"|append_attr:"placeholder= Status Pago"}}
+                                <label style="color: #121212;" for="id_id">pagada</label>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
                     <div class="col-2">
                         <!--onclick="regenerar()"-->
                         <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>

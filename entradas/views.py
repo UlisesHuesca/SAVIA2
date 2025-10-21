@@ -311,10 +311,12 @@ def articulos_entrada(request, pk):
         productos_criticos = articulos_entrada.filter(articulo_comprado__producto__producto__articulos__producto__producto__critico=True)
         for articulo in productos_criticos:
             producto = articulo.articulo_comprado.producto.producto.articulos.producto.producto
-            requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-
+            #requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+            pc = getattr(producto, "producto_calidad", None)  # o "productocalidad" si no usas related_name
+            
+            requerimientos = list(pc.requerimientos_calidad.all()) if pc else []
             # Tabla para productos criticos 
-            if requerimientos.exists():
+            if requerimientos:
                 for requerimiento in requerimientos:
                     articulos_html += f"""
                         <tr>
