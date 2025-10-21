@@ -129,15 +129,16 @@
                     <th scope="col">Distrito</th>
                     <th scope="col">RFC</th>
                     <th>Políticas</th>
-                    {% if usuario.tipo.proveedores_edicion %}
+                    
                     <th>Documentación</th>
-                    {% endif %}
+          
                     <th>Cuestionario DD</th>
                     {% if usuario.tipo.proveedores_edicion %}
                     <th scope="col">Edición</th>
-                    {% endif %}
+                  
                     <th scope="col">Direcciones</th>
                     <th>Autorizar</th>
+                    {% endif %}
                    
                 </tr>
             </thead>
@@ -151,7 +152,7 @@
                     <td>{{proveedor.distrito}}</th>
                     <td>{{proveedor.rfc}}</td>
                     <td>{% if proveedor.politicas_no_autorizadas %}<i class="fa-solid fa-hourglass-half text-warning fa-2x"></i>
-                        {% else %}<i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i></i>{% endif %}</th>
+                        {% else %}<i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i>{{proveedor.fecha_aceptacion_politica}} {% endif %}</th>
                     {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         {% if proveedor.documentos_completos %}
@@ -164,6 +165,14 @@
                             </a>
                         {% endif %}
                     </td>
+                    {% else %}
+                    <td>
+                        {% if proveedor.documentos_completos %}
+                           <i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i>
+                        {% else %}
+                           <i class="fa-duotone fa-solid fa-file-xmark fa-2x text-danger"></i>
+                        {% endif %}
+
                     {% endif %}
                     <td>
                        <i class="fa-duotone fa-solid text-danger fa-file-xmark fa-2x"></i>

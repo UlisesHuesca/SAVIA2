@@ -386,6 +386,8 @@ class Compra(models.Model):
     fecha_cierre = models.DateField(null=True, blank = True)
     comentario_cierre = models.TextField(blank=True, null=True)
     tipo_prioridad = models.ForeignKey(TipoPrioridad, on_delete=models.SET_NULL, null=True, blank=True)
+    local = models.BooleanField(default = True)
+
 
 
     @property

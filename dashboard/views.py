@@ -729,7 +729,7 @@ def autorizar_alta_proveedor(request, pk):
     proveedor_direcciones = Proveedor_direcciones.objects.filter(nombre=proveedor, estatus__nombre="PREALTA").first()
     
     if request.method =='POST':
-        print('si entra al ciclo')
+        #print('si entra al ciclo')
         status = Estatus_proveedor.objects.get(nombre="NUEVO")
         
         
