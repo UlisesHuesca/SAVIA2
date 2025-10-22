@@ -812,8 +812,17 @@ def reporte_calidad(request, pk):
     calidad_producto = Reporte_Calidad.objects.filter(articulo = articulo_entrada, completo = True)
     reporte_actual, created = Reporte_Calidad.objects.get_or_create(articulo = articulo_entrada, completo = False)
     sum_articulos_reportes = 0
-    requerimientos = articulo_entrada.articulo_comprado.producto.producto.articulos.producto.producto.producto_calidad.requerimientos_calidad.all()
+    producto = (
+        articulo_entrada.articulo_comprado.producto.producto
+        .articulos.producto.producto
+    )
 
+    # Si el related_name no es 'producto_calidad', usa 'productocalidad'
+    pc = getattr(producto, "producto_calidad", None)
+
+    # Trabaja con lista para evitar .exists() sobre None
+    requerimientos = list(pc.requerimientos_calidad.all()) if pc else []
+    
     for item in calidad_producto:
         sum_articulos_reportes = item.cantidad + sum_articulos_reportes
 
