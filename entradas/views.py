@@ -822,7 +822,7 @@ def reporte_calidad(request, pk):
 
     # Trabaja con lista para evitar .exists() sobre None
     requerimientos = list(pc.requerimientos_calidad.all()) if pc else []
-    
+
     for item in calidad_producto:
         sum_articulos_reportes = item.cantidad + sum_articulos_reportes
 
@@ -872,7 +872,7 @@ def reporte_calidad(request, pk):
                             #Lo estoy comentando porque según yo la cantidad ya está afectada en la cantidad en entró el sumarle sería afectarlo doble 
                             #Ya hice la verificación  no hay doble afectación a item, lo que haría falta es si el item proviene de un resurtimiento
                             if articulo_entrada.entrada.oc.req.orden.tipo.tipo == 'resurtimiento':
-                                inventario = Inventario.objects.get(producto = articulo_entrada.articulo_comprado.producto.producto.articulos.producto, distrito = articulo_entrada.articulo_comprado.oc.req.orden.distrito)
+                                inventario = Inventario.objects.get(producto = articulo_entrada.articulo_comprado.producto.producto.articulos.producto.producto, distrito = articulo_entrada.articulo_comprado.oc.req.orden.distrito)
                                 inventario.cantidad = inventario.cantidad + item.cantidad
                                 inventario.change_reason = 'Se modifica el inventario en view: reporte_calidad. Esto es una entrada para resurtimiento'
                                 inventario.cantidad_entradas = inventario.cantidad_entradas + item.cantidad
