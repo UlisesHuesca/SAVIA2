@@ -113,8 +113,13 @@
                                 <div class="d-none">
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
-                                    <a class="dropdown-item" href="{% url 'tiempo-proceso-autorizacion' %}">Tiempo Proceso Autorización</a>
+                                    
                                 </div>
+                            {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Subdirector_Administrativo" %}
+                                <div>
+                                    <a class="dropdown-item" href="{% url 'tiempo-proceso-autorizacion' %}">Tiempo Proceso Autorización</a>
+                                </div>   
+                            {% endif %}
                             {% if usuario.tipo.activos == True or usuario.tipo.nombre == "Admin"%}
                                 <div>
                             {% else %}
