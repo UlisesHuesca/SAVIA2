@@ -101,6 +101,9 @@
                                 <div class="d-none">
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'dashboard-product' %}">{% trans "Productos/Servicios" %}</a>
+                                </div>
+                            {% if usuario.tipo.nombre == "Contabilidad" %}
+                                <div>
                                     <a class="dropdown-item" href="{% url 'configuracion-contratos' %}">Contratos</a>
                                 </div>
                             {% if usuario.tipo.proyectos == True %}
