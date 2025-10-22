@@ -245,10 +245,13 @@ def articulos_restantes(request, pk):
     productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"), cancelado=False)
     #productos = ArticulosRequisitados.objects.filter(req = pk, cantidad_comprada__lt = F("cantidad"))
     requis = Requis.objects.get(id = pk)
+    # Leer parámetro ?next o usar HTTP_REFERER
+    url_origen = request.GET.get('next') or request.META.get('HTTP_REFERER') or '/'
 
     context = {
         'productos': productos,
         'requis': requis,
+        'url_origen': url_origen,
         }
 
     return render(request,'compras/articulos_restantes.html', context)

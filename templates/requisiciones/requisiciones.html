@@ -199,7 +199,7 @@
                     <th scope="col">RQ</th>
                     <th scope="col">Solicitud</th>
                     <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ"%}
+                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" %}
                     <th scope="col">Distrito</th>
                     {% endif %}
                     <th scope="col">Proyecto</th>
@@ -219,7 +219,7 @@
                     <th scope="row">{{req.folio}}</th>
                     <th scope="row">{{req.orden.folio}}</th>
                     <th class="d-none d-lg-table-cell">{{req.orden.staff.staff.staff.first_name}} {{req.orden.staff.staff.staff.last_name}}</th>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ"%}
+                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" %}
                     <td>{{req.orden.distrito.nombre}}</td>
                     {% endif %}
                     <td>{{req.orden.proyecto.nombre}}</td>
@@ -232,7 +232,7 @@
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-restantes' req.id %}">Productos</a>
+                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'articulos-restantes' req.id %}?next={{ request.path }}">Productos</a>
                             </li>    
                         </ul>
                     </td>
