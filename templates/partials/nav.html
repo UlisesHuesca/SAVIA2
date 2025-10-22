@@ -106,6 +106,7 @@
                                 <div>
                                     <a class="dropdown-item" href="{% url 'configuracion-contratos' %}">Contratos</a>
                                 </div>
+                            {% endif %}
                             {% if usuario.tipo.proyectos == True %}
                                 <div>
                             {% else %}
