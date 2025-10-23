@@ -1,5 +1,5 @@
 import django_filters
-from .models import Product
+from .models import Product, PriceRefChange
 from solicitudes.models import Proyecto, Subproyecto, St_Entrega, Contrato
 from compras.models import Proveedor
 from django_filters import CharFilter, DateTimeFilter, ModelChoiceFilter
@@ -71,3 +71,14 @@ class ProveedorFilter(django_filters.FilterSet):
     class Meta:
         model = Proveedor
         fields = ['razon_social','rfc','nombre_comercial']
+
+class PriceRefChangeFilter(django_filters.FilterSet):
+    product__nombre = CharFilter(field_name='product__nombre', lookup_expr='icontains')
+    product__codigo = CharFilter(field_name='product__codigo', lookup_expr='icontains')
+    solicitado_por = CharFilter(field_name='solicitado_por', lookup_expr='icontains')
+    start_date = DateTimeFilter(field_name = 'created_at', lookup_expr='gte')
+    end_date = DateTimeFilter(field_name='created_at',lookup_expr='lte')
+
+    class Meta:
+        model = PriceRefChange
+        fields = ['product__codigo','product__nombre','solicitado_en']

@@ -2676,7 +2676,7 @@ def generar_pdf(compra):
     c.setLineWidth(.3) #Grosor
     c.line(20,caja_proveedor-8,20,520) #Eje Y donde empieza, Eje X donde empieza, donde termina eje y,donde termina eje x (LINEA 1 contorno)
     c.line(585,caja_proveedor-8,585,520) #Linea 2 contorno
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vortec
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm) #Imagen vordcab
 
     c.setFillColor(white)
     c.setFont('Helvetica-Bold',11)

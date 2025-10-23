@@ -8,8 +8,9 @@ from django.urls import reverse
 from django.conf import settings
 from django.forms import inlineformset_factory
 from django.utils.http import urlencode
+from django.db import IntegrityError
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
-from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad
+from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia
 from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato
 from requisiciones.models import Salidas, ValeSalidas
@@ -17,7 +18,7 @@ from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
 from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form
 from user.decorators import perfil_seleccionado_required
-from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter
+from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from user.filters import ProfileFilter
 from proveedores_externos.views import extraer_tipo_contribuyente
 import csv
@@ -1574,30 +1575,117 @@ def product_update(request, pk):
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def precio_referencia(request, pk):
-#def product_update_modal(request, pk):
-
-    item = Product.objects.get(id=pk)
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    item = get_object_or_404(Product, id=pk)
     error_messages = {}
-    if request.method =='POST':
-        form = PrecioRef_Form(request.POST, request.FILES or None, instance=item, )
-        if form.is_valid():
-            form.save()
-            messages.success(request,f'Has actualizado correctamente el precio de referencia del producto {item.nombre}')
-            return redirect('dashboard-product')
-        else:
-            for field, errors in form.errors.items():
-                error_messages[field] = errors.as_text()
-    else:
-        form = PrecioRef_Form(instance=item)
 
+    if request.method == 'POST':
+        form = PrecioRef_Form(request.POST)
+        if form.is_valid():
+            # 1) Bloqueo en aplicación
+            hay_pendiente = PriceRefChange.objects.filter(
+                product=item,
+                autorizado__isnull=True
+            ).exists()
+
+            
+            if hay_pendiente:
+                messages.error(request,f"Ya existe una solicitud pendiente de autorización para el producto {item.nombre}.")
+                return redirect('dashboard-product')
+            cambio = form.save(commit=False)
+            cambio.product = item
+            cambio.solicitado_por = usuario
+            cambio.solicitado_en = datetime.now()
+            cambio.save()
+            messages.success(request, f"Se generó una solicitud de cambio para {item.nombre}.")
+            return redirect('dashboard-product')
+    else:
+        form = PrecioRef_Form()
 
     context = {
         'error_messages': error_messages,
         'form': form,
-        'item':item,
-        }
-    return render(request,'dashboard/precio_referencia.html', context)
+        'item': item,
+    }
+    return render(request, 'dashboard/precio_referencia.html', context)
 
+
+@login_required(login_url='user-login')
+def price_ref_pending(request):
+    """Vista principal para listar y filtrar solicitudes pendientes"""
+    cambios = PriceRefChange.objects.filter(autorizado__isnull=True).select_related('product', 'solicitado_por')
+    myfilter = PriceRefChangeFilter(request.GET, queryset=cambios)
+    cambios = myfilter.qs
+
+    context = {
+        'solicitudes': cambios,
+        'myfilter': myfilter,
+    }
+    return render(request, 'dashboard/price_ref_pending.html', context)
+
+@login_required(login_url='user-login')
+def price_ref_authorize(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    cambio = get_object_or_404(PriceRefChange, pk=pk)
+    producto = cambio.product
+
+    # Validación de estado previo
+    if cambio.autorizado is not None:
+        messages.error(request, "Esta solicitud ya fue procesada.")
+        return redirect('price_ref_pending')
+
+    # Actualiza el cambio
+    cambio.autorizado = True
+    cambio.autorizado_por = usuario
+    cambio.autorizado_en = datetime.now()
+    cambio.save()
+
+    # Actualiza el producto
+    producto.precioref = cambio.new_value
+    producto.porcentaje = cambio.new_porcentaje
+    #producto.actualizacion_precioref = cambio.created_at
+    producto.save()
+
+    messages.success(request, f'Solicitud de cambio de precio para {producto.nombre} autorizada correctamente.')
+    return redirect('price_ref_pending')
+
+def price_ref_reject(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    cambio = get_object_or_404(PriceRefChange, pk=pk)
+
+   
+    # Marcar como cancelada (reutilizamos autorizado=False)
+    cambio.autorizado = False
+    # Opcional: deja traza en motivo
+    nota_cancel = f"Cancelada por {usuario} el {datetime.now().strftime('%d/%m/%Y %H:%M')}"
+    cambio.motivo = (cambio.motivo or "")
+    cambio.motivo = (cambio.motivo + ("\n" if cambio.motivo else "") + nota_cancel).strip()
+    # Si quieres registrar quién “aprobó” el cambio de estado, reutiliza campos:
+    cambio.autorizado_por = usuario
+    cambio.autorizado_en = datetime.now()
+    cambio.save(update_fields=['autorizado', 'motivo', 'autorizado_por', 'autorizado_en'])
+
+    messages.success(request, "La solicitud fue cancelada correctamente.")
+    return redirect('price_ref_pending')
+
+@login_required(login_url='user-login')
+def price_ref_history(request):
+    # Solo historial: ya procesadas (no pendientes)
+    # Si usas Django < 5: usa autorizado__isnull=False
+    solicitudes = PriceRefChange.objects.filter(autorizado__isnull=False).select_related('product', 'solicitado_por', 'autorizado_por').order_by('-autorizado_en', '-solicitado_en')
+    print('solicitudes:', solicitudes)
+    # Con django-filter (opcional)
+    #myfilter = PriceRefHistoryFilter(request.GET, queryset=base) if 'PriceRefHistoryFilter' in globals() else None
+    #qs = (myfilter.qs if myfilter else base).order_by('-autorizado_en', '-solicitado_en')
+    context = {
+        'solicitudes': solicitudes,
+        #'myfilter': myfilter,
+    }
+
+    return render(request, 'dashboard/price_ref_history.html', context)
 
 
 def load_subfamilias(request):
@@ -2997,3 +3085,197 @@ def generar_pdf_dd(proveedor, request):
     c.save()
     buf.seek(0)
     return buf
+
+
+# -------- dibujar encabezado empresarial simple --------
+def draw_header(c, cambio):
+    width, height = letter
+    # barra título
+      #Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    #Encabezado
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+    caja_iso = 760
+    
+    #Elaborar caja
+    #c.line(caja_iso,500,caja_iso,720)
+    c.drawString(430,caja_iso,'Preparado por:')
+    c.drawString(410,caja_iso-10,'SUPT. DE ADQUISIONES')
+    c.drawString(530,caja_iso,'Aprobación')
+    c.drawString(525,caja_iso-10,'SUBD ADTVO')
+
+    c.drawString(110,caja_iso-20,'Número de documento')
+    c.drawString(112,caja_iso-30,'SEOV-ADQ-N4-03.01')
+    c.drawString(205,caja_iso-20,'Clasificación del documento')
+    c.drawString(235,caja_iso-30,'Controlado')
+    c.drawString(315,caja_iso-20,'Nivel del documento')
+    c.drawString(340,caja_iso-30, 'N5')
+    c.drawString(400,caja_iso-20,'Revisión No.')
+    c.drawString(412,caja_iso-30,'003')
+    c.drawString(450,caja_iso-20,'Fecha de Emisión')
+    c.drawString(460,caja_iso-30,'22/02/2023')
+    c.drawString(520,caja_iso-20,'Fecha de Revisión')
+    c.drawString(530,caja_iso-30,'22/02/2023')
+
+    caja_proveedor = caja_iso - 65
+    c.setFont('Helvetica',12)
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Orden de Compra
+    
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(280,755,'Tabla de Precios de Referencia')
+    c.drawInlineImage('static/images/logo_vordcab.jpg',20,730, 3 * cm, 1.5 * cm) #Imagen vortec
+
+    fecha = (cambio.autorizado_en.date() if cambio.autorizado is not None and cambio.autorizado_en
+             else cambio.solicitado_en.date() if cambio.solicitado_en
+             else date.today())
+    c.drawString(80, 705, fecha.strftime("%d/%m/%Y"))
+    
+    # ===== Badge de estatus (verde/rojo/blanco) =====
+    status_txt = "APROBADO" if cambio.autorizado is True else \
+                 "RECHAZADO" if cambio.autorizado is False else "PENDIENTE"
+    bg = colors.HexColor('#16a34a') if cambio.autorizado is True else \
+         colors.HexColor('#dc2626') if cambio.autorizado is False else colors.HexColor('#9ca3af')
+    x_badge, y_badge, w_badge, h_badge = (width-160, 705-4, 120, 18)
+    c.setFillColor(bg)
+    c.roundRect(x_badge, y_badge, w_badge, h_badge, 3, fill=True, stroke=0)
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold',10)
+    c.drawCentredString(x_badge + w_badge/2, y_badge + 4, status_txt)
+    c.setFillColor(black)
+
+# -------- dibujar la matriz (encabezados + 1 fila) --------
+def draw_matrix(c, x_left, y_top, producto):
+    styles = getSampleStyleSheet()
+    H = ParagraphStyle('H', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, alignment=1)
+    C = ParagraphStyle('C', parent=styles['Normal'], fontName='Helvetica', fontSize=8, alignment=1)
+    L = ParagraphStyle('L', parent=styles['Normal'], fontName='Helvetica', fontSize=8, leading=10, alignment=0)
+
+    # columnas
+    col_widths = [
+        1.1*cm,   # Item
+        7*cm,   # Descripción
+        2*cm,   # Servicio o Material
+        2.6*cm,   # Marcar si es un Activo
+        2*cm,   # Precio MXN
+        2*cm,   # Precio USD (No aplica)
+        2.5*cm,   # % tolerancia
+    ]
+
+    # encabezado (1 fila)
+    head = [[
+        Paragraph("Ítem", H),
+        Paragraph("Descripción del producto", H),
+        Paragraph("Servicio o<br/>Material", H),
+        Paragraph("Activo", H),
+        Paragraph("P.U. <br/> Pesos", H),
+        Paragraph("P.U. dólares", H),
+        Paragraph("Porcentaje de<br/>tolerancia", H),
+    ]]
+
+    t_head = Table(head, colWidths=col_widths, rowHeights=[1.3*cm])
+    t_head.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 0.6, colors.black),
+        ('BACKGROUND', (0,0), (-1,-1), colors.HexColor('#F5F5F5')),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+    ]))
+
+    w, h_head = t_head.wrapOn(c, 0, 0)
+    t_head.drawOn(c, x_left, y_top - h_head)
+
+    # datos del producto → UNA FILA
+    # Ajusta descripción como necesites; aquí uso nombre y un ejemplo de nota
+    descripcion = producto.product.nombre or ""
+    serv_mat = 'Servicio' if producto.product.servicio else "Material"  # si lo necesitas dinámico, cambia por tu lógica
+    activo_mark = "Sí" if producto.product.activo else "No"     # idem: si es activo o no
+    precio_mxn = f"${producto.new_value:,.2f}" if producto.new_value is not None else ""
+    precio_usd = "No aplica"
+    pct_tol = f"{producto.new_porcentaje:.2f} %" if producto.new_porcentaje is not None else ""
+
+    row = [[
+        Paragraph("1", C),
+        Paragraph(descripcion, L),
+        Paragraph(serv_mat, C),
+        Paragraph(activo_mark, C),
+        Paragraph(precio_mxn, C),
+        Paragraph(precio_usd, C),
+        Paragraph(pct_tol, C),
+    ]]
+
+    t_row = Table(row, colWidths=col_widths, rowHeights=[1.0*cm])
+    t_row.setStyle(TableStyle([
+        ('GRID', (0,0), (-1,-1), 0.5, colors.black),
+        ('VALIGN', (0,0), (-1,-1), 'MIDDLE'),
+        ('ALIGN', (0,0), (-1,-1), 'CENTER'),
+        ('LEFTPADDING', (1,0), (1,0), 4),
+        ('ALIGN', (1,0), (1,0), 'LEFT'),
+    ]))
+    w, h_row = t_row.wrapOn(c, 0, 0)
+    t_row.drawOn(c, x_left, y_top - h_head - 6 - h_row)
+
+    # devuelve la altura consumida, por si quieres continuar
+    return h_head + 6 + h_row
+
+def draw_signatures(c, cambio, y_bottom=140):
+    width, _ = letter
+    col_w = (width - 80) / 2.0
+    x1 = 40
+    x2 = 40 + col_w + 20
+    y = y_bottom
+
+    # línea + nombre solicitante
+    c.setStrokeColor(colors.black)
+    #c.line(x1, y, x1 + col_w, y)
+    c.setFont('Helvetica-Bold',9)
+    solicitante = f"{cambio.solicitado_por.staff.staff.first_name} {cambio.solicitado_por.staff.staff.last_name}"
+    c.drawCentredString(x1 + col_w/2, y - 12, solicitante)
+    c.setFont('Helvetica',8)
+    c.drawCentredString(x1 + col_w/2, y - 26, "Solicita")
+
+    fecha_sol = cambio.solicitado_en.strftime("%d/%m/%Y %H:%M")
+    c.drawCentredString(170, 100, fecha_sol)
+
+    # línea + nombre autorizador (puede estar vacío si está pendiente)
+    #c.line(x2, y, x2 + col_w, y)
+    c.setFont('Helvetica-Bold',9)
+    autorizador = f"{cambio.autorizado_por.staff.staff.first_name} {cambio.autorizado_por.staff.staff.last_name}"
+    c.drawCentredString(x2 + col_w/2, y - 12, autorizador or " ")
+    c.setFont('Helvetica',8)
+    c.drawCentredString(x2 + col_w/2, y - 26, "Autoriza")
+
+    fecha_aut = cambio.autorizado_en.strftime("%d/%m/%Y %H:%M")
+    c.drawCentredString(455, 100, fecha_aut)
+
+
+def pdf_precio_referencia(request, product_id):
+  
+    producto = PriceRefChange.objects.get(pk=product_id)
+    
+
+    # ------------- crear PDF -------------
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    width, height = letter
+
+    # encabezado simple
+    draw_header(c, producto)
+
+    # matriz
+    top_y = height - 120  # posición vertical de inicio de la tabla
+    draw_matrix(c, x_left=20, y_top=top_y, producto=producto)
+
+    
+    # Firmas (abajo)
+    draw_signatures(c, producto, y_bottom=140)
+
+    c.showPage()
+    c.save()
+    buf.seek(0)
+    filename = f"precio_ref_{producto.product.codigo or producto.id}.pdf"
+    return FileResponse(buf, as_attachment=False, filename=filename)

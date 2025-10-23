@@ -73,6 +73,23 @@ class Product(models.Model):
         except:
             url = ''
         return url
+    
+class PriceRefChange(models.Model):
+    product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='price_changes')
+    new_value = models.DecimalField(max_digits=14, decimal_places=2)
+    new_porcentaje = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    autorizado = models.BooleanField(null=True, blank=True)  # None=pending, True=autorizado, False=rechazado
+    solicitado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='solicitudes_precioref')
+    solicitado_en = models.DateTimeField(null=True)
+    autorizado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='autorizaciones_precioref')
+    autorizado_en = models.DateTimeField(null=True, blank=True)
+    motivo = models.CharField(max_length=255, null=True, blank=True)
+
+    class Meta:
+        ordering = ['-solicitado_en']
+
+    def __str__(self):
+        return f'{self.product}'
 
 #Este modelo fue enteramente creado para cumplimiento con la API
 class Producto_Calidad(models.Model):

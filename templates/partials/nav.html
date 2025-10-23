@@ -529,13 +529,10 @@
                                 </div>
                             {% if usuario.tipo.oc_gerencia or usuario.tipo.subdirector %}
                             <div>
-                            {% else %}
-                            <div class="d-none">
-                            {% endif %}
                                 <a class="dropdown-item" href="{% url 'viaticos-pendientes-autorizar2' %}">Autorización Viáticos
-                                  {% if conteo_viaticos_gerencia > 0 %}
-                                <span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span>
-                                {% endif %}
+                                    {% if conteo_viaticos_gerencia > 0 %}
+                                        <span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span>
+                                    {% endif %}
                                 </a>
                             </div>  
                             <div>
@@ -545,6 +542,13 @@
                                         {% endif %}
                                 </a>
                             </div>
+                            {% endif %}
+                             
+                            {% if usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Admin" %}
+                                 <a class="dropdown-item" href="{% url 'price_ref_pending' %}">Autorización Precios de Referencia</a>   
+                            {% endif %}
+
+
                             
                         <div class="dropdown-divider"></div>
                     </div>
@@ -591,13 +595,18 @@
                             <a class="dropdown-item" href="{% url 'matriz-pagos' %}">Matriz Pagos</a>
                             <a class="dropdown-item" href="{% url 'solicitudes-gasto' %}">Matriz Gastos</a>
                             </div>
-                            {% if usuario.tipo.calidad == True %}
+                        {% if usuario.tipo.calidad == True %}
                             <div>
-                            {% else %}
-                                <div class="d-none">
-                            {% endif %}
+                        {% else %}
+                            <div class="d-none">
+                        {% endif %}
                                 <a class="dropdown-item" href="{% url 'matriz-reportes-calidad' %}">Matriz Reportes Calidad</a>
-                                </div>
+                            </div>
+                        {% if usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Admin" %}
+                            <a class="dropdown-item" href="{% url 'price_ref_history' %}">Matriz de Precios de Referencia</a>
+                        {% endif %}
+                                
+                        
                     <div class="dropdown-divider"></div>
                     {% if usuario.tipo.historicos == False %}
                     <div class="d-none">

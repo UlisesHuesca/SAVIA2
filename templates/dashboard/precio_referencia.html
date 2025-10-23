@@ -10,13 +10,17 @@
 {% block content %}
 <hr>
 <hr>
+<h6>&nbsp;</h6>
 <div class="container">
     <div class="row mt-5">
         <div class="col-md-6 offset-md-3">
-            <div class="border bg-white p-3">
-                <h3>Actualizar Artículo</h3>
-                <hr>
+            <div class="card">
+                <div class="card-header">
+                    <h5>Solicitud de actualización de Precio de Referencia</h5>
+                </div>
+                
                 <form method="POST" id='ProductForm' enctype='multipart/form-data' data-subfamilias-url="{% url 'ajax_load_subfamilias' %}" novalidate>
+                <div class="card-body">
                     {% csrf_token %}
                     {% if error_messages %}
                             <div class="alert alert-danger" role="alert">
@@ -31,7 +35,7 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.precioref|add_class:"form-control"|append_attr:"placeholder=Precio Referencia"}}
+                            {{form.new_value|add_class:"form-control"|append_attr:"placeholder=Precio Referencia"}}
                             <label for="id_lugar_partida">Precio Referencia*</label>
                             </div>
                         </div>
@@ -40,14 +44,25 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-percent"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.porcentaje|add_class:"form-control"|append_attr:"placeholder=Equivalente decimal (Porcentaje)"}}
+                            {{form.new_porcentaje|add_class:"form-control"|append_attr:"placeholder=Equivalente decimal (Porcentaje)"}}
                             <label for="id_lugar_partida">Equivalente decimal (Porcentaje)*</label>
                             </div>
                         </div>
                     </div>
-                    <hr>
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-duotone fa-solid fa-message"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form.motivo|add_class:"form-control"|append_attr:"placeholder=Motivo"}}
+                            <label for="id_lugar_partida">Motivo</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer">
                     <a class="btn btn-outline-secondary" href="{% url 'dashboard-product' %}">Cancelar</a>
-                    <input id="submit-button" class="btn btn-outline-info" type='submit' value="Actualizar">
+                    <input id="submit-button" class="btn btn-outline-info" type='submit' value="Solicitar">
+                </div>
                 </form>
             </div>
         </div>
@@ -57,7 +72,7 @@
 <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
     <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
         <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
-        <p style="color: white; margin: 0;">Generando reporte, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+        <p style="color: white; margin: 0;">Generando solicitud de precio de referencia, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
     </div>
 </div>
 </body>

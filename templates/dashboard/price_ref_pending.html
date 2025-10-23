@@ -1,0 +1,94 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Autorización de Cambios de Precios de Referencia{% endblock %}
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<!-- filtros -->
+<!--<div class="col-sm-12 my-3">
+  <div class="card">
+    <div class="card-header"><h5>Filtro de Solicitudes</h5></div>
+    <div class="card-body">
+      <form method="GET" class="row">
+        <div class="col-lg-4">
+          <div class="form-floating mb-3">
+            {{ myfilter.form.solicitado_por|add_class:"form-control"|append_attr:"placeholder=Solicitado por" }}
+            <label>Solicitado por</label>
+          </div>
+        </div>
+        <div class="col-lg-3">
+          {% render_field myfilter.form.start_date type="date" class="form-control" %}
+          <label>Desde</label>
+        </div>
+        <div class="col-lg-3">
+          {% render_field myfilter.form.end_date type="date" class="form-control" %}
+          <label>Hasta</label>
+        </div>
+        <div class="col-auto">
+          <button class="btn btn-outline-success mt-3"><i class="fa-solid fa-magnifying-glass"></i></button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>-->
+
+<!-- tabla -->
+<div class="card mt-4">
+  <div class="card-header"><h5>Precios de Referencia Pendientes</h5></div>
+  <div class="card-body table-responsive">
+    <table class="table table-striped">
+      <thead>
+        <tr>
+          <th>Código</th>
+          <th>Producto</th>
+          <th>Precio Actual</th>
+          <th>Procentaje Actual</th>
+          <th>Propuesto</th>
+          <th>Porcentaje</th>
+          <th>Solicitado por</th>
+          <th>Fecha</th>
+          <th>Motivo</th>
+          <th>Acciones</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for solicitud in solicitudes %}
+        <tr>
+          <td>{{ solicitud.product.codigo}}</td>
+          <td>{{ solicitud.product.nombre }}</td>
+          <td>${{ solicitud.product.precioref }}</td>
+          <td>{% widthratio solicitud.product.porcentaje 1 100 %}%</td>
+          <td>${{ solicitud.new_value }}</td>
+          <td>{% widthratio solicitud.new_porcentaje 1 100 %}%</td>
+          <td>{{ solicitud.solicitado_por.staff.staff.first_name }} {{ solicitud.solicitado_por.staff.staff.last_name}}</td>
+          <td>{{ solicitud.solicitado_en|date:"d/m/Y H:i" }}</td>
+          <td>{{solicitud.motivo}}</td>
+          <td>
+            <a href="{% url 'price_ref_authorize' solicitud.id %}" class="btn btn-outline-success btn-sm">
+              <i class="fa-solid fa-check"></i>
+            </a>
+           
+            <a href="{% url 'price_ref_reject' solicitud.id %}" class="btn btn-outline-danger btn-sm">
+              <i class="fa-solid fa-xmark"></i>
+
+            </a>
+          </td>
+        </tr>
+        {% empty %}
+        <tr><td colspan="10" class="text-center">No hay solicitudes pendientes</td></tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+<!-- modal -->
+<div class="modal fade" id="dialog" tabindex="-1">
+  <div class="modal-dialog modal-lg" id="document"></div>
+</div>
+
+{% endblock %}

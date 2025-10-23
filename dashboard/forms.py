@@ -1,5 +1,5 @@
 from django import forms
-from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad, Producto_Calidad
+from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad, Producto_Calidad, PriceRefChange
 from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, DocumentosProveedor
 from user.models import Distrito
 from solicitudes.models import Proyecto, Subproyecto, Contrato
@@ -46,10 +46,23 @@ class RequerimientoCalidadForm(forms.ModelForm):
         fields = ['requerimiento','comentarios'] #,
 
 
+#class PrecioRef_Form(forms.ModelForm):
+#    class Meta:
+#        model = Product
+#        fields = ['precioref', 'porcentaje']
+
 class PrecioRef_Form(forms.ModelForm):
-    class Meta:
-        model = Product
-        fields = ['precioref', 'porcentaje']
+   class Meta:
+        model = PriceRefChange
+        fields = ['new_value', 'new_porcentaje', 'motivo']
+        labels = {
+            'new_value': 'Nuevo precio de referencia',
+            'new_porcentaje': 'Nuevo porcentaje',
+            'motivo': 'Motivo del cambio (opcional)',
+        }
+        widgets = {
+            'motivo': forms.Textarea(attrs={'rows': 2}),
+        }
 
 class ProveedoresForm(forms.ModelForm):
     class Meta:
