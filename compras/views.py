@@ -21,7 +21,7 @@ from tesoreria.models import Pago, Facturas
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import CompraFilter, ArticulosRequisitadosFilter,  ArticuloCompradoFilter, HistoricalArticuloCompradoFilter, HistoricalCompraFilter, ComparativoFilter
 from .models import ArticuloComprado, Compra, Proveedor_direcciones, Cond_pago, Uso_cfdi, Moneda, Comparativo, Item_Comparativo, Proveedor
-from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm
+from .forms import CompraForm, ArticuloCompradoForm, ArticulosRequisitadosForm, ComparativoForm, Item_ComparativoForm, Compra_ComentarioForm, UploadFileForm, Compra_ComentarioGerForm, RequisDevolucionForm
 from requisiciones.forms import Articulo_Cancelado_Form
 from requisiciones.filters import RequisFilter
 from tesoreria.forms import Facturas_Form
@@ -90,7 +90,7 @@ def requisiciones_autorizadas(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
     if perfil.tipo.compras == True:
-        requis = Requis.objects.filter(orden__distrito = perfil.distritos, autorizar=True, colocada=False, complete = True).order_by('-approved_at')
+        requis = Requis.objects.filter(orden__distrito = perfil.distritos, autorizar=True, colocada=False, complete = True, devuelta = False).order_by('-approved_at')
     else:
         requis = Requis.objects.filter(autorizar=True, colocada=False, complete =True)
     #requis = Requis.objects.filter(autorizar=True, colocada=False)
@@ -114,6 +114,32 @@ def requisiciones_autorizadas(request):
         }
 
     return render(request, 'compras/requisiciones_autorizadas.html',context)
+
+
+@perfil_seleccionado_required
+def requis_devolver(request, pk):
+    requis = get_object_or_404(Requis, pk=pk)
+    form = RequisDevolucionForm(request.POST, instance=requis)
+    if request.method == 'POST':
+        if 'btn_devolver' in request.POST: 
+            if form.is_valid():
+                obj = form.save(commit=False)
+                obj.devuelta = True
+                if not obj.fecha_devolucion:
+                    obj.fecha_devolucion = timezone.now().date()
+                obj.save()
+                messages.success(request, f"Requis #{requis.folio} devuelta.")
+            else:
+                messages.error(request, "Revisa el formulario de devolución.")
+            return redirect('requisicion-autorizada')
+    
+    context= {
+        'requis':requis,
+        'form':form,
+    }
+    
+    return render(request, 'compras/requis_devolver.html',context)
+
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required

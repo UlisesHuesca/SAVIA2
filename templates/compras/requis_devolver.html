@@ -1,0 +1,101 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}Devolver Requisición{% endblock %}
+
+{% block content %}
+<hr><hr>
+<div class="container">
+  <div class="row mt-5">
+    <div class="col-md-6 offset-md-3">
+      <div class="card">
+        <div class="card-header text-center">
+          <h3>Devolver Requisición</h3>
+        </div>
+
+        <form method="POST" id="RequisDevolverForm" novalidate>
+          <div class="card-body">
+            {% csrf_token %}
+
+            <!-- Encabezado con datos de la Requis -->
+            <div class="row my-2">
+              <div class="col-12">
+                <div class="alert alert-secondary" role="alert">
+                  <div class="d-flex flex-column gap-1">
+                    <div><strong>RQ:</strong> <span style="color:#121212">{{ requis.folio }}</span></div>
+                    <div>
+                      <strong>Solicitud (Orden):</strong>
+                      <span style="color:#121212">{% if requis.orden %}{{ requis.orden.folio }}{% else %}—{% endif %}</span>
+                    </div>
+                    <div>
+                      <strong>Autorizada:</strong>
+                      <span style="color:#121212">{{ requis.approved_at }} {{ requis.approved_at_time }}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Comentario devolución -->
+            <div class="col-12">
+              <div class="input-group mb-3">
+                <span class="input-group-text"><i class="fa-solid fa-comment-dots"></i></span>
+                <div class="form-floating form-floating-group flex-grow-1">
+                  {{ form.comentario_devolucion|add_class:"form-control"|append_attr:"placeholder= Motivo / indicaciones" }}
+                  <label style="color:#121212" for="id_comentario_devolucion">Comentario de devolución*</label>
+                </div>
+              </div>
+            </div>
+
+            {% if requis.devuelta %}
+              <div class="alert alert-warning mt-2">
+                <strong>Esta RQ ya fue devuelta.</strong>
+                {% if requis.fecha_devolucion %} Fecha: {{ requis.fecha_devolucion }}.{% endif %}
+                {% if requis.comentario_devolucion %} &nbsp;Comentario: <em>{{ requis.comentario_devolucion }}</em>{% endif %}
+              </div>
+            {% endif %}
+
+          </div> <!-- /card-body -->
+
+          <div class="card-footer text-muted text-center">
+            <a class="btn btn-outline-secondary" href="{% url 'requisicion-autorizada'  %}">Cancelar</a>
+            <input name= "btn_devolver" id="submit-button" class="btn btn-outline-warning" type="submit" value="Marcar como devuelta" >
+          </div>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Loading overlay -->
+<div id="loadingIndicator" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,.45); z-index:1000;">
+  <div style="position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); display:flex; align-items:center;">
+    <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width:90px; height:90px; border-radius:50%; margin-right:12px;">
+    <p style="color:#fff; margin:0;">Aplicando devolución, por favor espera...&nbsp;<i class="fa-solid fa-mug-hot"></i></p>
+  </div>
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<!-- Anti doble submit -->
+<script>
+const form = document.getElementById('RequisDevolverForm');
+  const btn  = document.getElementById('submit-button');
+
+  form.addEventListener('submit', function(e) {
+    e.preventDefault(); // Mantienes el control
+    document.getElementById('loadingIndicator').style.display = 'block';
+    btn.disabled = true;
+
+    // Inyecta el name/value del botón manualmente
+    let hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = 'btn_devolver';
+    hidden.value = btn.value || 'Marcar como devuelta';
+    form.appendChild(hidden);
+
+    setTimeout(() => form.submit(), 50);
+  });
+</script>
+{% endblock %}

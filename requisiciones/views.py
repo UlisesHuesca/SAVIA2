@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
@@ -41,7 +41,7 @@ from compras.models import Compra
 from .models import ArticulosRequisitados, Requis, Devolucion, Devolucion_Articulos, Tipo_Devolucion
 from .tasks import convert_entradas_to_xls_task, convert_salidas_to_xls_task
 from .filters import ArticulosparaSurtirFilter, SalidasFilter, EntradasFilter, DevolucionFilter, RequisFilter, RequisProductosFilter, HistoricalSalidasFilter, Historical_articulos_surtir_filter
-from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm
+from .forms import SalidasForm, ArticulosRequisitadosForm, ValeSalidasForm, ValeSalidasProyForm, RequisForm, Rechazo_Requi_Form, DevolucionArticulosForm, DevolucionForm, OrderComentarioForm
 #from compras.views import clear_task_id, verificar_estado
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -939,6 +939,48 @@ def requisicion_autorizacion(request):
         }
 
     return render(request, 'requisiciones/requisiciones_autorizacion.html',context)
+
+@perfil_seleccionado_required
+def requisiciones_devueltas(request):
+    """Matriz de Requis devueltas con opción de editar comentario de la Orden."""
+    pk = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk)
+
+    
+    qs = Requis.objects.filter(devuelta=True, orden__staff=usuario).select_related("orden", "orden__proyecto", "orden__subproyecto").order_by("-fecha_devolucion", "-approved_at")
+
+    # Paginación
+    p = Paginator(qs, 50)
+    requis_list = p.get_page(request.GET.get('page'))
+
+    # Form “base” para reusar markup (cada fila tendrá su propio form con CSRF)
+    order_form = OrderComentarioForm()
+
+    context = {
+        "perfil": usuario,
+        "requis_list": requis_list,
+        "order_form": order_form,
+    }
+
+    return render(request, "requisiciones/requisiciones_devueltas.html", context)
+
+@perfil_seleccionado_required
+def order_actualizar_comentario(request, req_id):
+    """Actualiza comentario de la Orden desde la matriz."""
+    requisicion = get_object_or_404(Requis, pk=req_id)
+    orden = Order.objects.get(id=requisicion.orden.id)
+    form = OrderComentarioForm(request.POST, instance=orden)
+    if form.is_valid():
+        form.save()
+        requisicion.devuelta = False  # Quitar marca de devuelta
+        requisicion.fecha_devolucion = timezone.now().date()
+        requisicion.save()
+        messages.success(request, f"Comentario de la Orden #{orden.folio} actualizado.")
+    else:
+        messages.error(request, "No se pudo actualizar el comentario de la Orden.")
+    # Regresar a la matriz (respetando página si viene en next)
+    return redirect('requisiciones-devueltas')
+
 
 @perfil_seleccionado_required
 def requisicion_creada_detalle(request, pk):

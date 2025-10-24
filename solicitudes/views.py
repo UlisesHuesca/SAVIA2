@@ -1669,7 +1669,25 @@ def autorizada_sol(request, pk):
             prod_inventario = Inventario.objects.get(id = producto.producto.id)
             ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
             #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
-            if prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
+            if order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True: #prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or 
+                ordensurtir.requisitar = True
+                ordensurtir.cantidad_requisitar = producto.cantidad
+                if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
+                    requi, created = Requis.objects.get_or_create(complete = True, orden = order)
+                    requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
+                    requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True)
+                    max_folio = Requis.objects.filter(orden__distrito=perfil.distritos, complete=True).aggregate(Max('folio'))['folio__max']
+                    requi.folio = max_folio + 1
+                    numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
+                    if productos.count() == numero_servicios: #No tengo claridad que es lo que pretendo contar acá
+                        order.requisitar=False
+                        order.requisitado = True
+                    ordensurtir.requisitar = False
+                    requi.save()
+                    requitem.save()
+                ordensurtir.save()
+                order.save()
+            elif prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
                 prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
                 prod_inventario.cantidad_apartada = prod_inventario.apartada
                 prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} Autorización de solicitudes cond:1'
@@ -1692,24 +1710,7 @@ def autorizada_sol(request, pk):
                 prod_inventario.save()
                 ordensurtir.save()
                 order.save()
-            elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
-                ordensurtir.requisitar = True
-                ordensurtir.cantidad_requisitar = producto.cantidad
-                if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
-                    requi, created = Requis.objects.get_or_create(complete = True, orden = order)
-                    requitem, created = ArticulosRequisitados.objects.get_or_create(req = requi, producto= ordensurtir, cantidad = producto.cantidad)
-                    requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True)
-                    max_folio = Requis.objects.filter(orden__distrito=perfil.distritos, complete=True).aggregate(Max('folio'))['folio__max']
-                    requi.folio = max_folio + 1
-                    numero_servicios = productos.filter(producto = producto.producto.producto.servicio).count()
-                    if productos.count() == numero_servicios: #No tengo claridad que es lo que pretendo contar acá
-                        order.requisitar=False
-                        order.requisitado = True
-                    ordensurtir.requisitar = False
-                    requi.save()
-                    requitem.save()
-                ordensurtir.save()
-                order.save()
+          
         order.autorizar = True
         order.approved_at = date.today()
         order.approved_at_time = datetime.now().time()

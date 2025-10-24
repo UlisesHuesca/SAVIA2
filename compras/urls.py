@@ -6,6 +6,7 @@ from django.conf.urls.static import static
 
 urlpatterns = [
     path('compras/requisiciones_autorizadas', views.requisiciones_autorizadas, name='requisicion-autorizada'), #Aqui dof
+    path('compras/requis/<int:pk>/devolver/', views.requis_devolver, name='requis_devolver'),
     path('compras/oc/<int:pk>/', views.oc_modal, name='oc'), #Aquí dof
     #path('reporte_compras', views.generar_reporte, name='reporte_compras'),
     path('verificar_estado/', views.verificar_estado, name='verificar_estado'),

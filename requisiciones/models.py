@@ -25,6 +25,10 @@ class Requis(models.Model):
     autorizar = models.BooleanField(null=True, default=None)
     approved_at = models.DateField(null=True)
     approved_at_time = models.TimeField(null=True)
+    #Fecha de devolución
+    devuelta = models.BooleanField(default=False)
+    fecha_devolucion = models.DateField(null=True, blank=True)
+    comentario_devolucion = models.TextField(null=True, blank=True)
 
     def __str__(self):
         return f'{self.get_folio} order {self.orden} req_id:{self.id} folio:{self.folio}'

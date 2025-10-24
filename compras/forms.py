@@ -1,7 +1,7 @@
 from django import forms
 from .models import Compra, ArticuloComprado, Comparativo, Item_Comparativo, Proveedor_direcciones, Proveedor
 from dashboard.models import Product, Inventario
-from requisiciones.models import ArticulosRequisitados
+from requisiciones.models import ArticulosRequisitados, Requis
 
 
 
@@ -14,7 +14,7 @@ class CompraForm(forms.ModelForm):
         model = Compra
         fields = ['proveedor','cond_de_pago','uso_del_cfdi','dias_de_credito','tesorero',
                   'monto_anticipo','dias_de_entrega','impuestos','costo_fletes', 'retencion','comentario_solicitud',
-                  'tesoreria_matriz','opciones_condiciones','moneda','tipo_de_cambio','logistica', 'referencia','comparativo_model']
+                  'opciones_condiciones','moneda','tipo_de_cambio','logistica', 'referencia','comparativo_model','local']
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -110,3 +110,11 @@ class Compra_ComentarioGerForm(forms.ModelForm):
     class Meta:
         model = Compra
         fields = ['comentario_gerencia']
+
+class RequisDevolucionForm(forms.ModelForm):
+    class Meta:
+        model = Requis
+        fields = ["comentario_devolucion"]
+        widgets = {
+            "comentario_devolucion": forms.Textarea(attrs={"rows":2}),
+        }

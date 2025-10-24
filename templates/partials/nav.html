@@ -229,18 +229,19 @@
                             
                         <div class="dropdown-divider"></div>
                     </div>
-                    {% if usuario.tipo.solicitudes == False %}
-                        <div class="d-none">
-                    {% else %}
-                        <div>
-                    {% endif %}
-                            <h6 class="dropdown-header">{% trans "Solicitudes" %}</h6>
+                    {% if usuario.tipo.solicitudes %}
+                       <h6 class="dropdown-header">{% trans "Solicitudes" %}</h6>
                             <div class="dropdown-divider"></div>
                                 <!--<a class="dropdown-item" href="{% url 'crear-plantilla' %}">Crear Plantilla</a>
                                 <a class="dropdown-item" href="{% url 'matriz-plantillas' %}">Matriz Plantillas</a>-->
                                 <a class="dropdown-item" href="{% url 'solicitud-product-selection' %}">{% trans "Crear Solicitud" %}</a>
                                 <a class="dropdown-item" href="{% url 'solicitud-matriz-productos' %}">{% trans "Solicitudes por producto" %}</a>
                                 <a class="dropdown-item" href="{% url 'solicitudes-pendientes' %}">{% trans "Matriz Solicitudes" %}</a>
+                                <a class="dropdown-item" href="{% url 'requisiciones-devueltas' %}">{% trans "Requisiciones devueltas" %}
+                                    {% if conteo_requis_devueltas > 0 %}
+                                    <span class="badge bg-danger">({{conteo_requis_devueltas}})</span>
+                                     {% endif %}
+                                </a>
                             <div class="dropdown-divider"></div>
                         <div>
                             <h6 class="dropdown-header">{% trans "Gastos y viáticos" %}</h6>
@@ -250,7 +251,10 @@
                                 <a class="dropdown-item" href="{% url 'solicitudes-viaticos' %}">{% trans "Matriz Viáticos" %}</a>
                             <div class="dropdown-divider"></div>
                         </div>
-                    </div>
+                  
+                    {% endif %}
+                     
+                    
                     <!--{% if usuario.tipo.requisiciones == False %}
                     <div class="d-none">
                     {% else %}

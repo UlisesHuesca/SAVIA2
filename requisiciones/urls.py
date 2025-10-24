@@ -43,4 +43,6 @@ urlpatterns = [
     path('verificar_estado_salidas/', views.verificar_estado_salidas, name='verificar_estado_salidas'),
     path('clear_task_id_salidas/', views.clear_task_id_salidas, name='clear_task_id_salidas'),
     path('salida_material/requisicion_pdf/<int:pk>/', views.render_requisicion_pdf_view, name='requisicion-pdf'),
+    path('requisiciones/requisiciones_devueltas/', views.requisiciones_devueltas, name='requisiciones-devueltas'),
+    path('requisiciones/requis/<int:req_id>/order/comentario/', views.order_actualizar_comentario, name='order-actualizar-comentario'),
     ]

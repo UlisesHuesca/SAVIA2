@@ -1,5 +1,6 @@
 from django import forms
 from requisiciones.models import Salidas, ArticulosRequisitados, ValeSalidas, Requis, Devolucion, Devolucion_Articulos
+from dashboard.models import Order
 from user.models import Profile
 
 class SalidasForm(forms.ModelForm):
@@ -58,4 +59,11 @@ class Rechazo_Requi_Form(forms.ModelForm):
     class Meta:
         model = Requis
         fields = ['comentario_rechazo']
+
+
+class OrderComentarioForm(forms.ModelForm):
+    class Meta:
+        model = Order
+        fields = ["comentario"]
+        widgets = {"comentario": forms.Textarea(attrs={"rows":2})}
 

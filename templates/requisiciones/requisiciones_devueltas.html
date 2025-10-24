@@ -1,0 +1,122 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Requisiciones devueltas{% endblock %}
+
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row">
+    <div class="col">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+<h6>&nbsp;</h6><h6>&nbsp;</h6><h6>&nbsp;</h6>
+
+<div class="row">
+  <div class="col-lg-10 offset-md-1">
+    <div class="card">
+      <div class="card-header d-flex justify-content-between align-items-center">
+        <h5 class="m-0">Matriz de Requis devueltas</h5>
+      </div>
+
+      <div class="card-body">
+        <div class="table-responsive-sm">
+          <table class="table bg-white table-striped align-middle">
+            <thead class="text-black" style="background-color:#F5F5F5;">
+              <tr>
+                <th scope="col">RQ</th>
+                <th scope="col">Solicitud</th>
+                <th class="d-none d-lg-table-cell">Solicitado por</th>
+                <th scope="col">Proyecto</th>
+                <th class="d-none d-lg-table-cell">Subproyecto</th>
+                <th class="d-none d-lg-table-cell">Operación</th>
+                <th scope="col">Fecha devolución</th>
+                <th scope="col">Comentario devolución</th>
+                <th scope="col" style="min-width:280px;">Comentario de la Orden</th>
+                <th scope="col">Acción</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for r in requis_list %}
+              <tr>
+                <td>{{ r.folio }}</td>
+                <td>{% if r.orden %}{{ r.orden.folio }}{% else %}-{% endif %}</td>
+                <td class="d-none d-lg-table-cell">
+                  {% if r.orden and r.orden.staff and r.orden.staff.staff and r.orden.staff.staff.staff %}
+                    {{ r.orden.staff.staff.staff.first_name }} {{ r.orden.staff.staff.staff.last_name }}
+                  {% else %}—{% endif %}
+                </td>
+                <td>{% if r.orden and r.orden.proyecto %}{{ r.orden.proyecto.nombre }}{% else %}—{% endif %}</td>
+                <td class="d-none d-lg-table-cell">{% if r.orden and r.orden.subproyecto %}{{ r.orden.subproyecto.nombre }}{% else %}—{% endif %}</td>
+                <td class="d-none d-lg-table-cell">{% if r.orden %}{{ r.orden.operacion }}{% else %}—{% endif %}</td>
+
+                <td>{{ r.fecha_devolucion|default:"-" }}</td>
+                <td style="max-width:360px; white-space:pre-wrap;">{{ r.comentario_devolucion|default:"" }}</td>
+
+                <td>
+                  {% if r.orden %}
+                    <form method="post" action="{% url 'order-actualizar-comentario' r.id %}">
+                      {% csrf_token %}
+                      <textarea name="comentario" rows="2" class="form-control">{% if r.orden.comentario %}{{ r.orden.comentario }}{% endif %}</textarea>
+                      <input type="hidden" name="next" value="{{ request.get_full_path|urlencode }}">
+                  {% else %}
+                    <em>Sin orden</em>
+                  {% endif %}
+                </td>
+                <td class="text-nowrap">
+                  {% if r.orden %}
+                      <button class="btn btn-primary btn-sm" type="submit">Guardar</button>
+                    </form>
+                  {% endif %}
+                </td>
+              </tr>
+              {% empty %}
+              <tr>
+                <td colspan="10" class="text-center">No hay requis devueltas.</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Paginación -->
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            Página {{ requis_list.number }} de {{ requis_list.paginator.num_pages }}
+          </div>
+          <div class="btn-group">
+            {% if requis_list.has_previous %}
+              <a class="btn btn-outline-secondary btn-sm" href="?page={{ requis_list.previous_page_number }}">«</a>
+            {% endif %}
+            {% if requis_list.has_next %}
+              <a class="btn btn-outline-secondary btn-sm" href="?page={{ requis_list.next_page_number }}">»</a>
+            {% endif %}
+          </div>
+        </div>
+
+      </div> <!-- /card-body -->
+    </div>
+  </div>
+</div>
+{% endblock %}

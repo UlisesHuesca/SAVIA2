@@ -145,7 +145,7 @@
                     {% else %}
                     <td></td>
                     {% endif %}
-                    {% if usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Admin" %}
+                    {% if usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Admin" %}
                     <td>
                         <a class="btn btn-outline-success" id="btnActualizar" type="button" href="{% url 'precio-referencia' item.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
                     </td>

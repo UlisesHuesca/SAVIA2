@@ -220,8 +220,8 @@
                 </div>
                 <div class="row ms-3 my-2">
                     <div class="form-check form-switch col-sm">
-                    <label for="form.tesoreria_local" class="form-check-label"><strong>Tesorería Matriz</strong></label>
-                        {{form.tesoreria_matriz|add_class:"form-check-input"}}
+                    <label for="form.local" class="form-check-label"><strong>Proveedor Local</strong></label>
+                        {{form.local|add_class:"form-check-input"}}
                     </div>
                 </div>
                 <div class="row ms-3 my-2">
@@ -420,7 +420,7 @@ function verificar() {
     var checkimpuesto = document.getElementById('SwitchImpuesto');
     var checkretencion = document.getElementById('SwitchRetencion');
     var checkflete = document.getElementById('SwitchFlete');
-    var checktesoreria = document.getElementById('id_tesoreria_matriz');
+    var checktesoreria = document.getElementById('id_local');
     var checkanticipo = document.getElementById('SwitchAnticipo');
     var opciones = document.getElementById('id_opciones_condiciones');
     var dias_credito = document.getElementById('id_dias_de_credito');

@@ -52,6 +52,7 @@ def contadores_processor(request):
     productosordenados = 0 #Se agregan solo para dejar de generar el error de que no existe la variable pero habrá que analizar si es la manera correcta
     productosordenadosres = 0 #Se agregan solo para dejar de generar el error de que no existe la variable pero habrá que analizar si es la manera correcta
     conteo_calidad = 0
+    conteo_requis_devueltas = 0
     conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
     solicitudes_generadas = Order.objects.filter(complete = True).count()
@@ -73,6 +74,7 @@ def contadores_processor(request):
         ordenes = Order.objects.filter(complete=True, autorizar = True)
 
         requis = Requis.objects.filter(complete = True)
+        conteo_requis_devueltas = requis.filter(devuelta = True, orden__staff=usuario).count()
         #conteo = requis.count()
         #if usuario.staff.staff.is_staff:
             #requis.
@@ -180,6 +182,7 @@ def contadores_processor(request):
                 articulo_comprado__oc__req__orden__distrito = usuario.distritos).count()
 
     return {
+    'conteo_requis_devueltas':conteo_requis_devueltas,
     'productosordenados':productosordenados,
     'productosordenadosres':productosordenadosres,
     'proveedores_altas':proveedores_altas,
