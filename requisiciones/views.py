@@ -2132,7 +2132,7 @@ def render_entrada_pdf(request, pk):
     buf = io.BytesIO()
     PAGE_W, PAGE_H = letter
 
-    BASE_MARGIN = 24      # ~0.33"
+    BASE_MARGIN = 10      # ~0.33"
     HEADER_H = 130        # alto reservado para encabezado
     FOOTER_H = 130         # alto reservado para pie
 
@@ -2202,7 +2202,7 @@ def render_entrada_pdf(request, pk):
 
         # ---- Pie y datos (fijo al final de cada página) ----
         # Altura base del pie
-        footer_top = 140  # deja 110 de margen infer + 30 de aire
+        footer_top = 130  # deja 110 de margen infer + 30 de aire
 
         # Barra azul "Proyecto/Subproyecto"
         canvas.setFillColor(prussian_blue)
