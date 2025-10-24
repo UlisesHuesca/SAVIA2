@@ -61,7 +61,7 @@ from reportlab.rl_config import defaultPageSize
 from reportlab.lib.styles import getSampleStyleSheet
 from reportlab.lib.enums import TA_CENTER
 from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, BaseDocTemplate, PageTemplate
 from bs4 import BeautifulSoup
 
 import urllib.request, urllib.parse, urllib.error
@@ -2122,182 +2122,162 @@ def render_salida_pdf(request, pk):
     return FileResponse(buf, as_attachment=True, filename='vale_salida_'+str(vale.folio) +'.pdf')
 
 def render_entrada_pdf(request, pk):
-    #Configuration of the PDF object
-    buf = io.BytesIO()
-    c = canvas.Canvas(buf, pagesize=portrait(letter))
-    #Here ends conf.
+    # =============== Datos de entrada ===============
     articulo = EntradaArticulo.objects.get(id=pk)
     vale = Entrada.objects.get(id = articulo.entrada.id)
     productos = EntradaArticulo.objects.filter(entrada= vale)
+
+    # =============== Configuration de PDF ================
+       # -------- Config de página y marcos --------
+    buf = io.BytesIO()
+    PAGE_W, PAGE_H = letter
+
+    BASE_MARGIN = 24      # ~0.33"
+    HEADER_H = 110        # alto reservado para encabezado
+    FOOTER_H = 90         # alto reservado para pie
+
+    # Marco (área de contenido) entre header y footer
+    frame = Frame(
+        x1=BASE_MARGIN,
+        y1=BASE_MARGIN + FOOTER_H,
+        width=PAGE_W - 2*BASE_MARGIN,
+        height=PAGE_H - (BASE_MARGIN + HEADER_H) - (BASE_MARGIN + FOOTER_H),
+        showBoundary=0,   # pon 1 para depurar el marco
+    )
+
+     # -------- Estilos/colores --------
     styles = getSampleStyleSheet()
-    styles['BodyText'].fontSize = 6
-
-    #Azul Vordcab
-    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    body6 = styles['BodyText']
+    body6.fontSize = 6
+    body6.leading = 8
+    prussian_blue = Color(0.0859375, 0.1953125, 0.30859375)
     rojo = Color(0.59375, 0.05859375, 0.05859375)
-    #Encabezado
-    c.setFillColor(black)
-    c.setLineWidth(.2)
-    c.setFont('Helvetica',8)
-    caja_iso = 770
-    #Elaborar caja
-    #c.line(caja_iso,500,caja_iso,720)
 
 
-    c.drawString(420,caja_iso,'Preparado por:')
-    c.drawString(420,caja_iso-10,'SUP. ADMON')
-    c.drawString(520,caja_iso,'Aprobación')
-    c.drawString(520,caja_iso-10,'SUB ADM')
-    #Segundo renglón
-    c.drawString(150,caja_iso-25,'Número de documento')
-    c.drawString(160,caja_iso-35,'SEOV-ALM-N4-01-02')
-    c.drawString(245,caja_iso-25,'Clasificación del documento')
-    c.drawString(275,caja_iso-35,'Controlado')
-    c.drawString(355,caja_iso-25,'Nivel del documento')
-    c.drawString(380,caja_iso-35, 'N5')
-    c.drawString(440,caja_iso-25,'Revisión No.')
-    c.drawString(452,caja_iso-35,'001')
-    c.drawString(510,caja_iso-25,'Fecha de Emisión')
-    c.drawString(525,caja_iso-35,'24-Oct.-18')
+    # =============== Encabezado/Pie de página ================
+    def draw_header_footer(canvas, doc):
+        canvas.saveState()  # <-- evita clipping/estados persistentes
+        # ---------- HEADER ----------
+        y_top = PAGE_H - BASE_MARGIN
+        # LOGO
+        canvas.drawInlineImage('static/images/logo_vordcab.jpg', 45, y_top-60, 3*cm, 1.5*cm)
+        caja_iso = y_top - 22
+        # Textos Superiores
+        canvas.setFillColor(black)
+        canvas.setLineWidth(.2)
+        canvas.setFont('Helvetica',8)
+
+        canvas.drawString(420,caja_iso,'Preparado por:')
+        canvas.drawString(420,caja_iso-10,'SUP. ADMON')
+        canvas.drawString(520,caja_iso,'Aprobación')
+        canvas.drawString(520,caja_iso-10,'SUB ADM')
+
+        canvas.drawString(150,caja_iso-25,'Número de documento')
+        canvas.drawString(160,caja_iso-35,'SEOV-ALM-N4-01-02')
+        canvas.drawString(245,caja_iso-25,'Clasificación del documento')
+        canvas.drawString(275,caja_iso-35,'Controlado')
+        canvas.drawString(355,caja_iso-25,'Nivel del documento')
+        canvas.drawString(380,caja_iso-35, 'N5')
+        canvas.drawString(440,caja_iso-25,'Revisión No.')
+        canvas.drawString(452,caja_iso-35,'001')
+        canvas.drawString(510,caja_iso-25,'Fecha de Emisión')
+        canvas.drawString(525,caja_iso-35,'24-Oct.-18')
 
 
-    c.drawString(510,caja_iso-50,'Folio: ')
-    #c.drawString(530,caja_iso-50, str(vale.folio))
-    c.drawString(510,caja_iso-60,'Fecha:')
-    c.drawString(540,caja_iso-60,vale.entrada_date.strftime("%d/%m/%Y"))
+        canvas.drawString(510,caja_iso-50,'Folio: ')
+        canvas.drawString(510,caja_iso-60,'Fecha:')
+        canvas.drawString(540,caja_iso-60, vale.entrada_date.strftime("%d/%m/%Y"))
 
-    c.setFillColor(rojo)
-    c.setFont('Helvetica-Bold',12)
-    c.drawString(540,caja_iso-50, str(vale.folio))
-    
+        canvas.setFillColor(rojo)
+        canvas.setFont('Helvetica-Bold',12)
+        canvas.drawString(540,caja_iso-50, str(vale.folio))
+        
+        #Barra azul título
+        canvas.setFillColor(prussian_blue)
+        canvas.rect(150, caja_iso - 15, 250, 20, fill=True, stroke=False)
+        canvas.setFillColor(white)
+        canvas.setLineWidth(.2)
+        canvas.setFont('Helvetica-Bold', 14)
+        canvas.drawCentredString(280, caja_iso - 10, 'Vale de Entrada Almacén')
 
-    c.setFont('Helvetica',12)
-    c.setFillColor(prussian_blue)
-    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(150,caja_iso-15,250,20, fill=True, stroke=False) #Barra azul superior Orden de Compra
+        # ---- Pie y datos (fijo al final de cada página) ----
+        # Altura base del pie
+        footer_top = 140  # deja 110 de margen infer + 30 de aire
 
-    c.setFillColor(white)
-    c.setLineWidth(.2)
-    c.setFont('Helvetica-Bold',14)
-    c.drawCentredString(280,caja_iso-10,'Vale de Entrada Almacén')
-    c.setLineWidth(.3) #Grosor
+        # Barra azul "Proyecto/Subproyecto"
+        canvas.setFillColor(prussian_blue)
+        canvas.rect(20, footer_top + 5, 340, 20, fill=True, stroke=False)
+        canvas.setFillColor(white)
+        canvas.setFont('Helvetica-Bold', 10)
+        canvas.drawCentredString(120, footer_top + 10, 'Proyecto')
+        canvas.drawCentredString(300, footer_top + 10, 'Subproyecto')
 
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,caja_iso-40, 3 * cm, 1.5 * cm) #Imagen vortec
-   
+        canvas.setFillColor(black)
+        canvas.setFont('Helvetica', 8)
+        canvas.drawCentredString(120, footer_top - 5, str(vale.oc.req.orden.proyecto))
+        canvas.drawCentredString(300, footer_top - 5, str(vale.oc.req.orden.subproyecto))
 
-    data =[]
-    productos_data = []
-    high = 670
-    data.append(['''Código''','''Producto''', '''Cantidad''', '''Unidad'''])
-    for producto in productos:
-        producto_nombre = Paragraph(producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre, styles["BodyText"])
-        data.append([producto.articulo_comprado.producto.producto.articulos.producto.producto.codigo, producto_nombre, producto.cantidad, producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad])
-        high = high - 18
-        #Lo vuelvo a captura de otra manera para el código QR
-        nombre_producto = producto.articulo_comprado.producto.producto.articulos.producto.producto.nombre
-        codigo_producto = producto.articulo_comprado.producto.producto.articulos.producto.producto.codigo
-        producto_info = {
-            'codigo': codigo_producto,
-            'nombre': nombre_producto,
-            'cantidad': str(producto.cantidad),
-            'unidad': str(producto.articulo_comprado.producto.producto.articulos.producto.producto.unidad),
-        }
-        productos_data.append(producto_info)
-    
-    
-    # Generar el código QR
-    #qr = qrcode.QRCode(
-    #    version=1,
-    #    error_correction=qrcode.constants.ERROR_CORRECT_L,
-    #    box_size=10,
-    #    border=4,
-    #)
-    #folio = str(vale.folio)
-    #fecha = vale.created_at.strftime("%d/%m/%Y")
-    #qr_info = {
-    #    'folio': folio,
-    #    'fecha': fecha,
-    #    'productos': productos_data
-    #}
-    #qr_data = json.dumps(qr_info)
-    #qr.add_data(qr_data)
-    #qr.make(fit=True)
+        # Recibió
+        canvas.setFont('Helvetica', 8)
+        canvas.drawCentredString(200, footer_top - 30, 'Recibió')
+        if vale.almacenista:
+            canvas.drawCentredString(
+                200, footer_top - 40,
+                f"{vale.almacenista.staff.staff.first_name} {vale.almacenista.staff.staff.last_name}"
+            )
 
-    # Generar la imagen del QR y guardarla
-    #qr_image = qr.make_image(fill_color="black", back_color="white")
-    #qr_image_path = '/tmp/temp_qr.png'
-    #qr_image.save(qr_image_path)
-    #c.drawInlineImage(qr_image_path, 500, 440, 100, 100)  # Reemplaza x, y, width, height con tus valores
+        # Proveedor
+        canvas.drawCentredString(425, footer_top - 30, 'Proveedor')
+        canvas.drawCentredString(425, footer_top - 40, vale.oc.proveedor.nombre.razon_social)
 
+        # Barra azul inferior (decorativa)
+        canvas.setFillColor(prussian_blue)
+        canvas.rect(20, footer_top - 65, 565, 20, fill=True, stroke=False)
 
-    c.setFillColor(black)
-    c.setFont('Helvetica',8)
-    proyecto_y = 485 if high > 500 else high - 30
+        # Número de página (opcional)
+        canvas.setFillColor(black)
+        canvas.setFont('Helvetica', 8)
+        canvas.drawRightString(PAGE_W-BASE_MARGIN, BASE_MARGIN-2, f"Página {doc.page}")
+        canvas.restoreState()  # <-- muy importante
 
-    c.setFillColor(prussian_blue)
-    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(20,proyecto_y - 5 ,350,20, fill=True, stroke=False) #3ra linea azul
-    c.setFillColor(black)
-    c.setFont('Helvetica',7)
+      # Doc con plantilla de página y marco fijo
+    doc = BaseDocTemplate(buf, pagesize=letter,
+                          leftMargin=BASE_MARGIN, rightMargin=BASE_MARGIN,
+                          topMargin=BASE_MARGIN, bottomMargin=BASE_MARGIN)
 
+    template = PageTemplate(id='vale_template', frames=[frame],
+                            onPage=draw_header_footer)
+    doc.addPageTemplates([template])
 
-    c.setFillColor(white)
-    c.setLineWidth(.1)
-    c.setFont('Helvetica-Bold',10)
-    c.drawCentredString(120,proyecto_y,'Proyecto')
-    c.drawCentredString(300,proyecto_y,'Subproyecto')
+    # -------- Tabla (se parte sola, con header repetido) --------
+    data = [['Código', 'Producto', 'Cantidad', 'Unidad']]
+    for p in productos:
+        nombre = p.articulo_comprado.producto.producto.articulos.producto.producto.nombre
+        codigo = p.articulo_comprado.producto.producto.articulos.producto.producto.codigo
+        unidad = p.articulo_comprado.producto.producto.articulos.producto.producto.unidad
+        data.append([codigo, Paragraph(nombre, body6), f"{p.cantidad:.2f}", str(unidad)])
 
-    c.setFont('Helvetica',8)
-    c.setFillColor(black)
-    c.drawCentredString(120,proyecto_y - 15, str(vale.oc.req.orden.proyecto))
-    c.drawCentredString(300,proyecto_y - 15, str(vale.oc.req.orden.subproyecto))
-
-
-    c.setFillColor(black)
-    c.setFont('Helvetica',8)
-    #c.line(135,high-200,215, high-200) #Linea de Autorizacion
-    c.drawCentredString(200,proyecto_y - 40,'Recibió')
-    if vale.almacenista:
-        c.drawCentredString(200,proyecto_y - 50, vale.almacenista.staff.staff.first_name +' '+vale.almacenista.staff.staff.last_name)
-
-    #c.line(370,proyecto_y - 20,430, proyecto_y - 20)
-    #c.drawCentredString(400,proyecto_y - 30,'Recibió')
-    #c.drawCentredString(400,proyecto_y - 40, vale.material_recibido_por.staff.staff.first_name +' '+vale.material_recibido_por.staff.staff.last_name)
-
-
-    #c.line(240, high-200, 310, high-200)
-    c.drawCentredString(425,proyecto_y - 40,'Proveedor')
-    c.drawCentredString(425,proyecto_y - 50, vale.oc.proveedor.nombre.razon_social)
-
-    c.setFont('Helvetica',10)
-    c.setFillColor(prussian_blue)
-    c.setFont('Helvetica', 9)
-    c.setFillColor(black)
-
-    c.setFillColor(prussian_blue)
-    c.rect(20,proyecto_y - 75,565,20, fill=True, stroke=False)
-    c.setFillColor(white)
-
-    width, height = letter
-    table = Table(data, colWidths=[2 * cm, 12.5 * cm, 2.5 * cm, 2.5 * cm,])
-    table.setStyle(TableStyle([ #estilos de la tabla
+    table = Table(data, colWidths=[2*cm, 12.5*cm, 2.5*cm, 2.5*cm], repeatRows=1)
+    table.setStyle(TableStyle([
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
         ('VALIGN',(0,0),(-1,-1),'MIDDLE'),
-        #ENCABEZADO
-        ('TEXTCOLOR',(0,0),(-1,0), white),
-        ('FONTSIZE',(0,0),(-1,0), 10),
         ('BACKGROUND',(0,0),(-1,0), prussian_blue),
-        #CUERPO
+        ('TEXTCOLOR',(0,0),(-1,0), white),
+        ('FONTNAME',(0,0),(-1,0),'Helvetica-Bold'),
+        ('FONTSIZE',(0,0),(-1,0),10),
         ('TEXTCOLOR',(0,1),(-1,-1), colors.black),
-        ('FONTSIZE',(0,1),(-1,-1), 6),
-        ]))
-    table.wrapOn(c, width, height)
-    table.drawOn(c, 20, high)
-    c.save()
-    c.showPage()
+        ('FONTSIZE',(0,1),(-1,-1),6),
+        ('LEADING',(0,1),(-1,-1),8),
+    ]))
+
+    # Construir (el marco se encarga del salto de página)
+    doc.build([table])
+
     buf.seek(0)
-    return FileResponse(buf, as_attachment=True, filename='vale_entrada_'+str(vale.folio) +'.pdf')
+    return FileResponse(buf, as_attachment=True, filename=f"vale_entrada_{vale.folio}.pdf")
+
+    
 
 def convert_excel_matriz_requis(requis):
       #print('si entra a la función')
