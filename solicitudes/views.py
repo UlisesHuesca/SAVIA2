@@ -1669,7 +1669,7 @@ def autorizada_sol(request, pk):
             prod_inventario = Inventario.objects.get(id = producto.producto.id)
             ordensurtir , created = ArticulosparaSurtir.objects.get_or_create(articulos = producto)
             #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
-            if order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True or producto.producto.producto.activo == True: #prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or 
+            if order.tipo.tipo == "resurtimiento" or  producto.producto.producto.servicio == True: # or  producto.producto.producto.activo == True: se comenta para crear la creación de requisiciones automáticas de activos #prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0 or 
                 ordensurtir.requisitar = True
                 ordensurtir.cantidad_requisitar = producto.cantidad
                 if producto.producto.producto.servicio == True or producto.producto.producto.activo == True:
@@ -1687,17 +1687,7 @@ def autorizada_sol(request, pk):
                     requitem.save()
                 ordensurtir.save()
                 order.save()
-            elif prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
-                prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
-                prod_inventario.cantidad_apartada = prod_inventario.apartada
-                prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} Autorización de solicitudes cond:1'
-                ordensurtir.cantidad = producto.cantidad
-                ordensurtir.precio = prod_inventario.price
-                ordensurtir.surtir = True
-                ordensurtir.requisitar = False
-                ordensurtir.save()
-                prod_inventario.save()
-            elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False and producto.producto.producto.activo == False: #si la cantidad solicitada es mayor que la cantidad en inventario 
+            elif producto.cantidad >= prod_inventario.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal" and producto.producto.producto.servicio == False: #and producto.producto.producto.activo == False: #si la cantidad solicitada es mayor que la cantidad en inventario 
                 ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
                 ordensurtir.precio = prod_inventario.price
                 ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
@@ -1710,6 +1700,17 @@ def autorizada_sol(request, pk):
                 prod_inventario.save()
                 ordensurtir.save()
                 order.save()
+            elif prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
+                prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
+                prod_inventario.cantidad_apartada = prod_inventario.apartada
+                prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} Autorización de solicitudes cond:1'
+                ordensurtir.cantidad = producto.cantidad
+                ordensurtir.precio = prod_inventario.price
+                ordensurtir.surtir = True
+                ordensurtir.requisitar = False
+                ordensurtir.save()
+                prod_inventario.save()
+            
           
         order.autorizar = True
         order.approved_at = date.today()
