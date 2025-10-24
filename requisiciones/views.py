@@ -2133,8 +2133,8 @@ def render_entrada_pdf(request, pk):
     PAGE_W, PAGE_H = letter
 
     BASE_MARGIN = 10      # ~0.33"
-    HEADER_H = 130        # alto reservado para encabezado
-    FOOTER_H = 130         # alto reservado para pie
+    HEADER_H = 90        # alto reservado para encabezado
+    FOOTER_H = 140         # alto reservado para pie
 
     # Marco (área de contenido) entre header y footer
     frame = Frame(
