@@ -67,8 +67,8 @@ class EstadoSerializer(serializers.ModelSerializer):
 class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
-        fields = ['id','razon_social','rfc']
-        
+        fields = '__all__'
+
 
 class BancoSerializer(serializers.ModelSerializer):
     class Meta:
