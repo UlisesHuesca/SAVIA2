@@ -182,7 +182,7 @@ def CompraAPI(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication,TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def proveedor_direcciones_api(request):
+def proveedor_direccion_api(request):
     #registra el acceso a la api
     #print(f"Usuario autenticado: {request.user}")
     user = request.user
