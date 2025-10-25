@@ -68,6 +68,7 @@ class ProveedorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Proveedor
         fields = ['id','razon_social','rfc']
+        
 
 class BancoSerializer(serializers.ModelSerializer):
     class Meta:
@@ -80,11 +81,11 @@ class MonedaSerializer(serializers.ModelSerializer):
         fields = ['id','nombre']
 
 class ProveedorDireccionesSerializer(serializers.ModelSerializer):
-    nombre = ProveedorSerializer(read_only=True)
-    distrito = DistritoSerializer(read_only=True)
-    estado = EstadoSerializer(read_only=True)
-    estatus = EstatusSerializer(read_only = True)
-    banco = BancoSerializer(read_only= True)
+    #nombre = ProveedorSerializer(read_only=True)
+    #distrito = DistritoSerializer(read_only=True)
+    #estado = EstadoSerializer(read_only=True)
+    #estatus = EstatusSerializer(read_only = True)
+    #banco = BancoSerializer(read_only= True)
 
     class Meta:
         model = Proveedor_direcciones

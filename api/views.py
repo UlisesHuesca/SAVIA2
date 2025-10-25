@@ -5,10 +5,11 @@ from rest_framework import generics
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
 from dashboard.models import Inventario, Order
-from compras.models import Compra, Proveedor_direcciones, Moneda
+from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor
 from solicitudes.models import Proyecto, Subproyecto
 from user.models import Profile 
 from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer, ProfileSerializer
+from .serializers import ProveedorSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
 import requests
@@ -181,7 +182,7 @@ def CompraAPI(request):
 @api_view(['GET'])
 @authentication_classes([SessionAuthentication,TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def proveedores_api(request):
+def proveedor_direcciones_api(request):
     #registra el acceso a la api
     #print(f"Usuario autenticado: {request.user}")
     user = request.user
@@ -203,6 +204,34 @@ def proveedores_api(request):
     except EmptyPage:
         proveedores = []
     serialized_proveedores = ProveedorDireccionesSerializer(proveedores, many=True)
+        
+    return Response(serialized_proveedores.data)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def proveedor_api(request):
+    #registra el acceso a la api
+    #print(f"Usuario autenticado: {request.user}")
+    user = request.user
+    ip_address = request.META.get('REMOTE_ADDR')
+    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+    
+    proveedores = Proveedor.objects.filter(completo = True)
+    page = request.query_params.get('page', 1)
+    per_page = request.query_params.get('per_page', 20)
+    #
+    ordering = request.query_params.get('ordering')
+
+    if ordering:
+        proveedores = Proveedor.order_by(ordering)
+        
+    paginator = Paginator(proveedores, per_page=per_page)
+    try: 
+        proveedores = paginator.page(number=page)
+    except EmptyPage:
+        proveedores = []
+    serialized_proveedores = ProveedorSerializer(proveedores, many=True)
         
     return Response(serialized_proveedores.data)
 
