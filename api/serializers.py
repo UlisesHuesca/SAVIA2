@@ -91,8 +91,8 @@ class ProveedorDireccionesSerializer(serializers.ModelSerializer):
         fields = ['id','distrito','nombre','domicilio','telefono','estado','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
 class CompraSerializer(serializers.ModelSerializer):
-    proveedor = ProveedorDireccionesSerializer(read_only=True)
-    req = RequisicionSerializer(read_only=True)
+    #proveedor = ProveedorDireccionesSerializer(read_only=True)
+    #req = RequisicionSerializer(read_only=True)
     descargar = serializers.SerializerMethodField()
 
     class Meta:
