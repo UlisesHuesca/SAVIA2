@@ -245,7 +245,7 @@ def distritos_api(request):
     ip_address = request.META.get('REMOTE_ADDR')
     logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
     
-    distritos = Distrito.objects.filter(completo = True)
+    distritos = Distrito.objects.filter(status = True)
     page = request.query_params.get('page', 1)
     per_page = request.query_params.get('per_page', 20)
     #
