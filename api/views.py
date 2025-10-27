@@ -176,24 +176,24 @@ def requisiciones_api(request):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def CompraAPI(request):
-    user = request.user
-    ip_address = request.META.get('REMOTE_ADDR')
-    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+    #user = request.user
+    #ip_address = request.META.get('REMOTE_ADDR')
+    #logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
 
     compras = Compra.objects.filter(complete = True)
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        compras = compras.order_by(ordering)
+    #if ordering:
+    #    compras = compras.order_by(ordering)
         
-    paginator = Paginator(compras, per_page=per_page)
-    try: 
-        compras = paginator.page(number=page)
-    except EmptyPage:
-        compras = []
+    #paginator = Paginator(compras, per_page=per_page)
+    #try: 
+    #    compras = paginator.page(number=page)
+    #except EmptyPage:
+    #    compras = []
     serialized_compras = CompraSerializer(compras, many=True)
         
     return Response(serialized_compras.data)
