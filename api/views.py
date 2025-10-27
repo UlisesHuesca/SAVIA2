@@ -51,22 +51,22 @@ client = OpenAI(
 @permission_classes([IsAuthenticated])
 def monedas_api(request):
     monedas = Moneda.objects.all()
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        monedas = monedas.order_by(ordering)
+    #if ordering:
+    #    monedas = monedas.order_by(ordering)
         
     
     serialized_monedas = MonedaSerializer(monedas, many=True)
 
-    paginator = Paginator(monedas, per_page=per_page)
-    try: 
-        monedas = paginator.page(number=page)
-    except EmptyPage:
-        monedas = []
+    #paginator = Paginator(monedas, per_page=per_page)
+    #try: 
+    #    monedas = paginator.page(number=page)
+    #except EmptyPage:
+    #    monedas = []
         
     return Response(serialized_monedas.data)
 
@@ -76,22 +76,22 @@ def monedas_api(request):
 @permission_classes([IsAuthenticated])
 def profiles_api(request):
     profiles = Profile.objects.all()
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        profiles = profiles.order_by(ordering)
+    #if ordering:
+    #    profiles = profiles.order_by(ordering)
         
     
     serialized_profiles = ProfileSerializer(profiles, many=True)
 
-    paginator = Paginator(profiles, per_page=per_page)
-    try: 
-        profiles = paginator.page(number=page)
-    except EmptyPage:
-        profiles = []
+    #paginator = Paginator(profiles, per_page=per_page)
+    #try: 
+    #    profiles = paginator.page(number=page)
+    #except EmptyPage:
+    #    profiles = []
         
     return Response(serialized_profiles.data)
 
@@ -101,22 +101,22 @@ def profiles_api(request):
 @permission_classes([IsAuthenticated])
 def proyectos_api(request):
     proyectos = Proyecto.objects.filter(activo = True)
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        proyectos = Proyecto.order_by(ordering)
+    #if ordering:
+    #    proyectos = Proyecto.order_by(ordering)
         
     
     serialized_proyectos = ProyectoSerializer(proyectos, many=True)
 
-    paginator = Paginator(proyectos, per_page=per_page)
-    try: 
-        proyectos = paginator.page(number=page)
-    except EmptyPage:
-        proyectos = []
+    #paginator = Paginator(proyectos, per_page=per_page)
+    #try: 
+    #    proyectos = paginator.page(number=page)
+    #except EmptyPage:
+    #    proyectos = []
         
     return Response(serialized_proyectos.data)
 
@@ -125,22 +125,22 @@ def proyectos_api(request):
 @permission_classes([IsAuthenticated])
 def subproyectos_api(request):
     subproyectos = Subproyecto.objects.filter(activo = True)
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        subproyectos = Subproyecto.order_by(ordering)
+    #if ordering:
+    #    subproyectos = Subproyecto.order_by(ordering)
         
     
     serialized_subproyectos = SubProyectoSerializer(subproyectos, many=True)
 
-    paginator = Paginator(subproyectos, per_page=per_page)
-    try: 
-        subproyectos = paginator.page(number=page)
-    except EmptyPage:
-        subproyectos = []
+    #paginator = Paginator(subproyectos, per_page=per_page)
+    #try: 
+    #    subproyectos = paginator.page(number=page)
+    #except EmptyPage:
+    #    subproyectos = []
         
     return Response(serialized_subproyectos.data)
 
@@ -205,24 +205,24 @@ def CompraAPI(request):
 def proveedor_direccion_api(request):
     #registra el acceso a la api
     #print(f"Usuario autenticado: {request.user}")
-    user = request.user
-    ip_address = request.META.get('REMOTE_ADDR')
-    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+    #user = request.user
+    #ip_address = request.META.get('REMOTE_ADDR')
+    #logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
     
     proveedores = Proveedor_direcciones.objects.filter(completo = True)
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        proveedores = Proveedor_direcciones.order_by(ordering)
+    #if ordering:
+    #    proveedores = Proveedor_direcciones.order_by(ordering)
         
-    paginator = Paginator(proveedores, per_page=per_page)
-    try: 
-        proveedores = paginator.page(number=page)
-    except EmptyPage:
-        proveedores = []
+    #paginator = Paginator(proveedores, per_page=per_page)
+    #try: 
+    #    proveedores = paginator.page(number=page)
+    #except EmptyPage:
+    #    proveedores = []
     serialized_proveedores = ProveedorDireccionesSerializer(proveedores, many=True)
         
     return Response(serialized_proveedores.data)
@@ -233,24 +233,24 @@ def proveedor_direccion_api(request):
 def proveedor_api(request):
     #registra el acceso a la api
     #print(f"Usuario autenticado: {request.user}")
-    user = request.user
-    ip_address = request.META.get('REMOTE_ADDR')
-    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+    #user = request.user
+    #ip_address = request.META.get('REMOTE_ADDR')
+    #logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
     
     proveedores = Proveedor.objects.filter(completo = True)
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        proveedores = Proveedor.order_by(ordering)
+    #if ordering:
+    #    proveedores = Proveedor.order_by(ordering)
         
-    paginator = Paginator(proveedores, per_page=per_page)
-    try: 
-        proveedores = paginator.page(number=page)
-    except EmptyPage:
-        proveedores = []
+    #paginator = Paginator(proveedores, per_page=per_page)
+    #try: 
+    #    proveedores = paginator.page(number=page)
+    #except EmptyPage:
+    #    proveedores = []
     serialized_proveedores = ProveedorSerializer(proveedores, many=True)
         
     return Response(serialized_proveedores.data)
@@ -261,24 +261,24 @@ def proveedor_api(request):
 def distritos_api(request):
     #registra el acceso a la api
     #print(f"Usuario autenticado: {request.user}")
-    user = request.user
-    ip_address = request.META.get('REMOTE_ADDR')
-    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+    #user = request.user
+    #ip_address = request.META.get('REMOTE_ADDR')
+    #logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
     
     distritos = Distrito.objects.filter(status = True)
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
     #
-    ordering = request.query_params.get('ordering')
+    #ordering = request.query_params.get('ordering')
 
-    if ordering:
-        distritos = Distrito.order_by(ordering)
+    #if ordering:
+    #    distritos = Distrito.order_by(ordering)
         
-    paginator = Paginator(distritos, per_page=per_page)
-    try: 
-        distritos = paginator.page(number=page)
-    except EmptyPage:
-        distritos = []
+    #paginator = Paginator(distritos, per_page=per_page)
+    #try: 
+    #    distritos = paginator.page(number=page)
+    #except EmptyPage:
+    #    distritos = []
     serialized_distritos = DistritoSerializer(distritos, many=True)
         
     return Response(serialized_distritos.data)
