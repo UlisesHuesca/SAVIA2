@@ -41,7 +41,7 @@ class DistritoSerializer(serializers.ModelSerializer):
         fields = ['id','nombre']
 
 class OrdenSerializer(serializers.ModelSerializer):
-    distrito = DistritoSerializer(read_only = True)
+    #distrito = DistritoSerializer(read_only = True)
 
     class Meta:
         model = Order
