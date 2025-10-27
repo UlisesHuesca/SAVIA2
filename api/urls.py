@@ -6,6 +6,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 urlpatterns = [
     path('inventario_api', views.getData, name='inventario-api'),
+    path('solicitudes_api', views.solicitudes_api, name ='solicitudes-api'),
     path('requisiciones_api', views.requisiciones_api, name ='requisiciones-api'),
     path('compras_api', views.CompraAPI, name ='compras-api'),
     path('proveedor_direccion_api', views.proveedor_direccion_api, name="proveedor-direccion-api"),
