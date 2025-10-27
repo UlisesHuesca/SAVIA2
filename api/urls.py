@@ -12,6 +12,7 @@ urlpatterns = [
     path('proyectos', views.proyectos_api, name="proyectos"),
     path('subproyectos', views.proyectos_api, name="subproyectos"),
     path('monedas', views.monedas_api, name="monedas"),
+    path('distritos', views.distritos_api, name="distritos"),
     path('profiles', views.profiles_api, name="profiles"),
     path('api-token-auth/', obtain_auth_token, name='api_token_auth'),
     path('perfiles_rh/', views.obtener_perfiles, name='perfiles_rh'),

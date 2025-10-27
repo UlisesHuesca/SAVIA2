@@ -7,7 +7,7 @@ from rest_framework.permissions import IsAuthenticated
 from dashboard.models import Inventario, Order
 from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor
 from solicitudes.models import Proyecto, Subproyecto
-from user.models import Profile 
+from user.models import Profile, Distrito
 from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer, ProfileSerializer
 from .serializers import ProveedorSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
@@ -234,6 +234,36 @@ def proveedor_api(request):
     serialized_proveedores = ProveedorSerializer(proveedores, many=True)
         
     return Response(serialized_proveedores.data)
+
+@api_view(['GET'])
+@authentication_classes([SessionAuthentication,TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def distritos_api(request):
+    #registra el acceso a la api
+    #print(f"Usuario autenticado: {request.user}")
+    user = request.user
+    ip_address = request.META.get('REMOTE_ADDR')
+    logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+    
+    distritos = Distrito.objects.filter(completo = True)
+    page = request.query_params.get('page', 1)
+    per_page = request.query_params.get('per_page', 20)
+    #
+    ordering = request.query_params.get('ordering')
+
+    if ordering:
+        distritos = Distrito.order_by(ordering)
+        
+    paginator = Paginator(distritos, per_page=per_page)
+    try: 
+        distritos = paginator.page(number=page)
+    except EmptyPage:
+        distritos = []
+    serialized_distritos = ProveedorSerializer(distritos, many=True)
+        
+    return Response(serialized_distritos.data)
+
+
 
 #url = 'https://vordcab.cloud/apiapp/perfiles/'
 #token = 'defa1b040b2e8acf4d9ab20127e87d820eb913b9'
