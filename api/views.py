@@ -8,7 +8,7 @@ from dashboard.models import Inventario, Order
 from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor
 from solicitudes.models import Proyecto, Subproyecto
 from user.models import Profile, Distrito
-from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer, ProfileSerializer
+from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer, ProfileSerializer, DistritoSerializer
 from .serializers import ProveedorSerializer
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.http import JsonResponse
@@ -259,7 +259,7 @@ def distritos_api(request):
         distritos = paginator.page(number=page)
     except EmptyPage:
         distritos = []
-    serialized_distritos = ProveedorSerializer(distritos, many=True)
+    serialized_distritos = DistritoSerializer(distritos, many=True)
         
     return Response(serialized_distritos.data)
 
