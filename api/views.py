@@ -1,4 +1,6 @@
-from django.shortcuts import render
+from django.shortcuts import render,  redirect
+from django.http import FileResponse, JsonResponse
+from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import generics
@@ -7,18 +9,19 @@ from rest_framework.permissions import IsAuthenticated
 from dashboard.models import Inventario, Order
 from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor
 from solicitudes.models import Proyecto, Subproyecto
+from requisiciones.models import Requis
 from user.models import Profile, Distrito
-from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer, ProfileSerializer, DistritoSerializer
-from .serializers import ProveedorSerializer
-from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
-from django.http import JsonResponse
+from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
+from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer
+
+
 import requests
 from django.contrib.auth.models import User
 from user.models import CustomUser, Empresa
 from django.contrib.auth.decorators import login_required
 from rest_framework.views import APIView
-from django.shortcuts import get_object_or_404, redirect
-from django.http import FileResponse
+
+
 from compras.views import generar_pdf
 from rest_framework import status
 from user.decorators import perfil_seleccionado_required
@@ -149,6 +152,15 @@ def subproyectos_api(request):
 def getData(request):
     inventario = Inventario.objects.all()
     serializer = InventarioSerializer(inventario, many=True)
+    return Response(serializer.data)
+
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def requisiciones_api(request):
+    requisiciones = Requis.objects.filter(complete=True).order_by("id")
+    serializer = RequisicionSerializer(requisiciones, many=True)
     return Response(serializer.data)
 
 
