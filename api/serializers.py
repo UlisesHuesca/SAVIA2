@@ -48,11 +48,11 @@ class OrdenSerializer(serializers.ModelSerializer):
         fields = ['id','distrito','proyecto','subproyecto']
 
 class RequisicionSerializer(serializers.ModelSerializer):
-    orden = OrdenSerializer(read_only = True)
+    #orden = OrdenSerializer(read_only = True)
 
     class Meta:
         model = Requis
-        fields = ['id','orden']
+        fields = '__all__'
 
 class EstatusSerializer(serializers.ModelSerializer):
     class Meta:
