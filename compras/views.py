@@ -8,6 +8,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
+from django.core.exceptions import ObjectDoesNotExist
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.views.decorators.csrf import csrf_exempt
@@ -1550,10 +1551,13 @@ def autorizar_oc1(request, pk):
             productos_criticos = productos_criticos
             for articulo in productos_criticos:
                 producto = articulo.producto.producto.articulos.producto.producto
-                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                # Si no existe producto_calidad, capturamos la excepción y seguimos
+                try:
+                    requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                except ObjectDoesNotExist:
+                    requerimientos = []  # o ProductoCalidad.objects.none()
 
-                # Si el producto tiene requerimientos, agregar una fila por cada uno
-                if requerimientos.exists():
+                if requerimientos:
                     for requerimiento in requerimientos:
                         #print(requerimiento.requerimiento.nombre)
                         articulos_html += f"""
@@ -1911,10 +1915,12 @@ def autorizar_oc2(request, pk):
             productos_criticos = productos_criticos
             for articulo in productos_criticos:
                 producto = articulo.producto.producto.articulos.producto.producto
-                requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                try:
+                    requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                except ObjectDoesNotExist:
+                    requerimientos = []  # o ProductoCalidad.objects.none()
 
-                # Si el producto tiene requerimientos, agregar una fila por cada uno
-                if requerimientos.exists():
+                if requerimientos:
                     for requerimiento in requerimientos:
                         articulos_html += f"""
                             <tr>
