@@ -146,9 +146,9 @@ class UnidadSerializer(serializers.ModelSerializer):
     #    fields = ('codigo', 'nombre','servicio')
 
 
-#class InventarioSerializer(serializers.ModelSerializer):
+class InventarioSerializer(serializers.ModelSerializer):
     #producto = ProductSerializer()
 
-#    class Meta:
-#        model = Inventario
-#        fields = '__all__'
+    class Meta:
+        model = Inventario
+        fields = '__all__'

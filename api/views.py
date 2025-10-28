@@ -13,7 +13,8 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile, Distrito
 from .serializers import  CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
 from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer
-#from .serializers import Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer, ProductSerializer, InventarioSerializer,Articulos_Ordenados_Serializer
+from .serializers import InventarioSerializer
+#,Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer, ProductSerializer, Articulos_Ordenados_Serializer
 
 import requests
 from django.contrib.auth.models import User
@@ -140,13 +141,13 @@ def subproyectos_api(request):
 #    return Response(serializer.data)
 
 
-#@api_view(['GET'])
-#@authentication_classes([TokenAuthentication])
-#@permission_classes([IsAuthenticated])
-#def inventario_api(request):
-#    inventario = Inventario.objects.all()
-#    serializer = InventarioSerializer(inventario, many=True)
-#    return Response(serializer.data)
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def inventario_api(request):
+    inventario = Inventario.objects.all()
+    serializer = InventarioSerializer(inventario, many=True)
+    return Response(serializer.data)
 
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
