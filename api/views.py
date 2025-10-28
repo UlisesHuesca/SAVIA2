@@ -131,22 +131,22 @@ def subproyectos_api(request):
     return Response(serialized_subproyectos.data)
 
 
-@api_view(['GET'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def productos_api(request):
-    productos = Product.objects.all()
-    serializer = ProductSerializer(productos, many=True)
-    return Response(serializer.data)
+#@api_view(['GET'])
+#@authentication_classes([TokenAuthentication])
+#@permission_classes([IsAuthenticated])
+#def productos_api(request):
+#    productos = Product.objects.all()
+#    serializer = ProductSerializer(productos, many=True)
+#    return Response(serializer.data)
 
 
-@api_view(['GET'])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def inventario_api(request):
-    inventario = Inventario.objects.all()
-    serializer = InventarioSerializer(inventario, many=True)
-    return Response(serializer.data)
+#@api_view(['GET'])
+#@authentication_classes([TokenAuthentication])
+#@permission_classes([IsAuthenticated])
+#def inventario_api(request):
+#    inventario = Inventario.objects.all()
+#    serializer = InventarioSerializer(inventario, many=True)
+#    return Response(serializer.data)
 
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
@@ -156,13 +156,13 @@ def solicitudes_api(request):
     serializer = OrdenSerializer(solicitudes, many=True)
     return Response(serializer.data)
 
-@api_view(["GET"])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def productos_solicitados_api(request):
-    articulos = ArticulosOrdenados.objects.all().order_by("id")
-    serializer = Articulos_Ordenados_Serializer(articulos, many=True)
-    return Response(serializer.data)
+#@api_view(["GET"])
+#@authentication_classes([TokenAuthentication])
+#@permission_classes([IsAuthenticated])
+#def productos_solicitados_api(request):
+#    articulos = ArticulosOrdenados.objects.all().order_by("id")
+#    serializer = Articulos_Ordenados_Serializer(articulos, many=True)
+#    return Response(serializer.data)
 
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
