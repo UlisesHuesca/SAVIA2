@@ -13,8 +13,8 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile, Distrito
 from .serializers import  CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
 from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer
-from .serializers import InventarioSerializer, ProductSerializer
-#,Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer,, Articulos_Ordenados_Serializer
+from .serializers import InventarioSerializer, ProductSerializer, Articulos_Ordenados_Serializer
+#,Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer,
 
 import requests
 from django.contrib.auth.models import User
@@ -157,13 +157,13 @@ def solicitudes_api(request):
     serializer = OrdenSerializer(solicitudes, many=True)
     return Response(serializer.data)
 
-#@api_view(["GET"])
-#@authentication_classes([TokenAuthentication])
-#@permission_classes([IsAuthenticated])
-#def productos_solicitados_api(request):
-#    articulos = ArticulosOrdenados.objects.all().order_by("id")
-#    serializer = Articulos_Ordenados_Serializer(articulos, many=True)
-#    return Response(serializer.data)
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def productos_solicitados_api(request):
+    articulos = ArticulosOrdenados.objects.all().order_by("id")
+    serializer = Articulos_Ordenados_Serializer(articulos, many=True)
+    return Response(serializer.data)
 
 #@api_view(["GET"])
 #@authentication_classes([TokenAuthentication])

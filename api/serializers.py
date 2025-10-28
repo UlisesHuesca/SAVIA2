@@ -47,10 +47,10 @@ class OrdenSerializer(serializers.ModelSerializer):
         model = Order
         fields = ['id','distrito','proyecto','subproyecto']
 
-#class Articulos_Ordenados_Serializer(serializers.ModelSerializer):
-#    class Meta:
-#        model = ArticulosOrdenados
-#        fields = ['id','orden','producto','cantidad']
+class Articulos_Ordenados_Serializer(serializers.ModelSerializer):
+    class Meta:
+        model = ArticulosOrdenados
+        fields = ['id','orden','producto','cantidad']
 
 
 
