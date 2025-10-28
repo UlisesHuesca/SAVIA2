@@ -67,11 +67,11 @@ class RequisicionSerializer(serializers.ModelSerializer):
         model = Requis
         fields = '__all__'
 
-#class Articulos_Requisitados_Serializer(serializers.ModelSerializer):
+class Articulos_Requisitados_Serializer(serializers.ModelSerializer):
 
-#    class Meta:
-#        model = ArticulosRequisitados
-#        fields = ['id','producto','req','cantidad','cantidad_comprada']
+    class Meta:
+        model = ArticulosRequisitados
+        fields = ['id','producto','req','cantidad','cantidad_comprada']
 
 class EstatusSerializer(serializers.ModelSerializer):
     class Meta:
