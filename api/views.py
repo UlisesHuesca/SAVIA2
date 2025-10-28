@@ -164,13 +164,13 @@ def solicitudes_api(request):
 #    serializer = Articulos_Ordenados_Serializer(articulos, many=True)
 #    return Response(serializer.data)
 
-@api_view(["GET"])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def productos_surtir_api(request):
-    productos_surtir = ArticulosparaSurtir.objects.all().order_by("id")
-    serializer = Articulos_para_Surtir_Serializer(productos_surtir, many=True)
-    return Response(serializer.data)
+#@api_view(["GET"])
+#@authentication_classes([TokenAuthentication])
+#@permission_classes([IsAuthenticated])
+#def productos_surtir_api(request):
+#    productos_surtir = ArticulosparaSurtir.objects.all().order_by("id")
+#    serializer = Articulos_para_Surtir_Serializer(productos_surtir, many=True)
+#    return Response(serializer.data)
 
 
 @api_view(["GET"])
@@ -181,13 +181,13 @@ def requisiciones_api(request):
     serializer = RequisicionSerializer(requisiciones, many=True)
     return Response(serializer.data)
 
-@api_view(["GET"])
-@authentication_classes([TokenAuthentication])
-@permission_classes([IsAuthenticated])
-def productos_requisitados_api(request):
-    productos_requisitados = ArticulosRequisitados.objects.all().order_by("id")
-    serializer = Articulos_Requisitados_Serializer(productos_requisitados, many=True)
-    return Response(serializer.data)
+#@api_view(["GET"])
+#@authentication_classes([TokenAuthentication])
+#@permission_classes([IsAuthenticated])
+#def productos_requisitados_api(request):
+#    productos_requisitados = ArticulosRequisitados.objects.all().order_by("id")
+#    serializer = Articulos_Requisitados_Serializer(productos_requisitados, many=True)
+#    return Response(serializer.data)
 
 
 @api_view(['GET'])
