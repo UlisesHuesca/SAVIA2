@@ -6,14 +6,14 @@ from rest_framework.decorators import api_view, authentication_classes, permissi
 from rest_framework import generics
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
-from dashboard.models import Inventario, Order
-from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor
-from solicitudes.models import Proyecto, Subproyecto
-from requisiciones.models import Requis
+from dashboard.models import Inventario, Order, Product, ArticulosOrdenados, ArticulosparaSurtir
+from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor, ArticuloComprado
+from solicitudes.models import Proyecto, Subproyecto, 
+from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile, Distrito
 from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
-from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer
-
+from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer, Articulos_Ordenados_Serializer
+from .serializers import Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer, ProductSerializer
 
 import requests
 from django.contrib.auth.models import User
@@ -76,22 +76,8 @@ def monedas_api(request):
 @permission_classes([IsAuthenticated])
 def profiles_api(request):
     profiles = Profile.objects.all()
-    #page = request.query_params.get('page', 1)
-    #per_page = request.query_params.get('per_page', 20)
-    #
-    #ordering = request.query_params.get('ordering')
-
-    #if ordering:
-    #    profiles = profiles.order_by(ordering)
         
-    
     serialized_profiles = ProfileSerializer(profiles, many=True)
-
-    #paginator = Paginator(profiles, per_page=per_page)
-    #try: 
-    #    profiles = paginator.page(number=page)
-    #except EmptyPage:
-    #    profiles = []
         
     return Response(serialized_profiles.data)
 
@@ -145,11 +131,19 @@ def subproyectos_api(request):
     return Response(serialized_subproyectos.data)
 
 
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def productos_api(request):
+    productos = Product.objects.all()
+    serializer = ProductSerializer(productos, many=True)
+    return Response(serializer.data)
+
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
-def getData(request):
+def inventario_api(request):
     inventario = Inventario.objects.all()
     serializer = InventarioSerializer(inventario, many=True)
     return Response(serializer.data)
@@ -162,6 +156,22 @@ def solicitudes_api(request):
     serializer = OrdenSerializer(solicitudes, many=True)
     return Response(serializer.data)
 
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def productos_solicitados_api(request):
+    articulos = ArticulosOrdenados.objects.all().order_by("id")
+    serializer = Articulos_Ordenados_Serializer(articulos, many=True)
+    return Response(serializer.data)
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def productos_surtir_api(request):
+    productos_surtir = ArticulosparaSurtir.objects.all().order_by("id")
+    serializer = Articulos_para_Surtir_Serializer(productos_surtir, many=True)
+    return Response(serializer.data)
+
 
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
@@ -171,32 +181,34 @@ def requisiciones_api(request):
     serializer = RequisicionSerializer(requisiciones, many=True)
     return Response(serializer.data)
 
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def productos_requisitados_api(request):
+    productos_requisitados = ArticulosRequisitados.objects.all().order_by("id")
+    serializer = Articulos_Requisitados_Serializer(productos_requisitados, many=True)
+    return Response(serializer.data)
+
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def CompraAPI(request):
-    #user = request.user
-    #ip_address = request.META.get('REMOTE_ADDR')
-    #logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
+
 
     compras = Compra.objects.filter(complete = True)
-    #page = request.query_params.get('page', 1)
-    #per_page = request.query_params.get('per_page', 20)
-    #
-    #ordering = request.query_params.get('ordering')
 
-    #if ordering:
-    #    compras = compras.order_by(ordering)
-        
-    #paginator = Paginator(compras, per_page=per_page)
-    #try: 
-    #    compras = paginator.page(number=page)
-    #except EmptyPage:
-    #    compras = []
     serialized_compras = CompraSerializer(compras, many=True)
         
     return Response(serialized_compras.data)
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def productos_comprados_api(request):
+    productos_comprados = ArticuloComprado.objects.all().order_by("id")
+    serializer = Articulo_Comprado_Serializer(productos_comprados, many=True)
+    return Response(serializer.data)
 
 
 @api_view(['GET'])
