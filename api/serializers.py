@@ -54,11 +54,11 @@ class Articulos_Ordenados_Serializer(serializers.ModelSerializer):
 
 
 
-#class Articulos_para_Surtir_Serializer(serializers.ModelSerializer):
+class Articulos_para_Surtir_Serializer(serializers.ModelSerializer):
 
-#    class Meta:
-#        model = ArticulosparaSurtir
-#        fields = ['id','articulos','cantidad','surtir']
+    class Meta:
+        model = ArticulosparaSurtir
+        fields = ['id','articulos','cantidad','surtir']
 
 class RequisicionSerializer(serializers.ModelSerializer):
     #orden = OrdenSerializer(read_only = True)
