@@ -98,7 +98,7 @@ class CompraSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Compra
-        fields = ['id','folio','proveedor','req','creada_por','created_at','moneda','cond_de_pago','costo_oc','descargar',]
+        fields = ['id','folio','proveedor','req','creada_por','created_at','moneda','cond_de_pago','costo_oc','descargar','pagada']
     
     def get_descargar(self, obj):
         # Retorna la URL del PDF con el ID de la compra
