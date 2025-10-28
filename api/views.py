@@ -8,12 +8,12 @@ from rest_framework.authentication import TokenAuthentication, SessionAuthentica
 from rest_framework.permissions import IsAuthenticated
 from dashboard.models import Inventario, Order, Product, ArticulosOrdenados, ArticulosparaSurtir
 from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor, ArticuloComprado
-from solicitudes.models import Proyecto, Subproyecto, 
+from solicitudes.models import Proyecto, Subproyecto
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile, Distrito
-from .serializers import InventarioSerializer, CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
-from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer, Articulos_Ordenados_Serializer
-from .serializers import Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer, ProductSerializer
+from .serializers import  CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
+from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer
+#from .serializers import Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer, ProductSerializer, InventarioSerializer,Articulos_Ordenados_Serializer
 
 import requests
 from django.contrib.auth.models import User
