@@ -137,13 +137,13 @@ class UnidadSerializer(serializers.ModelSerializer):
         model = Unidad
         fields = ('nombre',)
 
-#class ProductSerializer(serializers.ModelSerializer):
+class ProductSerializer(serializers.ModelSerializer):
     #familia = FamiliaSerializer()
     #unidad = UnidadSerializer()
 
- #   class Meta:
-    #    model = Product
-    #    fields = ('codigo', 'nombre','servicio')
+    class Meta:
+        model = Product
+        fields = ('codigo', 'nombre','servicio')
 
 
 class InventarioSerializer(serializers.ModelSerializer):
