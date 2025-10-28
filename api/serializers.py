@@ -50,7 +50,7 @@ class OrdenSerializer(serializers.ModelSerializer):
 class Articulos_Ordenados_Serializer(serializers.ModelSerializer):
     class Meta:
         model = ArticulosOrdenados
-        fields = ['id','orden','producto','cantidad','comentario']
+        fields = ['id','orden','producto','cantidad']
 
 
 
@@ -146,7 +146,7 @@ class ProductSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = Product
-        fields = ('codigo', 'nombre', 'unidad', 'familia','servicio')
+        fields = ('codigo', 'nombre','servicio')
 
 
 class InventarioSerializer(serializers.ModelSerializer):
