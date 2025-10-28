@@ -67,11 +67,11 @@ class RequisicionSerializer(serializers.ModelSerializer):
         model = Requis
         fields = '__all__'
 
-class Articulos_Requisitados_Serializer(serializers.ModelSerializer):
+#class Articulos_Requisitados_Serializer(serializers.ModelSerializer):
 
-    class Meta:
-        model = ArticulosRequisitados
-        fields = ['id','producto','req','cantidad','cantidad_comprada']
+#    class Meta:
+#        model = ArticulosRequisitados
+#        fields = ['id','producto','req','cantidad','cantidad_comprada']
 
 class EstatusSerializer(serializers.ModelSerializer):
     class Meta:
@@ -125,10 +125,7 @@ class Articulo_Comprado_Serializer(serializers.ModelSerializer):
         model = ArticuloComprado
         fields = ['id','producto','oc','cantidad','entrada_completa','precio_unitario']
     
-    def get_descargar(self, obj):
-        # Retorna la URL del PDF con el ID de la compra
-        return f'https://grupovordcab.cloud/api/oc-pdf/{obj.id}/'
-        #return f'http://127.0.0.1:8000/api/oc-pdf/{obj.id}/'
+  
     
 class FamiliaSerializer(serializers.ModelSerializer):
     class Meta:
