@@ -5,7 +5,7 @@ from rest_framework.authtoken.views import obtain_auth_token
 
 
 urlpatterns = [
-    path('productos_api', views.productos_api, name='productos-api'),
+    #path('productos_api', views.productos_api, name='productos-api'),
     path('inventario_api', views.inventario_api, name='inventario-api'),
     path('solicitudes_api', views.solicitudes_api, name ='solicitudes-api'),
     path('productos_solicitados_api', views.productos_solicitados_api, name ='productos-solicitados-api'),
