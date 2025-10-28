@@ -119,11 +119,11 @@ class CompraSerializer(serializers.ModelSerializer):
         return f'https://grupovordcab.cloud/api/oc-pdf/{obj.id}/'
         #return f'http://127.0.0.1:8000/api/oc-pdf/{obj.id}/'
 
-#class Articulo_Comprado_Serializer(serializers.ModelSerializer):
+class Articulo_Comprado_Serializer(serializers.ModelSerializer):
 
-#    class Meta:
-#        model = ArticuloComprado
-#        fields = ['id','producto','oc','cantidad','entrada_completa','precio_unitario']
+    class Meta:
+        model = ArticuloComprado
+        fields = ['id','producto','oc','cantidad','entrada_completa','precio_unitario']
     
   
     
