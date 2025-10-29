@@ -17,7 +17,7 @@ from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
 from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form
-from user.decorators import perfil_seleccionado_required
+from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from user.filters import ProfileFilter
 from proveedores_externos.views import extraer_tipo_contribuyente
@@ -1279,6 +1279,7 @@ def upload_batch_proveedores_direcciones(request):
     return render(request,'dashboard/upload_batch_proveedor_direcciones.html', context)
 
 @perfil_seleccionado_required
+@tipo_usuario_requerido('proveedores_edicion')
 def documentacion_proveedores(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -1286,7 +1287,7 @@ def documentacion_proveedores(request, pk):
     razon = request.GET.get('razon_social', '')
     rfc = request.GET.get('rfc', '')     
 
-    direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True)
+    direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre="NO REGISTR")
     tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
     tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
     tiene_producto = proveedor.direcciones.filter(producto=True).exists()
