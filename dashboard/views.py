@@ -1287,7 +1287,7 @@ def documentacion_proveedores(request, pk):
     razon = request.GET.get('razon_social', '')
     rfc = request.GET.get('rfc', '')     
 
-    direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre="NO REGISTR")
+    direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre__in=["NO REGISTR","RECHAZADO"])
     tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
     tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
     tiene_producto = proveedor.direcciones.filter(producto=True).exists()
