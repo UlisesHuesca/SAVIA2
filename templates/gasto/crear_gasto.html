@@ -1255,6 +1255,7 @@ $(document).ready(function() {
     });
     $('#id_tipo').on('select2:select', function(e){
         var data = e.params.data;
+        console.log(data)
         var datos = JSON.parse(localStorage.getItem("id_solicitud_"+gasto_id));
         cambio_en_formulario(data,'tipo') //Acá lo que hago es mediante esta función guardo los valores en el local storage
         // Mostrar o esconder el div basado en el valor seleccionado}
@@ -1318,27 +1319,41 @@ $(document).ready(function() {
 
         
         } else {
-            console.log("nn")
-            
-            $('#cardTxt').addClass('d-none');
-            $('#distrito').addClass('d-none');
-            $('#empresa').addClass('d-none');
-            $('#cardRH').addClass('d-none');
-            localStorage.removeItem('tipoDocumentoActual');
-            localStorage.removeItem('mostrarCardRH');
-            delete datos.distrito;
-            delete datos.distrito_text;
-            localStorage.setItem("id_solicitud_" + gasto_id, JSON.stringify(datos));
-                    // Reconstruye el Select2 con todas las opciones originales
-            $('#id_superintendente').empty();
-            //$('#id_superintendente').val('').trigger('change');
-            datosSuperintendentes.forEach(function(item) {
-                var newOption = new Option(item.text, item.id, false, false);
-                $('#id_superintendente').append(newOption);
-            });
-            // Forzar que no haya selección activa en el Select2
-            $('#id_superintendente').val('').trigger('change');     
+        console.log("nn");
+
+        $('#cardTxt, #distrito, #empresa, #cardRH').addClass('d-none');
+        localStorage.removeItem('tipoDocumentoActual');
+        localStorage.removeItem('mostrarCardRH');
+
+        // 1) Cargar desde storage (no uses una var 'datos' previa)
+        const key = "id_solicitud_" + gasto_id;
+        let store = {};
+        try { store = JSON.parse(localStorage.getItem(key)) || {}; } catch (_) { store = {}; }
+
+        // 2) Eliminar solo las claves necesarias
+        delete store.distrito;
+        delete store.distrito_text;
+
+        // 3) Guardar de nuevo (esto NO toca 'tipo' ni otros campos)
+        localStorage.setItem(key, JSON.stringify(store));
+
+        // 4) Reconstruir Select2 sin provocar escrituras vacías
+        let muteEvents = true; // usa este flag en tus handlers para ignorar eventos durante reconstrucción
+
+        const $sup = $('#id_superintendente');
+        $sup.empty();
+        datosSuperintendentes.forEach(function(item) {
+            $sup.append(new Option(item.text, item.id, false, false));
+  
+        });
+
+        // Limpia selección; si tienes listener de persistencia, respeta 'muteEvents'
+        $sup.val('').trigger('change');
+
+        // Desmutear en el siguiente tick
+        setTimeout(() => { muteEvents = false; }, 0);
         }
+
     
     });
     $('#id_tipo').on('select2:unselect', function(e) {
