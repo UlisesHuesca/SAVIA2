@@ -80,6 +80,8 @@
                     <th scope="col">Código</th>
                     <th scope="col">Nombre</th>
                     <th scope="col">Nombre Anterior</th>
+                    <th>Servicio</th>
+                    <th>Servicio anterior</th>
                 </tr>
             </thead>
             <tbody>
@@ -92,6 +94,8 @@
                     <td>{{registro.codigo}}</td>
                     <td>{{registro.nombre}}</td>
                     <td>{{registro.prev_record.nombre}}</td>
+                    <td>{{registro.servicio}}</td>
+                    <td>{{registro.prev_record.servicio}}</td>
                 </tr>
                 {% endfor %}
             </tbody>
