@@ -1285,7 +1285,8 @@ def documentacion_proveedores(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     proveedor = Proveedor.objects.get(id=pk)       
     razon = request.GET.get('razon_social', '')
-    rfc = request.GET.get('rfc', '')     
+    rfc = request.GET.get('rfc', '')   
+    next_url = request.GET.get('next') or request.POST.get('next')  
 
     direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre__in=["NO REGISTR","RECHAZADO"])
     tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
@@ -1371,6 +1372,7 @@ def documentacion_proveedores(request, pk):
         'documentos': documentos,
         'razon': razon,
         'rfc': rfc,
+        'next': next_url,
         }
     
     return render(request,'dashboard/documentacion_proveedor.html', context)
