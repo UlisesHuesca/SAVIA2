@@ -5561,6 +5561,8 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
                     for a in articulos_gasto if a.comentario
                 ]
                 comentarios = ', '.join(comentarios_articulos) if comentarios_articulos else 'NO HAY COMENTARIOS DISPONIBLES'
+        else:
+            comentarios = 'NO HAY COMENTARIOS DISPONIBLES'
             
                     
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else (pago.distrito.nombre if pago.distrito else '')))
