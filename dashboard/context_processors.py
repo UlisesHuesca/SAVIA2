@@ -1,6 +1,6 @@
 from genericpath import exists
 from itertools import count
-from dashboard.models import ArticulosparaSurtir, Order, Inventario
+from dashboard.models import ArticulosparaSurtir, Order, Inventario, PriceRefChange
 from user.models import Profile
 from gastos.models import Solicitud_Gasto, ValeRosa
 from tesoreria.models import Pago
@@ -53,6 +53,7 @@ def contadores_processor(request):
     productosordenadosres = 0 #Se agregan solo para dejar de generar el error de que no existe la variable pero habrá que analizar si es la manera correcta
     conteo_calidad = 0
     conteo_requis_devueltas = 0
+    conteo_solicitudes_precios = 0
     conteo_usuario = Profile.objects.filter(st_activo = True).count()
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
     solicitudes_generadas = Order.objects.filter(complete = True).count()
@@ -81,6 +82,10 @@ def contadores_processor(request):
         if usuario.tipo.compras == True:
             requis= Requis.objects.filter(orden__distrito = usuario.distritos, autorizar=True, colocada=False, complete = True)
             conteo_requis = requis.count()
+
+            cambios = PriceRefChange.objects.filter(autorizado__isnull=True).select_related('product', 'solicitado_por')
+            conteo_solicitudes_precios = cambios.count()
+
 
         if usuario.tipo.subdirector == True:
             oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__superintendente = usuario)
@@ -182,6 +187,7 @@ def contadores_processor(request):
                 articulo_comprado__oc__req__orden__distrito = usuario.distritos).count()
 
     return {
+    'conteo_solicitudes_precios': conteo_solicitudes_precios,
     'conteo_requis_devueltas':conteo_requis_devueltas,
     'productosordenados':productosordenados,
     'productosordenadosres':productosordenadosres,

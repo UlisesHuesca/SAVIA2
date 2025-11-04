@@ -549,7 +549,11 @@
                             {% endif %}
                              
                             {% if usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Admin" %}
-                                 <a class="dropdown-item" href="{% url 'price_ref_pending' %}">Autorización Precios de Referencia</a>   
+                                 <a class="dropdown-item" href="{% url 'price_ref_pending' %}">Autorización Precios de Referencia
+                                    {% if conteo_solicitudes_precios > 0 %}
+                                       <span class="badge bg-danger">({{conteo_solicitudes_precios}})</span>
+                                    {% endif %}
+                                 </a>   
                             {% endif %}
 
 
