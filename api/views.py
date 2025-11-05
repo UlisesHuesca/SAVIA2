@@ -12,7 +12,7 @@ from solicitudes.models import Proyecto, Subproyecto
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile, Distrito
 from .serializers import  CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
-from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer
+from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer, Tabla_CompraSerializer
 from .serializers import InventarioSerializer, ProductSerializer, Articulos_Ordenados_Serializer,Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer
 
 import requests
@@ -189,6 +189,18 @@ def productos_requisitados_api(request):
     serializer = Articulos_Requisitados_Serializer(productos_requisitados, many=True)
     return Response(serializer.data)
 
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def Tabla_compra_api(request):
+
+
+    compras = Compra.objects.filter(complete = True)
+
+    serialized_compras = Tabla_CompraSerializer(compras, many=True)
+        
+    return Response(serialized_compras.data)
 
 @api_view(['GET'])
 @authentication_classes([TokenAuthentication])

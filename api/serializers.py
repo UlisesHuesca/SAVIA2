@@ -119,6 +119,20 @@ class CompraSerializer(serializers.ModelSerializer):
         return f'https://grupovordcab.cloud/api/oc-pdf/{obj.id}/'
         #return f'http://127.0.0.1:8000/api/oc-pdf/{obj.id}/'
 
+class Tabla_CompraSerializer(serializers.ModelSerializer):
+    #proveedor = ProveedorDireccionesSerializer(read_only=True)
+    req = RequisicionSerializer(source = 'req.folio', read_only=True)
+    descargar = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Compra
+        fields = ['id','folio','proveedor','req','creada_por','created_at','moneda','cond_de_pago','costo_oc','descargar','pagada']
+    
+    def get_descargar(self, obj):
+        # Retorna la URL del PDF con el ID de la compra
+        return f'https://grupovordcab.cloud/api/oc-pdf/{obj.id}/'
+        #return f'http://127.0.0.1:8000/api/oc-pdf/{obj.id}/'
+
 class Articulo_Comprado_Serializer(serializers.ModelSerializer):
 
     class Meta:
