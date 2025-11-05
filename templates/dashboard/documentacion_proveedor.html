@@ -119,6 +119,7 @@
                             </tr>
                         </tbody>
                     </table>
+                    
             </div>
         </div>
     </div>
@@ -144,7 +145,7 @@
                                 <td>
                                     {% if direccion.estatus.nombre == "APROBADO" %}<span class="badge bg-primary">{{direccion.estatus}}</span>
                                     {% elif direccion.estatus.nombre == "NUEVO" %}<span class="badge bg-warning">{{direccion.estatus}}</span>
-                                    {% elif direccion.estatus.nombre == "RECHAZADO" %}<span class="badge bg-danger">{{direccion.estatus}}</span>
+                                    <!-- % elif direccion.estatus.nombre == "RECHAZADO" %}<span class="badge bg-danger">{{direccion.estatus}}</span> -->
                                     {% endif %}
                                 </td>
                                 <td>{% if direccion.modificado_fecha %}

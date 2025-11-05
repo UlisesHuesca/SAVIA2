@@ -68,7 +68,7 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th>Distrito</th>
-                    <th scope="col">Razón Social</th>
+                    
                     <th scope="col">Direccion</th>
                     <th>Teléfono</th>
                     <th scope="col">Contacto</th>
@@ -90,7 +90,7 @@
                 {% for direccion in direcciones %}
                 <tr>
                     <th>{{direccion.distrito.nombre}}</th>
-                    <th scope="row">{{direccion.nombre.razon_social}}</th>
+                    
                     <td>{{direccion.domicilio}}</td>
                     <td>{{direccion.telefono}}</td>
                     <td>{{direccion.contacto}}</td>
