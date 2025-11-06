@@ -80,7 +80,7 @@ def contadores_processor(request):
         #if usuario.staff.staff.is_staff:
             #requis.
         if usuario.tipo.compras == True:
-            requis= Requis.objects.filter(orden__distrito = usuario.distritos, autorizar=True, colocada=False, complete = True)
+            requis= Requis.objects.filter(orden__distrito = usuario.distritos, autorizar=True, colocada=False, complete = True, devuelta = False)
             conteo_requis = requis.count()
 
             cambios = PriceRefChange.objects.filter(autorizado__isnull=True).select_related('product', 'solicitado_por')
