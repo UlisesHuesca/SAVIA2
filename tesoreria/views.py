@@ -671,7 +671,7 @@ def compras_pagos(request, pk):
                                     <tr>
                                         <td>{producto.codigo}</td>
                                         <td>{producto.nombre}
-                                        <td>{requerimiento.nombre}</td>
+                                        <td>{requerimiento.requerimiento}</td>
                                     </tr>
                                 """
                         else:
