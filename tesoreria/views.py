@@ -648,8 +648,8 @@ def compras_pagos(request, pk):
                     <table border="1" style="border-collapse: collapse; width: 100%;">
                         <thead>
                             <tr>
-                                <th>Producto Crítico</th>
-                                <th>Requisitos</th>
+                                <th>Código</th>
+                                <th>Producto Nombre</th>
                                 <th>Requerimiento</th>
                             </tr>
                         </thead>        
@@ -658,26 +658,19 @@ def compras_pagos(request, pk):
                     productos_criticos = productos_criticos
                     for articulo in productos_criticos:
                         producto = articulo.producto.producto.articulos.producto.producto
-                        # Solo procesar si es crítico
-                        try:
-                            pc = producto.producto_calidad  # <-- aquí puede lanzar DoesNotExist
-                            requerimientos = pc.requerimientos_calidad.all()
-                        except Producto_Calidad.DoesNotExist:
-                            pc = None
-                            requerimientos = None
-
-                        # Si no existe producto_calidad, simplemente seguimos con el siguiente
+                        pc = getattr(producto, 'producto_calidad', None)
                         if not pc:
+                            # no hay ficha de calidad para este producto
                             continue
 
+                        reqs = pc.requerimientos_calidad.select_related('requerimiento').all()
 
-                        # Si el producto tiene requerimientos, agregar una fila por cada uno
-                        if  requerimientos and requerimientos.exists():
-                            for requerimiento in requerimientos:
+                        if reqs.exists():
+                            for requerimiento in reqs:
                                 articulos_html += f"""
                                     <tr>
                                         <td>{producto.codigo}</td>
-                                        <td>{producto.producto_calidad.requisitos}</td>
+                                        <td>{producto.nombre}
                                         <td>{requerimiento.nombre}</td>
                                     </tr>
                                 """
@@ -685,7 +678,7 @@ def compras_pagos(request, pk):
                             articulos_html += f"""
                                 <tr>
                                     <td>{producto.codigo}</td>
-                                    <td>{producto.producto_calidad.requisitos}</td>
+                                    <td>{producto.nombre}</td>
                                     <td>Sin requerimiento</td>
                                 </tr>
                             """
