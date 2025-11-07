@@ -95,6 +95,7 @@ class DocumentosProveedor(models.Model):
             ('calificacion', 'Calificación'),
             ('visita', 'Visita'),
             ('carta_credito', 'Carta de Crédito'),
+            ('cotizacion', 'Cotización'),
             ('otros','Otros'),
         ]
     )
@@ -593,6 +594,9 @@ class Debida_Diligencia(models.Model):
     descripcion_seguimiento = models.TextField(blank=True)
     directivos_hablan_de_corrupcion = models.BooleanField(default=False)
     terminada = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f"{self.proveedor}"
 
 class Accionista(models.Model):
     cuestionario = models.ForeignKey(Debida_Diligencia, on_delete=models.CASCADE, related_name='accionistas')

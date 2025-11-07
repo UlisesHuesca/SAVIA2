@@ -1313,6 +1313,7 @@ def documentacion_proveedores(request, pk):
         'otros',
         'visita',
         'carta_credito',
+        'cotizacion'
     ]
 
     documentos_count = {tipo: 0 for tipo in tipos_documentos}
@@ -2167,8 +2168,9 @@ def generar_pdf_dd(proveedor, request):
     def S(txt): return '' if txt is None else str(txt)
     #elaborado_perfil = proveedor.perfiles.first()
     proveedor_direcciones = proveedor.direcciones.first()
+    perfil_proveedor = Profile.objects.filter(proveedor=proveedor).first()
     # === Datos de ejemplo ===
-    elaborado_por = f" {usuario.staff.staff.first_name} {usuario.staff.staff.last_name} "
+    elaborado_por = perfil_proveedor.staff.staff.first_name + ' ' + perfil_proveedor.staff.staff.last_name
     cargo         = dd.cargo
     fecha         = dd.fecha.strftime('%d/%m/%Y') if dd and dd.fecha else ''
     tel           = proveedor_direcciones.telefono

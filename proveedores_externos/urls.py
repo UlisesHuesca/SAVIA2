@@ -13,7 +13,10 @@ urlpatterns = [
     path('edit_calificacion/<int:pk>', views.edit_calificacion, name='edit-calificacion'),
     path('edit_competencia/<int:proveedor_id>', views.subir_documento_competencia, name='subir-documento-competencia'),
     path('edit_calidad/<int:pk>', views.edit_calidad, name='edit-calidad'),
+    path('edit_cotizacion/<int:pk>', views.edit_cotizacion, name='edit-cotizacion'),
+    
     path('edit_otros/<int:pk>', views.edit_otros, name='edit-otros'),
+    
     path('edit_visita/<int:pk>', views.edit_visita, name='edit-visita'),
     path('edit_carta_credito/<int:pk>', views.edit_carta_credito, name='edit-carta-credito'),
     path('edit_contrato/<int:proveedor_id>', views.subir_documento_contrato, name='subir-documento-contrato'),

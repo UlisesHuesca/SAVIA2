@@ -37,7 +37,7 @@ def perfil_seleccionado_required(view_func):
         if selected_profile.tipo.nombre == "PROVEEDOR_EXTERNO":
             vistas_permitidas = ['dashboard-index', 'matriz-oc-proveedores','matriz-direcciones','matriz', 'matriz-facturas-nomodal',
                                   'productos-oc', 'factura-nueva', 'edit-csf','edit-acta-credencial', 'edit-comprobante-domicilio',
-                                  'edit-opinion-cumplimiento','evidencias-proveedor','subir-evidencias','eliminar-evidencia',
+                                  'edit-opinion-cumplimiento','edit-carta-credito','edit-cotizacion','edit-curriculum','evidencias-proveedor','subir-evidencias','eliminar-evidencia',
                                   'matriz-complementos', 'complemento-nuevo','complemento-eliminar','subir-documento-competencia',
                                   'subir-documento-contrato', 'subir-documento-factura-predial','factura-eliminar','ver-politica-pdf',
                                   'aceptar_politica',]  # Cambia por los nombres reales de las vistas

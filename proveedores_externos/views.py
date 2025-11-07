@@ -47,6 +47,13 @@ import json
 from django.core.mail import EmailMessage
 # Create your views here.
 
+
+
+#################### VISTAS PARA PROVEEDORES EXTERNOS ####################
+
+############ LAS VISTAS PARA PROVEEDORES EXERNOS DEBENDE SER DECLARADAS ESPECIFICAMENTE EN EL USER.DECORATORS.PY ##############
+############ DENTRO DE @PERFIL_SELECCIONADO_REQUIRED SI NO SE HACE DE ESA MANERA NO SE PUEDE VER ##############
+
 @perfil_seleccionado_required
 def matriz_oc_proveedores(request):
     pk_perfil = request.session.get('selected_profile_id')
@@ -187,6 +194,7 @@ def matriz_direcciones(request):
             'carta_credito',
             'visita',
             'calificacion',
+            'cotizacion'
         ]
 
         documentos_count = {tipo: 0 for tipo in tipos_documentos}
@@ -429,6 +437,34 @@ def edit_calidad(request, pk):
    
    
     return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+@perfil_seleccionado_required
+def edit_cotizacion(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'cotizacion'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Cotización subida exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
 
 @perfil_seleccionado_required
 def edit_otros(request, pk):
