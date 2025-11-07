@@ -194,7 +194,10 @@ def matriz_direcciones(request):
             'carta_credito',
             'visita',
             'calificacion',
-            'cotizacion'
+            'cotizacion',
+            'repse',
+            'cumplimiento_imss',
+            'busqueda_mediatica',
         ]
 
         documentos_count = {tipo: 0 for tipo in tipos_documentos}
@@ -205,6 +208,8 @@ def matriz_direcciones(request):
             documentos_count[tipo] += 1  # Contar cuántos documentos hay de cada tipo
             if documento.validada:
                 documentos_validados_count[tipo] += 1  # Contar cuántos están validados
+
+        print(documentos_count)
       
     else:
         raise Http404("No tienes permiso para ver esta vista")
@@ -465,6 +470,88 @@ def edit_cotizacion(request, pk):
    
     return render(request, 'proveedores_externos/edit_documentos.html',context)
 
+
+@perfil_seleccionado_required
+def edit_busqueda_mediatica(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'busqueda_mediatica'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Búsqueda mediática subida exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+
+@perfil_seleccionado_required
+def edit_busqueda_mediatica(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'busqueda_mediatica'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Búsqueda mediática subida exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
+
+@perfil_seleccionado_required
+def edit_cumplimiento_imss(request, pk):
+    proveedor = get_object_or_404(Proveedor, id=pk)
+    tipo_documento = 'cumplimiento_imss'
+   
+
+    if request.method == 'POST':
+        form = SubirDocumentoForm(request.POST, request.FILES)
+        if form.is_valid():
+            documento = form.save(commit=False)  # 🔥 Guardar sin hacer commit
+            documento.proveedor = proveedor
+            documento.tipo_documento = tipo_documento  # 🔥 Se asigna el tipo de documento
+            documento.save()  # 🔥 Ahora se guarda el documento con los datos completos
+            messages.success(request, 'Opinión de cumplimiento subida exitosamente')
+            return HttpResponse(status=204)  # 
+    else:
+        form = SubirDocumentoForm()  
+
+    context = {
+        'proveedor':proveedor,
+        'tipo_documento':tipo_documento,
+        'form':form, 
+    }
+   
+   
+    return render(request, 'proveedores_externos/edit_documentos.html',context)
 
 @perfil_seleccionado_required
 def edit_otros(request, pk):

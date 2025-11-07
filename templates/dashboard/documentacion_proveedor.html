@@ -1097,6 +1097,93 @@
 
                             </td>
                         </tr>
+                         <tr>
+                            <td>Búsqueda Mediática</td>
+                            <td>
+                             
+                                        {% if documentos_count.busqueda_mediatica == 0 %}   
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Búsqueda Mediática" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "busqueda_mediatica" %}
+                                                    {% if documento.validada %}
+                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfBusqueda{{documento.id|unlocalize }}" title="Ver Búsqueda Mediática">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfBusqueda{{documento.id|unlocalize }}" title="Ver Búsqueda Mediática">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% endif %}
+
+                                
+                                                    <!-- Modal con visor de PDF -->
+                                                    <div class="modal fade" id="pdfBusqueda{{documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfBusquedaLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                        <div class="modal-dialog modal-xl">
+                                                            <div class="modal-content">
+                                                                <div class="modal-header">
+                                                                    <h5 class="modal-title" id="pdfBusquedaLabel{{documento.id|unlocalize }}">Búsqueda Medíatica</h5>
+                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                                </div>
+                                                                <div class="modal-body">
+                                                                    <iframe src="{{documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                   
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if documentos_count.busqueda_mediatica > documentos_validados_count.busqueda_mediatica %}
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documentos de Calidad" hx-target="#document" hx-get="{% url 'edit-busqueda' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                            {% endif %}
+                                        {% endif %}
+                                   
+                            </td>
+                            <td>
+                            
+                            </td>
+                            <td class="" id="comentario_14_{{proveedor.id|unlocalize}}" tipo ="busqueda_mediatica" >{% if proveedor.comentario_busqueda %} {{proveedor.comentario_busqueda}} {% endif %}</td>
+                            <td class="d-none" id="form_comentario_14_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_14_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            </td>
+                            <td>
+                                <a id="modificar_comentario_14_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 14)">
+                                    <i class="fa-regular fa-comment"></i>
+                                </a>
+                                <button type="button" id="save_comment_14_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 14)"    class="btn btn-outline-primary d-none">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button id="cancel_edit_14_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 14)" style="color:ghostwhite; background-color:#980F0F ;">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                                
+                            </td>
+                            
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "busqueda_mediatica" %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "busqueda_mediatica" %}
+                                        {% if documento.validada %}
+                                            <i class="fa-regular fa-check"></i>
+                                        {% else %}
+                                            <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+
+                            </td>
+                        </tr>
                     </tbody>
                 </table>
 
@@ -1369,6 +1456,89 @@
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "competencias" %}
+                                        {% if documento.validada %}
+                                            <i class="fa-regular fa-check"></i>
+                                        {% else %}
+                                            <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+
+                            </td>
+
+                           
+                        </tr>
+                        <tr>
+                            <td>Opinión de cumplimiento del IMSS</td>
+                            <td>
+                              
+                                        {% if documentos_count.cumplimiento_imss == 0 %} 
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de cumplimiento" hx-target="#document" hx-get="{% url 'edit-cumplimiento-imss' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "cumplimiento_imss" %}
+                                                    {% if documento.validada %}
+                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfImss{{documento.id|unlocalize }}" title="Ver Opinión de cumplimiento del IMSS">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfImss{{documento.id|unlocalize }}" title="Ver Opinión de cumplimiento del IMSS">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                <!-- Modal con visor de PDF -->
+                                                <div class="modal fade" id="pdfImss{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfImssLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-xl">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="pdfImssLabel{{documento.id|unlocalize }}">Imss</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if documentos_count.cumplimiento_imss > documentos_validados_count.cumplimiento_imss %}
+                                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Cumplimiento Imss" hx-target="#document" hx-get="{% url 'edit-cumplimiento-imss' proveedor.id %}">
+                                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                   
+                            </td>
+                            <td class="" id="comentario_15_{{proveedor.id|unlocalize}}" tipo ="cumplimiento_imss" >
+                                {% if proveedor.comentario_cumplimiento_imss %} {{proveedor.comentario_cumplimiento_imss}} {% endif %}
+                            </td>
+                            <td class="d-none" id="form_comentario_15_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_15_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            </td>
+                            <td>
+                                <a id="modificar_comentario_15_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 15)">
+                                    <i class="fa-regular fa-comment"></i>
+                                </a>
+                                <button type="button" id="save_comment_15_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 15)"    class="btn btn-outline-primary d-none">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button id="cancel_edit_15_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 15)" style="color:ghostwhite; background-color:#980F0F ;">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            </td> 
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "cumplimiento_imss" %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "cumplimiento_imss" %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}

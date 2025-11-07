@@ -1313,7 +1313,10 @@ def documentacion_proveedores(request, pk):
         'otros',
         'visita',
         'carta_credito',
-        'cotizacion'
+        'cotizacion',
+        'busqueda_mediatica',
+        'repse',
+        'cumplimiento_imss',
     ]
 
     documentos_count = {tipo: 0 for tipo in tipos_documentos}
