@@ -810,32 +810,32 @@ def compras_pagos(request, pk):
                                         nombre_archivo = f'Pago_{archivo.id}.pdf'  
                                         email.attach(nombre_archivo, archivo_contenido, 'application/pdf') 
                         # Adjuntar los archivos con nombres personalizados
-                        for articulo in productos:
-                            producto = articulo.producto.producto.articulos.producto.producto
+                        #for articulo in productos:
+                            #producto = articulo.producto.producto.articulos.producto.producto
                            
-                            if not getattr(producto, "critico", False):
-                                continue  # solo interesa si es crítico
+                            #if not getattr(producto, "critico", False):
+                            #    continue  # solo interesa si es crítico
 
                             # Intenta obtener la ficha de calidad sin que truene
-                            pc = getattr(producto, "producto_calidad", None)
-                            if not pc:
+                            #pc = getattr(producto, "producto_calidad", None)
+                            #if not pc:
                                 # Producto crítico sin ficha de calidad → lo saltamos
-                                continue
-                            requerimientos = producto.producto_calidad.requerimientos_calidad.all()
-                            contador = 1  # Contador para evitar nombres duplicados
+                            #   continue
+                            #requerimientos = producto.producto_calidad.requerimientos_calidad.all()
+                            #contador = 1  # Contador para evitar nombres duplicados
                                 
-                            if not requerimientos.exists():
-                                continue  # Si no hay requerimientos, saltar al siguiente producto
+                            #if not requerimientos.exists():
+                            #    continue  # Si no hay requerimientos, saltar al siguiente producto
 
-                            for requerimiento in requerimientos:
-                                archivo_path = requerimiento.url.path
-                                nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
+                            #for requerimiento in requerimientos:
+                                #archivo_path = requerimiento.url.path
+                                #nombre_archivo = f"{producto.codigo}_requerimiento_{contador}{os.path.splitext(archivo_path)[1]}"
                                     
                                 # Abrir el archivo en modo binario y adjuntarlo directamente
-                                with open(archivo_path, 'rb') as archivo:
-                                    email.attach(nombre_archivo, archivo.read())
+                                #with open(archivo_path, 'rb') as archivo:
+                                #    email.attach(nombre_archivo, archivo.read())
 
-                                contador += 1  # Incrementar el contador para el siguiente archivo
+                                #contador += 1  # Incrementar el contador para el siguiente archivo
                         email.send()
                         messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
                     except (BadHeaderError, SMTPException, socket.gaierror) as e:
