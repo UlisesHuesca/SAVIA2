@@ -598,7 +598,7 @@
                             <td>
                             
                             </td>
-                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_calificacion %} {{proveedor.comentario_calificacion}} {% endif %}</td>
+                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="calificacion" >{% if proveedor.comentario_calificacion %} {{proveedor.comentario_calificacion}} {% endif %}</td>
                             <td class="d-none" id="form_comentario_9_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_9_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -685,18 +685,18 @@
                             <td>
                             
                             </td>
-                            <td class="" id="comentario_11_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_visita %} {{proveedor.comentario_visita}} {% endif %}</td>
-                            <td class="d-none" id="form_comentario_11_{{proveedor.id|unlocalize}}">
-                                <input type="textarea" class="form-control" id="comentario-input_11_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            <td class="" id="comentario_12_{{proveedor.id|unlocalize}}" tipo ="visita" >{% if proveedor.comentario_visita %} {{proveedor.comentario_visita}} {% endif %}</td>
+                            <td class="d-none" id="form_comentario_12_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_12_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
                             <td>
-                                <a id="modificar_comentario_11_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 11)">
+                                <a id="modificar_comentario_12_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 12)">
                                     <i class="fa-regular fa-comment"></i>
                                 </a>
-                                <button type="button" id="save_comment_11_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 11)"    class="btn btn-outline-primary d-none">
+                                <button type="button" id="save_comment_12_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 12)"    class="btn btn-outline-primary d-none">
                                     <i class="fa-regular fa-circle-check"></i>
                                 </button>
-                                <button id="cancel_edit_11_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 11)" style="color:ghostwhite; background-color:#980F0F ;">
+                                <button id="cancel_edit_12_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 12)" style="color:ghostwhite; background-color:#980F0F ;">
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </button>
                                 
@@ -772,18 +772,18 @@
                             <td>
                             
                             </td>
-                            <td class="" id="comentario_9_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_calidad %} {{proveedor.comentario_calidad}} {% endif %}</td>
-                            <td class="d-none" id="form_comentario_9_{{proveedor.id|unlocalize}}">
-                                <input type="textarea" class="form-control" id="comentario-input_9_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            <td class="" id="comentario_11_{{proveedor.id|unlocalize}}" tipo ="calidad" >{% if proveedor.comentario_calidad %} {{proveedor.comentario_calidad}} {% endif %}</td>
+                            <td class="d-none" id="form_comentario_11_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_11_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
                             <td>
-                                <a id="modificar_comentario_9_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 9)">
+                                <a id="modificar_comentario_11_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 11)">
                                     <i class="fa-regular fa-comment"></i>
                                 </a>
-                                <button type="button" id="save_comment_9_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 9)"    class="btn btn-outline-primary d-none">
+                                <button type="button" id="save_comment_11_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 11)"    class="btn btn-outline-primary d-none">
                                     <i class="fa-regular fa-circle-check"></i>
                                 </button>
-                                <button id="cancel_edit_9_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 9)" style="color:ghostwhite; background-color:#980F0F ;">
+                                <button id="cancel_edit_11_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 11)" style="color:ghostwhite; background-color:#980F0F ;">
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </button>
                                 
@@ -1060,18 +1060,18 @@
                             <td>
                             
                             </td>
-                            <td class="" id="comentario_12_{{proveedor.id|unlocalize}}" tipo ="carta_credito" >{% if proveedor.comentario_carta_credito %} {{proveedor.comentario_carta_credito}} {% endif %}</td>
-                            <td class="d-none" id="form_comentario_12_{{proveedor.id|unlocalize}}">
-                                <input type="textarea" class="form-control" id="comentario-input_11_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            <td class="" id="comentario_14_{{proveedor.id|unlocalize}}" tipo ="carta_credito" >{% if proveedor.comentario_carta_credito %} {{proveedor.comentario_carta_credito}} {% endif %}</td>
+                            <td class="d-none" id="form_comentario_14_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_14_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
                             <td>
-                                <a id="modificar_comentario_12_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 12)">
+                                <a id="modificar_comentario_14_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 14)">
                                     <i class="fa-regular fa-comment"></i>
                                 </a>
-                                <button type="button" id="save_comment_12_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 12)"    class="btn btn-outline-primary d-none">
+                                <button type="button" id="save_comment_14_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 14)"    class="btn btn-outline-primary d-none">
                                     <i class="fa-regular fa-circle-check"></i>
                                 </button>
-                                <button id="cancel_edit_12_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 12)" style="color:ghostwhite; background-color:#980F0F ;">
+                                <button id="cancel_edit_14_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 14)" style="color:ghostwhite; background-color:#980F0F ;">
                                     <i class="fa-solid fa-circle-xmark"></i>
                                 </button>
                                 
@@ -1097,7 +1097,7 @@
 
                             </td>
                         </tr>
-                         <tr>
+                        <tr>
                             <td>Búsqueda Mediática</td>
                             <td>
                              
@@ -1184,6 +1184,7 @@
 
                             </td>
                         </tr>
+                          
                     </tbody>
                 </table>
 

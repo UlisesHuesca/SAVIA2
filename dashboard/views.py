@@ -1418,9 +1418,22 @@ def update_comentario(request):
     if tipo == "otros":
         proveedor.comentario_otros = dato
         indice = 10
+    if tipo == "calidad":
+        proveedor.comentario_calidad = dato
+        indice = 11
     if tipo == "visita":
         proveedor.comentario_visita = dato
-        indice = 11
+        indice = 12
+    if tipo == 'cotizacion':
+        proveedor.comentario_cotizacion = dato
+        indice = 13
+    if tipo == 'carta_credito':
+        proveedor.comentario_carta_credito = dato
+        indice = 14
+    #if tipo == 'busqueda_mediatica':
+    #    proveedor.comentario_busqueda_mediatica = dato
+    #    indice = 15
+
     proveedor.save()
     # Construye un objeto de respuesta que incluya el dato y el tipo.
     response_data = {
@@ -2755,7 +2768,7 @@ def generar_pdf_dd(proveedor, request):
 
     c.setFont("Helvetica", 10)
     c.setFillColor(azul_claro)
-    c.drawString(60, y_actual, "Sí" if bool(getattr(dd, "elimina_trabajo_forzoso", False)) else "No")
+    c.drawString(60, y_actual, "Sí" if  dd.elimina_trabajo_forzoso else "No")
     y_actual -= 14
     c.setFillColor(black)
 
