@@ -2869,7 +2869,7 @@ def generar_pdf_dd(proveedor, request):
         c.showPage(); c.setFillColor(black); y_actual = 750
     pA.drawOn(c, 40, y_actual - hA); y_actual -= (hA + 6)
     c.setFont("Helvetica", 10); c.setFillColor(azul_claro)
-    c.drawString(60, y_actual, "Sí" if bool(getattr(dd, "codigo_etico", getattr(dd, "codigo_etica", False))) else "No")
+    c.drawString(60, y_actual, dd.codigo_etica)
     y_actual -= 14; c.setFillColor(black)
 
     # ========== B ==========
