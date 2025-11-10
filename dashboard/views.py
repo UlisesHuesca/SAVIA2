@@ -2881,7 +2881,7 @@ def generar_pdf_dd(proveedor, request):
         c.showPage(); c.setFillColor(black); y_actual = 750
     pB.drawOn(c, 40, y_actual - hB); y_actual -= (hB + 6)
     c.setFont("Helvetica", 10); c.setFillColor(azul_claro)
-    c.drawString(60, y_actual, "Sí" if bool(getattr(dd, "codigo_conducta", False)) else "No")
+    c.drawString(60, y_actual, dd.codigo_conducta)
     y_actual -= 14; c.setFillColor(black)
 
     # ========== C ==========
@@ -2893,7 +2893,7 @@ def generar_pdf_dd(proveedor, request):
         c.showPage(); c.setFillColor(black); y_actual = 750
     pC.drawOn(c, 40, y_actual - hC); y_actual -= (hC + 6)
     c.setFont("Helvetica", 10); c.setFillColor(azul_claro)
-    c.drawString(60, y_actual, "Sí" if bool(getattr(dd, "politica_anticorrupcion", False)) else "No")
+    c.drawString(60, y_actual, dd.politica_anticorrupcion)
     y_actual -= 14; c.setFillColor(black)
 
     # ========== D ==========
@@ -2905,7 +2905,7 @@ def generar_pdf_dd(proveedor, request):
         c.showPage(); c.setFillColor(black); y_actual = 750
     pD.drawOn(c, 40, y_actual - hD); y_actual -= (hD + 6)
     c.setFont("Helvetica", 10); c.setFillColor(azul_claro)
-    c.drawString(60, y_actual, "Sí" if bool(getattr(dd, "otro_documento_etico", False)) else "No")
+    c.drawString(60, y_actual, dd.otro_documento_etico)
     y_actual -= 14; c.setFillColor(black)
 
     # (E omitida)
@@ -2991,7 +2991,7 @@ def generar_pdf_dd(proveedor, request):
         c.showPage(); c.setFillColor(black); y_actual = 750
     pG.drawOn(c, 40, y_actual - hG); y_actual -= (hG + 6)
     c.setFont("Helvetica", 10); c.setFillColor(azul_claro)
-    c.drawString(60, y_actual, "Sí" if bool(getattr(dd, "manual_organizacion", getattr(dd, "manual_organización", False))) else "No")
+    c.drawString(60, y_actual, dd.manual_organizacion)
     y_actual -= 14; c.setFillColor(black)
 
     # ========== H ==========
@@ -3027,7 +3027,7 @@ def generar_pdf_dd(proveedor, request):
         c.showPage(); c.setFillColor(black); y_actual = 750
     pI.drawOn(c, 40, y_actual - hI); y_actual -= (hI + 6)
     c.setFont("Helvetica", 10); c.setFillColor(azul_claro)
-    c.drawString(60, y_actual, "Sí" if bool(getattr(dd, "capacitacion_anticorrupcion", getattr(dd, "capacitacion_anticorrupción", False))) else "No")
+    c.drawString(60, y_actual, dd.capacitacion_anticorrupcion)
     y_actual -= 14; c.setFillColor(black)
 
     # ========== J ==========
@@ -3040,9 +3040,9 @@ def generar_pdf_dd(proveedor, request):
     pJ.drawOn(c, 40, y_actual - hJ); y_actual -= (hJ + 6)
 
     val_j = getattr(dd, "medio_denuncia", None)
-    if isinstance(val_j, bool):
+    if val_j:
         c.setFont("Helvetica", 10); c.setFillColor(azul_claro)
-        c.drawString(60, y_actual, "Sí" if val_j else "No")
+        c.drawString(60, y_actual, val_j)
         y_actual -= 14; c.setFillColor(black)
     else:
         par_j = Paragraph(str(val_j or ""), pstyle_respuesta)
