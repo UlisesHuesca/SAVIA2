@@ -48,6 +48,7 @@ class Proveedor(models.Model):
     comentario_carta_credito = models.CharField(max_length=200,null=True, blank=True)
     comentario_cotizacion = models.CharField(max_length=200,null=True, blank=True)  
     comentario_cumplimiento_imss = models.CharField(max_length=200,null=True, blank=True)
+    comentario_repse = models.CharField(max_length=200,null=True, blank=True)
     acepto_politica = models.BooleanField(default=False)
     acepto_politica_proveedor = models.BooleanField(default=False)
     acepto_codigo_etica = models.BooleanField(default=False)

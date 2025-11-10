@@ -1147,7 +1147,7 @@
                             <td>
                             
                             </td>
-                            <td class="" id="comentario_14_{{proveedor.id|unlocalize}}" tipo ="busqueda_mediatica" >{% if proveedor.comentario_busqueda %} {{proveedor.comentario_busqueda}} {% endif %}</td>
+                            <!-- <td class="" id="comentario_14_{{proveedor.id|unlocalize}}" tipo ="busqueda_mediatica" >{% if proveedor.comentario_busqueda %} {{proveedor.comentario_busqueda}} {% endif %}</td>
                             <td class="d-none" id="form_comentario_14_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_14_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
                             </td>
@@ -1171,6 +1171,7 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
+                       
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "busqueda_mediatica" %}
@@ -1181,6 +1182,18 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
+
+                            </td>-->
+                            <td>
+
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
+
+                            </td>
+                            <td>
 
                             </td>
                         </tr>
@@ -1540,6 +1553,89 @@
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "cumplimiento_imss" %}
+                                        {% if documento.validada %}
+                                            <i class="fa-regular fa-check"></i>
+                                        {% else %}
+                                            <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+
+                            </td>
+
+                           
+                        </tr>
+                           <tr>
+                            <td>Repse</td>
+                            <td>
+                              
+                                        {% if documentos_count.repse == 0 %} 
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Repse" hx-target="#document" hx-get="{% url 'edit-repse' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "repse" %}
+                                                    {% if documento.validada %}
+                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfRepse{{documento.id|unlocalize }}" title="Ver Repse">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfRepse{{documento.id|unlocalize }}" title="Ver Repse">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                <!-- Modal con visor de PDF -->
+                                                <div class="modal fade" id="pdfRepse{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfRepseLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-xl">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="pdfRepseLabel{{documento.id|unlocalize }}">Imss</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if documentos_count.repse > documentos_validados_count.repse %}
+                                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Cumplimiento Imss" hx-target="#document" hx-get="{% url 'edit-repse' proveedor.id %}">
+                                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                   
+                            </td>
+                            <td class="" id="comentario_16_{{proveedor.id|unlocalize}}" tipo ="repse" >
+                                {% if proveedor.comentario_repse %} {{proveedor.comentario_repse}} {% endif %}
+                            </td>
+                            <td class="d-none" id="form_comentario_16_{{proveedor.id|unlocalize}}">
+                                <input type="textarea" class="form-control" id="comentario-input_16_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
+                            </td>
+                            <td>
+                                <a id="modificar_comentario_16_{{proveedor.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{proveedor.id|unlocalize}}', 16)">
+                                    <i class="fa-regular fa-comment"></i>
+                                </a>
+                                <button type="button" id="save_comment_16_{{proveedor.id|unlocalize}}" onclick="aceptar_edicion('{{proveedor.id|unlocalize}}', 16)"    class="btn btn-outline-primary d-none">
+                                    <i class="fa-regular fa-circle-check"></i>
+                                </button>
+                                <button id="cancel_edit_16_{{proveedor.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{proveedor.id|unlocalize}}', 16)" style="color:ghostwhite; background-color:#980F0F ;">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            </td> 
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "repse" %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "repse" %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}

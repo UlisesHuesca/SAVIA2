@@ -571,6 +571,102 @@
                                 {% if proveedor.comentario_cumplimiento_imss %} {{proveedor.comentario_cumplimiento_imss}} {% endif %}
                             </td>
                         </tr>
+                        <tr>
+                            <td>Opinión de cumplimiento del IMSS</td>
+                            <td>
+                              
+                                        {% if documentos_count.cumplimiento_imss == 0 %} 
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Opinión de cumplimiento" hx-target="#document" hx-get="{% url 'edit-cumplimiento-imss' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "cumplimiento_imss" %}
+                                                    {% if documento.validada %}
+                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfImss{{documento.id|unlocalize }}" title="Ver Opinión de cumplimiento del IMSS">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfImss{{documento.id|unlocalize }}" title="Ver Opinión de cumplimiento del IMSS">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                <!-- Modal con visor de PDF -->
+                                                <div class="modal fade" id="pdfImss{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfImssLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-xl">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="pdfImssLabel{{documento.id|unlocalize }}">Imss</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if documentos_count.cumplimiento_imss > documentos_validados_count.cumplimiento_imss %}
+                                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Cumplimiento Imss" hx-target="#document" hx-get="{% url 'edit-cumplimiento-imss' proveedor.id %}">
+                                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                   
+                            </td>
+                             <td class="" id="comentario_15_{{proveedor.id|unlocalize}}" tipo ="cumplimiento_imss" >
+                                {% if proveedor.comentario_cumplimiento_imss %} {{proveedor.comentario_cumplimiento_imss}} {% endif %}
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>Repse</td>
+                            <td>
+                              
+                                        {% if documentos_count.repse == 0 %} 
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar repse" hx-target="#document" hx-get="{% url 'edit-repse' proveedor.id %}">
+                                                <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                            </a>
+                                        {% else %}
+                                            {% for documento in documentos %}
+                                                {% if documento.tipo_documento == "repse" %}
+                                                    {% if documento.validada %}
+                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfRepse{{documento.id|unlocalize }}" title="Ver Repse">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% else %}
+                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfRepse{{documento.id|unlocalize }}" title="Ver Repse">
+                                                            <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
+                                                        </button>
+                                                    {% endif %}
+                                                <!-- Modal con visor de PDF -->
+                                                <div class="modal fade" id="pdfRepse{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfRepseLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-xl">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="pdfRepseLabel{{documento.id|unlocalize }}">Repse</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                            {% if documentos_count.repse > documentos_validados_count.repse %}
+                                                <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Repse" hx-target="#document" hx-get="{% url 'edit-repse' proveedor.id %}">
+                                                    <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
+                                                </a>
+                                            {% endif %}
+                                        {% endif %}
+                                   
+                            </td>
+                             <td class="" id="comentario_16_{{proveedor.id|unlocalize}}" tipo ="repse" >
+                                {% if proveedor.comentario_repse %} {{proveedor.comentario_repse}} {% endif %}
+                            </td>
+                        </tr>
                     </tbody> 
                 </table>
             </div>

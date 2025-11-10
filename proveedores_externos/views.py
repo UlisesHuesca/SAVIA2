@@ -500,9 +500,9 @@ def edit_busqueda_mediatica(request, pk):
 
 
 @perfil_seleccionado_required
-def edit_busqueda_mediatica(request, pk):
+def edit_repse(request, pk):
     proveedor = get_object_or_404(Proveedor, id=pk)
-    tipo_documento = 'busqueda_mediatica'
+    tipo_documento = 'repse'
    
 
     if request.method == 'POST':

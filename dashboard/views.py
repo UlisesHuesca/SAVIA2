@@ -1430,6 +1430,12 @@ def update_comentario(request):
     if tipo == 'carta_credito':
         proveedor.comentario_carta_credito = dato
         indice = 14
+    if tipo == 'cumplimiento_imss':
+        proveedor.comentario_cumplimiento_imss = dato
+        indice = 15
+    if tipo == 'repse':
+        proveedor.comentario_repse = dato
+        indice = 16
     #if tipo == 'busqueda_mediatica':
     #    proveedor.comentario_busqueda_mediatica = dato
     #    indice = 15
