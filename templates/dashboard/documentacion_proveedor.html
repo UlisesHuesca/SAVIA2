@@ -114,7 +114,10 @@
                                     {% else %}
                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                     {% endif %}
-
+                                    <button class="btn btn-sm btn-outline-info mt-1" 
+                                            onclick="toggleVisita({{ proveedor.id }})">
+                                        Cambiar
+                                    </button>
                                 </td>
                             </tr>
                         </tbody>
@@ -142,18 +145,80 @@
                             {% for direccion in direcciones %}
                             <tr>
                                 <td>{{direccion.distrito}}</td>
+                                <!-- Columna editable -->
                                 <td>
-                                    {% if direccion.estatus.nombre == "APROBADO" %}<span class="badge bg-primary">{{direccion.estatus}}</span>
-                                    {% elif direccion.estatus.nombre == "NUEVO" %}<span class="badge bg-warning">{{direccion.estatus}}</span>
-                                    <!-- % elif direccion.estatus.nombre == "RECHAZADO" %}<span class="badge bg-danger">{{direccion.estatus}}</span> -->
-                                    {% endif %}
+                                    <span id="estatus_display_{{ direccion.id|unlocalize }}">
+                                        {% if direccion.estatus.nombre == "APROBADO" %}
+                                            <span class="badge bg-primary">{{ direccion.estatus }}</span>
+                                        {% elif direccion.estatus.nombre == "NUEVO" %}
+                                            <span class="badge bg-warning">{{ direccion.estatus }}</span>
+                                        {% elif direccion.estatus.nombre == "RECHAZADO" %}
+                                            <span class="badge bg-danger">{{ direccion.estatus }}</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Sin estatus</span>
+                                        {% endif %}
+                                    </span>
+
+                                    <!-- Campo select oculto -->
+                                    <select id="estatus_select_{{ direccion.id|unlocalize }}" class="form-select form-select-sm d-none" style="width: 130px;">
+                                        <option value="NUEVO">NUEVO</option>
+                                        <option value="APROBADO">APROBADO</option>
+                                        <option value="RECHAZADO">RECHAZADO</option>
+                                    </select>
+
+                                    <button class="btn btn-sm btn-outline-info" type="button"
+                                            id="edit_btn_{{ direccion.id|unlocalize }}"
+                                            onclick="editarEstatus({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-success d-none" type="button"
+                                            id="save_btn_{{ direccion.id| unlocalize }}"
+                                            onclick="guardarEstatus({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-secondary d-none" type="button"
+                                            id="cancel_btn_{{ direccion.id | unlocalize }}"
+                                            onclick="cancelarEstatus({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
                                 </td>
-                                <td>{% if direccion.modificado_fecha %}
-                                        {{direccion.modificado_fecha}}
-                                    {% else %} 
-                                        <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i> 
-                                    {% endif %}
-                                </td>
+                                <td>
+                                    <!-- Vista -->
+                                    <span id="fecha_view_{{ direccion.id| unlocalize }}">
+                                        {% if direccion.modificado_fecha %}
+                                        {{ direccion.modificado_fecha }}
+                                        {% else %}
+                                        <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                    </span>
+
+                                    <!-- Edición -->
+                                    <span id="fecha_edit_{{ direccion.id|unlocalize }}" class="d-none">
+                                        <input type="date"
+                                            id="fecha_input_{{ direccion.id|unlocalize }}"
+                                            class="form-control form-control-sm"
+                                            value="{{ direccion.modificado_fecha|date:'Y-m-d' }}">
+                                    </span>
+                                    </td>
+
+                                    <td class="text-end">
+                                    <button type="button" class="btn btn-sm btn-outline-info"
+                                            id="fecha_btn_edit_{{ direccion.id|unlocalize }}"
+                                            onclick="fecha_edit({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-success d-none"
+                                            id="fecha_btn_save_{{ direccion.id|unlocalize }}"
+                                            onclick="fecha_save({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+                                    <button type="button" class="btn btn-sm btn-secondary d-none"
+                                            id="fecha_btn_cancel_{{ direccion.id|unlocalize }}"
+                                            onclick="fecha_cancel({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                    </td>
+
                             </tr>
                             {% endfor %}
                         </tbody>
@@ -2022,7 +2087,108 @@ function ActualizarComentario(pk, data, tipo, indice){
     }
 )
 }
+
+function toggleVisita(proveedorId) {
+    const url = '/dashboard/update_visita/';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,  // asegúrate de tenerlo definido igual que en tus otras funciones
+        },
+        body: JSON.stringify({'pk': proveedorId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        const statusDiv = document.getElementById('visita_status_' + proveedorId);
+        if (data.visita) {
+            statusDiv.innerHTML = '<i class="fa-solid fa-circle-check text-success fa-xl"></i>';
+        } else {
+            statusDiv.innerHTML = '<i class="fa-solid fa-circle-xmark text-danger fa-xl"></i>';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}
+function editarEstatus(id) {
+    document.getElementById("estatus_display_" + id).classList.add("d-none");
+    document.getElementById("estatus_select_" + id).classList.remove("d-none");
+    document.getElementById("edit_btn_" + id).classList.add("d-none");
+    document.getElementById("save_btn_" + id).classList.remove("d-none");
+    document.getElementById("cancel_btn_" + id).classList.remove("d-none");
+}
+
+function cancelarEstatus(id) {
+    document.getElementById("estatus_display_" + id).classList.remove("d-none");
+    document.getElementById("estatus_select_" + id).classList.add("d-none");
+    document.getElementById("edit_btn_" + id).classList.remove("d-none");
+    document.getElementById("save_btn_" + id).classList.add("d-none");
+    document.getElementById("cancel_btn_" + id).classList.add("d-none");
+}
+
+function guardarEstatus(id) {
+    const nuevoEstatus = document.getElementById("estatus_select_" + id).value;
+    fetch("/proveedores/update_estatus_direccion/", {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,
+        },
+        body: JSON.stringify({ id: id, estatus: nuevoEstatus }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("estatus_display_" + id).innerHTML = data.badge_html;
+        cancelarEstatus(id);
+    });
+}
+  
+function fecha_edit(id){
+  document.getElementById('fecha_view_'+id).classList.add('d-none');
+  document.getElementById('fecha_edit_'+id).classList.remove('d-none');
+
+  document.getElementById('fecha_btn_edit_'+id).classList.add('d-none');
+  document.getElementById('fecha_btn_save_'+id).classList.remove('d-none');
+  document.getElementById('fecha_btn_cancel_'+id).classList.remove('d-none');
+}
+
+function fecha_cancel(id){
+  document.getElementById('fecha_view_'+id).classList.remove('d-none');
+  document.getElementById('fecha_edit_'+id).classList.add('d-none');
+
+  document.getElementById('fecha_btn_edit_'+id).classList.remove('d-none');
+  document.getElementById('fecha_btn_save_'+id).classList.add('d-none');
+  document.getElementById('fecha_btn_cancel_'+id).classList.add('d-none');
+}
+
+function fecha_save(id){
+  const fechaVal = document.getElementById('fecha_input_'+id).value; // 'YYYY-MM-DD' o ''
+
+  fetch('/proveedores/update_fecha_direccion/', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json',
+      'X-CSRFToken': csrftoken,
+    },
+    body: JSON.stringify({ id: id, fecha: fechaVal })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.success) return;
+
+    // Actualiza la vista: fecha formateada o ícono si se limpió
+    document.getElementById('fecha_view_'+id).innerHTML =
+      data.fecha ? data.fecha : '<i class="fa-solid fa-circle-xmark text-danger fa-xl"></i>';
+
+    fecha_cancel(id);
+  })
+  .catch(console.error);
+}
+  
+  
   </script>
+
+
 {% endblock %}
 
 <!--style="background-color: #D0D8DC; color:black; font-weight: bold;" -->

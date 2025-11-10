@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.utils import translation
+from django.utils.dateparse import parse_date
 from django.urls import reverse
 from django.conf import settings
 from django.forms import inlineformset_factory
@@ -1450,6 +1451,68 @@ def update_comentario(request):
     }
 
     return JsonResponse(response_data, safe=False)
+
+@login_required
+def update_visita(request):
+    if request.method == 'POST':
+        import json
+        data = json.loads(request.body)
+        pk = data.get('pk')
+        proveedor = Proveedor.objects.get(pk=pk)
+        proveedor.visita = not proveedor.visita  # alterna el valor booleano
+        proveedor.save()
+        return JsonResponse({'success': True, 'visita': proveedor.visita})
+    return JsonResponse({'success': False}, status=400)
+
+
+@login_required
+def update_estatus_direccion(request):
+    if request.method == "POST":
+        print('estatus direccion')
+        data = json.loads(request.body)
+        direccion_id = data.get("id")
+        nuevo_estatus = data.get("estatus")
+
+        direccion = Proveedor_direcciones.objects.get(id=direccion_id)
+        estatus_obj = Estatus_proveedor.objects.get(nombre=nuevo_estatus)
+        direccion.estatus = estatus_obj
+        direccion.save()
+
+        # generar HTML del badge actualizado
+        color = {
+            "APROBADO": "bg-primary",
+            "NUEVO": "bg-warning",
+            "RECHAZADO": "bg-danger"
+        }.get(nuevo_estatus, "bg-secondary")
+
+        badge_html = f'<span class="badge {color}">{nuevo_estatus}</span>'
+
+        return JsonResponse({
+            "success": True,
+            "badge_html": badge_html,
+        })
+    
+@login_required
+def update_fecha_direccion(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False}, status=405)
+
+    payload = json.loads(request.body or '{}')
+    pk    = payload.get('id')
+    fecha = (payload.get('fecha') or '').strip()  # 'YYYY-MM-DD' o ''
+
+    try:
+        d = Proveedor_direcciones.objects.get(pk=pk)
+    except Proveedor_direcciones.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'not_found'}, status=404)
+
+    d.modificado_fecha = parse_date(fecha) if fecha else None
+    d.save()
+
+    return JsonResponse({
+        'success': True,
+        'fecha': d.modificado_fecha.isoformat() if d.modificado_fecha else ''
+    })
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
