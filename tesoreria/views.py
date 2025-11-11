@@ -925,12 +925,15 @@ def edit_pago(request, pk):
             print('ya estoy aquí')
             if compra.moneda.nombre == "PESOS":
                 sub.gastado = sub.gastado - pago.monto
+                compra.monto_pagado = compra.monto_pagado - pago.monto
             if compra.moneda.nombre == "DOLARES":
                 if pago.cuenta.moneda.nombre == "PESOS": #Si la cuenta es en pesos
                     sub.gastado = sub.gastado - pago.monto * pago.tipo_de_cambio
+                    compra.monto_pagado = compra.monto_pagado - pago.monto * pago.tipo_de_cambio
                 if pago.cuenta.moneda.nombre == "DOLARES":
                     tipo_de_cambio = decimal.Decimal(dof())
                     sub.gastado = sub.gastado - pago.monto * tipo_de_cambio
+                
                 messages.success(request,f'Has eliminado el pago {pago.id} de manera satisfactoria')
             pago.delete()
             return redirect('compras-autorizadas')
