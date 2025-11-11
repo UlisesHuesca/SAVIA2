@@ -618,6 +618,8 @@ def proveedores(request):
     # Obtén los IDs de los proveedores que cumplan con las condiciones deseadas
     proveedores_dir = Proveedor_direcciones.objects.filter(distrito__id__in = almacenes_distritos)
     proveedores_ids = proveedores_dir.values_list('nombre', flat=True).distinct()
+
+    proveedores_altas = proveedores_dir.filter(completo=True).filter(Q(estatus__nombre='NUEVO') | Q(estatus__nombre='APROBADO'))
     
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.proveedores:
@@ -633,8 +635,11 @@ def proveedores(request):
     myfilter=ProveedorFilter(request.GET, queryset=proveedores)
     proveedores = myfilter.qs
 
-    if request.method == 'POST' and 'btnExcel' in request.POST:
-        return convert_excel_proveedores(proveedores_dir)
+    if request.method == 'POST': 
+        if 'btnExcel' in request.POST:
+            return convert_excel_proveedores(proveedores_dir)
+        if 'btnproveedoresAltas' in request.POST:
+            return convert_excel_proveedores_altas(proveedores_altas)
 
     #Set up pagination
     p = Paginator(proveedores, 50)
@@ -1999,6 +2004,81 @@ def convert_excel_proveedores(proveedores):
     wb.save(response)
 
     return(response)
+
+def convert_excel_proveedores_altas(proveedores_qs):
+    """
+    Espera un queryset de Proveedor_direcciones (o equivalente) con:
+    - distrito__nombre
+    - nombre__razon_social
+    - nombre__rfc
+    - enviado_fecha
+    - modificado_fecha
+    """
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response['Content-Disposition'] = f'attachment; filename=Proveedores_resumen_{dt.date.today()}.xlsx'
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = 'Proveedores'
+
+    # Estilos básicos
+    try:
+        head_style = NamedStyle(name="head_style")
+        head_style.font = Font(name='Arial', color='00FFFFFF', bold=True, size=11)
+        head_style.fill = PatternFill("solid", fgColor='00003366')
+        wb.add_named_style(head_style)
+    except ValueError:
+        head_style = wb.named_styles['head_style']
+
+    try:
+        date_style = NamedStyle(name='date_style', number_format='DD/MM/YYYY')
+        wb.add_named_style(date_style)
+    except ValueError:
+        date_style = wb.named_styles['date_style']
+
+    # Encabezados
+    headers = ['Distrito', 'Razón Social', 'RFC', 'Enviado', 'Modificado']
+    for c, h in enumerate(headers, start=1):
+        cell = ws.cell(row=1, column=c, value=h)
+        cell.style = head_style
+        ws.column_dimensions[get_column_letter(c)].width = 22 if c in (2, 5) else 16
+
+    # Filas
+    rows = proveedores_qs.values_list(
+        'distrito__nombre',
+        'nombre__razon_social',
+        'nombre__rfc',
+        'enviado_fecha',
+        'modificado_fecha',
+    )
+
+    r = 1
+    for distrito, razon, rfc, enviado, modificado in rows:
+        r += 1
+        ws.cell(row=r, column=1, value=str(distrito) if distrito else '')
+        ws.cell(row=r, column=2, value=str(razon) if razon else '')
+        ws.cell(row=r, column=3, value=str(rfc) if rfc else '')
+
+        # Normaliza fechas para Excel (sin tz)
+        def write_date(col, val):
+            if not val:
+                ws.cell(row=r, column=col, value='')
+                return
+            if isinstance(val, dt.datetime):
+                # si viene con tz, quítala; si quieres solo fecha, usa .date()
+                if val.tzinfo is not None:
+                    val = val.replace(tzinfo=None)
+                val = val.date()
+            cell = ws.cell(row=r, column=col, value=val)
+            cell.style = date_style
+
+        write_date(4, enviado)
+        write_date(5, modificado)
+
+    wb.save(response)
+    return response
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required

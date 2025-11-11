@@ -98,7 +98,7 @@
         </div>  
     </div>
     
-    <div class="col-lg-2 col-sm-3 mt-2">
+    <div class="col-lg-3 col-sm-3 mt-2">
         <div class="card">
             <div class = "card-header">
                 <h5 class="card-title">Reportes</h5>
@@ -108,7 +108,12 @@
                     {% csrf_token %}
                     <ul class="nav nav-pills my-2" >
                         <li class="nav-item mx-2 pl-5">
-                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel'>
+                            <button type="submit" name="btnExcel" class="btn btn-outline-success" value='Reporte Excel' title ="Provedores Direcciones">
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2 pl-5">
+                            <button type="submit" name="btnproveedoresAltas" class="btn btn-outline-success" value='Reporte Excel Altas' title ="Proveedores Altas">
                                 <i class="fa-solid fa-file-excel fa-2xl"></i>
                             </button>
                         </li>
