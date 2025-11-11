@@ -2049,7 +2049,9 @@ def eliminar_requerimiento_calidad(request, pk):
     try:
         requerimiento = Requerimiento_Calidad.objects.get(id=pk)
         requerimiento.delete()
-        return JsonResponse({'success': True})
+        messages.success(request, "Requerimiento eliminado.")
+        next_url = request.POST.get('next') or request.META.get('HTTP_REFERER') or '/'
+        return redirect(next_url)
     except Requerimiento_Calidad.DoesNotExist:
         return JsonResponse({'success': False, 'error': 'Requerimiento no encontrado'})
     

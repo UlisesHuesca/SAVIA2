@@ -8,8 +8,36 @@
 </head>
 <body>
 {% block content %}
+
 <hr>
 <hr>
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
 <div class="container my-5">
     <div class="row justify-content-center">
         <div class="col-md-8">
@@ -84,7 +112,17 @@
                                         <td>{{ requerimiento.comentarios}}</td>
                                         <td>{{ requerimiento.fecha }}</td>
                                         <td>
-                                            <button class="btn btn-danger btn-sm" onclick="eliminarRequerimiento({{ requerimiento.id }})">Eliminar</button>
+                                            <form method="post"
+                                                action="{% url 'eliminar_requerimiento_calidad' requerimiento.id %}"
+                                                class="d-inline">
+                                            {% csrf_token %}
+                                            <!-- opcional, para volver a la misma página -->
+                                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                            <button type="submit" class="btn btn-danger btn-sm"
+                                                    onclick="return confirm('¿Seguro que deseas eliminar este requerimiento?')">
+                                                Eliminar
+                                            </button>
+                                            </form>
                                         </td>
                                     </tr>
                                 {% endfor %}
