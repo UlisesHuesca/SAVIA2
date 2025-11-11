@@ -93,6 +93,10 @@
                                     {% else %}
                                         <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                     {% endif %}
+                                    <button class="btn btn-sm btn-outline-info mt-1" 
+                                            onclick="toggleProducto({{ proveedor.id|unlocalize }})">
+                                        Cambiar
+                                    </button>
                                 </td>
                                 <td>
                                     {% if tiene_servicio %}
@@ -100,6 +104,10 @@
                                     {% else %}
                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                     {% endif %}
+                                    <button class="btn btn-sm btn-outline-info mt-1" 
+                                            onclick="toggleServicio({{ proveedor.id|unlocalize }})">
+                                        Cambiar
+                                    </button>
                                 </td>
                                 <td>
                                     {% if tiene_arrendamiento %}
@@ -107,6 +115,10 @@
                                     {% else %}
                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                     {% endif %}
+                                    <button class="btn btn-sm btn-outline-info mt-1" 
+                                            onclick="toggleArrendamiento({{ proveedor.id|unlocalize }})">
+                                        Cambiar
+                                    </button>
                                 </td>
                                 <td>
                                     {% if proveedor.visita %}
@@ -115,7 +127,7 @@
                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                     {% endif %}
                                     <button class="btn btn-sm btn-outline-info mt-1" 
-                                            onclick="toggleVisita({{ proveedor.id }})">
+                                            onclick="toggleVisita({{ proveedor.id|unlocalize }})">
                                         Cambiar
                                     </button>
                                 </td>
@@ -2110,6 +2122,30 @@ function toggleVisita(proveedorId) {
     })
     .catch(error => console.error('Error:', error));
 }
+
+/* function toggleArrendamiento(proveedorId) {
+    const url = '/dashboard/update_visita/';
+
+    fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,  // asegúrate de tenerlo definido igual que en tus otras funciones
+        },
+        body: JSON.stringify({'pk': proveedorId})
+    })
+    .then(response => response.json())
+    .then(data => {
+        const statusDiv = document.getElementById('arrendamiento_status_' + proveedorId);
+        if (data.visita) {
+            statusDiv.innerHTML = '<i class="fa-solid fa-circle-check text-success fa-xl"></i>';
+        } else {
+            statusDiv.innerHTML = '<i class="fa-solid fa-circle-xmark text-danger fa-xl"></i>';
+        }
+    })
+    .catch(error => console.error('Error:', error));
+}*/
+
 function editarEstatus(id) {
     document.getElementById("estatus_display_" + id).classList.add("d-none");
     document.getElementById("estatus_select_" + id).classList.remove("d-none");

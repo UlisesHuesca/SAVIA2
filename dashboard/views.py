@@ -1465,6 +1465,20 @@ def update_visita(request):
     return JsonResponse({'success': False}, status=400)
 
 
+#@login_required
+#def update_materiales(request):
+#    if request.method == 'POST':
+#        import json
+#        data = json.loads(request.body)
+#        pk = data.get('pk')
+#        proveedor = Proveedor.objects.get(pk=pk)
+
+#        proveedor. = not proveedor.visita  # alterna el valor booleano
+#        proveedor.save()
+#        return JsonResponse({'success': True, 'visita': proveedor.visita})
+#    return JsonResponse({'success': False}, status=400)
+
+
 @login_required
 def update_estatus_direccion(request):
     if request.method == "POST":

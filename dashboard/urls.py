@@ -51,6 +51,7 @@ urlpatterns = [
     path('proveedores/alta_cancelada/<int:pk>/', views.cancelar_alta_proveedor, name='cancelar-alta-proveedor'),
     path('proveedores/debida_diligencia/<int:pk>/', views.descargar_pdf_dd, name='descargar-pdf-dd'),
     path('dashboard/update_visita/', views.update_visita, name='update_visita'),
+    #path('dashboard/update_materiales/', views.update_materiales, name='update_materiales'),
     path('proveedores/update_estatus_direccion/', views.update_estatus_direccion, name='update_estatus_direccion'),
     path('proveedores/update_fecha_direccion/', views.update_fecha_direccion, name='update_fecha_direccion'),
 ]

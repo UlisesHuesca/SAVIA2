@@ -40,6 +40,10 @@
                             <th scope="col">{{compra.req.orden.staff.staff.staff.first_name}} {{compra.req.orden.staff.staff.staff.last_name}}</th>
                         </tr>
                         <tr>
+                            <th>Activo</th>
+                            <th>{% if compra.req.orden.activo.eco_unidad == null %}No registrado{% else %}{{compra.req.orden.activo.eco_unidad}} | {{compra.req.orden.activo.descripcion}}{% endif %}</th>
+                        </tr>
+                        <tr>
                             <th scope="col">Proveedor</th>
                             <th scope="col">{{compra.proveedor}}</th>
                         </tr>

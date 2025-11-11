@@ -302,7 +302,7 @@ def checkout(request):
     activos_para_select2 = [
         {
             'id': item.id, 
-            'text': str(item.eco_unidad)
+            'text': str(item.eco_unidad) + ('|') + str(item.descripcion)
         } for item in activos
     ]
     
