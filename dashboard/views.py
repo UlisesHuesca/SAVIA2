@@ -1286,8 +1286,19 @@ def documentacion_proveedores(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     proveedor = Proveedor.objects.get(id=pk)       
     razon = request.GET.get('razon_social', '')
-    rfc = request.GET.get('rfc', '')   
-    next_url = request.GET.get('next') or request.POST.get('next')  
+    rfc = request.GET.get('rfc', '') 
+    
+    # 1) SIEMPRE define next_url (fallbacks seguros)
+    next_url = (
+        request.GET.get('next') or
+        request.session.get('next_url') or
+        request.META.get('HTTP_REFERER') or
+        '/'
+    )
+
+    # 2) Solo en GET, guarda en sesión para posteriores POST/AJAX
+    if request.method == 'GET':
+        request.session['next_url'] = next_url
 
     direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre__in=["NO REGISTR","RECHAZADO"])
     #tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
@@ -1339,19 +1350,19 @@ def documentacion_proveedores(request, pk):
                 checkbox_name = f'validar_documento_{documento.id}'
                 print("Nombre del checkbox esperado:", checkbox_name)  # Imprimir el nombre esperado
                 if checkbox_name in request.POST:
-                    print('PASO 1')
+                    #print('PASO 1')
                     documento.validada = True
                     documento.validada_por = usuario
                     documento.validada_fecha = fecha_hora
                 else:
-                    print('No paso')
+                    #print('No paso')
                     documento.validada = False
                 documento.save()
             
         if "btn_eliminar_docto" in request.POST:
             for documento in documentos:
                 eliminar_checkbox_name = f'eliminar_documento_{documento.id}'
-                print(documento)
+                #print(documento)
                 if documento.archivo: 
                     if eliminar_checkbox_name in request.POST: # Verificar que tenga archivo
                         print(documento.archivo)
@@ -1364,8 +1375,8 @@ def documentacion_proveedores(request, pk):
         return redirect(request.path) 
         #else:
         #    messages.error(request,'No está validando')
-    print(documentos_count)
-    print(documentos_validados_count)
+    #print(documentos_count)
+    #print(documentos_validados_count)
     context = {
         'proveedor':proveedor,
         'direcciones':direcciones,

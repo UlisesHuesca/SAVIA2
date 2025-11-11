@@ -201,9 +201,9 @@
                                     <td class="text-center">
                                         <span id="flag_producto_{{ direccion.id|unlocalize }}">
                                         {% if direccion.producto %} 
-                                            <i class="fa-solid fa-circle-check text-success fa-lg"></i>
+                                            <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
                                         {% else %}
-                                            <i class="fa-solid fa-circle-xmark text-danger fa-lg"></i>
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                         {% endif %}
                                         </span>
                                         <button class="btn btn-sm btn-outline-info"
@@ -216,9 +216,9 @@
                                     <td class="text-center">
                                         <span id="flag_servicio_{{ direccion.id|unlocalize }}">
                                         {% if direccion.servicio %}
-                                            <i class="fa-solid fa-circle-check text-success fa-lg"></i>
+                                                <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
                                         {% else %}
-                                            <i class="fa-solid fa-circle-xmark text-danger fa-lg"></i>
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                         {% endif %}
                                         </span>
                                         <button class="btn btn-sm btn-outline-info"
@@ -231,9 +231,9 @@
                                     <td class="text-center">
                                         <span id="flag_arrendamiento_{{ direccion.id|unlocalize }}">
                                         {% if direccion.arrendamiento %}
-                                            <i class="fa-solid fa-circle-check text-success fa-lg"></i>
+                                            <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
                                         {% else %}
-                                            <i class="fa-solid fa-circle-xmark text-danger fa-lg"></i>
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                         {% endif %}
                                         </span>
                                         <button class="btn btn-sm btn-outline-info"
@@ -2247,13 +2247,15 @@ function toggleFlag(id, flag) {
   })
   .then(r => r.json())
   .then(data => {
-    if (!data.success) return;
-    const spanId = `flag_${flag}_${id}`;
-    document.getElementById(spanId).innerHTML = iconHtml(data.value);
+    if (data.success) {
+      const spanId = `flag_${flag}_${id}`;
+      document.getElementById(spanId).innerHTML = iconHtml(data.value);
+    }
   })
   .catch(console.error);
 }
-  
+
+
   </script>
 
 
