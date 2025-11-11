@@ -933,6 +933,7 @@ def edit_pago(request, pk):
                 if pago.cuenta.moneda.nombre == "DOLARES":
                     tipo_de_cambio = decimal.Decimal(dof())
                     sub.gastado = sub.gastado - pago.monto * tipo_de_cambio
+                    compra.monto_pagado = compra.monto_pagado - pago.monto
                 
                 messages.success(request,f'Has eliminado el pago {pago.id} de manera satisfactoria')
             pago.delete()
