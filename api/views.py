@@ -199,13 +199,13 @@ def Compra_tabla_api(request):
     compras = Compra.objects.filter(complete = True)
 
  
-    page = request.query_params.get('page', 1)
-    per_page = request.query_params.get('per_page', 20)
-    paginator = Paginator(compras, per_page=per_page)
-    try: 
-       compras = paginator.page(number=page)
-    except EmptyPage:
-        proveedores = []
+    #page = request.query_params.get('page', 1)
+    #per_page = request.query_params.get('per_page', 20)
+    #paginator = Paginator(compras, per_page=per_page)
+    #try: 
+    #   compras = paginator.page(number=page)
+    #except EmptyPage:
+    #    proveedores = []
 
     serialized_compras = Compra_tabla_Serializer(compras, many=True)
         
