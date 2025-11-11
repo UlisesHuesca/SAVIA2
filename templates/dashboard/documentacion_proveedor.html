@@ -46,12 +46,12 @@
 <form method="POST">
     {% csrf_token %}
 <div class ="row">
-    <div class="col-sm-12 col-lg-6">
+    <div class="col-sm-12 col-lg-2">
         
         <div class = "card mt-2 bg-white">
      
             <div class="card-header">
-                <h5>Proveedor: {{proveedor.razon_social}}</h5>
+                <h5>Status Visita</h5>
             </div>
             <div class="card-body">
                 <div class="d-flex justify-content-end">
@@ -70,65 +70,28 @@
                     </ul>
                 </div>
                     <table class="table table-striped">
-                        <p class="text-center fw-bold">Tipo de Proveedor/Status Visita</p>
                         <thead>
-                            <th>
-                                Materiales
-                            </th>
-                            <th>
-                                Servicios
-                            </th>
-                            <th>
-                                Arrendamiento
-                            </th>
+                            
                             <th>
                                 Visita
+                            </th>
+                            <th>
+                                Cambiar Status
                             </th>
                         </thead>
                         <tbody>
                             <tr>
-                                <td>
-                                    {% if tiene_producto %}
-                                        <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
-                                    {% else %}
-                                        <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
-                                    {% endif %}
-                                    <button class="btn btn-sm btn-outline-info mt-1" 
-                                            onclick="toggleProducto({{ proveedor.id|unlocalize }})">
-                                        Cambiar
-                                    </button>
-                                </td>
-                                <td>
-                                    {% if tiene_servicio %}
-                                    <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
-                                    {% else %}
-                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
-                                    {% endif %}
-                                    <button class="btn btn-sm btn-outline-info mt-1" 
-                                            onclick="toggleServicio({{ proveedor.id|unlocalize }})">
-                                        Cambiar
-                                    </button>
-                                </td>
-                                <td>
-                                    {% if tiene_arrendamiento %}
-                                    <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
-                                    {% else %}
-                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
-                                    {% endif %}
-                                    <button class="btn btn-sm btn-outline-info mt-1" 
-                                            onclick="toggleArrendamiento({{ proveedor.id|unlocalize }})">
-                                        Cambiar
-                                    </button>
-                                </td>
                                 <td>
                                     {% if proveedor.visita %}
                                     <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
                                     {% else %}
                                     <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                     {% endif %}
+                                </td>
+                                <td>
                                     <button class="btn btn-sm btn-outline-info mt-1" 
-                                            onclick="toggleVisita({{ proveedor.id|unlocalize }})">
-                                        Cambiar
+                                            onclick="toggleVisita({{ proveedor.id|unlocalize }})" title="Cambiar Status">
+                                        <i class="fa-solid fa-rotate-reverse"></i>
                                     </button>
                                 </td>
                             </tr>
@@ -139,7 +102,7 @@
         </div>
     </div>
     <div class="col-sm-12 col-lg-6">
-        <div class = "card mt-2 bg-white">
+        <div class = "card bg-white">
      
             <div class="card-header">
                 <h5>Proveedor: {{proveedor.razon_social}}</h5>
@@ -151,7 +114,11 @@
                         <tr>
                             <th>Distrito</th>
                             <th>Status</th>
-                            <th>Fecha de Evaluación</th>      
+                            <th>Fecha de Evaluación</th>
+                            <th></th>      
+                            <th>Materiales</th>
+                            <th>Servicio</th>
+                            <th>Arrendamiento</th>
                         </tr>
                         <tbody>
                             {% for direccion in direcciones %}
@@ -180,7 +147,7 @@
 
                                     <button class="btn btn-sm btn-outline-info" type="button"
                                             id="edit_btn_{{ direccion.id|unlocalize }}"
-                                            onclick="editarEstatus({{ direccion.id|unlocalize }})">
+                                            onclick="editarEstatus({{ direccion.id|unlocalize }})" title="Editar Status">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                     <button class="btn btn-sm btn-success d-none" type="button"
@@ -216,7 +183,7 @@
                                     <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-info"
                                             id="fecha_btn_edit_{{ direccion.id|unlocalize }}"
-                                            onclick="fecha_edit({{ direccion.id|unlocalize }})">
+                                            onclick="fecha_edit({{ direccion.id|unlocalize }})" title="Editar Fecha">
                                         <i class="fa-solid fa-pen"></i>
                                     </button>
                                     <button type="button" class="btn btn-sm btn-success d-none"
@@ -230,6 +197,51 @@
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
                                     </td>
+
+                                    <td class="text-center">
+                                        <span id="flag_producto_{{ direccion.id|unlocalize }}">
+                                        {% if direccion.producto %} 
+                                            <i class="fa-solid fa-circle-check text-success fa-lg"></i>
+                                        {% else %}
+                                            <i class="fa-solid fa-circle-xmark text-danger fa-lg"></i>
+                                        {% endif %}
+                                        </span>
+                                        <button class="btn btn-sm btn-outline-info"
+                                                onclick="toggleFlag({{ direccion.id|unlocalize }}, 'producto')" title="Cambiar Status">
+                                        <i class="fa-solid fa-rotate-reverse"></i>
+                                        </button>
+                                    </td>
+
+                                    <!-- Servicio -->
+                                    <td class="text-center">
+                                        <span id="flag_servicio_{{ direccion.id|unlocalize }}">
+                                        {% if direccion.servicio %}
+                                            <i class="fa-solid fa-circle-check text-success fa-lg"></i>
+                                        {% else %}
+                                            <i class="fa-solid fa-circle-xmark text-danger fa-lg"></i>
+                                        {% endif %}
+                                        </span>
+                                        <button class="btn btn-sm btn-outline-info"
+                                                onclick="toggleFlag({{ direccion.id|unlocalize }}, 'servicio')" title="Cambiar Status">
+                                        <i class="fa-solid fa-rotate-reverse"></i>
+                                        </button>
+                                    </td>
+
+                                    <!-- Arrendamiento -->
+                                    <td class="text-center">
+                                        <span id="flag_arrendamiento_{{ direccion.id|unlocalize }}">
+                                        {% if direccion.arrendamiento %}
+                                            <i class="fa-solid fa-circle-check text-success fa-lg"></i>
+                                        {% else %}
+                                            <i class="fa-solid fa-circle-xmark text-danger fa-lg"></i>
+                                        {% endif %}
+                                        </span>
+                                        <button class="btn btn-sm btn-outline-info"
+                                                onclick="toggleFlag({{ direccion.id|unlocalize }}, 'arrendamiento')" title="Cambiar Status">
+                                        <i class="fa-solid fa-rotate-reverse"></i>
+                                        </button>
+                                    </td>
+
 
                             </tr>
                             {% endfor %}
@@ -2220,7 +2232,27 @@ function fecha_save(id){
   })
   .catch(console.error);
 }
-  
+function iconHtml(on) {
+  return on
+    ? '<i class="fa-solid fa-circle-check text-success fa-lg"></i>'
+    : '<i class="fa-solid fa-circle-xmark text-danger fa-lg"></i>';
+}
+
+function toggleFlag(id, flag) {
+  // flag ∈ {'producto','servicio','arrendamiento'}
+  fetch('/proveedores/update_flag_direccion/', {
+    method: 'POST',
+    headers: { 'Content-Type':'application/json', 'X-CSRFToken': csrftoken },
+    body: JSON.stringify({ id, flag })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (!data.success) return;
+    const spanId = `flag_${flag}_${id}`;
+    document.getElementById(spanId).innerHTML = iconHtml(data.value);
+  })
+  .catch(console.error);
+}
   
   </script>
 

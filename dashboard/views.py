@@ -1290,9 +1290,9 @@ def documentacion_proveedores(request, pk):
     next_url = request.GET.get('next') or request.POST.get('next')  
 
     direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre__in=["NO REGISTR","RECHAZADO"])
-    tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
-    tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
-    tiene_producto = proveedor.direcciones.filter(producto=True).exists()
+    #tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
+    #tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
+    #tiene_producto = proveedor.direcciones.filter(producto=True).exists()
 
     # Obtener todos los documentos del proveedor
     documentos = DocumentosProveedor.objects.filter(proveedor=proveedor)
@@ -1369,9 +1369,9 @@ def documentacion_proveedores(request, pk):
     context = {
         'proveedor':proveedor,
         'direcciones':direcciones,
-        'tiene_servicio': tiene_servicio,
-        'tiene_arrendamiento': tiene_arrendamiento,
-        'tiene_producto': tiene_producto,
+        #'tiene_servicio': tiene_servicio,
+        #'tiene_arrendamiento': tiene_arrendamiento,
+        #'tiene_producto': tiene_producto,
         'documentos_count': documentos_count,  # Dict con el total de documentos por tipo
         'documentos_validados_count': documentos_validados_count,  # Dict con validados por tipo
         'documentos': documentos,
@@ -1465,19 +1465,36 @@ def update_visita(request):
     return JsonResponse({'success': False}, status=400)
 
 
-#@login_required
-#def update_materiales(request):
-#    if request.method == 'POST':
-#        import json
-#        data = json.loads(request.body)
-#        pk = data.get('pk')
-#        proveedor = Proveedor.objects.get(pk=pk)
+@login_required
+def update_flag_direccion(request):
+    if request.method != 'POST':
+        return JsonResponse({'success': False}, status=405)
 
-#        proveedor. = not proveedor.visita  # alterna el valor booleano
-#        proveedor.save()
-#        return JsonResponse({'success': True, 'visita': proveedor.visita})
-#    return JsonResponse({'success': False}, status=400)
+    data = json.loads(request.body or '{}')
+    pk   = data.get('id')
+    flag = (data.get('flag') or '').strip()
 
+    # Solo estos campos son editables:
+    allowed = {
+        'producto': 'producto',                 # o 'tiene_producto'
+        'servicio': 'servicio',                 # o 'tiene_servicio'
+        'arrendamiento': 'arrendamiento',       # o 'tiene_arrendamiento'
+    }
+    field = allowed.get(flag)
+    if not field:
+        return JsonResponse({'success': False, 'error': 'bad_flag'}, status=400)
+
+    try:
+        obj = Proveedor_direcciones.objects.get(pk=pk)
+    except Proveedor_direcciones.DoesNotExist:
+        return JsonResponse({'success': False, 'error': 'not_found'}, status=404)
+
+    # toggle
+    current = bool(getattr(obj, field))
+    setattr(obj, field, not current)
+    obj.save()
+
+    return JsonResponse({'success': True, 'value': getattr(obj, field)})
 
 @login_required
 def update_estatus_direccion(request):
