@@ -200,7 +200,7 @@ def Compra_tabla_api(request):
 
  
     #page = request.query_params.get('page', 1)
-    #per_page = request.query_params.get('per_page', 20)
+    #per_page = request.query_params.get('per_page', 1000)
     #paginator = Paginator(compras, per_page=per_page)
     #try: 
     #   compras = paginator.page(number=page)
