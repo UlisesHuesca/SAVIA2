@@ -741,6 +741,7 @@ def autorizar_alta_proveedor(request, pk):
         
         
         proveedor_direcciones.estatus = status
+        proveedor_direcciones.enviado_fecha = date.today()
         proveedor_direcciones.save()
          # Asignar folio automáticamente
         # Tomamos el país desde la primera dirección asociada
@@ -1027,7 +1028,7 @@ def add_proveedores_comparativo(request, pk=None):
                 estatus = Estatus_proveedor.objects.get(nombre ="COTIZACION")
                 direccion.estatus = estatus
             direccion.creado_por = usuario
-            direccion.enviado_fecha = date.today()
+            #direccion.enviado_fecha = date.today()
             direccion.completo = True
             direccion.save()
             messages.success(request, f'Has agregado correctamente el proveedor {proveedor.razon_social} y sus direcciones')
