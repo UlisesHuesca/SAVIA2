@@ -15,7 +15,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.urls import reverse
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
-from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir
+from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir, Producto_Calidad
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
@@ -3084,7 +3084,80 @@ def generar_pdf(compra):
 
         # Restaurar el estado original del lienzo
         c.restoreState()
+    #c.showPage()
+
+    # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
+    rows_cal = []   # solo filas con requerimientos
+
+    # (opcional) deduplicar por producto si la OC puede traer el mismo producto varias veces
+    vistos = set()
+
+    for ac in productos:
+        try:
+            base_product = ac.producto.producto.articulos.producto.producto
+        except Exception:
+            continue
+        if not base_product:
+            continue
+
+        # (opcional) evita duplicados por Product
+        if getattr(base_product, 'id', None) in vistos:
+            continue
+        vistos.add(base_product.id)
+
+        # intenta tomar el OneToOne
+        try:
+            producto_calidad = base_product.producto_calidad
+        except Producto_Calidad.DoesNotExist:
+            continue
+
+        if not producto_calidad:
+            continue
+
+        reqs = producto_calidad.requerimientos_calidad.select_related('requerimiento').all()
+        if not reqs:
+            continue
+
+        codigo = base_product.codigo
+        desc_par = Paragraph(base_product.nombre or '', style_desc)
+
+        for req in reqs:
+            req_nombre = req.requerimiento.nombre if req.requerimiento else ''
+            comentario = req.comentarios or ''
+            rows_cal.append([codigo, desc_par, req_nombre, comentario])
+
+    # Si no hay nada que mostrar, NO crear la hoja
+    if rows_cal:
+        c.showPage()
+        # encabezado hoja
+        c.setFont('Helvetica', 12)
+        c.setFillColor(prussian_blue)
+        c.rect(20, 750, 565, 24, fill=True, stroke=False)
+        c.setFillColor(white)
+        c.setFont('Helvetica-Bold', 13)
+        c.drawCentredString(300, 756, 'Requerimientos de Calidad por Producto')
+
+        data_cal = [['Código', 'Producto', 'Requerimiento Calidad', 'Comentario']]
+        data_cal.extend(rows_cal)
+
+        col_widths = [2*cm, 8.0*cm, 5*cm, 5.0*cm]
+        tabla_cal = Table(data_cal, colWidths=col_widths, hAlign='LEFT')
+        tabla_cal.setStyle(TableStyle([
+            ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+            ('BOX',       (0,0), (-1,-1), 0.50, colors.black),
+            ('VALIGN',    (0,0), (-1,-1), 'MIDDLE'),
+            ('BACKGROUND',(0,0), (-1,0),  prussian_blue),
+            ('TEXTCOLOR', (0,0), (-1,0),  colors.white),
+            ('FONTSIZE',  (0,0), (-1,0),  9),
+            ('FONTSIZE',  (0,1), (-1,-1), 8),
+        ]))
+
+        tabla_cal.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        tabla_cal.drawOn(c, 20, 680 - min(520, len(data_cal)*16))
+   
     c.showPage()
+    # ------------ FIN NUEVA HOJA ------------------------------------------------
+    
     # Agregar el encabezado en la segunda página
     c.setFont('Helvetica', 8)
     c.drawString(430, caja_iso, 'Preparado por:')

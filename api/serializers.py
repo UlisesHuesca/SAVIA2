@@ -9,6 +9,7 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from dashboard.models import Order, ArticulosparaSurtir, ArticulosOrdenados
 from user.models import Distrito, Banco, Profile, CustomUser
 from django.contrib.auth.models import User
+from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 
 class UserSerializer(serializers.ModelSerializer):
     class Meta:
@@ -237,29 +238,46 @@ class Compra_tabla_Serializer(serializers.ModelSerializer):
             return 'Sí' if obj.factura_set.exists() else 'No'
         
     def get_tipo_cambio(self, obj):
-        # Promedio de pagos hechos
+        """
+        Devuelve el tipo de cambio como Decimal (o None si no hay valor válido).
+        Usa el promedio de pagos hechos; si no hay, usa el de la OC.
+        """
         avg_pago = (Pago.objects
                     .filter(oc=obj, hecho=True)
                     .aggregate(avg=Avg('tipo_de_cambio'))['avg'])
-        tipo = avg_pago or obj.tipo_de_cambio
-        # Si tipo es 0 o None, devolver cadena vacía
-        if not tipo or tipo == 0:
-            return ''
-        # Opcional: redondea a 4 decimales
-        from decimal import Decimal, ROUND_HALF_UP
-        return str(Decimal(tipo).quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP))
+
+        # Prioriza el promedio; si no hay, toma el de la OC
+        tipo = avg_pago if avg_pago not in (None, 0) else obj.tipo_de_cambio
+
+        if tipo in (None, 0, Decimal('0')):
+            return None
+
+        try:
+            tipo = Decimal(tipo)
+        except (InvalidOperation, TypeError):
+            return None
+
+        # Redondeo opcional a 4 decimales (manteniendo Decimal)
+        return tipo.quantize(Decimal('0.0001'), rounding=ROUND_HALF_UP)
     
     def get_total_pesos(self, obj):
-        # Reutiliza la lógica de tipo_de_cambio
+        """
+        Multiplica costo_oc * tipo_de_cambio.
+        Si no hay tipo, devuelve costo_oc tal cual.
+        Retorna Decimal (o podrías castear a float/str si tu serializer lo requiere).
+        """
         tipo = self.get_tipo_cambio(obj)
-        costo = obj.costo_oc or 0
 
-        if not tipo or tipo == 0:
-            return costo  # si no hay tipo de cambio, se usa costo_oc directo
+        try:
+            costo = Decimal(obj.costo_oc or 0)
+        except (InvalidOperation, TypeError):
+            costo = Decimal('0')
 
-        total = tipo * costo
-        # opcional: redondear o formatear
-        return round(total, 2)
+        if not tipo:
+            return costo  # sin tipo: regresa costo en la moneda base
+
+        total = (tipo * costo).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
+        return total
 
     #def get_descargar(self, obj):
         # Retorna la URL del PDF con el ID de la compra
