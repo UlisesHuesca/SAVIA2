@@ -1010,12 +1010,12 @@ def invitar_proveedor(request):
             messages.error(request, 'Ya existe un proveedor con este RFC registrado')
             return redirect('invitar-proveedor')
 
-        proveedor = Proveedor.objects.filter(rfc=rfc).first()
+        #proveedor = Proveedor.objects.filter(rfc=rfc).first()
 
         invitacion = InvitacionProveedor.objects.create(
             email=email,
             rfc=rfc,
-            proveedor=proveedor,
+            #proveedor=proveedor,
             creado_por= perfil
         )
 

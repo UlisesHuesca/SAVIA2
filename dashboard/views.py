@@ -1307,9 +1307,9 @@ def documentacion_proveedores(request, pk):
         request.session['next_url'] = next_url
 
     direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre__in=["NO REGISTR","RECHAZADO"])
-    #tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
-    #tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
-    #tiene_producto = proveedor.direcciones.filter(producto=True).exists()
+    tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
+    tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
+    tiene_producto = proveedor.direcciones.filter(producto=True).exists()
 
     # Obtener todos los documentos del proveedor
     documentos = DocumentosProveedor.objects.filter(proveedor=proveedor)
@@ -1386,9 +1386,9 @@ def documentacion_proveedores(request, pk):
     context = {
         'proveedor':proveedor,
         'direcciones':direcciones,
-        #'tiene_servicio': tiene_servicio,
-        #'tiene_arrendamiento': tiene_arrendamiento,
-        #'tiene_producto': tiene_producto,
+        'tiene_servicio': tiene_servicio,
+        'tiene_arrendamiento': tiene_arrendamiento,
+        'tiene_producto': tiene_producto,
         'documentos_count': documentos_count,  # Dict con el total de documentos por tipo
         'documentos_validados_count': documentos_validados_count,  # Dict con validados por tipo
         'documentos': documentos,
