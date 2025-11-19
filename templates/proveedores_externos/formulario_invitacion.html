@@ -41,7 +41,7 @@
             <h2>Invitar Proveedor</h2>
         </div>
         <div class="card-body">
-            <form method="post" class="mt-4">
+            <form method="post" class="mt-4" id="form-invite">
                 {% csrf_token %}
 
                 <div class="form-group">
@@ -53,12 +53,107 @@
                     <label for="email">Correo electrónico del contacto</label>
                     <input type="email" name="email" id="email" class="form-control" required>
                 </div>
+                {# Campo oculto para el flujo elegido #}
+                <input type="hidden" name="tipo" id="tipo" value="">
 
-                <button type="submit" class="btn btn-primary mt-4">Enviar invitación</button>
+                <button type="button" id="btn-send" class="btn btn-primary mt-4" onclick="precheckInvite()">
+                    Enviar invitación
+                </button>
             </form>
         </div>
     </div>
 </div>
+<script>
+  function disableBtn(disabled) {
+    const btn = document.getElementById('btn-send');
+    btn.disabled = disabled;
+  }
+
+  function precheckInvite() {
+    const rfcEl  = document.getElementById('rfc');
+    const emailEl = document.getElementById('email');
+    const tipoEl  = document.getElementById('tipo');
+    const form    = document.getElementById('form-invite');
+
+    // Normaliza RFC a mayúsculas
+    rfcEl.value   = (rfcEl.value || '').trim().toUpperCase();
+    emailEl.value = (emailEl.value || '').trim();
+
+    const rfc   = rfcEl.value;
+    const email = emailEl.value;
+
+    if (!rfc || !email) {
+      Swal.fire({
+        title: "Datos incompletos",
+        text: "RFC y correo son obligatorios.",
+        icon: "warning"
+      });
+      return;
+    }
+
+    disableBtn(true);
+
+    fetch("{% url 'check_proveedor_ajax' %}?rfc=" + encodeURIComponent(rfc) +
+        "&email=" + encodeURIComponent(email), {
+    credentials: 'same-origin'
+    })
+    .then(r => r.json())
+    .then(data => {
+    console.log('RESP JSON:', data);
+
+    // CASO FELIZ: NO existe RFC NI correo/invitación → nuevo proveedor normal
+    if (!data.exists_rfc && !data.exists_email_or_invite) {
+      tipoEl.value = 'NUEVO_PROVEEDOR';
+      form.submit();
+      return;
+    }
+
+    // Proveedor / correo ya existen → mostrar opciones
+    let extraInfo = '';
+    if (data.proveedor_razon) {
+      extraInfo += `<p><strong>Proveedor:</strong> ${data.proveedor_razon}</p>`;
+    }
+    if (data.direcciones && data.direcciones.length) {
+      extraInfo += '<ul>';
+      data.direcciones.forEach(d => {
+        extraInfo += `<li>${d.distrito} — ${d.estatus}</li>`;
+      });
+      extraInfo += '</ul>';
+    }
+
+    Swal.fire({
+      title: 'Proveedor existente',
+      html: 'El RFC o el correo ya existen.<br>' + extraInfo,
+      icon: 'question',
+      showCancelButton: true,
+      cancelButtonText: 'Cancelar',
+      showDenyButton: true,
+      denyButtonText: 'Solo nueva dirección',
+      confirmButtonText: 'Dirección + nuevo usuario'
+    }).then((result) => {
+      if (result.isConfirmed) {
+        tipoEl.value = 'NUEVO_USUARIO';   // dirección + nuevo usuario
+        form.submit();
+      } else if (result.isDenied) {
+        tipoEl.value = 'NUEVA_DIRECCION'; // solo nueva dirección
+        form.submit();
+      } else {
+        disableBtn(false);
+      }
+      });
+    })
+    .catch(err => {
+      console.error('Error en fetch check_proveedor_ajax:', err);
+      Swal.fire({
+        title: "Error",
+        text: "No se pudo verificar RFC/correo.",
+        icon: "error"
+      });
+      disableBtn(false);
+    });
+  }
+</script>
+
 {% endblock %}
 </body>
 </html>

@@ -4,7 +4,7 @@
 {% load widget_tweaks %}
 <html>
 <head>
-{% block title %}Editar Proveedor{% endblock %}
+{% block title %}Agregar Direccion{% endblock %}
 <link rel="stylesheet" href="https://code.jquery.com/ui/1.14.0/themes/base/jquery-ui.css">
 </head>
 <body>
@@ -16,7 +16,7 @@
         <div class="col-md-8 offset-md-2">
             <div class="card">
                 <div class="card-header">
-                <h3>Editar Proveedor</h3>
+                <h3>Agregar Dirección</h3>
                 </div>
                 <div class="card-body">
                 <form method="POST" id='ProductForm'>
@@ -42,17 +42,8 @@
                                 </div>
                             </div>
                         </div>
-                        <div  class="col-sm-12 col-md-6">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.distrito|add_class:"form-control required"|append_attr:"placeholder=Distrito"}}
-                                <label for="id_lugar_partida">Distrito*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-sm-12 col-md-12">
+                    
+                    <div class="col-sm-12 col-md-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -61,6 +52,7 @@
                             </div>
                         </div>
                     </div>
+                </div>
                     <div class="col-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
@@ -85,7 +77,7 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-at"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.email_opt|add_class:"form-control"|append_attr:"placeholder=Email 2"}}
-                                <label for="id_lugar_partida">Email 2*</label>
+                                <label for="id_lugar_partida">Email 2</label>
                                 </div>
                             </div>
                         </div>
@@ -122,7 +114,7 @@
                             </div>
                             <div class="col-6">
                                 <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">   
                                     {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
                                     <label for="id_lugar_partida">Financiamiento*</label>
@@ -133,39 +125,21 @@
                     <div class="row">
                                 <div class="col-6">
                                     <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
                                         <label for="id_lugar_partida">Días de crédito*</label>
                                         </div>
                                     </div>
                                 </div>
-                                <div class="col-6">
-                                    <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1">   
-                                        {{form.estatus|add_class:"form-control"|append_attr:"placeholder=Status"}}
-                                        <label for="id_lugar_partida">Status*</label>
-                                        </div>
-                                    </div>
-                                </div>
-                    </div>
-                    <div class="row">
+                              
+                    
                         <div class="col-lg-6 col-sm-12">
                             <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-dollar-sign"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda"}}
                                 <label for="id_lugar_partida">Moneda*</label>
-                                </div>
-                            </div>
-                        </div> 
-                        <div class="col-lg-6 col-sm-12">
-                            <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.modificado_fecha|add_class:"form-control"|attr:"type:text"}}
-                                    <label style="color: #121212;" for="id_subproyecto">Fecha de Evaluación:</label>
                                 </div>
                             </div>
                         </div> 
@@ -180,34 +154,39 @@
                                 </div>
                             </div>
                         </div>
+                   
                         <div class="col-6">
                             <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
                                 <label for="id_lugar_partida">Convenio</label>
                                 </div>
                             </div>
                         </div>
+                     </div>
+                    <div class="row">
                         <div class="col-6">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
-                                <label for="id_clabe">Swift*</label>
+                                <label for="id_clabe">Swift</label>
                                 </div>
                             </div>
                         </div>
+                    
                         <div class="col-6">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                 {{form.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
-                                <label for="id_clabe">Spid*</label>
+                                <label for="id_clabe">Spid</label>
                                 </div>
                             </div>
                         </div>
                     </div>
+                    
                     <div class="row ms-3 my-2">
                                     <div class="form-check form-switch col-sm">
                                     <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>

@@ -12,7 +12,7 @@ from django.utils.http import urlencode
 from django.db import IntegrityError
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
-from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia
+from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, InvitacionProveedor
 from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
@@ -61,6 +61,7 @@ def index(request):
     usuario = Profile.objects.get(id = pk)
     inventarios = Inventario.objects.all()
     proyectos = Proyecto.objects.all()
+    invitaciones_direccion = None
     proveedor = usuario.proveedor
     mostrar_modal = True
     prealta = False
@@ -71,6 +72,8 @@ def index(request):
             not proveedor.acepto_codigo_etica or
             not proveedor.acepto_aviso_privacidad
         )
+        invitaciones_direccion = InvitacionProveedor.objects.filter(proveedor = proveedor,tipo= "NUEVA_DIRECCION", usado = False)
+        print('invitaciones', invitaciones_direccion)
         if proveedor.direcciones.filter(estatus__nombre = "PREALTA").exists():
             prealta = True
 
@@ -122,6 +125,7 @@ def index(request):
     context = {
         'mostrar_modal': mostrar_modal,
         'prealta': prealta,
+        'invitaciones_direccion': invitaciones_direccion,
         #'select_profile':selected_profil
         #'graph_proyectos': graph_proyectos,
         #'graph_inventarios':graph_inventarios,
@@ -708,10 +712,11 @@ def proveedores_altas(request):
     proveedores_list = p.get_page(page)
     # Añadir datos de proveedor_direcciones
     for proveedor in proveedores_list:
-        direccion = Proveedor_direcciones.objects.filter(
+        direccion = Proveedor_direcciones.objects.get(
             nombre=proveedor,
+            estatus__nombre = "PREALTA"
             #distrito=usuario.distritos
-        ).last()  # Obtener la ultima dirección que coincida (más actual)
+        )  # Obtener la ultima dirección que coincida (más actual)
         if direccion:
             proveedor.telefono = direccion.telefono
             proveedor.contacto = direccion.contacto

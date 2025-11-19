@@ -262,6 +262,11 @@ class Proveedor_direcciones(models.Model):
         return f'{self.nombre}'
     
 class InvitacionProveedor(models.Model):
+    TIPO_CHOICES = (
+        ('NUEVO_PROVEEDOR', 'NUEVO_PROVEEDOR'),
+        ('NUEVA_DIRECCION', 'NUEVA_DIRECCION'),
+        ('NUEVO_USUARIO', 'NUEVO_USUARIO'),
+    )
     email = models.EmailField(unique=True)
     rfc = models.CharField(max_length=14)
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
@@ -270,6 +275,7 @@ class InvitacionProveedor(models.Model):
     usado = models.BooleanField(default=False)
     fecha_creacion = models.DateTimeField(auto_now_add=True)
     fecha_uso = models.DateTimeField(null=True, blank=True)
+    tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='NUEVO_PROVEEDOR')
 
     def __str__(self):
         return f'{self.email} | {self.proveedor}'

@@ -93,7 +93,7 @@ class ProveedoresExistDireccionesForm(forms.ModelForm):
    
     class Meta:
         model = Proveedor_direcciones
-        fields = ['nombre','domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito']
+        fields = ['domicilio','estado','contacto','telefono','email','email_opt','banco','clabe','cuenta','financiamiento','dias_credito','moneda','referencia','convenio','swift','spid','producto','servicio','arrendamiento']
 
 
 class Add_ProveedoresDireccionesForm(forms.ModelForm):

@@ -53,6 +53,7 @@
 
                 <!-- Datos de acceso -->
                 <h5 class="mb-3">Datos de acceso</h5>
+                {% if tipo_invitacion == "NUEVO_PROVEEDOR" %}
                 <div class="col-12">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
@@ -62,6 +63,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 <div class="col-12">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>

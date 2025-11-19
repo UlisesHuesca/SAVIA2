@@ -165,6 +165,7 @@
                                             {% else %}<i class="fa-solid fa-circle-1 text-success"></i>
                                             {% endif %}
                                         </h4>
+
                                        
                                        
                                         <h3></h3>
@@ -184,17 +185,20 @@
                                 </a>
                             </div>
                             <div class="col-md-4">
-                            <a class="text-decoration-none text-dark"  href="{% url 'cuestionario' usuario.proveedor.id %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>{% trans "Cuestionario DD" %} 
-                                        {% if usuario.proveedor.cuestionario_dd %}<i class="fa-solid fa-circle-3 text-success"></i>
-                                        {% else %}<i class="fa-solid fa-circle-3 text-danger"></i>
-                                        {% endif %}
-                                    </h4>
-                                    <h3></h3>
-                                </div>
-                            </a>
-                        </div>   
+                                <a class="text-decoration-none text-dark"  href="{% url 'cuestionario' usuario.proveedor.id %}">
+                                    <div class="card my-card shadow text-center p-3">
+                                        <h4>{% trans "Cuestionario DD" %} 
+                                            {% if usuario.proveedor.cuestionario_dd %}<i class="fa-solid fa-circle-3 text-success"></i>
+                                            {% else %}<i class="fa-solid fa-circle-3 text-danger"></i>
+                                            {% endif %}
+                                        </h4>
+                                        <h3></h3>
+                                    </div>
+                                    
+                                </a>
+                            </div>   
+                          
+
                         </div>
                         {% else %}
                         <div class="row mt-2">
@@ -234,8 +238,21 @@
                                     </div>
                                 </a>
                             </div>
+                            {% if invitaciones_direccion %}
+                                <div class="col-md-4 mt-2">
+                                    <a class="text-decoration-none text-dark" href="{% url 'registro-solo-direccion' usuario.proveedor.id %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                        <h4>
+                                            Agregar dirección 
+                                        </h4>
+                                        <h3></h3>
+                                        </div>
+                                    </a>
+                                </div>
                             {% endif %}
-                    </div>
+                        </div>
+                        {% endif %}
+                    
                    
                     {% endif %}
                 </div>

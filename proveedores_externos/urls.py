@@ -34,4 +34,6 @@ urlpatterns = [
     path('elminar_empleado_funcionario/<int:pk>/', views.eliminar_empleado_funcionario, name='eliminar-empleado-funcionario'),
     path('elminar_accionista_funcionario/<int:pk>/', views.eliminar_accionista_funcionario, name='eliminar-accionista-funcionario'), 
     path('elminar-responsable-interaccion/<int:pk>/', views.eliminar_responsable_interaccion, name='eliminar-responsable-interaccion'),
+    path('proveedores/check/', views.check_proveedor_ajax, name='check_proveedor_ajax'),
+    path('proveedores/registro_solo_direccion/<int:pk>', views.registro_solo_direccion, name='registro-solo-direccion'),
 ]

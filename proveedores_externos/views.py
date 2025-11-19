@@ -12,6 +12,9 @@ from django.contrib.auth.hashers import make_password
 from django.contrib import messages
 from django.utils.timezone import now
 from django.urls import reverse
+from django.views.decorators.http import require_GET
+from django.utils.crypto import get_random_string
+from django import forms  # por si no lo tienes ya importado
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor, Debida_Diligencia, Miembro_Alta_Direccion, Funcionario_Publico_Relacionado, Relacion_Servidor_Publico, Responsable_Interaccion
 from user.models import Profile, CustomUser, Tipo_perfil, Distrito
 from compras.filters import CompraFilter
@@ -31,6 +34,7 @@ from .forms import (
     RelacionServidorPublicoForm,
     ResponsableInteraccionForm
 )
+from dashboard.forms import ProveedoresDireccionesForm, ProveedoresExistDireccionesForm
 from io import BytesIO
 
 from tesoreria.models import Pago, Facturas
@@ -170,11 +174,14 @@ def matriz_oc_proveedores(request):
 def matriz_direcciones(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
    
     
     if usuario.tipo.proveedor_externo:
         proveedor = Proveedor.objects.get(id = usuario.proveedor.id)
-        direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre="Rechazado")
+        #direcciones = Proveedor_direcciones.objects.filter(nombre= proveedor, completo = True).exclude(estatus__nombre="Rechazado")
+        estatus_proveedor = ["NUEVO","APROBADO"]
+        direcciones = Proveedor_direcciones.objects.filter(nombre=proveedor, completo = True, distrito__status = True, estatus__nombre__in = estatus_proveedor,  distrito__id__in = almacenes_distritos)
         tiene_servicio = proveedor.direcciones.filter(servicio=True).exists()
         tiene_arrendamiento = proveedor.direcciones.filter(arrendamiento=True).exists()
 
@@ -991,101 +998,265 @@ def aceptar_politica(request):
 
 @perfil_seleccionado_required
 def invitar_proveedor(request):
+    print('invitar_proveedor')
     pk_perfil = request.session.get('selected_profile_id')
     perfil = get_object_or_404(Profile, id=pk_perfil)
-    
-    
+
     if request.method == 'POST':
-        email = request.POST['email']
-        rfc = request.POST['rfc']
-        print(email, rfc)
-         # Validar si ya hay una invitación para ese correo sin usar
+        email = (request.POST.get('email') or '').strip()
+        rfc   = (request.POST.get('rfc') or '').strip().upper()
+        tipo  = (request.POST.get('tipo') or '').strip()
+        
+        
         if InvitacionProveedor.objects.filter(email=email, usado=False).exists():
-            messages.error(request, 'Ya existe un proveedor con este correo registrado')
-            return redirect('invitar-proveedor')  # Ajusta según el nombre de tu URL
-        elif User.objects.filter(email=email).exists():
-            messages.error(request, 'Ya existe un usuario con este correo registrado')
-            return redirect('invitar-proveedor')
-        elif Proveedor.objects.filter(rfc=rfc).exists():
-            messages.error(request, 'Ya existe un proveedor con este RFC registrado')
+            messages.error(request, 'Ya existe una invitación pendiente para este correo.')
             return redirect('invitar-proveedor')
 
-        #proveedor = Proveedor.objects.filter(rfc=rfc).first()
+        if tipo not in ('NUEVO_PROVEEDOR', 'NUEVA_DIRECCION', 'NUEVO_USUARIO'):
+            messages.error(request, 'Tipo de invitación inválido.')
+            return redirect('invitar-proveedor')
+        
+        # 2) Validaciones según el tipo de invitación
+        distrito = perfil.distritos  # distrito del usuario que invita
+        ESTATUS_VALIDOS = ['NUEVO', 'APROBADO']
+        print('tipo:',tipo)
+        if tipo in ("NUEVA_DIRECCION", "NUEVO_USUARIO"):
+            # En estos casos, el proveedor DEBE existir
+            proveedor = Proveedor.objects.filter(rfc=rfc).first()
+            if not proveedor:
+                messages.error(
+                    request,
+                    'No se encontró un proveedor con ese RFC. '
+                    'Debes registrarlo como nuevo proveedor primero.'
+                )
+                return redirect('invitar-proveedor')
+            
+             # No puedes invitar si ya tiene dirección ACTIVA en ese distrito
+            existe_dir = Proveedor_direcciones.objects.filter(
+                nombre=proveedor,
+                distrito=distrito,
+                completo=True,
+                estatus__nombre__in=ESTATUS_VALIDOS,
+            ).exists()
+            
+            if existe_dir:
+                messages.error(
+                    request,
+                    f'El proveedor ya tiene una dirección activa en el distrito {distrito}. '
+                    'No puedes enviar invitación para este distrito.'
+                )
+                return redirect('invitar-proveedor')
+            else:
+                
+                #print('sí, esta pasando1')
+                if tipo == "NUEVO_USUARIO" and User.objects.filter(email = email).exists():
+                    messages.error(request, 'Este correo ya está registrado como usuario en SAVIA.')
+                    return redirect('invitar-proveedor')
 
-        invitacion = InvitacionProveedor.objects.create(
-            email=email,
-            rfc=rfc,
-            #proveedor=proveedor,
-            creado_por= perfil
-        )
 
-        link = request.build_absolute_uri(reverse('registro-proveedor', args=[invitacion.token]))
-        # aquí puedes enviar el link por email
-        enviar_correo_invitacion(email, rfc, link, perfil.staff.staff.first_name + " " + perfil.staff.staff.last_name)
+             
 
-        return render(request, 'proveedores_externos/invitacion_enviada.html', {'link': link})
-    
+                invitacion = InvitacionProveedor.objects.create(
+                    proveedor = proveedor,
+                    email=email,
+                    rfc=rfc,
+                    creado_por=perfil,
+                    tipo=tipo,
+                )
+
+                if tipo == "NUEVA_DIRECCION":
+                    link = request.build_absolute_uri(reverse('user-login'))
+                else:
+                    link = request.build_absolute_uri(reverse('registro-proveedor', args=[invitacion.token]))
+                
+                enviar_correo_invitacion(
+                    email, rfc, link,
+                    f"{perfil.staff.staff.first_name} {perfil.staff.staff.last_name}", tipo
+                )
+
+                return render(request, 'proveedores_externos/invitacion_enviada.html', {'link': link})
+                
+        else:
+            print('sí, esta pasando')
+            invitacion = InvitacionProveedor.objects.create(
+                email=email,
+                rfc=rfc,
+                creado_por=perfil,
+                tipo=tipo,
+            )
+
+            link = request.build_absolute_uri(
+                reverse('registro-proveedor', args=[invitacion.token])
+            )
+            enviar_correo_invitacion(
+                email, rfc, link,
+                f"{perfil.staff.staff.first_name} {perfil.staff.staff.last_name}", tipo
+            )
+
+            return render(request, 'proveedores_externos/invitacion_enviada.html', {'link': link})
+
     return render(request, 'proveedores_externos/formulario_invitacion.html')
 
-def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre):
+
+def check_proveedor_ajax(request):
+    rfc   = (request.GET.get('rfc') or '').strip().upper()
+    email = (request.GET.get('email') or '').strip()
+    exists_rfc = Proveedor.objects.filter(rfc=rfc).exists()
+    exists_email_or_invite = (
+        User.objects.filter(email=email).exists() or
+        InvitacionProveedor.objects.filter(email=email, usado=False).exists()
+    )
+    print(exists_rfc)
+    print(exists_email_or_invite)
+    proveedor_razon = ''
+    proveedor_id = None
+    direcciones_data = []
+    estatus_set = set()
+   
+
+    ESTATUS_VALIDOS = ['NUEVO', 'APROBADO']
+
+    if exists_rfc:
+        proveedor = Proveedor.objects.filter(rfc=rfc).first()
+        print('proveedor:',proveedor)
+        if proveedor:
+
+            proveedor_razon = proveedor.razon_social
+            proveedor_id = proveedor.id
+            print('proveedor_razon:', proveedor_razon)
+            # FILTRAR SOLO DIRECCIONES ACTIVAS CON ESTATUS PERMITIDO
+            direcciones_filtradas = Proveedor_direcciones.objects.filter(
+                nombre = proveedor,
+                distrito__status=True,
+                estatus__nombre__in=ESTATUS_VALIDOS
+            )
+            print('direcciones_filtradas:', direcciones_filtradas)
+
+            for d in direcciones_filtradas:
+                distrito_nombre = getattr(getattr(d, 'distrito', None), 'nombre', '')
+                estatus_nombre = getattr(getattr(d, 'estatus', None), 'nombre', '')
+
+                if estatus_nombre:
+                    estatus_set.add(estatus_nombre)
+
+                direcciones_data.append({
+                    'id': d.id,
+                    'distrito': distrito_nombre,
+                    'estatus': estatus_nombre,
+                })
+        
+   
+    return JsonResponse({
+        'exists_rfc': exists_rfc,
+        'exists_email_or_invite': exists_email_or_invite,
+        'proveedor_id': proveedor_id,
+        'proveedor_razon': proveedor_razon,
+        'direcciones': direcciones_data,
+        'estatus_lista': list(estatus_set),
+    })
+
+def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
+    print(tipo)
     static_path = settings.STATIC_ROOT
     img_path1 = os.path.join(static_path, 'images', 'SAVIA_Logo.png')
     img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
     image_base64 = get_image_base64(img_path1)
     logo_v_base64 = get_image_base64(img_path2)
+    if tipo == 'NUEVA_DIRECCION':
+        titulo = "Agregar nueva dirección de facturación/servicio"
+        cuerpo = f"""
+            Has recibido una invitación para agregar una <strong>nueva dirección</strong>
+            asociada al RFC <strong>{rfc}</strong> en el portal de proveedores.
+        """
+        pasos = """
+            <ol style="font-size: 15px; padding-left: 20px; color: #333;">
+                <li>Accede al portal con tus credenciales habituales.</li>
+                <li>Da clic en el botón "Agregar dirección"</li>
+                <li>Llena la información de domicilio, contacto y condiciones de pago.</li>
+            </ol>
+        """
+        texto_boton = "Ir al portal"
+    if tipo == 'NUEVO_USUARIO':
+        titulo = "Agregar un nuevo usuario + dirección de proveedor existente"
+        cuerpo = f"""
+            Has recibido una invitación para darte de alta como <strong> usuario nuevo </strong> dentro de nuestra plataforma.
+            Esta nueva cuenta está asociada con el RFC de proveedor existente <strong>{rfc}</strong>        
+        """
+        pasos = """
+            <ul style="font-size: 15px; padding-left: 20px; color: #333;">
+                <li><strong>Completar tu registro inicial</strong> dando clic en el botón que aparece a continuación.</li>
+                <li>Acceder al portal de proveedores con los datos de acceso generados.</li>
+            </ul>
+            <ol style="font-size: 15px; padding-left: 20px; color: #333;">
+                <li>Aceptar las políticas y códigos de Grupo Vordcab.</li>
+                <li>Subir los documentos requeridos.</li>
+                <li>Contestar el cuestionario de Debida Diligencia.</li>
+            </ol>
+        """
+        texto_boton = "Completar registro"
+    else:
+        titulo = "Invitación a registrarte como proveedor"
+        cuerpo = f"""
+            Has sido invitado a registrarte como proveedor en nuestra plataforma.
+            Tu RFC registrado es <strong>{rfc}</strong>.
+        """
+        pasos = """
+            <ul style="font-size: 15px; padding-left: 20px; color: #333;">
+                <li><strong>Completar tu registro inicial</strong> dando clic en el botón que aparece a continuación.</li>
+                <li>Acceder al portal de proveedores con los datos de acceso generados.</li>
+            </ul>
+            <ol style="font-size: 15px; padding-left: 20px; color: #333;">
+                <li>Aceptar las políticas y códigos de Grupo Vordcab.</li>
+                <li>Subir los documentos requeridos.</li>
+                <li>Contestar el cuestionario de Debida Diligencia.</li>
+            </ol>
+        """
+        texto_boton = "Completar registro"
 
     html_message = f"""
-    <html>
-        <head>
-            <meta charset="UTF-8">
-        </head>
-        <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
-            <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
-                <tr>
-                    <td align="center">
-                        <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
-                            <tr>
-                                <td align="center">
-                                    <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 120px;" />
-                                </td>
-                            </tr>
-                            <tr>
-                                <td style="padding: 20px;">
-                                    <p style="font-size: 18px;">Hola,</p>
-                                    <p style="font-size: 16px;">
-                                        Has sido invitado a registrarte como proveedor en nuestra plataforma. Tu RFC registrado es <strong>{rfc}</strong>.
-                                    </p>
-                                    <h3 style="margin-top: 30px; font-size: 16px;">Pasos para completar tu registro:</h3>
-                                    <ul style="font-size: 15px; padding-left: 20px; color: #333;">
-                                        <li><strong>Completar tu registro inicial</strong> dando clic en el botón que aparece a continuación.</li>
-                                        <li>Acceder al portal de proveedores con los datos de acceso generados.</li>
-                                    </ul>
-                                    <ol style="font-size: 15px; padding-left: 20px; color: #333;">
-                                        <li>Aceptar las políticas y códigos de Grupo Vordcab.</li>
-                                        <li>Subir los documentos requeridos.</li>
-                                        <li>Contestar el cuestionario de Debida Diligencia.</li>
-                                    </ol>
+        <html>
+            <head>
+                <meta charset="UTF-8">
+            </head>
+            <body style="font-family: Arial, sans-serif; color: #333; background-color: #f4f4f4; margin: 0; padding: 0;">
+                <table width="100%" cellspacing="0" cellpadding="0" style="background-color: #f4f4f4; padding: 20px;">
+                    <tr>
+                        <td align="center">
+                            <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
+                                <tr>
+                                    <td align="center">
+                                        <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 120px;" />
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="padding: 20px;">
+                                        <p style="font-size: 18px;">Hola,</p>
+                                        <p style="font-size: 16px;">
+                                            {cuerpo}
+                                        </p>
+                                        <h3 style="margin-top: 30px; font-size: 16px;">{pasos}</h3>
+                                        
 
-                                    <p style="text-align: center; margin: 30px 0;">
-                                        <a href="{link}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
-                                            Completar registro
-                                        </a>
-                                    </p>
-                                    <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>
-                                    <p style="margin-top: 40px; font-size: 14px;">Atentamente,<br><strong>{creado_por_nombre}</strong></p>
-                                    <div style="text-align: center; margin-top: 30px;">
-                                        <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
-                                        <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.0</p>
-                                    </div>
-                                </td>
-                            </tr>
-                        </table>
-                    </td>
-                </tr>
-            </table>
-        </body>
-    </html>
-    """
+                                        <button style="text-align: center; margin: 30px 0;">
+                                            <a href="{link}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+                                                {texto_boton}
+                                            </a>
+                                        </button>
+                                        <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>
+                                        <p style="margin-top: 40px; font-size: 14px;">Atentamente,<br><strong>{creado_por_nombre}</strong></p>
+                                        <div style="text-align: center; margin-top: 30px;">
+                                            <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                            <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.0</p>
+                                        </div>
+                                    </td>
+                                </tr>
+                            </table>
+                        </td>
+                    </tr>
+                </table>
+            </body>
+        </html>
+        """
 
     try:
         email = EmailMessage(
@@ -1176,10 +1347,27 @@ def enviar_correo_registro_exitoso(usuario_email, creado_por_nombre, savia_url):
 
 def registro_proveedor(request, token):
     invitacion = get_object_or_404(InvitacionProveedor, token=token, usado=False)
+    tipo_invitacion = invitacion.tipo or 'NUEVO_PROVEEDOR'
 
+    # =======================================
+    # 1) SOLO NUEVA DIRECCIÓN (tu form nuevo)
+    # =======================================
+    if tipo_invitacion == 'NUEVA_DIRECCION':
+        return registro_solo_direccion(request, invitacion)
+
+    # =======================================
+    # 2) FLUJO ORIGINAL (NUEVO_PROVEEDOR)
+    #    aquí dejas exactamente tu código actual
+    # =======================================
+
+    
     if request.method == 'POST':
         #print(invitacion.email)
         form = RegistroProveedorForm(request.POST)
+        # 🔹 Si la invitación YA tiene proveedor, ocultamos y hacemos opcional razon_social
+        if invitacion.tipo =="NUEVO_USUARIO":
+            form.fields['razon_social'].required = False
+            form.fields['razon_social'].widget = forms.HiddenInput()
         if form.is_valid():
             print("El formulario es válido")
             # 1 Objeto user
@@ -1191,12 +1379,15 @@ def registro_proveedor(request, token):
             )
                 
             # 2 Objeto proveedor
-            proveedor = invitacion.proveedor or Proveedor.objects.create(
-                rfc=invitacion.rfc,
-                razon_social=form.cleaned_data['razon_social'],
-                creado_por=invitacion.creado_por,
-                completo = True,
-            )
+            if invitacion.proveedor:
+                proveedor = invitacion.proveedor
+            else:
+                proveedor = Proveedor.objects.create(
+                    rfc=invitacion.rfc,
+                    razon_social=form.cleaned_data['razon_social'],
+                    creado_por=invitacion.creado_por,
+                    completo = True,
+                )
 
                 #3 Objeto CustomUser
             customuser = CustomUser.objects.create(
@@ -1230,27 +1421,30 @@ def registro_proveedor(request, token):
             #5.5
             status = Estatus_proveedor.objects.get(nombre="PREALTA")
                 #6 Objeto Proveedor_direcciones
-            Proveedor_direcciones.objects.create(
+            direccion, creada = Proveedor_direcciones.objects.update_or_create(
                 nombre=proveedor,
-                creado_por=profile,
-                domicilio=form.cleaned_data['domicilio'],
-                telefono=form.cleaned_data['telefono'],
-                contacto=form.cleaned_data['contacto'],
-                email=invitacion.email,
-                banco=form.cleaned_data['banco'],
-                clabe=form.cleaned_data['clabe'],
-                distrito=invitacion.creado_por.distritos,
-                cuenta = form.cleaned_data['cuenta'],
-                email_opt = form.cleaned_data['email_opt'],
-                estatus = status,
+                distrito = invitacion.creado_por.distritos,
+                defaults = {
+                'creado_por' : profile,
+                'domicilio':form.cleaned_data['domicilio'],
+                'telefono':form.cleaned_data['telefono'],
+                'contacto':form.cleaned_data['contacto'],
+                'email':invitacion.email,
+                'banco':form.cleaned_data['banco'],
+                'clabe':form.cleaned_data['clabe'],
+                #distrito=invitacion.creado_por.distritos,
+                'cuenta': form.cleaned_data['cuenta'],
+                'email_opt': form.cleaned_data['email_opt'],
+                'estatus' : status,
                  # Aquí capturas los booleanos:
-                producto=form.cleaned_data['producto'],
-                servicio=form.cleaned_data['servicio'],
-                arrendamiento=form.cleaned_data['arrendamiento'],
-                moneda=form.cleaned_data['moneda'],
-                financiamiento=financiamiento,
-                dias_credito=form.cleaned_data['dias_credito'],
-                completo = True,
+                'producto':form.cleaned_data['producto'],
+                'servicio':form.cleaned_data['servicio'],
+                'arrendamiento':form.cleaned_data['arrendamiento'],
+                'moneda':form.cleaned_data['moneda'],
+                'financiamiento':financiamiento,
+                'dias_credito':form.cleaned_data['dias_credito'],
+                'completo': True,
+                }
             )
             #Deshabilitación de la invitación por medio del usado = True
             invitacion.usado = True
@@ -1276,7 +1470,16 @@ def registro_proveedor(request, token):
     else:
         form = RegistroProveedorForm(initial={'email': invitacion.email, 'rfc': invitacion.rfc})
 
-    return render(request, 'proveedores_externos/registro_proveedor.html', {'form': form})
+        if tipo_invitacion == 'NUEVO_USUARIO':
+            form.fields['razon_social'].required = False
+            form.fields['razon_social'].widget = forms.HiddenInput()
+
+    context = {
+        'form': form,
+        'tipo_invitacion': tipo_invitacion,
+    }
+
+    return render(request, 'proveedores_externos/registro_proveedor.html', context)
 
 #@login_required
 def cuestionario_debida_diligencia(request, proveedor_id):
@@ -1409,6 +1612,66 @@ def cuestionario_debida_diligencia(request, proveedor_id):
         }
 
         return render(request, 'proveedores_externos/cuestionario.html', context)
+    
+def registro_solo_direccion(request, pk):
+    """
+    Usado cuando InvitacionProveedor.tipo == 'NUEVA_DIRECCION'
+    Solo crea un Proveedor_direcciones adicional.
+    """
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_perfil)
+    # El proveedor ya debe existir (el flujo de invitación ya validó el RFC)
+    proveedor = Proveedor.objects.get(id=pk)
+    invitacion = InvitacionProveedor.objects.get(proveedor = proveedor,tipo= "NUEVA_DIRECCION", usado = False)
+    form = ProveedoresExistDireccionesForm()
+    if not invitacion:
+         # Si NO hay invitación válida, lo regresas al index (o donde prefieras)
+        messages.error(
+            request,
+            'No tienes una invitación válida para registrar una nueva dirección.'
+        )
+        return redirect('index')   # <-- cambia 'index' si tu URL se llama distinto
+
+    if request.method == 'POST':
+        item, created = Proveedor_direcciones.objects.get_or_create(nombre = proveedor, distrito = invitacion.creado_por.distritos)
+        form = ProveedoresExistDireccionesForm(request.POST, instance = item)
+        if form.is_valid():
+            direccion = form.save(commit=False)
+            direccion.nombre = proveedor
+            direccion.creado_por = usuario
+            actualizado_por = usuario
+            status = Estatus_proveedor.objects.get(nombre = "NUEVO")
+            direccion.estatus = status
+            # si quieres asegurar distrito por defecto:
+            
+            #direccion.distrito = invitacion.creado_por.distritos
+            direccion.created_at = datetime.now()
+            direccion.completo = True
+            direccion.save()
+
+            invitacion.usado = True
+            invitacion.fecha_uso = datetime.now()
+            #invitacion.proveedor = proveedor
+            invitacion.save()
+
+            messages.success(request, 'Nueva dirección registrada correctamente.')
+            # aquí ya podrías mandarlo a su dashboard de proveedor
+            return redirect('dashboard-index')  # o 'dashboard-proveedor'
+        else:
+            print(form.errors)
+            messages.error(request, f'Error al registrar la dirección: {form.errors}')
+   
+        
+
+      
+
+    context = {
+        'form': form, 
+        'invitacion': invitacion, 
+        'proveedor': proveedor
+    }
+
+    return render(request,'proveedores_externos/registro_direccion.html', context)
     
 def eliminar_miembro(request, pk):
     miembro = get_object_or_404(Miembro_Alta_Direccion, id=pk)
