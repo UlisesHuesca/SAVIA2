@@ -134,9 +134,9 @@ class Compra_tabla_Serializer(serializers.ModelSerializer):
     folio_req = serializers.IntegerField(source='req.folio', read_only=True)
     folio_solicitud = serializers.IntegerField(source='req.orden.folio', read_only=True)
     distrito = serializers.CharField(source='req.orden.distrito.nombre', read_only=True)
-    proyecto = serializers.CharField(source='req.orden.proyecto.nombre', read_only=True)
-    subproyecto = serializers.CharField(source='req.orden.subproyecto.nombre', read_only=True)
-    area = serializers.CharField(source='req.orden.operacion.nombre', read_only=True)
+    proyecto = serializers.CharField(source='req.orden.proyecto.nombre', read_only=True, allow_null = True, default = None)
+    subproyecto = serializers.CharField(source='req.orden.subproyecto.nombre', read_only=True, allow_null = True, default = None)
+    area = serializers.SerializerMethodField()
     solicitante = serializers.SerializerMethodField()
     creador = serializers.SerializerMethodField()  # nuevo campo
     created_at = serializers.DateTimeField(read_only=True, format='%d/%m/%Y')
@@ -154,7 +154,7 @@ class Compra_tabla_Serializer(serializers.ModelSerializer):
     tipo_cambio = serializers.SerializerMethodField()
     entrega = serializers.CharField(source='entrada_completa', read_only=True)
     tiene_facturas = serializers.SerializerMethodField()
-    activo_fijo = serializers.CharField(source='req.orden.activo.nombre', read_only=True)
+    activo_fijo = serializers.CharField(source='req.orden.activo.nombre', read_only=True, allow_null = True, default = None)
     total_pesos = serializers.SerializerMethodField()
 
     class Meta:
@@ -278,6 +278,13 @@ class Compra_tabla_Serializer(serializers.ModelSerializer):
 
         total = (tipo * costo).quantize(Decimal('0.01'), rounding=ROUND_HALF_UP)
         return total
+    
+      # 🔹 Aquí definimos el método seguro para 'area'
+    def get_area(self, obj):
+        try:
+            return obj.req.orden.operacion.nombre
+        except Exception:
+            return None
 
     #def get_descargar(self, obj):
         # Retorna la URL del PDF con el ID de la compra
