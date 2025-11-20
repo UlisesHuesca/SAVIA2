@@ -198,18 +198,19 @@ def Compra_tabla_api(request):
       # Trae TODO pero lo paginamos
     compras_qs = Compra.objects.filter(complete=True).order_by('id')
 
-    page = int(request.query_params.get('page', 1))
-    per_page = int(request.query_params.get('per_page', 1000))  # ajustable
+    #page = int(request.query_params.get('page', 1))
+    #per_page = int(request.query_params.get('per_page', 1000))  # ajustable
 
-    paginator = Paginator(compras_qs, per_page=per_page)
+    #paginator = Paginator(compras_qs, per_page=per_page)
 
-    try:
-        compras_page = paginator.page(number=page)
-    except EmptyPage:
+    #try:
+    #    compras_page = paginator.page(number=page)
+    #except EmptyPage:
         # Sin más datos -> lista vacía
-        return Response([])
+    #    return Response([])
 
-    serialized_compras = Compra_tabla_Serializer(compras_page, many=True)
+    #serialized_compras = Compra_tabla_Serializer(compras_page, many=True)
+    serialized_compras = Compra_tabla_Serializer(compras_qs, many=True)
         
     return Response(serialized_compras.data)
 
