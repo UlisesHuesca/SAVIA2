@@ -251,6 +251,18 @@
             </div>
         </div>
     </div>
+    <div class="col-sm-12 col-lg-2">
+        <div class = "card mt-2 bg-white">
+            <div class="card-header">
+                <h5>Históricos</h5>
+            </div>
+            <div class="card-body">
+                <a class="btn btn-outline-info" type="button" href="{% url 'historico-obsoletos' proveedor.id %}">
+                 <i class="fa-solid fa-cabinet-filing"></i>                                      
+                </a>
+            </div>
+        </div>    
+    </div>
 </div>    
 <div class="col-sm-12 col-lg-12">
     <div class = "card">
@@ -580,7 +592,7 @@
                                         {% else %}
                                             {% for documento in documentos %}
                                                 {% if documento.tipo_documento == "opinion_cumplimiento" %}
-                                                    {% if documento.validada %}
+                                                    {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfOpinion{{documento.id|unlocalize }}" title="Ver Opinión de Cumplimiento">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -618,7 +630,7 @@
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "opinion_cumplimiento"%}
+                                    {% if documento.tipo_documento == "opinion_cumplimiento" and not documento.obsoleto %}
                                         {% if documento.fecha_emision %}
                                             <p><strong>Fecha de Emisión:</strong> {{ documento.fecha_emision }}</p>
                                             <p><strong>Fecha de Vencimiento:</strong> {{documento.fecha_vencimiento }}</strong></p>
@@ -647,14 +659,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "opinion_cumplimiento" %}
+                                    {% if documento.tipo_documento == "opinion_cumplimiento" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "opinion_cumplimiento" %}
+                                    {% if documento.tipo_documento == "opinion_cumplimiento" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -664,7 +676,7 @@
                                 {% endfor %}
 
                             </td>
-                              <td>
+                            <td>
                                 {% for documento in documentos  %}
                                     {% if documento.tipo_documento == "opinion_cumplimiento" and documento.obsoleto == False and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
@@ -741,14 +753,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "calificacion" %}
+                                    {% if documento.tipo_documento == "calificacion" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "calificacion" %}
+                                    {% if documento.tipo_documento == "calificacion" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -757,6 +769,13 @@
                                     {% endif %}
                                 {% endfor %}
 
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "calificacion" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
                             </td>
                         </tr>
                         <tr>
@@ -828,14 +847,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "visita" %}
+                                    {% if documento.tipo_documento == "visita"  and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "visita" %}
+                                    {% if documento.tipo_documento == "visita" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -844,6 +863,13 @@
                                     {% endif %}
                                 {% endfor %}
 
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "visita" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
                             </td>
                         </tr>
                         <tr>
@@ -915,14 +941,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "calidad" %}
+                                    {% if documento.tipo_documento == "calidad"  and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "calidad" %}
+                                    {% if documento.tipo_documento == "calidad" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -930,8 +956,15 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
-
                             </td>
+                             <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "calidad" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            
                         </tr>
                         <tr>
                             <td>Cotización</td>
@@ -1002,14 +1035,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "cotizacion" %}
+                                    {% if documento.tipo_documento == "cotizacion" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "cotizacion" %}
+                                    {% if documento.tipo_documento == "cotizacion" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1017,7 +1050,13 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
-
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "cotizacion" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
                             </td>
                         </tr>
                         <tr>
@@ -1089,14 +1128,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "otros" %}
+                                    {% if documento.tipo_documento == "otros" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "otros" %}
+                                    {% if documento.tipo_documento == "otros" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1104,7 +1143,13 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
-
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "otros" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
                             </td>
                         </tr>
                         <tr>
@@ -1119,6 +1164,9 @@
                             </td>
                             <td>
                                {{ proveedor.ultimo_cuestionario.fecha}}
+                            </td>
+                            <td>
+
                             </td>
                             <td>
 
@@ -1203,14 +1251,14 @@
                             
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "carta_credito" %}
+                                    {% if documento.tipo_documento == "carta_credito" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "carta_credito" %}
+                                    {% if documento.tipo_documento == "carta_credito" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1218,7 +1266,13 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
-
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "carta_credito" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
                             </td>
                         </tr>
                         <tr>
@@ -1320,6 +1374,13 @@
                             <td>
 
                             </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "busqueda_mediatica" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                         </tr>
                           
                     </tbody>
@@ -1352,6 +1413,11 @@
                             <th class="text-danger" title="Eliminar documento">
                                 <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
                                     <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>  
+                                </button>
+                            </th>
+                            <th class="" title="Marcar como obsoleto">
+                                <button type="submit" name="btn_obsoleto_docto" class="btn btn-outline-info" title="Enviar a obsoletos">
+                                    <i class="fa-duotone fa-solid fa-cabinet-filing"></i>
                                 </button>
                             </th>
                         </tr>
@@ -1421,19 +1487,26 @@
                             </td> 
                             <td>
                             {% for documento in proveedor.documentos.all %}
-                                {% if documento.tipo_documento == "contrato" %}
+                                {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
                                     <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                 {% endif %}
                             {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "contrato" %}
+                                    {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
                                             <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
                                         {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "contrato" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
@@ -1504,14 +1577,14 @@
                             </td> 
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "curriculum" %}
+                                    {% if documento.tipo_documento == "curriculum" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "curriculum" %}
+                                    {% if documento.tipo_documento == "curriculum" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1520,6 +1593,13 @@
                                     {% endif %}
                                 {% endfor %}
 
+                            </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "curriculum" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
                             </td>
 
                         </tr>
@@ -1586,14 +1666,14 @@
                             </td> 
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "competencias" %}
+                                    {% if documento.tipo_documento == "competencias" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "competencias" %}
+                                    {% if documento.tipo_documento == "competencias" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1601,8 +1681,15 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
-
                             </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "competencias" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+
 
                            
                         </tr>
@@ -1669,14 +1756,14 @@
                             </td> 
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "cumplimiento_imss" %}
+                                    {% if documento.tipo_documento == "cumplimiento_imss" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "cumplimiento_imss" %}
+                                    {% if documento.tipo_documento == "cumplimiento_imss" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1686,6 +1773,14 @@
                                 {% endfor %}
 
                             </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "cumplimiento_imss" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+
 
                            
                         </tr>
@@ -1752,14 +1847,14 @@
                             </td> 
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "repse" %}
+                                    {% if documento.tipo_documento == "repse" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "repse" %}
+                                    {% if documento.tipo_documento == "repse" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1767,10 +1862,14 @@
                                         {% endif %}
                                     {% endif %}
                                 {% endfor %}
-
                             </td>
-
-                           
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "repse" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>                           
                         </tr>
                     </tbody> 
                 </table>
@@ -1807,6 +1906,11 @@
                             <th class="text-danger" title="Eliminar documento">
                                 <button type="submit" name="btn_eliminar_docto" class="btn btn-outline-danger" title="Confirmar Eliminación" >
                                     <i class="fa-duotone fa-solid fa-trash-can fa-xl"></i>  
+                                </button>
+                            </th>
+                            <th class="" title="Marcar como obsoleto">
+                                <button type="submit" name="btn_obsoleto_docto" class="btn btn-outline-info" title="Enviar a obsoletos">
+                                    <i class="fa-duotone fa-solid fa-cabinet-filing"></i>
                                 </button>
                             </th>
                         </tr>
@@ -1875,19 +1979,26 @@
                             </td> 
                             <td>
                             {% for documento in proveedor.documentos.all %}
-                                {% if documento.tipo_documento == "contrato" %}
+                                {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
                                     <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                 {% endif %}
                             {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "contrato" %}
+                                    {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
                                             <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="eliminar_documento_{{ documento.id | unlocalize }}">
                                         {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
+                              <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "contrato" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
@@ -1956,14 +2067,14 @@
                             </td> 
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "factura_predial" %}
+                                    {% if documento.tipo_documento == "factura_predial" and not documento.obsoleto %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validado %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
-                                    {% if documento.tipo_documento == "factura_predial" %}
+                                    {% if documento.tipo_documento == "factura_predial" and not documento.obsoleto %}
                                         {% if documento.validada %}
                                             <i class="fa-regular fa-check"></i>
                                         {% else %}
@@ -1972,6 +2083,13 @@
                                     {% endif %}
                                 {% endfor %}
                             </td>
+                            <td>
+                                {% for documento in documentos  %}
+                                    {% if documento.tipo_documento == "factura_predial" and documento.obsoleto == False and documento.validada %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>         
 
                         </tr>
                     </tbody>

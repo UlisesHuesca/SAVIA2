@@ -55,4 +55,5 @@ urlpatterns = [
     path('proveedores/update_estatus_direccion/', views.update_estatus_direccion, name='update_estatus_direccion'),
     path('proveedores/update_fecha_direccion/', views.update_fecha_direccion, name='update_fecha_direccion'),
     path('proveedores/update_flag_direccion/', views.update_flag_direccion, name='update-flag-direccion'),
+    path('proveedores/<int:proveedor_id>/obsoletos/', views.historico_obsoletos, name='historico-obsoletos'),
 ]

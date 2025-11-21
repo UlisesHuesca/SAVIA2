@@ -1360,7 +1360,7 @@ def documentacion_proveedores(request, pk):
 
         if documento.validada:
             documentos_validados_count[tipo] += 1
-            
+
     if request.method == 'POST':
         #form =  Comentario_Proveedor_Doc_Form(request.POST, instance=proveedor)
         if "btn_validacion" in request.POST:
@@ -1424,6 +1424,27 @@ def documentacion_proveedores(request, pk):
         }
     
     return render(request,'dashboard/documentacion_proveedor.html', context)
+
+def historico_obsoletos(request, proveedor_id):
+    proveedor = get_object_or_404(Proveedor, id=proveedor_id)
+
+    documentos_qs = DocumentosProveedor.objects.filter(
+        proveedor=proveedor,
+        obsoleto=True
+    ).order_by('-fecha_obsoleto', '-fecha_subida')
+
+    # 🔹 Set up pagination
+    paginator = Paginator(documentos_qs, 50)  # 50 por página (ajusta a gusto)
+    page_number = request.GET.get('page')
+    page_obj = paginator.get_page(page_number)
+
+
+    context = {
+        'proveedor': proveedor,
+        'documentos_obsoletos': page_obj,
+    }
+
+    return render(request, 'dashboard/historico_obsoletos.html', context)
 
 def update_comentario(request):
     data= json.loads(request.body)

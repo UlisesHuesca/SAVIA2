@@ -3559,7 +3559,7 @@ def mis_viaticos(request):
     viaticos = myfilter.qs
 
     for viatico in viaticos:
-        viatico.creado_reciente = viatico.created_at >= timezone.now() - timedelta(days=30)
+        viatico.creado_reciente = (viatico.approved_at2 >= timezone.now() - timedelta(days=30)) if viatico.approved_at2 else True
         
     context= {
         'viaticos':viaticos,
