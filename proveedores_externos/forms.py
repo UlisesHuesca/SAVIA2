@@ -59,9 +59,9 @@ class RegistroProveedorForm(forms.Form):
     pais = forms.ModelChoiceField(queryset=Pais.objects.all())
     estado = forms.ModelChoiceField(queryset=Estado.objects.all())
 
-    producto = forms.BooleanField(required=False, label='Producto')
-    servicio = forms.BooleanField(required=False, label='Servicio')
-    arrendamiento = forms.BooleanField(required=False, label='Arrendamiento')
+    #producto = forms.BooleanField(required=False, label='Producto')
+    #servicio = forms.BooleanField(required=False, label='Servicio')
+    #arrendamiento = forms.BooleanField(required=False, label='Arrendamiento')
     
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)

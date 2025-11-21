@@ -16,7 +16,7 @@ from django.views.decorators.http import require_GET
 from django.utils.crypto import get_random_string
 from django import forms  # por si no lo tienes ya importado
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor, Debida_Diligencia, Miembro_Alta_Direccion, Funcionario_Publico_Relacionado, Relacion_Servidor_Publico, Responsable_Interaccion
-from user.models import Profile, CustomUser, Tipo_perfil, Distrito
+from user.models import Profile, CustomUser, Tipo_perfil, Distrito, Almacen
 from compras.filters import CompraFilter
 from requisiciones.models import Requis
 from requisiciones.views import get_image_base64
@@ -1006,6 +1006,10 @@ def invitar_proveedor(request):
         email = (request.POST.get('email') or '').strip()
         rfc   = (request.POST.get('rfc') or '').strip().upper()
         tipo  = (request.POST.get('tipo') or '').strip()
+        # Convertir checkboxes a booleanos
+        producto = bool(request.POST.get('producto'))
+        servicio = bool(request.POST.get('servicio'))
+        arrendamiento = bool(request.POST.get('arrendamiento'))
         
         
         if InvitacionProveedor.objects.filter(email=email, usado=False).exists():
@@ -1062,6 +1066,10 @@ def invitar_proveedor(request):
                     rfc=rfc,
                     creado_por=perfil,
                     tipo=tipo,
+                     # <<< Los 3 booleanos guardados correctamente >>>
+                    producto=producto,
+                    servicio=servicio,
+                    arrendamiento=arrendamiento,
                 )
 
                 if tipo == "NUEVA_DIRECCION":
@@ -1083,6 +1091,10 @@ def invitar_proveedor(request):
                 rfc=rfc,
                 creado_por=perfil,
                 tipo=tipo,
+                 # <<< Los 3 booleanos guardados correctamente >>>
+                producto=producto,
+                servicio=servicio,
+                arrendamiento=arrendamiento,
             )
 
             link = request.build_absolute_uri(
@@ -1403,21 +1415,28 @@ def registro_proveedor(request, token):
             )
             #4 Objeto tipo
             tipo = Tipo_perfil.objects.get(nombre="PROVEEDOR_EXTERNO")
+            distrito = invitacion.creado_por.distritos
             #5 Objeto perfil
             profile = Profile.objects.create(
                 staff=customuser,
                 tipo=tipo,
                 proveedor=proveedor,
-                distritos=invitacion.creado_por.distritos,
+                distritos= distrito,
                 st_activo =True,
 
             )
-            profile.almacen.set(invitacion.creado_por.almacen.all())
+           
+            almacenes = Almacen.objects.filter(nombre = distrito.nombre)
+            profile.almacen.set(almacenes)
             condicion_seleccionada = form.cleaned_data['condiciones']
             if condicion_seleccionada == 'CREDITO':
                 financiamiento = True
             else:
                 financiamiento = False
+
+            producto_inv = invitacion.producto
+            servicio_inv = invitacion.servicio
+            arrendamiento_inv = invitacion.arrendamiento
             #5.5
             status = Estatus_proveedor.objects.get(nombre="PREALTA")
                 #6 Objeto Proveedor_direcciones
@@ -1437,9 +1456,9 @@ def registro_proveedor(request, token):
                 'email_opt': form.cleaned_data['email_opt'],
                 'estatus' : status,
                  # Aquí capturas los booleanos:
-                'producto':form.cleaned_data['producto'],
-                'servicio':form.cleaned_data['servicio'],
-                'arrendamiento':form.cleaned_data['arrendamiento'],
+                'producto': producto_inv,
+                'servicio': servicio_inv,
+                'arrendamiento': arrendamiento_inv,
                 'moneda':form.cleaned_data['moneda'],
                 'financiamiento':financiamiento,
                 'dias_credito':form.cleaned_data['dias_credito'],

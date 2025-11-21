@@ -277,6 +277,11 @@ class InvitacionProveedor(models.Model):
     fecha_uso = models.DateTimeField(null=True, blank=True)
     tipo = models.CharField(max_length=20, choices=TIPO_CHOICES, default='NUEVO_PROVEEDOR')
 
+     # >>> Campos “preconfigurados” para la dirección:
+    servicio = models.BooleanField(default=False)
+    producto = models.BooleanField(default=False)
+    arrendamiento = models.BooleanField(default=False)
+
     def __str__(self):
         return f'{self.email} | {self.proveedor}'
 
