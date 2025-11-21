@@ -3473,7 +3473,29 @@ def generar_pdf_nueva(compra):
 
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Comentarios:')
-    # c.line(col_inicio + 65, campo_y - 1, col_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+    #Comentario de solicitud
+    if compra.comentario_solicitud:
+        paragraph_content = compra.req.orden.comentario
+    else:
+        paragraph_content = "NA" 
+
+    styles = getSampleStyleSheet()
+    styleN = styles["Normal"]
+    styleN.fontSize = 8
+    #styleN.color = prussian_blue
+    styleN.leading = 13  # Espaciado entre líneas
+    styleN = ParagraphStyle('Justicado', parent=styles['Normal'], alignment=TA_JUSTIFY)
+
+    if paragraph_content is None:
+        paragraph_content = " "    
+    conditional_paragraph = Paragraph(paragraph_content, styleN)
+
+    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
+    # Asumiendo 'width' y 'height' ya están definidos como antes
+    new_frame = Frame(col_inicio + 74, campo_y - 185 , 200, 200, id='conditional_frame')
+    
+    # Agregar el párrafo al nuevo marco
+    new_frame.addFromList([conditional_paragraph], c)
 
     # Panel Derecho: Términos y condiciones (Etiqueta centrada en fondo azul oscuro)
     c.setFillColor(prussian_blue)
@@ -3507,7 +3529,7 @@ def generar_pdf_nueva(compra):
 
     campo_y -= 12
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Enviar factura:')
-    # c.line(panel_derecho_inicio + 65, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+    c.drawString(panel_derecho_inicio + 80,campo_y, compra.creada_por.staff.staff.email)
 
     campo_y -= 12
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Tiempo entrega:')
@@ -3520,7 +3542,21 @@ def generar_pdf_nueva(compra):
 
     campo_y -= 12
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Comentarios:')
-    # c.line(panel_derecho_inicio + 60, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+    if compra.comentarios:
+        comentarios = compra.comentarios
+    else:
+        comentarios = "NA"
+
+    if comentarios is None:
+        comentarios = " "    
+    conditional_paragraph = Paragraph(comentarios, styleN)
+
+    # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
+    # Asumiendo 'width' y 'height' ya están definidos como antes
+    new_frame = Frame(col_inicio + 340, campo_y - 185 , 200, 200, id='conditional_frame')
+    
+    # Agregar el párrafo al nuevo marco
+    new_frame.addFromList([conditional_paragraph], c)
 
     # --- SECCIÓN NOTA IMPORTANTE ---
     # Se calcula la posición Y para la nota, debajo de los paneles de contenido.
@@ -3750,7 +3786,7 @@ def generar_pdf_nueva(compra):
     c.drawString(145, caja_iso - 35, 'Clasificación del documento')
     c.drawString(175, caja_iso - 45, 'No Controlado')
     c.drawString(255, caja_iso - 35, 'Nivel del documento')
-    c.drawString(280, caja_iso - 35, 'N5')
+    c.drawString(280, caja_iso - 45, 'N5')
     c.drawString(340, caja_iso - 35, 'Revisión No.')
     c.drawString(352, caja_iso - 45, '001')
     c.drawString(410, caja_iso - 35, 'Fecha de Emisión')
