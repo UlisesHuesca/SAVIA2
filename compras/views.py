@@ -3480,11 +3480,11 @@ def generar_pdf_nueva(compra):
         paragraph_content = "NA" 
 
     styles = getSampleStyleSheet()
-    styleN = styles["Normal"]
-    styleN.fontSize = 8
+    base = styles["Normal"]
+    base.fontSize = 7
     #styleN.color = prussian_blue
-    styleN.leading = 13  # Espaciado entre líneas
-    styleN = ParagraphStyle('Justicado', parent=styles['Normal'], alignment=TA_JUSTIFY)
+    base.leading = 6  # Espaciado entre líneas
+    styleN = ParagraphStyle('Justicado', parent=base, alignment=TA_JUSTIFY)
 
     if paragraph_content is None:
         paragraph_content = " "    
