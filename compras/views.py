@@ -2592,7 +2592,7 @@ def historico_compras(request):
 
 def descargar_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
-    buf = generar_pdf(compra)
+    buf = generar_pdf_nueva(compra)
     return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')
 
 def attach_oc_pdf(request, pk):
@@ -2990,7 +2990,7 @@ def generar_pdf(compra):
     
     
 
-    table = Table(data, colWidths=[1.2 * cm, 13 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
+    table = Table(data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm,])
     table_style = TableStyle([ #estilos de la tabla
         ('INNERGRID',(0,0),(-1,-1), 0.25, colors.white),
         ('BOX',(0,0),(-1,-1), 0.25, colors.black),
@@ -3263,6 +3263,586 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
     buf.seek(0)
     return buf
 
+
+def generar_pdf_nueva(compra):
+    #Configuration of the PDF object
+    buf = io.BytesIO()
+    c = canvas.Canvas(buf, pagesize=letter)
+    #doc = SimpleDocTemplate(buf, pagesize=letter)
+    #Here ends conf.
+    #compra = Compra.objects.get(id=pk)
+    productos = ArticuloComprado.objects.filter(oc=compra.id)
+
+    # Define estilos para las tablas (antes de usarlos)
+    styles = getSampleStyleSheet()
+    style_desc = styles["BodyText"]
+    style_desc.wordWrap = 'CJK'
+    style_desc.fontSize = 6
+    style_desc.leading = 8
+
+    # Azul Vordcab
+    prussian_blue = Color(0.0859375,0.1953125,0.30859375)
+    rojo = Color(0.59375, 0.05859375, 0.05859375)
+    # Encabezado superior
+    c.setFillColor(black)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica',8)
+
+    # Bloque 1: Logotipo y Nombre de la Empresa (Izquierda)
+    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm)  # Imagen vordcab
+
+    # Bloque 2: Título y Datos de Control (Centro Superior)
+    caja_iso = 760
+    # Dibujar el título principal
+    c.setFillColor(prussian_blue)
+    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
+    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Orden de Compra
+    c.setFillColor(white)
+    c.setLineWidth(.2)
+    c.setFont('Helvetica-Bold',14)
+    c.drawCentredString(280,755,'Orden de compra')
+    c.setFillColor(black)
+
+    # Datos de control
+    c.setFont('Helvetica',8)
+    c.drawString(150,caja_iso-20,'Número de documento')
+    c.drawString(150,caja_iso-30,'SEOV-ADQ-N4-01.02')
+    c.drawString(245,caja_iso-20,'Clasificación del documento')
+    c.drawString(275,caja_iso-30,'Controlado')
+    c.drawString(355,caja_iso-20,'Nivel del documento')
+    c.drawString(380,caja_iso-30, 'N5')
+    c.drawString(440,caja_iso-20,'Revisión No.')
+    c.drawString(452,caja_iso-30,'003')
+    c.drawString(510,caja_iso-20,'Fecha de Emisión')
+    c.drawString(525,caja_iso-30,'13/11/2017')
+
+    # Bloque 3: Datos de Elaboración y Aprobación (Derecha Superior)
+    c.drawString(430,caja_iso,'Preparado por:')
+    c.drawString(405,caja_iso-10,'SUPT. DE ADQUISICIONES')
+    c.drawString(520,caja_iso,'Aprobación')
+    c.drawString(515,caja_iso-10,'SUBD ADTVO')
+
+    # --- SECCIÓN PRINCIPAL DEL FORMULARIO ---
+    # Definir las posiciones para las columnas principales con mejor distribución
+    col_inicio = 30
+    col_total_ancho = 530  # Aproximadamente el ancho disponible
+
+    # Dividir en 2 columnas principales (cada panel de la fila 1 y 2)
+    col_ancho = col_total_ancho // 2 - 5  # Aproximadamente 260 cada una con separación
+    col_separacion = 10
+
+    # Coordenadas Y para las secciones principales
+    seccion_inicio = 700
+    seccion_alto = 100  # Ajustable según contenido
+
+    # Fila 1: ORDEN DE COMPRA Y DATOS DEL PROVEEDOR
+    # Panel Izquierdo: Orden de compra (Etiqueta centrada en fondo azul oscuro)
+    panel_inicio_y = seccion_inicio - 25
+    c.setFillColor(prussian_blue)
+    c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño para evitar superposición
+    c.drawCentredString(col_inicio + col_ancho//2, panel_inicio_y + 12, 'Orden de compra')
+
+    # Contenido del panel izquierdo
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño para más campos
+    campo_y = panel_inicio_y - 8  # Espaciado reducido
+    c.drawString(col_inicio + 3, campo_y, 'Folio:')
+    c.drawString(col_inicio + 80,campo_y, str(compra.folio))
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Fecha de emisión:')
+    c.drawString(col_inicio + 80, campo_y, compra.created_at.strftime("%d/%m/%Y"))
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Proceso:')
+    # c.line(col_inicio + 45, campo_y - 1, col_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Elaboró:')
+    c.drawString(col_inicio + 80, campo_y,compra.creada_por.staff.staff.first_name + ' ' +compra.creada_por.staff.staff.last_name)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Aut. Sptte.:')
+    if compra.autorizado1:
+        c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por.staff.staff.first_name + ' ' +compra.oc_autorizada_por.staff.staff.last_name)
+    
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Aut. Gerente:')
+    if compra.autorizado2:
+        c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por2.staff.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.staff.last_name)
+    # Panel Derecho: Datos del proveedor (Etiqueta centrada en fondo azul oscuro)
+    panel_derecho_inicio = col_inicio + col_ancho + col_separacion
+    c.setFillColor(prussian_blue)
+    c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
+    c.drawCentredString(panel_derecho_inicio + col_ancho//2, panel_inicio_y + 12, 'Datos del proveedor')
+
+    # Contenido del panel derecho
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
+    campo_y = panel_inicio_y - 8
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Nombre:')
+    if compra.proveedor.nombre.razon_social == 'COLABORADOR':
+        c.drawString(panel_derecho_inicio + 80,campo_y, compra.deposito_comprador.staff.staff.first_name+' '+compra.deposito_comprador.staff.staff.last_name)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 24, compra.deposito_comprador.banco.nombre)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 36, compra.deposito_comprador.cuenta_bancaria)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 48, compra.deposito_comprador.clabe)
+    else:
+        c.drawString(panel_derecho_inicio + 80,campo_y, compra.proveedor.nombre.razon_social)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 24, compra.proveedor.banco.nombre)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 36, compra.proveedor.cuenta)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 48, compra.proveedor.clabe)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'RFC:')
+    c.drawString(panel_derecho_inicio + 80, campo_y, compra.proveedor.nombre.rfc)
+        
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Banco:')
+    # c.line(panel_derecho_inicio + 30, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Cuenta:')
+    # c.line(panel_derecho_inicio + 40, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'CLABE:')
+    # c.line(panel_derecho_inicio + 35, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Contacto:') # <<< este campo no se renderiza
+    # c.line(panel_derecho_inicio + 45, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    # Fila 2: TRAZABILIDAD Y TÉRMINOS Y CONDICIONES
+    # Reducir el espacio entre filas para acercar las secciones
+    espacio_entre_filas = 80  # Reducido de 150 a 80 para acercar las secciones
+    panel_inicio_y = panel_inicio_y - espacio_entre_filas  # Mayor separación
+
+    # Panel Izquierdo: Trazabilidad/ Datos de requisición (Etiqueta centrada en fondo azul oscuro)
+    c.setFillColor(prussian_blue)
+    c.rect(col_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
+    c.drawCentredString(col_inicio + col_ancho//2, panel_inicio_y + 12, 'Trazabilidad/ Datos de requisición')
+
+    # Contenido del panel izquierdo
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
+    campo_y = panel_inicio_y - 8
+    c.drawString(col_inicio + 3, campo_y, 'Proyecto:')
+    c.drawString(col_inicio + 80, campo_y,compra.req.orden.proyecto.nombre)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Subproyecto:')
+    c.drawString(col_inicio + 80, campo_y,compra.req.orden.subproyecto.nombre)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Folio requisición:')
+    c.drawString(col_inicio + 80, campo_y, str(compra.req.folio))
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Fecha autorización:')
+    c.drawString(col_inicio + 80, campo_y,compra.req.orden.approved_at.strftime("%d/%m/%Y"))
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Solicitado por:')
+    c.drawString(col_inicio + 80, campo_y, compra.req.orden.staff.staff.staff.first_name +' '+ compra.req.orden.staff.staff.staff.last_name)
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Activo Fijo:')
+    try:
+        if compra.req.orden.activo is not None:
+            eco_unidad = compra.req.orden.activo.eco_unidad
+            descripcion = compra.req.orden.activo.descripcion
+            serie = compra.req.orden.activo.serie
+            c.drawString(col_inicio + 80, campo_y, f'{eco_unidad} {descripcion}')
+            c.drawString(col_inicio + 80, campo_y - 12, serie)
+        else:
+            c.drawString(col_inicio + 80, campo_y, 'NA')
+            c.drawString(col_inicio + 80, campo_y - 12 , 'NA')
+    except Activo.DoesNotExist:
+        c.drawString(col_inicio + 80, campo_y, 'NA')
+        c.drawString(col_inicio + 80, campo_y - 12, 'NA')
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'N° de serie:')
+    # c.line(col_inicio + 55, campo_y - 1, col_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(col_inicio + 3, campo_y, 'Comentarios:')
+    # c.line(col_inicio + 65, campo_y - 1, col_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    # Panel Derecho: Términos y condiciones (Etiqueta centrada en fondo azul oscuro)
+    c.setFillColor(prussian_blue)
+    c.rect(panel_derecho_inicio, panel_inicio_y, col_ancho, 20, fill=True, stroke=False)  # Fondo azul
+    c.setFillColor(white)
+    c.setFont('Helvetica-Bold', 9)  # Tamaño de fuente más pequeño
+    c.drawCentredString(panel_derecho_inicio + col_ancho//2, panel_inicio_y + 12, 'Términos y condiciones')
+
+    # Contenido del panel derecho
+    c.setFillColor(black)
+    c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
+    campo_y = panel_inicio_y - 8
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Condición pago:')
+    c.drawString(panel_derecho_inicio + 80, campo_y, compra.cond_de_pago.nombre)
+    
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Plazo Crédito:')
+    if compra.dias_de_credito:
+        c.drawString(panel_derecho_inicio + 80, campo_y, str(compra.dias_de_credito) + ' días')
+    else:
+        c.drawString(panel_derecho_inicio + 80, campo_y, 'No Especificado')
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Moneda:')
+    c.drawString(panel_derecho_inicio + 80, campo_y,compra.moneda.nombre)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Uso CFDI:')
+    c.drawString(panel_derecho_inicio + 80, campo_y, compra.uso_del_cfdi.descripcion)
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Enviar factura:')
+    # c.line(panel_derecho_inicio + 65, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Tiempo entrega:')
+    if compra.dias_de_entrega:
+        c.drawString(panel_derecho_inicio + 80, campo_y, str(compra.dias_de_entrega)+' '+'días hábiles')
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Lugar entrega:')
+    # c.line(panel_derecho_inicio + 70, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    campo_y -= 12
+    c.drawString(panel_derecho_inicio + 3, campo_y, 'Comentarios:')
+    # c.line(panel_derecho_inicio + 60, campo_y - 1, panel_derecho_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+
+    # --- SECCIÓN NOTA IMPORTANTE ---
+    # Se calcula la posición Y para la nota, debajo de los paneles de contenido.
+    nota_y_inicio = panel_inicio_y - 100 # Ajustado para bajar la nota
+    
+    # Define styles for the note
+    style_nota_titulo = ParagraphStyle('nota_titulo', parent=styles['Normal'], fontName='Helvetica-Bold', fontSize=8, leading=10)
+    style_nota_cuerpo = ParagraphStyle('nota_cuerpo', parent=styles['Normal'], fontSize=7, leading=9, alignment=TA_JUSTIFY)
+
+    # Create Paragraphs for the note
+    titulo_texto = "<strong>IMPORTANTE: Requisito de Acceso para Personal Externo</strong>"
+    cuerpo_texto = """
+    Todo personal externo (proveedores, contratistas y subcontratistas) solo podrá ingresar a realizar
+    trabajos o servicios en las instalaciones de GRUPO VORDCAB presentando su constancia de vigencia
+    de derechos del IMSS con una antigüedad no mayor a 30 días naturales a partir de su fecha de emisión.
+    """
+    titulo_p = Paragraph(titulo_texto, style_nota_titulo)
+    cuerpo_p = Paragraph(cuerpo_texto, style_nota_cuerpo)
+
+    # Create and draw a Frame to hold the note content with a border
+    elementos_nota = [titulo_p, Spacer(1, 4), cuerpo_p]
+    nota_frame = Frame(col_inicio, nota_y_inicio - 55, col_total_ancho, 55, showBoundary=1, leftPadding=5, rightPadding=5, topPadding=5, bottomPadding=5)
+    nota_frame.addFromList(elementos_nota, c)
+
+
+    # NUEVA SECCIÓN: TABLA DE PARTIDAS - Colocada debajo de la nota
+    # La posición de la tabla ahora se calcula en relación a la nueva posición de la nota.
+    tabla_inicio_y = nota_y_inicio - 65
+
+    # Sección de la tabla de productos
+    data = []
+    data.append(['''Código''', '''Producto / Servicio''', '''Cantidad''', '''Unidad''', '''P. U.''', '''Importe'''])
+
+    for producto in productos:
+        importe = producto.precio_unitario * producto.cantidad
+        importe_rounded = round(importe, 4)
+        descripcion = Paragraph(producto.producto.producto.articulos.producto.producto.nombre, style_desc)
+        precio_unitario = f"{producto.precio_unitario:,.4f}"
+        data.append([
+            producto.producto.producto.articulos.producto.producto.codigo,
+            descripcion,
+            producto.cantidad,
+            producto.producto.producto.articulos.producto.producto.unidad,
+            precio_unitario,
+            f"{importe_rounded:,.4f}"
+        ])
+
+    c.setFillColor(black)
+    c.setFont('Helvetica', 8)
+
+    # Dibujar la tabla de productos en la nueva ubicación
+    table = Table(data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+    table_style = TableStyle([  # estilos de la tabla
+        ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
+        ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        # ENCABEZADO
+        ('TEXTCOLOR', (0, 0), (-1, 0), white),
+        ('FONTSIZE', (0, 0), (-1, 0), 8),
+        ('BACKGROUND', (0, 0), (-1, 0), prussian_blue),
+        # CUERPO
+        ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
+        ('FONTSIZE', (0, 1), (-1, -1), 6),
+    ])
+    table.setStyle(table_style)
+
+    # Calcular la altura de la tabla para posicionarla adecuadamente
+    table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+
+    # Posicionar la tabla más abajo para evitar superposición
+    table_y = tabla_inicio_y - (len(data) * 18)  # Ajustar la posición basado en el número de filas
+
+    # Asegurarse de que la tabla no se posicione demasiado abajo
+    if table_y < 200:  # Si la tabla se va muy abajo, ajustar
+        table_y = 400 - (len(data) * 18)
+
+    table.drawOn(c, 20, table_y)
+
+    # --- PIE DE PÁGINA FIJO ---
+    footer_y = 120  # Posición Y fija para el inicio del pie de página
+    c.setLineWidth(1)
+    c.line(20, footer_y, 585, footer_y)  # Línea divisoria del pie de página
+
+    # Sección Izquierda: Total con letra
+    c.setFillColor(black)
+    c.setFont('Helvetica-Bold', 9)
+    c.drawString(30, footer_y - 20, 'Total con letra:')
+    
+    c.setFont('Helvetica', 8)
+    
+    def convertir_a_reales(valor):
+        partes = f"{valor:.2f}".split(".")
+        reales = num2words(int(partes[0]), lang='pt_BR')
+        centavos = num2words(int(partes[1]), lang='pt_BR')
+        return f"{reales} reais e {centavos} centavos"
+
+    total_en_letra = ""
+    if compra.moneda.nombre == "PESOS":
+        total_en_letra = num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='MXN')
+    elif compra.moneda.nombre == "DOLARES":
+        total_en_letra = num2words(compra.costo_plus_adicionales, lang='es', to='currency', currency='USD')
+    elif compra.moneda.nombre == "REAIS":
+        total_en_letra = convertir_a_reales(compra.costo_plus_adicionales)
+    
+    # Usar Paragraph para el texto con ajuste de línea
+    style_letra = ParagraphStyle('total_letra', parent=styles['Normal'], fontSize=8, leading=10)
+    p_letra = Paragraph(total_en_letra.upper(), style_letra)
+    
+    # Dibujar el párrafo en un Frame para controlar el ancho
+    frame_letra = Frame(30, footer_y - 70, 350, 50, id='frame_letra', showBoundary=0)
+    frame_letra.addFromList([p_letra], c)
+
+
+    # Sección Derecha: Totales numéricos
+    montos_align_x = 570
+    
+    # Sub Total
+    c.setFont('Helvetica-Bold', 9)
+    c.drawRightString(montos_align_x - 80, footer_y - 20, 'Sub Total:')
+    c.setFont('Helvetica', 9)
+    subtotal = compra.costo_oc - compra.costo_iva
+    c.drawRightString(montos_align_x, footer_y - 20, f"${subtotal:,.2f}")
+
+    # IVA
+    c.setFont('Helvetica-Bold', 9)
+    c.drawRightString(montos_align_x - 80, footer_y - 40, 'IVA:')
+    c.setFont('Helvetica', 9)
+    c.drawRightString(montos_align_x, footer_y - 40, f"${compra.costo_iva:,.2f}")
+
+    # Total (resaltado en azul)
+    c.setFillColor(prussian_blue)
+    c.setFont('Helvetica-Bold', 11)
+    c.drawRightString(montos_align_x - 80, footer_y - 60, 'Total:')
+    c.drawRightString(montos_align_x, footer_y - 60, f"${compra.costo_plus_adicionales:,.2f}")
+
+    c.setFillColor(black)
+    width, height = letter
+
+    # Use the same style from earlier
+    styleN = getSampleStyleSheet()["BodyText"]
+    styleN.fontSize = 6
+
+
+
+    # The duplicate table code has been removed to prevent overlap issues
+
+    # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
+    rows_cal = []   # solo filas con requerimientos
+
+    # (opcional) deduplicar por producto si la OC puede traer el mismo producto varias veces
+    vistos = set()
+
+    for ac in productos:  # Using mock data instead of Django query
+        try:
+            base_product = ac.producto.producto.articulos.producto.producto
+        except Exception:
+            continue
+        if not base_product:
+            continue
+
+        # (opcional) evita duplicados por Product
+        if getattr(base_product, 'id', None) in vistos:
+            continue
+        vistos.add(base_product.id)
+
+        # intenta tomar el OneToOne
+        try:
+            producto_calidad = base_product.producto_calidad
+        except:  # Using generic exception for mock data instead of Producto_Calidad.DoesNotExist
+            continue
+
+        if not producto_calidad:
+            continue
+
+        reqs = producto_calidad.requerimientos_calidad.select_related('requerimiento').all()
+        if not reqs:
+            continue
+
+        codigo = base_product.codigo
+        desc_par = Paragraph(base_product.nombre or '', style_desc)
+
+        for req in reqs:
+            req_nombre = req.requerimiento.nombre if req.requerimiento else ''
+            comentario = req.comentarios or ''
+            rows_cal.append([codigo, desc_par, req_nombre, comentario])
+
+    # Si no hay nada que mostrar, NO crear la hoja
+    if rows_cal:
+        c.showPage()
+        # encabezado hoja
+        c.setFont('Helvetica', 12)
+        c.setFillColor(prussian_blue)
+        c.rect(20, 750, 565, 24, fill=True, stroke=False)
+        c.setFillColor(white)
+        c.setFont('Helvetica-Bold', 13)
+        c.drawCentredString(300, 756, 'Requerimientos de Calidad por Producto')
+
+        data_cal = [['Código', 'Producto', 'Requerimiento Calidad', 'Comentario']]
+        data_cal.extend(rows_cal)
+
+        col_widths = [2*cm, 8.0*cm, 5*cm, 5.0*cm]
+        tabla_cal = Table(data_cal, colWidths=col_widths, hAlign='LEFT')
+        tabla_cal.setStyle(TableStyle([
+            ('INNERGRID', (0,0), (-1,-1), 0.25, colors.black),
+            ('BOX',       (0,0), (-1,-1), 0.50, colors.black),
+            ('VALIGN',    (0,0), (-1,-1), 'MIDDLE'),
+            ('BACKGROUND',(0,0), (-1,0),  prussian_blue),
+            ('TEXTCOLOR', (0,0), (-1,0),  colors.white),
+            ('FONTSIZE',  (0,0), (-1,0),  9),
+            ('FONTSIZE',  (0,1), (-1,-1), 8),
+        ]))
+
+        tabla_cal.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        tabla_cal.drawOn(c, 20, 680 - min(520, len(data_cal)*16))
+
+    c.showPage()
+    # ------------ FIN NUEVA HOJA ------------------------------------------------
+
+    # Agregar el encabezado en la segunda página
+    c.setFont('Helvetica', 8)
+    c.drawString(430, caja_iso, 'Preparado por:')
+    c.drawString(420, caja_iso - 10, 'ASIST. TEC. SUBAD')
+    c.drawString(525, caja_iso, 'Aprobación')
+    c.drawString(520, caja_iso - 10, 'SUBD-ADTVO')
+    c.drawString(50, caja_iso - 35, 'Número de documento')
+    c.drawString(50, caja_iso - 45, 'SEOV-ADQ-N4-01.04')
+    c.drawString(145, caja_iso - 35, 'Clasificación del documento')
+    c.drawString(175, caja_iso - 45, 'No Controlado')
+    c.drawString(255, caja_iso - 35, 'Nivel del documento')
+    c.drawString(280, caja_iso - 35, 'N5')
+    c.drawString(340, caja_iso - 35, 'Revisión No.')
+    c.drawString(352, caja_iso - 45, '001')
+    c.drawString(410, caja_iso - 35, 'Fecha de Emisión')
+    c.drawString(425, caja_iso - 45, '03/05/23')
+    c.drawString(500, caja_iso - 35, 'Fecha de Revisión')
+    c.drawString(525, caja_iso - 45, '06/09/23')
+
+    caja_proveedor = caja_iso - 65
+    c.setFont('Helvetica', 12)
+    c.setFillColor(prussian_blue)
+    c.rect(155, 735, 250, 35, fill=True, stroke=False)  # Barra azul superior encabezado
+    c.setFillColor(colors.white)
+    c.setFont('Helvetica-Bold', 13)
+    c.drawCentredString(280, 755, 'Requisitos en Materia de Gestión')
+    c.drawCentredString(280, 740, 'de Seguridad, Salud y Medio Ambiente')
+    # c.drawInlineImage('static/images/logo_vordcab.jpg', 60, 735, 2 * cm, 1 * cm)  # Imagen vortec  # This might fail if image doesn't exist
+
+
+
+    #c.setFont("Helvetica-Bold", 12)
+    #c.setFillColor(prussian_blue)  # Asumiendo que prussian_blue está definido
+    #c.drawCentredString(300, 680, )  # Ajusta la posición según sea necesario
+    styles = getSampleStyleSheet()
+    styleN = styles["Normal"]
+    styleN.fontSize = 10
+    #styleN.color = prussian_blue
+    styleN.leading = 13  # Espaciado entre líneas
+    styleN = ParagraphStyle('Justicado', parent=styles['Normal'], alignment=TA_JUSTIFY)
+    styleT = styles["Normal"]
+    styleT.fontSize = 13
+    styleT.fontName = 'Helvetica-Bold'
+    styleT.textColor = prussian_blue
+    styleT.leading = 17
+    styleT = ParagraphStyle('Center', parent=styles['Normal'], alignment= TA_CENTER)
+
+    texto = """El objeto del presente escrito es poner en conocimiento, de los proveedores que realizan trabajos para nuestra empresa,
+                los requerimientos mínimos que le sean de aplicación, que debe de cumplir en lo referente a la seguridad y salud en el
+                trabajo, calidad y protección del medio ambiente. La aceptación de una orden de compra implica la responsabilidad por
+                parte del proveedor del conocimiento y aceptación de lo descrito.<br/>Nuestra empresa tiene implantado un SEOV
+                (Sistema de Excelencia Operativa Vordcab), bajo las normas ISO 9001:2015, ISO 14001:2015 e ISO 45001:2018,
+                por lo que se requiere que nuestros proveedores colaboren en el cumplimiento de los siguientes requisitos: <br/>
+                """
+
+    texto2 = """En todo momento el proveedor está obligado a cumplir con la legislación aplicable al servicio que está prestando.<br/>
+El proveedor se compromete a garantizar el cumplimiento de lo solicitado en el pedido u orden de compra del material o del trabajo
+externo.<br/>
+El proveedor debería poder garantizar la correcta gestión y control de: los residuos, emisiones atmosféricas, ruidos,
+efluentes residuales, productos peligrosos, afectación del suelo y mantenimiento de instalaciones, respecto al servicio prestado.<br/>
+El proveedor deberá aplicar las medidas preventivas necesarias, para evitar situaciones de peligro o emergencia como derrame, fuga,
+incendio, etc., durante la realización del trabajo encomendado. Y si es preciso formar e informar a su personal sobre manipulación,
+almacenaje, uso y riesgos de productos o preparados peligrosos.<br/>
+El proveedor deberá facilitar la documentación ambiental y de seguridad que se le solicite o requiera.<br/>
+Si el proveedor tiene algún servicio que presta a nuestra empresa subcontratado, por ejemplo, transporte, deberá transmitir este
+documento a su subcontratista.<br/> """
+    texto3 = """El proveedor deberá trabajar adoptando buenas prácticas ambientales y cumplir con los procedimientos internos que se
+    le hayan comunicado respecto a HSE y la Prevención de Riesgos Laborales.<br/>
+Las empresas que realicen trabajos para nuestra empresa deberán cumplirse los requisitos de seguridad establecidos, uso de EPP,
+protecciones colectivas, formación, seguridad equipos,
+medidas preventivas<br/>
+Si durante el trabajo se deben retirar residuos peligrosos (aceites, aguas con productos peligrosos, pinturas, disolventes, sus envases)
+o /y no peligrosos (escombros, embalajes), se recogerán en recipientes adecuados según la cantidad a retirar. Los recipientes llenos
+serán retirados por la empresa que preste el servicio o entregados a nuestra empresa, según convenga, para su correcto almacenamiento
+y gestión posterior.<br/>
+Si no sabe qué hacer con algún residuo o efluente residual o cualquier otra cosa, que se ha originado mientras prestaba el servicio,
+ avise a la persona que le haya atendido o al Responsable de seguridad. No tomará decisiones.<br/>
+Si detecta cualquier situación de riesgo/emergencia (ambiental, personal, de seguridad), lo comunicará de inmediato a cualquier persona
+de la empresa o a la que le haya atendido o al Responsable de seguridad. Nunca actué. Deberá seguir las normas de emergencia que se le
+ han facilitado a la entrada.<br/>
+Si mientras trabaja se produce una situación de emergencia (derrame o fuga de producto peligrosos), y le han facilitado la formación y
+medios necesarios para actuar, proceda según la instrucción que se le ha facilitado, en caso contrario avise de inmediato a cualquier
+persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<br/>"""
+    titulo1 = "REQUISITOS OBLIGATORIOS PARA PROVEEDORES DE GRUPO VORDCAB"
+    titulo2 = """REQUISITOS GENERALES PARA TODOS LOS PROVEEDORES"""
+    titulo3 = """REQUISITOS SI USTED PRESTA EL SERVICIO O PARTE DE SERVICIO DENTRO <br/>
+                DE LAS INSTALACIONES DE GRUPO VORDCAB"""
+
+    titulo1 = Paragraph(titulo1, styleT)
+    parrafo = Paragraph(texto, styleN)
+    titulo2 = Paragraph(titulo2, styleT)
+    parrafo2 = Paragraph(texto2, styleN)
+    titulo3 = Paragraph(titulo3, styleT)
+    parrafo3 = Paragraph(texto3, styleN)
+
+    ancho, alto = letter  # Asegúrate de tener estas dimensiones definidas
+    #frame = Frame(120, 720, ancho - 100, alto - 100, id='frameTextoConstante')  # Ajusta las dimensiones según sea necesario
+    elementos = [titulo1, Spacer(1,25), parrafo, Spacer(1,25),titulo2,Spacer(1,25), parrafo2, Spacer(1,25),titulo3,Spacer(1,25), parrafo3]
+    frame = Frame(30, 0, width-50, height-100, id='frameTextoConstante')
+    frame.addFromList(elementos, c)
+
+    c.save()
+    buf.seek(0)
+    return buf
 
 def generar_pdf_proveedor(request, pk):
     #Configuration of the PDF object
@@ -5301,7 +5881,7 @@ def ver_codigo_etica(request):
     url = os.path.join(settings.MEDIA_URL, 'politicas', filename)
     return JsonResponse({'url': url})
 
-@login_required
+
 @login_required
 def politicas_pendientes(request):
     perfil_id = request.session.get('selected_profile_id')
