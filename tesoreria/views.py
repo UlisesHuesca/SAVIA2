@@ -3525,7 +3525,7 @@ def mis_gastos(request):
 
         proyectos = set()
         subproyectos = set()
-        gasto.creado_reciente = gasto.created_at >= timezone.now() - timedelta(days=30)
+        gasto.creado_reciente = (gasto.approbado_fecha2 >= timezone.now() - timedelta(days=30)) if gasto.approbado_fecha2 else True
         for articulo in articulos_gasto:
             if articulo.proyecto:
                 proyectos.add(str(articulo.proyecto.nombre))

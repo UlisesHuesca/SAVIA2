@@ -115,6 +115,8 @@ class DocumentosProveedor(models.Model):
     validada_por = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, related_name='validada_por')
     validada_fecha = models.DateTimeField(null=True)
     comentario = models.CharField(max_length=200, null=True, blank=True)
+    obsoleto = models.BooleanField(default = False)
+    fecha_obsoleto = models.DateField(null=True)
     def __str__(self):
         return f"{self.proveedor.razon_social} - {self.get_tipo_documento_display()} (Activo: {self.activo})"
 

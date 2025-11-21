@@ -1345,13 +1345,22 @@ def documentacion_proveedores(request, pk):
     documentos_count = {tipo: 0 for tipo in tipos_documentos}
     documentos_validados_count = {tipo: 0 for tipo in tipos_documentos}
 
+    #for documento in documentos:
+    #    tipo = documento.tipo_documento
+    #    documentos_count[tipo] += 1  # Contar cuántos documentos hay de cada tipo
+    #    if documento.validada:
+    #        documentos_validados_count[tipo] += 1  # Contar cuántos están validados
+
     for documento in documentos:
+        if documento.obsoleto:
+            continue  # Ignorar documento marcado como obsoleto
+
         tipo = documento.tipo_documento
-        documentos_count[tipo] += 1  # Contar cuántos documentos hay de cada tipo
+        documentos_count[tipo] += 1
+
         if documento.validada:
-            documentos_validados_count[tipo] += 1  # Contar cuántos están validados
-
-
+            documentos_validados_count[tipo] += 1
+            
     if request.method == 'POST':
         #form =  Comentario_Proveedor_Doc_Form(request.POST, instance=proveedor)
         if "btn_validacion" in request.POST:
@@ -1383,7 +1392,19 @@ def documentacion_proveedores(request, pk):
                         documento.delete()  # Eliminar el registro de la base de datos
                         #documento.save()
             messages.success(request, f"Documentos eliminados correctamente.")
-        return redirect(request.path) 
+        if "btn_obsoleto_docto" in request.POST:
+            for documento in documentos:
+                obsoleto_checkbox_name = f'obsoleto_documento_{documento.id}'
+                print(obsoleto_checkbox_name)
+                # Si está marcado…
+                if obsoleto_checkbox_name in request.POST:
+                    
+                    documento.obsoleto = True
+                    documento.fecha_obsoleto = date.today()
+                    documento.save()  # Guardar estado obsoleto
+                
+            messages.success(request, "Documentos marcados como obsoletos correctamente.")
+            return redirect(request.path)
         #else:
         #    messages.error(request,'No está validando')
     #print(documentos_count)
