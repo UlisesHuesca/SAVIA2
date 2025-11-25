@@ -3542,10 +3542,10 @@ def generar_pdf_nueva(compra):
 
     campo_y -= 12
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Comentarios:')
-    if compra.comentarios:
-        comentarios = compra.comentarios
+    if compra.opciones_condiciones is not None:
+        options_conditions = compra.opciones_condiciones
     else:
-        comentarios = "NA"
+        options_conditions = "NA"
 
     if comentarios is None:
         comentarios = " "    
