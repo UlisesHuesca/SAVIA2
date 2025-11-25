@@ -3547,8 +3547,8 @@ def generar_pdf_nueva(compra):
     else:
         options_conditions = "NA"
 
-    if comentarios is None:
-        comentarios = " "    
+    if options_conditions is None:
+        options_conditions = " "    
     conditional_paragraph = Paragraph(options_conditions, styleN)
 
     # Crear un nuevo frame similar al anterior pero ajustando la posición y/o tamaño si es necesario
