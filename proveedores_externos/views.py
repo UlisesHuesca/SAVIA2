@@ -205,16 +205,21 @@ def matriz_direcciones(request):
             'repse',
             'cumplimiento_imss',
             'busqueda_mediatica',
+            'calidad'
         ]
 
         documentos_count = {tipo: 0 for tipo in tipos_documentos}
         documentos_validados_count = {tipo: 0 for tipo in tipos_documentos}
 
         for documento in documentos:
+            if documento.obsoleto:
+                continue  # Ignorar documento marcado como obsoleto
+
             tipo = documento.tipo_documento
-            documentos_count[tipo] += 1  # Contar cuántos documentos hay de cada tipo
+            documentos_count[tipo] += 1
+
             if documento.validada:
-                documentos_validados_count[tipo] += 1  # Contar cuántos están validados
+                documentos_validados_count[tipo] += 1
 
         print(documentos_count)
       

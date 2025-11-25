@@ -1570,6 +1570,7 @@ def update_estatus_direccion(request):
 
         direccion = Proveedor_direcciones.objects.get(id=direccion_id)
         estatus_obj = Estatus_proveedor.objects.get(nombre=nuevo_estatus)
+        print(estatus_obj)
         direccion.estatus = estatus_obj
         direccion.save()
 
@@ -1577,7 +1578,8 @@ def update_estatus_direccion(request):
         color = {
             "APROBADO": "bg-primary",
             "NUEVO": "bg-warning",
-            "RECHAZADO": "bg-danger"
+            "RECHAZADO": "bg-danger",
+            "SUSPENDIDO": "bg-danger",
         }.get(nuevo_estatus, "bg-secondary")
 
         badge_html = f'<span class="badge {color}">{nuevo_estatus}</span>'

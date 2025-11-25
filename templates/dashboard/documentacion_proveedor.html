@@ -133,6 +133,8 @@
                                             <span class="badge bg-warning">{{ direccion.estatus }}</span>
                                         {% elif direccion.estatus.nombre == "RECHAZADO" %}
                                             <span class="badge bg-danger">{{ direccion.estatus }}</span>
+                                        {% elif direccion.estatus.nombre == "SUSPENDIDO" %}
+                                            <span class="badge bg-danger">{{ direccion.estatus }}</span>
                                         {% else %}
                                             <span class="badge bg-secondary">Sin estatus</span>
                                         {% endif %}
@@ -143,6 +145,7 @@
                                         <option value="NUEVO">NUEVO</option>
                                         <option value="APROBADO">APROBADO</option>
                                         <option value="RECHAZADO">RECHAZADO</option>
+                                        <option value="SUSPENDIDO">SUSPENDIDO</option>
                                     </select>
 
                                     <button class="btn btn-sm btn-outline-info" type="button"
@@ -2329,6 +2332,7 @@ function cancelarEstatus(id) {
 
 function guardarEstatus(id) {
     const nuevoEstatus = document.getElementById("estatus_select_" + id).value;
+    console.log("Guardando nuevo estatus:", nuevoEstatus);
     fetch("/proveedores/update_estatus_direccion/", {
         method: "POST",
         headers: {
