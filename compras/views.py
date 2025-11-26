@@ -2592,12 +2592,12 @@ def historico_compras(request):
 
 def descargar_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
-    buf = generar_pdf_nueva(compra)
+    buf = generar_pdf(compra)
     return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')
 
 def attach_oc_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
-    buf = generar_pdf_nueva(compra)
+    buf = generar_pdf(compra)
 
     return buf.getvalue()
 
