@@ -10,6 +10,7 @@ from django.conf import settings
 from django.forms import inlineformset_factory
 from django.utils.http import urlencode
 from django.db import IntegrityError
+#from dateutil.relativedelta import relativedelta
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, InvitacionProveedor
@@ -1610,6 +1611,19 @@ def update_fecha_direccion(request):
         'success': True,
         'fecha': d.modificado_fecha.isoformat() if d.modificado_fecha else ''
     })
+
+def guardar_fecha_adicional(request, documento_id):
+    print('siiii')
+    if request.method == "POST":
+        body = json.loads(request.body)
+        fecha = body.get("fecha_adicional")
+
+        comprobante = DocumentosProveedor.objects.get(id=documento_id)
+        if comprobante:
+            comprobante.fecha_adicional = fecha
+            comprobante.save()
+
+        return JsonResponse({"ok": True})
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required

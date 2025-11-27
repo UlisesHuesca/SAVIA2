@@ -115,7 +115,7 @@
                             <th>Distrito</th>
                             <th>Status</th>
                             <th>Fecha de Evaluación</th>
-                            <th></th>      
+                            <th>Fecha de Vencimiento</th>      
                             <th>Materiales</th>
                             <th>Servicio</th>
                             <th>Arrendamiento</th>
@@ -174,6 +174,7 @@
                                         {% endif %}
                                     </span>
 
+
                                     <!-- Edición -->
                                     <span id="fecha_edit_{{ direccion.id|unlocalize }}" class="d-none">
                                         <input type="date"
@@ -181,9 +182,6 @@
                                             class="form-control form-control-sm"
                                             value="{{ direccion.modificado_fecha|date:'Y-m-d' }}">
                                     </span>
-                                    </td>
-
-                                    <td class="text-end">
                                     <button type="button" class="btn btn-sm btn-outline-info"
                                             id="fecha_btn_edit_{{ direccion.id|unlocalize }}"
                                             onclick="fecha_edit({{ direccion.id|unlocalize }})" title="Editar Fecha">
@@ -199,36 +197,49 @@
                                             onclick="fecha_cancel({{ direccion.id|unlocalize }})">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
-                                    </td>
+                                </td>
+                                <td>
+                                    <span id="fecha_view_{{ direccion.id|unlocalize }}"
+                                        style="color: {% if direccion.es_vigente %}blue{% else %}red{% endif %};">
 
-                                    <td class="text-center">
-                                        <span id="flag_producto_{{ direccion.id|unlocalize }}">
+                                        {% if direccion.fecha_vencimiento %}
+                                            {{ direccion.fecha_vencimiento }}
+                                        {% else %}
+                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                    </span>
+                                </td>
+
+                                
+
+                                <td class="text-center">
+                                    <span id="flag_producto_{{ direccion.id|unlocalize }}">
                                         {% if direccion.producto %} 
+                                    <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
+                                        {% else %}
+                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                        {% endif %}
+                                    </span>
+                                    <button class="btn btn-sm btn-outline-info"
+                                        onclick="toggleFlag({{ direccion.id|unlocalize }}, 'producto')" title="Cambiar Status">
+                                        <i class="fa-solid fa-rotate-reverse"></i>
+                                    </button>
+                                </td>
+
+                                <!-- Servicio -->
+                                <td class="text-center">
+                                    <span id="flag_servicio_{{ direccion.id|unlocalize }}">
+                                        {% if direccion.servicio %}
                                             <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
                                         {% else %}
                                             <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
                                         {% endif %}
-                                        </span>
-                                        <button class="btn btn-sm btn-outline-info"
-                                                onclick="toggleFlag({{ direccion.id|unlocalize }}, 'producto')" title="Cambiar Status">
+                                    </span>
+                                    <button class="btn btn-sm btn-outline-info"
+                                        onclick="toggleFlag({{ direccion.id|unlocalize }}, 'servicio')" title="Cambiar Status">
                                         <i class="fa-solid fa-rotate-reverse"></i>
-                                        </button>
-                                    </td>
-
-                                    <!-- Servicio -->
-                                    <td class="text-center">
-                                        <span id="flag_servicio_{{ direccion.id|unlocalize }}">
-                                        {% if direccion.servicio %}
-                                                <i class="fa-duotone fa-solid fa-circle-check alert-success fa-xl"></i>
-                                        {% else %}
-                                            <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
-                                        {% endif %}
-                                        </span>
-                                        <button class="btn btn-sm btn-outline-info"
-                                                onclick="toggleFlag({{ direccion.id|unlocalize }}, 'servicio')" title="Cambiar Status">
-                                        <i class="fa-solid fa-rotate-reverse"></i>
-                                        </button>
-                                    </td>
+                                    </button>
+                                </td>
 
                                     <!-- Arrendamiento -->
                                     <td class="text-center">
@@ -538,7 +549,51 @@
                                         {% endif %}
                                     
                             </td>
-                            <td></td>
+                            <td>
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "comprobante_domicilio" %}
+                                        {% if documento.validada and not documento.obsoleto %}
+                                            
+                                            {# Fecha adicional (editable) #}
+                                            <span id="fecha_adic_view_{{ documento.id|unlocalize }}">
+                                                {% if documento.fecha_adicional %}
+                                                    {{ documento.fecha_adicional }}
+                                                {% else %}
+                                                    <i class="fa-duotone fa-solid fa-circle-xmark alert-danger fa-xl"></i>
+                                                {% endif %}
+                                            </span>
+
+                                            <input type="date" class="form-control d-none"
+                                                id="fecha_adic_input_{{ documento.id|unlocalize }}"
+                                                value="{{ documento.fecha_adicional|date:'Y-m-d' }}">
+
+                                            <button type="button" class="btn btn-sm btn-outline-info"
+                                                    id="fecha_adic_btn_edit_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_edit({{ documento.id|unlocalize }})"
+                                                    title="Editar Fecha">
+                                                <i class="fa-solid fa-pen"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-success d-none"
+                                                    id="fecha_adic_btn_save_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_save({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-check"></i>
+                                            </button>
+
+                                            <button type="button" class="btn btn-sm btn-secondary d-none"
+                                                    id="fecha_adic_btn_cancel_{{ documento.id|unlocalize }}"
+                                                    onclick="fechaAdic_cancel({{ documento.id|unlocalize }})">
+                                                <i class="fa-solid fa-xmark"></i>
+                                            </button>
+
+                                        {% elif not documento.obsoleto %}
+                                            {# Aquí sigues mostrando el checkbox de eliminar si NO está validada #}
+                                            <input type="checkbox" style="transform: scale(1.5); margin: 5px;"
+                                                name="eliminar_documento_{{ documento.id|unlocalize }}">
+                                        {% endif %}
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                             <td class="" id="comentario_3_{{proveedor.id|unlocalize}}" tipo ="domicilio" >{% if proveedor.comentario_comprobante_domicilio %} {{proveedor.comentario_comprobante_domicilio}} {% endif %}</td>
                             <td class="d-none" id="form_comentario_3_{{proveedor.id|unlocalize}}">
                                 <input type="textarea" class="form-control" id="comentario-input_3_{{ proveedor.id|unlocalize }}" value="{{ proveedor.comentario }}">
@@ -2411,7 +2466,63 @@ function toggleFlag(id, flag) {
   })
   .catch(console.error);
 }
+function fechaAdic_edit(id) {
+    const view  = document.getElementById(`fecha_adic_view_${id}`);
+    const input = document.getElementById(`fecha_adic_input_${id}`);
+    const btnEdit   = document.getElementById(`fecha_adic_btn_edit_${id}`);
+    const btnSave   = document.getElementById(`fecha_adic_btn_save_${id}`);
+    const btnCancel = document.getElementById(`fecha_adic_btn_cancel_${id}`);
 
+    if (!view || !input || !btnEdit || !btnSave || !btnCancel) {
+        console.log("Falta algún elemento para id:", id);
+        return;
+    }
+
+    view.classList.add("d-none");
+    input.classList.remove("d-none");
+
+    btnEdit.classList.add("d-none");
+    btnSave.classList.remove("d-none");
+    btnCancel.classList.remove("d-none");
+}
+
+function fechaAdic_cancel(id) {
+    document.getElementById(`fecha_adic_view_${id}`).classList.remove("d-none");
+    document.getElementById(`fecha_adic_input_${id}`).classList.add("d-none");
+
+    document.getElementById(`fecha_adic_btn_edit_${id}`).classList.remove("d-none");
+    document.getElementById(`fecha_adic_btn_save_${id}`).classList.add("d-none");
+    document.getElementById(`fecha_adic_btn_cancel_${id}`).classList.add("d-none");
+}
+
+function fechaAdic_save(id) {
+    const input = document.getElementById(`fecha_adic_input_${id}`);
+    const valor = input.value;
+
+    // Ajusta la URL a como tengas tu ruta en Django
+    fetch(`/guardar/fecha-adicional/${id}/`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            "X-CSRFToken": csrftoken,   // usa la misma variable que ya usas en otros fetch
+        },
+        body: JSON.stringify({ fecha_adicional: valor }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.ok) {
+            // Actualizar texto visible (puedes usar data.fecha_formateada si la mandas desde Django)
+            const view = document.getElementById(`fecha_adic_view_${id}`);
+            view.textContent = valor;
+
+            // Salir del modo edición
+            fechaAdic_cancel(id);
+        } else {
+            console.log("Error al guardar fecha adicional", data);
+        }
+    })
+    .catch(err => console.error("Error en fetch fechaAdic_save:", err));
+}
 
   </script>
 

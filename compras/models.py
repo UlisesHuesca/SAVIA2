@@ -4,9 +4,10 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Distrito, Banco, Pais
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
+from datetime import date
 from datetime import datetime
-import decimal
 from dateutil.relativedelta import relativedelta
+import decimal
 from phone_field import PhoneField
 import re
 import PyPDF2
@@ -117,6 +118,7 @@ class DocumentosProveedor(models.Model):
     comentario = models.CharField(max_length=200, null=True, blank=True)
     obsoleto = models.BooleanField(default = False)
     fecha_obsoleto = models.DateField(null=True)
+    fecha_adicional = models.DateField(null=True, blank=True)  #Llenado a mano
     def __str__(self):
         return f"{self.proveedor.razon_social} - {self.get_tipo_documento_display()} (Activo: {self.activo})"
 
@@ -259,6 +261,23 @@ class Proveedor_direcciones(models.Model):
     moneda = models.ForeignKey(Moneda, on_delete = models.CASCADE, null=True)
     referencia = models.CharField(max_length=20, null=True, blank = True)
     convenio = models.CharField(max_length=20, null=True, blank = True)
+
+    @property
+    def fecha_vencimiento(self):
+        if not self.modificado_fecha:
+            return None
+        return self.modificado_fecha + relativedelta(years=1)
+
+    @property
+    def es_vigente(self):
+        """
+        True si la fecha de vencimiento es mayor a hoy.
+        False si ya venció.
+        """
+        if not self.fecha_vencimiento:
+            return False
+        return self.fecha_vencimiento >= date.today()
+
 
     def __str__(self):
         return f'{self.nombre}'
