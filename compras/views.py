@@ -52,7 +52,7 @@ from reportlab.rl_config import defaultPageSize
 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
-from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak
+from reportlab.platypus import SimpleDocTemplate, Paragraph, Spacer, Table, TableStyle, Frame, PageBreak, Image
 from bs4 import BeautifulSoup
 
 import urllib.request, urllib.parse, urllib.error
@@ -2592,12 +2592,12 @@ def historico_compras(request):
 
 def descargar_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
-    buf = generar_pdf(compra)
+    buf = generar_pdf_nueva(compra)
     return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')
 
 def attach_oc_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
-    buf = generar_pdf(compra)
+    buf = generar_pdf_nueva(compra)
 
     return buf.getvalue()
 
@@ -3283,46 +3283,112 @@ def generar_pdf_nueva(compra):
     # Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)
     rojo = Color(0.59375, 0.05859375, 0.05859375)
-    # Encabezado superior
-    c.setFillColor(black)
-    c.setLineWidth(.2)
-    c.setFont('Helvetica',8)
+    gris_legal = Color(0.5, 0.5, 0.5)
 
-    # Bloque 1: Logotipo y Nombre de la Empresa (Izquierda)
-    c.drawInlineImage('static/images/logo_vordcab.jpg',45,730, 3 * cm, 1.5 * cm)  # Imagen vordcab
+    def dibujar_pie_pagina_legal(c_obj):
+        texto_legal = """Este documento está protegido por derechos de autor y contiene información confidencial, ya sea patentable o no, propiedad de Vordcab. Se deposita en los destinatarios de este documento restricciones de confidencialidad, con el entendimiento de que ni esta documentación ni la información contenida allí se reproducirán, utilizarán ni divulgarán, en forma total ni parcial para ningún otro propósito que no sea el autorizado específicamente por Vordcab."""
+        
+        style_legal = ParagraphStyle('legal_footer', parent=styles['Normal'], fontSize=5, textColor=gris_legal, alignment=TA_CENTER, leading=6)
+        p_legal = Paragraph(texto_legal, style_legal)
+        
+        w_legal, h_legal = p_legal.wrap(550, 50)
+        p_legal.drawOn(c_obj, 30, 20) # Posición en el pie de página
 
-    # Bloque 2: Título y Datos de Control (Centro Superior)
-    caja_iso = 760
-    # Dibujar el título principal
-    c.setFillColor(prussian_blue)
-    # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(150,750,250,20, fill=True, stroke=False) #Barra azul superior Orden de Compra
-    c.setFillColor(white)
-    c.setLineWidth(.2)
-    c.setFont('Helvetica-Bold',14)
-    c.drawCentredString(280,755,'Orden de compra')
-    c.setFillColor(black)
+     # 3. Crear función interna dibujar_encabezado(canvas_obj) para reutilizar.
+    def dibujar_encabezado(c_obj):
+        c_obj.setFillColor(black)
+        c_obj.setLineWidth(.2)
+        
+        # Definir anchos de columnas basados en porcentajes del ancho total (530 puntos)
+        total_width = 530
+        col_widths = [
+            total_width * 0.15,  # Logo / Num Doc
+            total_width * 0.20,  # Clasificación
+            total_width * 0.10,  # Nivel
+            total_width * 0.10,  # Idioma
+            total_width * 0.10,  # Revisión
+            total_width * 0.15,  # Fecha Emisión
+            total_width * 0.20   # Fecha Rev
+        ]
 
-    # Datos de control
-    c.setFont('Helvetica',8)
-    c.drawString(150,caja_iso-20,'Número de documento')
-    c.drawString(150,caja_iso-30,'SEOV-ADQ-N4-01.02')
-    c.drawString(245,caja_iso-20,'Clasificación del documento')
-    c.drawString(275,caja_iso-30,'Controlado')
-    c.drawString(355,caja_iso-20,'Nivel del documento')
-    c.drawString(380,caja_iso-30, 'N5')
-    c.drawString(440,caja_iso-20,'Revisión No.')
-    c.drawString(452,caja_iso-30,'003')
-    c.drawString(510,caja_iso-20,'Fecha de Emisión')
-    c.drawString(525,caja_iso-30,'13/11/2017')
+        # Preparar contenido de la tabla
+        # Fila 1: Logo, Título, Aprobación
+        
+        # Logo
+        logo_path = 'static/images/logo_vordcab.jpg'
+        if os.path.exists(logo_path):
+            logo_img = Image(logo_path, width=2*cm, height=1*cm)
+            logo_img.hAlign = 'CENTER'
+        else:
+            logo_img = "LOGO"
 
-    # Bloque 3: Datos de Elaboración y Aprobación (Derecha Superior)
-    c.drawString(430,caja_iso,'Preparado por:')
-    c.drawString(405,caja_iso-10,'SUPT. DE ADQUISICIONES')
-    c.drawString(520,caja_iso,'Aprobación')
-    c.drawString(515,caja_iso-10,'SUBD ADTVO')
 
-    # --- SECCIÓN PRINCIPAL DEL FORMULARIO ---
+    # Estilos de párrafo para celdas
+        #style_center = ParagraphStyle('header_center', parent=styles['Normal'], alignment=TA_CENTER, fontSize=8)
+        style_center_bold = ParagraphStyle('header_center_bold', parent=styles['Normal'], alignment=TA_CENTER, fontSize=14, fontName='Helvetica-Bold', textColor=white)
+        style_center_small = ParagraphStyle(
+            'header_center_small', 
+            parent=styles['Normal'], 
+            alignment=TA_CENTER, 
+            fontSize=7,
+            leading = 8.4
+            )
+        
+        # Contenido Fila 1
+        titulo = Paragraph("Orden de compra", style_center_bold)
+        prep_por = Paragraph("Preparado por:<br/>SUPT. DE ADQUISICIONES", style_center_small)
+        aprobacion = Paragraph("Aprobación:<br/>SUBD RM", style_center_small)
+        
+        # Contenido Fila 2
+        num_doc = Paragraph("Número de documento<br/>SEOV-ADQ-N4-01.02", style_center_small)
+        clasif = Paragraph("Clasificación del documento<br/>No Controlado", style_center_small)
+        nivel = Paragraph("Nivel del documento<br/>N5", style_center_small)
+        idioma = Paragraph("Idioma<br/>Español", style_center_small)
+        revision = Paragraph("Revisión No.<br/>004", style_center_small)
+        fecha_em = Paragraph("Fecha de Emisión<br/>13/11/2017", style_center_small)
+        fecha_rev = Paragraph("Fecha de última revisión<br/>21/11/2025", style_center_small)
+
+        data_header = [
+            [logo_img, titulo, '', '', '', prep_por, aprobacion],
+            [num_doc, clasif, nivel, idioma, revision, fecha_em, fecha_rev]
+        ]
+
+        # Crear tabla
+        t_header = Table(data_header, colWidths=col_widths)
+        
+        # Estilos de la tabla
+        t_header.setStyle(TableStyle([
+            # Fila 1
+            ('SPAN', (1, 0), (4, 0)),  # Título ocupa cols 1-4 (indices 0-based: 1,2,3,4 -> 5 columnas?? No, cols 2,3,4,5 son indices 1,2,3,4)
+            # Espera, indices: 0=Logo, 1=Col2, 2=Col3, 3=Col4, 4=Col5, 5=Col6, 6=Col7
+            # Title spans cols 2,3,4,5 -> Indices 1, 2, 3, 4. So SPAN (1,0) to (4,0).
+            
+            ('BACKGROUND', (1, 0), (4, 0), prussian_blue), # Fondo azul para título
+            ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+            ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+            ('GRID', (0, 0), (-1, -1), 0.5, black),
+            
+            # Ajustes específicos
+            ('LEFTPADDING', (0, 0), (-1, -1), 2),
+            ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+            ('TOPPADDING', (0, 0), (-1, -1), 2),
+            ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+        ]))
+
+        # Dibujar tabla
+        w, h = t_header.wrap(total_width, 100) # Altura aproximada
+        t_header.drawOn(c_obj, 30, 710) # Posición Y ajustada (bajado de 730 a 710)
+
+    
+
+
+
+
+    # Dibujar encabezado en la primera página
+    dibujar_encabezado(c)
+
+
+     # --- SECCIÓN PRINCIPAL DEL FORMULARIO ---
     # Definir las posiciones para las columnas principales con mejor distribución
     col_inicio = 30
     col_total_ancho = 530  # Aproximadamente el ancho disponible
@@ -3367,12 +3433,18 @@ def generar_pdf_nueva(compra):
     c.drawString(col_inicio + 3, campo_y, 'Aut. Sptte.:')
     if compra.autorizado1:
         c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por.staff.staff.first_name + ' ' +compra.oc_autorizada_por.staff.staff.last_name)
-    
+    else:
+        c.setFont('Helvetica-Bold', 10)
+        c.drawString(col_inicio + 80, campo_y, 'NO AUTORIZADA')
 
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Aut. Gerente:')
     if compra.autorizado2:
         c.drawString(col_inicio + 80, campo_y,compra.oc_autorizada_por2.staff.staff.first_name + ' ' + compra.oc_autorizada_por2.staff.staff.last_name)
+    else:
+        c.setFont('Helvetica-Bold', 10)
+        c.drawString(col_inicio + 80, campo_y, 'NO AUTORIZADA')
+    
     # Panel Derecho: Datos del proveedor (Etiqueta centrada en fondo azul oscuro)
     panel_derecho_inicio = col_inicio + col_ancho + col_separacion
     c.setFillColor(prussian_blue)
@@ -3391,11 +3463,14 @@ def generar_pdf_nueva(compra):
         c.drawString(panel_derecho_inicio + 80,campo_y- 24, compra.deposito_comprador.banco.nombre)
         c.drawString(panel_derecho_inicio + 80,campo_y- 36, compra.deposito_comprador.cuenta_bancaria)
         c.drawString(panel_derecho_inicio + 80,campo_y- 48, compra.deposito_comprador.clabe)
+        c.drawString(panel_derecho_inicio + 80,campo_y-60, compra.deposito_comprador.staff.staff.first_name+' '+compra.deposito_comprador.staff.staff.last_name)
+        
     else:
         c.drawString(panel_derecho_inicio + 80,campo_y, compra.proveedor.nombre.razon_social)
         c.drawString(panel_derecho_inicio + 80,campo_y- 24, compra.proveedor.banco.nombre)
         c.drawString(panel_derecho_inicio + 80,campo_y- 36, compra.proveedor.cuenta)
         c.drawString(panel_derecho_inicio + 80,campo_y- 48, compra.proveedor.clabe)
+        c.drawString(panel_derecho_inicio + 80,campo_y-60, compra.proveedor.contacto)
 
     campo_y -= 12
     c.drawString(panel_derecho_inicio + 3, campo_y, 'RFC:')
@@ -3419,7 +3494,9 @@ def generar_pdf_nueva(compra):
 
     # Fila 2: TRAZABILIDAD Y TÉRMINOS Y CONDICIONES
     # Reducir el espacio entre filas para acercar las secciones
-    espacio_entre_filas = 80  # Reducido de 150 a 80 para acercar las secciones
+    # Fila 2: TRAZABILIDAD Y TÉRMINOS Y CONDICIONES
+    # Reducir el espacio entre filas para acercar las secciones
+    espacio_entre_filas = 110  # Aumentado de 80 a 110 para evitar solapamiento con 'Aut. Gerente'
     panel_inicio_y = panel_inicio_y - espacio_entre_filas  # Mayor separación
 
     # Panel Izquierdo: Trazabilidad/ Datos de requisición (Etiqueta centrada en fondo azul oscuro)
@@ -3698,10 +3775,7 @@ def generar_pdf_nueva(compra):
     # Use the same style from earlier
     styleN = getSampleStyleSheet()["BodyText"]
     styleN.fontSize = 6
-
-
-
-    # The duplicate table code has been removed to prevent overlap issues
+    dibujar_pie_pagina_legal(c)
 
     # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
     rows_cal = []   # solo filas con requerimientos
@@ -3709,7 +3783,7 @@ def generar_pdf_nueva(compra):
     # (opcional) deduplicar por producto si la OC puede traer el mismo producto varias veces
     vistos = set()
 
-    for ac in productos:  # Using mock data instead of Django query
+    for ac in productos: 
         try:
             base_product = ac.producto.producto.articulos.producto.producto
         except Exception:
@@ -3745,14 +3819,18 @@ def generar_pdf_nueva(compra):
 
     # Si no hay nada que mostrar, NO crear la hoja
     if rows_cal:
+    # Dibujar pie de página legal en la primera página
+    
+    
+       
         c.showPage()
-        # encabezado hoja
+        dibujar_encabezado(c) # encabezado hoja
         c.setFont('Helvetica', 12)
         c.setFillColor(prussian_blue)
-        c.rect(20, 750, 565, 24, fill=True, stroke=False)
+        c.rect(20, 650, 565, 24, fill=True, stroke=False)
         c.setFillColor(white)
         c.setFont('Helvetica-Bold', 13)
-        c.drawCentredString(300, 756, 'Requerimientos de Calidad por Producto')
+        c.drawCentredString(300, 656, 'Requerimientos de Calidad por Producto')
 
         data_cal = [['Código', 'Producto', 'Requerimiento Calidad', 'Comentario']]
         data_cal.extend(rows_cal)
@@ -3770,38 +3848,191 @@ def generar_pdf_nueva(compra):
         ]))
 
         tabla_cal.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        tabla_cal.drawOn(c, 20, 680 - min(520, len(data_cal)*16))
+        tabla_cal.drawOn(c, 20, 600 - min(520, len(data_cal)*16))
+    
+        dibujar_pie_pagina_legal(c)
 
     c.showPage()
     # ------------ FIN NUEVA HOJA ------------------------------------------------
+    # ------------ PRINCIPIO DE HOJA DE CONTRATO ---------------------------------
+    # Dibujar encabezado
+    dibujar_encabezado(c)
+    
+    # Texto personalizado
+    texto_personalizado = """
+    <b>CONTRATO QUE REGULA LA RELACIÓN COMERCIAL, CONFORME A LA PRESENTE ORDEN DE COMPRA/SERVICIOS</b>
 
+    <br/><br/>
+
+    <b>PRIMERA. OBJETO.</b>
+
+    ____________ (“PROVEEDOR”), se obliga a entregar a GRUPO VORDCAB, S.A. DE C.V., (“VORDCAB”) los servicios, y/o productos, conforme a la presente orden de compra/servicio, en la forma, términos y condiciones establecidos en este documento, así como en los convenios, contratos o acuerdos comerciales, que se celebren posteriormente y que se encuentren relacionados entre las partes, por su propio derecho o a través de sus representantes en su caso, en los cuales se establecerán aquellas obligaciones y derechos que no se encuentren contemplados en la presente. 
+
+    Para efectos del presente contrato, se entenderá por Orden de Compra o de Servicios, el documento emitido por VORDCAB y dirigido al “PROVEEDOR”, de forma escrita, impresa o por medios electrónicos, para requerir los servicios y/o productos que este último deberá entregar a “VORDCAB”, misma que contiene la cantidad, precio, fecha y lugar de entrega, condiciones de pago y otras condiciones de compra acordadas previamente por las partes mediante la cotización correspondiente, aceptando el “PROVEEDOR” dichas condiciones, mediante la firma por su propio derecho, o a través de sus representantes, comisionistas, delegados, encargados comerciales, gerentes o cualquier persona relacionada a la negociación, y que será vinculante jurídicamente y válido legítimamente para las partes, por lo que acepta el PRESTADOR de conformidad y manifiesta conocer el alcance del mismo. 
+
+    El “PROVEEDOR” únicamente podrá prestar aquellos servicios que no estén contenidos dentro de una Orden de compra/servicios, cuando estos sean de flagrante necesidad para prestar los servicios requeridos, y estrictamente con previa autorización por escrito de “VORDCAB”.
+
+    <b>SEGUNDA. FIRMA ELECTRÓNICA.</b>
+
+    De acuerdo con la cláusula anterior, las Partes acuerdan que la presente orden de compra/servicios, y cualquier documento que se firme en relación con la misma, puede ser suscrito electrónicamente y el uso por una Parte de una Firma Electrónica será, para los efectos de validez, exigibilidad y admisibilidad, evidencia concluyente de la intención de esa Parte de estar legalmente obligada como si dicha firma hubiera sido escrita a mano.
+
+    <b>TERCERA. CONTRAPRESTACIÓN.</b>
+
+    Las Partes acuerdan que la contraprestación que “VORDCAB” pagará al “PROVEEDOR” por la ejecución del Servicio o los productos solicitados en la presente orden de compra/servicios, de acuerdo con la cotización correspondiente, serán aquellas que se especifiquen en las mismas, más el impuesto al valor agregado correspondiente, así como cualquier otro impuesto aplicable (la “Contraprestación”) según el tipo de Servicio que se ejecute o producto que se entregue, o cualquier otra consideración establecida en la orden de compra o de servicio, por lo que el “PROVEEDOR” se obliga a entregar la factura cumpliendo todos los requisitos legales para tales efectos. Asimismo, se considera como contraprestación, cualquier cantidad erogada por “VORDCAB” para el cumplimiento de las obligaciones a cargo del “PROVEEDOR” derivadas del presente contrato, y que sean necesarias e indispensables para el cumplimiento de los Servicios o entrega de productos.
+
+    <b>CUARTA. IMPUESTOS.</b>
+
+    Cada una de las partes pagará los impuestos que le corresponden de conformidad con la legislación fiscal vigente. En caso de que el “PROVEEDOR” importe productos y/o mercancías provenientes del extranjero, este será el único responsable del pago en forma correcta de las tarifas y clasificaciones arancelarias, así como del cumplimiento de las disposiciones fiscales y aduaneras vigentes, entregando a “VORDCAB” toda aquella documentación relacionada. Asimismo, el “PROVEEDOR” deberá indicar en la factura que entregue a “VORDCAB”, el número de pedimento aduanal correspondiente, en su caso.
+
+    <b>QUINTA. VIGENCIA.</b>
+
+    Las partes convienen que la vigencia del presente contrato será por tiempo indefinido, a partir de la fecha de su firma, hasta concluir con la prestación de los servicios o la entrega de los productos, según corresponda, a entera satisfacción de “VORDCAB”. Asimismo, las partes podrán darlo por terminado previa notificación por escrito a la otra parte, con 30 (treinta) días de anticipación, siempre y cuando hayan sido cumplidas todas y cada una de sus obligaciones.
+
+    <b>SEXTA. RESPONSABILIDADES.</b>
+
+    Las partes acuerdan que el “PROVEEDOR” deberá indemnizar y sacar en paz y a salvo a “VORDCAB”, subsidiarias, filiales, partes relacionadas accionistas, empleados, delegados, comisionistas, y representantes, de cualquier contingencia legal que se suscite en virtud de la prestación de los servicios o entrega de productos, en términos de la presente orden de compra/servicios. Para todos los efectos de este contrato, el “PROVEEDOR” se considera como contratista independiente y como tal, no existe relación laboral alguna ni sustitución patronal entre “VORDCAB” y los empleados, trabajadores, o cualquier persona relacionada con el “PROVEEDOR”. 
+
+    <b>SÉPTIMA. INFORMACIÓN CONFIDENCIAL.</b>
+
+    El “PROVEEDOR” se obliga a no revelar o divulgar la información a la que haya tenido acceso derivado del presente, en virtud de ser considerada como confidencial. Para efectos de este contrato, se entenderá por información confidencial, toda aquella información verbal, escrita y gráfica, así como la documentación recibida u obtenida por cualquier medio, a partir de esta fecha o con anterioridad entre las partes, y la que se reciba u obtenga en el futuro.
+
+    <b>OCTAVA. GARANTÍAS.</b>
+
+    El “PROVEEDOR” garantiza los servicios y/o productos que entrega a “VORDCAB”, respecto de cualquier negligencia, defecto de fabricación, falla, o por cualquier caso que impida la utilización de los productos o que esté relacionado con el servicio, obligándose a reponer el mismo o producto que no cumpla con las características o la calidad requerida en favor de “VORDCAB”, y en su caso, indemnizar o restituir a “VORDCAB” cualquier gasto que haya erogado por dichas fallas en los servicios o productos, en un plazo que no deberá exceder de 10 (DIEZ) días naturales posteriores a la notificación que realice “VORDCAB” a el “PROVEEDOR”. 
+
+    <b>DÉCIMA SEXTA. LEGISLACIÓN APLICABLE, JURISDICCIÓN Y COMPETENCIA.</b>
+
+    Las partes convienen en que para todo lo no previsto por el presente contrato, se estará a lo dispuesto en el Código de Comercio y en el Código Civil vigente para el Estado de Veracruz, como disposiciones supletorias a la voluntad de las partes contratantes. Para cualquier disputa, necesidad de interpretación, controversia o reclamación que surja con relación a este contrato o a la violación del mismo, las partes se someten irrevocablemente a la jurisdicción y competencia de los tribunales del fuero común ubicados en la ciudad de Xalapa, Veracruz, renunciando expresamente a cualquier otro fuero que pudiera corresponderles por razón de su domicilio presente o futuro, o por cualquier otra causa.
+    """
+    
+    style_personalizado = ParagraphStyle('personalizado', parent=styles['Normal'], fontSize=8, leading=12, alignment=TA_JUSTIFY)
+    p_personalizado = Paragraph(texto_personalizado, style_personalizado)
+    
+    w_pers, h_pers = p_personalizado.wrap(530, 600)
+    p_personalizado.drawOn(c, 30, 680 - h_pers) # Posicionado debajo del encabezado
+    
+    # Dibujar pie de página legal
+    dibujar_pie_pagina_legal(c)
+    
+    c.showPage()
+    # ------------ FIN NUEVA HOJA ------------------------------------------------
+
+
+    # Definir anchos de columnas basados en porcentajes del ancho total (530 puntos)
+    total_width = 530
+    col_widths = [
+        total_width * 0.15,  # Logo / Num Doc
+        total_width * 0.20,  # Clasificación
+        total_width * 0.20,  # Nivel
+        total_width * 0.20,  # Revisión
+        total_width * 0.15,  # Fecha Emisión
+        total_width * 0.15   # Fecha Rev
+    ]
+
+    # Preparar contenido de la tabla
+    # Fila 1: Logo, Título, Aprobación
+        
+    # Logo
+    logo_path = 'static/images/logo_vordcab.jpg'
+    if os.path.exists(logo_path):
+        logo_img = Image(logo_path, width=2*cm, height=1*cm)
+        logo_img.hAlign = 'CENTER'
+    else:
+        logo_img = "LOGO"
+
+
+    # Estilos de párrafo para celdas
+    #style_center = ParagraphStyle('header_center', parent=styles['Normal'], alignment=TA_CENTER, fontSize=8)
+    style_center_bold = ParagraphStyle(
+        'header_center_bold', 
+        parent=styles['Normal'], 
+        alignment=TA_CENTER, fontSize=14, 
+        fontName='Helvetica-Bold', 
+        leading = 12,
+        textColor=white
+        )
+    style_center_small = ParagraphStyle(
+        'header_center_small', 
+        parent=styles['Normal'], 
+        alignment=TA_CENTER, 
+        fontSize=7,
+        leading = 8.4
+        )
+        
+    # Contenido Fila 1
+    #c.drawCentredString(280, 755, 'Requisitos en Materia de Gestión')
+    #c.drawCentredString(280, 740, 'de Seguridad, Salud y Medio Ambiente')
+    titulo = Paragraph("Requisitos en Materia de Gestión de Seguridad y Medio Ambiente", style_center_bold)
+    prep_por = Paragraph("Preparado por:<br/>ASIST. TEC. SUBAD.", style_center_small)
+    aprobacion = Paragraph("Aprobación:<br/>SUBD-ADTVO", style_center_small)
+    
+    # Contenido Fila 2
+    num_doc = Paragraph("Número de documento<br/>SEOV-ADQ-N4-01.04", style_center_small)
+    clasif = Paragraph("Clasificación del documento<br/>No Controlado", style_center_small)
+    nivel = Paragraph("Nivel del documento<br/>N5", style_center_small)
+    #idioma = Paragraph("Idioma<br/>Español", style_center_small)
+    revision = Paragraph("Revisión No.<br/>001", style_center_small)
+    fecha_em = Paragraph("Fecha de Emisión<br/>03/05/2023", style_center_small)
+    fecha_rev = Paragraph("Fecha de última revisión<br/>06/09/2023", style_center_small)
+
+    data_header = [
+        [logo_img, titulo, '', '', prep_por, aprobacion],
+        [num_doc, clasif, nivel, revision, fecha_em, fecha_rev]
+    ]
+
+    # Crear tabla
+    t_header = Table(data_header, colWidths=col_widths)
+        
+    # Estilos de la tabla
+    t_header.setStyle(TableStyle([
+        # Fila 1
+        ('SPAN', (1, 0), (3, 0)),  # Título ocupa cols 1-4 (indices 0-based: 1,2,3,4 -> 5 columnas?? No, cols 2,3,4,5 son indices 1,2,3,4)
+        # Espera, indices: 0=Logo, 1=Col2, 2=Col3, 3=Col4, 4=Col5, 5=Col6, 6=Col7
+        # Title spans cols 2,3,4,5 -> Indices 1, 2, 3, 4. So SPAN (1,0) to (4,0).
+            
+        ('BACKGROUND', (1, 0), (3, 0), prussian_blue), # Fondo azul para título
+        ('VALIGN', (0, 0), (-1, -1), 'MIDDLE'),
+        ('ALIGN', (0, 0), (-1, -1), 'CENTER'),
+        ('GRID', (0, 0), (-1, -1), 0.5, black),
+            
+        # Ajustes específicos
+        ('LEFTPADDING', (0, 0), (-1, -1), 2),
+        ('RIGHTPADDING', (0, 0), (-1, -1), 2),
+        ('TOPPADDING', (0, 0), (-1, -1), 2),
+        ('BOTTOMPADDING', (0, 0), (-1, -1), 2),
+    ]))
+
+   
+    w, h = t_header.wrap(total_width, 100) # Altura aproximada
+    t_header.drawOn(c, 30, 710) # Posición Y ajustada (bajado de 730 a 710)
     # Agregar el encabezado en la segunda página
-    c.setFont('Helvetica', 8)
-    c.drawString(430, caja_iso, 'Preparado por:')
-    c.drawString(420, caja_iso - 10, 'ASIST. TEC. SUBAD')
-    c.drawString(525, caja_iso, 'Aprobación')
-    c.drawString(520, caja_iso - 10, 'SUBD-ADTVO')
-    c.drawString(50, caja_iso - 35, 'Número de documento')
-    c.drawString(50, caja_iso - 45, 'SEOV-ADQ-N4-01.04')
-    c.drawString(145, caja_iso - 35, 'Clasificación del documento')
-    c.drawString(175, caja_iso - 45, 'No Controlado')
-    c.drawString(255, caja_iso - 35, 'Nivel del documento')
-    c.drawString(280, caja_iso - 45, 'N5')
-    c.drawString(340, caja_iso - 35, 'Revisión No.')
-    c.drawString(352, caja_iso - 45, '001')
-    c.drawString(410, caja_iso - 35, 'Fecha de Emisión')
-    c.drawString(425, caja_iso - 45, '03/05/23')
-    c.drawString(500, caja_iso - 35, 'Fecha de Revisión')
-    c.drawString(525, caja_iso - 45, '06/09/23')
+    #c.setFont('Helvetica', 8)
+    #caja_iso = 760
+    #c.drawString(430, caja_iso, 'Preparado por:')
+    #c.drawString(420, caja_iso - 10, 'ASIST. TEC. SUBAD')
+    #c.drawString(525, caja_iso, 'Aprobación')
+    #c.drawString(520, caja_iso - 10, 'SUBD-ADTVO')
+    #c.drawString(50, caja_iso - 35, 'Número de documento')
+    #c.drawString(50, caja_iso - 45, 'SEOV-ADQ-N4-01.04')
+    #c.drawString(145, caja_iso - 35, 'Clasificación del documento')
+    #c.drawString(175, caja_iso - 45, 'No Controlado')
+    #c.drawString(255, caja_iso - 35, 'Nivel del documento')
+    #c.drawString(280, caja_iso - 45, 'N5')
+    #c.drawString(340, caja_iso - 35, 'Revisión No.')
+    #c.drawString(352, caja_iso - 45, '001')
+    #c.drawString(410, caja_iso - 35, 'Fecha de Emisión')
+    #c.drawString(425, caja_iso - 45, '03/05/23')
+    #c.drawString(500, caja_iso - 35, 'Fecha de Revisión')
+    #c.drawString(525, caja_iso - 45, '06/09/23')
 
-    caja_proveedor = caja_iso - 65
-    c.setFont('Helvetica', 12)
-    c.setFillColor(prussian_blue)
-    c.rect(155, 735, 250, 35, fill=True, stroke=False)  # Barra azul superior encabezado
-    c.setFillColor(colors.white)
-    c.setFont('Helvetica-Bold', 13)
-    c.drawCentredString(280, 755, 'Requisitos en Materia de Gestión')
-    c.drawCentredString(280, 740, 'de Seguridad, Salud y Medio Ambiente')
+    #caja_proveedor = caja_iso - 65
+    #c.setFont('Helvetica', 12)
+    #c.setFillColor(prussian_blue)
+    #c.rect(155, 735, 250, 35, fill=True, stroke=False)  # Barra azul superior encabezado
+    #c.setFillColor(colors.white)
+    #c.setFont('Helvetica-Bold', 13)
+    #c.drawCentredString(280, 755, 'Requisitos en Materia de Gestión')
+    #c.drawCentredString(280, 740, 'de Seguridad, Salud y Medio Ambiente')
     # c.drawInlineImage('static/images/logo_vordcab.jpg', 60, 735, 2 * cm, 1 * cm)  # Imagen vortec  # This might fail if image doesn't exist
 
 
