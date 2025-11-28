@@ -53,7 +53,7 @@ class ArticulosRequisitadosForm(forms.ModelForm):
 class ComparativoForm(forms.ModelForm):
     class Meta:
         model = Comparativo
-        fields = ['nombre','comentarios','proveedor', 'proveedor2','proveedor3']
+        fields = ['nombre','comentarios','proveedor', 'proveedor2','proveedor3', 'cotizacion','cotizacion2','cotizacion3']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)

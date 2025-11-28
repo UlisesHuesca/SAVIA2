@@ -5,7 +5,7 @@
 {% load widget_tweaks %}
 <html>
 <head>
-{% block title %} Comparativo {% endblock %}
+{% block title %}Crear Comparativo{% endblock %}
 </head>
 <body>
 {% block content %}
@@ -40,13 +40,13 @@
 <hr>
 <h6>&nbsp;</h6>
 <div class="row">
-    <div class="col-lg-4">
+    <div class="col-lg-4 col-sm-12">
         <div class="card" id="form-wrapper">
             <div class="card-header text-center">
 				<h2 time="{{total_time}}">Comparativo</h2>
             </div>
             <div class="card-body">
-				<form method="POST" id='OrderForm'>
+				<form method="POST" id='OrderForm' enctype="multipart/form-data">
                     {% csrf_token %}
                     <div class="row my-2">
                         <div class="col-12">
@@ -81,11 +81,25 @@
                         </div>
                     </div>
                     <div class="row my-3">
+                        <div class="col-12">
+                            <div class="input-group mb-3">  
+                                {{form.cotizacion|add_class:"form-control"|append_attr:"placeholder= Cotización 1" }}  
+                            </div>  
+                        </div>
+                    </div>
+                    <div class="row my-3">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">
                             {{form.proveedor2}}  
                             </div>
+                        </div>
+                    </div>
+                    <div class="row my-3">
+                        <div class="col-12">
+                            <div class="input-group mb-3">  
+                                {{form.cotizacion2|add_class:"form-control"|append_attr:"placeholder= Cotización 2" }}  
+                            </div>  
                         </div>
                     </div>
                     <div class="row my-3">
@@ -96,7 +110,14 @@
                             </div>
                         </div>  
                     </div>
-                    <div class ="table-responsive-sm">
+                    <div class="row my-3">
+                        <div class="col-12">
+                            <div class="input-group mb-3">  
+                                {{form.cotizacion3|add_class:"form-control"|append_attr:"placeholder= Cotización 3" }}  
+                            </div>  
+                        </div>
+                    </div>
+                    <!-- <div class ="table-responsive-sm">
                         <table class="table table-light table-striped table-hover">
                         <thead>
                             <tr>
@@ -166,15 +187,15 @@
                         </tr>
                         {% endif %}
                         </tbody>
-                    </table>
+                    </table> 
                         
 
-                    </div>
+                    </div> -->
                     {% if productos %}
                     <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_creacion" id="btn_agregar" type="submit" value="Crear">
                     {% endif %}
                 </form>
-                <button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                <!--<button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
                 <form method="POST" id='FileForm' enctype="multipart/form-data" class="d-none">
                     {% csrf_token %} 
                     <div class="mb-3">
@@ -186,14 +207,17 @@
                     {% if error_messages %}
                     <div>{{error_messages}}</div>
                     {% endif %}
-                </form>
+                </form>-->
             </div>
         </div>
     </div>
 
-    <div class="col-lg-8">
+    <div class="col-lg-8 col-sm-12">
         <div class="card">    
-            <div id="form_product">
+            <div class="card-header text-center">
+                <h4>Productos de Comparativo</h4>
+            </div>
+            <div class="card-body">
                 <form method="POST">
                 {% csrf_token %}
                 {% if error_messages %}
@@ -361,41 +385,42 @@
                     </div>
                 </div>
                 </form>
-            </div>
+            
         
-            <div class ="table-responsive-sm">
-                <table class="table table-light table-striped table-hover">
-                    <thead>
-                        <tr>
-                            <th scope="col">#</th>
-                            <th scope="col">Producto</th>
-                            <th scope="col">Cantidad</th>
-                            <th scope="col">Unidad</th>
-                            <th style="color:#478800" scope="col">P.U.</th>
-                            <th scope="col">P.U.</th>
-                            <th scope="col">P.U.</th>
-                            <th scope="col">Eliminar</th>
-                        </tr>
-                    </thead>
-                    <tbody id="mytbl">
-                        {% for producto in productos%}
-                        <tr>
-                            <td scope="col">{{producto.producto.producto.codigo}}</td>
-                            <td scope="col">{{producto.producto.producto.nombre}}</td>
-                            <td scope="col">{{producto.cantidad|floatformat:2}}</td>
-                            <td scope="col">{{producto.producto.producto.unidad.nombre}}</td>
-                            <td style="color:#478800" scope="col">${{producto.precio|floatformat:2}}</td>
-                            <td scope="col">${{producto.precio2|floatformat:2}}</td>
-                            <td scope="col">${{producto.precio3|floatformat:2}}</td>
-                            <td scope="col">
-                                <a class="btn btn-danger" value="Delete" name="btn_delete" href="{% url 'articulo-comparativo-delete' producto.id %}"   id="delete">
-                                    <i class="fa-solid fa-trash-can"></i>
-                                </a>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+                <div class ="table-responsive-sm">
+                    <table class="table table-light table-striped table-hover">
+                        <thead>
+                            <tr>
+                                <th scope="col">#</th>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Unidad</th>
+                                <th style="color:#478800" scope="col">P.U.</th>
+                                <th scope="col">P.U.</th>
+                                <th scope="col">P.U.</th>
+                                <th scope="col">Eliminar</th>
+                            </tr>
+                        </thead>
+                        <tbody id="mytbl">
+                            {% for producto in productos%}
+                            <tr>
+                                <td scope="col">{{producto.producto.producto.codigo}}</td>
+                                <td scope="col">{{producto.producto.producto.nombre}}</td>
+                                <td scope="col">{{producto.cantidad|floatformat:2}}</td>
+                                <td scope="col">{{producto.producto.producto.unidad.nombre}}</td>
+                                <td style="color:#478800" scope="col">${{producto.precio|floatformat:2}}</td>
+                                <td scope="col">${{producto.precio2|floatformat:2}}</td>
+                                <td scope="col">${{producto.precio3|floatformat:2}}</td>
+                                <td scope="col">
+                                    <a class="btn btn-danger" value="Delete" name="btn_delete" href="{% url 'articulo-comparativo-delete' producto.id %}"   id="delete">
+                                        <i class="fa-solid fa-trash-can"></i>
+                                    </a>
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
         </div>
     </div>
@@ -449,8 +474,8 @@ var modeloFields = document.getElementsByClassName("modelo-field");
     }
 });
 
-document.getElementById('start_upload').addEventListener('click',show_file_input)
-document.getElementById('cancel').addEventListener('click',cancel_show)
+//document.getElementById('start_upload').addEventListener('click',show_file_input)
+//document.getElementById('cancel').addEventListener('click',cancel_show)
 
 function show_file_input() {
     var form = document.getElementById('FileForm');

@@ -2307,7 +2307,7 @@ def comparativos(request):
     #creada_por 
     pk_perfil = request.session.get('selected_profile_id') 
     usuario = Profile.objects.get(id = pk_perfil)
-    comparativos = Comparativo.objects.filter(completo = True, creada_por__distritos = usuario.distritos)
+    comparativos = Comparativo.objects.filter(completo = True, creada_por__distritos = usuario.distritos).order_by('-id')
     form = UploadFileForm()
     error_messages = {}
 
@@ -2372,7 +2372,7 @@ def crear_comparativo(request):
 
     if request.method =='POST':
         if "btn_creacion" in request.POST:
-            form = ComparativoForm(request.POST, instance=comparativo)
+            form = ComparativoForm(request.POST, request.FILES, instance=comparativo)
             if form.is_valid():
                 comparativo = form.save(commit=False)
                 comparativo.completo = True
@@ -2398,29 +2398,29 @@ def crear_comparativo(request):
                 for field, errors in form_item.errors.items():
                     error_messages[field] = errors.as_text()
                 messages.error(request,f'No está validando {error_messages}' )
-        if "btn_files" in request.POST:
+        #if "btn_files" in request.POST:
             #mi_id = request.POST.get('mi_id')
-            form = UploadFileForm(request.POST or None, request.FILES or None)
-            files = request.FILES.getlist('file')
-            cont = 0
-            if form.is_valid():
+        #    form = UploadFileForm(request.POST or None, request.FILES or None)
+        #    files = request.FILES.getlist('file')
+        #    cont = 0
+        #    if form.is_valid():
                 #comparativo = comparativos.get(id=mi_id)
                 #comparativo = form.save(commit = False)
-                for f in files:
-                    if cont == 0:
-                        comparativo.cotizacion = files[cont]
-                    elif cont == 1:
-                        comparativo.cotizacion2 = files[cont]
-                    elif cont == 2:
-                        comparativo.cotizacion3 = files[cont]
-                    elif cont == 3:
-                        comparativo.cotizacion4 = files[cont]
-                    elif cont == 4:
-                        comparativo.cotizacion5 = files[cont]
-                    cont+=1
-                comparativo.save()
-                messages.success(request,f'Entrando {files}')
-                return redirect('crear_comparativo')
+        #        for f in files:
+        #            if cont == 0:
+        #                comparativo.cotizacion = files[cont]
+        #            elif cont == 1:
+        #                comparativo.cotizacion2 = files[cont]
+        #            elif cont == 2:
+        #                comparativo.cotizacion3 = files[cont]
+        #            elif cont == 3:
+        #                comparativo.cotizacion4 = files[cont]
+        #            elif cont == 4:
+        #                comparativo.cotizacion5 = files[cont]
+        #            cont+=1
+        #        comparativo.save()
+        #        messages.success(request,f'Entrando {files}')
+        #        return redirect('crear_comparativo')
         else:
             post_data = request.POST
             post_items = [f"{key}: {value}" for key, value in post_data.items()]

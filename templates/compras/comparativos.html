@@ -58,23 +58,21 @@
 </div>
 
 <div class="row">
-    <div class="col">
-        <div class="card text-center" style="width: 12rem;">
+    <div class="col-sm-12 col-lg-2">
+        <div class="card text-center">
             <div class="card-header">
                 <h5 class="card-title">Crear</h5>
             </div>
-            <div class="card-body text-center">
-            <ul class="nav nav-pills">
-                <li class="nav-item">      
-                <a type="button" class="btn btn-outline-info" href="{% url 'crear_comparativo' %}"><i class="fa-solid fa-plus"></i> Comparativo</a>
-                </li>
-            </ul>
+            <div class="card-body">
+           
+                <a type="button" class="btn btn-outline-info btn-lg" href="{% url 'crear_comparativo' %}"><i class="fa-solid fa-plus"></i> Comparativo</a>
+            
             </div>
             <div class="card-footer text-muted">  
             </div>
         </div>
     </div>  
-    <div class="col-10">
+    <div class="col-sm-12 col-lg-10">
         <div class="card">
             <div class="card-header">
                 <h5 class="card-title">Filtros</h5>
@@ -155,7 +153,7 @@
                         <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg"  onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
-                <hr>
+                
                 </form>
             </div>
         </div>
@@ -175,9 +173,9 @@
                     <th>Cotización 1</th>
                     <th>Cotización 2</th>
                     <th>Cotización 3</th>
-                    <th>Editar</th>
-                    <th>Acción</th>
-                    <th>Comparativos</th>
+                    <!--<th>Editar</th>-->
+                    <th>Detalle</th>
+                    <!--<th>Comparativos</th>-->
                     
                 </tr>
             </thead>
@@ -186,7 +184,7 @@
                 <tr>
                     <th scope="row">{{item.id}}</th>
                     <th scope="row">{{item.nombre}}</th>
-                    <th scope="row">{{item.creada_por.staff.staff.first_name}} {{item.creada_por.satff.staff.last_name}}</th>
+                    <th scope="row">{{item.creada_por.staff.staff.first_name}} {{item.creada_por.staff.staff.last_name}}</th>
                     <td>{{item.created_at.date}}</td>
                     <td>{{item.comentarios}}</td>
                     <td>  
@@ -256,19 +254,19 @@
                         </div>
                         {% endif %}
                     </td>
-                    <td>
+                    <!--<td>
                         <a class="btn btn-outline-info" id="btnActualizar" href="{% url 'editar-comparativo' item.id %}" type="button">
                             <i class="fa-solid fa-pen-to-square"></i>
                         </a>
-                    </td>
+                    </td>-->
                     <td>
                         <ul class="nav nav-pills">
                             <li class="nav-item mx-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-comparativo' item.id %}">Detalle</a>
+                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-comparativo' item.id %}"><i class="fa-solid fa-circle-info"></i></a>
                             </li>
                         </ul>
                     </td>
-                    <td>
+                    <!--<td>
                         <button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
                         <form method="POST" id='FileForm' enctype="multipart/form-data" class="d-none">
                         {% csrf_token %} 
@@ -282,7 +280,7 @@
                         <div>{{error_messages}}</div>
                         {% endif %}
                         </form>
-                    </td>
+                    </td>-->
                 </tr>
                 {% endfor %}
             </tbody>
