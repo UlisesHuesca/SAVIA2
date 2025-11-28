@@ -21,7 +21,42 @@
     <script src="https://code.jquery.com/jquery-3.6.0.js" integrity="sha256-H+K7U5CnXl1h5ywQfKtSj8PCmoN9aaq30gDh27Xc0jk=" crossorigin="anonymous"></script>
     -->
     
-    
+    <style>
+    /* Contenedor de la nieve (capa completa sobre la pantalla) */
+    #snow-container {
+        position: fixed;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+        pointer-events: none;
+        z-index: 9999;
+    }
+
+    .snowflake {
+        position: absolute;
+        font-family: "Segoe UI Symbol", "Arial Unicode MS", sans-serif;
+        top: -10px;
+        color: white !important;
+        opacity: 1;                 /* Totalmente opacos */
+        text-shadow: 0 0 8px rgba(255,255,255,0.5);
+        user-select: none;
+        pointer-events: none;
+        animation-name: snow-fall;
+        animation-timing-function: linear;
+        animation-iteration-count: infinite;
+    }
+
+    @keyframes snow-fall {
+        0% {
+            transform: translateY(0);
+        }
+        100% {
+            transform: translateY(110vh); /* Baja más allá de la pantalla */
+        }
+    }
+</style>
    
     <!--Chartjs CDN-->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js"></script>
@@ -72,6 +107,7 @@ const csrftoken = getToken('csrftoken');
    
     <div>
     {% block content %}
+    
     {% endblock %}
     </div>
 
@@ -90,6 +126,44 @@ const csrftoken = getToken('csrftoken');
     <!-- Sweetalert2 -->
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        // Crear el contenedor de nieve
+        const snowContainer = document.createElement('div');
+        snowContainer.id = 'snow-container';
+        document.body.appendChild(snowContainer);
+
+        const SNOWFLAKE_COUNT = 40;  // Puedes subir o bajar la cantidad
+
+        for (let i = 0; i < SNOWFLAKE_COUNT; i++) {
+            const snowflake = document.createElement('span');
+            snowflake.classList.add('snowflake');
+            snowflake.textContent = '❄';
+
+            // Posición horizontal aleatoria (0 a 100vw)
+            snowflake.style.left = Math.random() * 100 + 'vw';
+
+            // Tamaño de la nieve (entre 6px y 18px aprox.)
+            const size = 6 + Math.random() * 12;
+            snowflake.style.fontSize = size + 'px';
+
+            // Opacidad aleatoria
+            snowflake.style.opacity = (0.5 + Math.random() * 0.5).toString();
+
+            // Duración de la caída (entre 10 y 25 segundos)
+            const duration = 10 + Math.random() * 15;
+            snowflake.style.animationDuration = duration + 's';
+
+            // Retraso negativo para que ya haya copos en distintos puntos
+            const delay = Math.random() * -duration;
+            snowflake.style.animationDelay = delay + 's';
+
+            snowContainer.appendChild(snowflake);
+        }
+    });
+</script>
+
+
 
 
 </body>
