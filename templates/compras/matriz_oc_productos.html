@@ -57,6 +57,15 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.producto_codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                                <label style="color: #121212;" for="id_producto">Código</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
                                 <label style="color: #121212;" for="id_producto">Producto</label>
                             </div>
@@ -71,7 +80,16 @@
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
+                    <div class="col-lg-4 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proveedor|add_class:"form-control"|append_attr:"placeholder= Proveedor"}}
+                                <label style="color: #121212;" for="id_producto">Proveedor</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div id="serie" class="col-lg-2 col-sm-12 mt-2">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -80,7 +98,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-sm-12">
+                    <div id="serie" class="col-lg-2 col-sm-12 mt-2">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -89,7 +107,7 @@
                             </div>
                         </div>
                     </div>
-                <div class="col-2">
+                <div class="col-sm-12 col-lg-2">
                     <button  id="btnBuscar" class="btn btn-outline-success btn-block mt-3 btn-lg" onclick="guardar_variable();" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
             </div>
@@ -156,6 +174,7 @@
                     <th scope="col">Proyecto</th>
                     <th class="d-none d-lg-table-cell">Subproyecto</th>
                     <th class="d-none d-lg-table-cell">Operación</th>
+                    <th scope="col">Código</th>
                     <th scope="col">Producto</th>
                     <th scope="col">P.U.</th>
                     <th scope="col">Cantidad</th>
@@ -173,6 +192,7 @@
                     <td>{{item.oc.req.orden.proyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{item.oc.req.orden.subproyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{item.oc.req.orden.operacion}}</td>
+                    <td>{{item.producto.producto.articulos.producto.producto.codigo}}</td>
                     <td>{{item.producto.producto.articulos.producto.producto.nombre}} </td>
                     <td>${{item.precio_unitario|floatformat:2}}</td>
                     <td>{{item.cantidad}}</td>

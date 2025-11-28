@@ -121,13 +121,15 @@ class CompraFilter(django_filters.FilterSet):
 
 class ArticuloCompradoFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='producto__producto__articulos__producto__producto__nombre', lookup_expr='icontains')
+    producto_codigo = CharFilter(field_name='producto__producto__articulos__producto__producto__codigo', lookup_expr='exact')
     oc = CharFilter(field_name='oc__folio', lookup_expr='icontains')
     start_date = DateFilter(field_name = 'oc__created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='oc__created_at',lookup_expr='lte')
+    proveedor = CharFilter(field_name='oc__proveedor__nombre__razon_social', lookup_expr='icontains')
 
     class Meta:
         model = ArticuloComprado
-        fields = ['producto','oc', 'start_date','end_date']
+        fields = ['producto','oc', 'start_date','end_date','proveedor', 'producto_codigo']
 
 class ArticulosRequisitadosFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='producto__articulos__producto__producto__nombre', lookup_expr='icontains')
