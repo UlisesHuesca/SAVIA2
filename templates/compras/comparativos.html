@@ -162,129 +162,134 @@
 
 <div class = "row mt-2">
     <div class="col-md-12">
-        <table class="table bg-white">
-            <thead class="text-black" style="background-color: #F5F5F5;">
-                <tr>
-                    <th scope="col">Comparativo</th>
-                    <th scope="col">Nombre</th>
-                    <th scope="col">Elaborado por</th>
-                    <th scope="col">Fecha</th>
-                    <th scope="col">Comentarios</th>
-                    <th>Cotización 1</th>
-                    <th>Cotización 2</th>
-                    <th>Cotización 3</th>
-                    <!--<th>Editar</th>-->
-                    <th>Detalle</th>
-                    <!--<th>Comparativos</th>-->
-                    
-                </tr>
-            </thead>
-            <tbody>
-                {% for item in comparativos_list %}
-                <tr>
-                    <th scope="row">{{item.id}}</th>
-                    <th scope="row">{{item.nombre}}</th>
-                    <th scope="row">{{item.creada_por.staff.staff.first_name}} {{item.creada_por.staff.staff.last_name}}</th>
-                    <td>{{item.created_at.date}}</td>
-                    <td>{{item.comentarios}}</td>
-                    <td>  
-                        {% if item.cotizacion %}
-                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ item.id|unlocalize }}" title="Ver cotización">
-                            <i class="fa-solid fa-file-invoice-dollar"></i>
-                        </button>
-                         <!-- Modal con visor de PDF -->
-                         <div class="modal fade" id="pdfModal{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ item.id|unlocalize }}" aria-hidden="true">
-                            <div class="modal-dialog modal-xl">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="pdfModalLabel{{ item.id|unlocalize }}">Cotización 1</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <iframe src="{{ item.cotizacion.url }}#zoom=80" width="100%" height="750px"></iframe>
+        <div class="card">
+            <div class ="table-responsive-sm">
+                <table class="table bg-white">
+                    <thead class="text-black" style="background-color: #F5F5F5;">
+                        <tr>
+                            <th scope="col">Comparativo</th>
+                            <th scope="col">Nombre</th>
+                            <th scope="col">Elaborado por</th>
+                            <th scope="col">Fecha</th>
+                            <th scope="col">Comentarios</th>
+                            <th>Cotización 1</th>
+                            <th>Cotización 2</th>
+                            <th>Cotización 3</th>
+                            <!--<th>Editar</th>-->
+                            <th>Detalle</th>
+                            <!--<th>Comparativos</th>-->
+                            
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in comparativos_list %}
+                        <tr>
+                            <th scope="row">{{item.id}}</th>
+                            <th scope="row">{{item.nombre}}</th>
+                            <th scope="row">{{item.creada_por.staff.staff.first_name}} {{item.creada_por.staff.staff.last_name}}</th>
+                            <td>{{item.created_at.date}}</td>
+                            <td>{{item.comentarios}}</td>
+                            <td>  
+                                {% if item.cotizacion %}
+                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ item.id|unlocalize }}" title="Ver cotización">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </button>
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfModal{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ item.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfModalLabel{{ item.id|unlocalize }}">Cotización 1</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ item.cotizacion.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
 
-                        <!--<a href="{{item.cotizacion.url}}" download class="btn btn-outline-danger">
-                            <i class="fa-solid fa-file-invoice-dollar"></i>
-                        </a>-->
-                        {% endif %}
-                    </td>
-                    <td>  
-                        {% if item.cotizacion2 %}
-                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModalDos{{ item.id|unlocalize }}" title="Ver cotizacion 2">
-                            <i class="fa-solid fa-file-invoice-dollar"></i>
-                        </button>
-                         <!-- Modal con visor de PDF -->
-                         <div class="modal fade" id="pdfModalDos{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabelDos{{ item.id|unlocalize }}" aria-hidden="true">
-                            <div class="modal-dialog modal-xl">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="pdfModalLabelDos{{ item.id|unlocalize }}">Cotización 2</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <iframe src="{{ item.cotizacion2.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </td>
-                    <td>  
-                        {% if item.cotizacion3 %}
-                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal3{{ item.id|unlocalize }}" title="Ver cotizacion 3">
-                            <i class="fa-solid fa-file-invoice-dollar"></i>
-                        </button>
-                         <!-- Modal con visor de PDF -->
-                         <div class="modal fade" id="pdfModal3{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel3{{ item.id|unlocalize }}" aria-hidden="true">
-                            <div class="modal-dialog modal-xl">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="pdfModalLabel3{{ item.id|unlocalize }}">Cotización 3</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <iframe src="{{ item.cotizacion3.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                <!--<a href="{{item.cotizacion.url}}" download class="btn btn-outline-danger">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </a>-->
+                                {% endif %}
+                            </td>
+                            <td>  
+                                {% if item.cotizacion2 %}
+                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModalDos{{ item.id|unlocalize }}" title="Ver cotizacion 2">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </button>
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfModalDos{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabelDos{{ item.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfModalLabelDos{{ item.id|unlocalize }}">Cotización 2</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ item.cotizacion2.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                        {% endif %}
-                    </td>
-                    <!--<td>
-                        <a class="btn btn-outline-info" id="btnActualizar" href="{% url 'editar-comparativo' item.id %}" type="button">
-                            <i class="fa-solid fa-pen-to-square"></i>
-                        </a>
-                    </td>-->
-                    <td>
-                        <ul class="nav nav-pills">
-                            <li class="nav-item mx-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-comparativo' item.id %}"><i class="fa-solid fa-circle-info"></i></a>
-                            </li>
-                        </ul>
-                    </td>
-                    <!--<td>
-                        <button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
-                        <form method="POST" id='FileForm' enctype="multipart/form-data" class="d-none">
-                        {% csrf_token %} 
-                        <div class="mb-3">
-                            <input class="form-control" type="file" name="file" multiple>
-                            <input type="hidden" name="mi_id" value="{{item.id}}">
-                        </div>
-                        <button id="btn_files" name="btn_files" type="submit" class="btn btn-outline-info"><i class="fa-solid fa-file-arrow-up"></i></button>
-                        <button id="cancel" type="button" class="btn btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
-                        {% if error_messages %}
-                        <div>{{error_messages}}</div>
-                        {% endif %}
-                        </form>
-                    </td>-->
-                </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+                                {% endif %}
+                            </td>
+                            <td>  
+                                {% if item.cotizacion3 %}
+                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal3{{ item.id|unlocalize }}" title="Ver cotizacion 3">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </button>
+                                <!-- Modal con visor de PDF -->
+                                <div class="modal fade" id="pdfModal3{{ item.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel3{{ item.id|unlocalize }}" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title" id="pdfModalLabel3{{ item.id|unlocalize }}">Cotización 3</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                            </div>
+                                            <div class="modal-body">
+                                                <iframe src="{{ item.cotizacion3.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                                {% endif %}
+                            </td>
+                            <!--<td>
+                                <a class="btn btn-outline-info" id="btnActualizar" href="{% url 'editar-comparativo' item.id %}" type="button">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </a>
+                            </td>-->
+                            <td>
+                                <ul class="nav nav-pills">
+                                    <li class="nav-item mx-1">
+                                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'articulos-comparativo' item.id %}"><i class="fa-solid fa-circle-info"></i></a>
+                                    </li>
+                                </ul>
+                            </td>
+                            <!--<td>
+                                <button id="start_upload" type="button" class="btn btn-outline-info"><i class="fa-solid fa-cloud-arrow-up"></i></button>
+                                <form method="POST" id='FileForm' enctype="multipart/form-data" class="d-none">
+                                {% csrf_token %} 
+                                <div class="mb-3">
+                                    <input class="form-control" type="file" name="file" multiple>
+                                    <input type="hidden" name="mi_id" value="{{item.id}}">
+                                </div>
+                                <button id="btn_files" name="btn_files" type="submit" class="btn btn-outline-info"><i class="fa-solid fa-file-arrow-up"></i></button>
+                                <button id="cancel" type="button" class="btn btn-outline-danger"><i class="fa-solid fa-xmark"></i></button>
+                                {% if error_messages %}
+                                <div>{{error_messages}}</div>
+                                {% endif %}
+                                </form>
+                            </td>-->
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
                 {% if comparativos_list.has_previous %}
@@ -313,7 +318,7 @@
             </ul>
         </nav>
     </div>
-
+</div>
 <!--Este es el modal-->
 <div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
     <div class="modal-dialog modal-lg-12 modal-dialog-centered" id="document" role="document" hx-target="this">
