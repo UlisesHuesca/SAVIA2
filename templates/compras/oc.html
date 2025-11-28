@@ -450,7 +450,7 @@ function verificar() {
                     "icon":"error",
                 })
                 return false
-    } else if((isHidden == false ) && (status_comparativo == "NUEVO") && (comparativo.value ==='')){
+    } else if((isHidden == false ) &&  (status_comparativo == "NUEVO" || status_comparativo == "APROBADO") && (comparativo.value ==='')){
         Swal.fire({
                 "title":"Error",
                 "text":"Debes elegir una opción en comparativo",
@@ -1284,7 +1284,7 @@ function precio_ref() {
     console.log(status)
     var comparativo = document.getElementById('comparativo')
 
-    if (status == "NUEVO"){
+    //if (status == "NUEVO"){
         for (data in datosProductos_comp){
             
             var precio_unitario = Number(datosProductos_comp[data].precio) || 0;
@@ -1305,9 +1305,9 @@ function precio_ref() {
                 break;
             }
         }
-    } else {
-        comparativo.classList.add('d-none');
-    }
+    //} else {
+    //    comparativo.classList.add('d-none');
+    //}
 
 }
 
