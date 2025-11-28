@@ -271,14 +271,7 @@ function eliminarEvidencia() {
         document.getElementById('deleteForm').submit();  
     }
 }*/
-;(function() {
-    const modal = new bootstrap.Modal(document.getElementById('dialog'))
 
-    htmx.on('htmx:beforeSwap', (e) => {
-        if (e.detail.target.id === "document" && !e.detail.xhr.response)
-            modal.hide()
-    })
-})()
 
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');

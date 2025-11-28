@@ -2,6 +2,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load crispy_forms_tags %}
+{% load l10n %}
 <html>
 <head>
 {% block title %} Reporte Calidad {% endblock %}
@@ -65,6 +66,7 @@
                             <th>Tipo de Requerimiento</th>
                             <th>Comentarios</th>
                             <th>Fecha</th>
+                           
                         </tr>
                         </thead>
                         <tbody>
@@ -148,7 +150,8 @@
                         <th>Archivo</th>
                         <th>Comentario</th>
                         <th>Fecha</th>
-                        <th>Acciones</th>
+                        <th>Visualizar</th>
+                        <th>Eliminar</th>
                     </tr>
                     </thead>
                     <tbody>
@@ -166,40 +169,15 @@
                                     <i class="fa fa-eye"></i> Ver
                                 </button>
                             </td>
+                              <!-- Botón de eliminación -->
+                            <td>
+                                <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="abrirModalEliminar({{ evidencia.id | unlocalize }})">
+                                    <i class="fa-duotone fa-solid fa-trash-can"></i>
+                                </button>
+                            </td> 
                         </tr>
 
-                        <!-- 🔽 Modal dentro del bucle, pero fuera del <tr> -->
-                        <div class="modal fade" 
-                            id="verEvidencia{{ evidencia.id }}" 
-                            tabindex="-1" 
-                            aria-labelledby="verEvidenciaLabel{{ evidencia.id }}" 
-                            aria-hidden="true">
-                            <div class="modal-dialog modal-xl modal-dialog-centered">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="verEvidenciaLabel{{ evidencia.id }}">
-                                            Evidencia: {{ evidencia.file.name|slice:"15:" }}
-                                        </h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Cerrar"></button>
-                                    </div>
-                                    <div class="modal-body text-center">
-                                       {% if ".pdf" in evidencia.file.url|lower %}
-                                            <iframe src="{{ evidencia.file.url }}#zoom=100" width="100%" height="700px" style="border:none;"></iframe>
-                                        {% else %}
-                                            <img src="{{ evidencia.file.url }}" alt="Evidencia" class="img-fluid rounded shadow">
-                                        {% endif %}
-                                    </div>
-                                    <div class="modal-footer">
-                                        <a href="{{ evidencia.file.url }}" target="_blank" class="btn btn-secondary">
-                                            <i class="fa fa-download"></i> Descargar
-                                        </a>
-                                        <button type="button" class="btn btn-outline-danger" data-bs-dismiss="modal">
-                                            Cerrar
-                                        </button>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                   
                         {% endfor %}
                     </tbody>
                 </table>
@@ -228,10 +206,28 @@
         </div>
     </div>
 </div>
-<!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
-
+<!-- Modal de Confirmación eliminación-->
+<div class="modal fade" id="confirmModal" tabindex="-1" aria-labelledby="confirmModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="confirmModalLabel">Eliminar Evidencia</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <form id="deleteForm" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label for="comentario" class="form-label">Comentario</label>
+                        <input type="text" class="form-control" id="comentario" name="comentario" placeholder="Escribe un comentario" required>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-danger" onclick="eliminarEvidencia()">Eliminar</button>
+            </div>
+        </div>
     </div>
 </div>
 <!--AJAX CALL-->
@@ -251,30 +247,72 @@ document.addEventListener("DOMContentLoaded", function() {
       check.style.transition = "all 0.25s ease";
     }
   });
-/*document.getElementById("txt_producto").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_producto");
-    var browserChildren = document.getElementById('producto').children;
-    var other_select = document.getElementById('id_producto');
-    //console.log(select.getAttribute("valor"))
-    //other_select.value = select.valor
-    cont = 0
 
-    for(let i = 0; i < browserChildren.length; i++){
-        if (browserChildren[i].value === select.value){
-            console.log(browserChildren[i])
-            console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            console.log(id)
-            other_select.value = id;
-            cont = 1
-            }
+
+let evidenciaIdEliminar = null;
+
+function abrirModalEliminar(evidenciaId) {
+    evidenciaIdEliminar = evidenciaId;
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
+}
+
+
+//Parte del modal factura eliminar
+function eliminarEvidencia() {
+        console.log("Eliminar evidencia", evidenciaIdEliminar);
+        
+        if (!evidenciaIdEliminar) {
+            alert("No se ha seleccionado ninguna evidencia para eliminar");
+            return;
+        }
+        const comentario = document.getElementById('comentario').value;
+        console.log(comentario);
+        if (!comentario) {
+            alert("Por favor, escribe un comentario antes de continuar.");
+            return;
+        }
+        // Obtener token CSRF desde el template
+        const csrftoken = document.querySelector('[name=csrfmiddlewaretoken]').value;
+
+        fetch(`/proveedores_externos/eliminar_evidencia/${evidenciaIdEliminar}/`, {  // Ajusta la URL según tu configuración
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken  // Django requiere este token para seguridad
+            },
+            body: JSON.stringify({ comentario: comentario })  // Agrega datos adicionales si es necesario
+        })
+        .then(response => response.json())
+      .then(data => {
+        if (data.success) {
+
+            // quitar la fila
+            const row = document.getElementById(`evidencia-${evidenciaIdEliminar}`);
+            if (row) row.remove();
+
+            // ocultar modal
+            const modalElement = document.getElementById('confirmModal');
+            const modalInstance = bootstrap.Modal.getInstance(modalElement)
+                                || new bootstrap.Modal(modalElement);
+            modalInstance.hide();
+
+            // Opcional: recargar página
+            // window.location.reload();
+        } else {
+            alert("Error: " + (data.error || "No se pudo eliminar la evidencia"));
+        }
+    })
+        .catch(error => console.error("Error en la solicitud:", error));
     }
-    //console.log(select.value)
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-    }
-}); */
+
+
+    // Recargar la página cuando se cierre el modal de confirmación
+var confirmModal = document.getElementById('confirmModal');
+confirmModal.addEventListener('hidden.bs.modal', function (event) {
+    location.reload();  
+});
+
 
 </script>
 {% endblock %}
