@@ -46,6 +46,7 @@ urlpatterns = [
     path('compras/pdf_comparativo/<int:pk>', views.pdf_formato_comparativo, name='pdf_comparativo'),
 
     path('editar_comparativo/<int:pk>/', views.editar_comparativo, name='editar-comparativo'),
+    path('clonar_comparativo/<int:pk>/', views.clonar_comparativo, name='clonar-comparativo'),
     path('compras/politica_antisoborno_pdf', views.descargar_antisoborno_pdf, name='politica-antisoborno'),
     path('compras/aviso_privacidad_pdf', views.descargar_aviso_privacidad_pdf, name='aviso-privacidad'),
     path('compras/codigo_etica_pdf', views.descargar_codigo_etica_pdf, name='codigo-etica'),

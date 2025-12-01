@@ -1179,6 +1179,7 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
     img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
     image_base64 = get_image_base64(img_path1)
     logo_v_base64 = get_image_base64(img_path2)
+    link = link
     if tipo == 'NUEVA_DIRECCION':
         titulo = "Agregar nueva dirección de facturación/servicio"
         cuerpo = f"""

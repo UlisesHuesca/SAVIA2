@@ -40,7 +40,7 @@ def perfil_seleccionado_required(view_func):
                                   'edit-opinion-cumplimiento','edit-carta-credito','edit-cotizacion','edit-curriculum','evidencias-proveedor','subir-evidencias','eliminar-evidencia',
                                   'matriz-complementos', 'complemento-nuevo','complemento-eliminar','subir-documento-competencia',
                                   'subir-documento-contrato', 'subir-documento-factura-predial','factura-eliminar','ver-politica-pdf',
-                                  'aceptar_politica',]  # Cambia por los nombres reales de las vistas
+                                  'aceptar_politica','edit-cumplimiento-imss','edit-repse']  # Cambia por los nombres reales de las vistas
 
             vista_actual = resolve(request.path_info).url_name
             if vista_actual not in vistas_permitidas:

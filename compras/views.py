@@ -2485,10 +2485,11 @@ def carga_productos(request):
 @perfil_seleccionado_required
 def editar_comparativo(request, pk):
     pk_perfil = request.session.get('selected_profile_id')
-    #colaborador_sel = Profile.objects.all()
+   
     usuario = Profile.objects.get(id = pk_perfil)
-    #usuario = Profile.objects.get(staff__id=request.user.id)
-    comparativo =Comparativo.objects.get(id = pk)
+    
+    comparativo = Comparativo.objects.get(id=pk)
+
     productos = Item_Comparativo.objects.filter(comparativo = comparativo, completo = True)
     proveedores = Proveedor_direcciones.objects.all()
     articulos = Inventario.objects.all()
@@ -2497,6 +2498,7 @@ def editar_comparativo(request, pk):
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
+            print(request.POST)
             form = ComparativoForm(request.POST, request.FILES, instance = comparativo)
             #abrev= usuario.distrito.abreviado
             if form.is_valid():
@@ -2506,8 +2508,9 @@ def editar_comparativo(request, pk):
                 #comparativo.created_at_time = datetime.now().time()
                 comparativo.creado_por =  usuario
                 comparativo.save()
-                #form.save()
-                messages.success(request, f'El comparativo {comparativo.id} ha sido modificado')
+
+                # Ahora sigues trabajando sobre el nuevo comparativo
+                messages.success(request, f'Ha sido creado un nuevo comparativo: {comparativo.id}')
                 return redirect('comparativos')
         if "btn_producto" in request.POST:
             articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo = comparativo)
@@ -2533,6 +2536,40 @@ def editar_comparativo(request, pk):
 
     return render(request, 'compras/actualizar_comparativo.html', context)
 
+
+@perfil_seleccionado_required
+def clonar_comparativo(request, pk):
+    usuario = Profile.objects.get(id=request.session.get('selected_profile_id'))
+
+    original = Comparativo.objects.get(id=pk)
+
+    # 1. Crear nuevo comparativo basado en el original
+    nuevo = Comparativo.objects.get(pk=pk)
+    nuevo.pk = None  # esto crea un nuevo registro
+    nuevo.completo = False
+    nuevo.created_at = date.today()
+    nuevo.creado_por = usuario
+    nuevo.save()
+
+    # 2. Copiar productos del original
+    productos_originales = Item_Comparativo.objects.filter(
+        comparativo=original,
+        completo=True
+    )
+
+    for item in productos_originales:
+        item.pk = None
+        item.comparativo = nuevo
+        item.completo = True
+        item.save()
+
+    messages.success(
+        request,
+        f"El comparativo {nuevo.id} fue creado basado en el comparativo {original.id}"
+    )
+
+    # 3. Redirigir al nuevo
+    return redirect('editar-comparativo', pk=nuevo.id)
 
 @perfil_seleccionado_required
 def articulos_comparativo(request, pk):

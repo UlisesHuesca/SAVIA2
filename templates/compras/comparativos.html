@@ -175,7 +175,7 @@
                             <th>Cotización 1</th>
                             <th>Cotización 2</th>
                             <th>Cotización 3</th>
-                            <!--<th>Editar</th>-->
+                            <th>Clonar</th>
                             <th>Detalle</th>
                             <!--<th>Comparativos</th>-->
                             
@@ -256,11 +256,11 @@
                                 </div>
                                 {% endif %}
                             </td>
-                            <!--<td>
-                                <a class="btn btn-outline-info" id="btnActualizar" href="{% url 'editar-comparativo' item.id %}" type="button">
-                                    <i class="fa-solid fa-pen-to-square"></i>
+                            <td>
+                                <a class="btn btn-outline-info" id="btnActualizar" href="{% url 'clonar-comparativo' item.id %}" type="button">
+                                    <i class="fa-solid fa-copy"></i>
                                 </a>
-                            </td>-->
+                            </td>
                             <td>
                                 <ul class="nav nav-pills">
                                     <li class="nav-item mx-1">

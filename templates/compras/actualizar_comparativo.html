@@ -37,15 +37,15 @@
     </div>
 </div>
 <hr>
-<hr>
-<hr>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
 <div class="row">
     <div class="col-lg-4">
-        <div class="box-element" id="form-wrapper">
-            <div id="Solicitud-info">
-                <hr>
-					<h2>Comparativo:</h2>
-					<hr>
+        <div class="card">
+            <div class="card-header">
+				<h2>Proveedores Comparativo</h2>
+			</div>
+            <div class="card-body">
 					<form method="POST" id='OrderForm' enctype="multipart/form-data">
                         {% csrf_token %}
                             
@@ -72,107 +72,80 @@
                                 </div>
                             </div>
                             <div class="row my-2">
-                                <div class="col-sm-12">
-                                    <div id="etiqueta_solicitado" class="col-11">
-                                        <div class="alert alert-secondary" role="alert">
-                                        <h6>Proveedor:</h6><h6 style="color: #121212;" id="solicitado">{{comparativo.proveedor.nombre}}</h6>   
-                                        </div>
+                                <div id="etiqueta_solicitado" class="col-12">
+                                    <div class="alert alert-secondary" role="alert">
+                                        <h6>Proveedor:</h6><h6 style="color: #121212;" id="solicitado">{{comparativo.proveedor.razon_social}}</h6>   
                                     </div>
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                        <input type="text" list="proveedores" id="txt_proveedores" placeholder="Proveedores..." class="form-control">
-                                    
-                                        <label for="txt_proveedores">Proveedor*</label>
-                                        </div>
-                                        <datalist id="proveedores" name='proveedores'>
-                                        {% for item in proveedores %}
-                                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
-                                        {% endfor %}
-                                     </datalist>
-                                    </div>
-                                    
                                 </div>
                             </div>
-                            
-                            <div class="row my-2 d-none">
+                            <div class="row my-3">
+                                <div class="col-12">
+                                    <div class="input-group mb-3">
+                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                            <div class="form-floating form-floating-group flex-grow-1">   
+                                                {{form.proveedor}}    
+                                            </div>
+                                    </div>  
+                                </div>
+                            </div>
+                            <!--<div class="row my-2 d-none">
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{form.proveedor|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
                                         <label for="id_proveedor">Proveedor*</label>   
                                 </div>  
-                            </div>
+                            </div>-->
                             <div class="col-12">
                                 <div class="input-group mb-3">
                                         {{form.cotizacion|add_class:"form-control"}}
                                         <label class="input-group-text" style="color:ghostwhite; background-color:#980F0F;" for="id_cotizacion"><i class="fa-solid fa-file-pdf"></i></i></label> 
                                 </div>
                             </div>
-                            <div id="etiqueta_solicitado" class="col-11">
+                            <div id="etiqueta_solicitado" class="col-12">
                                 <div class="alert alert-secondary" role="alert">
-                                <h6>Proveedor:</h6><h6 style="color: #121212;" id="solicitado">{{comparativo.proveedor2.nombre}}</h6>   
+                                <h6>Proveedor:</h6><h6 style="color: #121212;" id="solicitado">{{comparativo.proveedor2.razon_social}}</h6>   
                                 </div>
                             </div>
-                            <div class="row my-2">
-                                
-                                <div class="col-sm-12">
+                            <div class="row my-3">
+                                <div class="col-12">
                                     <div class="input-group mb-3">
                                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                        <input type="text" list="proveedores2" id="txt_proveedores2" placeholder="Proveedores..." class="form-control">
-                                    
-                                        <label for="txt_proveedores2">Proveedor2*</label>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                        {{form.proveedor2}}    
                                         </div>
-                                        <datalist id="proveedores2" name='proveedores2'>
-                                        {% for item in proveedores %}
-                                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
-                                        {% endfor %}
-                                     </datalist>
-                                    </div>
-                                    
+                                    </div>  
                                 </div>
                             </div>
-                            <div class="row my-2 d-none">
+                            <!--<div class="row my-2 d-none">
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{form.proveedor2|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
                                     <label for="id_proveedor2">Proveedor*</label>   
                                 </div>  
-                            </div>
+                            </div>-->
                             <div class="col-12">
                                 <div class="input-group mb-3">
                                         {{form.cotizacion2|add_class:"form-control"}}
                                         <label class="input-group-text" style="color:ghostwhite; background-color:#980F0F;" for="id_cotizacion2"><i class="fa-solid fa-file-pdf"></i></label> 
                                 </div>
                             </div>
-                            <div id="etiqueta_solicitado" class="col-11">
+                            <div id="etiqueta_solicitado" class="col-12">
                                 <div class="alert alert-secondary" role="alert">
-                                <h6>Proveedor:</h6><h6 style="color: #121212;" id="solicitado">{{comparativo.proveedor3.nombre}}</h6>   
+                                <h6>Proveedor:</h6><h6 style="color: #121212;" id="solicitado">{{comparativo.proveedor3.razon_social}}</h6>   
                                 </div>
                             </div>
-                            <div class="row my-2">
-
-                                <div class="col-sm-12">
-                                    <div class="input-group mb-3">
-                                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                                        <div class="form-floating form-floating-group flex-grow-1"> 
-                                        <input type="text" list="proveedores3" id="txt_proveedores3" placeholder="Proveedores..." class="form-control">
-                                    
-                                        <label for="txt_proveedores3">Proveedor3*</label>
-                                        </div>
-                                        <datalist id="proveedores3" name='proveedores3'>
-                                        {% for item in proveedores %}
-                                            <option valor="{{item.id}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
-                                        {% endfor %}
-                                     </datalist>
+                            <div class="row my-3">
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">  
+                                    {{form.proveedor3}}
                                     </div>
-                                    
-                                </div>
+                                </div>  
                             </div>
-                            <div class="row my-2 d-none">
+                            <!--<div class="row my-2 d-none">
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{form.proveedor3|add_class:"form-control"|append_attr:"placeholder=Proveedor*"}}
                                     <label for="id_proveedor3">Proveedor*</label>   
                                 </div>  
-                            </div>
+                            </div>-->
                             <div class="col-12">
                                 <div class="input-group mb-3">
                                         {{form.cotizacion3|add_class:"form-control"}} 
@@ -186,7 +159,7 @@
 
                     </form>
             </div>
-            <hr>
+            
         </div>
     </div>
 
@@ -196,19 +169,13 @@
                 <form method="POST">
                 {% csrf_token %}
                 <div class="row my-2">
-                    <div class="col-sm-12">
+                    
+                    <div class="col-12">
                         <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-cubes-stacked"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1"> 
-                            <input type="text" list="productos" id="txt_productos" placeholder="Productos..." class="form-control">
-                       
-                            <label for="txt_productos">Productos*</label>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{form_item.producto}}
                             </div>
-                            <datalist id="productos" name="productos">
-                            {% for item in articulos %}
-                            <option valor="{{item.id|unlocalize}}" value="{{item}}" iva="{{item.producto.iva}}" comparativo="{{item.productos.comparativo}}"></option>
-                            {% endfor %}
-                            </datalist>
                         </div>
                     </div>
                     <div class="col-3 d-none">
@@ -468,204 +435,194 @@ var modeloFields = document.getElementsByClassName("modelo-field");
 });
 
 
+$(document).ready(function(){
+    $('#id_proveedor').select2({
+        placeholder:'Seleccione Proveedor',
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        
+        allowClear: true,
+        width: '100%',
+        ajax: {
+            url: "{% url 'carga-proveedor-comparativo' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.razon_social};
+                    })
 
-    /*document.getElementById('id_precio').addEventListener('change',(event)=>{
-    cantidad = document.getElementById('id_cantidad').value;
-    precio = document.getElementById('id_precio_unitario').value;
-    otros_impuestos = document.getElementById('id_otros_impuestos').value
-    retenidos = document.getElementById('id_impuestos_retenidos').value
-    calculo_previo = document.getElementById('calculo_previo')
-    var other_select = document.getElementById('id_producto')
-    var value = other_select.options[other_select.selectedIndex].value
-    var browserChildren = document.getElementById('articulos_gasto').children;
-    var producto = document.getElementById('btn_producto')
-    if (precio <= 0 || cantidad <= 0){
-            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
-        } else {
-            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
-        }
-
-
-
-    for(let i = 0; i < browserChildren.length; i++){
-        //console.log(browserChildren[i].getAttribute('valor'))
-        valor = browserChildren[i].getAttribute('valor')
-
-        if (valor === value) {
-            console.log(browserChildren[i])
-            let iva = browserChildren[i].getAttribute('iva');
-            console.log(iva)
-            if (iva){
-                subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
-                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
-            } else {
-                subtotal = precio * cantidad + otros_impuestos - retenidos
-                calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
-            }
-            }
-    }
-    })
-
-    document.getElementById('id_cantidad').addEventListener('change',(event)=>{
-        cantidad = document.getElementById('id_cantidad').value
-        precio = document.getElementById('id_precio_unitario').value
-        calculo_previo = document.getElementById('calculo_previo')
-        otros_impuestos = document.getElementById('id_otros_impuestos').value
-        retenidos = document.getElementById('id_impuestos_retenidos').value
-        var other_select = document.getElementById('id_producto')
-        var value = other_select.options[other_select.selectedIndex].value
-        var producto = document.getElementById('btn_producto')
-        var browserChildren = document.getElementById('articulos_gasto').children;
-        if (precio <= 0 || cantidad <= 0){
-            producto.setAttribute('class','btn btn-outline-info btn-block my-2 d-none')
-        } else {
-            producto.setAttribute('class','btn btn-outline-info btn-block my-2')
-        }
-
-
-
-        for(let i = 0; i < browserChildren.length; i++){
-        //console.log(browserChildren[i].getAttribute('valor'))
-        valor = browserChildren[i].getAttribute('valor')
-
-            if (valor === value) {
-                console.log(browserChildren[i])
-                let iva = browserChildren[i].getAttribute('iva');
-                console.log(iva)
-                    if (iva){
-                        subtotal = (precio * cantidad * 1.16) + (otros_impuestos - retenidos)
-                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
-                    } else {
-                        subtotal = precio * cantidad + otros_impuestos - retenidos
-                        calculo_previo.innerHTML = parseFloat(subtotal).toFixed(4)
-                   }
-        }}
-
-    })
-*/
-
-document.getElementById("txt_productos").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_productos");
-    var browserChildren = document.getElementById('productos').children;
-    var other_select = document.getElementById('id_producto');
-
-
-
-    cont = 0
-
-    for(let i = 0; i < browserChildren.length; i++){
-        //console.log(browserChildren[i].value)
-
-        if (browserChildren[i].value === select.value) {
-          //  console.log(browserChildren[i])
-          // console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            console.log(id)
-            other_select.value = id;
-            cont = 1
-            } //else {
-            //    console.log(browserChildren[i].value)
-              //  console.log(select)
-           // }
-    }
-    //console.log(select.value)
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-    }
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
 });
 
-document.getElementById("txt_proveedores").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_proveedores");
-    var browserChildren = document.getElementById('proveedores').children;
-    var other_select = document.getElementById('id_proveedor');
+ {% if comparativo.proveedor %}
+    var option = new Option(
+        "{{ comparativo.proveedor.razon_social|escapejs }}",
+        "{{ comparativo.proveedor.id|unlocalize }}",
+        true,
+        true
+    );
+    $('#id_proveedor').append(option).trigger('change');
+{% endif %}       
 
 
+$(document).ready(function(){
+    $('#id_proveedor2').select2({
+        placeholder:'Seleccione Proveedor',
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        allowClear: true,
+        width: '100%',
+        ajax: {
+            url: "{% url 'carga-proveedor-comparativo' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.razon_social};
+                    })
 
-    cont = 0
-
-    for(let i = 0; i < browserChildren.length; i++){
-        //console.log(browserChildren[i].value)
-
-        if (browserChildren[i].value === select.value) {
-          //  console.log(browserChildren[i])
-          // console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            console.log(id)
-            other_select.value = id;
-            cont = 1
-            } //else {
-            //    console.log(browserChildren[i].value)
-              //  console.log(select)
-           // }
-    }
-    //console.log(select.value)
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-    }
-});
-document.getElementById("txt_proveedores2").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_proveedores2");
-    var browserChildren = document.getElementById('proveedores2').children;
-    var other_select = document.getElementById('id_proveedor2');
-
-
-
-    cont = 0
-
-    for(let i = 0; i < browserChildren.length; i++){
-        //console.log(browserChildren[i].value)
-
-        if (browserChildren[i].value === select.value) {
-          //  console.log(browserChildren[i])
-          // console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            console.log(id)
-            other_select.value = id;
-            cont = 1
-            } //else {
-            //    console.log(browserChildren[i].value)
-              //  console.log(select)
-           // }
-    }
-    //console.log(select.value)
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-    }
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
 });
 
-document.getElementById("txt_proveedores3").addEventListener("change", (event)=>{
-    var select = document.getElementById("txt_proveedores3");
-    var browserChildren = document.getElementById('proveedores3').children;
-    var other_select = document.getElementById('id_proveedor3');
+{% if comparativo.proveedor2 %}
+    var option = new Option(
+        "{{ comparativo.proveedor2.razon_social|escapejs }}",
+        "{{ comparativo.proveedor2.id|unlocalize }}",
+        true,
+        true
+    );
+    $('#id_proveedor2').append(option).trigger('change');
+{% endif %}       
 
+$(document).ready(function(){
+    $('#id_proveedor3').select2({
+        placeholder:'Seleccione Proveedor',
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        allowClear: true,
+        width: '100%',
+        
+        ajax: {
+            url: "{% url 'carga-proveedor-comparativo' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.razon_social};
+                    })
 
-
-    cont = 0
-
-    for(let i = 0; i < browserChildren.length; i++){
-        //console.log(browserChildren[i].value)
-
-        if (browserChildren[i].value === select.value) {
-          //  console.log(browserChildren[i])
-          // console.log(select.value)
-            let id = browserChildren[i].getAttribute('valor');
-            console.log(id)
-            other_select.value = id;
-            cont = 1
-            } //else {
-            //    console.log(browserChildren[i].value)
-              //  console.log(select)
-           // }
-    }
-    //console.log(select.value)
-    //El cont = 0 es un indicador/bandera si encuentra al menos una similitud en el for no se activa
-    if ((!select.value) || (cont = 0)){
-        other_select.value = 0
-    }
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
 });
+
+{% if comparativo.proveedor3 %}
+    var option = new Option(
+        "{{ comparativo.proveedor3.razon_social|escapejs }}",
+        "{{ comparativo.proveedor3.id|unlocalize }}",
+        true,
+        true
+    );
+    $('#id_proveedor3').append(option).trigger('change');
+{% endif %}       
+
+$(document).ready(function(){
+    $('#id_producto').select2({
+        placeholder:'Selecciona el producto',
+
+        escapeMarkup : function(markup){
+            return markup;
+        },
+        allowClear: true,
+        width: '100%',
+        
+        ajax: {
+            url: "{% url 'carga-productos' %}",
+            datatype: 'json',
+            delay: 250,
+            data: function (params){
+                return {
+                    term: params.term
+                };
+            },
+            processResults: function (data) {
+                return {
+                    results: $.map(data, function(item){
+                        return {id: item.id, text: item.producto__nombre};
+                    })
+
+                };
+            },
+            cache: true
+        },
+        minimumInputLength: 1, // Número mínimo de caracteres para empezar a filtrar
+        templateResult: formatRepo, // Función para renderizar los resultados
+        templateSelection: formatRepoSelection // Función para renderizar la selección
+    });
+    
+});
+
+function formatRepo (repo) {
+    if (repo.loading) {
+        return repo.text;
+    }
+
+    var $container = $("<div class='select2-result-repository clearfix'>" +
+        "<div class='form-control form-control-lg select2-result-repository__title'></div>" +
+        "</div>");
+
+    $container.find(".select2-result-repository__title").text(repo.text);
+    // Aquí podrías agregar más elementos al contenedor si es necesario.
+
+    return $container;
+}
+function formatRepoSelection (repo) {
+    return repo.text || repo.id;
+}
 
 </script>
 {% endblock %}
