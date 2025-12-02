@@ -1708,7 +1708,8 @@ def autorizada_sol(request, pk):
                 ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
                 ordensurtir.precio = prod_inventario.price
                 ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
-                prod_inventario.cantidad_apartada = prod_inventario.apartada
+                
+                prod_inventario.cantidad_apartada = prod_inventario.apartada()
                 prod_inventario.cantidad = 0
                 if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
                     ordensurtir.surtir = True
@@ -1719,7 +1720,7 @@ def autorizada_sol(request, pk):
                 order.save()
             elif prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":
                 prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
-                prod_inventario.cantidad_apartada = prod_inventario.apartada
+                prod_inventario.cantidad_apartada = prod_inventario.apartada()
                 prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id} Autorización de solicitudes cond:1'
                 ordensurtir.cantidad = producto.cantidad
                 ordensurtir.precio = prod_inventario.price

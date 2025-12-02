@@ -191,13 +191,13 @@ class Inventario(models.Model):
         return total
     
     #@property
-    #def apartada(self):
-    #    apartados = self.articulosordenados_set.all()
+    def apartada(self):
+        apartados = self.articulosordenados_set.all()
 
         # Para cada apartado, suma los valores disponibles_true y disponibles_false
-    #    disponibles = sum([item.articulos_disponibles for item in apartados])
+        disponibles = sum([item.articulos_disponibles for item in apartados])
            
-    #    return disponibles
+        return disponibles
     
     #@property
     #def apartada_entradas(self):
