@@ -96,9 +96,10 @@
             {% if usuario.tipo.almacen == True %}
             <div class="col-lg-3">
             <div class="card ">
-                <div class="card-body">
+                <div class="card-header">
                     <h5 class="card-title">Reportes:</h5>
-                    <hr>
+                </div>
+                <div class="card-body">
                     <form method=POST onsubmit="mostrarIndicadorCarga();">
                     {% csrf_token %}
                     <ul class="nav nav-pills my-2" >
@@ -120,13 +121,14 @@
             {% endif %}
         </div>
         <div class="card my-2 mx-1">
-            <div class="card card-body">
+            <div class="card-header">
                 <h5>Filtro Inventario</h5>
-                <hr>
+            </div>
+            <div class="card-body">
                 {% csrf_token %}
                 <form method="GET">
                 <div class="row g-12">
-                    <div class="col-3">
+                    <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -135,7 +137,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box-open"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -144,7 +146,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -153,7 +155,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-3">
+                    <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -164,7 +166,7 @@
                     </div>
                 </div>
                 <div class="row">
-                    <div class="col-3">
+                    <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gears"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -177,65 +179,66 @@
                         <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
-                <hr>
                 </form>
             </div>
         </div>
 
 
-            <div class="col-md-12">
-                <table class="table bg-white">
-                    <thead class="text-black" style="background-color: #F5F5F5;">
-                        <tr>
-                            <th scope="row">Código</th>
-                            <th scope="col">Producto</th>
-                            <th scope="col">Unidad</th>
-                            <th scope="col">Familia</th>
-                            <th scope="col">Ubicacion</th>
-                            <th scope="col">Estante</th>
-                            <th scope="col">Cantidad</th>
-                            <th scope="col">Apartados</th>
-                            <th scope="col">Entradas</th>
-                            <th scope="col">Precio</th>
-                            <th scope="col">Costo</th>
-                            <th scope="col">Mínimo</th>
-                            <th scope="col">Editar</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for producto in existencia_list %}
-                        <tr>
-                            <th scope="row">{{producto.producto.codigo}}</th>
-                            <td>{{producto.producto.nombre}}</td>
-                            <td>{{producto.producto.unidad}}</td>
-                            <td>{{producto.producto.familia}}</td>
-                            {% if producto.ubicacion == None %}
-                            <td></td>
-                            {% else %}
-                            <td>{{producto.ubicacion}}</td>
-                            {% endif %}
-                            {% if producto.estante == None %}
-                            <td></td>
-                            {% else %}
-                            <td>{{producto.estante}}</td>
-                            {% endif %}
-                            <td>{{producto.cantidad}}</td>
-                            <td>{{producto.apartada}}</td>
-                            <td>{{producto.cantidad_entradas}}</td>
-                            <td>{{producto.price}}</td>
-                            <td>{{producto.get_total_producto}}</td>
-                            <td>{{producto.minimo}}</td>
-                            {% if usuario.tipo.nombre == "Superintendente" %}
-                            <td></td>
-                            {% else %}
-                            <td><a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-inventario-update-modal' producto.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
-                            {% endif %}
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
+            <div class="card">
+                <div class ="table-responsive-sm">
+                    <table class="table bg-white">
+                        <thead class="text-black" style="background-color: #F5F5F5;">
+                            <tr>
+                                <th scope="row">Código</th>
+                                <th scope="col">Producto</th>
+                                <th scope="col">Unidad</th>
+                                <th scope="col">Familia</th>
+                                <th scope="col">Ubicacion</th>
+                                <th scope="col">Estante</th>
+                                <th scope="col">Cantidad</th>
+                                <th scope="col">Apartados</th>
+                                <th scope="col">Entradas</th>
+                                <th scope="col">Precio</th>
+                                <th scope="col">Costo</th>
+                                <th scope="col">Mínimo</th>
+                                <th scope="col">Editar</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for producto in existencia_list %}
+                            <tr>
+                                <th scope="row">{{producto.producto.codigo}}</th>
+                                <td>{{producto.producto.nombre}}</td>
+                                <td>{{producto.producto.unidad}}</td>
+                                <td>{{producto.producto.familia}}</td>
+                                {% if producto.ubicacion == None %}
+                                <td></td>
+                                {% else %}
+                                <td>{{producto.ubicacion}}</td>
+                                {% endif %}
+                                {% if producto.estante == None %}
+                                <td></td>
+                                {% else %}
+                                <td>{{producto.estante}}</td>
+                                {% endif %}
+                                <td>{{producto.cantidad}}</td>
+                                <td>{{producto.apartada}}</td>
+                                <td>{{producto.cantidad_entradas}}</td>
+                                <td>{{producto.price}}</td>
+                                <td>{{producto.get_total_producto}}</td>
+                                <td>{{producto.minimo}}</td>
+                                {% if usuario.tipo.nombre == "Superintendente" %}
+                                <td></td>
+                                {% else %}
+                                <td><a class="btn btn-outline-info" id="btnActualizar" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'solicitud-inventario-update-modal' producto.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                                {% endif %}
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
+        
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
                 {% if existencia_list.has_previous %}
