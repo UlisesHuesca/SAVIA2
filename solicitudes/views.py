@@ -9,6 +9,7 @@ from django.db.models.functions import Concat
 from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
+from django.db import transaction
 from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max, Q
 from dashboard.models import Activo, Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden, Plantilla, ArticuloPlantilla, Unidad, Producto_Calidad
 from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas
@@ -1060,12 +1061,19 @@ def inventario(request):
         perfil_flag = False
 
     valor_inv = 0
+    objetos_a_actualizar = []
     for inv in existencia:
-        inv.total_entradas = dict_entradas.get(inv.id,0)
+        #inv.total_entradas = dict_entradas.get(inv.id,0)
         inv.total_apartado = dict_resultados.get(inv.id,0) #2 ciclos for uno para calcular el valor del inventario
+        inv.cantidad_apartada = inv.total_apartado
         valor_inv += (inv.cantidad + inv.total_apartado) * inv.price # y otro para calcular los apartados
+        objetos_a_actualizar.append(inv)
 
-
+    with transaction.atomic():
+        Inventario.objects.bulk_update(
+            objetos_a_actualizar,
+            ['cantidad_apartada']  # 👈 solo este campo se actualiza en la tabla
+        )
    
 
     myfilter = InventarioFilter(request.GET, queryset=existencia)
@@ -2066,21 +2074,21 @@ def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entra
     row_num = 0
     for inventario in existencia:
         row_num += 1
-        inventario.total_entradas = dict_entradas.get(inventario.id, 0)
+        #inventario.total_entradas = dict_entradas.get(inventario.id, 0)
         inventario.total_apartado = dict_resultados.get(inventario.id, 0)
-        total_value = (inventario.cantidad + inventario.total_apartado) * inventario.price
+        #total_value = (inventario.cantidad + inventario.total_apartado) * inventario.price
     
         row = [
-            inventario.producto.codigo,
-            inventario.producto.nombre,
-            inventario.distrito.nombre,
-            inventario.producto.unidad.nombre,
-            inventario.cantidad,
-            inventario.total_apartado,
+            inventario.producto.codigo, #A
+            inventario.producto.nombre, #B
+            inventario.distrito.nombre, #C
+            inventario.producto.unidad.nombre, #D
+            inventario.cantidad, #E
+            inventario.total_apartado, #F
             #inventario.total_entradas,
-            inventario.minimo,
-            inventario.ubicacion,
-            inventario.estante,
+            inventario.minimo, #G
+            inventario.ubicacion, #H
+            inventario.estante, #I
         ]
     
         for col_num, item in enumerate(row, start=1):  # Enumerate empieza con 1 para A1, ajusta según sea necesario
@@ -2088,7 +2096,8 @@ def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entra
     
         # Ahora escribe los valores con formateo especial directamente
         worksheet.write(row_num, 9, inventario.price, money_style)  # Columna 10 (J) para el precio
-        worksheet.write(row_num, 10, total_value, money_style)  # Columna 11 (K) para el valor total
+        worksheet.write_formula(row_num, 10, f"=(E{row_num+1}+F{row_num+1})*J{row_num+1}", money_style)
+       #worksheet.write(row_num, 10, total_value, money_style)  # Columna 11 (K) para el valor total
 
     # Escribir el total del inventario
     worksheet.set_column('N:N', 30)
@@ -2111,3 +2120,4 @@ def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entra
     response['Content-Disposition'] = f'attachment; filename=Inventario_{dt.date.today()}.xlsx'
     output.close()
     return response
+
