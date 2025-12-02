@@ -10,7 +10,7 @@ from django.core.mail import EmailMessage, BadHeaderError
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.db import transaction
-from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max, Q
+from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max, Q, ExpressionWrapper
 from dashboard.models import Activo, Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden, Plantilla, ArticuloPlantilla, Unidad, Producto_Calidad
 from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas
 from requisiciones.views import get_image_base64
@@ -1066,7 +1066,8 @@ def inventario(request):
         #inv.total_entradas = dict_entradas.get(inv.id,0)
         inv.total_apartado = dict_resultados.get(inv.id,0) #2 ciclos for uno para calcular el valor del inventario
         inv.cantidad_apartada = inv.total_apartado
-        valor_inv += (inv.cantidad + inv.total_apartado) * inv.price # y otro para calcular los apartados
+        inv.valor_producto = (inv.cantidad + inv.total_apartado) * inv.price # y otro para calcular los apartados
+        valor_inv += inv.valor_producto
         objetos_a_actualizar.append(inv)
 
     with transaction.atomic():
@@ -1075,6 +1076,14 @@ def inventario(request):
             ['cantidad_apartada']  # 👈 solo este campo se actualiza en la tabla
         )
    
+    #qs = existencia.annotate(
+    #    total_valor=ExpressionWrapper(
+    #        (F('cantidad') + F('cantidad_apartada')) * F('price'),
+    #        output_field=DecimalField(max_digits=20, decimal_places=2)
+    #    )
+    #)
+
+    #valor_inv = qs.aggregate(suma=Sum('total_valor'))['suma'] or 0
 
     myfilter = InventarioFilter(request.GET, queryset=existencia)
     existencia = myfilter.qs
@@ -1084,8 +1093,8 @@ def inventario(request):
     page = request.GET.get('page')
     existencia_list = p.get_page(page)
 
-    for inventario in existencia_list:
-        inventario.cantidad_por_surtir = dict_resultados.get(inventario.id,0)
+    #for inventario in existencia_list:
+    #    inventario.cantidad_por_surtir = dict_resultados.get(inventario.id,0)
 
     cuenta_productos = existencia.count()
 

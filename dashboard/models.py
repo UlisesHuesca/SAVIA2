@@ -181,7 +181,7 @@ class Inventario(models.Model):
 
     @property
     def get_total_producto(self):
-        total_inv = (self.cantidad + self.apartada) * self.price
+        total_inv = (self.cantidad + self.cantidad_apartada) * self.price
         return total_inv
 
     @property
@@ -190,23 +190,23 @@ class Inventario(models.Model):
         total = sum([item.get_costo_salidas for item in art_ordenados])
         return total
     
-    @property
-    def apartada(self):
-        apartados = self.articulosordenados_set.all()
+    #@property
+    #def apartada(self):
+    #    apartados = self.articulosordenados_set.all()
 
         # Para cada apartado, suma los valores disponibles_true y disponibles_false
-        disponibles = sum([item.articulos_disponibles for item in apartados])
+    #    disponibles = sum([item.articulos_disponibles for item in apartados])
            
-        return disponibles
+    #    return disponibles
     
-    @property
-    def apartada_entradas(self):
-        articulos = self.articulosordenados_set.all()
+    #@property
+    #def apartada_entradas(self):
+    #    articulos = self.articulosordenados_set.all()
 
         #Para cada apartado, suma los valores disponibles_true y disponibles_false
-        disponibles = sum([item.articulos_totales for item in articulos])
+    #    disponibles = sum([item.articulos_totales for item in articulos])
            
-        return disponibles
+    #    return disponibles
 
     def __str__(self):
         return f'{self.producto}'
