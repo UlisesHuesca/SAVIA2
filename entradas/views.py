@@ -275,8 +275,11 @@ def articulos_entrada(request, pk):
     nuevo_folio = (max_folio or 0) + 1
     
     for articulo in articulos:
+        #print('estoy pasando por aquí')
         if articulo.cantidad_pendiente == None or articulo.cantidad_pendiente == "":
+            #print(articulo.cantidad)
             articulo.cantidad_pendiente = articulo.cantidad
+            articulo.save()
 
 
     if request.method == 'POST' and 'entrada' in request.POST:
@@ -667,8 +670,8 @@ def update_entrada(request):
         producto_surtir = ArticulosparaSurtir.objects.get(id= producto_comprado.producto.producto.id)
 
     if producto_inv.producto.servicio == False:
-        monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.apartada_entradas * producto_inv.price
-        cantidad_inventario = producto_inv.cantidad + producto_inv.apartada_entradas
+        monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.cantidad_apartada * producto_inv.price
+        cantidad_inventario = producto_inv.cantidad + producto_inv.cantidad_apartada
         monto_total = monto_inventario + entrada_item.cantidad * producto_comprado.precio_unitario
         nueva_cantidad_inventario =  cantidad_inventario + entrada_item.cantidad
     
