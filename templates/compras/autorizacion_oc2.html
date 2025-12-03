@@ -172,7 +172,7 @@
                             <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                             </li>
-                            {% if compra.proveedor.estatus.nombre == 'NUEVO' %}
+                            {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
                                 {% if compra.comparativo_model %}
                                 <li class="nav-item m-1">
                                     <a id="myBtn" type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document"  hx-get="{% url 'mostrar-comparativo' compra.id|unlocalize %}">
