@@ -1779,10 +1779,12 @@ def precio_referencia(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     item = get_object_or_404(Product, id=pk)
     error_messages = {}
-
+    #print('estoy aqui')
     if request.method == 'POST':
         form = PrecioRef_Form(request.POST)
+        print('estoy entrando al post')
         if form.is_valid():
+            print('es válido')
             # 1) Bloqueo en aplicación
             hay_pendiente = PriceRefChange.objects.filter(
                 product=item,
@@ -1791,8 +1793,10 @@ def precio_referencia(request, pk):
 
             
             if hay_pendiente:
+                print('hay pendiente')
                 messages.error(request,f"Ya existe una solicitud pendiente de autorización para el producto {item.nombre}.")
                 return redirect('dashboard-product')
+            print(form)
             cambio = form.save(commit=False)
             cambio.product = item
             cambio.solicitado_por = usuario
@@ -1800,6 +1804,9 @@ def precio_referencia(request, pk):
             cambio.save()
             messages.success(request, f"Se generó una solicitud de cambio para {item.nombre}.")
             return redirect('dashboard-product')
+        else:
+            error_messages = form.errors            # errores legibles
+            
     else:
         form = PrecioRef_Form()
 

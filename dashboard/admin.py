@@ -11,7 +11,7 @@ admin.site.site_header = 'SAVIA 2.0 | Administración'
 class ProductAdmin(admin.ModelAdmin):
     list_display = ('id','nombre','familia', 'codigo')
     list_filter = ('familia',)
-    search_fields = ['nombre']
+    search_fields = ['id','nombre']
 
 
 class InventarioAdmin(SimpleHistoryAdmin):

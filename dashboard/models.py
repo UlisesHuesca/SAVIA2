@@ -51,7 +51,7 @@ class Product(models.Model):
     image = models.ImageField(null=True, blank=True, upload_to='product_images')
     completado = models.BooleanField(default = False)
     precioref = models.DecimalField(max_digits=14, decimal_places=2, null=True)
-    porcentaje = models.DecimalField(max_digits=4, decimal_places=2, null=True)
+    porcentaje = models.DecimalField(max_digits=5, decimal_places=3, null=True)
     pais = models.ForeignKey(Pais, on_delete = models.CASCADE, null=True)
     #Para calidad
     critico = models.BooleanField(default = False)
@@ -77,7 +77,7 @@ class Product(models.Model):
 class PriceRefChange(models.Model):
     product = models.ForeignKey('Product', on_delete=models.CASCADE, related_name='price_changes')
     new_value = models.DecimalField(max_digits=14, decimal_places=2)
-    new_porcentaje = models.DecimalField(max_digits=5, decimal_places=2, null=True, blank=True)
+    new_porcentaje = models.DecimalField(max_digits=5, decimal_places=3, null=True, blank=True)
     autorizado = models.BooleanField(null=True, blank=True)  # None=pending, True=autorizado, False=rechazado
     solicitado_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='solicitudes_precioref')
     solicitado_en = models.DateTimeField(null=True)
