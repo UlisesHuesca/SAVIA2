@@ -1694,6 +1694,88 @@ def pago_gastos_autorizados(request):
 
 
 @perfil_seleccionado_required
+@perfil_seleccionado_required
+def gastos_por_pagar(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    #tipos_prioridad = TipoPrioridad.objects.all()
+    if usuario.tipo.cuentas_por_pagar:
+        gastos = Solicitud_Gasto.objects.filter(autorizar2=True, para_pago = False, pagada=False, distrito__in = almacenes_distritos).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
+                )).order_by('-folio')
+        
+    
+    
+    #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
+    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
+    gastos = myfilter.qs
+    
+    for gasto in gastos:
+        articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
+
+        proyectos = set()
+        subproyectos = set()
+
+        for articulo in articulos_gasto:
+            if articulo.proyecto:
+                proyectos.add(str(articulo.proyecto.nombre))
+            if articulo.subproyecto:
+                subproyectos.add(str(articulo.subproyecto.nombre))
+
+        gasto.proyectos = ', '.join(proyectos)
+        gasto.subproyectos = ', '.join(subproyectos)
+
+    p = Paginator(gastos, 50)
+    page = request.GET.get('page')
+    gastos_list = p.get_page(page)
+
+    for gasto in gastos_list:
+            # Determinar estado basado en total_facturas y autorizadas
+            if gasto.total_facturas == 0:
+                gasto.estado_facturas = 'sin_facturas'
+            elif gasto.autorizadas == gasto.total_facturas:
+                gasto.estado_facturas = 'todas_autorizadas'
+            else:
+                gasto.estado_facturas = 'pendientes'
+    
+    if request.method == 'POST' and 'btnReporte' in request.POST:
+        #if usuario.tipo.tesoreria or usuario.tipo.finanzas:
+        return convert_excel_gasto_matriz(gastos)
+        #else:
+        #    return convert_excel_matriz_compras_autorizadas(compras)
+       
+    
+    if request.method == 'POST':
+        gastos_ids = request.POST.getlist('gastos_ids')
+        print(gastos_ids)
+        if gastos_ids:
+            for gasto_id in gastos_ids:
+                parcial = request.POST.get(f'parcial_{gasto_id}')
+                print(parcial)
+                  # Asegurarte de que monto no sea None y que sea un número válido
+                if parcial:
+                    try:
+                        parcial = float(parcial)
+                    except ValueError:
+                        parcial = 0  # O algún valor por defecto en caso de error
+                Solicitud_Gasto.objects.filter(id=gasto_id).update(para_pago=True, manda_pago = usuario)
+            # Después de la actualización, redirige para restablecer el conteo y sumatoria
+            return redirect('gastos-por-pagar')
+
+    context= {
+        'usuario':usuario,
+        'gastos':gastos,
+        'myfilter':myfilter,
+        'gastos_list':gastos_list,
+        #'tipos_prioridad': tipos_prioridad,
+        }
+
+    return render(request, 'gasto/gastos_por_pagar.html',context)
+
+
+
+@perfil_seleccionado_required
 def finanzas_transferencia_gastos_autorizados(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)

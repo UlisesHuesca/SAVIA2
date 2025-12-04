@@ -45,5 +45,6 @@ urlpatterns = [
     path('gasto/editar_gasto_rh/<int:pk>/', views.editar_gasto_rh, name='editar-gasto-rh'),
     path('gasto/delete_rh/<int:pk>', views.delete_gasto_rh, name='delete-gasto-rh'),
     path('eliminar-archivo-pago/<int:archivo_id>/', views.eliminar_archivo_pago, name='eliminar_archivo_pago'),
+    path('gasto/gastos_por_pagar/', views.gastos_por_pagar, name='gastos-por-pagar'),
 ]
     

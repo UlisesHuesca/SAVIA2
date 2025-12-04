@@ -328,14 +328,20 @@
                         <div class="d-none">
                     {% endif %}
                     <h6 class="dropdown-header">Cuentas por pagar</h6>
-                    <div class="dropdown-divider"></div>
+                        <div class="dropdown-divider"></div>
                         <a class="dropdown-item" href="{% url 'compras-por-pagar' %}">
                             Compras por pagar
                             {% if conteo_pagos2 > 0 %}
                                 <span class="badge bg-danger">({{conteo_pagos2}})</span>
                             {% endif %}
                         </a>
-                    <div class="dropdown-divider"></div>       
+                        <!--<a class="dropdown-item" href="{% url 'gastos-por-pagar' %}">
+                            Gastos por pagar
+                            {% if conteo_gastos_por_pagar > 0 %}
+                                <span class="badge bg-danger">({{conteo_gastos_por_pagar}})</span>
+                            {% endif %}
+                        </a>-->
+                        <div class="dropdown-divider"></div>       
                     </div>
                     {% if usuario.tipo.tesoreria %}
                   

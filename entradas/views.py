@@ -645,6 +645,7 @@ def update_entrada(request):
     referencia = data["referencia"]
 
     producto_comprado = ArticuloComprado.objects.get(id = producto_id)
+    print('producto comprado:',producto_comprado)
     entrada = Entrada.objects.get(id = pk, completo = False)
     aggregation = EntradaArticulo.objects.filter(
         articulo_comprado = producto_comprado,
@@ -717,9 +718,12 @@ def update_entrada(request):
                         producto_inv.save()
                     producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para resurtimiento'
                 else:
+                    print('Es una entrada normal')
                     producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #Todo lo que está pendiente en una entrada más la entrada misma
-                    producto_inv.cantidad_apartada = producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
-                    producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad                       #Al producto disponible para surtir se le suma lo que entra
+                    producto_inv.cantidad_apartada = producto_inv.cantidad_apartada + entrada_item.cantidad #producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
+                    producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad  
+                    print(producto_surtir)
+                    print('producto_surtir_cantidad', producto_surtir.cantidad)                     #Al producto disponible para surtir se le suma lo que entra
                     #Es probable que esta cantidad ya le esté restando en otro lado
                     producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
                     producto_inv.save()

@@ -56,6 +56,8 @@ class Solicitud_Gasto(models.Model):
     comentario_cierre = models.TextField(blank=True, null=True)
     dispersion = models.BooleanField(default=False)
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, null=True, blank=True)
+    para_pago = models.BooleanField(default=False)
+    manda_pago = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='manda_pago_gasto')
 
     class Meta:
         unique_together = ('folio', 'distrito',)

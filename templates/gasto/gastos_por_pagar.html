@@ -1,0 +1,640 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Cuentas por pagar|Gastos Autorizados{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+<div class = "col" id="response-div">
+        <div class="card">
+            <div class="card-header">
+                <h5>Filtro de Gastos Autorizados| Por pagar </h5>
+            </div>
+             <div class="card-body">
+                {% csrf_token %}
+                <form method="GET">
+                <div class="row g-12">
+                    <!-- Primera fila de filtros -->
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                                <label style="color: #121212;" for="id_proyecto">Folio</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.solicitado_por|add_class:"form-control"|attr:"placeholder= Solicitado por"}}
+                                <label style="color: #121212;" for="id_staff">Solicitado por</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.solicitado_para|add_class:"form-control"|attr:"placeholder= Solicitado para"}}
+                                <label style="color: #121212;" for="id_solicitado_para">Solicitado para</label>
+                            </div>
+                        </div>
+                    </div>
+                    
+                </div>
+                   
+                <!-- Segunda fila de filtros -->
+                <div class="row g-12">
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                                <label style="color: #121212;" for="id_start_date">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                                <label style="color: #121212;" for="id_end_date">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo de Gasto" }}
+                                <label style="color: #121212;" for="id_tipo">Tipo de Gasto</label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 col-md-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1">
+                                <i class="fa-solid fa-briefcase"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto" }}
+                                <label style="color: #121212;" for="id_proyecto"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-6 col-md-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1">
+                                <i class="fa-solid fa-layer-group"></i>
+                            </span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{ myfilter.form.subproyecto|add_class:"form-control"|append_attr:"placeholder= Subproyecto" }}
+                                <label style="color: #121212;" for="id_subproyecto"></label>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="col-lg-1 col-sm-12">
+                        <button class="btn btn-outline-success btn-block m-1" type="submit" value="Buscar">
+                            <i class="fa-solid fa-magnifying-glass"></i>
+                        </button>
+                    </div>
+                </div>
+                <hr>
+                </form>
+                <form method="POST">
+                    {% csrf_token %}
+                   <ul class="nav nav-pills">
+                        <li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" name="btnReporte" value='Reporte Excel'>
+                                <i class="fa-solid fa-file-excel fa-2xl"></i>
+                            </button>
+                        </li>
+                        <!--<li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger">
+                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                            </button>
+                        </li>-->
+                        <li class="nav-item mx-2">
+                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                                <a type="button" class="btn btn-outline-info" href="{% url 'compras-autorizadas' %}">Compras</a>
+                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viáticos</a>
+                              </div>
+                        </li>
+                    </ul>
+                </form>
+            </div>
+        </div>
+    </div>
+    <!-- Aquí terminan el encabezado de los filtros -->
+    <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
+        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
+            <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+            <p style="color: white; margin: 0;">Generando reporte, por favor espera...<i class="fa-solid fa-mug-hot"></i></p>
+        </div>
+    </div>
+<!-- Esta es la zona donde se crean los mensajes perrones con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+
+<div class="card bg-white my-2">
+    
+    <form id="mass_payment_form" method="post" action="{% url 'gastos-por-pagar' %}">
+        {% if usuario.tipo.para_pago %}
+        <ul class="nav nav-pills">
+            <li class="nav-item mx-2">
+                <div col-lg-2>
+                    <div class="alert alert-primary" role="alert">Total Gastos seleccionados: <span id="gasto_count">0</span></div>
+                </div>
+            </li>
+            <li class="nav-item mx-2">
+                <div col-lg-2>
+                    <div class="alert alert-primary" role="alert">Suma total: <span id="gasto_sum">0.00</span></div>
+                </div>
+            </li>
+                <input type="submit" value="Enviar a pago" id="enviar_a_pago_button" class="btn btn-primary">
+        </ul>
+        {% endif %}
+   
+    {% csrf_token %}
+    <div class="col-md-12">
+        <div class ="table-responsive-sm">
+            <table class="table table-striped table-hover bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+                <tr>
+                    <th scope="col">Gasto</th>
+                    <th scope="col">Solicitado por</th>
+                    <th scope="col">Solicitado para</th>
+                    <th>Proyecto</th>
+                    <th>Subproyecto</th>
+                     <th>Tipo</th>
+                    <th scope="col">Autorizado</th>
+                    <th scope="col">Importe Gasto</th>
+                    <th scope="col">Pagado</th>
+                    {% if usuario.distritos.nombre == "MATRIZ" %}
+                    <th>Distrito/Empresa</th>
+                    {% endif %}
+                    <th scope="col">Comprobación</th>
+                    <th>PDF</th>
+                    {% if usuario.tipo.para_pago %}
+                    
+                    
+                    <th>Cancelar</th>
+                    <th>Para Pago</th>
+                  
+                    {% endif %}
+                </tr>
+            </thead>
+            <tbody>
+                {% for gasto in gastos_list %}
+                <tr>
+                    <th scope="row">{{gasto.folio}}</th>
+                    <td>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
+                    <td>   
+                        {% if gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
+                        {% elif gasto.colaborador %}{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}
+                        {% endif %}
+                    </td> 
+                     <td>{{gasto.proyectos}}</td>
+                    <td>{{gasto.subproyectos}}</td>
+                    <td>{{gasto.tipo.tipo}}</td>
+                    <td>{{gasto.approbado_fecha2}} </td>
+                    <td>
+                        <input type="hidden" class="total" data-id="{{ gasto.id|unlocalize }}" value="{{ gasto.get_total_solicitud|unlocalize }}">
+                        ${{gasto.get_total_solicitud|floatformat:2}}
+                    </td>
+                    <td>
+                        <input type="hidden" class="pagado" data-id="{{ gasto.id|unlocalize }}" value="{{ gasto.monto_pagado|unlocalize }}">
+                        ${{gasto.monto_pagado|floatformat:2}}
+                    </td>
+                    <td style="display:none;"><input type="hidden" class="diferencia" data-id="{{ gasto.id|unlocalize }}" value="0">
+                    </td>
+                   
+                    {% if usuario.distritos.nombre == "MATRIZ" %}
+                    <td>{{gasto.distrito}}/{% if gasto.empresa %} {{gasto.empresa}} {% elif gasto.colaborador.staff.empresa %} {{gasto.colaborador.staff.empresa.nombre}} {% elif gasto.staff.staff.empresa %} {{gasto.staff.staff.empresa.nombre}} {% else%} {{VDC}} {% endif %} </td>
+                    {% endif %}
+                    <td>
+                        {% if gasto.autorizar2 %}
+                            <ul class="nav nav-pills">
+                                <li class="nav-item mx-1">
+                                    {% if gasto.estado_facturas == "sin_facturas" %}
+                                        <a type="button" class="btn btn-outline-danger" 
+                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" 
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas">
+                                            <i class="fa-solid fa-file-circle-xmark"></i>
+                                        </a>
+                                    {% elif gasto.estado_facturas == "todas_autorizadas" %}
+                                        <a type="button" class="btn btn-outline-info" 
+                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" 
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
+                                            <i class="fa-solid fa-file-circle-check"></i>
+                                        </a>
+                                    {% elif gasto.estado_facturas == "pendientes" %}
+                                        <a type="button" class="btn btn-outline-warning" 
+                                        href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" 
+                                        data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
+                                            <i class="fa-solid fa-file-circle-exclamation"></i>
+                                        </a>
+                                    {% endif %}
+                                </li>
+                            </ul>
+                        {% endif %}
+                    </td>
+                    <td>
+                        <ul class="nav nav-pills">
+                            <li>
+                                <a type="button" class="btn btn-outline-info" href="{% url 'descargar-pdf-gasto' gasto.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                            </li>
+                            
+                        </ul>
+                    </td>
+
+                 
+                    
+                    <!--if usuario.tipo.nombre == "SUPERIN_ADM" or usuario.distritos.nombre == "MATRIZ" or usuario.tipo.nombre == "GERENTE_ALT" or usuario.tipo.nombre == "Admin" % -->
+                    {% if usuario.tipo.para_pago %}
+                      
+                      
+                    
+                        <td>
+                            
+                            <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="#"><i class="fa-solid fa-xmark"></i></a>
+                        </td>
+                        <td>
+                            <input class="gasto_checkbox form-check-input" style="transform: scale(2); margin: 5px;" data-id="{{ gasto.id|unlocalize }}" type="checkbox" name="gastos_ids" value="{{ gasto.id|unlocalize }}">
+                        </td>
+                      
+                        
+                    {% endif %}
+                </tr>
+               
+                    
+                
+                {% endfor %}
+            </tbody>
+            </table>
+
+        <nav aria-label="Page navigation example">
+            <ul class="pagination justify-content-center">
+                {% if compras_list.has_previous %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                {% endif %}
+
+                {% for item in compras_list.paginator.page_range %}
+                    {% if compras_list.number == item %}
+                        <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
+                    {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
+                        <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
+                    {% endif %}
+                {% endfor %}
+
+                {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
+                <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
+                {% endif %}
+
+                {% if compras_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% endif %}
+            </ul>
+        </nav>
+        </div>
+    </div>
+    </form>
+</div>
+
+<!--Este es el modal-->
+<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
+
+    </div>
+</div>
+
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script>
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+});
+(function(){
+    const modal = new bootstrap.Modal(document.getElementById('dialog'))
+
+    htmx.on('htmx:beforeSwap',(e)=>{
+        if (e.detail.target.id === "document" && !e.detail.xhr.response)
+        modal.hide()
+    })
+})()
+var myModal = document.getElementById('dialog')
+
+myModal.addEventListener('hidden.bs.modal', function (event) {
+  location.reload();
+})
+
+document.addEventListener('DOMContentLoaded', function() {
+        const checkboxes = document.querySelectorAll('.gasto_checkbox');
+        const gastoCountElement = document.getElementById('gasto_count');
+        const gastoSumElement = document.getElementById('gasto_sum');
+        const layoutPagosButton = document.getElementById('enviar_a_pago_button');
+        var diferenciaElements = document.querySelectorAll('.diferencia');
+
+        // Inicializar o cargar el array que almacenará los ids y montos seleccionados
+        let selectedGastos = JSON.parse(localStorage.getItem('selectedGastos')) || [];
+        console.log(selectedGastos);
+        // Cargar el estado de los checkboxes desde localStorage
+        initializeDifferencesAndCheckboxes();
+
+
+        // Actualizar la sumatoria y conteo al cargar la página
+        updateCountAndSum();
+
+        checkboxes.forEach(checkbox => {
+            //console.log('Estoy marcando los checkboxes')
+            checkbox.addEventListener('change', updateCountAndSum);
+        });
+
+        function updateCountAndSum() {
+            let count = 0;
+            let sum = 0;
+
+            checkboxes.forEach((checkbox) => {
+               
+                const id = checkbox.getAttribute('data-id');
+                //const diferenciaElement = document.querySelector(`.diferencia[data-id="${id}"]`);
+                
+                if (checkbox.checked) {
+                     // Verificar si el ID ya está en el array
+                     const existingGasto = selectedGastos.find(gasto => gasto.id === id);
+                    if (!existingGasto) { //&& diferenciaElement
+                        // Agregar el nuevo ID y monto al array
+                        selectedGastos.push({
+                        id: id,
+                        //monto: parseFloat(diferenciaElement.value) || 0
+                        });
+                    }
+                } else {
+                    // Si se desmarca, eliminar del array
+                    selectedGastos = selectedGastos.filter(gasto => gasto.id !== id);
+                }
+                
+            });
+             // Guardar el estado en localStorage
+            localStorage.setItem('selectedGastos', JSON.stringify(selectedGastos));
+            // Actualizar los contadores de cantidad y sumatoria
+            count = selectedGastos.length;
+            sum = selectedGastos.reduce((acc, gasto) => acc + gasto.monto, 0);
+
+            gastoCountElement.textContent = count;
+            gastoSumElement.textContent = sum.toFixed(2);
+           
+        }
+
+        layoutPagosButton.addEventListener('click', function(event) {
+             // Limpiar el localStorage cuando se presiona el botón
+            event.preventDefault(); // Detener el envío del formulario por defecto
+            const form = document.getElementById('mass_payment_form');  // Asegúrate de tener un id en tu formulario
+
+            selectedGastos.forEach(purchase => {
+                // Crear inputs ocultos para cada compra_id seleccionada y su parcial
+                const inputCompraId = document.createElement('input');
+                inputCompraId.type = 'hidden';
+                inputCompraId.name = 'gastos_ids';  // Debe coincidir con lo que esperas en la vista
+                inputCompraId.value = purchase.id;
+
+                const inputParcial = document.createElement('input');
+                inputParcial.type = 'hidden';
+                inputParcial.name = `parcial_${purchase.id}`;
+                inputParcial.value = purchase.monto;
+
+                // Agregar los inputs ocultos al formulario
+                form.appendChild(inputCompraId);
+                form.appendChild(inputParcial);
+            });
+        // Limpiar el localStorage después de agregar los datos
+        localStorage.removeItem('selectedPurchases');
+        // Finalmente enviar el formulario con todos los datos añadidos
+        form.submit();
+        });
+    function initializeDifferencesAndCheckboxes() {
+        console.log(checkboxes);
+
+        // 1) Restaurar checkboxes desde localStorage
+        checkboxes.forEach((checkbox) => {
+            const id = checkbox.getAttribute('data-id');
+            const existingGasto = selectedGastos.find(gasto => gasto.id === id);
+            if (existingGasto) {
+                checkbox.checked = true;
+            }
+        });
+
+        // 2) Calcular diferencia = total - pagado para cada gasto
+        diferenciaElements.forEach((diferenciaElement) => {
+            const id = diferenciaElement.getAttribute('data-id');
+            const totalElement  = document.querySelector(`.total[data-id="${id}"]`);
+            const pagadoElement = document.querySelector(`.pagado[data-id="${id}"]`);
+
+            if (totalElement && pagadoElement) {
+                const total  = parseFloat(totalElement.value)  || 0;
+                const pagado = parseFloat(pagadoElement.value) || 0;
+                const diferencia = total - pagado;
+
+                // 1) Valor que usará JS
+                diferenciaElement.value = diferencia.toFixed(2);
+
+                // 2) Atributo HTML
+                diferenciaElement.setAttribute('value', diferencia.toFixed(2));
+
+                // 3) Máximo permitido
+                diferenciaElement.dataset.valor = diferencia.toFixed(2);
+
+                // Validación si editas manualmente la diferencia (si la vas a permitir)
+                diferenciaElement.addEventListener('change', function () {
+                    const maxPermitido = parseFloat(this.dataset.valor);
+                    const valorIngresado = parseFloat(this.value) || 0;
+
+                    if (valorIngresado > maxPermitido) {
+                        alert(`El valor no puede ser mayor a ${maxPermitido}`);
+                        this.value = maxPermitido.toFixed(2);
+                    }
+                });
+            }
+        });
+    
+
+
+        // Calcular las diferencias y asignar a los inputs .diferencia
+        /* diferenciaElements.forEach((diferenciaElement) => {
+            const id = diferenciaElement.getAttribute('data-id');
+            const costoElement = document.querySelector(`.costo_plus_adicionales[data-id="${id}"]`);
+            const pagadoElement = document.querySelector(`.pagado[data-id="${id}"]`);
+
+            if (costoElement && pagadoElement) {
+                const costoPlusAdicionales = parseFloat(costoElement.value) || 0;
+                const pagado = parseFloat(pagadoElement.value) || 0;
+                const diferencia = costoPlusAdicionales - pagado;
+                
+                // 1) Propiedad que usa el input
+                diferenciaElement.value = diferencia.toFixed(2);
+
+                // 2) Atributo HTML (para que lo veas en DevTools tal cual)
+                diferenciaElement.setAttribute('value', diferencia.toFixed(2));
+
+                // 3) Guarda el máximo permitido en un data-atributo
+                diferenciaElement.dataset.valor = diferencia.toFixed(2);
+
+                 // Agregar validación en el evento change
+                diferenciaElement.addEventListener('change', function () {
+                    const maxPermitido = parseFloat(this.dataset.valor);
+                    const valorIngresado = parseFloat(this.value) || 0;
+
+                    if (valorIngresado > maxPermitido) {
+                        alert(`El valor no puede ser mayor a ${maxPermitido}`);
+                        this.value = maxPermitido.toFixed(2);
+                    }
+                });
+            } 
+        }) */
+    } 
+
+
+    });
+
+var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
+dataSpyList.forEach(function (dataSpyEl) {
+  bootstrap.ScrollSpy.getInstance(dataSpyEl)
+    .refresh()
+})
+
+
+
+// Función para obtener el valor de una cookie por su nombre
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+function mostrarIndicadorCarga() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+    verificarDescargaIniciada();
+}
+
+function verificarDescargaIniciada(){
+    const checkDescarga = setInterval(() => {
+        const descargaIniciada = getCookie('descarga_iniciada');
+        if (descargaIniciada === 'true') {
+            // Ocultar el indicador de carga
+            document.getElementById('loadingIndicator').style.display = 'none';
+            
+            // Opcional: Borrar la cookie si es necesario
+            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
+            
+            clearInterval(checkDescarga);
+        }
+    }, 1000); // Revisar cada segundo
+}
+
+function modificar_prioridad(compraId) {
+    document.getElementById("prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("form_prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("save_prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("cancel_prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("modificar_prioridad_" + compraId).classList.add("d-none");
+}
+
+function cancelar_edicion_prioridad(compraId) {
+    document.getElementById("prioridad_" + compraId).classList.remove("d-none");
+    document.getElementById("form_prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("save_prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("cancel_prioridad_" + compraId).classList.add("d-none");
+    document.getElementById("modificar_prioridad_" + compraId).classList.remove("d-none");
+}
+
+function guardar_prioridad(compraId) {
+     const select = document.getElementById(`select_prioridad_${compraId}`);
+    if (!select) {
+        console.error('No se encontró el select de prioridad');
+        return;
+    }
+
+    const opt = select.options[select.selectedIndex] || select.options[0];
+    const tipoId = opt.value;
+    const tipoTexto = opt.textContent.trim();
+
+
+
+
+    fetch('/tesoreria/actualizar_prioridad/', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrftoken,
+        },
+        body: JSON.stringify({ compra_id: compraId, tipo_prioridad_id: tipoId })
+    })
+    .then(response => response.json())
+    .then(data => {
+        document.getElementById("prioridad_" + compraId).textContent = tipoTexto;
+        cancelar_edicion_prioridad(compraId);
+    })
+    .catch(error => console.error('Error:', error));
+}
+</script>
+
+</script>
+{% endblock %}
+</body>
+</html>
