@@ -335,12 +335,12 @@
                                 <span class="badge bg-danger">({{conteo_pagos2}})</span>
                             {% endif %}
                         </a>
-                        <!--<a class="dropdown-item" href="{% url 'gastos-por-pagar' %}">
+                        <a class="dropdown-item" href="{% url 'gastos-por-pagar' %}">
                             Gastos por pagar
-                            {% if conteo_gastos_por_pagar > 0 %}
-                                <span class="badge bg-danger">({{conteo_gastos_por_pagar}})</span>
+                            {% if conteo_gastos_pagar > 0 %}
+                                <span class="badge bg-danger">({{conteo_gastos_pagar}})</span>
                             {% endif %}
-                        </a>-->
+                        </a>
                         <div class="dropdown-divider"></div>       
                     </div>
                     {% if usuario.tipo.tesoreria %}
@@ -359,7 +359,7 @@
                                 {% endif %}
                                 | Gastos
                                 {% if conteo_gastos_pagar > 0 %}
-                                <span class="badge bg-danger">({{conteo_gastos_pagar}})</span>
+                                
                                 {% endif %}
                                 | Viáticos
                                 {% if conteo_viaticos_pagar > 0 %}

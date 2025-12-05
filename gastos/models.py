@@ -58,6 +58,7 @@ class Solicitud_Gasto(models.Model):
     empresa = models.ForeignKey(Empresa, on_delete=models.CASCADE, null=True, blank=True)
     para_pago = models.BooleanField(default=False)
     manda_pago = models.ForeignKey('user.Profile', on_delete = models.CASCADE, null=True, blank=True, related_name='manda_pago_gasto')
+    parcial = models.DecimalField(max_digits=14,decimal_places=2, default=0)
 
     class Meta:
         unique_together = ('folio', 'distrito',)
