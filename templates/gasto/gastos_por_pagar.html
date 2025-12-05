@@ -221,6 +221,7 @@
                     
                     <th>Cancelar</th>
                     <th>Para Pago</th>
+                    <th>Parcial</th>
                   
                     {% endif %}
                 </tr>
@@ -303,10 +304,15 @@
                         <td>
                             <input class="gasto_checkbox form-check-input" style="transform: scale(2); margin: 5px;" data-id="{{ gasto.id|unlocalize }}" type="checkbox" name="gastos_ids" value="{{ gasto.id|unlocalize }}">
                         </td>
-                      
+                        <td>
+                            <input type="hidden" data-id="{{ gasto.id|unlocalize }}" class="monto" value="{{ gasto.get_total_solicitud|unlocalize }}">
+                            <input type="hidden" data-id="{{ gasto.id|unlocalize }}" class="pagado" value="{{ gasto.monto_pagado|unlocalize }}">
+                            <input class="form-control diferencia" type="textbox" data-id="{{ gasto.id|unlocalize }}" name="parcial_{{ gasto.id|unlocalize }}" value="">
+                        </td>
                         
                     {% endif %}
                 </tr>
+                  
                
                     
                 
@@ -316,28 +322,28 @@
 
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
-                {% if compras_list.has_previous %}
+                {% if gastos_list.has_previous %}
                     <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
                 {% endif %}
 
-                {% for item in compras_list.paginator.page_range %}
-                    {% if compras_list.number == item %}
+                {% for item in gastos_list.paginator.page_range %}
+                    {% if gastos_list.number == item %}
                         <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > compras_list.number|add:'-2' and item < compras_list.number|add:'2' %}
+                    {% elif item > gastos_list.number|add:'-2' and item < gastos_list.number|add:'2' %}
                         <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
                     {% endif %}
                 {% endfor %}
 
-                {% if compras_list.paginator.num_pages > compras_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{compras_list.number|add:'2'}}">&hellip;</a></li>
+                {% if gastos_list.paginator.num_pages > gastos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{gastos_list.number|add:'2'}}">&hellip;</a></li>
                 <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}">{{compras_list.paginator.num_pages}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{gastos_list.paginator.num_pages}}</a></li>
                 {% endif %}
 
-                {% if compras_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url compras_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% if gastos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
                 {% endif %}
             </ul>
         </nav>
@@ -376,15 +382,14 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
 })
 
 document.addEventListener('DOMContentLoaded', function() {
-        const checkboxes = document.querySelectorAll('.gasto_checkbox');
-        const gastoCountElement = document.getElementById('gasto_count');
-        const gastoSumElement = document.getElementById('gasto_sum');
+        const checkboxes = document.querySelectorAll('.oc_checkbox');
+        const ocCountElement = document.getElementById('oc_count');
+        const ocSumElement = document.getElementById('oc_sum');
         const layoutPagosButton = document.getElementById('enviar_a_pago_button');
         var diferenciaElements = document.querySelectorAll('.diferencia');
 
         // Inicializar o cargar el array que almacenará los ids y montos seleccionados
-        let selectedGastos = JSON.parse(localStorage.getItem('selectedGastos')) || [];
-        console.log(selectedGastos);
+        let selectedPurchases = JSON.parse(localStorage.getItem('selectedPurchases')) || [];
         // Cargar el estado de los checkboxes desde localStorage
         initializeDifferencesAndCheckboxes();
 
@@ -404,32 +409,32 @@ document.addEventListener('DOMContentLoaded', function() {
             checkboxes.forEach((checkbox) => {
                
                 const id = checkbox.getAttribute('data-id');
-                //const diferenciaElement = document.querySelector(`.diferencia[data-id="${id}"]`);
+                const diferenciaElement = document.querySelector(`.diferencia[data-id="${id}"]`);
                 
                 if (checkbox.checked) {
                      // Verificar si el ID ya está en el array
-                     const existingGasto = selectedGastos.find(gasto => gasto.id === id);
-                    if (!existingGasto) { //&& diferenciaElement
+                     const existingPurchase = selectedPurchases.find(purchase => purchase.id === id);
+                    if (!existingPurchase && diferenciaElement) {
                         // Agregar el nuevo ID y monto al array
-                        selectedGastos.push({
+                        selectedPurchases.push({
                         id: id,
-                        //monto: parseFloat(diferenciaElement.value) || 0
+                        monto: parseFloat(diferenciaElement.value) || 0
                         });
                     }
                 } else {
                     // Si se desmarca, eliminar del array
-                    selectedGastos = selectedGastos.filter(gasto => gasto.id !== id);
+                    selectedPurchases = selectedPurchases.filter(purchase => purchase.id !== id);
                 }
                 
             });
              // Guardar el estado en localStorage
-            localStorage.setItem('selectedGastos', JSON.stringify(selectedGastos));
+            localStorage.setItem('selectedPurchases', JSON.stringify(selectedPurchases));
             // Actualizar los contadores de cantidad y sumatoria
-            count = selectedGastos.length;
-            sum = selectedGastos.reduce((acc, gasto) => acc + gasto.monto, 0);
+            count = selectedPurchases.length;
+            sum = selectedPurchases.reduce((acc, purchase) => acc + purchase.monto, 0);
 
-            gastoCountElement.textContent = count;
-            gastoSumElement.textContent = sum.toFixed(2);
+            ocCountElement.textContent = count;
+            ocSumElement.textContent = sum.toFixed(2);
            
         }
 
@@ -438,11 +443,11 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault(); // Detener el envío del formulario por defecto
             const form = document.getElementById('mass_payment_form');  // Asegúrate de tener un id en tu formulario
 
-            selectedGastos.forEach(purchase => {
+            selectedPurchases.forEach(purchase => {
                 // Crear inputs ocultos para cada compra_id seleccionada y su parcial
                 const inputCompraId = document.createElement('input');
                 inputCompraId.type = 'hidden';
-                inputCompraId.name = 'gastos_ids';  // Debe coincidir con lo que esperas en la vista
+                inputCompraId.name = 'compra_ids';  // Debe coincidir con lo que esperas en la vista
                 inputCompraId.value = purchase.id;
 
                 const inputParcial = document.createElement('input');
@@ -459,55 +464,18 @@ document.addEventListener('DOMContentLoaded', function() {
         // Finalmente enviar el formulario con todos los datos añadidos
         form.submit();
         });
-    function initializeDifferencesAndCheckboxes() {
-        console.log(checkboxes);
-
-        // 1) Restaurar checkboxes desde localStorage
+        function initializeDifferencesAndCheckboxes() {
+        // Revisar si el ID de los checkboxes actuales está en el array de seleccionados
         checkboxes.forEach((checkbox) => {
             const id = checkbox.getAttribute('data-id');
-            const existingGasto = selectedGastos.find(gasto => gasto.id === id);
-            if (existingGasto) {
+            const existingPurchase = selectedPurchases.find(purchase => purchase.id === id);
+            if (existingPurchase) {
                 checkbox.checked = true;
             }
         });
 
-        // 2) Calcular diferencia = total - pagado para cada gasto
-        diferenciaElements.forEach((diferenciaElement) => {
-            const id = diferenciaElement.getAttribute('data-id');
-            const totalElement  = document.querySelector(`.total[data-id="${id}"]`);
-            const pagadoElement = document.querySelector(`.pagado[data-id="${id}"]`);
-
-            if (totalElement && pagadoElement) {
-                const total  = parseFloat(totalElement.value)  || 0;
-                const pagado = parseFloat(pagadoElement.value) || 0;
-                const diferencia = total - pagado;
-
-                // 1) Valor que usará JS
-                diferenciaElement.value = diferencia.toFixed(2);
-
-                // 2) Atributo HTML
-                diferenciaElement.setAttribute('value', diferencia.toFixed(2));
-
-                // 3) Máximo permitido
-                diferenciaElement.dataset.valor = diferencia.toFixed(2);
-
-                // Validación si editas manualmente la diferencia (si la vas a permitir)
-                diferenciaElement.addEventListener('change', function () {
-                    const maxPermitido = parseFloat(this.dataset.valor);
-                    const valorIngresado = parseFloat(this.value) || 0;
-
-                    if (valorIngresado > maxPermitido) {
-                        alert(`El valor no puede ser mayor a ${maxPermitido}`);
-                        this.value = maxPermitido.toFixed(2);
-                    }
-                });
-            }
-        });
-    
-
-
         // Calcular las diferencias y asignar a los inputs .diferencia
-        /* diferenciaElements.forEach((diferenciaElement) => {
+        diferenciaElements.forEach((diferenciaElement) => {
             const id = diferenciaElement.getAttribute('data-id');
             const costoElement = document.querySelector(`.costo_plus_adicionales[data-id="${id}"]`);
             const pagadoElement = document.querySelector(`.pagado[data-id="${id}"]`);
@@ -536,9 +504,9 @@ document.addEventListener('DOMContentLoaded', function() {
                         this.value = maxPermitido.toFixed(2);
                     }
                 });
-            } 
-        }) */
-    } 
+            }
+        })
+    }
 
 
     });

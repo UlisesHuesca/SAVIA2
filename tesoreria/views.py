@@ -107,7 +107,7 @@ def compras_por_pagar(request):
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     tipos_prioridad = TipoPrioridad.objects.all()
     if usuario.tipo.cuentas_por_pagar:
-        compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, regresar_oc = False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
+        compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, regresar_oc = False, cerrar_sin_pago_completo = False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
         
     
     
