@@ -42,6 +42,7 @@ def contadores_processor(request):
     conteo_asignar_montos = 0
     conteo_viaticos_pagar= 0
     conteo_gastos_pagar= 0 
+    conteo_gastos_a_pagar= 0    
     conteo_asignar_montos = 0
     conteo_viaticos=0
     conteo_devoluciones = 0
@@ -131,9 +132,11 @@ def contadores_processor(request):
             oc_pendientes = Compra.objects.filter(Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos)
             viaticos_por_asignar = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, montos_asignados=False, distrito = usuario.distritos)
             gastos_por_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, distrito = usuario.distritos  )
+            gastos_a_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, para_pago = True, distrito = usuario.distritos  )
             viaticos_por_pagar = Solicitud_Viatico.objects.filter(complete = True, autorizar2=True, pagada=False, distrito = usuario.distritos)
             conteo_viaticos_pagar = viaticos_por_pagar.count()
             conteo_gastos_pagar = gastos_por_pagar.count()
+            conteo_gastos_a_pagar = gastos_a_pagar.count()
             conteo_pagos = oc_pendientes.count()
             conteo_asignar_montos = viaticos_por_asignar.count()
         if usuario.tipo.supervisor == True:
@@ -199,6 +202,7 @@ def contadores_processor(request):
     'conteo_usuario':conteo_usuario,
     'conteo_viaticos_pagar':conteo_viaticos_pagar,
     'conteo_gastos_pagar':conteo_gastos_pagar,
+    'conteo_gastos_a_pagar':conteo_gastos_a_pagar,
     'conteo_servicios':conteo_servicios,
     'conteo_asignar_montos':conteo_asignar_montos,
     'conteo_viaticos': conteo_viaticos,

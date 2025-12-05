@@ -184,6 +184,7 @@
                     <th scope="col">Autorizado</th>
                     <th scope="col">Importe Gasto</th>
                     <th scope="col">Pagado</th>
+                    <th>Parcial</th>
                     {% if usuario.distritos.nombre == "MATRIZ" %}
                     <th>Distrito/Empresa</th>
                     {% endif %}
@@ -215,7 +216,7 @@
                     <td>{{gasto.approbado_fecha2}} </td>
                     <td>${{gasto.get_total_solicitud|floatformat:2}}</td>
                     <td>${{gasto.monto_pagado|floatformat:2}}</td>
-                   
+                    <td>${{gasto.parcial|floatformat:2}}</td>
                      {% if usuario.distritos.nombre == "MATRIZ" %}
                     <td>{{gasto.distrito}}/{% if gasto.empresa %} {{gasto.empresa}} {% elif gasto.colaborador.staff.empresa %} {{gasto.colaborador.staff.empresa.nombre}} {% elif gasto.staff.staff.empresa %} {{gasto.staff.staff.empresa.nombre}} {% else%} {{VDC}} {% endif %} </td>
                     {% endif %}
