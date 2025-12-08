@@ -1627,13 +1627,13 @@ def pago_gastos_autorizados(request):
             if usuario.distritos.nombre == 'MATRIZ':
                 gastos = Solicitud_Gasto.objects.filter(
                      Q(distrito=usuario.distritos) & ~Q(tipo__familia="rh_nomina") | Q(tipo__familia="rh_nomina"),
-                    autorizar=True, pagada=False, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = True
+                    autorizar=True, pagada=False, autorizar2=True, cerrar_sin_pago_completo = False#, para_pago = True
                     ).annotate(
                         total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                     )).order_by('-approbado_fecha2')
             else:
                 gastos = Solicitud_Gasto.objects.filter(
-                    autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = True
+                    autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False#, para_pago = True
                     ).exclude(
                         tipo__familia="rh_nomina"
                     ).annotate(
