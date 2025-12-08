@@ -1620,7 +1620,7 @@ def pago_gastos_autorizados(request):
     
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh == True:
-            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYOS A EMPLEADOS")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, para_pago= True,distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False).annotate(
+            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYOS A EMPLEADOS")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False).annotate( #para_pago= True,
                 total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                 )).order_by('-approbado_fecha2')
         else:
