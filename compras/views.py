@@ -3595,7 +3595,7 @@ def generar_pdf_nueva(compra):
 
     styles = getSampleStyleSheet()
     base = styles["Normal"]
-    base.fontSize = 7
+    base.fontSize = 6
     #styleN.color = prussian_blue
     base.leading = 6  # Espaciado entre líneas
     styleN = ParagraphStyle('Justicado', parent=base, alignment=TA_JUSTIFY)
@@ -3797,36 +3797,44 @@ def generar_pdf_nueva(compra):
     c.drawRightString(montos_align_x - 80, footer_y - 30, 'IVA:')
     c.setFont('Helvetica', 9)
     c.drawRightString(montos_align_x, footer_y - 30, f"${compra.costo_iva:,.2f}")
+    c.setFont('Helvetica-Bold', 9)
+    c.drawRightString(montos_align_x -80,footer_y - 40,'Importe Neto:')
+    costo_oc =  format(float(compra.costo_oc), ',.2f')
+    c.drawRightString(montos_align_x,footer_y - 40,'$' + str(costo_oc))
     
     
     importe_neto = compra.costo_oc
     if compra.impuestos:
         subtotal = subtotal #- compra.impuestos
         c.setFillColor(black)
-        c.setFont('Helvetica-Bold',9)
+        
         #c.drawRightString(montos_align,170,'Impuestos Adicionales:')
-        c.setFont('Helvetica',10)
+        c.setFont('Helvetica', 9)
         costo_impuestos = format(float(compra.impuestos), ',.2f')
-        c.drawRightString(montos_align_x, footer_y -40, '$' + str(costo_impuestos))
-        c.drawRightString(montos_align_x- 80, footer_y -40, 'Impuestos:')
+        c.drawRightString(montos_align_x, footer_y -60, '$' + str(costo_impuestos))
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align_x- 80, footer_y -60, 'Impuestos:')
         #importe_neto = importe_neto + compra.impuestos
     if compra.impuestos and compra.retencion:
         subtotal = subtotal #+ compra.retencion
         costo_retencion = format(float(compra.retencion), ',.2f')
+        c.setFont('Helvetica', 9)
         c.drawRightString(montos_align_x, footer_y -50, '$' + str(costo_retencion))
+        c.setFont('Helvetica-Bold',9)
         c.drawRightString(montos_align_x - 80, footer_y -50, 'Retención:')
     elif compra.retencion:
         subtotal = subtotal #+ compra.retencion
         costo_retencion = format(float(compra.retencion), ',.2f')
+        c.setFont('Helvetica', 9)
         c.drawRightString(montos_align_x, footer_y - 50, '$' + str(costo_retencion))
+        c.setFont('Helvetica-Bold',9)
         c.drawRightString(montos_align_x - 80, footer_y - 50, 'Retención:')
         #importe_neto = importe_neto - compra.retencion
-    costo_subtotal = format(float(subtotal), ',.2f')
-    c.drawRightString(montos_align_x + 90,210,'$ ' + str(costo_subtotal))
-    costo_con_iva = format(float(compra.costo_iva), ',.2f')
-    c.drawRightString(montos_align_x + 90,200,'$ ' + str(costo_con_iva))
-    costo_oc =  format(float(compra.costo_oc), ',.2f')
-    c.drawRightString(montos_align_x + 90,190,'$ ' + str(costo_oc))
+    #costo_subtotal = format(float(subtotal), ',.2f')
+    #c.drawRightString(montos_align_x + 90,210,'$ ' + str(costo_subtotal))
+    #costo_con_iva = format(float(compra.costo_iva), ',.2f')
+    #c.drawRightString(montos_align_x + 90,200,'$ ' + str(costo_con_iva))
+   
     
    
     #if compra.costo_fletes is None:
@@ -3834,11 +3842,13 @@ def generar_pdf_nueva(compra):
        
    
 
-    #if compra.costo_fletes:
-        #importe_neto = importe_neto + compra.costo_fletes
-        #c.drawRightString(montos_align_x,170,'Total:')
-        #c.drawRightString(montos_align_x,180,'Costo fletes:')
-        #c.drawRightString(montos_align_x + 90,180,'$ ' + str(compra.costo_fletes))
+    if compra.costo_fletes:
+        importe_neto = importe_neto + compra.costo_fletes
+        c.setFont('Helvetica-Bold',9)
+        c.drawRightString(montos_align_x - 80,footer_y - 70,'Costo fletes:')
+        c.setFont('Helvetica', 9)
+        costo_fletes = format(float(compra.costo_fletes), ',.2f')
+        c.drawRightString(montos_align_x,footer_y - 70,'$' + str(costo_fletes))
         #c.drawRightString(montos_align_x + 90,170,'$ ' + str(total))
 
 
@@ -3850,9 +3860,9 @@ def generar_pdf_nueva(compra):
     # Total (resaltado en azul)
     c.setFillColor(prussian_blue)
     c.setFont('Helvetica-Bold', 11)
-    c.drawRightString(montos_align_x - 80, footer_y - 60, 'Total:')
+    c.drawRightString(montos_align_x - 80, footer_y - 80, 'Total:')
     total =  format(float(compra.costo_plus_adicionales), ',.2f')
-    c.drawRightString(montos_align_x, footer_y - 60, str(total))
+    c.drawRightString(montos_align_x, footer_y - 80, str(total))
 
     c.setFillColor(black)
     width, height = letter
