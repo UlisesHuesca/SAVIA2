@@ -1080,16 +1080,18 @@ $(document).ready(function() {
         $('#lbl_distrito').text(ProvInicial.distrito || 'N/A');
         $('#lbl_domicilio').text(ProvInicial.domicilio || 'N/A');
         $('#lbl_status').text(ProvInicial.status || 'N/A');
+        precio_ref()
     }
 
     // Evento cuando se selecciona un proveedor
     $('#id_proveedor').on('select2:select', function(e) {
         var data = e.params.data; // Datos del proveedor seleccionado
-        precio_ref()
+        
         // Actualizar las etiquetas con los datos seleccionados
         $('#lbl_distrito').text(data.distrito || 'N/A');
         $('#lbl_domicilio').text(data.domicilio || 'N/A');
         $('#lbl_status').text(data.status || 'N/A');
+        precio_ref()
     });
 
     // Evento cuando se deselecciona el proveedor
@@ -1177,11 +1179,12 @@ function precio_ref() {
     console.log("Función precio_ref llamada");
     
     var lbl_status = document.getElementById('lbl_status');
-    var status = lbl_status.innerHTML
-    console.log(status)
+    //console.log(lbl_status)
+    var status = (lbl_status.textContent || lbl_status.innerText).trim();
+    //console.log(status)
     var comparativo = document.getElementById('comparativo')
 
-    if (status == "NUEVO"){
+    if (status == "NUEVO" || status == "APROBADO") {
         
         for (data in datosProductos_comp){
             
