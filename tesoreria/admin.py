@@ -4,7 +4,7 @@ from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, 
 class CuentaAdmin(admin.ModelAdmin):
     list_display = ('cuenta','banco','distrito','encargado','status')
     raw_id_fields = ('encargado',)
-    search_fields = ['cuenta']
+    search_fields = ['cuenta','encargado']
 
 class PagoAdmin(admin.ModelAdmin):
     list_display = ('id','oc','gasto','viatico','tesorero','monto', 'hecho','tipo','cuenta','pagado_real','distrito')

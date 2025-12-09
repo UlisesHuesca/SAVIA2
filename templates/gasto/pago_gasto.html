@@ -134,8 +134,8 @@
                             <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">{{suma_pagos}}</th>
                         </tr>
                         <tr>
-                            <th scope="col">Parcial:</th>
-                            <th style="color:#28a745" scope="col">{{gasto.parcial}}</th>
+                            <th>Parcialidad:</th>
+                            <th  id="parialidad" parcialidad="{{compra.parcial|unlocalize}}" style="color:#3e92cc">${{gasto.parcial|floatformat:4}}</th>
                         </tr>
                         <tr>
                             <th>Remanente:</th>
