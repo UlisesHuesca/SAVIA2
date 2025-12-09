@@ -137,8 +137,8 @@
                             <th style="color:#28a745" scope="col">{{gasto.parcial}}</th>
                         </tr>
                         <tr>
-                            <th scope="col">Remanente:</th>
-                            <th>{{remanente}}</th>
+                            <th>Remanente:</th>
+                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:4}}</th>
                         </tr>
                     </tbody>
                 </table>

@@ -1532,7 +1532,8 @@ def cuestionario_debida_diligencia(request, proveedor_id):
             documento_csf = DocumentosProveedor.objects.get(
                 proveedor_id=proveedor_id,
                 tipo_documento="csf",
-                activo=True
+                activo=True,
+                obsoleto=False,
             ) 
         except DocumentosProveedor.DoesNotExist:
             documento_csf = None

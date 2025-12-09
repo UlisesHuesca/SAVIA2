@@ -34,6 +34,7 @@ class Moneda_Admin(admin.ModelAdmin):
     list_display = ('id','nombre')
 
 class DocumentosProveedorAdmin(admin.ModelAdmin):
+    search_fields = ('proveedor__razon_social','tipo_documento',)
     list_display = ('id','proveedor','tipo_documento','archivo',)
     raw_id_fields = ('proveedor',)
 

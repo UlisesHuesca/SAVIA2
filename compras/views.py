@@ -3798,9 +3798,9 @@ def generar_pdf_nueva(compra):
     c.setFont('Helvetica', 9)
     c.drawRightString(montos_align_x, footer_y - 30, f"${compra.costo_iva:,.2f}")
     c.setFont('Helvetica-Bold', 9)
-    c.drawRightString(montos_align_x -80,footer_y - 40,'Importe Neto:')
+    c.drawRightString(montos_align_x - 80, footer_y - 40,'Importe Neto:')
     costo_oc =  format(float(compra.costo_oc), ',.2f')
-    c.drawRightString(montos_align_x,footer_y - 40,'$' + str(costo_oc))
+    c.drawRightString(montos_align_x, footer_y - 40,'$' + str(costo_oc))
     
     
     importe_neto = compra.costo_oc
