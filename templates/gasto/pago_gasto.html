@@ -45,7 +45,7 @@
         <div class="card-header">
             <h5 id="gasto" value="{{gasto.id}}">Gasto: {{gasto.folio}} </h5>
         </div>
-        <form id="id_formulario" method="POST" enctype='multipart/form-data'>
+        <form id="formulario" method="POST" enctype='multipart/form-data'>
              {% csrf_token %}
         <div class="card-body">
            {% if error_messages %}
@@ -125,17 +125,17 @@
                     <thead>
                         <tr>
                         <th scope="col">Importe Gasto</th>
-                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">{{gasto.get_total_solicitud}}</th>
+                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">${{gasto.get_total_solicitud}}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
                             <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">{{suma_pagos}}</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{gasto.monto_pagado}}</th>
                         </tr>
                         <tr>
                             <th>Parcialidad:</th>
-                            <th  id="parialidad" parcialidad="{{compra.parcial|unlocalize}}" style="color:#3e92cc">${{gasto.parcial|floatformat:4}}</th>
+                            <th  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{gasto.parcial|floatformat:4}}</th>
                         </tr>
                         <tr>
                             <th>Remanente:</th>
@@ -151,7 +151,7 @@
                             <th scope="col-2">Pagado</th>
                             <th scope="col-3">Cuenta</th>
                             <th scope="col-3">Fecha</th>
-                            <th scope="col-2">Pago</th>
+                            <th scope="col-2">Ficha de Pago</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -159,7 +159,7 @@
                         <tr>
                             <th scope="row">{{p.id}}</th>
                             <td>{{p.monto}}</td>
-                            <td>{{p.cuenta.banco}} - {{p.cuenta.cuenta}}</td>
+                            <td>{{p.cuenta.cuenta}}</td>
                             <td>{{p.pagado_date}}</td>
                             <td>
                                 <a href="{{p.comprobante_pago.url}}" download class="btn btn-outline-info">
@@ -241,6 +241,78 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+document.getElementById('formulario').addEventListener('submit', function(event) { 
+    // Obtiene los valores de los campos
+    let monto = document.getElementById('id_monto').value || 0;
+    const remanente_field = document.getElementById('remanente');
+    const parcialidad_field = document.getElementById('parcialidad')
+    let remanente = remanente_field.getAttribute('remanente');
+    let parcialidad = parcialidad_field.getAttribute('parcialidad')
+    //let tipo_cambio_element = document.getElementById('id_tipo_de_cambio');
+    //let tipo_cambio_visible = tipo_cambio_element.offsetParent !== null; // Devuelve true si es visible
+    console.log(parcialidad)
+    //let tipo_cambio = document.getElementById('id_tipo_de_cambio').value || 0;
+    console.log(parseFloat(remanente))
+
+    // Obtén la moneda seleccionada en el Select2
+    let cuenta_select = $('#id_cuenta').select2('data')[0]; // primer item
+    //let moneda_cuenta = cuenta_select ? cuenta_select.moneda : "";
+    
+    /*if (tipo_cambio_visible) {
+        if (!tipo_cambio || parseFloat(tipo_cambio) === 0) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error de validación',
+                text: 'El tipo de cambio no puede estar vacío o ser 0.',
+                confirmButtonText: 'Entendido'
+            });
+            event.preventDefault(); // Detiene el envío del formulario
+            return;
+        }
+    }
+   // Si la compra es en dólares y la moneda de la cuenta es "PESOS", hace la conversión
+    if (compra_moneda == "DOLARES" && moneda_cuenta == "PESOS") {
+        console.log(`TC: ${parseFloat(tipo_cambio)}`);
+        monto = monto / tipo_cambio;
+    } else {
+        // No hace conversión si la cuenta es en DÓLARES
+        monto = monto;
+    }*/
+    
+    monto = parseFloat(monto);
+    remanente = parseFloat(remanente);
+
+   
+
+    console.log(monto.toFixed(2))
+    console.log(remanente.toFixed(2))
+    const tolerancia = 0.2;
+    if (parcialidad > 0 && parcialidad < remanente) {
+        //Si existe parcialidad entonces el valor con el que se compara es contra la parcialidad
+        valor_a_comparar = parcialidad
+    } else {
+        valor_a_comparar = remanente
+    }
+    
+    // Verifica si el monto es mayor que el remanente 
+    if ((Math.abs(monto - valor_a_comparar) > tolerancia) && (monto > valor_a_comparar))  { //<<< esto es para pagar exacto o con tolerancia
+    //if (parseFloat(monto.toFixed(2)) > parseFloat(remanente.toFixed(2))) {
+        Swal.fire({
+            icon: 'error',
+            title: 'Error de validación',
+            text: 'El monto debe ser igual a la parcialidad o al remanente. Favor de modificar el monto',
+            confirmButtonText: 'Entendido'
+        });
+        event.preventDefault(); // Detiene el envío del formulario
+        return;
+    } else {
+        mostrarIndicadorCarga();
+        return true; // Permite
+    }
+});
+
+
 {% if usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" or usuario.tipo.superintendente %}
 document.getElementById("btnCerrar").addEventListener("click", function (e) {
     Swal.fire({

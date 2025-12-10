@@ -1620,20 +1620,20 @@ def pago_gastos_autorizados(request):
     
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh == True:
-            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYOS A EMPLEADOS")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False).annotate( #para_pago= True,
+            gastos = Solicitud_Gasto.objects.filter( Q(tipo__tipo = "APOYOS A EMPLEADOS")|Q(tipo__tipo = "APOYO DE RENTA"),autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False,para_pago= True,).annotate( 
                 total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                 )).order_by('-approbado_fecha2')
         else:
             if usuario.distritos.nombre == 'MATRIZ':
                 gastos = Solicitud_Gasto.objects.filter(
                      Q(distrito=usuario.distritos) & ~Q(tipo__familia="rh_nomina") | Q(tipo__familia="rh_nomina"),
-                    autorizar=True, pagada=False, autorizar2=True, cerrar_sin_pago_completo = False#, para_pago = True
+                    autorizar=True, pagada=False, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = True
                     ).annotate(
                         total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                     )).order_by('-approbado_fecha2')
             else:
                 gastos = Solicitud_Gasto.objects.filter(
-                    autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False#, para_pago = True
+                    autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = True
                     ).exclude(
                         tipo__familia="rh_nomina"
                     ).annotate(
@@ -1885,7 +1885,9 @@ def pago_gasto(request, pk):
                 else:
                     if abs(total_sol - total_pagado) <= TOLERANCIA:
                         gasto.pagada = True
-                        gasto.save()
+                    gasto.parcial= remanente
+                    gasto.para_pago = False
+                    gasto.save()
                     
                     pago.save()
                     pagos = Pago.objects.filter(gasto=gasto, hecho=True)
@@ -1894,7 +1896,7 @@ def pago_gasto(request, pk):
                         f'Gasto Autorizado {gasto.id}',
                         f'Estimado(a) {gasto.staff.staff.staff.first_name} {gasto.staff.staff.staff.last_name}:\n\nEstás recibiendo este correo porque ha sido pagado el gasto con folio: {gasto.folio}.\n\n\nGrupo Vordcab S.A de C.V.\n\n Este mensaje ha sido automáticamente generado por SAVIA 2.0',
                         'savia@grupovordcab.com',
-                        ['ulises_huesc@hotmail.com',gasto.staff.staff.staff.email],
+                        ['ulises_huesc@hotmail.com'], #,gasto.staff.staff.staff.email
                         )
                     email.attach(f'Gasto_folio_{gasto.id}.pdf',archivo_gasto,'application/pdf')
                     email.attach('Pago.pdf',pago.comprobante_pago.read(),'application/pdf')
