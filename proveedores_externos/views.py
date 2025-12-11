@@ -1252,14 +1252,16 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
                                         <p style="font-size: 16px;">
                                             {cuerpo}
                                         </p>
-                                        <h3 style="margin-top: 30px; font-size: 16px;">{pasos}</h3>
+                                        <h3 style="margin-top: 30px; font-size: 16px;">Pasos a seguir</h3>
+                                        {pasos}
                                         
 
-                                        <button style="text-align: center; margin: 30px 0;">
-                                            <a href="{link}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px;">
+                                        <p style="text-align: center; margin: 30px 0;">
+                                            <a href="{link}" 
+                                            style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display:inline-block;">
                                                 {texto_boton}
                                             </a>
-                                        </button>
+                                        </p>
                                         <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>
                                         <p style="margin-top: 40px; font-size: 14px;">Atentamente,<br><strong>{creado_por_nombre}</strong></p>
                                         <div style="text-align: center; margin-top: 30px;">
@@ -1281,7 +1283,7 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
             subject='Invitación para registro de proveedor',
             body=html_message,
             from_email=settings.DEFAULT_FROM_EMAIL,
-            to=[email_destino, "proveedores.sur@grupovordcab.com"],
+            to=[email_destino, "proveedores.sur@grupovordcab.com", "ulises.huesca@grupovordcab.com"],
         )
         email.content_subtype = "html"
         email.send()
