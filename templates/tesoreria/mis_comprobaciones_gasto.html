@@ -130,13 +130,13 @@
                     <i class="fa-solid fa-envelope fa-xl"></i>
                 </button>
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="enviarContabilidad" name="enviarContabilidad" value="1">
-                    <label class="form-check-label" for="enviarContabilidad">Tesorería</label>
+                    <input class="form-check-input"  style="transform: scale(2); margin: 5px;" type="checkbox" id="enviarContabilidad" name="enviarContabilidad" value="1">
+                    <label class="form-check-label"  style="margin-left: 10px;" for="enviarContabilidad">Tesorería</label>
                 </div>
                 
                 <div class="form-check form-check-inline">
-                    <input class="form-check-input" type="checkbox" id="enviarRH" name="enviarRH" value="1">
-                    <label class="form-check-label" for="enviarRH">RH</label>
+                    <input class="form-check-input" style="transform: scale(2);" type="checkbox" id="enviarRH" name="enviarRH" value="1">
+                    <label class="form-check-label" style="margin-left: 10px;" for="enviarRH">RH</label>
                 </div>
             </div>
         </div>
@@ -186,7 +186,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            <input type="checkbox" name="gastos" value="{{ gasto.id|unlocalize }}">
+                            <input style="transform: scale(2);" type="checkbox" name="gastos" value="{{ gasto.id|unlocalize }}">
                         </td>
                     </tr>
                     {% endfor %}
