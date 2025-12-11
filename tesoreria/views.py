@@ -3579,6 +3579,7 @@ def mis_comprobaciones_gasto(request):
 
     print(año_actual)
     print(año_anterior)
+    # QuerySet base (por usuario, fechas, autorizaciones, etc.)
     gastos = Solicitud_Gasto.objects.filter(
         Q(staff=usuario) | Q(colaborador=usuario),
         autorizar2=True,
@@ -3591,12 +3592,11 @@ def mis_comprobaciones_gasto(request):
     #).annotate(total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),autorizadas=Count(Case(When(Q(facturas__hecho=True), then=Value(1))))
     #            ).order_by('-folio')
     print('gastos:',gastos)
-    #myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
-    #viaticos = myfilter.qs
+    
+    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
+    gastos = myfilter.qs
 
-    #p = Paginator(pagos, 25)
-    #page = request.GET.get('page')
-    #pagos_list = p.get_page(page)
+    
    
     suma = decimal.Decimal(0)
     total_monto_gastos = decimal.Decimal(0)
@@ -3617,9 +3617,9 @@ def mis_comprobaciones_gasto(request):
         gasto.suma_total_facturas = suma
         total_todas_facturas += gasto.suma_total_facturas
 
-    # Agrega la suma del gasto actual al total general
-    #total_todas_facturas += gasto.suma_total_facturas
-    #total_monto_gastos += gasto.get_total_solicitud
+    p = Paginator(gastos, 25)
+    page = request.GET.get('page')
+    gastos_list = p.get_page(page)
 
     if request.method =='POST':
         if 'btnExcel' in request.POST:
@@ -3855,7 +3855,8 @@ def mis_comprobaciones_gasto(request):
         'total_monto_gastos':total_monto_gastos,
         'año_actual':str(año_actual),
         'año_anterior':str(año_anterior),
-        #'myfilter':myfilter,
+        'myfilter':myfilter,
+        'gastos_list': gastos_list,
         }
 
     return render(request, 'tesoreria/mis_comprobaciones_gasto.html',context)
