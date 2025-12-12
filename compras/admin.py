@@ -24,7 +24,8 @@ class Proveedor_direccionesAdmin(admin.ModelAdmin):
    
 
 class Comparativo_Admin(admin.ModelAdmin):
-    search_fields = ('nombre',)
+    search_fields = ('nombre','creada_por__staff__staff__first_name','creada_por__staff__staff__last_name',)
+    list_display = ('id','creada_por') 
     raw_id_fields = ('proveedor','proveedor2','proveedor3',)
 
 class Item_Comparativo_Admin(admin.ModelAdmin):
