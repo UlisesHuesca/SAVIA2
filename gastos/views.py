@@ -2733,11 +2733,28 @@ def render_pdf_gasto(pk):
     # Agregar el párrafo al marco
     frame.addFromList([options_conditions_paragraph], c)
     c.drawCentredString(230, y_totales_pos-190, gasto.staff.staff.staff.first_name +' '+ gasto.staff.staff.staff.last_name)
-    c.line(150,  y_totales_pos-195,300,  y_totales_pos-195)
+    c.line(180, y_totales_pos-195,280,  y_totales_pos-195)
     c.drawCentredString(230,  y_totales_pos-205, 'Solicitado')
    
+    
+    if gasto.staff.distritos == "MATRIZ":  
+        if gasto.autorizar:
+            c.drawCentredString(410, y_totales_pos-190, gasto.superintendente.staff.staff.first_name +' '+ gasto.superintendente.staff.staff.last_name)
+        if gasto.autorizar is None:
+            c.setFillColor(colors.orange) 
+            c.drawCentredString(410, y_totales_pos-190, 'No autorizado aún')
+        if gasto.autorizar == False:
+            c.setFillColor(colors.red)
+            c.drawCentredString(410, y_totales_pos-190, 'Cancelado')
+    elif gasto.autorizar2:
+        c.drawCentredString(410, y_totales_pos-190, gasto.autorizado_por2.staff.staff.first_name +' '+ gasto.autorizado_por2.staff.staff.last_name)
+    elif gasto.autorizar2 is None:
+        c.setFillColor(colors.orange) 
+        c.drawCentredString(410, y_totales_pos-190, 'No autorizado aún')
+    elif gasto.autorizar2 == False:
+        c.setFillColor(colors.red)
+        c.drawCentredString(410, y_totales_pos-190, 'Cancelado')
     c.setFillColor(black)
-    c.drawCentredString(410, y_totales_pos-190, gasto.superintendente.staff.staff.first_name +' '+ gasto.superintendente.staff.staff.last_name)
     c.line(360,  y_totales_pos-195,460,  y_totales_pos-195)
     c.drawCentredString(410, y_totales_pos-205,'Aprobado por')
 
