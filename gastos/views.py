@@ -2490,8 +2490,10 @@ def render_pdf_gasto(pk):
     c.setFont('Helvetica',9)
     c.drawString(100,caja_proveedor-20, gasto.staff.staff.staff.first_name+' '+ gasto.staff.staff.staff.last_name)
     c.drawString(100,caja_proveedor-40, gasto.staff.distritos.nombre)
-    c.drawString(100,caja_proveedor-60, gasto.tipo.tipo)
-    
+    if gasto.tipo:
+        c.drawString(100,caja_proveedor-60, gasto.tipo.tipo)
+    else: 
+        c.drawString(100,caja_proveedor-60, "Sin registro")
     
     if gasto.approved_at:
         c.drawString(100,caja_proveedor-100, gasto.approved_at.strftime("%d/%m/%Y"))
