@@ -1172,11 +1172,12 @@ def cancelar_oc1(request, pk):
     compra = Compra.objects.get(id = pk)
     productos = ArticuloComprado.objects.filter(oc = pk)
 
-    if compra.costo_fletes == None:
-        costo_fletes = 0
+   
+    costo_fletes = 0
     
     #Si hay tipo de cambio es porque la compra fue en dólares entonces multiplico por tipo de cambio la cantidad
     #Escenario con dólares
+    
     if compra.tipo_de_cambio:
         costo_oc = compra.costo_oc * compra.tipo_de_cambio
         if compra.costo_fletes:
@@ -1188,6 +1189,7 @@ def cancelar_oc1(request, pk):
             costo_fletes = compra.costo_fletes
         else:
             costo_fletes = 0
+    
     costo_total = costo_fletes + costo_oc
     resta = compra.req.orden.subproyecto.presupuesto - costo_total - compra.req.orden.subproyecto.gastado
     try:
