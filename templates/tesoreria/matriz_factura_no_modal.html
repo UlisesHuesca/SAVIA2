@@ -205,7 +205,7 @@
                             {% endif %}
                            
                             <td>
-                                {% if p.emisor.metodo_pago == "PPD" %}
+                                {% if p.emisor.metodo_pago == "PPD" or p.emisor.metodo_pago == "Por definir" %}
                                     {% if p.complementos.exists %}
                                         <a href="{% url 'matriz-complementos' p.id %}" class="btn btn-outline-info" title="Complementos de pago">
                                             <i class="fa-duotone fa-solid fa-file-invoice fa-xl"></i>
