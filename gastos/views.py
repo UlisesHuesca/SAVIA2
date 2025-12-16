@@ -1886,20 +1886,32 @@ def pago_gasto(request, pk):
                 pago.pagado_date = datetime.now()
                 #pago.pagado_hora = datetime.now().time()
                 pago.hecho = True
-                
-                total_pagado = gasto.monto_pagado  + pago.monto
+                monto_actual = pago.monto
+                total_pagado = gasto.monto_pagado  + monto_actual
+                gasto.parcial = gasto.parcial - monto_actual
                 total_sol = gasto.get_total_solicitud
                 TOLERANCIA = Decimal(0.2)
                 #El bloque a continuación se generó para resolver los problemas de redondeo, se comparan las dos cantidades redondeadas en una variable y se activa una bandera (flag) que indica si son iguales o no!
-
-                if (total_pagado - total_sol) > TOLERANCIA:
-                    messages.error(request,f'{usuario.staff.staff.first_name}, el monto introducido más los pagos anteriores superan el monto total del gasto')
+                if monto_actual <= 0:
+                    messages.error(request, f'El pago {monto_actual} debe ser mayor a 0')
                 else:
+                     # 1) resta parcialidad
+                    nuevo_remanente = gasto.parcial - monto_actual
+                 # 2) si ya cubriste la parcialidad -> cierra "para pago"
+                    if nuevo_remanente < -TOLERANCIA:
+                        messages.error(request, "El pago excede la parcialidad más allá de la tolerancia")
+                    elif abs(nuevo_remanente) <= TOLERANCIA:
+                        gasto.parcial = Decimal("0")
+                        gasto.para_pago = False
+                    else:
+                        gasto.parcial = nuevo_remanente
+
+                    
+                    # 3) si ya cubriste el total del gasto -> marca pagada
                     if abs(total_sol - total_pagado) <= TOLERANCIA:
                         gasto.pagada = True
-                    gasto.parcial= remanente
-                    gasto.para_pago = False
-                    gasto.save()
+
+                    gasto.save()  
                     
                     pago.save()
                     pagos = Pago.objects.filter(gasto=gasto, hecho=True)
