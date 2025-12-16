@@ -1888,7 +1888,7 @@ def pago_gasto(request, pk):
                 pago.hecho = True
                 monto_actual = pago.monto
                 total_pagado = gasto.monto_pagado  + monto_actual
-                gasto.parcial = gasto.parcial - monto_actual
+                #gasto.parcial = gasto.parcial - monto_actual
                 total_sol = gasto.get_total_solicitud
                 TOLERANCIA = Decimal(0.2)
                 #El bloque a continuación se generó para resolver los problemas de redondeo, se comparan las dos cantidades redondeadas en una variable y se activa una bandera (flag) que indica si son iguales o no!
@@ -1897,6 +1897,7 @@ def pago_gasto(request, pk):
                 else:
                      # 1) resta parcialidad
                     nuevo_remanente = gasto.parcial - monto_actual
+                    print('nuevo_remanente',nuevo_remanente)
                  # 2) si ya cubriste la parcialidad -> cierra "para pago"
                     if nuevo_remanente < -TOLERANCIA:
                         messages.error(request, "El pago excede la parcialidad más allá de la tolerancia")
