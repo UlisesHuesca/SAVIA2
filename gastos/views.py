@@ -2737,7 +2737,7 @@ def render_pdf_gasto(pk):
     c.drawCentredString(230,  y_totales_pos-205, 'Solicitado')
    
     
-    if gasto.staff.distritos == "MATRIZ":  
+    if gasto.staff.distritos.nombre == "MATRIZ":  
         if gasto.autorizar:
             c.drawCentredString(410, y_totales_pos-190, gasto.superintendente.staff.staff.first_name +' '+ gasto.superintendente.staff.staff.last_name)
         if gasto.autorizar is None:
