@@ -3533,8 +3533,7 @@ def generar_pdf_nueva(compra):
 
     # Fila 2: TRAZABILIDAD Y TÉRMINOS Y CONDICIONES
     # Reducir el espacio entre filas para acercar las secciones
-    # Fila 2: TRAZABILIDAD Y TÉRMINOS Y CONDICIONES
-    # Reducir el espacio entre filas para acercar las secciones
+   
     espacio_entre_filas = 110  # Aumentado de 80 a 110 para evitar solapamiento con 'Aut. Gerente'
     panel_inicio_y = panel_inicio_y - espacio_entre_filas  # Mayor separación
 
@@ -3694,7 +3693,7 @@ def generar_pdf_nueva(compra):
 
     # Create and draw a Frame to hold the note content with a border
     elementos_nota = [titulo_p, Spacer(1, 4), cuerpo_p]
-    nota_frame = Frame(col_inicio, nota_y_inicio - 55, col_total_ancho, 55, showBoundary=1, leftPadding=5, rightPadding=5, topPadding=5, bottomPadding=5)
+    nota_frame = Frame(col_inicio, nota_y_inicio - 65, col_total_ancho, 45, showBoundary=1, leftPadding=5, rightPadding=5, topPadding=5, bottomPadding=0)
     nota_frame.addFromList(elementos_nota, c)
 
 
@@ -3737,22 +3736,21 @@ def generar_pdf_nueva(compra):
         ('TEXTCOLOR', (0, 1), (-1, -1), colors.black),
         ('FONTSIZE', (0, 1), (-1, -1), 6),
     ])
+    
+    row_first_page = 14
+    rows_other_pages = 25
+    table_y_first = 125   # ajusta 1 vez viendo el PDF
+    table_y_other = 350   # ajusta 1 vez viendo el PDF
+
+    
     table.setStyle(table_style)
+    header = data[:1]
+    body = data[1:]
 
-    # Calcular la altura de la tabla para posicionarla adecuadamente
-    table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-
-    # Posicionar la tabla más abajo para evitar superposición
-    table_y = tabla_inicio_y - (len(data) * 18)  # Ajustar la posición basado en el número de filas
-
-    # Asegurarse de que la tabla no se posicione demasiado abajo
-    if table_y < 200:  # Si la tabla se va muy abajo, ajustar
-        table_y = 400 - (len(data) * 18)
-
-    table.drawOn(c, 20, table_y)
-
-    # --- PIE DE PÁGINA FIJO ---
+     # --- PIE DE PÁGINA FIJO ---
     footer_y = 120  # Posición Y fija para el inicio del pie de página
+
+
     c.setLineWidth(1)
     c.line(20, footer_y, 585, footer_y)  # Línea divisoria del pie de página
 
@@ -3832,15 +3830,7 @@ def generar_pdf_nueva(compra):
         c.setFont('Helvetica-Bold',9)
         c.drawRightString(montos_align_x - 80, footer_y - 50, 'Retención:')
         #importe_neto = importe_neto - compra.retencion
-    #costo_subtotal = format(float(subtotal), ',.2f')
-    #c.drawRightString(montos_align_x + 90,210,'$ ' + str(costo_subtotal))
-    #costo_con_iva = format(float(compra.costo_iva), ',.2f')
-    #c.drawRightString(montos_align_x + 90,200,'$ ' + str(costo_con_iva))
    
-    
-   
-    #if compra.costo_fletes is None:
-    #c.setFillColor(prussian_blue)
        
    
 
@@ -3853,11 +3843,6 @@ def generar_pdf_nueva(compra):
         c.drawRightString(montos_align_x,footer_y - 70,'$' + str(costo_fletes))
         #c.drawRightString(montos_align_x + 90,170,'$ ' + str(total))
 
-
-
-    
-
-    
 
     # Total (resaltado en azul)
     c.setFillColor(prussian_blue)
@@ -3948,6 +3933,48 @@ def generar_pdf_nueva(compra):
         tabla_cal.drawOn(c, 20, 600 - min(520, len(data_cal)*16))
     
         dibujar_pie_pagina_legal(c)
+
+    #=============== Página 1: Solo las primeras 15 filas ==================
+    first_chunk = body[:row_first_page]
+    first_page_data = header + first_chunk
+
+    first_table = Table(first_page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+    first_table.setStyle(table_style)
+    first_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+    first_table.drawOn(c, 30, table_y_first)
+
+    remaining = body[row_first_page:]
+    #=============== Páginas siguientes: 25 filas por página ==================
+    while remaining:
+        c.showPage()
+
+        dibujar_encabezado(c)  # Redibujar el encabezado en cada nueva página
+        dibujar_pie_pagina_legal(c)  # Agregar el pie de página legal en cada página
+
+        chunk = remaining[:rows_other_pages]
+        remaining = remaining[rows_other_pages:]
+
+
+        page_data = header + chunk
+        t = Table(page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+        t.setStyle(table_style)
+        t.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        t.drawOn(c, 30, table_y_other)
+
+    # Calcular la altura de la tabla para posicionarla adecuadamente
+    #table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+    
+
+    # Posicionar la tabla más abajo para evitar superposición
+    #table_y = tabla_inicio_y - (len(data) * 18)  # Ajustar la posición basado en el número de filas
+
+    # Asegurarse de que la tabla no se posicione demasiado abajo
+    #if table_y < 200:  # Si la tabla se va muy abajo, ajustar
+    #    table_y = 400 - (len(data) * 18)
+
+    #table.drawOn(c, 20, table_y)
+
+   
 
     c.showPage()
     # ------------ FIN NUEVA HOJA ------------------------------------------------
@@ -4102,41 +4129,7 @@ def generar_pdf_nueva(compra):
    
     w, h = t_header.wrap(total_width, 100) # Altura aproximada
     t_header.drawOn(c, 30, 710) # Posición Y ajustada (bajado de 730 a 710)
-    # Agregar el encabezado en la segunda página
-    #c.setFont('Helvetica', 8)
-    #caja_iso = 760
-    #c.drawString(430, caja_iso, 'Preparado por:')
-    #c.drawString(420, caja_iso - 10, 'ASIST. TEC. SUBAD')
-    #c.drawString(525, caja_iso, 'Aprobación')
-    #c.drawString(520, caja_iso - 10, 'SUBD-ADTVO')
-    #c.drawString(50, caja_iso - 35, 'Número de documento')
-    #c.drawString(50, caja_iso - 45, 'SEOV-ADQ-N4-01.04')
-    #c.drawString(145, caja_iso - 35, 'Clasificación del documento')
-    #c.drawString(175, caja_iso - 45, 'No Controlado')
-    #c.drawString(255, caja_iso - 35, 'Nivel del documento')
-    #c.drawString(280, caja_iso - 45, 'N5')
-    #c.drawString(340, caja_iso - 35, 'Revisión No.')
-    #c.drawString(352, caja_iso - 45, '001')
-    #c.drawString(410, caja_iso - 35, 'Fecha de Emisión')
-    #c.drawString(425, caja_iso - 45, '03/05/23')
-    #c.drawString(500, caja_iso - 35, 'Fecha de Revisión')
-    #c.drawString(525, caja_iso - 45, '06/09/23')
-
-    #caja_proveedor = caja_iso - 65
-    #c.setFont('Helvetica', 12)
-    #c.setFillColor(prussian_blue)
-    #c.rect(155, 735, 250, 35, fill=True, stroke=False)  # Barra azul superior encabezado
-    #c.setFillColor(colors.white)
-    #c.setFont('Helvetica-Bold', 13)
-    #c.drawCentredString(280, 755, 'Requisitos en Materia de Gestión')
-    #c.drawCentredString(280, 740, 'de Seguridad, Salud y Medio Ambiente')
-    # c.drawInlineImage('static/images/logo_vordcab.jpg', 60, 735, 2 * cm, 1 * cm)  # Imagen vortec  # This might fail if image doesn't exist
-
-
-
-    #c.setFont("Helvetica-Bold", 12)
-    #c.setFillColor(prussian_blue)  # Asumiendo que prussian_blue está definido
-    #c.drawCentredString(300, 680, )  # Ajusta la posición según sea necesario
+  
     styles = getSampleStyleSheet()
     styleN = styles["Normal"]
     styleN.fontSize = 10
@@ -4207,6 +4200,51 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
     c.save()
     buf.seek(0)
     return buf
+
+def draw_table_pages(c, data, col_widths, style_first, style_other,
+                     x=20, y_first=350, y_other=650,
+                     rows_first=13, rows_other=25,
+                     draw_chrome_first=None, draw_chrome_other=None):
+    """
+    - data incluye encabezado en data[0]
+    - y_first: Y donde dibujar la tabla en pág 1
+    - y_other: Y donde dibujar tabla en páginas 2..n
+    - draw_chrome_first: función que dibuja header+footer(totales+legal) en pág1
+    - draw_chrome_other: función que dibuja header+footer legal en pág2..n
+    """
+    header = data[:1]
+    body = data[1:]
+
+    # --- Página 1 ---
+    if draw_chrome_first:
+        draw_chrome_first()
+
+    first_body = body[:rows_first]
+    first_page_data = header + first_body
+
+    t1 = Table(first_page_data, colWidths=col_widths)
+    t1.setStyle(style_first)
+    t1.wrapOn(c, c._pagesize[0], c._pagesize[1])
+    t1.drawOn(c, x, y_first)
+
+    remaining = body[rows_first:]
+    if not remaining:
+        return
+
+    # --- Páginas 2..n ---
+    while remaining:
+        c.showPage()
+        if draw_chrome_other:
+            draw_chrome_other()
+
+        chunk = remaining[:rows_other]
+        remaining = remaining[rows_other:]
+
+        page_data = header + chunk
+        t = Table(page_data, colWidths=col_widths)
+        t.setStyle(style_other)
+        t.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        t.drawOn(c, x, y_other)
 
 def generar_pdf_proveedor(request, pk):
     #Configuration of the PDF object
@@ -4477,6 +4515,11 @@ persona de la empresa o a la que le ha atendido o al Responsable de seguridad.<b
     c.save()
     buf.seek(0)
     return FileResponse(buf, as_attachment=True, filename='Carta_Proveedor' + str(proveedor.id) +'.pdf')
+
+
+
+
+
 
 
 def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date):
