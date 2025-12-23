@@ -195,7 +195,11 @@ def pendientes_calidad(request):
     pk = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk)
     
-    articulos_entrada = EntradaArticulo.objects.filter(articulo_comprado__producto__producto__articulos__producto__producto__critico = True, liberado = False, articulo_comprado__oc__req__orden__distrito = usuario.distritos)
+    articulos_entrada = EntradaArticulo.objects.filter(
+        articulo_comprado__producto__producto__articulos__producto__producto__critico = True,
+        liberado = False, 
+        articulo_comprado__oc__req__orden__distrito = usuario.distritos
+        ).order_by('-entrada__oc__folio')
 
      #Set up pagination
     p = Paginator(articulos_entrada, 50)
