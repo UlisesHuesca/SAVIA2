@@ -1711,7 +1711,7 @@ def gastos_por_pagar(request):
             gastos = Solicitud_Gasto.objects.filter(
                 autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = False
                 ).exclude(
-                    tipo__familia=["rh_nomina", "rh"]
+                    tipo__familia="rh_nomina"
                 ).annotate(
                     total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                 )).order_by('-approbado_fecha2')
