@@ -11,7 +11,7 @@ from django.conf import settings
 from django.urls import reverse
 from django.core.mail import EmailMessage, BadHeaderError
 import traceback
-
+import calendar
 
 
 import zipfile
@@ -1702,7 +1702,7 @@ def gastos_por_pagar(request):
     if usuario.tipo.cuentas_por_pagar:
         if usuario.distritos.nombre == 'MATRIZ':
             gastos = Solicitud_Gasto.objects.filter(
-                Q(distrito=usuario.distritos) & ~Q(tipo__familia="rh_nomina") | Q(tipo__familia="rh_nomina"),
+                Q(distrito=usuario.distritos) & ~Q(tipo__familia="rh_nomina") | Q(tipo__familia=["rh_nomina", "FONACOT"]),
                 autorizar=True, pagada=False, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = False
                 ).annotate(
                     total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
@@ -1711,7 +1711,7 @@ def gastos_por_pagar(request):
             gastos = Solicitud_Gasto.objects.filter(
                 autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = False
                 ).exclude(
-                    tipo__familia="rh_nomina"
+                    tipo__familia=["rh_nomina","FONACOT"]
                 ).annotate(
                     total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
                 )).order_by('-approbado_fecha2')
@@ -2089,6 +2089,23 @@ def matriz_facturas_gasto(request, pk):
     form =  Facturas_Gastos_Form(instance=gasto)
     next_url = request.GET.get('next','mis-gastos')
 
+
+    #if gasto.approbado_fecha2:
+        #fecha_aprobacion = gasto.approbado_fecha2.date()
+
+        # último día del mes de aprobación
+        #ultimo_dia_mes = calendar.monthrange(
+        #    fecha_aprobacion.year,
+        #    fecha_aprobacion.month
+        #)[1]
+
+        #fecha_corte = fecha_aprobacion.replace(day=ultimo_dia_mes)
+
+        #hoy = timezone.localdate()
+
+        #if hoy > fecha_corte:
+        #    gasto.cerrar_facturacion = True
+        #    gasto.save(update_fields=['cerrar_facturacion'])
     #factura_form = FacturaForm()
     #next_url = request.GET.get('next', 'mis-gastos') 
     #print(next_url)
@@ -2923,9 +2940,9 @@ def convert_excel_gasto_matriz(gastos):
         
         if gasto.autorizar2:
             status = "Autorizado"
-            
-            if gasto.distrito.nombre == "MATRIZ":
-                autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+            if gasto.distrito:
+                if gasto.distrito.nombre == "MATRIZ":
+                    autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
             else:
                 if gasto.autorizado_por2:
                     autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)

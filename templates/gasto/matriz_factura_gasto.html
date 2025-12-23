@@ -243,6 +243,11 @@
                 </table>
 
                 <!-- Botón para subir nueva factura -->
+                 {% if gasto.cerrar_facturacion %}
+                    <div class="alert alert-warning" role="alert">
+                        <strong>Atención:</strong> La facturación de este gasto ha sido cerrada. No se pueden subir nuevas facturas.
+                    </div>
+                {% else %}
                 <ul class="nav">
                     <li class="nav-item">
                         <a class="btn btn-lg btn-outline-success" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'factura-nueva-gasto' gasto.id %}" title ="Subir nuevas facturas">
@@ -250,6 +255,7 @@
                         </a>
                     </li>
                 </ul>
+                {% endif %}
                
 
                 <!-- Cierre del formulario y botón de cierre de facturas -->

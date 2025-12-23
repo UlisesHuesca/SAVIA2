@@ -302,12 +302,13 @@
                         </div>
                     </div>
                 </div>
+
                 <div class="row my-2">
                         <div class="col-12">
                             {{form.comprobante_pago|add_class:"form-control"|append_attr:"placeholder= Comprobante de pago"}}
                         </div>
                 </div>
-                    
+                <input type="hidden" id="remanente_value" value="{{ remanente|unlocalize }}">    
                 
             </div>
             <div class="card-footer text-end">
@@ -404,7 +405,7 @@ function mostrarIndicadorCarga() {
 
 function pagarTodo() {
     // Opción A: Obtener el valor de 'remanente' desde el elemento oculto
-    var remanente = document.getElementById('remanente');
+    var remanente = document.getElementById('remanente_value');
     var valor_remanente = remanente.getAttribute('remanente')
     console.log(valor_remanente)
     valor= Number(valor_remanente).toFixed(4)
@@ -428,75 +429,85 @@ var monto_moneda = document.getElementById("id_monto");
 //        document.getElementById('myBtn').disabled = true;
 //    }, 50);
 //});
-document.getElementById('myForm').addEventListener('submit', function(event) { 
-    // Obtiene los valores de los campos
-    let monto = document.getElementById('id_monto').value || 0;
-    const remanente_field = document.getElementById('remanente');
-    const parcialidad_field = document.getElementById('parcialidad')
-    let remanente = remanente_field.getAttribute('remanente');
-    let parcialidad = parcialidad_field.getAttribute('parcialidad')
-    let tipo_cambio_element = document.getElementById('id_tipo_de_cambio');
-    let tipo_cambio_visible = tipo_cambio_element.offsetParent !== null; // Devuelve true si es visible
-    console.log(tipo_cambio_visible)
-    let tipo_cambio = document.getElementById('id_tipo_de_cambio').value || 0;
-    console.log(parseFloat(remanente))
+const form = document.getElementById('myForm');
+if (form) {
+  form.addEventListener('submit', function(event) {
 
-    // Obtén la moneda seleccionada en el Select2
-    let cuenta_select = $('#id_cuenta').select2('data')[0]; // primer item
-    let moneda_cuenta = cuenta_select ? cuenta_select.moneda : "";
-    
-    if (tipo_cambio_visible) {
-        if (!tipo_cambio || parseFloat(tipo_cambio) === 0) {
-            Swal.fire({
-                icon: 'error',
-                title: 'Error de validación',
-                text: 'El tipo de cambio no puede estar vacío o ser 0.',
-                confirmButtonText: 'Entendido'
-            });
-            event.preventDefault(); // Detiene el envío del formulario
-            return;
-        }
-    }
-   // Si la compra es en dólares y la moneda de la cuenta es "PESOS", hace la conversión
-    if (compra_moneda == "DOLARES" && moneda_cuenta == "PESOS") {
-        console.log(`TC: ${parseFloat(tipo_cambio)}`);
-        monto = monto / tipo_cambio;
+    // ===== remanente seguro =====
+    let remanente = 0;
+
+    const remInp = document.getElementById('remanente_value');
+    if (remInp) {
+      remanente = Number(remInp.value || "0");
     } else {
-        // No hace conversión si la cuenta es en DÓLARES
-        monto = monto;
-    }
-    
-    monto = parseFloat(monto);
-    remanente = parseFloat(remanente);
-
-   
-
-    console.log(monto.toFixed(2))
-    console.log(remanente.toFixed(2))
-    const tolerancia = 0.2;
-    if (parcialidad > 0 && parcialidad < remanente) {
-        //Si existe parcialidad entonces el valor con el que se compara es contra la parcialidad
-        valor_a_comparar = parcialidad
-    } else {
-        valor_a_comparar = remanente
-    }
-    
-    // Verifica si el monto es mayor que el remanente
-    if (Math.abs(monto - valor_a_comparar) > tolerancia)  {
-    //if (parseFloat(monto.toFixed(2)) > parseFloat(remanente.toFixed(2))) {
+      const remTh = document.getElementById('remanente');
+      if (!remTh) {
+        console.error("No existe #remanente_value ni #remanente en el DOM.");
         Swal.fire({
-            icon: 'error',
-            title: 'Error de validación',
-            text: 'El monto debe ser menor o igual al remanente. Favor de modificar el monto',
-            confirmButtonText: 'Entendido'
+          icon: 'error',
+          title: 'Error',
+          text: 'No se pudo validar el remanente. Recarga la página o contacta a sistemas.'
         });
-        event.preventDefault(); // Detiene el envío del formulario
+        event.preventDefault();
         return;
-    } else {
-        mostrarIndicadorCarga();
-        return true; // Permite
+      }
+      remanente = Number(remTh.getAttribute('remanente') || "0");
     }
-});
+
+    // ===== parcialidad segura =====
+    let parcialidad = 0;
+    const parcInp = document.getElementById('parcialidad_value');
+    if (parcInp) {
+      parcialidad = Number(parcInp.value || "0");
+    } else {
+      const parcEl = document.getElementById('parcialidad');
+      if (parcEl) parcialidad = Number(parcEl.getAttribute('parcialidad') || "0");
+    }
+
+    // ===== moneda cuenta desde select2 =====
+    const cuenta_select = $('#id_cuenta').select2('data')[0];
+    const moneda_cuenta = cuenta_select ? cuenta_select.moneda : "";
+
+    // ===== regla TC =====
+    const requiere_tc = (compra_moneda === "DOLARES" && moneda_cuenta === "PESOS");
+
+    const tc_raw = document.getElementById('id_tipo_de_cambio')?.value;
+    const tc = Number(tc_raw);
+
+    if (requiere_tc) {
+      if (tc_raw === "" || tc_raw == null || isNaN(tc) || tc <= 0) {
+        Swal.fire({
+          icon: 'error',
+          title: 'Error de validación',
+          text: 'Debes capturar un Tipo de Cambio válido (> 0).',
+          confirmButtonText: 'Entendido'
+        });
+        event.preventDefault();
+        return;
+      }
+    }
+
+    // ===== monto =====
+    let monto = Number(document.getElementById('id_monto')?.value || "0");
+    if (requiere_tc) monto = monto / tc;
+
+    // ===== comparación =====
+    const tolerancia = 0.2;
+    const valor_a_comparar = (parcialidad > 0 && parcialidad < remanente) ? parcialidad : remanente;
+
+    if (Math.abs(monto - valor_a_comparar) > tolerancia) {
+      Swal.fire({
+        icon: 'error',
+        title: 'Error de validación',
+        text: 'El monto debe ser menor o igual al remanente. Favor de modificar el monto'
+      });
+      event.preventDefault();
+      return;
+    }
+
+    mostrarIndicadorCarga();
+  });
+}
 /* *******************NO BORRAR EL CODIGO**********************
 este era para evitar el envío doble cuando era un modal
 htmx.defineExtension('disable-on-submit', {
