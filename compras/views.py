@@ -3871,7 +3871,12 @@ def generar_pdf_nueva(compra):
     first_table = Table(first_page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
     first_table.setStyle(table_style)
     first_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-    first_table.drawOn(c, 30, tabla_inicio_y)
+    w, h = first_table.wrap(0, 0)     # h = altura real de esa tabla (con paragraphs)
+
+    table_top = tabla_inicio_y        # ESTE sí es tu "inicio" debajo de la nota
+    table_bottom = table_top - h      # convierto TOP -> BOTTOM
+
+    first_table.drawOn(c, 30, table_bottom)
 
     remaining = body[row_first_page:]
     #=============== Páginas siguientes: 25 filas por página ==================
