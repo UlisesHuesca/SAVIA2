@@ -3699,7 +3699,8 @@ def generar_pdf_nueva(compra):
 
     # NUEVA SECCIÓN: TABLA DE PARTIDAS - Colocada debajo de la nota
     # La posición de la tabla ahora se calcula en relación a la nueva posición de la nota.
-    tabla_inicio_y = nota_y_inicio - 65
+
+    tabla_inicio_y = nota_y_inicio - 110  # Ajusta este valor según el espacio que desees entre la nota y la tabla
 
     # Sección de la tabla de productos
     data = []
@@ -3739,7 +3740,7 @@ def generar_pdf_nueva(compra):
     
     row_first_page = 14
     rows_other_pages = 25
-    table_y_first = 125   # ajusta 1 vez viendo el PDF
+    #table_y_first = 125   # ajusta 1 vez viendo el PDF
     table_y_other = 350   # ajusta 1 vez viendo el PDF
 
     
@@ -3859,7 +3860,38 @@ def generar_pdf_nueva(compra):
     styleN.fontSize = 6
     dibujar_pie_pagina_legal(c)
 
-    # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
+   
+
+   
+
+    #=============== Página 1: Solo las primeras 15 filas ==================
+    first_chunk = body[:row_first_page]
+    first_page_data = header + first_chunk
+
+    first_table = Table(first_page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+    first_table.setStyle(table_style)
+    first_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
+    first_table.drawOn(c, 30, tabla_inicio_y)
+
+    remaining = body[row_first_page:]
+    #=============== Páginas siguientes: 25 filas por página ==================
+    while remaining:
+        c.showPage()
+
+        dibujar_encabezado(c)  # Redibujar el encabezado en cada nueva página
+        dibujar_pie_pagina_legal(c)  # Agregar el pie de página legal en cada página
+
+        chunk = remaining[:rows_other_pages]
+        remaining = remaining[rows_other_pages:]
+
+
+        page_data = header + chunk
+        t = Table(page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
+        t.setStyle(table_style)
+        t.wrapOn(c, c._pagesize[0], c._pagesize[1])
+        t.drawOn(c, 30, table_y_other)
+
+     # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
     rows_cal = []   # solo filas con requerimientos
 
     # (opcional) deduplicar por producto si la OC puede traer el mismo producto varias veces
@@ -3897,9 +3929,11 @@ def generar_pdf_nueva(compra):
         for req in reqs:
             req_nombre = req.requerimiento.nombre if req.requerimiento else ''
             comentario = req.comentarios or ''
-            rows_cal.append([codigo, desc_par, req_nombre, comentario])
-
-    # Si no hay nada que mostrar, NO crear la hoja
+            req_par = Paragraph(req_nombre or '', style_desc)
+            com_par = Paragraph(comentario or '', style_desc)
+            rows_cal.append([codigo, desc_par, req_par, com_par])
+     # Si no hay nada que mostrar, NO crear la hoja
+    
     if rows_cal:
     # Dibujar pie de página legal en la primera página
     
@@ -3933,33 +3967,6 @@ def generar_pdf_nueva(compra):
         tabla_cal.drawOn(c, 20, 600 - min(520, len(data_cal)*16))
     
         dibujar_pie_pagina_legal(c)
-
-    #=============== Página 1: Solo las primeras 15 filas ==================
-    first_chunk = body[:row_first_page]
-    first_page_data = header + first_chunk
-
-    first_table = Table(first_page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-    first_table.setStyle(table_style)
-    first_table.wrapOn(c, c._pagesize[0], c._pagesize[1])
-    first_table.drawOn(c, 30, table_y_first)
-
-    remaining = body[row_first_page:]
-    #=============== Páginas siguientes: 25 filas por página ==================
-    while remaining:
-        c.showPage()
-
-        dibujar_encabezado(c)  # Redibujar el encabezado en cada nueva página
-        dibujar_pie_pagina_legal(c)  # Agregar el pie de página legal en cada página
-
-        chunk = remaining[:rows_other_pages]
-        remaining = remaining[rows_other_pages:]
-
-
-        page_data = header + chunk
-        t = Table(page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
-        t.setStyle(table_style)
-        t.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        t.drawOn(c, 30, table_y_other)
 
     # Calcular la altura de la tabla para posicionarla adecuadamente
     #table.wrapOn(c, c._pagesize[0], c._pagesize[1])
