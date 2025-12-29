@@ -2986,7 +2986,7 @@ def convert_excel_gasto_matriz(gastos):
         row = [
             gasto.folio,
             autorizado_at_2_naive,
-            gasto.distrito.nombre,
+            gasto.distrito.nombre if gasto.distrito else '',
             proyectos_str,
             subproyectos_str,
             comentarios_str,
