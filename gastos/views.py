@@ -1934,6 +1934,7 @@ def pago_gasto(request, pk):
                     messages.success(request,f'Gracias por registrar tu pago, {usuario.staff.staff.first_name}')
                     return redirect('pago-gastos-autorizados')
         if "cerrar_sin_pago" in request.POST:
+            print('Está entrando')
             gasto.comentario_cierre = request.POST.get('comentario_cierre')
             gasto.cerrar_sin_pago_completo = True
             gasto.fecha_cierre = date.today()
