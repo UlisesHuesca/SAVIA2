@@ -1157,7 +1157,7 @@ def solicitudes_gasto(request):
     
     if perfil.tipo.nombre == "Admin":  
         solicitudes = Solicitud_Gasto.objects.filter(complete=True,  distrito = perfil.distritos).order_by('-created_at') #Temporalmente le metí el filtro de distrito
-    elif perfil.tipo.nombre == "Gerente" or perfil.tipo.superintendente == True:
+    elif perfil.tipo.nombre == "Gerente" or perfil.tipo.superintendente == True or perfil.tipo.nombre == "CONTADOR":
         solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos).order_by('-folio')
     elif perfil.tipo.rh == True and perfil.tipo.documentos == True:    
         solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos, tipo__tipo__in = ['APOYOS A EMPLEADOS'] ).order_by('-folio')
