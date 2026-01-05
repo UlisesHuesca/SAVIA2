@@ -1164,20 +1164,7 @@ def solicitudes_gasto(request):
     else:
         gastos = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
 
-    for gasto in gastos:
-        articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
-
-        proyectos = set()
-        subproyectos = set()
-        gasto.creado_reciente = (gasto.approbado_fecha2 >= timezone.now() - timedelta(days=30)) if gasto.approbado_fecha2 else True
-        for articulo in articulos_gasto:
-            if articulo.proyecto:
-                proyectos.add(str(articulo.proyecto.nombre))
-            if articulo.subproyecto:
-                subproyectos.add(str(articulo.subproyecto.nombre))
-
-        gasto.proyectos = ', '.join(proyectos)
-        gasto.subproyectos = ', '.join(subproyectos)
+ 
 
     myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
     gastos = myfilter.qs
@@ -1190,11 +1177,14 @@ def solicitudes_gasto(request):
     if request.method =='POST' and 'btnExcel' in request.POST:
 
         return convert_excel_gasto_matriz(gastos)
+    
+    usuario_view = False
 
     context= {
         'gastos':gastos,
         'myfilter':myfilter,
         'gastos_list': gastos_list,
+        'usuario_view': usuario_view,
         }
 
     return render(request, 'tesoreria/mis_gastos.html',context)

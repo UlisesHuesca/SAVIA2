@@ -6,7 +6,14 @@
 {% load tt_extras %}
 <html>
 <head>
-{% block title %}Matriz Gastos{% endblock %}
+
+{% block title %}
+    {% if usuario_view %}
+        Mis Gastos
+    {% else %}
+        Matriz Gastos
+    {% endif %}   
+{% endblock %}
 
 </head>
 <body>
@@ -118,9 +125,13 @@
                     <th scope="col">Autorización Gerencia</th>
                     <th>Detalles</th>
                     <th scope="col">Facturas</th>
+                    {% if usuario_view %}
                     <th>Agregar</th>
+                    {% endif %}
                     <th>Registro</th>
+                    {% if usuario_view %}
                     <th>Pago</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -184,43 +195,52 @@
                             <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="No tiene Facturas"><i class="fa-solid fa-file-circle-xmark"></i></a>
                         {% endif %}
                     </td>
+                     {% if usuario_view %}
                     <td>
-                        {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
-                        <a type="button" class="btn" style="background-color: #f8d7da; border: 1px solid #721c24; color: #721c24;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Rosa">
-                            <i class="fa-regular fa-file-import"></i>
-                        </a> 
-                        {% endif %}
+                       
+                            {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
+                            <a type="button" class="btn" style="background-color: #f8d7da; border: 1px solid #721c24; color: #721c24;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Rosa">
+                                <i class="fa-regular fa-file-import"></i>
+                            </a> 
+                            {% endif %}
+                       
                     </td>
+                     {% endif %}
                     <td>
                         <a type="button" class="btn btn-outline-info" href="{% url 'descargar-pdf-gasto' gasto.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>  
                     </td>
+                    {% if usuario_view %}
                     <td>
-                    {% for pago in gasto.pagosg.all %}
-                        {% if pago.comprobante_pago %}
-                        <ul class="nav nav-pills">
-                            <!-- Botón para abrir el visor de PDF -->
-                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
-                                <i class="fa-solid fa-file-invoice-dollar"></i>
-                            </button>
-                        </ul>
-                        <!-- Modal con visor de PDF -->
-                        <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
-                            <div class="modal-dialog modal-xl">
-                                <div class="modal-content">
-                                    <div class="modal-header">
-                                        <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">Comprobante de Pago</h5>
-                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                    </div>
-                                    <div class="modal-body">
-                                        <iframe src="{{ pago.comprobante_pago.url }}#zoom=80" width="100%" height="750px"></iframe>
+                 
+                        {% for pago in gasto.pagosg.all %}
+                            {% if pago.comprobante_pago %}
+                            <ul class="nav nav-pills">
+                                <!-- Botón para abrir el visor de PDF -->
+                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
+                                    <i class="fa-solid fa-file-invoice-dollar"></i>
+                                </button>
+                            </ul>
+                            <!-- Modal con visor de PDF -->
+                            <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
+                                <div class="modal-dialog modal-xl">
+                                    <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">Comprobante de Pago</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                        </div>
+                                        <div class="modal-body">
+                                            <iframe src="{{ pago.comprobante_pago.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                        </div>
                                     </div>
                                 </div>
                             </div>
-                        </div>
+                            {% endif %}
+                        {% endfor %}
+                      
+                        </td>
                         {% endif %}
                     {% endfor %}
-                    </td>
-                {% endfor %}
+             
                 
             </tbody>
         </table>

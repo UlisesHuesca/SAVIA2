@@ -3541,11 +3541,14 @@ def mis_gastos(request):
 
     if request.method =='POST' and 'btnExcel' in request.POST:
         return convert_excel_gasto(gastos)
-
+    
+    usuario_view = True
+    print('usuario_view:',usuario_view)
     context= {
         'gastos':gastos,
         'myfilter':myfilter,
         'gastos_list': gastos_list,
+        'usuario_view': usuario_view,
         }
 
     return render(request, 'tesoreria/mis_gastos.html',context)
