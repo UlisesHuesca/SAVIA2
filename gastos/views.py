@@ -56,7 +56,7 @@ from io import BytesIO
 
 
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
-from datetime import date, datetime
+from datetime import date, datetime, timedelta
 import json
 import xml.etree.ElementTree as ET
 import decimal
@@ -1156,34 +1156,48 @@ def solicitudes_gasto(request):
     articulos_gasto_prefetch = Prefetch('articulo_gasto_set', queryset=Articulo_Gasto.objects.filter(completo=True, producto__isnull=False, proyecto__isnull=False), to_attr='articulos_filtrados')
     
     if perfil.tipo.nombre == "Admin":  
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True,  distrito = perfil.distritos).order_by('-created_at') #Temporalmente le metí el filtro de distrito
+        gastos = Solicitud_Gasto.objects.filter(complete=True,  distrito = perfil.distritos).order_by('-created_at') #Temporalmente le metí el filtro de distrito
     elif perfil.tipo.nombre == "Gerente" or perfil.tipo.superintendente == True or perfil.tipo.nombre == "CONTADOR":
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos).order_by('-folio')
+        gastos = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos).order_by('-folio')
     elif perfil.tipo.rh == True and perfil.tipo.documentos == True:    
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos, tipo__tipo__in = ['APOYOS A EMPLEADOS'] ).order_by('-folio')
+        gastos = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos, tipo__tipo__in = ['APOYOS A EMPLEADOS'] ).order_by('-folio')
     else:
-        solicitudes = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
+        gastos = Solicitud_Gasto.objects.filter(complete=True, staff = perfil).order_by('-folio')
 
-    
+    for gasto in gastos:
+        articulos_gasto = Articulo_Gasto.objects.filter(gasto=gasto)
 
-    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=solicitudes)
-    solicitudes = myfilter.qs
+        proyectos = set()
+        subproyectos = set()
+        gasto.creado_reciente = (gasto.approbado_fecha2 >= timezone.now() - timedelta(days=30)) if gasto.approbado_fecha2 else True
+        for articulo in articulos_gasto:
+            if articulo.proyecto:
+                proyectos.add(str(articulo.proyecto.nombre))
+            if articulo.subproyecto:
+                subproyectos.add(str(articulo.subproyecto.nombre))
+
+        gasto.proyectos = ', '.join(proyectos)
+        gasto.subproyectos = ', '.join(subproyectos)
+
+    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
+    gastos = myfilter.qs
 
     #Set up pagination
-    p = Paginator(solicitudes, 10)
+    p = Paginator(gastos, 10)
     page = request.GET.get('page')
-    ordenes_list = p.get_page(page)
+    gastos_list = p.get_page(page)
 
     if request.method =='POST' and 'btnExcel' in request.POST:
 
-        return convert_excel_gasto_matriz(solicitudes)
+        return convert_excel_gasto_matriz(gastos)
 
     context= {
-        'ordenes_list':ordenes_list,
+        'gastos':gastos,
         'myfilter':myfilter,
+        'gastos_list': gastos_list,
         }
 
-    return render(request, 'gasto/solicitudes_gasto.html',context)
+    return render(request, 'tesoreria/mis_gastos.html',context)
 
 @perfil_seleccionado_required
 def detalle_gastos(request, pk):
