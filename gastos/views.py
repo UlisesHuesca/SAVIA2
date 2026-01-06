@@ -226,7 +226,7 @@ def crear_gasto(request):
             tipos = Tipo_Gasto.objects.filter(familia__in=['usuario', 'rh', 'rh_nomina'])
             distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
         if usuario.tipo.subdirector:
-            superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True) 
+            superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
       
         else:    
             superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
