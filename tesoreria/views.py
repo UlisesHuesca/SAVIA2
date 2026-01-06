@@ -3511,6 +3511,9 @@ def complemento_eliminar(request, pk):
 def mis_gastos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
+    
+    if usuario.sustituto:
+        usuario = Profile.objects.filter(staff = usuario.staff).first()
     gastos = Solicitud_Gasto.objects.filter(
         Q(staff = usuario) |Q(colaborador = usuario), 
         complete=True
