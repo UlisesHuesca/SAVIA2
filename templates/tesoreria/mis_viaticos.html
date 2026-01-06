@@ -162,7 +162,8 @@
                     <td>{{viatico.staff.staff.staff.first_name}} {{viatico.staff.staff.staff.last_name}}</td>
                     {% endif %}
                     <td>${{viatico.get_total|floatformat:2}}</td>
-                    <td>{{viatico.approved_at2}}</td>
+                    
+                    <td>{% if viatico.autorizar2 %}{{viatico.approved_at2}}{% elif viatico.autorizar2 = False %}<span class="badge bg-danger">Cancelado</span>{% else %} <span class="badge bg-warning">{% endif %}</span></td>
                     <td><a id="myBtn" type="button" class="btn btn-outline-info btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos3' viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a></td>
                     <td>
                         {% if viatico.facturas.exists %}
