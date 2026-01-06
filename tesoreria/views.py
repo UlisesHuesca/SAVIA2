@@ -3513,7 +3513,7 @@ def mis_gastos(request):
     usuario = Profile.objects.get(id = pk_profile)
     
     if usuario.sustituto:
-        usuario = Profile.objects.filter(staff = usuario.staff).first()
+        usuario = Profile.objects.get(staff = usuario.staff, tipo__subidirector = True, st_activo = True)
     gastos = Solicitud_Gasto.objects.filter(
         Q(staff = usuario) |Q(colaborador = usuario), 
         complete=True
