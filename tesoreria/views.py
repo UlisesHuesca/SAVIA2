@@ -3560,9 +3560,14 @@ def mis_gastos(request):
 def mis_viaticos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
+    if usuario.sustituto:
+        usuario = Profile.objects.filter(staff = usuario.staff, tipo__subdirector = True, st_activo = True).first()
+    
     viaticos = Solicitud_Viatico.objects.filter(Q(staff = usuario) |Q(colaborador = usuario), complete=True).order_by('-folio')
     myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
+
+
 
     for viatico in viaticos:
         viatico.creado_reciente = (viatico.approved_at2 >= timezone.now() - timedelta(days=30)) if viatico.approved_at2 else True
