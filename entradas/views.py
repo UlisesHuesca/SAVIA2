@@ -148,7 +148,7 @@ def entrada_servicios(request):
                 compra.solo_servicios = True
                 compra.save()
         #Posterior a haber marcado las compras que solo tienen servicios, se vuelve a hacer la consulta para traer solo las que tienen servicios
-        compras = compras.filter(solo_servicios = True)
+        compras = compras.filter( req__orden__staff = usuario, solo_servicios = True)
         #print(usuario.staff.staff.first_name)
 
 
