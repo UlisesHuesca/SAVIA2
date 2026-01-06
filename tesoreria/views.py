@@ -3571,10 +3571,15 @@ def mis_viaticos(request):
 
     for viatico in viaticos:
         viatico.creado_reciente = (viatico.approved_at2 >= timezone.now() - timedelta(days=30)) if viatico.approved_at2 else True
+
+    p = Paginator(viaticos, 20)
+    page = request.GET.get('page')
+    viaticos_list = p.get_page(page)
         
     context= {
         'viaticos':viaticos,
         'myfilter':myfilter,
+        'viaticos_list': viaticos_list,
         }
 
     return render(request, 'tesoreria/mis_viaticos.html',context)
