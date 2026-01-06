@@ -3,6 +3,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load l10n %}
+{% load tt_extras %}
 <html>
 <head>
 {% block title %}Matriz Viáticos{% endblock %}
@@ -217,28 +218,28 @@
      
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
-                {% if gastos_list.has_previous %}
+                {% if viaticos_list.has_previous %}
                     <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url 1 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-left"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.previous_page_number  'page' request.GET.urlencode %}"><i class="fa-solid fa-angle-left"></i></a></li>
                 {% endif %}
 
-                {% for item in gastos_list.paginator.page_range %}
-                    {% if gastos_list.number == item %}
+                {% for item in viaticos_list.paginator.page_range %}
+                    {% if viaticos_list.number == item %}
                         <li class="page-item active"><a href="#" class="page-link bg-dark">{{item}}</a></li>
-                    {% elif item > gastos_list.number|add:'-2' and item < gastos_list.number|add:'2' %}
+                    {% elif item > viaticos_list.number|add:'-2' and item < viaticos_list.number|add:'2' %}
                         <li class="page-item "><a class="page-link" style="color:#3E92CC" href="{% my_url item 'page' request.GET.urlencode %}" class="page-link">{{item}}</a></li>
                     {% endif %}
                 {% endfor %}
 
-                {% if gastos_list.paginator.num_pages > gastos_list.number|add:'2' %}
-                <li><a class="page-link" style="color:#3E92CC" href="?page={{gastos_list.number|add:'2'}}">&hellip;</a></li>
+                {% if viaticos_list.paginator.num_pages > viaticos_list.number|add:'2' %}
+                <li><a class="page-link" style="color:#3E92CC" href="?page={{viaticos_list.number|add:'2'}}">&hellip;</a></li>
                 <li><a style="color:#3E92CC" href="?page={{ item }}">{{item}}</a></li>
-                <li><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{gastos_list.paginator.num_pages}}</a></li>
+                <li><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.paginator.num_pages 'page' request.GET.urlencode %}">{{viaticos_list.paginator.num_pages}}</a></li>
                 {% endif %}
 
-                {% if gastos_list.has_next %}
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
-                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url gastos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
+                {% if viaticos_list.has_next %}
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.next_page_number 'page' request.GET.urlencode %}"><i class="fa-solid fa-chevron-right"></i></a></li>
+                    <li class="page-item"><a class="page-link" style="color:#3E92CC" href="{% my_url viaticos_list.paginator.num_pages 'page' request.GET.urlencode %}"><i class="fa-solid fa-angles-right"></i></a></a></li>
                 {% endif %}
             </ul>
         </nav>
