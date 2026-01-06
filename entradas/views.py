@@ -140,10 +140,12 @@ def entrada_servicios(request):
             req__orden__distrito = usuario.distritos, solo_servicios= True,
             entrada_completa = False, autorizado2= True).order_by('-folio')
     else:
+        
+        #Este ciclo solo trae a la compras con servicios igual a false para utilizarla en el ciclo de abajo y ser marcadas como True en caso de que solo tengan servicios
         compras = Compra.objects.filter(
                 Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
                 req__orden__staff = usuario,
-                solo_servicios= True,
+                solo_servicios= False,
                 entrada_completa = False, 
                 autorizado2= True, 
                 ).order_by('-folio')
@@ -158,6 +160,7 @@ def entrada_servicios(request):
             if  cant_entradas == cant_servicios and cant_entradas > 0:
                 compra.solo_servicios = True
                 compra.save()
+        #Posterior a haber marcado las compras que solo tienen servicios, se vuelve a hacer la consulta para traer solo las que tienen servicios
         compras = Compra.objects.filter(
             Q(cond_de_pago__nombre ='CREDITO') | Q(pagada = True) |Q(monto_pagado__gt=0), 
             req__orden__staff = usuario,
