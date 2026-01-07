@@ -38,6 +38,7 @@ class CustomUser(models.Model):
     apoyo_renta = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
     apoyo_mantto = models.DecimalField(max_digits=10, decimal_places=2, default = 0)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+    extension = models.IntegerField(null=True, blank=True)
 
 
     @property

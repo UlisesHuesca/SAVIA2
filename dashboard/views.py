@@ -569,12 +569,12 @@ def staff(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
 
-    perfiles = Profile.objects.filter(staff__staff__is_active = True, sustituto__isnull=True, distritos = usuario.distritos)
+    perfiles = Profile.objects.filter(staff__staff__is_active = True, st_activo = True, sustituto__isnull=True, distritos = usuario.distritos).exclude(tipo__nombre = 'PROVEEDOR_EXTERNO')
     cuenta_perfiles = perfiles.count()
 
     myfilter = ProfileFilter(request.GET, queryset=perfiles)
     perfiles = myfilter.qs
-    cuenta_filtrados = perfiles.count()
+    #cuenta_filtrados = perfiles.count()
 
     #Set up pagination
     p = Paginator(perfiles, 30)
@@ -585,7 +585,7 @@ def staff(request):
         'registros_list':registros_list,
         'myfilter':myfilter,
         'cuenta_perfiles':cuenta_perfiles,
-        'cuenta_filtrados':cuenta_filtrados,
+        #'cuenta_filtrados':cuenta_filtrados,
         }
     return render(request,'dashboard/staff.html', context)
 
