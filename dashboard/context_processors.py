@@ -55,7 +55,8 @@ def contadores_processor(request):
     conteo_calidad = 0
     conteo_requis_devueltas = 0
     conteo_solicitudes_precios = 0
-    conteo_usuario = Profile.objects.filter(st_activo = True).count()
+    conteo_usuario = 0
+    usuarios = Profile.objects.filter(st_activo = True)
     conteo_productos = Inventario.objects.filter(cantidad__gt = 0).count()
     solicitudes_generadas = Order.objects.filter(complete = True).count()
 
@@ -77,6 +78,7 @@ def contadores_processor(request):
 
         requis = Requis.objects.filter(complete = True)
         conteo_requis_devueltas = requis.filter(devuelta = True, orden__staff=usuario).count()
+        conteo_usuario = usuarios.filter(distritos = usuario.distritos).count()
         #conteo = requis.count()
         #if usuario.staff.staff.is_staff:
             #requis.

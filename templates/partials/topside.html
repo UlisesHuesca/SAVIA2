@@ -95,65 +95,146 @@
                             </a>
                         </div>
                     </div>
-                    {%else%}
-                    {% if usuario.tipo.proveedor_externo == False %}
-                    <div class="row mt-1">
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark" href="#">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>Personal <i class="fa-solid fa-users"></i></h4>
-                                    <h3>{{conteo_usuario}}</h3>
+                    {% else %}
+                        {% if usuario.tipo.proveedor_externo == False %}
+                            {% if usuario.tipo.subdirector %}
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'autorizacion-oc1' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Compras por Autorizar </h4>
+                                            {% if conteo_oc1 == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                            <h3><span class="badge bg-danger">({{conteo_oc1}})</span></h3>
+                                            {% endif %}
+                                        </div>
+                                    </a>
                                 </div>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark" href="{% url 'dashboard-product' %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>{% trans "Productos" %} <i class="fa-solid fa-box"></i></h4>
-                                    <h3>{{conteo_productos}}</h3>
+                                
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" href="{% url 'gastos-pendientes-autorizar2' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Gastos por Autorizar </h4>
+                                            {% if conteo_gastos_gerencia == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                                <span class="badge bg-danger">({{conteo_gastos_gerencia}})</span>
+                                            {% endif %}
+                                        </div>
+                                    </a>
                                 </div>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark" href="{% url 'solicitudes-pendientes' %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>{% trans "Solicitudes" %} <i class="fa-solid fa-truck-fast"></i></h4>
-                                    <h3>{{solicitudes_generadas}}</h3>
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" href="{% url 'viaticos-pendientes-autorizar' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Viáticos por Autorizar<span class="badge bg-primary">1</span></h4>
+                                            {% if conteo_viaticos == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                                <span class="badge bg-danger">({{conteo_viaticos}})</span>
+                                            {% endif %}
+                                        </div>
+                                    </a>
                                 </div>
-                            </a>
-                        </div>
-                        
-                    </div>
+                            </div>
+                            {% else %}
+                                <div class="row mt-1">
+                                    <div class="col-md-4">
+                                        <a class="text-decoration-none text-dark" href="#">
+                                            <div class="card my-card shadow text-center p-3">
+                                                <h4>Personal <i class="fa-solid fa-users"></i></h4>
+                                                <h3>{{conteo_usuario}}</h3>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <a class="text-decoration-none text-dark" href="{% url 'dashboard-product' %}">
+                                            <div class="card my-card shadow text-center p-3">
+                                                <h4>{% trans "Productos" %} <i class="fa-solid fa-box"></i></h4>
+                                                <h3>{{conteo_productos}}</h3>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <a class="text-decoration-none text-dark" href="{% url 'solicitudes-pendientes' %}">
+                                            <div class="card my-card shadow text-center p-3">
+                                                <h4>{% trans "Solicitudes" %} <i class="fa-solid fa-truck-fast"></i></h4>
+                                                <h3>{{solicitudes_generadas}}</h3>
+                                            </div>
+                                        </a>
+                                    </div>
+                                    
+                                </div>
+                            {% endif %}
+                        {% endif %}
                     {% endif %}
-                    {% endif %}
                     {% if usuario.tipo.proveedor_externo == False %}
-                    <div class="row mt-2">
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>Perfil <i class="fa-solid fa-user"></i></h4>
-                                    <h3></h3>
+                         {% if usuario.tipo.subdirector %}
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'viaticos-pendientes-autorizar2' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Viáticos por Autorizar<span class="badge bg-primary">2</span></h4>
+                                            {% if conteo_viaticos_gerencia == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                            <h3><span class="badge bg-danger">({{conteo_viaticos_gerencia}})</span></h3>
+                                            {% endif %}
+                                        </div>
+                                    </a>
                                 </div>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark"  href="{% url 'solicitud-product-selection' %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>{% trans "Crear Solicitud" %} <i class="fa-solid fa-pen-to-square"></i></h4>
-                                    <h3></h3>
+                                
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" href="{% url 'vales-rosa-pendientes-autorizar' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Vales por Autorizar </h4>
+                                            {% if conteo_vales == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                                <span class="badge bg-danger">({{conteo_vales}})</span>
+                                            {% endif %}
+                                        </div>
+                                    </a>
                                 </div>
-                            </a>
-                        </div>
-                        <div class="col-md-4">
-                            <a class="text-decoration-none text-dark"  href="{% url 'solicitudes-pendientes' %}">
-                                <div class="card my-card shadow text-center p-3">
-                                    <h4>{% trans "Solicitud Status" %}<i class="fa-solid fa-shoe-prints"></i></h4>
-                                    <h3></h3>
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" >
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Directorio <i class="fa-solid fa-users"></i></h4> 
+                                            <h3><span class="badge bg-primary">{{conteo_usuario}}</span></h3>
+                                        </div>
+                                    </a>
                                 </div>
-                            </a>
-                        </div>   
-                        
-                    </div>
+                            </div>
+
+                            {% else %}
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Perfil <i class="fa-solid fa-user"></i></h4>
+                                            <h3></h3>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'solicitud-product-selection' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>{% trans "Crear Solicitud" %} <i class="fa-solid fa-pen-to-square"></i></h4>
+                                            <h3></h3>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'solicitudes-pendientes' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>{% trans "Solicitud Status" %}<i class="fa-solid fa-shoe-prints"></i></h4>
+                                            <h3></h3>
+                                        </div>
+                                    </a>
+                                </div>   
+                            
+                            </div>
+                        {% endif %}
                     {% endif %} 
                     {% if usuario.tipo.proveedor_externo %}
                         {% if prealta %}
