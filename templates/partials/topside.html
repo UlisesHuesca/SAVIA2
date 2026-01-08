@@ -180,22 +180,30 @@
                             {% elif usuario.tipo.superintendente and usuario.distritos.nombre != "MATRIZ" or usuario.tipo.supervisor and usuario.distritos.nombre == "MATRIZ" %}
                             
                             <div class="row mt-2">
-                                {% if usuario.tipo.oc_superintendencia %}
                                 <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'autorizacion-oc1' %}">
+                                    <a class="text-decoration-none text-dark" href="{% url 'solicitud-pendientes-autorizacion' %}">
                                         <div class="card my-card shadow text-center p-3">
-                                            <h4>Compras por Autorizar </h4>
-                                            {% if conteo_oc == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            <h4>Solicitudes por Autorizar </h4>
+                                            {% if conteo_solicitudes == 0 %}
+                                                <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
                                             {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_oc}})</span></h3>
+                                                <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
                                             {% endif %}
                                         </div>
                                     </a>
                                 </div>
-                                {% endif %}
-                            
-                                
+                                 <div class="col-md-4">
+                                        <a class="text-decoration-none text-dark" href="{% url 'requisicion-autorizacion' %}">
+                                            <div class="card my-card shadow text-center p-3">
+                                                <h4>Requis por Autorizar </h4>
+                                                {% if conteo_requis_pendientes == 0 %}
+                                                    <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                {% else %}
+                                                    <h3><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></h3>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                </div>
                                 <div class="col-md-4">
                                     <a class="text-decoration-none text-dark" href="{% url 'gastos-pendientes-autorizar' %}">
                                         <div class="card my-card shadow text-center p-3">
@@ -204,18 +212,6 @@
                                             <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
                                             {% else %}
                                                 <span class="badge bg-danger">({{conteo_gastos_pendientes}})</span>
-                                            {% endif %}
-                                        </div>
-                                    </a>
-                                </div>
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark" href="{% url 'viaticos-pendientes-autorizar' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Viáticos por Autorizar</h4>
-                                            {% if conteo_viaticos == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
-                                            {% else %}
-                                            <h3><span class="badge bg-danger">({{conteo_viaticos}})</span></h3>
                                             {% endif %}
                                         </div>
                                     </a>
@@ -340,6 +336,34 @@
                                         </div>
                                     </a>
                                 </div>-->
+                            </div>
+                            {% elif usuario.tipo.superintendente and usuario.distritos.nombre != "MATRIZ" %}
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" href="{% url 'viaticos-pendientes-autorizar' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Viáticos por Autorizar</h4>
+                                            {% if conteo_viaticos == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                            <h3><span class="badge bg-danger">({{conteo_viaticos}})</span></h3>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
+                            
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'autorizacion-oc1' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Compras por Autorizar </h4>
+                                            {% if conteo_oc == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                            <h3><span class="badge bg-danger">({{conteo_oc}})</span></h3>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
                             </div>
                             {% else %}
                             <div class="row mt-2">
