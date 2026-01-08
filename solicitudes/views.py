@@ -1633,15 +1633,21 @@ def inventario_delete(request, pk):
 @perfil_seleccionado_required
 def solicitud_autorizacion(request):
     pk = request.session.get('selected_profile_id')
-    perfil = Profile.objects.get(id = pk)
-    #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
-    #usuario = request.user.id
+    usuario = Profile.objects.get(id = pk)
+    if usuario.sustituto:
+        usuario= Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()
+        
     
-    perfiles = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos)
+    #Estoy obteniendo todos los perfiles que coinciden con el mismo staff, tipo y distrito que el usuario actual
+    usuarios = Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos)
+    
+    
+    
+   
     
 
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    ordenes = Order.objects.filter(complete=True, autorizar=None, distrito =perfil.distritos, supervisor__in= perfiles).order_by('-folio')
+    ordenes = Order.objects.filter(complete=True, autorizar=None, distrito =usuario.distritos, supervisor__in= usuarios).order_by('-folio')
     #ordenes = ordenes.filter(supervisor=perfil)
     myfilter=SolicitudesFilter(request.GET, queryset=ordenes)
     ordenes = myfilter.qs

@@ -91,6 +91,8 @@ def contadores_processor(request):
 
 
         if usuario.tipo.subdirector == True:
+            if usuario.sustituto:
+                usuario= Profile.objects.filter(staff=usuario.staff, tipo=usuario.tipo, distritos=usuario.distritos).first()
             oc = Compra.objects.filter(complete = True, autorizado1 = None, autorizado2= None, req__orden__superintendente = usuario)
             conteo_oc1 = oc.count()
             gastos = Solicitud_Gasto.objects.filter(complete=True, autorizar=None, superintendente = usuario, distrito = usuario.distritos)
