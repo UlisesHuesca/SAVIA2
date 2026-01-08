@@ -204,6 +204,7 @@
                                             </div>
                                         </a>
                                 </div>
+                                {% if usuario.tipo.superintendente %}
                                 <div class="col-md-4">
                                     <a class="text-decoration-none text-dark" href="{% url 'gastos-pendientes-autorizar' %}">
                                         <div class="card my-card shadow text-center p-3">
@@ -216,6 +217,17 @@
                                         </div>
                                     </a>
                                 </div>
+                                {% else %}
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" href="{% url 'mis-comprobaciones-gasto' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Mis Comprobaciones </h4>
+                                            <h3><span class="badge bg-secondary"><i class="fa-solid fa-money-bill"></i></span></h3>
+                                        </div>
+                                    </a>
+                                </div>
+                                {% endif %}
+
                             </div>
                             {% else %}
                                 <div class="row mt-1">
