@@ -13,10 +13,10 @@
     <div class="row my-4">
         <div class="col-md-12">
             <div class="card">
-                <div class ="car-header">
+                <div class ="card-header">
                     <h5>Autorización de Requisiciones</h5>
                 </div>
-                <div class="card card-body">
+                <div class="card-body">
                     <div class = "row mt-2 bg-white">
                         <form method=POST>
                             {% csrf_token %}
@@ -79,7 +79,8 @@
                     <th class="d-none d-lg-table-cell">Operación</th>
                     <th class="d-none d-lg-table-cell">Creado</th>
                     <th class="d-none d-lg-table-cell">Comentarios</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Detalles</th>
+                    <th>Acciones</th>
                 </tr>
             </thead>
             <tbody>
@@ -94,20 +95,21 @@
                     <td class="d-none d-lg-table-cell">{{req.orden.created_at}} </td>
                     <td class="d-none d-lg-table-cell">{% if req.orden.comentario %}{{req.orden.comentario}}{%else%}Sin comentarios{%endif%}</td>
                     <td>
+                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-creada-detalle' req.id %}">Productos</a>
+                    </td>
+                    <td>
                         <ul class="nav nav-pills">
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-autorizar' req.id %}">
-                                    <i class="fa-solid fa-check"></i>
-                                </a>
-                            </li>
                             <li class="nav-item m-1">
                                 <a type="button" class="btn btn-outline-danger  btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-cancelar' req.id %}">
                                     <i class="fa-solid fa-xmark"></i>
                                 </a>
                             </li>
                             <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'requisicion-creada-detalle' req.id %}">Productos</a>
+                                <a type="button" class="btn btn-outline-success btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'requisicion-autorizar' req.id %}">
+                                    <i class="fa-solid fa-check"></i>
+                                </a>
                             </li>
+                          
                         </ul>
                     </td>
                 </tr>
