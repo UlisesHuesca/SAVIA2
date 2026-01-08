@@ -223,8 +223,6 @@
                                         </div>
                                     </a>
                                 </div>
-                                
-                                
                                 <div class="col-md-4">
                                         <a class="text-decoration-none text-dark" href="{% url 'requisicion-autorizacion' %}">
                                             <div class="card my-card shadow text-center p-3">
@@ -267,13 +265,37 @@
                                     </a>
                                 </div>
                                 <div class="col-md-4">
+                                        <a class="text-decoration-none text-dark" href="{% url 'requisicion-autorizacion' %}">
+                                            <div class="card my-card shadow text-center p-3">
+                                                <h4>Requis por Autorizar </h4>
+                                                {% if conteo_requis_pendientes == 0 %}
+                                                    <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                {% else %}
+                                                    <h3><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></h3>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                </div>
+                                 <div class="col-md-4">
+                                        <a class="text-decoration-none text-dark" href="{% url 'solicitud-pendientes-autorizacion' %}">
+                                            <div class="card my-card shadow text-center p-3">
+                                                <h4>Solicitudes por Autorizar </h4>
+                                                {% if conteo_solicitudes == 0 %}
+                                                    <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                {% else %}
+                                                    <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
+                                                {% endif %}
+                                            </div>
+                                        </a>
+                                </div>
+                                <!--<div class="col-md-4">
                                     <a class="text-decoration-none text-dark" href="{% url 'staff' %}">
                                         <div class="card my-card shadow text-center p-3">
                                             <h4>Personal <i class="fa-solid fa-users"></i></h4> 
                                             <h3><span class="badge bg-primary">{{conteo_usuario}}</span></h3>
                                         </div>
                                     </a>
-                                </div>
+                                </div>-->
                             </div>
                             {% else %}
                             <div class="row mt-2">
