@@ -2781,8 +2781,10 @@ def render_pdf_gasto(pk):
         if gasto.autorizar == False:
             c.setFillColor(colors.red)
             c.drawCentredString(410, y_totales_pos-190, 'Cancelado')
-    elif gasto.autorizar2:
+    elif gasto.autorizar2 and gasto.autorizado_por2:
         c.drawCentredString(410, y_totales_pos-190, gasto.autorizado_por2.staff.staff.first_name +' '+ gasto.autorizado_por2.staff.staff.last_name)
+    elif gasto.autorizar2:
+        c.drawCentredString(410, y_totales_pos-190, gasto.superintendente.staff.staff.first_name +' '+ gasto.superintendente.staff.staff.last_name)
     elif gasto.autorizar2 is None:
         c.setFillColor(colors.orange) 
         c.drawCentredString(410, y_totales_pos-190, 'No autorizado aún')
