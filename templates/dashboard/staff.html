@@ -26,8 +26,8 @@
     </div>
 </div>
 
-<div class="card my-2 mx-2">
-    <div class="row g-12 text-center">
+<div class="card my-2 mx-2 col-sm-12">
+    <div class="card-header text-center">
         <div class="col-12 mb-2">
             <img class="rounded-circle" src="{% static 'images/SAVIA_Logo.png' %}" id="logo" alt="SAVIA" style="width: 80px; height: 80px;">
         </div>
@@ -35,12 +35,12 @@
             <h5>Usuarios SAVIA 2 </h5>
         </div>
     </div>
-    <div class="card card-body">
+    <div class="card-body">
         <h5>Filtro Usuarios del Distrito</h5>
        
         {% csrf_token %}
         <form method="GET">
-            <div class="row g-12">
+            <div class="row">
                 <!-- Filtro para User -->
                 <!--<div class="col-lg-3 col-sm-12">
                     <div class="input-group mb-3">
@@ -52,15 +52,15 @@
                     </div>
                 </div>-->
                 <!-- Filtro Nombre -->
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">
-                                {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre" }}
-                                <label style="color: #121212;" for="id_nombre">Nombre</label>
-                            </div>
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre" }}
+                            <label style="color: #121212;" for="id_nombre">Nombre</label>
                         </div>
                     </div>
+                </div>
                 <!-- Distrito Filter -->
                 <div class="col-lg-3 col-sm-12">
                     <div class="input-group mb-3">
@@ -93,7 +93,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="row g-12">
+            </div>
+            <div class="row">
                     
                     <!-- Filtro para Nivel -->
                     <!--<div class="col-lg-3 col-sm-12">
@@ -106,41 +107,41 @@
                         </div>
                     </div>-->
 
-                    <!-- Filtro para Empresa -->
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{ myfilter.form.empresa|add_class:"form-control"|append_attr:"placeholder=Empresa" }}
-                                <label style="color: #121212;" for="id_empresa">Empresa</label>
-                            </div>
+                <!-- Filtro para Empresa -->
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-building"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{ myfilter.form.empresa|add_class:"form-control"|append_attr:"placeholder=Empresa" }}
+                            <label style="color: #121212;" for="id_empresa">Empresa</label>
                         </div>
                     </div>
+                </div>
 
-                    <!-- Filtro para Puesto -->
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-briefcase"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {{ myfilter.form.puesto|add_class:"form-control"|append_attr:"placeholder=Puesto" }}
-                                <label style="color: #121212;" for="id_puesto">Puesto</label>
-                            </div>
-                        </div>
-                    </div>
-                    <!-- Activo (st_activo) Filter -->
-                    <div class="col-lg-3 col-sm-12">
-                        <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-toggle-on"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">
-                                {{ myfilter.form.st_activo|add_class:"form-control"|append_attr:"placeholder= Activo" }}
-                                <label style="color: #121212;" for="id_st_activo">Activo</label>
-                            </div>
+                <!-- Filtro para Puesto -->
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-briefcase"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{ myfilter.form.puesto|add_class:"form-control"|append_attr:"placeholder=Puesto" }}
+                            <label style="color: #121212;" for="id_puesto">Puesto</label>
                         </div>
                     </div>
                 </div>
-                <div class="row g-12">
+                <!-- Activo (st_activo) Filter -->
+                <div class="col-lg-3 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-toggle-on"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">
+                            {{ myfilter.form.st_activo|add_class:"form-control"|append_attr:"placeholder= Activo" }}
+                            <label style="color: #121212;" for="id_st_activo">Activo</label>
+                        </div>
+                    </div>
                 </div>
-                <!-- Submit Button -->
+            </div>
+                
+            <!-- Submit Button -->
+            <div class="row">
                 <div class="col-9">
                     <button class="btn btn-outline-success btn-block my-2" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                 </div>
@@ -152,16 +153,15 @@
                     </div>
                 </div>
             </div>
-          
         </form>
     </div>
 </div>
 
 
 <!-- Aquí empieza la generación de la tabla -->
-<div class = "row mt-2">
-    <div class="col-md-12">
-        <table class="table table-striped table-hover bg-white">
+<div class = "card">
+    <div class ="table-responsive-sm">
+        <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <!--<th scope="col">id</th>
