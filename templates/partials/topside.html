@@ -376,6 +376,18 @@
                                         </div>
                                     </a>
                                 </div>
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'compras-por-pagar' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Compras por Pagar </h4>
+                                            {% if conteo_pagos2 == 0 %}
+                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                            <h3><span class="badge bg-danger">({{conteo_pagos2}})</span></h3>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
                                 {% endif %}
                             </div>
                             {% else %}
