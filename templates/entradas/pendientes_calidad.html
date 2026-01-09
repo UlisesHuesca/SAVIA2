@@ -80,7 +80,9 @@
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th scope="col">Fecha Entrada</th>
-                    <th scope="col">Reporte</th>
+                    {% if usuario.tipo.nombre == "Calidad" or usuario.tipo.nombre == "Coordinador_Calidad" %}
+                    <th>Reporte</th>
+                    {% endif %}
                 </tr>
             </thead>
             <tbody>
@@ -92,9 +94,11 @@
                     <td>{{articulo.articulo_comprado.producto.producto.articulos.orden.proyecto.nombre}}</td>
                     <td>{{articulo.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}}</td>
                     <td>{{articulo.entrada.entrada_date}} </td>
+                    {% if usuario.tipo.nombre == "Calidad" or usuario.tipo.nombre == "Coordinador_Calidad" %}
                     <td>
                         <a class="btn btn-outline-info btn-block mx-auto" href="{% url 'reporte_calidad' articulo.id %}"><i class="fa-solid fa-list-ul"></i></a>
                     </td>
+                    {% endif %}
                 </tr>
                 {% endfor %}
             </tbody>

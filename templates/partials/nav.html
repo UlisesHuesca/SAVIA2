@@ -208,26 +208,27 @@
                         </div>
                         <div class="dropdown-divider"></div>
                     </div>
-                    {% if usuario.tipo.calidad == False %}
-                    <div class="d-none">
-                    {% else %}
+                    {% if usuario.tipo.calidad or usuario.tipo.almacenista%}
                     <div>
+                    {% else %}
+                    <div class="d-none">
                     {% endif %}
                         <h6 class="dropdown-header">Calidad</h6>
                         <div class="dropdown-divider"></div>
-                        {% if usuario.tipo.nombre == "Coordinador_Calidad" %}
+                        {% if usuario.tipo.nombre == "Calidad" %}
                             <div>
                         {% else %}
                             <div class="d-none">
                         {% endif %}
-                            <a class="dropdown-item" href="{% url 'product_calidad' %}">Productos Críticos</a>    
-                            </div>
-                        <a class="dropdown-item" href="{% url 'pendientes_calidad' %}">Liberación
+                             <a class="dropdown-item" href="{% url 'pendientes_calidad' %}">Liberación
                              {% if conteo_calidad > 0 %}
                                 <span class="badge bg-danger">({{conteo_calidad}})</span>
                             {% endif %}</a>
+                            {% if usuario.tipo.nombre == "Coordinador_Calidad" %}
+                            <a class="dropdown-item" href="{% url 'product_calidad' %}">Productos Críticos</a>    
+                            </div>
                             <a class="dropdown-item" href="{% url 'matriz-nc' %}">Matriz NC's</a>
-                            
+                            {% endif %}
                         <div class="dropdown-divider"></div>
                     </div>
                     {% if usuario.tipo.solicitudes %}
