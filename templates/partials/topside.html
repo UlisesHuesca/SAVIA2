@@ -229,6 +229,37 @@
                                 {% endif %}
 
                             </div>
+                            {% elif usuario.tipo.supervisor and usuario.distritos.nombre != "MATRIZ" %}
+                            <div class="row mt-2">
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" href="{% url 'solicitud-pendientes-autorizacion' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Solicitudes por Autorizar </h4>
+                                            {% if conteo_solicitudes == 0 %}
+                                                <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                            {% else %}
+                                                <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
+                                            {% endif %}
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark" href="{% url 'mis-comprobaciones-gasto' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Mis Comprobaciones </h4>
+                                            <h3><span class="badge bg-secondary"><i class="fa-solid fa-money-bill"></i></span></h3>
+                                        </div>
+                                    </a>
+                                </div>
+                                <div class="col-md-4">
+                                    <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
+                                        <div class="card my-card shadow text-center p-3">
+                                            <h4>Perfil</h4>
+                                            <h3><span class="badge bg-secondary"><i class="fa-solid fa-user"></i></span> </h3>
+                                        </div>
+                                    </a>
+                                </div>
+                            </div>
                             {% else %}
                                 <div class="row mt-1">
                                     <div class="col-md-4">
@@ -240,13 +271,14 @@
                                         </a>
                                     </div>
                                     <div class="col-md-4">
-                                        <a class="text-decoration-none text-dark" href="{% url 'dashboard-product' %}">
+                                        <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
                                             <div class="card my-card shadow text-center p-3">
-                                                <h4>{% trans "Productos" %} <i class="fa-solid fa-box"></i></h4>
-                                                <h3>{{conteo_productos}}</h3>
+                                                <h4>Perfil <i class="fa-solid fa-user"></i></h4>
+                                                <h3></h3>
                                             </div>
                                         </a>
                                     </div>
+
                                     <div class="col-md-4">
                                         <a class="text-decoration-none text-dark" href="{% url 'solicitudes-pendientes' %}">
                                             <div class="card my-card shadow text-center p-3">
@@ -392,14 +424,7 @@
                             </div>
                             {% else %}
                             <div class="row mt-2">
-                                <div class="col-md-4">
-                                    <a class="text-decoration-none text-dark"  href="{% url 'user-profile' %}">
-                                        <div class="card my-card shadow text-center p-3">
-                                            <h4>Perfil <i class="fa-solid fa-user"></i></h4>
-                                            <h3></h3>
-                                        </div>
-                                    </a>
-                                </div>
+                                
                                 <div class="col-md-4">
                                     <a class="text-decoration-none text-dark"  href="{% url 'solicitud-product-selection' %}">
                                         <div class="card my-card shadow text-center p-3">
