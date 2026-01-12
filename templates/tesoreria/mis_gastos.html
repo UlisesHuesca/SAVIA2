@@ -58,6 +58,17 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="row g-12">
+                      <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito"}}
+                                <label for="id_lugar_partida">Distrito</label>
+                            </div>
+                        </div>
+                    </div>
                     <div class="col-2 mt-3">
                         <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>

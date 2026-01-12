@@ -436,7 +436,7 @@ def crear_gasto(request):
                         factura = Factura.objects.create(
                             solicitud_gasto=gasto,
                             hecho=False,
-                            subido_por=usuario,
+                            #subido_por=usuario,
                         # si tienes campos uuid/fecha_timbrado en el modelo, puedes setearlos aquí también
                         )
                         
@@ -1183,11 +1183,11 @@ def solicitudes_gasto(request):
 
     # Preparar un Prefetch para articulos_gasto
     articulos_gasto_prefetch = Prefetch('articulo_gasto_set', queryset=Articulo_Gasto.objects.filter(completo=True, producto__isnull=False, proyecto__isnull=False), to_attr='articulos_filtrados')
-    
+    almacenes_distritos = set(perfil.almacen.values_list('distrito__id', flat=True))
     if perfil.tipo.nombre == "Admin":  
         gastos = Solicitud_Gasto.objects.filter(complete=True,  distrito = perfil.distritos).order_by('-created_at') #Temporalmente le metí el filtro de distrito
     elif perfil.tipo.nombre == "Gerente" or perfil.tipo.superintendente == True or perfil.tipo.nombre == "CONTADOR":
-        gastos = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos).order_by('-folio')
+        gastos = Solicitud_Gasto.objects.filter(complete=True, distrito__in = almacenes_distritos).order_by('-folio')
     elif perfil.tipo.rh == True and perfil.tipo.documentos == True:    
         gastos = Solicitud_Gasto.objects.filter(complete=True, distrito = perfil.distritos, tipo__tipo__in = ['APOYOS A EMPLEADOS'] ).order_by('-folio')
     else:
@@ -1195,7 +1195,7 @@ def solicitudes_gasto(request):
 
  
 
-    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
+    myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos, perfil=perfil)
     gastos = myfilter.qs
 
     #Set up pagination

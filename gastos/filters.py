@@ -1,6 +1,7 @@
 import django_filters
 from .models import Solicitud_Gasto, Conceptos_Entradas, Tipo_Gasto
 from solicitudes.models import Proyecto, Subproyecto
+from user.models import Distrito
 from django_filters import CharFilter, DateFilter
 from django.db.models import Q
 from django.forms import TextInput
@@ -16,15 +17,32 @@ class Solicitud_Gasto_Filter(django_filters.FilterSet):
     tipo = django_filters.ModelChoiceFilter(queryset=Tipo_Gasto.objects.all(), label="Tipo Gasto")
     start_date = DateFilter(field_name ='approbado_fecha2', lookup_expr='gte')
     end_date = DateFilter(field_name='approbado_fecha2', lookup_expr='lte')
+    distrito = django_filters.ModelChoiceFilter(queryset=Distrito.objects.none(),  label="Distrito")
     #Busqueda parcial para la parte de gasto
     proyecto = django_filters.ModelChoiceFilter(queryset=Proyecto.objects.filter(activo=True, complete=True), method='filter_by_proyecto', label="Proyecto")
     subproyecto = django_filters.ModelChoiceFilter(queryset=Subproyecto.objects.all(), method='filter_by_subproyecto', label="Subproyecto")
 
+   
+
+    def __init__(self, *args, **kwargs):
+        perfil = kwargs.pop('perfil', None)
+        super().__init__(*args, **kwargs)
+
+        if perfil:
+            almacenes_distritos = perfil.almacen.values_list(
+                'distrito__id',
+                flat=True
+            )
+
+            self.filters['distrito'].queryset = Distrito.objects.filter(
+                id__in=almacenes_distritos,
+                status=True
+            )
+
     class Meta:
         model = Solicitud_Gasto
-        fields = ['staff','colaborador','folio','start_date','end_date','tipo','proyecto','subproyecto']
+        fields = ['staff','colaborador','folio','start_date','end_date','tipo','proyecto','subproyecto','distrito',]
 
-    
     def filter_solicitado_por(self, queryset, name, value):
         if " " in value:
             first_name, last_name = value.split(" ", 1)
