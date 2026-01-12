@@ -119,6 +119,13 @@ def extraer_datos_del_xml(archivo_xml):
         print(f"Versión del documento XML no reconocida")
         return None, None
     
+
+    rfc_receptor = None
+    receptor = root.find('cfdi:Receptor', ns)
+    if receptor is not None:
+        rfc_receptor = receptor.get('Rfc')
+    else:
+        print("Receptor no encontrado")
     # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
     complemento = root.find('cfdi:Complemento', ns)
     if complemento is not None:
@@ -126,14 +133,14 @@ def extraer_datos_del_xml(archivo_xml):
         if timbre_fiscal is not None:
             uuid = timbre_fiscal.get('UUID')
             fecha_timbrado = timbre_fiscal.get('FechaTimbrado') or root.get('Fecha')
-            return uuid, fecha_timbrado  # Devolver UUID y fecha de timbrado
         else:
             print("Timbre Fiscal Digital no encontrado")
-            return None, None
+            return None, None, None
     else:
         print("Complemento no encontrado")
-        return None, None
-################################################################################################################################
+        return None, None, None
+    
+    return uuid, fecha_timbrado, rfc_receptor####################################################################################
 
 
 # Create your views here.
@@ -911,7 +918,11 @@ def factura_nueva_viatico(request, pk):
                         #factura_temp = Viaticos_Factura(factura_xml=archivo_xml)
                         #factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
                         #print(factura_temp)
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_xml)
+                        uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_xml)
+                        RFC_RECEPTOR_ESPERADO = "GVO020226811"
+                        if rfc_receptor and rfc_receptor != RFC_RECEPTOR_ESPERADO:
+                            messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba {RFC_RECEPTOR_ESPERADO}.")
+                            break # Saltar al siguiente a
 
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()

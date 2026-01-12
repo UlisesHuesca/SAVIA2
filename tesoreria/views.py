@@ -2705,6 +2705,13 @@ def extraer_datos_del_xml(archivo_xml):
         print(f"Versión del documento XML no reconocida")
         return None, None
     
+
+    rfc_receptor = None
+    receptor = root.find('cfdi:Receptor', ns)
+    if receptor is not None:
+        rfc_receptor = receptor.get('Rfc')
+    else:
+        print("Receptor no encontrado")
     # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
     complemento = root.find('cfdi:Complemento', ns)
     if complemento is not None:
@@ -2712,13 +2719,14 @@ def extraer_datos_del_xml(archivo_xml):
         if timbre_fiscal is not None:
             uuid = timbre_fiscal.get('UUID')
             fecha_timbrado = timbre_fiscal.get('FechaTimbrado') or root.get('Fecha')
-            return uuid, fecha_timbrado  # Devolver UUID y fecha de timbrado
         else:
             print("Timbre Fiscal Digital no encontrado")
-            return None, None
+            return None, None, None
     else:
         print("Complemento no encontrado")
-        return None, None
+        return None, None, None
+    
+    return uuid, fecha_timbrado, rfc_receptor
     
 import xml.etree.ElementTree as ET
 
@@ -3071,8 +3079,11 @@ def factura_nueva(request, pk):
                         # Guardar temporalmente para extraer datos
                         #factura_temp = Factura(archivo_xml=archivo_xml)
                         #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
-
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_procesado)
+                        RFC_RECEPTOR_ESPERADO = "GVO020226811"
+                        uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_procesado)
+                        if rfc_receptor and rfc_receptor != RFC_RECEPTOR_ESPERADO:
+                            messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba {RFC_RECEPTOR_ESPERADO}.")
+                            break # Saltar al siguiente archivo si el RFC no coincide
                         if fecha_timbrado_extraida:
                             try:
                                 # Si la fecha incluye la hora, parsearla correctamente

@@ -28,6 +28,7 @@ from solicitudes.models import Proyecto, Subproyecto, Operacion
 from tesoreria.models import Pago, Cuenta, Facturas, Tipo_Pago
 from compras.models import Proveedor_direcciones
 from tesoreria.forms import Facturas_Gastos_Form, Transferencia_Form, Cargo_Abono_Form
+
 from compras.views import attach_oc_pdf
 from tesoreria.utils import extraer_texto_de_pdf, encontrar_variables, extraer_bloques_formato_2, detectar_formato_pdf, encontrar_variables_bloques
 from requisiciones.views import get_image_base64
@@ -99,7 +100,6 @@ def eliminar_caracteres_invalidos(archivo_xml):
     return archivo_xml
 
 def extraer_datos_del_xml(archivo_xml):
-    
     try:
         # Parsear el archivo XML
         archivo_xml.seek(0)
@@ -128,6 +128,13 @@ def extraer_datos_del_xml(archivo_xml):
         print(f"Versión del documento XML no reconocida")
         return None, None
     
+
+    rfc_receptor = None
+    receptor = root.find('cfdi:Receptor', ns)
+    if receptor is not None:
+        rfc_receptor = receptor.get('Rfc')
+    else:
+        print("Receptor no encontrado")
     # Buscar el complemento donde se encuentra el UUID y la fecha de timbrado
     complemento = root.find('cfdi:Complemento', ns)
     if complemento is not None:
@@ -135,13 +142,14 @@ def extraer_datos_del_xml(archivo_xml):
         if timbre_fiscal is not None:
             uuid = timbre_fiscal.get('UUID')
             fecha_timbrado = timbre_fiscal.get('FechaTimbrado') or root.get('Fecha')
-            return uuid, fecha_timbrado  # Devolver UUID y fecha de timbrado
         else:
             print("Timbre Fiscal Digital no encontrado")
-            return None, None
+            return None, None, None
     else:
         print("Complemento no encontrado")
-        return None, None
+        return None, None, None
+    
+    return uuid, fecha_timbrado, rfc_receptor
 ################################################################################################################################
 def procesar_bbva(archivo):
     total = 0.0
@@ -402,32 +410,48 @@ def crear_gasto(request):
                 for i in range(max_len):
                     archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
                     archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-                    factura, created = Factura.objects.get_or_create(solicitud_gasto=gasto, hecho=False)
+                    
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                         
                         #factura_temp = Factura(archivo_xml=archivo_xml)
                         #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_procesado)
+                        uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_procesado)
+                        RFC_RECEPTOR_ESPERADO = "GVO020226811"
+                        if rfc_receptor and rfc_receptor != RFC_RECEPTOR_ESPERADO:
+                            messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba {RFC_RECEPTOR_ESPERADO}.")
+                            break # Saltar al siguiente archivo si el RFC no coincide
 
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
-                        factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-                        facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
-                        viaticos_factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        existe_en_gastos = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists()
+                        existe_en_compras = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists()
+                        existe_en_viaticos = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).exists()
 
-                        if factura_existente or facturas_existentes or viaticos_factura_existente:
+                        if existe_en_gastos or existe_en_compras or existe_en_viaticos:
+                            facturas_duplicadas.append(uuid_extraido)
+                            continue
+
+                        # ✅ Aquí ya es seguro crear TU factura para ESTA iteración
+                        factura = Factura.objects.create(
+                            solicitud_gasto=gasto,
+                            hecho=False,
+                            subido_por=usuario,
+                        # si tienes campos uuid/fecha_timbrado en el modelo, puedes setearlos aquí también
+                        )
+                        
+                        if existe_en_gastos or existe_en_compras or existe_en_viaticos:
                             # Si una factura existente se encuentra, verificamos si su solicitud no está aprobada
-                            if factura_existente and (factura_existente.solicitud_gasto.autorizar is False or factura_existente.solicitud_gasto.autorizar2 is False):
-                                factura_existente.delete()
+                            if existe_en_gastos and (existe_en_gastos.solicitud_gasto.autorizar is False or existe_en_gastos.solicitud_gasto.autorizar2 is False):
+                                existe_en_gastos.delete()
                                 guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
 
-                            elif facturas_existentes and (facturas_existentes.oc.autorizado1 is False or facturas_existentes.oc.autorizado2 is False):
-                                facturas_existentes.delete()
+                            elif existe_en_compras and (existe_en_compras.oc.autorizado1 is False or existe_en_compras.oc.autorizado2 is False):
+                                existe_en_compras.delete()
                                 guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
 
-                            elif viaticos_factura_existente and (viaticos_factura_existente.solicitud_viatico.autorizar is False or viaticos_factura_existente.solicitud_viatico.autorizar2 is False):
-                                viaticos_factura_existente.delete()
+                            elif existe_en_viaticos and (existe_en_viaticos.solicitud_viatico.autorizar is False or existe_en_viaticos.solicitud_viatico.autorizar2 is False):
+                                existe_en_viaticos.delete()
                                 guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
 
                             else:
@@ -852,12 +876,17 @@ def factura_nueva_gasto(request, pk):
                         #factura_temp = Factura(archivo_xml=archivo_xml)
                         #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
 
-                        uuid_extraido, fecha_timbrado_extraida = extraer_datos_del_xml(archivo_procesado)
-
+                        
+                        uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_procesado)
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
                         facturas_existentes = Facturas.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
                         viaticos_factura_existente = Viaticos_Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
+                        RFC_RECEPTOR_ESPERADO = "GVO020226811"
+                       
+                        if rfc_receptor and rfc_receptor != RFC_RECEPTOR_ESPERADO:
+                            messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba {RFC_RECEPTOR_ESPERADO}.")
+                            break # Saltar al siguiente archivo si el RFC no coincide
 
                         if factura_existente or facturas_existentes or viaticos_factura_existente:
                             # Si una factura existente se encuentra, verificamos si su solicitud no está aprobada
