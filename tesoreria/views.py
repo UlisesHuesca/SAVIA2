@@ -1393,16 +1393,16 @@ def matriz_pagos(request):
 
                         if pago.comprobante_pago and carpeta is not None:
                             fecha_pago = pago.pagado_real.strftime('%Y-%m-%d') if pago.pagado_real else 'SIN_FECHA'
-                            if pago.gasto.folio:
+                            if pago.gasto:
                                 folio = f'G{pago.gasto.folio}'
                                 if pago.gasto.colaborador:
                                     pago_nombre = f'{pago.gasto.colaborador.staff.staff.first_name}_{pago.gasto.colaborador.staff.staff.last_name}'
                                 else:
                                     pago_nombre = f'{pago.gasto.staff.staff.staff.first_name}_{pago.gasto.staff.staff.staff.last_name}'
-                            elif pago.oc.folio:
+                            elif pago.oc:
                                 folio = f'OC{oc.folio}'
                                 pago_nombre = f'{pago.oc.proveedor.nombre.razon_social}'
-                            elif pago.viatico.folio:
+                            elif pago.viatico:
                                 folio = f'V{viatico.folio}'
                                 if pago.viatico.colaborador:
                                     pago_nombre = f'{pago.viatico.colaborador.staff.staff.first_name}_{pago.viatico.colaborador.staff.staff.last_name}'
