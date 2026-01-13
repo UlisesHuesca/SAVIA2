@@ -1392,7 +1392,27 @@ def matriz_pagos(request):
                                 processed_docs.add(viatico.id)
 
                         if pago.comprobante_pago and carpeta is not None:
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(carpeta, os.path.basename(pago.comprobante_pago.path)))
+                            fecha_pago = pago.pagado_real.strftime('%Y-%m-%d') if pago.pagado_real else 'SIN_FECHA'
+                            if gasto.folio:
+                                folio = f'G{gasto.folio}'
+                                if gasto.colaborador:
+                                    pago_nombre = f'{gasto.colaborador.staff.staff.first_name}_{gasto.colaborador.staff.staff.last_name}'
+                                else:
+                                    pago_nombre = f'{gasto.staff.staff.staff.first_name}_{gasto.staff.staff.staff.last_name}'
+                            elif oc.folio:
+                                folio = f'OC{oc.folio}'
+                                pago_nombre = f'{oc.proveedor.nombre.razon_social}'
+                            elif viatico.folio:
+                                folio = f'V{viatico.folio}'
+                                if gasto.colaborador:
+                                    pago_nombre = f'{gasto.colaborador.staff.staff.first_name}_{gasto.colaborador.staff.staff.last_name}'
+                                else:
+                                    pago_nombre = f'{gasto.staff.staff.staff.first_name}_{gasto.staff.staff.staff.last_name}'
+                            
+                            monto = f"{pago.monto:.2f}".replace('.', '_')
+                            nuevo_nombre = f'{fecha_pago}_{folio}_{pago_nombre}_{monto}'
+                           
+                            zip_file.write(pago.comprobante_pago.path, os.path.join(carpeta, f'{nuevo_nombre}.pdf'))
 
                         # Excel de resumen
                     output = BytesIO()
