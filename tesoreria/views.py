@@ -1979,7 +1979,7 @@ def control_documentos(request):
             if usuario.distritos.nombre == "MATRIZ":
                 pagos = Pago.objects.filter(hecho=True)
                 if fecha_inicio and fecha_fin:
-                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
+                    pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True, control_documentos = True)
 
                     if cuenta_bancaria_id:
                         pagos = pagos.filter(cuenta__id = cuenta_bancaria_id)
@@ -2018,7 +2018,8 @@ def control_documentos(request):
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
                     Q(gasto__distrito=usuario.distritos) |
                     Q(oc__req__orden__distrito=usuario.distritos) |
-                    Q(viatico__distrito=usuario.distritos)
+                    Q(viatico__distrito=usuario.distritos),
+                    control_documentos = True
                 )
             
 
