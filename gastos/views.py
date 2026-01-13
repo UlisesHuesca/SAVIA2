@@ -2974,6 +2974,7 @@ def convert_excel_gasto_matriz(gastos):
         else:
             tiene_facturas = 'No'
         
+        autorizado_por ="NR"
         if gasto.autorizar2:
             status = "Autorizado"
             if gasto.distrito:
@@ -2982,8 +2983,6 @@ def convert_excel_gasto_matriz(gastos):
             else:
                 if gasto.autorizado_por2:
                     autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
-                else:
-                    autorizado_por ="NR"
         elif gasto.autorizar2 == False:
             status = "Cancelado"
             if gasto.distrito.nombre == "MATRIZ":
