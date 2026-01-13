@@ -60,12 +60,21 @@
                     </div>
                 </div>
                 <div class="row g-12">
-                      <div class="col-lg-4">
+                    <div class="col-lg-4">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                                 {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito"}}
                                 <label for="id_lugar_partida">Distrito</label>
+                            </div>
+                        </div>
+                    </div>
+                     <div class="col-lg-4">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder=Tipo"}}
+                                <label for="id_lugar_partida">Tipo</label>
                             </div>
                         </div>
                     </div>
@@ -130,10 +139,12 @@
                     <th scope="col">Gasto</th>
                     <th class="d-none d-lg-table-cell">Solicitado</th>
                     <th>Comentario</th>
+                    <th>Tipo</th>
                     <th scope="col">Autorizado</th>
                     <th class="d-none d-lg-table-cell">Colaborador</th>
                     <th scope="col">Importe</th>
                     <th scope="col">Autorización Gerencia</th>
+                    
                     <th>Detalles</th>
                     <th scope="col">Facturas</th>
                     {% if usuario_view %}
@@ -151,6 +162,9 @@
                     <th>{{gasto.folio}}</th>
                     <td class="d-none d-lg-table-cell">
                         {{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}
+                    </td>
+                    <td>
+                        {{gasto.tipo.tipo}}
                     </td>
                     <td>{% if gasto.comentario %}
                         {{gasto.comentario}}
