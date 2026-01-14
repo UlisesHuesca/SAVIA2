@@ -18,8 +18,8 @@ class ProveedorAdmin(admin.ModelAdmin):
     #raw_id_fields = ('perfil_proveedor',)
 
 class Proveedor_direccionesAdmin(admin.ModelAdmin):
-    search_fields = ('nombre__razon_social',)
-    raw_id_fields = ('nombre','creado_por',)
+    search_fields = ('nombre__razon_social','email')
+    raw_id_fields = ('nombre','creado_por')
     list_display = ('id','nombre','distrito') 
    
 
