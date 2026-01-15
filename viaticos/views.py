@@ -152,7 +152,7 @@ def solicitud_viatico(request):
     proyectos = Proyecto.objects.filter(~Q(status_de_entrega__status = "INACTIVO"), activo=True, distrito = usuario.distritos)
     #subproyectos = Subproyecto.objects.all()
     viatico, created = Solicitud_Viatico.objects.get_or_create(complete= False, staff = usuario)
-    colaboradores = colaborador.filter(distritos = usuario.distritos)
+    colaboradores = colaborador.filter(distritos = usuario.distritos, st_activo = True)
     puntos = Puntos_Intermedios.objects.filter(solicitud = viatico)
     error_messages = {}
     
