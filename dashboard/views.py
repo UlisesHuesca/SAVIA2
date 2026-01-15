@@ -332,7 +332,7 @@ def proyectos(request):
 def contratos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    contratos = Contrato.objects.all()
+    contratos = Contrato.objects.filter(complete = True)
 
     myfilter= ContratoFilter(request.GET, queryset=contratos)
 
