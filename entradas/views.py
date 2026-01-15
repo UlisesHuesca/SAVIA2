@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth.decorators import login_required
-from django.db.models import Q, Sum, Max, Exists, OuterRef, Subquery, Avg
+from django.db.models import Q, Sum, Max, OuterRef,Exists #Value, DecimalField , Subquery, Avg
+from django.db.models.functions import Coalesce
 from django.contrib import messages
 from django.http import JsonResponse, HttpResponse, Http404
 from django.core.mail import EmailMessage
@@ -65,6 +66,20 @@ def pendientes_entrada(request):
                 compra.solo_servicios = True
                 compra.save()
         compras = compras.filter(solo_servicios= False)
+        #DECIMAL_14_2 = DecimalField(max_digits=14, decimal_places=2)
+
+
+        pendientes_qs = ArticuloComprado.objects.filter(
+            oc=OuterRef('pk'),
+            entrada_completa=False
+        ).filter(
+            Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True)
+        )
+        compras = compras.annotate(
+            tiene_pendientes=Exists(pendientes_qs)
+        ).filter(tiene_pendientes=True)
+
+
     elif usuario.tipo.almacen == True:
         compras_servicios = compras.filter(Q(solo_servicios=False) | (Q(solo_servicios=True) & Q(req__orden__staff=usuario)))
         
@@ -82,6 +97,15 @@ def pendientes_entrada(request):
         # que NO sea un servicio (O) que sea un servicio (Y) del usuario que generó la order (Y)
         # que sea del distrito del usuario (Y) que la entrada NO este completa (Y) que este autorizada 
         compras = compras.filter(Q(solo_servicios=False) | (Q(solo_servicios=False) & Q(req__orden__staff=usuario)))
+        pendientes_qs = ArticuloComprado.objects.filter(
+            oc=OuterRef('pk'),
+            entrada_completa=False
+        ).filter(
+            Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True)
+        )
+        compras = compras.annotate(
+            tiene_pendientes=Exists(pendientes_qs)
+        ).filter(tiene_pendientes=True)
         
     else:
         compras = Compra.objects.none()
