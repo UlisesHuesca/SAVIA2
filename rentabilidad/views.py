@@ -72,8 +72,14 @@ def add_costo(request, tipo):
     elif tipo == "central":
         form = Solicitud_Costo_Indirecto_Central_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [1])
+        print('siii')
     costo_form = Costo_Form()
 
+    #El problema reciente es que aparecen 5 tipos de costos, pero solo tengo definidos:
+    #  1 central
+    #  2 directo
+    #  3 operativo < indirecto
+    #  4 administrativo < indirecto
 
 
     if request.method =='POST':
@@ -145,7 +151,7 @@ def reporte_costos(request):
     tabla, meses = get_tabla_costos(tipo_id, distrito_id, fecha_inicio, fecha_fin)
     distrito_nombre = Distrito.objects.get(id=distrito_id).nombre
     tipo_nombre = Tipo_Costo.objects.get(id=tipo_id).nombre
-    
+    print(tabla)
 
     # 🚩 Si el usuario presiona el botón de Excel
     if request.method == "POST" and "btnReporte" in request.POST:
@@ -168,15 +174,19 @@ def reporte_costos(request):
 
 def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fin=None):
     costos = Costos.objects.all()
+    print('tipo_id',tipo_id)
+    print('distrito_id',distrito_id)
+    print('fecha_inicio',fecha_inicio)
+    print('fecha_fin',fecha_fin)
 
     if distrito_id:
         costos = costos.filter(solicitud__distrito_id=distrito_id)
-
+    #print(costos)
     tipo_nombre = None
     if tipo_id:
         costos = costos.filter(solicitud__tipo_id=tipo_id)
         tipo_nombre = Tipo_Costo.objects.get(id=tipo_id).nombre
-
+    
     if fecha_inicio and fecha_fin:
         try:
             fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m").date()
@@ -184,6 +194,7 @@ def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fi
             last_day = monthrange(y, m)[1]
             fecha_fin = date(y, m, last_day)
             costos = costos.filter(solicitud__fecha__range=[fecha_inicio, fecha_fin])
+            #print(costos)
         except ValueError:
             pass
 
@@ -233,6 +244,7 @@ def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fi
         tabla = tabla_distribuida
      # 🚩 Caso: indirectos operativos o administrativos → prorrateo por distrito
     elif tipo_nombre in ["Indirectos Operativos", "Indirectos Administrativos"]:
+        print('aqui indirectos')
         tabla_ingresos, _ = get_tabla_ingresos_contrato(
             fecha_inicio.strftime("%Y-%m"), fecha_fin.strftime("%Y-%m"), distrito_id
         )
@@ -242,14 +254,16 @@ def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fi
             .values("mes")
             .annotate(total=Sum("monto"))
         )
-
+        print('costos_mes',costos_mes)
         for row in costos_mes:
             mes = row["mes"].strftime("%B %Y")
             meses.add(mes)
             total_costos_mes = row["total"]
 
             for contrato, meses_dict in tabla_ingresos.items():
+                print('meses_dict',meses_dict)
                 if mes in meses_dict:
+                    
                     prorrateo = meses_dict[mes]["prorrateo"]
 
                     if contrato not in tabla:

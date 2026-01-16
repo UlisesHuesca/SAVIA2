@@ -2373,6 +2373,9 @@ def crear_comparativo(request):
     form = ComparativoForm()
 
     if request.method =='POST':
+        print("POST KEYS:", list(request.POST.keys()))
+        print("POST btn_creacion?", "btn_creacion" in request.POST)
+        print("POST btn_producto?", "btn_producto" in request.POST)
         if "btn_creacion" in request.POST:
             form = ComparativoForm(request.POST, request.FILES, instance=comparativo)
             if form.is_valid():
@@ -2384,10 +2387,10 @@ def crear_comparativo(request):
                 messages.success(request, f'El comparativo {comparativo.id} ha sido creado')
                 return redirect('comparativos')
             else:
-                for field, errors in form_item.errors.items():
+                for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
                 messages.error(request,f'No está validando {error_messages}' )
-        if "btn_producto" in request.POST:
+        elif "btn_producto" in request.POST:
             articulo, created = Item_Comparativo.objects.get_or_create(completo = False, comparativo = comparativo)
             form_item = Item_ComparativoForm(request.POST, instance= articulo)
             if form_item.is_valid():
