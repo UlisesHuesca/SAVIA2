@@ -2373,9 +2373,9 @@ def crear_comparativo(request):
     form = ComparativoForm()
 
     if request.method =='POST':
-        print("POST KEYS:", list(request.POST.keys()))
-        print("POST btn_creacion?", "btn_creacion" in request.POST)
-        print("POST btn_producto?", "btn_producto" in request.POST)
+        #print("POST KEYS:", list(request.POST.keys()))
+        #print("POST btn_creacion?", "btn_creacion" in request.POST)
+        #print("POST btn_producto?", "btn_producto" in request.POST)
         if "btn_creacion" in request.POST:
             form = ComparativoForm(request.POST, request.FILES, instance=comparativo)
             if form.is_valid():

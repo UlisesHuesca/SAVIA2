@@ -919,10 +919,14 @@ def factura_nueva_viatico(request, pk):
                         #factura_temp.factura_xml.save(archivo_xml.name, archivo_procesado, save=False)
                         #print(factura_temp)
                         uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_xml)
-                        RFC_RECEPTOR_ESPERADO = "GVO020226811"
-                        if rfc_receptor and rfc_receptor != RFC_RECEPTOR_ESPERADO:
-                            messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba {RFC_RECEPTOR_ESPERADO}.")
-                            break # Saltar al siguiente a
+                        RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
+                        if rfc_receptor and rfc_receptor not in RFC_RECEPTORES_ESPERADOS:
+                            messages.error(
+                                request,
+                                f"RFC receptor inválido ({rfc_receptor}). "
+                                f"Se esperaba uno de: {', '.join(RFC_RECEPTORES_ESPERADOS)}."
+                            )
+                            break # Saltar al siguiente archivo si el RFC no coincide
 
                         # Verificar si ya existe una factura con el mismo UUID y fecha de timbrado en cualquiera de las tablas
                         factura_existente = Factura.objects.filter(uuid=uuid_extraido, fecha_timbrado=fecha_timbrado_extraida).first()
