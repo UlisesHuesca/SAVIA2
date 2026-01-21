@@ -27,7 +27,7 @@
                 {% elif message.tags == "warning" %}
                 <script>
                 Swal.fire({
-                    "title": "Facturas repetidas",
+                    "title": "Conceptos no encontrados",
                     "text": "{{ message }}",
                     "icon": "warning",
                 })
@@ -129,15 +129,16 @@
             </div>
         </div>
 </div>
+
 <div class="col-lg-7 col-sm-12">
         <div class="card">
-            <div class="card-header">
+            <div class="card-header d-flex justify-content-between align-items-center">
                 <h2 id="linea_gasto">{% trans "Costos" %}</h2>
+
+                <button type="button" class="btn btn-outline-success" data-bs-toggle="modal" data-bs-target="#modalCargaExcel">
+                   <i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i>
+                </button>
             </div>
-            <!--<div class="form-check form-switch col-auto mx-4 d-none" id="usarXML">
-                <input class="form-check-input" type="checkbox" role="switch" id="SwitchUsarXML">
-                <label class="form-check-label" for="SwitchUsarXML">{% trans "Usar XML" %}</label>
-            </div>--> 
         <div class ="card-body">
         <div>
                 <form id="form_costo" method="post">
@@ -154,17 +155,17 @@
                     </div>
                 </div>
                
-                <!--<div class="row">
+                <div class="row">
                     <div class="col-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{costo_form.categorizacion|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Categorización"}}
-                                <label style="color: #121212;" for="id_precio_unitario">Categorización*</label>
+                                {{costo_form.comentario|add_class:"form-control grupo-entrada"|append_attr:"placeholder= Comentario"}}
+                                <label style="color: #121212;" for="id_precio_unitario">Comentario*</label>
                             </div>
                         </div>
                     </div>
-                </div>-->
+                </div>
            
             <div class="row">
                  <div class="col-lg-4 col-sm-12">
@@ -179,10 +180,6 @@
              
               
             </div>
-            <div class="form-check form-switch col-auto mx-4 d-none" id="Entrada_Salida">
-                        <input class="form-check-input" type="checkbox" role="switch" id="SwitchEntrada_Salida">
-                        <label class="form-check-label" for="SwitchEntrada_Salida" id="LabelAlmacén">Entrada-Salida Express</label>
-                </div>
             <div class="text-end my-2">
                     <input class="btn btn-outline-info btn-block btn-lg" name="btn_costo" id="btn_costo" type="submit" value="Agregar">
             </div>
@@ -194,7 +191,7 @@
             <thead>
                 <tr>
                     <th scope="col">{% trans "Concepto" %}</th>
-                    <th scope="col">{% trans "Categorización" %}</th>
+                    <th scope="col">{% trans "Comentario" %}</th>
                     <th scope="col">{% trans "Monto" %}</th>
                     <th>Acción</th>
                 </tr>
@@ -204,7 +201,7 @@
 
                 <tr>
                     <td scope="col">{{costo.concepto}}</td>
-                    <td scope="col">{{costo.categorizacion}}</td>
+                    <td scope="col">{{costo.comentario}}</td>
                     <td >{{costo.monto}}</td>
                     <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' tipo costo.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
                 </tr>
@@ -234,6 +231,41 @@
     <div class="modal-dialog modal-lg" id="document" role="document" hx-target="this">
 
     </div>
+</div>
+
+<!-- MODAL CARGA EXCEL -->
+<div class="modal fade" id="modalCargaExcel" tabindex="-1" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+
+      <form method="post" enctype="multipart/form-data" action="{% url 'carga-costos-excel' %}">
+        {% csrf_token %}
+
+        <div class="modal-header">
+          <h5 class="modal-title">Carga masiva (Excel)</h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+
+        <div class="modal-body">
+          <div class="mb-3">
+            <label class="form-label">Archivo Excel</label>
+            <input type="file" name="file" class="form-control" accept=".xlsx,.xls" required>
+          </div>
+
+          <small class="text-muted">
+            Se leerá: Concepto = columna B, Monto = columna E
+          </small>
+        </div>
+
+        <div class="modal-footer">
+          <button type="submit" class="btn btn-success">Cargar</button>
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+        </div>
+
+      </form>
+
+    </div>
+  </div>
 </div>
 
 <!--AJAX CALL-->

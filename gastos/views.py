@@ -404,13 +404,15 @@ def crear_gasto(request):
                 
                 # Iterar sobre el número máximo de archivos en cualquiera de las listas
                 max_len = max(len(archivos_pdf), len(archivos_xml))
+                #print('max_len:', max_len)
                 facturas_registradas = []
                 facturas_duplicadas = []
 
                 for i in range(max_len):
                     archivo_pdf = archivos_pdf[i] if i < len(archivos_pdf) else None
+                    print('archivo_pdf:', archivo_pdf)
                     archivo_xml = archivos_xml[i] if i < len(archivos_xml) else None
-                    
+                    factura = None
                     if archivo_xml:
                         archivo_procesado = eliminar_caracteres_invalidos(archivo_xml)
                         
@@ -467,6 +469,14 @@ def crear_gasto(request):
                             guardar_factura(factura, archivo_xml, uuid_extraido, fecha_timbrado_extraida, usuario)
                             #messages.success(request, 'Las facturas se registraron de manera exitosa')
                     if archivo_pdf:
+                        if factura is None: 
+                            # Aquí ya es seguro crear TU factura para ESTA iteración
+                            factura = Factura.objects.create(
+                                solicitud_gasto=gasto,
+                                hecho=False,
+                                    #subido_por=usuario,
+                                # si tienes campos uuid/fecha_timbrado en el modelo, puedes setearlos aquí también
+                                )
                         factura.archivo_pdf = archivo_pdf
                         factura.hecho = True
                         factura.fecha_subida = datetime.now()

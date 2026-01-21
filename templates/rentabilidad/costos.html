@@ -153,20 +153,27 @@
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
+                    <th>Contrato</th>
                     <th scope="col">Distrito</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
                     <th scope="col">Tipo</th>
+                    <th>Detalle</th>
                 </tr>
             </thead>
             <tbody>
                 {% for costo in costos_list %}
                 <tr>
-                    
+                    <td>{{costo.contrato}}</td>
                     <td>{{costo.distrito}}</td>
                     <td>{{costo.fecha|date:"F Y"}}</td>
                     <td>${{costo.get_total}}</td>
                     <td>{{costo.tipo}}</td>
+                    <td>
+                        <a id="myBtn" type="button" title= "Productos y Comentarios" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'conceptos-costos' costo.id %}">
+                            <i class="fa-duotone fa-solid fa-circle-info"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
@@ -208,14 +215,14 @@
                 {% endif %}
             </ul>
         </nav>
-
-
 <!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
 
     </div>
 </div>
+
+
 
 {% endblock %}
 </body>

@@ -41,6 +41,7 @@ class Costos(models.Model):
     solicitud = models.ForeignKey(Solicitud_Costos, on_delete= models.CASCADE, null = True, related_name = "costos" )
     concepto = models.ForeignKey(Concepto, on_delete = models.CASCADE, null = True, related_name = 'costos_conceptos')
     categorizacion = models.CharField(max_length = 150, null = True)
+    comentario = models.CharField(max_length = 250, null = True, blank=True)    
     monto = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     complete = models.BooleanField(default = False)
 

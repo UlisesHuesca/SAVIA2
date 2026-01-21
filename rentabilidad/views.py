@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect
+from django.db import transaction
 from django.db.models import Sum, Q
 from django.db.models.functions import TruncMonth
 from django.conf import settings
@@ -8,23 +9,26 @@ from django.http import HttpResponse
 from calendar import month_name,  monthrange
 from collections import defaultdict
 
-from .models import Costos, Solicitud_Costos, Tipo_Costo, Solicitud_Ingresos, Ingresos, Depreciaciones
+from .models import Costos, Solicitud_Costos, Tipo_Costo, Solicitud_Ingresos, Ingresos, Depreciaciones, Concepto
 from user.models import Profile, Distrito
 from solicitudes.models import Contrato
 from compras.models import Moneda
 from user.decorators import perfil_seleccionado_required
-from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form, Solicitud_Costo_Indirecto_Form, Solicitud_Costo_Indirecto_Central_Form
+from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form, Solicitud_Costo_Indirecto_Form, Solicitud_Costo_Indirecto_Central_Form, UploadExcelForm
 from .filters import Costos_Form
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
+import re
+import unicodedata
 
 
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 
 import openpyxl
 from openpyxl.styles import NamedStyle, Font, PatternFill
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
+from openpyxl import load_workbook
 
 
 # Create your views here.
@@ -53,6 +57,19 @@ def costos(request):
     return render(request,'rentabilidad/costos.html', context)
 
 @perfil_seleccionado_required
+def conceptos_costos(request, pk):
+    costo = Solicitud_Costos.objects.get(id=pk)
+    conceptos = Costos.objects.filter(solicitud = costo)
+
+
+    context = {
+        'costo':costo,
+        'conceptos':conceptos,
+    }
+
+    return render(request,'rentabilidad/conceptos_costos.html',context)
+
+@perfil_seleccionado_required
 def add_costo(request, tipo):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
@@ -61,7 +78,7 @@ def add_costo(request, tipo):
     costos = Costos.objects.filter(solicitud = solicitud)
     if tipo == "directo":
         form = Solicitud_Costo_Form()
-        tipos = Tipo_Costo.objects.filter(id__in = [2,5])
+        tipos = Tipo_Costo.objects.filter(id__in = [2])
         form.fields['tipo'].queryset = tipos
         form.fields['distrito'].queryset = distritos
     elif tipo == "indirecto":
@@ -127,6 +144,145 @@ def add_costo(request, tipo):
         }
 
     return render(request,'rentabilidad/add_costo.html',context)
+
+def _to_decimal(value):
+    """
+    Acepta 1234.56, "1,234.56", 1234, etc.
+    """
+    if value is None:
+        return None
+    if isinstance(value, (int, float, Decimal)):
+        return Decimal(str(value))
+    s = str(value).strip().replace(",", "")
+    if s == "":
+        return None
+    try:
+        return Decimal(s)
+    except (InvalidOperation, ValueError):
+        return None
+    
+
+def limpiar_espacios(s):
+    if s is None:
+        return ""
+    return re.sub(r"\s+", " ", str(s).strip())
+
+def normalizar_clave(valor):
+    if valor is None:
+        return ""
+    s = re.sub(r"\s+", " ", str(valor).strip())
+    s = unicodedata.normalize("NFKD", s)
+    s = "".join(ch for ch in s if not unicodedata.combining(ch))
+    return s.upper()
+
+@perfil_seleccionado_required
+def carga_costos_excel(request):
+    pk_perfil = request.session.get("selected_profile_id")
+    usuario = Profile.objects.get(id=pk_perfil)
+
+    solicitud, _ = Solicitud_Costos.objects.get_or_create(created_by=usuario, complete=False)
+
+    if request.method == "POST":
+        form = UploadExcelForm(request.POST, request.FILES)
+        if not form.is_valid():
+            return render(request, "rentabilidad/carga_costos_excel.html", {"form": form})
+
+        f = form.cleaned_data["file"]
+
+        try:
+            wb = load_workbook(filename=f, data_only=True)
+            ws = wb.active
+        except Exception as e:
+            messages.error(request, f"No se pudo leer el Excel: {e}")
+            return redirect(request.path)
+
+        COL_CONCEPTO = 2  # B
+        COL_MONTO = 5     # E
+        MIN_ROW = 2       # ajusta si tu reporte tiene encabezados
+
+        filas = []
+        errores = []
+
+        # 1) Leer filas y validar monto básico
+        for row_idx, row in enumerate(ws.iter_rows(min_row=MIN_ROW, values_only=True), start=MIN_ROW):
+            concepto_raw = row[COL_CONCEPTO - 1] if len(row) >= COL_CONCEPTO else None
+            monto_raw = row[COL_MONTO - 1] if len(row) >= COL_MONTO else None
+
+            concepto_txt = (str(concepto_raw).strip() if concepto_raw is not None else "")
+            monto = _to_decimal(monto_raw)
+            concepto_txt = normalizar_clave(concepto_txt)
+            # saltar filas vacías en B y E
+            if concepto_txt == "" and (monto is None or monto == 0):
+                continue
+
+            # opcional: ignorar encabezados de reporte
+            upper = concepto_txt.upper()
+            if upper.startswith("CONTRATO") or upper in {"CUENTA", "NOMBRE"}:
+                continue
+
+            if concepto_txt == "":
+                errores.append(f"Fila {row_idx}: columna B vacía (concepto).")
+                continue
+
+            if monto is None:
+                errores.append(f"Fila {row_idx}: columna E inválida ({monto_raw}).")
+                continue
+
+            filas.append((limpiar_espacios(concepto_txt), monto))
+
+        if errores:
+            return render(request, "rentabilidad/carga_costos_excel.html", {"form": form, "errores": errores})
+
+        if not filas:
+            messages.warning(request, "No se encontraron filas válidas para cargar.")
+            return redirect("add-costo", tipo="directo")
+
+        # 2) Resolver conceptos existentes (sin crear nuevos)
+        nombres = sorted({c for c, _ in filas})
+        
+        existentes = Concepto.objects.filter(nombre__in=nombres)  # <-- ajusta 'nombre' si tu campo se llama distinto
+
+        mapa = {normalizar_clave(c.nombre): c for c in existentes}
+
+        faltantes = [n for n in nombres if n not in mapa]
+
+        # 3) Crear solo los Costos que sí tengan Concepto
+        costos_a_crear = []
+        for concepto_txt, monto in filas:
+            concepto_obj = mapa.get(concepto_txt)
+            if not concepto_obj:
+                continue
+
+            costos_a_crear.append(Costos(
+                solicitud=solicitud,
+                concepto=concepto_obj,  # FK
+                monto=monto,
+                complete=True
+            ))
+
+        with transaction.atomic():
+            Costos.objects.bulk_create(costos_a_crear, batch_size=500)
+
+        # 4) Mensajes finales
+        if costos_a_crear:
+            messages.success(request, f"Se crearon {len(costos_a_crear)} costos correctamente.")
+        else:
+            messages.warning(request, "No se creó ningún costo porque ninguno de los conceptos existe en el catálogo.")
+
+        if faltantes:
+            # evita mensajes gigantes (opcional)
+            max_show = 25
+            lista = ", ".join(faltantes[:max_show])
+            extra = "" if len(faltantes) <= max_show else f" ... (+{len(faltantes)-max_show} más)"
+            messages.warning(request, f"No se encontraron en el catálogo: {lista}{extra}")
+
+        return redirect("add-costo", tipo="directo")
+
+    else:
+        form = UploadExcelForm()
+
+    return render(request, "rentabilidad/carga_costos_excel.html", {"form": form, "solicitud": solicitud})
+
 
 @perfil_seleccionado_required
 def delete_costo(request, tipo, pk):

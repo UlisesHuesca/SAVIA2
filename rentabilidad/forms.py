@@ -44,6 +44,15 @@ class Solicitud_Costo_Form(forms.ModelForm):
         except ValueError:
             raise forms.ValidationError("Formato de fecha inválido. Usa Mes-Año (YYYY-MM).")
         
+class UploadExcelForm(forms.Form):
+    file = forms.FileField(
+        label="Archivo Excel",
+        widget=forms.ClearableFileInput(attrs={
+            "class": "form-control",
+            "accept": ".xlsx,.xls"
+        })
+    )
+        
 class Solicitud_Costo_Indirecto_Form(forms.ModelForm):
     # Sobrescribimos el campo para poder usar input_formats y controlar la limpieza
     fecha = forms.DateField(
@@ -132,7 +141,7 @@ class Solicitud_Costo_Indirecto_Central_Form(forms.ModelForm):
 class Costo_Form(forms.ModelForm):
     class Meta:
         model = Costos
-        fields = ['concepto','monto']
+        fields = ['concepto','monto','comentario']
 
 class Solicitud_Ingreso_Form(forms.ModelForm):
     # Sobrescribimos el campo para poder usar input_formats y controlar la limpieza
