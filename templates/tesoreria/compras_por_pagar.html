@@ -15,16 +15,19 @@
 <hr>
 <h6>&nbsp;</h6>
 <h6 class="d-lg-none">&nbsp;</h6>
-<div class = "col" id="response-div">
+<div class="row">
+<div class = "col-md-6 col-sm-12" id="response-div">
         <div class="card">
             <div class="card-header">
                 <h5>Filtro de Compras Autorizadas| Por pagar </h5>
             </div>
+           
+            <form method="GET">
+            {% csrf_token %}
             <div class="card-body">
-                {% csrf_token %}
-                <form method="GET">
-                <div class="row g-12">
-                    <div class="col-lg-3 col-md-12">
+               
+                <div class="row">
+                    <div class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -33,7 +36,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-12">
+                    <div class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -42,7 +45,9 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-12">
+                </div>
+                 <div class="row">
+                    <div class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -51,7 +56,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="col-lg-3 col-md-12">
+                    <div class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -61,8 +66,8 @@
                         </div>
                     </div>
                 </div>
-                <div class="row g-12">
-                    <div class="col-lg-3 col-md-12">
+                <div class="row">
+                    <div class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -71,25 +76,7 @@
                             </div>
                         </div>
                     </div>
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                        <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                            </div>
-                        </div>
-                    </div>
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                      <div id="serie" class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -98,8 +85,30 @@
                             </div>
                         </div>
                     </div>
+                </div>
+                <div class="row">
+                    <div id="serie" class="col-lg-6 col-md-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
+                        </div>
+                    </div>
+                     <div id="serie" class="col-lg-6 col-md-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                  
                     {% if usuario.distritos.nombre == "MATRIZ" %}
-                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                    <div id="serie" class="col-lg-6 col-md-12">
                         <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
@@ -113,35 +122,135 @@
                     <div class="col-2 mt-1">
                         <button class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
-                </div>
-                <hr>
-                </form>
-                <form method="POST" onsubmit="mostrarIndicadorCarga();">
-                    {% csrf_token %}
-                    <ul class="nav nav-pills">
-                        <li class="nav-item mx-2">
-                            <button type="submit" class="btn btn-outline-success" name="btnReporte" value='Reporte Excel'>
-                                <i class="fa-solid fa-file-excel fa-2xl"></i>
-                            </button>
-                        </li>
-                        <!--<li class="nav-item mx-2">
-                            <button type="button" class="btn btn-outline-danger">
-                               <i class="fa-solid fa-file-pdf fa-2xl"></i>
-                            </button>
-                        </li>-->
-                        <!--<li class="nav-item mx-2">
-                            <div class="btn-group btn-group" role="group" aria-label="Large button group">
-                                <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-autorizadas' %}">Compras</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viaticos</a>
-                                
-                            </div>
-                        </li>-->
-                    </ul>
-                </form>
             </div>
+            <hr>
+            </form>
+            <form method="POST" onsubmit="mostrarIndicadorCarga();">
+            {% csrf_token %}
+            <ul class="nav nav-pills">
+                <li class="nav-item mx-2">
+                    <button type="submit" class="btn btn-outline-success" name="btnReporte" value='Reporte Excel'>
+                        <i class="fa-solid fa-file-excel fa-2xl"></i>
+                    </button>
+                </li>
+                <!--<li class="nav-item mx-2">
+                    <button type="button" class="btn btn-outline-danger">
+                        <i class="fa-solid fa-file-pdf fa-2xl"></i>
+                    </button>
+                </li>-->
+                <!--<li class="nav-item mx-2">
+                    <div class="btn-group btn-group" role="group" aria-label="Large button group">
+                        <a type="button" class="btn btn-outline-info active" style="color:#F5F5F5; background:#3E92CC; border-color: #3E92CC;" href="{% url 'compras-autorizadas' %}">Compras</a>
+                        <a type="button" class="btn btn-outline-info" href="{% url 'pago-gastos-autorizados' %}">Gastos</a>
+                        <a type="button" class="btn btn-outline-info" href="{% url 'viaticos-autorizados-pago' %}">Viaticos</a>
+                                
+                    </div>
+                </li>-->
+            </ul>
+            </form>
+        
         </div>
+</div>
+<div class="col-lg-6 col-md-6">
+    <div class = "card">
+    <form method=POST onsubmit="mostrarIndicadorCarga()">
+        {% csrf_token %}
+        <div class="card-header">
+            <h6>Facturas | Descarga</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">   
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            <input type="date" id="fecha_inicio" name="fecha_inicio" class="form-control">
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            <input type="date" id="fecha_fin" name="fecha_fin" class="form-control">
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-4 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            <input id="folio" name="folio" class="form-control">
+                            <label style="color: #121212;" for="id_subproyecto">Folio:</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            {% if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.nombre != "Tesoreria_Documentos"  %}
+            <div class="col-lg-3 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <select id="distrito" name="distrito" class="form-select">
+                            <option value="">Todos</option>
+                            {% for distrito in distritos %}
+                                <option value="{{ distrito.id }}">{{ distrito.nombre }}</option>
+                            {% endfor %}
+                        </select>
+                        <label style="color: #121212;" for="id_id">Distrito</label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-4 col-sm-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        <select id="tesorero" name="tesorero" class="form-select">
+                            <option value="">Todos</option>
+                            {% for tesorero in tesoreros %}
+                                <option value="{{ tesorero.id }}">{{ tesorero.staff.staff.first_name }} {{tesorero.staff.staff.last_name}}</option>
+                            {% endfor %}
+                        </select>
+                        <label style="color: #121212;" for="id_id">Tesorero</label>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+                <div class="col-lg-4 col-sm-12">
+               
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-plus"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">       
+                            <select id="tipo_documento" name="tipo_documento" class="form-select">
+                                <option value="">Todos</option>
+                                <option value="gastos">Gastos</option>
+                                <option value="compras">Compras</option>
+                                <option value="viaticos">Viáticos</option>
+                            </select>
+                            <label for="tipo_documento">Tipo de Documento:</label>
+                        </div>
+                    </div>
+                </div>
+                <!--<div class="form-check mt-2">
+                    <input class="form-check-input" type="checkbox" id="validacion" name="validacion">
+                    <img src="{% static 'images/SAT.jpg' %}" alt="Validar SAT"
+                    style="width: 40px; height: auto; vertical-align: middle; margin-right: 8px;">
+                    <label class="form-check-label" for="validacion">Validar en SAT</label>
+                </div>-->
+            
+            <div class="col-lg-3 col-sm-12 m-3">
+                <button type="submit" name="btnDescargarFacturas" class="btn btn-primary "><i class="fa-solid fa-circle-chevron-down"></i></button>
+                 <button name="btnReporteXML" type="submit" class="btn btn-outline-success" value='Reporte Excel de XML' title ="Generar reporte de XML">
+                    <i class="fa-solid fa-file-excel fa-2xl"></i>
+                </button>
+            </div>
+        </div>        
+    </form>
     </div>
+</div>
+</div>
     <!-- Aquí terminan el encabezado de los filtros -->
     <div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
         <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
