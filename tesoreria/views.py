@@ -2577,9 +2577,10 @@ def control_bancos(request, pk):
     else:
         pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('pagado_real', 'pagado_hora','-tipo__id')  
     
+    
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
     pagos = myfilter.qs
-
+    print(pagos)
       # Valores para mostrar solo cuando se calcule
     saldo_final = None
     saldo_trasladado = None

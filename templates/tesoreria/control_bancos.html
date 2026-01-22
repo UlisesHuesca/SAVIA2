@@ -275,7 +275,7 @@
                         {% elif pago.distrito %} {{pago.distrito}}
                         {% endif %}</td>
                     
-                    <td>{% if pago.tipo.nombre == null or pago.tipo.nombre == "CARGO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
+                    <td>{% if pago.tipo.nombre == null or pago.tipo.nombre == "CARGO" or pago.tipo.nombre == "TRANSFERENCIA" %}${{pago.monto|floatformat:2}}{% endif %}</td>
                     <td>{% if pago.tipo.nombre == "ABONO" %}${{pago.monto|floatformat:2}}{% endif %}</td>
                     <!--<td class="saldo">{{pago.saldo|floatformat:2}}</td>-->
                 </tr>

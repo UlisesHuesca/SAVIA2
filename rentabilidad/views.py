@@ -1265,7 +1265,7 @@ def reporte_rentabilidad_mensual(request):
                     "ind_oper": 0,
                     "ind_adm": 0,
                     "ind_central": 0,
-                    "rentabilidad": 0,
+                    "margen operativo": 0,
                 }
 
                 # ------------------------
