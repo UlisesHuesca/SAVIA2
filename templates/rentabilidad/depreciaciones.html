@@ -112,7 +112,7 @@
                     <td>{{depreciacion.mes_inicial|date:"F Y"}}</td>
                     <td>${{depreciacion.monto}}</td>
                     <td>{{depreciacion.meses_a_depreciar}}</td>
-                    <td>${{depreciacion.get_depreciacion_mensual}}</td>
+                    <td>${{depreciacion.get_depreciacion_mensual|floatformat:2}}</td>
                 </tr>
                 {% endfor %}
             </tbody>

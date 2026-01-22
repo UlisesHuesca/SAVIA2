@@ -109,7 +109,7 @@
                     
                     <td>{{ingreso.distrito}}</td>
                     <td>{{ingreso.fecha|date:"F Y"}}</td>
-                    <td>${{ingreso.get_total}}</td>
+                    <td>${{ingreso.get_total|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>
