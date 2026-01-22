@@ -2959,7 +2959,7 @@ def convert_excel_gasto_matriz(gastos):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(I:I)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(K:K)").style = money_resumen_style
   
 
    
