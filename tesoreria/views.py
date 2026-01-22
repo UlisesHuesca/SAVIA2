@@ -255,7 +255,7 @@ def compras_por_pagar(request):
                             uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                             gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                             zip_file.write(factura.factura_xml.path, gen_path)
-                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", gen_path, factura))
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{compra.folio}", factura.fecha_subido, compra.req.orden.distrito.nombre, "NA", gen_path, factura))
                         for complemento in factura.complementos.all():
                             if complemento.complemento_pdf:     #Encarpeta el complemento_pdf
                                 complemento_file_name = os.path.basename(complemento.complemento_pdf.path)
