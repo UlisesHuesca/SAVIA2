@@ -108,7 +108,7 @@ def compras_por_pagar(request):
     tipos_prioridad = TipoPrioridad.objects.all()
     if usuario.tipo.cuentas_por_pagar:
         compras = Compra.objects.filter(autorizado2=True, para_pago = False, pagada=False, regresar_oc = False, cerrar_sin_pago_completo = False, req__orden__distrito__in = almacenes_distritos).order_by('-folio')
-        
+          
     
     
     #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
@@ -142,89 +142,6 @@ def compras_por_pagar(request):
                 Compra.objects.filter(id=compra_id).update(para_pago=True, parcial = parcial, tesorero =usuario)
             # Después de la actualización, redirige para restablecer el conteo y sumatoria
             return redirect('compras-por-pagar')
-
-    context= {
-        'usuario':usuario,
-        'compras':compras,
-        'myfilter':myfilter,
-        'compras_list':compras_list,
-        'tipos_prioridad': tipos_prioridad,
-        }
-
-    return render(request, 'tesoreria/compras_por_pagar.html',context)
-
-def actualizar_prioridad(request):
-    if request.method == 'POST':
-        data = json.loads(request.body)
-        compra_id = data.get('compra_id')
-        tipo_prioridad_id = data.get('tipo_prioridad_id')
-        compra = Compra.objects.get(pk=compra_id)
-        tipo = TipoPrioridad.objects.get(pk=tipo_prioridad_id)
-        compra.tipo_prioridad = tipo
-        compra.save()
-        return JsonResponse({'success': True, 'tipo': tipo.nombre})
-    return JsonResponse({'success': False}, status=400)
-
-# Create your views here.
-@perfil_seleccionado_required
-def compras_autorizadas(request):
-    pk_profile = request.session.get('selected_profile_id')
-    usuario = Profile.objects.get(id = pk_profile)
-    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-    
-    if usuario.tipo.tesoreria == True:
-        if usuario.tipo.rh:
-            compras = Compra.objects.none()
-        elif usuario.tipo.tesoreria: 
-            compras = Compra.objects.filter(
-                Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), # 👈 Filtra que quien envió a pago sea Tesorería
-                para_pago=True,
-                pagada=False,
-                cerrar_sin_pago_completo = False,
-                autorizado2=True, 
-                req__orden__distrito__in = almacenes_distritos
-            ).annotate(
-                total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
-                autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
-            ).order_by('-folio')
-    elif usuario.tipo.finanzas:
-        compras = Compra.objects.filter(
-            para_pago=True,
-            pagada=False,
-            cerrar_sin_pago_completo = False,
-            autorizado2=True, 
-            tesorero__tipo__finanzas=True,  # 👈 Filtra que quien envió a pago sea Finanzas
-            req__orden__distrito = usuario.distritos
-        ).annotate(
-            total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
-            autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
-        ).order_by('-folio')
-        
-    
-   
-    
-    #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
-    myfilter = CompraFilter(request.GET, queryset=compras)
-    compras = myfilter.qs
-    
-    p = Paginator(compras, 50)
-    page = request.GET.get('page')
-    compras_list = p.get_page(page)
-
-    for compra in compras_list:
-        if compra.total_facturas == 0:
-            compra.estado_facturas = 'sin_facturas'
-        elif compra.autorizadas == compra.total_facturas:
-            compra.estado_facturas = 'todas_autorizadas'
-        else:
-            compra.estado_facturas = 'pendientes'
-
-    if request.method == 'POST':
-        if 'btnReporte' in request.POST:
-            if usuario.tipo.tesoreria:
-                return convert_excel_matriz_compras_tesoreria(compras)
-            else:
-                return convert_excel_matriz_compras_autorizadas(compras)
         elif 'btnReporteXML' in request.POST:
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
@@ -302,213 +219,163 @@ def compras_autorizadas(request):
             response.set_cookie('descarga_iniciada', 'true', max_age=20)
             return response
         elif 'btnDescargarFacturas' in request.POST:
-            fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
-            fecha_fin = parse_date(request.POST.get('fecha_fin'))
-            distrito_id = request.POST.get('distrito')
-            tesorero_id = request.POST.get('tesorero')
-            folio = request.POST.get('folio')
-            validar_sat = request.POST.get('validacion') == 'on'
-            tipo_documento = request.POST.get('tipo_documento') 
+            print("Descargas")
+            #fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
+            #fecha_fin = parse_date(request.POST.get('fecha_fin'))
+            #distrito_id = request.POST.get('distrito')
+            #tesorero_id = request.POST.get('tesorero')
+            #folio = request.POST.get('folio')
+            #validar_sat = request.POST.get('validacion') == 'on'
+            #tipo_documento = request.POST.get('tipo_documento') 
             #print('tipo_documento:', tipo_documento)
-            
-            print(usuario.tipo.documentos)
-            if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
-                print('Como entró?')
-                pagos = Pago.objects.filter(hecho=True)
-                if fecha_inicio and fecha_fin:
-                    #pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True)
-                    pagos = Pago.objects.filter(pagado_real__range=[fecha_inicio, fecha_fin], hecho = True) #Se modifica para que ya solo descargue con respecto a la --fecha real--
-                    
-                    if tipo_documento == "gastos":
-                        pagos = pagos.filter(gasto__isnull=False)
-                    elif tipo_documento == "compras":
-                        pagos = pagos.filter(oc__isnull=False)
-                    elif tipo_documento == "viaticos":
-                        pagos = pagos.filter(viatico__isnull=False)
+                
+            print('usuario.usuario.tipo.documentos:', usuario.tipo.documentos)
+            #if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
+            zip_buffer = BytesIO()
+            datos_xml_lista = []
+            processed_docs = set()
 
-                    if distrito_id:
-                        pagos = pagos.filter(
-                            Q(gasto__distrito_id=distrito_id) |
-                            Q(oc__req__orden__distrito_id=distrito_id) |
-                            Q(viatico__distrito_id=distrito_id)
-                        )
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                #zip_file.mkdir("GENERAL_PDFs")
+                #zip_file.mkdir("GENERAL_XMLs")
 
-                    if tesorero_id:
-                        pagos = pagos.filter(tesorero_id=tesorero_id)
+                for compra in compras:
+                    carpeta = None   
+                        
+                        
+                    carpeta = f'COMPRA_{compra.folio}_{compra.req.orden.distrito.nombre}'
+                    #zip_file.mkdir(carpeta)
+                    for factura in compra.facturas.all():
+                        if factura.factura_pdf:
+                            zip_file.write(factura.factura_pdf.path, os.path.join(carpeta, os.path.basename(factura.factura_pdf.path)))
+                            uuid = factura.uuid if factura.uuid else 'SIN_UUID'
+                            zip_file.write(factura.factura_pdf.path, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
+                        if factura.factura_xml:
+                            zip_file.write(factura.factura_xml.path, os.path.join(carpeta, os.path.basename(factura.factura_xml.path)))
+                            uuid = factura.uuid if factura.uuid else 'SIN_UUID'
+                            gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
+                            zip_file.write(factura.factura_xml.path, gen_path)
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", gen_path, factura))
+                        for complemento in factura.complementos.all():
+                            if complemento.complemento_pdf:     #Encarpeta el complemento_pdf
+                                complemento_file_name = os.path.basename(complemento.complemento_pdf.path)
+                                zip_file.write(complemento.complemento_pdf.path, os.path.join(carpeta, complemento_file_name))
+                            if complemento.complemento_xml:     #Encarpeta el complemento_xml
+                                complemento_file_name = os.path.basename(complemento.complemento_xml.path)
+                                zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
+                    if compra.id not in processed_docs:
+                        pdf_buf = generar_pdf(compra)
+                        zip_file.writestr(os.path.join(carpeta, f'OC_{compra.folio}.pdf'), pdf_buf.getvalue())
+                        processed_docs.add(compra.id)
+                        # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
+                                
+                # Excel de resumen
+                output = BytesIO()
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Resumen XML"
+                columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
+                            'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                            'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
+                ws.append(columnas)
+                for dato in datos_xml_lista:
+                    ws.append([dato.get(col, '') for col in columnas])
+                for col in ['G']:
+                    for row in range(2, ws.max_row + 1):
+                        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+                wb.save(output)
+                zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
 
-                if folio:
-                    pagos = Pago.objects.filter(hecho = True)
-                    pagos = pagos.filter(
-                        Q(gasto__folio=folio) |
-                        Q(oc__folio=folio) |
-                        Q(viatico__folio=folio)
-                    )
-                    if distrito_id:
-                        pagos = pagos.filter(
-                            Q(gasto__distrito_id=distrito_id) |
-                            Q(oc__req__orden__distrito_id=distrito_id) |
-                            Q(viatico__distrito_id=distrito_id)
-                        )
+            zip_buffer.seek(0)
+            response = HttpResponse(zip_buffer, content_type='application/zip')
+            response.set_cookie('descarga_iniciada', 'true', max_age=20)
+            response['Content-Disposition'] = 'attachment; filename=pagos.zip'
+            return response
 
-                    if tesorero_id:
-                        pagos = pagos.filter(tesorero_id=tesorero_id)
+    context= {
+        'usuario':usuario,
+        'compras':compras,
+        'myfilter':myfilter,
+        'compras_list':compras_list,
+        'tipos_prioridad': tipos_prioridad,
+        }
+
+    return render(request, 'tesoreria/compras_por_pagar.html',context)
+
+def actualizar_prioridad(request):
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        compra_id = data.get('compra_id')
+        tipo_prioridad_id = data.get('tipo_prioridad_id')
+        compra = Compra.objects.get(pk=compra_id)
+        tipo = TipoPrioridad.objects.get(pk=tipo_prioridad_id)
+        compra.tipo_prioridad = tipo
+        compra.save()
+        return JsonResponse({'success': True, 'tipo': tipo.nombre})
+    return JsonResponse({'success': False}, status=400)
+
+# Create your views here.
+@perfil_seleccionado_required
+def compras_autorizadas(request):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+   
+    
+    if usuario.tipo.tesoreria == True:
+        if usuario.tipo.rh:
+            compras = Compra.objects.none()
+        elif usuario.tipo.tesoreria: 
+            compras = Compra.objects.filter(
+                Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), # 👈 Filtra que quien envió a pago sea Tesorería
+                para_pago=True,
+                pagada=False,
+                cerrar_sin_pago_completo = False,
+                autorizado2=True, 
+                req__orden__distrito__in = almacenes_distritos
+            ).annotate(
+                total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
+                autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
+            ).order_by('-folio')
+    elif usuario.tipo.finanzas:
+        compras = Compra.objects.filter(
+            para_pago=True,
+            pagada=False,
+            cerrar_sin_pago_completo = False,
+            autorizado2=True, 
+            tesorero__tipo__finanzas=True,  # 👈 Filtra que quien envió a pago sea Finanzas
+            req__orden__distrito = usuario.distritos
+        ).annotate(
+            total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
+            autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
+        ).order_by('-folio')
+        
+    
+   
+    
+    #compras = Compra.objects.filter(autorizado2=True, pagada=False).order_by('-folio')
+    myfilter = CompraFilter(request.GET, queryset=compras)
+    compras = myfilter.qs
+    
+    p = Paginator(compras, 50)
+    page = request.GET.get('page')
+    compras_list = p.get_page(page)
+
+    for compra in compras_list:
+        if compra.total_facturas == 0:
+            compra.estado_facturas = 'sin_facturas'
+        elif compra.autorizadas == compra.total_facturas:
+            compra.estado_facturas = 'todas_autorizadas'
+        else:
+            compra.estado_facturas = 'pendientes'
+
+    if request.method == 'POST':
+        if 'btnReporte' in request.POST:
+            if usuario.tipo.tesoreria:
+                return convert_excel_matriz_compras_tesoreria(compras)
             else:
-                #print('Aquí también entró')
-                pagos = pagos.filter(
-                    Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
-                    Q(gasto__distrito=usuario.distritos) |
-                    Q(oc__req__orden__distrito=usuario.distritos) |
-                    Q(viatico__distrito=usuario.distritos)
-                )
-                if tipo_documento == "gastos":
-                    pagos = pagos.filter(gasto__isnull=False)
-                elif tipo_documento == "compras":
-                    pagos = pagos.filter(oc__isnull=False)
-                elif tipo_documento == "viaticos":
-                    pagos = pagos.filter(viatico__isnull=False)
-
-
-            if validar_sat:
-                ids_gastos = set()
-                ids_compras = set()
-                ids_viaticos = set()
-                #print(f"Pagos: {pagos.count()}")
-                for pago in pagos:
-                    if pago.gasto:
-                        ids_gastos.update(pago.gasto.facturas.values_list('id', flat=True))
-                    elif pago.oc:
-                        ids_compras.update(pago.oc.facturas.values_list('id', flat=True))
-                    elif pago.viatico:
-                        ids_viaticos.update(pago.viatico.facturas.values_list('id', flat=True))
-                print(ids_gastos, ids_compras, ids_viaticos)
-                validar_lote_facturas.delay(list(ids_gastos), list(ids_compras), list(ids_viaticos))
-            else:
-                zip_buffer = BytesIO()
-                datos_xml_lista = []
-                processed_docs = set()
-
-                with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
-                    #zip_file.mkdir("GENERAL_PDFs")
-                    #zip_file.mkdir("GENERAL_XMLs")
-
-                    for pago in pagos:
-                        carpeta = None
-                        if pago.gasto:
-                            gasto = pago.gasto
-                            carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
-                            #zip_file.mkdir(carpeta)
-                            for factura in gasto.facturas.all():
-                                beneficiario = factura.solicitud_gasto.colaborador.staff.staff.first_name + ' ' + factura.solicitud_gasto.colaborador.staff.staff.last_name  if factura.solicitud_gasto.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
-                                fecha_subida = factura.fecha_subida.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subida else 'No disponible'
-                                if factura.archivo_pdf:
-                                    zip_file.write(factura.archivo_pdf.path, os.path.join(carpeta, os.path.basename(factura.archivo_pdf.path)))
-                                    uuid = factura.uuid if factura.uuid else 'SIN_UUID'
-                                    zip_file.write(factura.archivo_pdf.path, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
-                                if factura.archivo_xml:
-                                    zip_file.write(factura.archivo_xml.path, os.path.join(carpeta, os.path.basename(factura.archivo_xml.path)))
-                                    uuid = factura.uuid if factura.uuid else 'SIN_UUID'
-                                    gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
-                                    zip_file.write(factura.archivo_xml.path, gen_path)
-                                    datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
-                            if gasto.id not in processed_docs:
-                                pdf_buf = render_pdf_gasto(gasto.id)
-                                zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
-                                processed_docs.add(gasto.id)
-                        elif pago.oc:
-                            oc = pago.oc
-                            carpeta = f'{pago.pagado_real}_COMPRA_{oc.folio}_{oc.req.orden.distrito.nombre}'
-                            #zip_file.mkdir(carpeta)
-                            for factura in oc.facturas.all():
-                                if factura.factura_pdf:
-                                    zip_file.write(factura.factura_pdf.path, os.path.join(carpeta, os.path.basename(factura.factura_pdf.path)))
-                                    uuid = factura.uuid if factura.uuid else 'SIN_UUID'
-                                    zip_file.write(factura.factura_pdf.path, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
-                                if factura.factura_xml:
-                                    zip_file.write(factura.factura_xml.path, os.path.join(carpeta, os.path.basename(factura.factura_xml.path)))
-                                    uuid = factura.uuid if factura.uuid else 'SIN_UUID'
-                                    gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
-                                    zip_file.write(factura.factura_xml.path, gen_path)
-                                    datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{oc.folio}", factura.fecha_subido, oc.req.orden.distrito.nombre, "NA", gen_path, factura))
-                                for complemento in factura.complementos.all():
-                                    if complemento.complemento_pdf:     #Encarpeta el complemento_pdf
-                                        complemento_file_name = os.path.basename(complemento.complemento_pdf.path)
-                                        zip_file.write(complemento.complemento_pdf.path, os.path.join(carpeta, complemento_file_name))
-                                    if complemento.complemento_xml:     #Encarpeta el complemento_xml
-                                        complemento_file_name = os.path.basename(complemento.complemento_xml.path)
-                                        zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
-                            if oc.id not in processed_docs:
-                                pdf_buf = generar_pdf(oc)
-                                zip_file.writestr(os.path.join(carpeta, f'OC_{oc.folio}.pdf'), pdf_buf.getvalue())
-                                processed_docs.add(oc.id)
-                                     # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
-                              
-                        elif pago.viatico:
-                            viatico = pago.viatico
-                            carpeta = f'{pago.pagado_real}_VIATICO_{viatico.folio}_{viatico.distrito.nombre}'
-                            #zip_file.mkdir(carpeta)
-                            for factura in viatico.facturas.all():
-                                beneficiario = factura.solicitud_viatico.colaborador.staff.staff.first_name + ' ' + factura.solicitud_viatico.colaborador.staff.staff.last_name  if factura.solicitud_viatico.colaborador else factura.solicitud_gasto.staff.staff.staff.first_name + ' ' + factura.solicitud_gasto.staff.staff.staff.last_name
-                                fecha_subida = factura.fecha_subido.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
-                                if factura.factura_pdf:
-                                    zip_file.write(factura.factura_pdf.path, os.path.join(carpeta, os.path.basename(factura.factura_pdf.path)))
-                                    uuid = factura.uuid if factura.uuid else 'SIN_UUID'
-                                    zip_file.write(factura.factura_pdf.path, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
-                                if factura.factura_xml:
-                                    zip_file.write(factura.factura_xml.path, os.path.join(carpeta, os.path.basename(factura.factura_xml.path)))
-                                    uuid = factura.uuid if factura.uuid else 'SIN_UUID'
-                                    gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
-                                    zip_file.write(factura.factura_xml.path, gen_path)
-                                    datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"V{viatico.folio}", fecha_subida, viatico.distrito.nombre, beneficiario, gen_path, factura))
-                            if viatico.id not in processed_docs:
-                                pdf_buf = generar_pdf_viatico(viatico.id)
-                                zip_file.writestr(os.path.join(carpeta, f'VIATICO_{viatico.folio}.pdf'), pdf_buf.getvalue())
-                                processed_docs.add(viatico.id)
-
-                        if pago.comprobante_pago and carpeta is not None:
-                            fecha_pago = pago.pagado_real.strftime('%Y-%m-%d') if pago.pagado_real else 'SIN_FECHA'
-                            if pago.gasto:
-                                folio = f'G{pago.gasto.folio}'
-                                if pago.gasto.colaborador:
-                                    pago_nombre = f'{pago.gasto.colaborador.staff.staff.first_name}_{pago.gasto.colaborador.staff.staff.last_name}'
-                                else:
-                                    pago_nombre = f'{pago.gasto.staff.staff.staff.first_name}_{pago.gasto.staff.staff.staff.last_name}'
-                            elif pago.oc:
-                                folio = f'OC{oc.folio}'
-                                pago_nombre = f'{pago.oc.proveedor.nombre.razon_social}'
-                            elif pago.viatico:
-                                folio = f'V{viatico.folio}'
-                                if pago.viatico.colaborador:
-                                    pago_nombre = f'{pago.viatico.colaborador.staff.staff.first_name}_{pago.viatico.colaborador.staff.staff.last_name}'
-                                else:
-                                    pago_nombre = f'{pago.viatico.staff.staff.staff.first_name}_{pago.viatico.staff.staff.staff.last_name}'
-                            
-                            monto = f"{pago.monto:.2f}".replace('.', '_')
-                            nuevo_nombre = f'{fecha_pago}_{folio}_{pago_nombre}_{monto}'
-                           
-                            zip_file.write(pago.comprobante_pago.path, os.path.join(carpeta, f'{nuevo_nombre}.pdf'))
-
-                        # Excel de resumen
-                    output = BytesIO()
-                    wb = Workbook()
-                    ws = wb.active
-                    ws.title = "Resumen XML"
-                    columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
-                                'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
-                                'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
-                    ws.append(columnas)
-                    for dato in datos_xml_lista:
-                        ws.append([dato.get(col, '') for col in columnas])
-                    for col in ['G']:
-                        for row in range(2, ws.max_row + 1):
-                            ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
-                    wb.save(output)
-                    zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
-
-                zip_buffer.seek(0)
-                response = HttpResponse(zip_buffer, content_type='application/zip')
-                response.set_cookie('descarga_iniciada', 'true', max_age=20)
-                response['Content-Disposition'] = 'attachment; filename=pagos.zip'
-                return response
+                return convert_excel_matriz_compras_autorizadas(compras)
+        
     
 
     context= {
