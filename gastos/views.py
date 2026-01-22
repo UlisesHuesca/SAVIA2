@@ -2935,7 +2935,7 @@ def convert_excel_gasto_matriz(gastos):
     wb.add_named_style(percent_style)
 
     columns = ['Folio','Fecha Autorización','Distrito','Proyectos','Subproyectos','Comentarios','Colaborador','Solicitado para',
-               'Importe','Fecha Creación','Status','Autorizado por','Tiene Facturas','Status de Pago']
+               'Importe','Importe Pagado','Restante','Fecha Creación','Status','Autorizado por','Tiene Facturas','Status de Pago']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -2996,8 +2996,10 @@ def convert_excel_gasto_matriz(gastos):
             status = "Autorizado"
             if gasto.distrito:
                 if gasto.distrito.nombre == "MATRIZ":
+                    
                     autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
                 else:
+                    #print(gasto.folio)
                     autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
             else:
                 if gasto.autorizado_por2:
@@ -3037,6 +3039,9 @@ def convert_excel_gasto_matriz(gastos):
         subproyectos_str = ', '.join(subproyectos)
         comentarios_str = ', '.join(comentarios)
 
+        restante =  gasto.get_total_solicitud - gasto.monto_pagado
+
+
         row = [
             gasto.folio,
             autorizado_at_2_naive,
@@ -3047,6 +3052,8 @@ def convert_excel_gasto_matriz(gastos):
             gasto.staff.staff.staff.first_name + ' ' + gasto.staff.staff.staff.last_name,
             gasto.colaborador.staff.staff.first_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
             gasto.get_total_solicitud,
+            gasto.monto_pagado,
+            restante,
             created_at_naive,
             status,
             autorizado_por,
@@ -3059,9 +3066,9 @@ def convert_excel_gasto_matriz(gastos):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num ==1 or col_num == 9:
+            if col_num == 1 or col_num == 11:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 8:
+            if col_num == 8 or col_num == 9 or col_num == 10:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
