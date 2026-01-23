@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.models.functions import Concat
 from django.db.models import Sum, Q, Prefetch, Max, Value,Count, When, Case,DecimalField
 
@@ -14,6 +15,7 @@ from django.core.mail import EmailMessage, BadHeaderError
 import traceback
 import calendar
 
+from datetime import date, datetime
 
 import zipfile
 
@@ -682,11 +684,7 @@ def agregar_vale_rosa(request, pk):
     
     return render(request, 'gasto/crear_vale_rosa.html', context)
 
-from django.shortcuts import get_object_or_404, redirect, render
-from django.contrib import messages
-from django.db import transaction
-from django.utils import timezone
-from datetime import date, datetime
+
 
 @perfil_seleccionado_required
 
