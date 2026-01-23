@@ -148,7 +148,8 @@
                     <th>Detalles</th>
                     <th scope="col">Facturas</th>
                     {% if usuario_view %}
-                    <th>Agregar</th>
+                    <th>Vale Rosa</th>
+                    <th>Vale Azul</th>
                     {% endif %}
                     <th>Registro</th>
                     {% if usuario_view %}
@@ -224,7 +225,16 @@
                     <td>
                        
                             {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
-                            <a type="button" class="btn" style="background-color: #f8d7da; border: 1px solid #721c24; color: #721c24;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Rosa">
+                            <a type="button" class="btn" style="background-color: #f8d7da; border: 1px solid #721c24; color: #721c24;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&color=rosa&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Rosa">
+                                <i class="fa-regular fa-file-import"></i>
+                            </a> 
+                            {% endif %}
+                       
+                    </td>
+                     <td>
+                       
+                            {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
+                            <a type="button" class="btn" style="background-color: #d1ecf1; border: 1px solid #0c5460; color: #0c5460;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&&color=azul&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Azul">
                                 <i class="fa-regular fa-file-import"></i>
                             </a> 
                             {% endif %}

@@ -16,7 +16,7 @@
 <div class="col-lg-6 offset-3">
 <div class="card mt-4" id="cardValeRosa">
         <div class="card-header">
-            <h4>Agregar Vale Rosa</h4>
+            <h4>Agregar Vale {{color}}</h4>
         </div>
         <div class="card-body">
             <form method="POST" id="formValeRosa" enctype="multipart/form-data">
@@ -56,10 +56,18 @@
                     </button>
                 </div>
             </form>
+            {% if color == "azul" %}
+            <h5 class="mt-4">Vales Azules Registrados</h5>
+            {% else %}
             <h5 class="mt-4">Vales Rosa Registrados</h5>
+            {% endif %}
             <table class="table table-bordered">
                 <thead>
+                    {% if color == "azul" %}
+                    <tr style="background-color: #0c5460;"> 
+                    {% else %}
                     <tr style="background-color: #f8d7da;">
+                    {% endif %}
                         <th>ID</th>
                         <th>Motivo</th>
                         <th>Monto</th>
@@ -72,18 +80,23 @@
                 <tbody id="valesRosaLista">
                    {% if tipo == 'gasto' %}
                         {% for vale in objeto.vales_rosa.all %}
+                        {% if vale.color == color %}
                             {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                        {% endif %}
                         {% empty %}
-                            <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                        <tr><td colspan="4" class="text-center">Sin vales aún</td></tr>
                         {% endfor %}
+
                     {% elif tipo == 'viatico' %}
                         {% for vale in objeto.vales_rosa_viatico.all %}
+                        {% if vale.color == color %}
                             {% include "gasto/vale_rosa_row.html" with vale=vale %}
+                        {% endif %}
                         {% empty %}
-                            <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
-                           
+                        <tr><td colspan="4" class="text-center">Sin vales aún</td></tr>
                         {% endfor %}
                     {% endif %}
+                    </tbody>
                     
                 </tbody>
             </table>

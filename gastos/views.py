@@ -1,6 +1,7 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import JsonResponse, HttpResponse, FileResponse
 from django.core.paginator import Paginator
+from django.core.files.base import ContentFile
 from django.db.models.functions import Concat
 from django.db.models import Sum, Q, Prefetch, Max, Value,Count, When, Case,DecimalField
 
@@ -20,7 +21,7 @@ from smtplib import SMTPException
 import logging
 import socket
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
-from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form, Vale_Rosa_Form
+from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form, Vale_Rosa_Form, Cargo_Abono_Tipo_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile, Distrito, Empresa 
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
@@ -632,7 +633,15 @@ def eliminar_archivo(request, archivo_id):
 @perfil_seleccionado_required
 def agregar_vale_rosa(request, pk):
     tipo = request.GET.get('tipo')  # puede ser 'gasto' o 'viatico'
-    print(tipo)
+    next_url = request.GET.get('next') or 'mis-gastos'
+    # color llega por GET al abrir el form, y por POST al guardar
+    color = request.GET.get('color') or request.POST.get('color') or 'rosa'
+
+    # Validación robusta del color con base en el modelo
+    colores_validos = {c[0] for c in ValeRosa.VALE_COLOR_CHOICES}
+    if color not in colores_validos:
+        messages.error(request, 'Color de vale no reconocido.')
+        return redirect(next_url)
     if tipo == 'gasto':
         objeto = get_object_or_404(Solicitud_Gasto, id=pk)
     elif tipo == 'viatico':
@@ -648,6 +657,8 @@ def agregar_vale_rosa(request, pk):
         if form.is_valid():
             vale = form.save(commit=False)
             vale.creado_por = objeto.staff
+            vale.color = color
+            
             if tipo == 'gasto':
                 vale.gasto = objeto
             elif tipo == 'viatico':
@@ -665,9 +676,117 @@ def agregar_vale_rosa(request, pk):
         'objeto': objeto,
         'tipo': tipo,
         'form': form,
+        'next_url': next_url,
+        'color': color,
     }
     
     return render(request, 'gasto/crear_vale_rosa.html', context)
+
+from django.shortcuts import get_object_or_404, redirect, render
+from django.contrib import messages
+from django.db import transaction
+from django.utils import timezone
+from datetime import date, datetime
+
+@perfil_seleccionado_required
+
+def vale_azul_abono(request, pk):
+    """
+    pk = id del ValeRosa (color=azul)
+    Crea un Pago tipo ABONO y al registrarlo marca el vale como aprobado.
+    Renderiza con el template gasto/pago_gasto.html.
+    """
+    pk_usuario = request.session.get('selected_profile_id')
+    usuario = get_object_or_404(Profile, id=pk_usuario)
+
+    vale = get_object_or_404(ValeRosa, id=pk, color='azul')
+
+    # El vale azul siempre pertenece a gasto o viatico. Para usar pago_gasto template,
+    # anclamos al gasto (si quieres soportar viatico también, te lo armo similar).
+    
+    gasto = vale.gasto
+
+    # Tipos (ajusta IDs reales en tu sistema)
+    tipo = Tipo_Pago.objects.get(nombre='ABONO')
+    
+    cuentas = Cuenta.objects.filter(moneda__nombre='PESOS')
+    cuentas_para_select2 = [{'id': c.id, 'text': str(c.cuenta)} for c in cuentas]
+
+    error_messages = []
+    form = Cargo_Abono_Tipo_Form()
+
+    # Remanente del gasto (si no quieres que el vale azul afecte parcialidades del gasto,
+    # te recomiendo NO tocar gasto.parcial / gasto.pagada aquí)
+    remanente = gasto.get_total_solicitud - gasto.monto_pagado
+
+    # Si ya está aprobado, típicamente ya debe existir pago (por regla de negocio)
+    if vale.esta_aprobado:
+        messages.info(request, "Este vale azul ya fue aprobado.")
+        return redirect('pago-gastos-autorizados')
+
+    if request.method == 'POST' and "myBtn" in request.POST:
+        # Borrador de pago ligado al vale
+        pago, created = Pago.objects.get_or_create(
+            tesorero=usuario,
+            hecho=False,
+            gasto=gasto,
+            tipo=tipo,
+            comentario = f"Abono por Vale Azul #{vale.id}",
+        )
+        form = Cargo_Abono_Tipo_Form(request.POST or None, instance=pago)
+
+        if form.is_valid():
+            with transaction.atomic():
+                pago = form.save(commit=False)
+                pago.pagado_date = datetime.now()
+                pago.hecho = True
+                pago.monto = vale.monto
+                # (opcional) copiar comprobante del vale si el pago no trae uno
+                if not pago.comprobante_pago and vale.comprobante_pdf:
+                    with vale.comprobante_pdf.open('rb') as f:
+                        filename = os.path.basename(vale.comprobante_pdf.name)
+                        pago.comprobante_pago.save(filename, ContentFile(f.read()), save=False)
+
+                monto_actual = pago.monto
+                if monto_actual <= 0:
+                    messages.error(request, f'El pago {monto_actual} debe ser mayor a 0')
+                    return render(request, 'gasto/pago_gasto.html', {
+                        'gasto': gasto,
+                        'form': form,
+                        'cuentas_para_select2': cuentas_para_select2,
+                        'error_messages': error_messages,
+                        'remanente': remanente,
+                        'vale': vale,
+                        'modo_vale_azul': True,
+                    })
+
+                pago.save()
+
+                # Marcar vale como aprobado (tesorero + fecha)
+                vale.esta_aprobado = True
+                vale.aprobado_por = usuario
+                vale.aprobado_en = date.today()
+                vale.save(update_fields=["esta_aprobado", "aprobado_por", "aprobado_en"])
+
+            messages.success(request, f'Vale azul #{vale.id} aprobado y abono registrado.')
+            return redirect('pago-gastos-autorizados')
+
+        else:
+            for field, errors in form.errors.items():
+                error_messages.append(f"{field}: {errors.as_text()}")
+
+    context = {
+        'gasto': gasto,  # el template pago_gasto espera 'gasto'
+        'cuentas_para_select2': cuentas_para_select2,
+        'form': form,
+        'error_messages': error_messages,
+        'remanente': remanente,
+        # extras para el UI
+        'vale': vale,
+        'modo_vale_azul': True,
+    }
+    return render(request, 'gasto/pago_gasto.html', context)
+
 
 
 

@@ -6,6 +6,7 @@ from dashboard.models import Inventario, Order, Product
 from compras.models import Proveedor_direcciones
 from tesoreria.models import Pago, Cuenta
 
+
 class Solicitud_GastoForm(forms.ModelForm):
     class Meta:
         model = Solicitud_Gasto
@@ -116,7 +117,8 @@ class Pago_Gasto_Form(forms.ModelForm):
                 self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
-
+        
+    
 #class Articulo_Gasto_Factura_Form(forms.ModelForm):
 
 #    class Meta:
@@ -168,3 +170,20 @@ class Vale_Rosa_Form(forms.ModelForm):
     class Meta:
         model = ValeRosa
         fields = ['motivo','monto','comprobante_pdf']
+
+class Cargo_Abono_Tipo_Form(forms.ModelForm):
+    class Meta:
+        model = Pago
+        fields = ['cuenta','pagado_real','pagado_hora']
+
+    def __init__(self,*args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.fields['cuenta'].queryset = Cuenta.objects.none()
+
+        if 'cuenta' in self.data:
+            try:
+                seleccion_actual = int(self.data.get('cuenta'))
+                # Lógica para determinar el nuevo queryset basado en la selección actual
+                self.fields['cuenta'].queryset = Cuenta.objects.filter(id= seleccion_actual)
+            except (ValueError, TypeError):
+                pass  # Manejo de errores en caso de entrada no válida

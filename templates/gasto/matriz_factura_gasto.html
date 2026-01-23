@@ -282,6 +282,7 @@
                 </thead>
                 <tbody id="valesRosaLista">
                     {% for vale in gasto.vales_rosa.all %}
+                    {% if vale.color == "rosa" %}
                     <tr>
                         <td>{{ vale.id }}</td>
                         <td>{{ vale.motivo }}</td>
@@ -308,11 +309,66 @@
                             </a>
                         </td>
                     </tr>
+                    {% endif %}
                     {% empty %}
                         <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                   
                     {% endfor %}
                 </tbody>
             </table>
+            <table class="table table-bordered">
+                <thead>
+                    <tr  style="background-color:#0c5460; color: white">
+                        <th>ID</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Estado</th>
+                        <th>Eliminar</th>
+                        <th>Vale</th>
+                    </tr>
+                </thead>
+                <tbody id="valesRosaLista">
+                    {% for vale in gasto.vales_rosa.all %}
+                    {% if vale.color == "azul" %}
+                    <tr>
+                        <td>{{ vale.id }}</td>
+                        <td>{{ vale.motivo }}</td>
+                        <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
+                        <td>
+                            {% if vale.esta_aprobado %}
+                                ✅ Validado
+                            {% else %}
+                                <form method="get" action="{% url 'vale_azul_abono' vale.id %}">
+                                    <input type="hidden" name="next" value="{{ request.path }}">
+                                    <button type="submit" class="btn btn-outline-primary">
+                                        Validar abono
+                                    </button>
+                                </form>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name ="vale_id" value="{{vale.id}}">
+                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale rosa?')" >
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                        <td>
+                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id %}" class="btn btn-outline-danger" target="_blank">
+                                 <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+                            </a>
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
+                   
+                    {% endfor %}
+                </tbody>
+            </table>
+
 
                 <!-- Botón de cierre -->
                 <hr>

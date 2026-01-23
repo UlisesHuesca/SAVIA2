@@ -451,6 +451,8 @@ class Conceptos_Entradas(models.Model):
         return subtotal 
 
 class ValeRosa(models.Model):
+    VALE_COLOR_CHOICES = [('rosa', 'Rosa'),('azul', 'Azul'),]
+    color = models.CharField(max_length=10,choices=VALE_COLOR_CHOICES,default='rosa')
     gasto = models.ForeignKey(Solicitud_Gasto, on_delete=models.CASCADE, related_name='vales_rosa', null=True, blank=True)
     viatico = models.ForeignKey(Solicitud_Viatico, on_delete=models.CASCADE, related_name='vales_rosa_viatico', null=True, blank=True)
     motivo = models.TextField()
