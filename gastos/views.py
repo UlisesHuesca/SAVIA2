@@ -3112,9 +3112,9 @@ def convert_excel_gasto_matriz(gastos):
         if gasto.autorizar2:
             status = "Autorizado"
             if gasto.distrito:
-                if gasto.distrito.nombre == "MATRIZ":
+                if gasto.distrito.nombre == "MATRIZ" or gasto.staff.distritos.nombre == "MATRIZ":
                     
-                    autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name)
+                    autorizado_por = str(gasto.superintendente.staff.staff.first_name) + ' ' + str(gasto.superintendente.staff.staff.last_name) 
                 else:
                     #print(gasto.folio)
                     autorizado_por = str(gasto.autorizado_por2.staff.staff.first_name) + ' ' + str(gasto.autorizado_por2.staff.staff.last_name)
