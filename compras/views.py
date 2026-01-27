@@ -3744,7 +3744,7 @@ def generar_pdf_nueva(compra):
     row_first_page = 14
     rows_other_pages = 25
     #table_y_first = 125   # ajusta 1 vez viendo el PDF
-    table_y_other = 350   # ajusta 1 vez viendo el PDF
+    table_y_other = 680  # ajusta 1 vez viendo el PDF
 
     
     table.setStyle(table_style)
@@ -3896,8 +3896,8 @@ def generar_pdf_nueva(compra):
         page_data = header + chunk
         t = Table(page_data, colWidths=[1.2 * cm, 12.5 * cm, 1.5 * cm, 1.2 * cm, 1.5 * cm, 1.5 * cm])
         t.setStyle(table_style)
-        t.wrapOn(c, c._pagesize[0], c._pagesize[1])
-        t.drawOn(c, 30, table_y_other)
+        w, h = t.wrap(0, 0)               # altura real de esta tabla
+        t.drawOn(c, 30, table_y_other - h)  # <-- AQUÍ está la corrección
 
      # --- NUEVA HOJA: Requerimientos de Calidad por producto ---
     rows_cal = []   # solo filas con requerimientos
