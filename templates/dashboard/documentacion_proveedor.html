@@ -1211,7 +1211,7 @@
                             </td>
                         </tr>
                         <tr>
-                            {% if proveedor.ultimo_cuestionario %}
+                           
                             <td>
                                 Cuestionario Debida Diligencia
                             </td>
@@ -1221,7 +1221,9 @@
                                 </a>
                             </td>
                             <td>
-                               {{ proveedor.ultimo_cuestionario.fecha}}
+                                {% if proveedor.ultimo_cuestionario %}
+                                    {{ proveedor.ultimo_cuestionario.fecha}}
+                                {% endif %}
                             </td>
                             <td>
 
@@ -1238,7 +1240,7 @@
                             <td>
 
                             </td>
-                            {% endif %}
+                           
                         </tr>
                         <tr>
                             <td>Carta de Crédito</td>

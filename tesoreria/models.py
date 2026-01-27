@@ -488,3 +488,14 @@ class Complemento_Pago(models.Model):
             'imp_pagado': imp_pagado,
         }
 
+class EstadoCuenta(models.Model):
+    cuenta = models.ForeignKey (Cuenta, on_delete = models.CASCADE, null=True)
+    periodo = models.DateField(null=True)
+    archivo_pdf = models.FileField(blank=True, null=True, upload_to='estado_cuenta_pdf',validators=[FileExtensionValidator(['pdf'])])
+    subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='estado_cuenta_subido_por')
+    created_at = models.DateTimeField(auto_now_add=True)
+    comentario = models.CharField(max_length=100, null=True, blank=True)
+   
+    def __str__(self):
+        return f'id:{self.id} cuenta:{self.cuenta}'
+

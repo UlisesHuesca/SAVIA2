@@ -3703,7 +3703,7 @@ def generar_pdf_nueva(compra):
     # NUEVA SECCIÓN: TABLA DE PARTIDAS - Colocada debajo de la nota
     # La posición de la tabla ahora se calcula en relación a la nueva posición de la nota.
 
-    tabla_inicio_y = nota_y_inicio - 110  # Ajusta este valor según el espacio que desees entre la nota y la tabla
+    tabla_inicio_y = nota_y_inicio - 74  # Ajusta este valor según el espacio que desees entre la nota y la tabla
 
     # Sección de la tabla de productos
     data = []

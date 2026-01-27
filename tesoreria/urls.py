@@ -41,6 +41,6 @@ urlpatterns = [
     path('tesoreria/control_documentos/', views.control_documentos, name='control-documentos'),
     path('tesoreria/tiempo_proceso_autorizacion/', views.tiempo_proceso_autorizacion, name='tiempo-proceso-autorizacion'),
     path('actualizar_prioridad/', views.actualizar_prioridad, name='actualizar_prioridad'),
-    #path('tesoreria/impresion_factura/', views.impresion_facturas, name='impresion-factura'),
+    path("cuentas/<int:pk>/estado-cuenta/subir/", views.subir_estado_cuenta, name="subir-estado-cuenta"),
    
     ]

@@ -124,7 +124,12 @@
                             </a>
                         </li>
                         <li class="nav-item mx-2">
-                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'cargo-abono-documento' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Cargo/Abono">
+                            <a type="button" class="btn btn-lg btn-outline-info" href="{% url 'cargo-abono-documento' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Cargo/Abono Documento">
+                               <i class="fa-duotone fa-solid fa-file-arrow-up"></i>
+                            </a>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a type="button" class="btn btn-lg btn-outline-secondary" href="{% url 'subir-estado-cuenta' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Subir Estado de Cuenta">
                                <i class="fa-duotone fa-solid fa-file-arrow-up"></i>
                             </a>
                         </li>
@@ -317,6 +322,7 @@
 
     </div>
 </div>
+
 
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>

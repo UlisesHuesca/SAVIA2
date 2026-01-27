@@ -1,5 +1,5 @@
 from django.contrib import admin
-from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, Saldo_Cuenta, Complemento_Pago
+from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, Saldo_Cuenta, Complemento_Pago, EstadoCuenta
 
 class CuentaAdmin(admin.ModelAdmin):
     list_display = ('cuenta','banco','distrito','encargado','status')
@@ -31,6 +31,8 @@ class Saldo_Cuenta_Admin(admin.ModelAdmin):
     search_fields = ['cuenta__cuenta']
     list_display = ('id','cuenta','monto_inicial','fecha_inicial')
 
+
+
 # Register your models here.
 admin.site.register(Cuenta, CuentaAdmin)
 
@@ -45,3 +47,5 @@ admin.site.register(Comprobante_saldo_favor)
 admin.site.register(Tipo_Pago, TipoPagoAdmin)
 
 admin.site.register(Saldo_Cuenta, Saldo_Cuenta_Admin)
+
+admin.site.register(EstadoCuenta)

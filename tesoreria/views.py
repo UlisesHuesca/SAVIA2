@@ -19,14 +19,14 @@ from compras.forms import CompraForm
 from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf #convert_excel_matriz_compras
 from dashboard.models import Subproyecto, Producto_Calidad
-from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago
+from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago, EstadoCuenta
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
 from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto
 from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
 from finanzas.models import Exhibit, Linea_Exhibit
 from requisiciones.views import get_image_base64
-from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, TxtForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm, Cargo_Abono_No_Documento_Form
+from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm, Cargo_Abono_No_Documento_Form, EstadoCuentaForm
 from .filters import PagoFilter, Matriz_Pago_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
@@ -6411,3 +6411,31 @@ def generar_acuse_recibo(usuario, gastos_enviar, tipo):
 
     buffer.seek(0)
     return buffer
+
+
+def subir_estado_cuenta(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk_profile)
+    cuenta = get_object_or_404(Cuenta, id=pk)
+
+    if request.method == "POST":
+        form = EstadoCuentaForm(request.POST, request.FILES)
+        if form.is_valid():
+            estado = form.save(commit=False)
+            estado.cuenta = cuenta
+
+            # Ajusta esta línea si tu Profile no es request.user.profile
+            estado.subido_por = perfil
+
+            estado.save()
+            messages.success(request, "Estado de cuenta cargado correctamente.")
+            return redirect('control-bancos', pk=pk)
+    else:
+        form = EstadoCuentaForm()
+
+    context = {
+        "form": form,
+        "cuenta": cuenta,
+    }
+
+    return render(request, "tesoreria/subir_estado_cuenta.html", context)

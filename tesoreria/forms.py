@@ -3,7 +3,7 @@ from .models import Pago, Facturas, Cuenta
 from compras.models import Compra
 from gastos.models import Solicitud_Gasto
 from viaticos.models import Solicitud_Viatico
-from tesoreria.models import Comprobante_saldo_favor, Saldo_Cuenta
+from tesoreria.models import Comprobante_saldo_favor, Saldo_Cuenta, EstadoCuenta
 
 class PagoForm(forms.ModelForm):
     class Meta:
@@ -112,3 +112,30 @@ class UploadFileForm(forms.Form):
 class UploadComplementoForm(forms.Form):
     complemento_pdf = forms.FileField(required=False)
     complemento_xml = forms.FileField(required=False)
+
+class EstadoCuentaForm(forms.ModelForm):
+    periodo = forms.DateField(
+        widget=forms.DateInput(
+            attrs={
+                "type": "month",
+                "class": "form-control",
+                "placeholder": "MM-YYYY",
+            },
+            format="%Y-%m",
+        ),
+        input_formats=["%Y-%m"],
+        required=True,
+        help_text="Selecciona mes y año",
+        label="Periodo",
+    )
+
+    class Meta:
+        model = EstadoCuenta
+        fields = ['archivo_pdf','comentario','periodo']
+
+    def clean_periodo(self):
+        """
+        Convierte YYYY-MM → YYYY-MM-01
+        """
+        periodo = self.cleaned_data["periodo"]
+        return periodo.replace(day=1)
