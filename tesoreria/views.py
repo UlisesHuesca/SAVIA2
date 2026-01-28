@@ -6439,3 +6439,34 @@ def subir_estado_cuenta(request, pk):
     }
 
     return render(request, "tesoreria/subir_estado_cuenta.html", context)
+
+@login_required(login_url="user-login")
+def estados_cuenta(request, cuenta_id):
+    cuenta = get_object_or_404(Cuenta, pk=cuenta_id)
+
+    qs = (EstadoCuenta.objects
+          .filter(cuenta_id=cuenta_id)
+          .select_related("cuenta", "subido_por")
+          .order_by("-periodo", "-id"))
+
+    # Filtro por mes (YYYY-MM)
+    periodo = (request.GET.get("periodo") or "").strip()  # ej: "2025-01"
+    if periodo:
+        try:
+            y, m = periodo.split("-")
+            qs = qs.filter(periodo__year=int(y), periodo__month=int(m))
+        except ValueError:
+            pass  # si viene malformado, ignora filtro
+
+    # Búsqueda simple (comentario)
+    q = (request.GET.get("q") or "").strip()
+    if q:
+        qs = qs.filter(comentario__icontains=q)
+
+    context = {
+        "cuenta": cuenta,
+        "estados": qs,
+        "periodo": periodo,
+        "q": q,
+    }
+    return render(request, "tesoreria/estados_cuenta.html", context)

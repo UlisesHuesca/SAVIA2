@@ -42,5 +42,5 @@ urlpatterns = [
     path('tesoreria/tiempo_proceso_autorizacion/', views.tiempo_proceso_autorizacion, name='tiempo-proceso-autorizacion'),
     path('actualizar_prioridad/', views.actualizar_prioridad, name='actualizar_prioridad'),
     path("cuentas/<int:pk>/estado-cuenta/subir/", views.subir_estado_cuenta, name="subir-estado-cuenta"),
-   
+    path("tesoreria/cuentas/<int:cuenta_id>/estados-cuenta/",views.estados_cuenta,name="estados-cuenta"),
     ]

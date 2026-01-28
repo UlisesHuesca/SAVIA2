@@ -1,0 +1,110 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Estados de cuenta{% endblock %}
+
+{% block content %}
+<hr><hr><hr>
+
+<div class="card">
+  <div class="card-header">
+    <h5>Estados de cuenta — {{ cuenta }}</h5>
+  </div>
+
+  <div class="card-body">
+    <form method="GET">
+      <div class="row g-2 align-items-end">
+
+        <div class="col-lg-3 col-sm-12">
+          <label class="form-label">Periodo</label>
+          <input type="month" name="periodo" value="{{ periodo }}" class="form-control">
+        </div>
+
+        <div class="col-lg-6 col-sm-12">
+          <label class="form-label">Comentario</label>
+          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar en comentario...">
+        </div>
+
+        <div class="col-lg-3 col-sm-12">
+          <button class="btn btn-outline-success w-100" type="submit">
+            <i class="fa-solid fa-magnifying-glass"></i> Buscar
+          </button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
+<div class="card mt-3">
+  <div class="table-responsive">
+    <table class="table bg-white mb-0">
+      <thead style="background-color:#F5F5F5;">
+        <tr>
+          <th>Periodo</th>
+          <th>Comentario</th>
+          <th>Subido por</th>
+          <th>Creado</th>
+          <th>PDF</th>
+        </tr>
+      </thead>
+
+      <tbody>
+        {% for ec in estados %}
+          <tr>
+            <td>{{ ec.periodo|date:"M/Y" }}</td>
+            <td>{{ ec.comentario|default:"—" }}</td>
+            <td>{{ ec.subido_por }}</td>
+            <td>{{ ec.created_at|date:"d/M/Y H:i" }}</td>
+            <td>
+               {% if ec.archivo_pdf %}
+                    {# Botón que abre el modal #}
+                    <button type="button" class="btn btn-outline-info btn-sm" data-bs-toggle="modal" data-bs-target="#pdfEstadoCuenta{{ ec.id }}" title="Ver estado de cuenta">
+                        <i class="fa-solid fa-file-pdf"></i>
+                    </button>
+
+                    {# Modal con visor PDF #}
+                    <div class="modal fade" id="pdfEstadoCuenta{{ ec.id }}" tabindex="-1" aria-labelledby="pdfEstadoCuentaLabel{{ ec.id }}" aria-hidden="true">
+                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                        <div class="modal-content">
+                            <div class="modal-header">
+                                <h5 class="modal-title" id="pdfEstadoCuentaLabel{{ ec.id }}">
+                                Estado de cuenta — {{ ec.periodo|date:"M/Y" }}
+                                </h5>
+                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                            </div>
+
+                            <div class="modal-body p-0">
+                                <iframe src="{{ ec.archivo_pdf.url }}#zoom=80" width="100%" height="750px" style="border:0;"></iframe>
+                            </div>
+
+                            <div class="modal-footer">
+                                <a class="btn btn-outline-secondary" href="{{ ec.archivo_pdf.url }}" target="_blank" title="Abrir en otra pestaña">
+                                    <i class="fa-solid fa-up-right-from-square"></i>
+                                </a>
+
+                                <a class="btn btn-outline-success" href="{{ ec.archivo_pdf.url }}" download>
+                                    <i class="fa-solid fa-download"></i>
+                                </a>
+                            </div>
+
+                        </div>
+                    </div>
+                    </div>
+
+                {% else %}
+                    —
+                {% endif %}
+            </td>
+          </tr>
+        {% empty %}
+          <tr>
+            <td colspan="5" class="text-center">No hay estados de cuenta con esos filtros.</td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+</div>
+
+{% endblock %}
