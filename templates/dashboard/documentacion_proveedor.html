@@ -2074,31 +2074,31 @@
                                         {% else %}
                                             {% for documento in documentos %}
                                                 {% if documento.tipo_documento == "factura_predial" %}
-                                                    {% if documento.validada %}
-                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdPredial{{ documento.id|unlocalize }}" title="Ver Factura/Predial">
+                                                     {% if documento.validada %}
+                                                        <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfPredial{{documento.id|unlocalize }}" title="Ver Contrato">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
                                                     {% else %}
-                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfPredial{{ documento.id|unlocalize }}" title="Ver Factura/Predial">
+                                                        <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfPredial{{documento.id|unlocalize }}" title="Ver Contrato">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
                                                     {% endif %}
-                                                
-                                                    <!-- Modal con visor de PDF -->
-                                                    <div class="modal fade" id="pdfPredial{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfPredialLabel{{documento.id|unlocalize }}" aria-hidden="true">
-                                                        <div class="modal-dialog modal-xl">
-                                                            <div class="modal-content">
-                                                                <div class="modal-header">
-                                                                    <h5 class="modal-title" id="pdfPredialLabel{{documento.id|unlocalize }}">Predial/Factura del Bien</h5>
-                                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                                                                </div>
-                                                                <div class="modal-body">
-                                                                    <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
-                                                                </div>
+                                                <!-- Modal con visor de PDF -->
+                                                <div class="modal fade" id="pdfPredial{{ documento.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfPredialLabel{{documento.id|unlocalize }}" aria-hidden="true">
+                                                    <div class="modal-dialog modal-xl">
+                                                        <div class="modal-content">
+                                                            <div class="modal-header">
+                                                                <h5 class="modal-title" id="pdfPredialLabel{{documento.id|unlocalize }}">Prediales</h5>
+                                                                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                            </div>
+                                                            <div class="modal-body">
+                                                                <iframe src="{{ documento.archivo.url }}#zoom=80" width="100%" height="750px"></iframe>
                                                             </div>
                                                         </div>
                                                     </div>
-                                                    
+                                                </div>
+                                                 
+                                               
                                                 {% endif %}
                                             {% endfor %}
                                             {% if documentos_count.factura_predial > documentos_validados_count.factura_predial %}
@@ -2128,7 +2128,7 @@
                             <td>
                                 {% for documento in proveedor.documentos.all %}
                                     {% if documento.tipo_documento == "factura_predial" and not documento.obsoleto %}
-                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validado %}checked{% endif %}>
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
                             </td>
