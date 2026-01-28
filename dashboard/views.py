@@ -3564,3 +3564,109 @@ def pdf_precio_referencia(request, product_id):
     buf.seek(0)
     filename = f"precio_ref_{producto.product.codigo or producto.id}.pdf"
     return FileResponse(buf, as_attachment=False, filename=filename)
+
+
+
+
+
+
+TIPOS_REPORTE = ("csf", "comprobante_domicilio", "opinion_cumplimiento", "calificacion")
+
+
+def _fmt_date(d):
+    """Recibe date o None y regresa DD/MM/YYYY o ''."""
+    if not d:
+        return ""
+    return d.strftime("%d/%m/%Y")
+
+
+def _vencimiento_doc(doc: DocumentosProveedor) -> str:
+    """
+    Regresa vencimiento para el reporte en texto:
+    - csf / opinion_cumplimiento: doc.fecha_vencimiento (string DD/MM/YYYY o None)
+    - comprobante_domicilio / calificacion: doc.fecha_adicional (date) si validada
+    """
+    if not doc or doc.obsoleto or not doc.activo:
+        return ""
+
+    if doc.tipo_documento in ("csf", "opinion_cumplimiento"):
+        return doc.fecha_vencimiento or ""
+
+    if doc.tipo_documento in ("comprobante_domicilio", "calificacion"):
+        if not doc.validada:
+            return ""
+        return _fmt_date(doc.fecha_adicional)
+
+    return ""
+
+
+
+def reporte_vencimientos_excel(request):
+    """
+    Descarga Excel con vencimientos por proveedor:
+    CSF, Comprobante domicilio, Opinión cumplimiento, Calificación.
+    """
+
+    # Ajusta este queryset si solo quieres proveedores activos, etc.
+    proveedores_qs = Proveedor.objects.filter(completo = True)
+
+    proveedores = (
+        proveedores_qs
+        .prefetch_related(
+            Prefetch(
+                "documentos",
+                queryset=DocumentosProveedor.objects.filter(
+                    tipo_documento__in=TIPOS_REPORTE,
+                    activo=True,
+                    obsoleto=False,
+                ).order_by("-fecha_subida"),
+                to_attr="docs_rep"
+            )
+        )
+        .order_by("razon_social")
+    )
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Vencimientos"
+
+    headers = [
+        "Proveedor ID",
+        "Razón social",
+        "CSF (vencimiento)",
+        "Comprobante domicilio (vencimiento)",
+        "Opinión cumplimiento (vencimiento)",
+        "Calificación (vencimiento)",
+        "Generado el",
+    ]
+    ws.append(headers)
+
+    for p in proveedores:
+        # Tomar el más reciente por tipo (ya vienen ordenados desc)
+        docs_map = {}
+        for d in getattr(p, "docs_rep", []):
+            if d.tipo_documento not in docs_map:
+                docs_map[d.tipo_documento] = d
+
+        row = [
+            p.id,
+            p.razon_social,
+            _vencimiento_doc(docs_map.get("csf")),
+            _vencimiento_doc(docs_map.get("comprobante_domicilio")),
+            _vencimiento_doc(docs_map.get("opinion_cumplimiento")),
+            _vencimiento_doc(docs_map.get("calificacion")),
+            date.today(),
+        ]
+        ws.append(row)
+
+    # Ajuste simple de ancho de columnas
+    for col in range(1, len(headers) + 1):
+        ws.column_dimensions[get_column_letter(col)].width = 28
+
+    filename = f"reporte_vencimientos_{ date.today().strftime('%Y%m%d_%H%M')}.xlsx"
+    response = HttpResponse(
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = f'attachment; filename="{filename}"'
+    wb.save(response)
+    return response

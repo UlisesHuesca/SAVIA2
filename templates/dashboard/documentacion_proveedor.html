@@ -396,7 +396,7 @@
                             </td>
                              <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "credencial_acta_constitutiva" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "credencial_acta_constitutiva" and not documento.obsoleto  and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}"  {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -495,7 +495,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "csf" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "csf" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -514,7 +514,7 @@
                                         {% else %}
                                             {% for documento in documentos %}
                                                 {% if documento.tipo_documento == "comprobante_domicilio" %}
-                                                    {% if documento.validada %}
+                                                    {% if documento.validada and not documento.obsoleto %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfDomicilio{{documento.id|unlocalize }}" title="Ver Comprobante de Domicilio">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -632,7 +632,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "comprobante_domicilio" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "comprobante_domicilio" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -736,7 +736,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "opinion_cumplimiento" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "opinion_cumplimiento" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -830,7 +830,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "calificacion" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "calificacion" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -924,7 +924,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "visita" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "visita" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -941,7 +941,7 @@
                                         {% else %}
                                             {% for documento in documentos %}
                                                 {% if documento.tipo_documento == "calidad" %}
-                                                    {% if documento.validada %}
+                                                    {% if documento.validada and not documento.obsoleto %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfCalidad{{documento.id|unlocalize }}" title="Ver Documento Calidad">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -1017,7 +1017,7 @@
                             </td>
                              <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "calidad" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "calidad" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1111,7 +1111,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "cotizacion" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "cotizacion" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1127,8 +1127,8 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "otros" %}
-                                                    {% if documento.validada %}
+                                                {% if documento.tipo_documento == "otros" and not documento.obsoleto %}
+                                                    {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfOtros{{documento.id|unlocalize }}" title="Ver Documento">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -1204,7 +1204,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "otros" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "otros" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1252,7 +1252,7 @@
                                     </a>
                                 {% else %}
                                     {% for documento in documentos %}
-                                        {% if documento.tipo_documento == "carta_credito" %}
+                                        {% if documento.tipo_documento == "carta_credito" and not documento.obsoleto %}
                                             {% if documento.validada %}
                                                 <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfCredito{{documento.id|unlocalize }}" title="Ver Carta de Crédito">
                                                     <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
@@ -1329,7 +1329,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "carta_credito" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "carta_credito" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1345,8 +1345,8 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "busqueda_mediatica" %}
-                                                    {% if documento.validada %}
+                                                {% if documento.tipo_documento == "busqueda_mediatica" and not documento.obsoleto %}
+                                                    {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfBusqueda{{documento.id|unlocalize }}" title="Ver Búsqueda Mediática">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -1436,7 +1436,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "busqueda_mediatica" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "busqueda_mediatica" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1493,8 +1493,8 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "contrato" %}
-                                                    {% if documento.validada %}
+                                                {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
+                                                    {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfContrato{{documento.id|unlocalize }}" title="Ver Contrato">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -1565,7 +1565,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "contrato" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "contrato" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1583,8 +1583,8 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "curriculum" %}
-                                                    {% if documento.validada %}
+                                                {% if documento.tipo_documento == "curriculum" and not documento.obsoleto %}
+                                                    {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfCV{{documento.id|unlocalize }}" title="Ver Curriculum Vitae">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -1656,7 +1656,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "curriculum" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "curriculum" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1673,8 +1673,8 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "competencias" %}
-                                                    {% if documento.validada %}
+                                                {% if documento.tipo_documento == "competencias" and not documento.obsoleto %}
+                                                    {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfCompetencias{{documento.id|unlocalize }}" title="Ver Competencia">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -1744,7 +1744,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "competencias" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "competencias" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1763,8 +1763,8 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "cumplimiento_imss" %}
-                                                    {% if documento.validada %}
+                                                {% if documento.tipo_documento == "cumplimiento_imss" and not documento.obsoleto %}
+                                                    {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfImss{{documento.id|unlocalize }}" title="Ver Opinión de cumplimiento del IMSS">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
@@ -1835,7 +1835,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "cumplimiento_imss" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "cumplimiento_imss" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1854,7 +1854,7 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "repse" %}
+                                                {% if documento.tipo_documento == "repse" and not documento.obsoleto %}
                                                     {% if documento.validada %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfRepse{{documento.id|unlocalize }}" title="Ver Repse">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
@@ -1925,7 +1925,7 @@
                             </td>
                             <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "repse" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "repse" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -1985,7 +1985,7 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "contrato" %}
+                                                {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
                                                     {% if documento.validada %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfContrato{{documento.id|unlocalize }}" title="Ver Contrato">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
@@ -2038,11 +2038,12 @@
                                 </button>
                             </td> 
                             <td>
-                            {% for documento in proveedor.documentos.all %}
-                                {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
-                                    <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
-                                {% endif %}
-                            {% endfor %}
+                                {% for documento in proveedor.documentos.all %}
+                                    {% if documento.tipo_documento == "contrato" and not documento.obsoleto %}
+                                        <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="validar_documento_{{ documento.id | unlocalize }}" {% if documento.validada %}checked{% endif %}>
+                                    {% endif %}
+                                {% endfor %}
+                            </td>
                             </td>
                             <td>
                                 {% for documento in proveedor.documentos.all %}
@@ -2057,7 +2058,7 @@
                             </td>
                               <td>
                                 {% for documento in documentos  %}
-                                    {% if documento.tipo_documento == "contrato" and documento.obsoleto == False and documento.validada %}
+                                    {% if documento.tipo_documento == "contrato" and not documento.obsoleto and documento.validada %}
                                         <input type="checkbox" style="transform: scale(1.5); margin: 5px;" name="obsoleto_documento_{{ documento.id | unlocalize }}" {% if documento.obsoleto %}checked{% endif %}>
                                     {% endif %}
                                 {% endfor %}
@@ -2073,8 +2074,8 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "factura_predial" %}
-                                                     {% if documento.validada %}
+                                                {% if documento.tipo_documento == "factura_predial" and not documento.obsoleto %}
+                                                     {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfPredial{{documento.id|unlocalize }}" title="Ver Contrato">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
                                                         </button>
