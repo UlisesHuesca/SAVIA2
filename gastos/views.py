@@ -236,6 +236,8 @@ def crear_gasto(request):
         if usuario.tipo.rh: #Se pone a lo útimo para que sea el último filtro que haga
             tipos = Tipo_Gasto.objects.filter(familia__in=['usuario', 'rh', 'rh_nomina'])
             distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
+        if usuario.tipo.subdirector and usuario.tipo.dg: #Esto es los autorizadores que le deben de aparecer al Director General
+            superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
         if usuario.tipo.subdirector:
             superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
       

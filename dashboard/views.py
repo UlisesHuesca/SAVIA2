@@ -3626,11 +3626,12 @@ def _vencimiento_excel(doc):
     return None
 
 
+
 def reporte_vencimientos_excel(request):
     output = io.BytesIO()
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
     worksheet = workbook.add_worksheet("Vencimientos")
-
+    DISTRITOS_REPORTE = ["Veracruz", "Altamira", "Poza Rica", "Matriz", "Villahermosa"]
     # ---- formatos
     head_style = workbook.add_format({
         'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366',
@@ -3640,10 +3641,21 @@ def reporte_vencimientos_excel(request):
     date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
     warn_style = workbook.add_format({'font_color': '9C0006', 'bg_color': 'FFC7CE', 'font_name': 'Calibri', 'font_size': 10})
     msg_style = workbook.add_format({'font_name': 'Arial Narrow', 'font_size': 11})
+    
+
+    # fechas (si None, dejar celda vacía)
+    # xlsxwriter: para escribir fecha como fecha, usa write_datetime con datetime
+    def write_date(col, d):
+        if not d:
+            worksheet.write(row_num, col, "", body_style)
+        else:
+            worksheet.write_datetime(row_num, col, dt.datetime.combine(d, dt.time()), date_style)
 
     columns = [
         "Proveedor ID",
         "Razón social",
+        "Distrito",
+        "Vencimiento proveedor (dirección)",
         "CSF (vencimiento)",
         "Comprobante domicilio (vencimiento)",
         "Opinión cumplimiento (vencimiento)",
@@ -3664,7 +3676,8 @@ def reporte_vencimientos_excel(request):
 
     # ---- data
     proveedores = (
-        Proveedor.objects.all()
+        Proveedor.objects
+        .filter(completo = True)
         .prefetch_related(
             Prefetch(
                 "documentos",
@@ -3674,41 +3687,75 @@ def reporte_vencimientos_excel(request):
                     obsoleto=False,
                 ).order_by("-fecha_subida"),
                 to_attr="docs_rep"
+            ),
+            Prefetch(
+                "direcciones",
+                queryset=Proveedor_direcciones.objects.select_related("distrito", "estatus").filter(
+                    distrito__nombre__in=DISTRITOS_REPORTE,
+                    estatus__nombre__in=["Nuevo", "Aprobado"]
+                ),
+                to_attr="dirs_rep"
             )
         )
         .order_by("razon_social")
     )
-
     row_num = 0
+    
     for p in proveedores:
-        row_num += 1
-
         docs_map = _get_doc_mas_reciente_por_tipo(getattr(p, "docs_rep", []))
 
-        v_csf = _vencimiento_excel(docs_map.get("csf"))
+        v_csf  = _vencimiento_excel(docs_map.get("csf"))
         v_comp = _vencimiento_excel(docs_map.get("comprobante_domicilio"))
         v_opin = _vencimiento_excel(docs_map.get("opinion_cumplimiento"))
         v_cal  = _vencimiento_excel(docs_map.get("calificacion"))
         v_con  = _vencimiento_excel(docs_map.get("contrato"))
 
-        # texto
-        worksheet.write(row_num, 0, p.id, body_style)
-        worksheet.write(row_num, 1, getattr(p, "razon_social", ""), body_style)
+        dirs = getattr(p, "dirs_rep", [])
+        
+        # si NO tiene direcciones, igual escribe una fila “vacía” de distrito/vencimiento
+        if not dirs:
+            row_num += 1
+            worksheet.write(row_num, 0, p.id, body_style)
+            worksheet.write(row_num, 1, getattr(p, "razon_social", ""), body_style)
+            worksheet.write(row_num, 2, "", body_style)  # distrito
+            worksheet.write(row_num, 3, "", body_style)  # vencimiento dirección
 
-        # fechas (si None, dejar celda vacía)
-        # xlsxwriter: para escribir fecha como fecha, usa write_datetime con datetime
-        def write_date(col, d):
-            if not d:
-                worksheet.write(row_num, col, "", body_style)
-                return
-            # convertir date -> datetime (xlsxwriter requiere datetime)
-            worksheet.write_datetime(row_num, col, dt.datetime.combine(d, dt.time()), date_style)
+            write_date(4, v_csf)
+            write_date(5, v_comp)
+            write_date(6, v_opin)
+            write_date(7, v_cal)
+            write_date(8, v_con)
+            continue
 
-        write_date(2, v_csf)
-        write_date(3, v_comp)
-        write_date(4, v_opin)
-        write_date(5, v_cal)
-        write_date(6, v_con)
+        # 1 fila por dirección/distrito
+        for d in dirs:
+            row_num += 1
+
+            # distrito (ajusta si tu FK tiene otro campo)
+            distrito_txt = ""
+            if d.distrito_id:
+                # intenta nombre, o str(d.distrito)
+                distrito_txt = getattr(d.distrito, "nombre", str(d.distrito))
+
+            # vencimiento desde property (date o None)
+            v_prov = d.fecha_vencimiento  # None si no hay modificado_fecha
+
+            worksheet.write(row_num, 0, p.id, body_style)
+            worksheet.write(row_num, 1, getattr(p, "razon_social", ""), body_style)
+            worksheet.write(row_num, 2, distrito_txt, body_style)
+
+            # vencimiento proveedor (dirección)
+            if v_prov:
+                worksheet.write_datetime(row_num, 3, dt.datetime.combine(v_prov, dt.time()), date_style)
+            else:
+                worksheet.write(row_num, 3, "", body_style)
+
+            # docs (mismos valores por proveedor)
+            write_date(4, v_csf)
+            write_date(5, v_comp)
+            write_date(6, v_opin)
+            write_date(7, v_cal)
+            write_date(8, v_con)
 
     workbook.close()
     output.seek(0)
