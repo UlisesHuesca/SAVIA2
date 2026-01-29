@@ -1,3 +1,4 @@
+from urllib import response
 from django.shortcuts import render, redirect, get_object_or_404
 from django.http import HttpResponse, Http404, JsonResponse, FileResponse
 from django.contrib import messages
@@ -32,6 +33,9 @@ import plotly.graph_objects as go
 import pandas as pd
 import io
 import os
+
+import xlsxwriter
+
 #import decimal
 from openpyxl import Workbook
 from openpyxl.styles import NamedStyle, Font, PatternFill
@@ -3573,45 +3577,100 @@ def pdf_precio_referencia(request, product_id):
 TIPOS_REPORTE = ("csf", "comprobante_domicilio", "opinion_cumplimiento", "calificacion")
 
 
-def _fmt_date(d):
-    """Recibe date o None y regresa DD/MM/YYYY o ''."""
-    if not d:
-        return ""
-    return d.strftime("%d/%m/%Y")
+TIPOS_REPORTE = ("csf", "comprobante_domicilio", "opinion_cumplimiento", "calificacion")
 
 
-def _vencimiento_doc(doc: DocumentosProveedor) -> str:
+def _to_date_ddmmyyyy(value):
     """
-    Regresa vencimiento para el reporte en texto:
-    - csf / opinion_cumplimiento: doc.fecha_vencimiento (string DD/MM/YYYY o None)
-    - comprobante_domicilio / calificacion: doc.fecha_adicional (date) si validada
+    value puede ser:
+    - 'DD/MM/YYYY' (string) -> date
+    - date -> date
+    - None -> None
     """
-    if not doc or doc.obsoleto or not doc.activo:
-        return ""
+    if not value:
+        return None
+    if isinstance(value, str):
+        try:
+            return datetime.strptime(value, "%d/%m/%Y").date()
+        except ValueError:
+            return None
+    return value
+
+
+def _get_doc_mas_reciente_por_tipo(docs):
+    """
+    docs ya vienen ordenados por -fecha_subida.
+    retorna dict tipo_documento -> doc (primer match)
+    """
+    m = {}
+    for d in docs:
+        if d.tipo_documento not in m:
+            m[d.tipo_documento] = d
+    return m
+
+
+def _vencimiento_excel(doc):
+    """
+    Regresa un date o None para escribir como fecha real en Excel.
+    - csf/opinion: doc.fecha_vencimiento (string DD/MM/YYYY) -> date
+    - comprobante/calificacion: doc.fecha_adicional (date) si validada
+    """
+    if not doc:
+        return None
+
+    if doc.obsoleto or not doc.activo:
+        return None
 
     if doc.tipo_documento in ("csf", "opinion_cumplimiento"):
-        return doc.fecha_vencimiento or ""
+        return _to_date_ddmmyyyy(doc.fecha_vencimiento)
 
     if doc.tipo_documento in ("comprobante_domicilio", "calificacion"):
         if not doc.validada:
-            return ""
-        return _fmt_date(doc.fecha_adicional)
+            return None
+        return doc.fecha_adicional  # ya es date
 
-    return ""
+    return None
 
 
-
+@login_required(login_url="user-login")
 def reporte_vencimientos_excel(request):
-    """
-    Descarga Excel con vencimientos por proveedor:
-    CSF, Comprobante domicilio, Opinión cumplimiento, Calificación.
-    """
+    output = io.BytesIO()
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet("Vencimientos")
 
-    # Ajusta este queryset si solo quieres proveedores activos, etc.
-    proveedores_qs = Proveedor.objects.filter(completo = True)
+    # ---- formatos
+    head_style = workbook.add_format({
+        'bold': True, 'font_color': 'FFFFFF', 'bg_color': '333366',
+        'font_name': 'Arial', 'font_size': 11
+    })
+    body_style = workbook.add_format({'font_name': 'Calibri', 'font_size': 10})
+    date_style = workbook.add_format({'num_format': 'dd/mm/yyyy', 'font_name': 'Calibri', 'font_size': 10})
+    warn_style = workbook.add_format({'font_color': '9C0006', 'bg_color': 'FFC7CE', 'font_name': 'Calibri', 'font_size': 10})
+    msg_style = workbook.add_format({'font_name': 'Arial Narrow', 'font_size': 11})
 
+    columns = [
+        "Proveedor ID",
+        "Razón social",
+        "CSF (vencimiento)",
+        "Comprobante domicilio (vencimiento)",
+        "Opinión cumplimiento (vencimiento)",
+        "Calificación (vencimiento)",
+    ]
+
+    # Mensajes laterales (como tu ejemplo)
+    col_msg = len(columns) + 1
+    worksheet.write(0, col_msg, "Reporte creado automáticamente por SAVIA Vordcab. UH", msg_style)
+    worksheet.write(1, col_msg, "Software desarrollado por Grupo Vordcab S.A. de C.V.", msg_style)
+    worksheet.set_column(col_msg, col_msg, 40)
+
+    # Encabezados
+    for i, c in enumerate(columns):
+        worksheet.write(0, i, c, head_style)
+        worksheet.set_column(i, i, 28)
+
+    # ---- data
     proveedores = (
-        proveedores_qs
+        Proveedor.objects.all()
         .prefetch_related(
             Prefetch(
                 "documentos",
@@ -3626,47 +3685,46 @@ def reporte_vencimientos_excel(request):
         .order_by("razon_social")
     )
 
-    wb = Workbook()
-    ws = wb.active
-    ws.title = "Vencimientos"
-
-    headers = [
-        "Proveedor ID",
-        "Razón social",
-        "CSF (vencimiento)",
-        "Comprobante domicilio (vencimiento)",
-        "Opinión cumplimiento (vencimiento)",
-        "Calificación (vencimiento)",
-        "Generado el",
-    ]
-    ws.append(headers)
-
+    row_num = 0
     for p in proveedores:
-        # Tomar el más reciente por tipo (ya vienen ordenados desc)
-        docs_map = {}
-        for d in getattr(p, "docs_rep", []):
-            if d.tipo_documento not in docs_map:
-                docs_map[d.tipo_documento] = d
+        row_num += 1
 
-        row = [
-            p.id,
-            p.razon_social,
-            _vencimiento_doc(docs_map.get("csf")),
-            _vencimiento_doc(docs_map.get("comprobante_domicilio")),
-            _vencimiento_doc(docs_map.get("opinion_cumplimiento")),
-            _vencimiento_doc(docs_map.get("calificacion")),
-            date.today(),
-        ]
-        ws.append(row)
+        docs_map = _get_doc_mas_reciente_por_tipo(getattr(p, "docs_rep", []))
 
-    # Ajuste simple de ancho de columnas
-    for col in range(1, len(headers) + 1):
-        ws.column_dimensions[get_column_letter(col)].width = 28
+        v_csf = _vencimiento_excel(docs_map.get("csf"))
+        v_comp = _vencimiento_excel(docs_map.get("comprobante_domicilio"))
+        v_opin = _vencimiento_excel(docs_map.get("opinion_cumplimiento"))
+        v_cal  = _vencimiento_excel(docs_map.get("calificacion"))
 
-    filename = f"reporte_vencimientos_{ date.today().strftime('%Y%m%d_%H%M')}.xlsx"
+        # texto
+        worksheet.write(row_num, 0, p.id, body_style)
+        worksheet.write(row_num, 1, getattr(p, "razon_social", ""), body_style)
+
+        # fechas (si None, dejar celda vacía)
+        # xlsxwriter: para escribir fecha como fecha, usa write_datetime con datetime
+        def write_date(col, d):
+            if not d:
+                worksheet.write(row_num, col, "", body_style)
+                return
+            # convertir date -> datetime (xlsxwriter requiere datetime)
+            worksheet.write_datetime(row_num, col, dt.datetime.combine(d, dt.time()), date_style)
+
+        write_date(2, v_csf)
+        write_date(3, v_comp)
+        write_date(4, v_opin)
+        write_date(5, v_cal)
+
+    workbook.close()
+    output.seek(0)
+
+    filename = f"reporte_vencimientos_{dt.date.today()}.xlsx"
     response = HttpResponse(
+        output.read(),
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
     response["Content-Disposition"] = f'attachment; filename="{filename}"'
-    wb.save(response)
+
+    # Cookie para tu loading indicator (IMPORTANTE: path="/")
+    response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
+    output.close()
     return response
