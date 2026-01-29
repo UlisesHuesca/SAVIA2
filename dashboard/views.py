@@ -3571,13 +3571,7 @@ def pdf_precio_referencia(request, product_id):
 
 
 
-
-
-
-TIPOS_REPORTE = ("csf", "comprobante_domicilio", "opinion_cumplimiento", "calificacion")
-
-
-TIPOS_REPORTE = ("csf", "comprobante_domicilio", "opinion_cumplimiento", "calificacion")
+TIPOS_REPORTE = ("csf", "comprobante_domicilio", "opinion_cumplimiento", "calificacion","contrato")
 
 
 def _to_date_ddmmyyyy(value):
@@ -3624,7 +3618,7 @@ def _vencimiento_excel(doc):
     if doc.tipo_documento in ("csf", "opinion_cumplimiento"):
         return _to_date_ddmmyyyy(doc.fecha_vencimiento)
 
-    if doc.tipo_documento in ("comprobante_domicilio", "calificacion"):
+    if doc.tipo_documento in ("comprobante_domicilio", "calificacion","contrato"):
         if not doc.validada:
             return None
         return doc.fecha_adicional  # ya es date
@@ -3632,7 +3626,6 @@ def _vencimiento_excel(doc):
     return None
 
 
-@login_required(login_url="user-login")
 def reporte_vencimientos_excel(request):
     output = io.BytesIO()
     workbook = xlsxwriter.Workbook(output, {'in_memory': True})
@@ -3655,6 +3648,7 @@ def reporte_vencimientos_excel(request):
         "Comprobante domicilio (vencimiento)",
         "Opinión cumplimiento (vencimiento)",
         "Calificación (vencimiento)",
+        "Contrato (vencimiento)",
     ]
 
     # Mensajes laterales (como tu ejemplo)
@@ -3695,6 +3689,7 @@ def reporte_vencimientos_excel(request):
         v_comp = _vencimiento_excel(docs_map.get("comprobante_domicilio"))
         v_opin = _vencimiento_excel(docs_map.get("opinion_cumplimiento"))
         v_cal  = _vencimiento_excel(docs_map.get("calificacion"))
+        v_con  = _vencimiento_excel(docs_map.get("contrato"))
 
         # texto
         worksheet.write(row_num, 0, p.id, body_style)
@@ -3713,6 +3708,7 @@ def reporte_vencimientos_excel(request):
         write_date(3, v_comp)
         write_date(4, v_opin)
         write_date(5, v_cal)
+        write_date(6, v_con)
 
     workbook.close()
     output.seek(0)
