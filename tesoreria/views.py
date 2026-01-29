@@ -2616,13 +2616,20 @@ def control_cuentas(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
     
-    if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.supervisor:
-        if usuario.tipo.tesoreria:
-            cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True)
-        elif usuario.tipo.finanzas:
-            cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True)
+    if usuario.distritos.nombre == "MATRIZ":
+        if usuario.tipo.supervisor:
+            if usuario.tipo.tesoreria:
+                cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True)
+            elif usuario.tipo.finanzas:
+                cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True)
+        else:
+            if usuario.tipo.tesoreria:
+                cuentas = Cuenta.objects.filter(encargado = usuario)
+            elif usuario.tipo.finanzas:
+                cuentas = Cuenta.objects.filter(encargado = usuario)
+            
     else:
-        cuentas = Cuenta.objects.filter(encargado = usuario)
+        cuentas = Cuenta.objects.filter(encargado__distritos__nombre = usuario.distritos.nombre)
     
     context= {
         'cuentas': cuentas,
