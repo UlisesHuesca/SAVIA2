@@ -1093,7 +1093,11 @@ $(document).ready(function() {
     $('#id_superintendente').select2({
         allowClear: true,
         width: '100%',
+        {% if usuario.distritos.nombre == "MATRIZ" %}
+        placeholder: 'Subdirector',
+        {% else %}
         placeholder: 'Superintendente',
+        {% endif %}
         data: datosSuperintendentes,
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección
