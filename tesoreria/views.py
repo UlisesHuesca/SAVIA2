@@ -3213,10 +3213,10 @@ def factura_nueva(request, pk):
                         # Guardar temporalmente para extraer datos
                         #factura_temp = Factura(archivo_xml=archivo_xml)
                         #factura_temp.archivo_xml.save(archivo_xml.name, archivo_procesado, save=False)
-                        RFC_RECEPTOR_ESPERADO = "GVO020226811"
+                        RFC_RECEPTORES_ESPERADOS = {"GVO020226811","SPP0605268G8"}
                         uuid_extraido, fecha_timbrado_extraida, rfc_receptor = extraer_datos_del_xml(archivo_procesado)
-                        if rfc_receptor and rfc_receptor != RFC_RECEPTOR_ESPERADO:
-                            messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba {RFC_RECEPTOR_ESPERADO}.")
+                        if rfc_receptor and rfc_receptor not in RFC_RECEPTORES_ESPERADOS:
+                            messages.error(request, f"RFC receptor inválido ({rfc_receptor}). Se esperaba uno de los siguientes: {', '.join(RFC_RECEPTORES_ESPERADOS)}.")
                             break # Saltar al siguiente archivo si el RFC no coincide
                         if fecha_timbrado_extraida:
                             try:
