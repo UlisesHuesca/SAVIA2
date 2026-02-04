@@ -114,6 +114,7 @@
                         <tr>
                             <th>Distrito</th>
                             <th>Status</th>
+                            <th>Comentario</th>
                             <th>Fecha de Evaluación</th>
                             <th>Fecha de Vencimiento</th>      
                             <th>Materiales</th>
@@ -161,6 +162,39 @@
                                     <button class="btn btn-sm btn-secondary d-none" type="button"
                                             id="cancel_btn_{{ direccion.id | unlocalize }}"
                                             onclick="cancelarEstatus({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-xmark"></i>
+                                    </button>
+                                </td>
+                                <td style="min-width: 260px;">
+                                    <span id="comentario_display_{{ direccion.id|unlocalize }}">
+                                        {% if direccion.comentario_status %}
+                                            {{ direccion.comentario_status }}
+                                        {% else %}
+                                            <span class="text-muted fst-italic">Sin comentario</span>
+                                        {% endif %}
+                                    </span>
+
+                                    <input type="text"
+                                        id="comentario_input_{{ direccion.id|unlocalize }}"
+                                        class="form-control form-control-sm d-none"
+                                        value="{{ direccion.comentario_status|default_if_none:'' }}">
+
+                                    <button class="btn btn-sm btn-outline-info" type="button"
+                                            id="comentario_edit_btn_{{ direccion.id|unlocalize }}"
+                                            onclick="editarComentario({{ direccion.id|unlocalize }})"
+                                            title="Editar comentario">
+                                        <i class="fa-solid fa-pen"></i>
+                                    </button>
+
+                                    <button class="btn btn-sm btn-success d-none" type="button"
+                                            id="comentario_save_btn_{{ direccion.id|unlocalize }}"
+                                            onclick="guardarComentario({{ direccion.id|unlocalize }})">
+                                        <i class="fa-solid fa-check"></i>
+                                    </button>
+
+                                    <button class="btn btn-sm btn-secondary d-none" type="button"
+                                            id="comentario_cancel_btn_{{ direccion.id|unlocalize }}"
+                                            onclick="cancelarComentario({{ direccion.id|unlocalize }})">
                                         <i class="fa-solid fa-xmark"></i>
                                     </button>
                                 </td>
@@ -2307,6 +2341,49 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+
+    function editarComentario(id) {
+        document.getElementById("comentario_display_" + id).classList.add("d-none");
+        document.getElementById("comentario_input_" + id).classList.remove("d-none");
+
+        document.getElementById("comentario_edit_btn_" + id).classList.add("d-none");
+        document.getElementById("comentario_save_btn_" + id).classList.remove("d-none");
+        document.getElementById("comentario_cancel_btn_" + id).classList.remove("d-none");
+
+        document.getElementById("comentario_input_" + id).focus();
+    }
+
+    function cancelarComentario(id) {
+        document.getElementById("comentario_display_" + id).classList.remove("d-none");
+        document.getElementById("comentario_input_" + id).classList.add("d-none");
+
+        document.getElementById("comentario_edit_btn_" + id).classList.remove("d-none");
+        document.getElementById("comentario_save_btn_" + id).classList.add("d-none");
+        document.getElementById("comentario_cancel_btn_" + id).classList.add("d-none");
+    }
+
+    function guardarComentario(id) {
+        const comentario = document.getElementById("comentario_input_" + id).value;
+
+        fetch(`/proveedores/direccion/${id}/comentario/`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+                "X-CSRFToken": csrftoken,
+            },
+            body: JSON.stringify({ id: id, comentario_status: comentario }),
+        })
+        .then(r => r.json())
+        .then(data => {
+            if (!data.ok) return;
+
+            document.getElementById("comentario_display_" + id).innerHTML =
+                comentario ? comentario : '<span class="text-muted fst-italic">Sin comentario</span>';
+
+            cancelarComentario(id);
+            });
+    }
+
     $("#id_familia").change(function () {
       const url = $("#ProductForm").attr("data-subfamilias-url");  // get the url of the `load_subfamilias` view
       const familiaId = $(this).val();  // get the selected familia ID from the HTML input

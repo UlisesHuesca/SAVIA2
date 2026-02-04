@@ -78,7 +78,7 @@ def index(request):
             not proveedor.acepto_aviso_privacidad
         )
         invitaciones_direccion = InvitacionProveedor.objects.filter(proveedor = proveedor,tipo= "NUEVA_DIRECCION", usado = False)
-        print('invitaciones', invitaciones_direccion)
+        print(mostrar_modal)
         if proveedor.direcciones.filter(estatus__nombre = "PREALTA").exists():
             prealta = True
 
@@ -2454,7 +2454,7 @@ def generar_pdf_dd(proveedor, request):
     proveedor_direcciones = proveedor.direcciones.first()
     perfil_proveedor = Profile.objects.filter(proveedor=proveedor).first()
     # === Datos de ejemplo ===
-    elaborado_por = perfil_proveedor.staff.staff.first_name + ' ' + perfil_proveedor.staff.staff.last_name
+    elaborado_por = perfil_proveedor.staff.staff.first_name + ' ' + perfil_proveedor.staff.staff.last_name or "No definido"
     cargo         = dd.cargo
     fecha         = dd.fecha.strftime('%d/%m/%Y') if dd and dd.fecha else ''
     tel           = proveedor_direcciones.telefono
@@ -3771,3 +3771,17 @@ def reporte_vencimientos_excel(request):
     response.set_cookie('descarga_iniciada', 'true', max_age=20)  # La cookie expira en 20 segundos
     output.close()
     return response
+
+def actualizar_comentario_status(request, pk):
+    pk_profile = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id = pk_profile)
+    if request.method == 'POST':
+        data = json.loads(request.body)
+        direccion = Proveedor_direcciones.objects.get(pk=pk)
+        print("Data recibida:", data)
+        print("Dirección a actualizar:", direccion)
+        direccion.comentario_status = data.get('comentario_status')
+        direccion.actualizado_por = usuario
+        direccion.save()
+
+        return JsonResponse({'ok': True})

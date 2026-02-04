@@ -974,6 +974,7 @@ def aceptar_politica(request):
     perfil_id = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id=perfil_id)
     proveedor = Proveedor.objects.get(id=perfil.proveedor.id)
+    #print('aceptar_politica proveedor:',proveedor)
     if request.method == 'POST':
         data = json.loads(request.body)
         clave = data.get('clave')
@@ -991,8 +992,9 @@ def aceptar_politica(request):
                 proveedor.acepto_codigo_etica = True
                 proveedor.fecha_aceptacion_politica = now
             # puedes seguir agregando aquí más claves/políticas
-            
+            #print('Proveedor aceptó código de ética')
             else:
+
                 return JsonResponse({'error': 'Política no reconocida'}, status=400)
 
             proveedor.save()

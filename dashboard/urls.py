@@ -58,4 +58,5 @@ urlpatterns = [
     path('proveedores/<int:proveedor_id>/obsoletos/', views.historico_obsoletos, name='historico-obsoletos'),
     path("proveedores/reporte-vencimientos-excel/", views.reporte_vencimientos_excel, name="reporte-vencimientos-excel"),
     path('guardar/fecha-adicional/<int:documento_id>/', views.guardar_fecha_adicional, name='guardar_fecha_adicional'),
+    path('proveedores/direccion/<int:pk>/comentario/', views.actualizar_comentario_status, name='actualizar_comentario_status'), 
 ]

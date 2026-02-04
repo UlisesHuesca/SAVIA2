@@ -6309,36 +6309,16 @@ def politicas_pendientes(request):
     perfil_id = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id=perfil_id)
     proveedor = Proveedor.objects.get(id=perfil.proveedor.id)
-    politicas = []
-    print('proveedor:',proveedor)
-    if proveedor:
-        if not proveedor.acepto_politica:
-            politicas.append({
-                "nombre": "Política Antisoborno",
-                "url": reverse('ver-politica-pdf'),
-                "clave": "antisoborno"
-            })
-
-        if not proveedor.acepto_politica_proveedor:
-            politicas.append({
-                "nombre": "Política de Proveedores",
-                "url": reverse('ver-politica-proveedores'),
-                "clave": "proveedores"
-            })
-        
-        if not proveedor.acepto_aviso_privacidad:
-            politicas.append({
-                "nombre": "Aviso de Privacidad",
-                "url": reverse('ver-aviso-privacidad'),
-                "clave": "privacidad"
-            })
-        
-        if not proveedor.acepto_codigo_etica:
-            politicas.append({
-                "nombre": "Código de Ética",
-                "url": reverse('ver-codigo-etica'),
-                "clave": "etica"
-            })
+    politicas = [
+        {"nombre": "Política Antisoborno", "url": reverse('ver-politica-pdf'), "clave": "antisoborno",
+         "aceptada": bool(proveedor.acepto_politica)},
+        {"nombre": "Política de Proveedores", "url": reverse('ver-politica-proveedores'), "clave": "proveedores",
+         "aceptada": bool(proveedor.acepto_politica_proveedor)},
+        {"nombre": "Aviso de Privacidad", "url": reverse('ver-aviso-privacidad'), "clave": "privacidad",
+         "aceptada": bool(proveedor.acepto_aviso_privacidad)},
+        {"nombre": "Código de Ética", "url": reverse('ver-codigo-etica'), "clave": "etica",
+         "aceptada": bool(proveedor.acepto_codigo_etica)},
+    ]
 
     return JsonResponse(politicas, safe=False)
 

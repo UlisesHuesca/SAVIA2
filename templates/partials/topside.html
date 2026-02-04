@@ -2,7 +2,7 @@
 {% load i18n %}
 <html>
 <head>
-   
+<meta name="csrf-token" content="{{ csrf_token }}">
 {% block title %}
 
 {% endblock %}
@@ -13,6 +13,7 @@
 
 
 </head>
+
 <body>
 {% block content %}
 <div class="row my-4">
@@ -458,7 +459,7 @@
                         <div class="row mt-2">
                             
                             <div class="col-md-4">
-                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
+                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
                                     <div class="card my-card shadow text-center p-3">
                                         
                                         <h4>Políticas y Códigos 
@@ -520,7 +521,7 @@
                                 </a>
                             </div>
                             <div class="col-md-4">
-                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" title="Políticas y Códigos">
+                                <a id="btnVerPolitica" type="button" class="text-decoration-none text-dark" class="btn btn-outline-info"  title="Políticas y Códigos">
                                     <div class="card my-card shadow text-center p-3">
                                         <h4>Políticas y Códigos <i class="fa-duotone fa-solid fa-book"></i></h4>
                                         <h3></h3>
@@ -596,6 +597,13 @@
                                 Acepto haber leído y comprendido la política antisoborno.
                               </label>
                             </div>
+                            <button type="button" class="btn btn-secondary" id="btnCerrarModal">
+                                Cerrar
+                            </button>
+
+                              <button type="button" class="btn btn-secondary" id="btnSiguiente">
+                                Siguiente
+                            </button>
                             <button type="button" class="btn btn-primary" id="btnAceptarPolitica">Aceptar</button>
                         </div>
                     </div>
@@ -607,96 +615,160 @@
     
 </div>
 <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        const iframe = document.getElementById('iframePolitica');
-        const modalElement = document.getElementById('pdfModal');
-        const modal = new bootstrap.Modal(modalElement);
-        const modalTitle = document.getElementById('pdfModalLabel'); 
-        const btnAceptar = document.getElementById('btnAceptarPolitica');
-        // ⚠️ Definir aquí para que sea accesible desde todos los eventos
-        let politicas = [];
-        let indiceActual = 0;
-        
-        //console.log(btnAceptar);
 
-       fetch("{% url 'politicas-pendientes' %}")
-        .then(response => response.json())
-        .then(data => {
-            politicas = data;
-            if (politicas.length > 0) {
-                mostrarPolitica(indiceActual);
-            }
-        });
 
-    function mostrarPolitica(indice) {
-        const politica = politicas[indice];
-        fetch(politica.url)
-            .then(res => res.json())
-            .then(data => {
-                const url = data.url.replace(/\\/g, '/');
-                iframe.src = url + "#zoom=80";
-                modalTitle.textContent = politica.nombre;
-                console.log(politica.nombre)
-                if (politica.nombre == "Aviso de Privacidad" || politica.nombre == "Código de Ética"){
-                    labelPolitica.textContent = `Acepto haber leído y comprendido el ${politica.nombre.toLowerCase()}.`;
-                } else {
-                    labelPolitica.textContent = `Acepto haber leído y comprendido la ${politica.nombre.toLowerCase()}.`;
-                }               
-                modal.show();
-            });
-    }
+document.addEventListener('DOMContentLoaded', function () {
+  console.log("=== SCRIPT POLITICAS v2026-02-03 A ===");
 
-    btnAceptar.addEventListener('click', function () {
-        if (indiceActual < politicas.length) {
-            fetch("{% url 'aceptar-politica' %}", {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRFToken': getCookie('csrftoken')
-                },
-                body: JSON.stringify({ clave: politicas[indiceActual].clave })
-            })
-            .then(response => response.json())
-            .then(data => {
-                indiceActual++;
-                if (indiceActual < politicas.length) {
-                    mostrarPolitica(indiceActual);
-                } else {
-                    modal.hide();
-                    Swal.fire({
-                        icon: 'success',
-                        title: '¡Gracias!',
-                        text: 'Tu aceptación de las políticas ha sido registrada.',
-                        confirmButtonColor: '#3085d6',
-                        confirmButtonText: 'Entendido'
-                    }).then(() => {
-                        location.reload();
-                    });
-                }
-            })
-            .catch(error => {
-                alert('Error al registrar aceptación');
-                console.error(error);
-            });
-        }
+  const iframe = document.getElementById('iframePolitica');
+  const modalElement = document.getElementById('pdfModal');
+  const modal = new bootstrap.Modal(modalElement);
+  const modalTitle = document.getElementById('pdfModalLabel');
+  const btnAceptar = document.getElementById('btnAceptarPolitica');
+  const labelPolitica = document.getElementById('labelPolitica');
+  const btnVerPolitica = document.getElementById('btnVerPolitica');
+  const btnCerrarModal = document.getElementById('btnCerrarModal');
+  const btnSiguiente = document.getElementById('btnSiguiente');
+  const csrfToken = document.querySelector('meta[name="csrf-token"]').content;
+  btnCerrarModal.addEventListener('click', function () {
+        modal.hide();
     });
 
-    // Función para obtener el CSRF token
-    function getCookie(name) {
-        let cookieValue = null;
-        if (document.cookie && document.cookie !== '') {
-            const cookies = document.cookie.split(';');
-            for (let i = 0; i < cookies.length; i++) {
-                const cookie = cookies[i].trim();
-                if (cookie.substring(0, name.length + 1) === (name + '=')) {
-                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
-                    break;
-                }
-            }
-        }
-        return cookieValue;
+
+  btnSiguiente.addEventListener('click', function () {
+  indiceActual++;
+
+    if (indiceActual < politicas.length) {
+        mostrarPolitica(indiceActual);
+    } else {
+        modal.hide(); // ya no hay más políticas
     }
+    });
+
+    btnAceptar.addEventListener('click', function () {
+        const politica = politicas[indiceActual];
+        if (!politica) return;
+
+        // 🔒 Si ya estaba aceptada, no hace nada
+        if (politica.aceptada) return;
+
+        fetch("{% url 'aceptar-politica' %}", {
+            method: 'POST',
+            headers: {
+            'Content-Type': 'application/json',
+            'X-CSRFToken': csrfToken
+            },
+            body: JSON.stringify({ clave: politica.clave })
+        })
+        .then(r => {
+            if (!r.ok) throw new Error("Error al aceptar política");
+            return r.json();
+        })
+        .then(() => {
+            // ✅ actualiza estado local
+            politicas[indiceActual].aceptada = true;
+
+            // ✅ feedback inmediato
+            btnAceptar.disabled = true;
+            btnAceptar.textContent = "Ya aceptada";
+            btnAceptar.classList.remove('btn-primary');
+            btnAceptar.classList.add('btn-success');
+        })
+        .catch(err => {
+            console.error(err);
+            alert("No se pudo registrar la aceptación");
+        });
+    });
+
+  let politicas = [];
+  let indiceActual = 0;
+
+  function cargarPoliticasYMostrar(forzarMostrarAunqueAceptadas = false) {
+    return fetch("{% url 'politicas-pendientes' %}")
+      .then(r => r.json())
+      .then(data => {
+        politicas = data || [];
+
+        if (politicas.length === 0) return;
+
+        const idxPendiente = politicas.findIndex(p => p.aceptada === false);
+
+        // ✅ si hay pendientes, muestra la primera pendiente
+        // ✅ si NO hay pendientes:
+        //   - si forzarMostrarAunqueAceptadas=true, muestra la primera
+        //   - si no, no hace nada
+        if (idxPendiente !== -1) {
+          indiceActual = idxPendiente;
+          mostrarPolitica(indiceActual);
+        } else if (forzarMostrarAunqueAceptadas) {
+          indiceActual = 0;
+          mostrarPolitica(indiceActual);
+        } else {
+          console.log("Todo aceptado, no se fuerza modal.");
+        }
+      })
+      .catch(err => console.error("Error politicas-pendientes:", err));
+  }
+
+  function mostrarPolitica(indice) {
+
+  if (indice >= politicas.length) {
+    modal.hide();
+    return;
+  }
+
+  const politica = politicas[indice];
+  console.log("Mostrando:", politica);
+
+  fetch(politica.url)
+    .then(res => res.json())
+    .then(data => {
+
+      // 1️⃣ Cargar el PDF
+      const pdfUrl = new URL((data.url || "").replace(/\\/g,'/'), window.location.origin).toString();
+      iframe.src = pdfUrl + "#zoom=80";
+
+      // 2️⃣ Título
+      modalTitle.textContent = politica.nombre;
+
+      // 3️⃣ Texto del label
+      const articulo = (politica.nombre === "Aviso de Privacidad" || politica.nombre === "Código de Ética") ? "el" : "la";
+      labelPolitica.textContent =
+        `Acepto haber leído y comprendido ${articulo} ${politica.nombre.toLowerCase()}.`;
+
+      // 4️⃣ 🔑 AQUÍ VA el estado del botón Aceptar
+      if (politica.aceptada) {
+        btnAceptar.disabled = true;
+        btnAceptar.textContent = "Ya aceptada";
+        btnAceptar.classList.remove('btn-primary');
+        btnAceptar.classList.add('btn-success');
+      } else {
+        btnAceptar.disabled = false;
+        btnAceptar.textContent = "Aceptar";
+        btnAceptar.classList.remove('btn-success');
+        btnAceptar.classList.add('btn-primary');
+      }
+
+      // 5️⃣ Mostrar modal (al final)
+      modal.show();
+    })
+    .catch(err => console.error("Error ver-politica:", err));
+}
+
+
+  // ✅ 1) Auto-abrir SOLO si hay pendientes
+  cargarPoliticasYMostrar(false);
+
+  // ✅ 2) Abrir desde el botón aunque todo esté aceptado
+  // (si quieres que el botón siempre muestre el modal)
+  if (btnVerPolitica) {
+    btnVerPolitica.addEventListener('click', function (e) {
+      e.preventDefault();
+      cargarPoliticasYMostrar(true);
+    });
+  }
 });
+
 
 
 
