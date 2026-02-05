@@ -2454,7 +2454,10 @@ def generar_pdf_dd(proveedor, request):
     proveedor_direcciones = proveedor.direcciones.first()
     perfil_proveedor = Profile.objects.filter(proveedor=proveedor).first()
     # === Datos de ejemplo ===
-    elaborado_por = perfil_proveedor.staff.staff.first_name + ' ' + perfil_proveedor.staff.staff.last_name or "No definido"
+    if perfil_proveedor:
+        elaborado_por = perfil_proveedor.staff.staff.first_name + ' ' + perfil_proveedor.staff.staff.last_name 
+    else:
+        elaborado_por = "No definido"
     cargo         = dd.cargo
     fecha         = dd.fecha.strftime('%d/%m/%Y') if dd and dd.fecha else ''
     tel           = proveedor_direcciones.telefono
