@@ -352,10 +352,13 @@
                                 </button>
                             </form>
                         </td>
+                       
                         <td>
+                            {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
                             <a href="{% url 'descargar_vale_rosa_pdf' vale.id %}" class="btn btn-outline-danger" target="_blank">
                                  <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                             </a>
+                            {% endif %}
                         </td>
                     </tr>
                     {% endif %}
