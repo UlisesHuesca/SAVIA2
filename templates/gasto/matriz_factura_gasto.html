@@ -338,12 +338,9 @@
                             {% if vale.esta_aprobado %}
                                 ✅ Validado
                             {% else %}
-                                <form method="get" action="{% url 'vale_azul_abono' vale.id %}">
-                                    <input type="hidden" name="next" value="{{ request.path }}">
-                                    <button type="submit" class="btn btn-outline-primary">
-                                        Validar abono
-                                    </button>
-                                </form>
+                                <a href="{% url 'vale_azul_abono' vale.id %}?next={{ request.path }}" class="btn btn-outline-primary">
+                                    Validar abono
+                                </a>
                             {% endif %}
                         </td>
                         <td>
