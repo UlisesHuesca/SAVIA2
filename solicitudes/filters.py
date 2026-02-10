@@ -95,10 +95,11 @@ class HistoricalProductoFilter(django_filters.FilterSet):
     history_id = CharFilter(field_name='history_id', lookup_expr='icontains')
     history_user = CharFilter(method='nombre_usuario', lookup_expr='icontains')
     nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
+    codigo = CharFilter(field_name='codigo', lookup_expr='icontains')
 
     class Meta:
         model = Product.history.model
-        fields = ['history_id','history_user','nombre']
+        fields = ['history_id','history_user','nombre','codigo']
 
     def nombre_usuario(self, queryset, name, value):
         return queryset.filter(Q(history_user__first_name__icontains = value) | Q(history_user__last_name__icontains = value))

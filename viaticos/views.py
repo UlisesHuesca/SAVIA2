@@ -323,12 +323,12 @@ def viaticos_pendientes_autorizar2(request):
     if perfil.distritos.nombre == "MATRIZ":
         if perfil.tipo.subdirector and perfil.tipo.dg:
             viaticos = Solicitud_Viatico.objects.filter(
-                Q(superintendente = perfil) | Q(colaborador__tipo__subdirector = True), 
+                (Q(superintendente = perfil) | Q(colaborador__tipo__subdirector = True)) & Q(distrito__nombre = "MATRIZ")
+                | (Q(colaborador__tipo__nombre = "GERENCIA") | Q(staff__tipo__nombre = "GERENCIA")),
                 complete=True, autorizar = True, 
-                montos_asignados=True, autorizar2 = None, 
-                distrito = perfil.distritos
+                montos_asignados=True, autorizar2 = None,     
                 ).order_by('-folio')
-        elif perfil.tipo.subdirector:
+        elif perfil.tipo.subdirector and not perfil.tipo.dg:
             viaticos = Solicitud_Viatico.objects.filter(
                 complete=True, 
                 autorizar = True, 
@@ -342,7 +342,7 @@ def viaticos_pendientes_autorizar2(request):
         else:
             viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos, superintendente = perfil).order_by('-folio')
     else:
-        viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos).order_by('-folio')
+        viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos).exclude(Q(colaborador=perfil) | Q(staff=perfil)).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs

@@ -2458,7 +2458,11 @@ def generar_pdf_dd(proveedor, request):
         elaborado_por = perfil_proveedor.staff.staff.first_name + ' ' + perfil_proveedor.staff.staff.last_name 
     else:
         elaborado_por = "No definido"
-    cargo         = dd.cargo
+
+    if dd is None:
+        cargo = ''
+    else:
+        cargo = dd.cargo
     fecha         = dd.fecha.strftime('%d/%m/%Y') if dd and dd.fecha else ''
     tel           = proveedor_direcciones.telefono
     correo        = proveedor_direcciones.email

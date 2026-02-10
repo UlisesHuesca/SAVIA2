@@ -53,6 +53,15 @@
                     </div>
                 </div>
             </div>
+            <div class="col-lg-3 col-md-12">
+                <div class="input-group mb-3">
+                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                    <div class="form-floating form-floating-group flex-grow-1">   
+                        {{myfilter.form.codigo|add_class:"form-control"|append_attr:"placeholder= Código"}}
+                        <label style="color: #121212;" for="id_codigo">Código</label>
+                    </div>
+                </div>
+            </div>
             <!--<label for="myfilter.form.familia" class="col-sm-auto col-form-label text-right my-2"><strong>Producto:</strong></label>
             <div class="col-auto my-2">
                 {{myfilter.form.producto|add_class:'form-control'}}
