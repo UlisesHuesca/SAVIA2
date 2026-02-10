@@ -608,18 +608,71 @@
                         </div>
                     </div>
                 </div>
-              </div>
+            </div>
+            {% if usuario.tipo.proveedor_externo %}
+            <div class="modal fade" id="modalInicial" tabindex="-1" aria-labelledby="modalInicialLabel" aria-hidden="true">
+                <div class="modal-dialog modal-dialog-centered">
+                    <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="modalInicialLabel">Aviso de Privacidad Simplificado</h5>
+                    </div>
+                    <div class="modal-body">
+                       GRUPO VORDCAB, S.A. DE C.V. no comercializa, ni comparte información con terceros. Toda la información plasmada y recabada en nuestro sistema SAVIA será utilizada para los trámites pertinentes de su evaluación como proveedor 
+                       y resguardada por 10 años misma que será destruida al terminar dicho periodo, a menos que se solicite lo contrario de manera escrita por el presente usuario. 
+
+                        Al continuar utilizando el sistema SAVIA, acepta este Aviso de privacidad en su totalidad y está de acuerdo con la recopilación, uso y resguardo de sus
+                        datos personales. 
+
+                        Para mayor información acerca del tratamiento y de los derechos que puede hacer valer, usted puede acceder al aviso de privacidad integral a través 
+                        de la página de Internet <a href="https://www.grupovordcab.com/politicas.php" target="_blank" rel="noopener noreferrer">https://www.grupovordcab.com/politicas.php</a>
+
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-primary" id="btnCerrarModalInicial">Entendido</button>
+                    </div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
         </div>
 
     </div>
     
 </div>
 <script>
+function mostrarModalInicial() {
+  return new Promise(resolve => {
+    const modalEl = document.getElementById('modalInicial');
+    const btnCerrar = document.getElementById('btnCerrarModalInicial');
 
+    // Bootstrap 5 modal
+    const modal = new bootstrap.Modal(modalEl, {
+      backdrop: 'static',  // no cerrar clic afuera
+      keyboard: false      // no cerrar con ESC
+    });
 
-document.addEventListener('DOMContentLoaded', function () {
+    // cuando lo cierran, seguimos
+    const onHidden = () => {
+      modalEl.removeEventListener('hidden.bs.modal', onHidden);
+      resolve();
+    };
+    modalEl.addEventListener('hidden.bs.modal', onHidden);
+
+    // botón cerrar
+    btnCerrar.addEventListener('click', () => modal.hide(), { once: true });
+
+    modal.show();
+  });
+}
+
+document.addEventListener('DOMContentLoaded', async function () {
   console.log("=== SCRIPT POLITICAS v2026-02-03 A ===");
+  {% if usuario.tipo.proveedor_externo %}
+  await mostrarModalInicial();
+  {% endif %}
 
+  // 2) Aquí ya corre lo demás (tu script de políticas, etc.)
+  console.log("Ya cerraron el modal inicial, ahora sí continuo...");
   const iframe = document.getElementById('iframePolitica');
   const modalElement = document.getElementById('pdfModal');
   const modal = new bootstrap.Modal(modalElement);
