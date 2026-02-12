@@ -190,3 +190,8 @@ class Comentario_Proveedor_Doc_Form(forms.ModelForm):
     class Meta:
         model = DocumentosProveedor
         fields = ['comentario']
+
+class Comentario_Rechazo_Form(forms.ModelForm):
+    class Meta:
+        model = Proveedor_direcciones
+        fields = ['comentario_status']

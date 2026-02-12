@@ -261,7 +261,7 @@ class Proveedor_direcciones(models.Model):
     moneda = models.ForeignKey(Moneda, on_delete = models.CASCADE, null=True)
     referencia = models.CharField(max_length=20, null=True, blank = True)
     convenio = models.CharField(max_length=20, null=True, blank = True)
-    comentario_status = models.CharField(max_length=255, null=True, blank=True, help_text="Comentario asociado al estatus del proveedor")
+    comentario_status = models.CharField(max_length=255, null=True, help_text="Comentario asociado al estatus del proveedor")
 
     @property
     def fecha_vencimiento(self):

@@ -19,7 +19,7 @@ from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form
+from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form, Comentario_Rechazo_Form
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from user.filters import ProfileFilter
@@ -682,21 +682,18 @@ def proveedores(request):
 def proveedores_altas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-   
+    proveedores = Proveedor.objects.filter(
+                completo=True, 
+                direcciones__estatus__nombre = "PREALTA",
+                ).exclude(familia__nombre="IMPUESTOS").distinct()
    
     if usuario.tipo.proveedores_edicion:
-        proveedores = Proveedor.objects.filter(
-                completo=True, 
-                direcciones__estatus__nombre = "PREALTA",
-                ).exclude(familia__nombre="IMPUESTOS").distinct()
+        proveedores = proveedores
     else:
-        proveedores = Proveedor.objects.filter(
-                completo=True, 
-                direcciones__estatus__nombre = "PREALTA",
-                direcciones__distrito__id = usuario.distritos.id,
-                ).exclude(familia__nombre="IMPUESTOS").distinct()
+        proveedores = proveedores.filter(direcciones__distrito__id = usuario.distritos.id)
         
     for proveedor in proveedores:
+        proveedor.dd_contestada = proveedor.cuestionarios.filter(terminada=True).exists()
         proveedor.politicas_no_autorizadas = (
             not proveedor.acepto_politica or
             not proveedor.acepto_politica_proveedor or
@@ -779,32 +776,25 @@ def cancelar_alta_proveedor(request, pk):
     usuario = Profile.objects.get(id = pk_perfil)
     proveedor = Proveedor.objects.get(id=pk)
     proveedor_direcciones = Proveedor_direcciones.objects.filter(nombre=proveedor, estatus__nombre="PREALTA").first()
-    
-    if request.method =='POST':
-        #print('si entra al ciclo')
-        status = Estatus_proveedor.objects.get(nombre="RECHAZADO")
-        
-        
-        proveedor_direcciones.estatus = status
-        proveedor_direcciones.save()
-         # Asignar folio automáticamente
-        # Tomamos el país desde la primera dirección asociada
-        
-        #pais = proveedor_direcciones.estado.pais.nombre
-        #print(f"Pais: {pais}")
-        # Obtener el último folio consecutivo para ese país
-        #ultimo_folio = Proveedor.objects.filter(
-        #    direcciones__estado__pais__nombre__iexact=pais,
-        #    folio_consecutivo__isnull=False
-        #).aggregate(Max('folio_consecutivo'))['folio_consecutivo__max'] or 0
+    form = Comentario_Rechazo_Form()
 
-        #proveedor.folio_consecutivo = ultimo_folio + 1
-        #proveedor.save()
-        messages.success(request,f'Has autorizado correctamente el alta del proveedor {proveedor.razon_social}')
-        return redirect('proveedores-altas')
+    if request.method =='POST':
+        form = Comentario_Rechazo_Form(request.POST, instance=proveedor_direcciones)
+        if form.is_valid():
+            print('esta entrando a validación')
+            proveedor_direcciones = form.save(commit=False)
+            status = Estatus_proveedor.objects.get(nombre="RECHAZADO")
+            proveedor_direcciones.estatus = status
+            proveedor_direcciones.save()
+        
+            messages.success(request,f'Has cancelado correctamente el alta del proveedor {proveedor.razon_social}')
+            return redirect('proveedores-altas')
+        else:
+            messages.error(request,'Por favor, ingresa un comentario de rechazo válido.')
     
     context = {
         'proveedor':proveedor,
+        'form': form,   
     }
     return render(request,'dashboard/cancelar_alta_proveedor.html', context)
     

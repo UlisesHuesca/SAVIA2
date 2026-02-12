@@ -1,6 +1,7 @@
 {% extends 'partials/base_w_nav.html' %}
 {% load crispy_forms_tags %}
 {% load static %}
+{% load widget_tweaks %}
 <html>
 <head>
 {% block title %}Alta de proveedores{% endblock %}
@@ -9,23 +10,37 @@
 {% block content %}
 <div class="modal-dialog" role="document">
     <div class="modal-content">
+        <form action="{% url 'cancelar-alta-proveedor' proveedor.id %}" method=POST onsubmit="disableButton()">
+         {% csrf_token %}
         <div class="modal-header">
             <h5 class="modal-title">Cancelar Alta de Proveedor</h5>
             <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-
+        
         <div class="modal-body">
-            
-           <h2>{{proveedor.razon_social}}</h2> 
+           <h5>{{proveedor.razon_social}}</h5> 
+           <div class="col-12 mt-3">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-comment"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ form.comentario_status|add_class:"form-control"|append_attr:"placeholder=Comentario" }}
+                            <label for="id_comentario_status">Comentario*</label>
+                        </div>
+                    </div>
+                </div>
            
         </div>
         <div class="modal-footer">
-            <form action="{% url 'cancelar-alta-proveedor' proveedor.id %}" method=POST onsubmit="disableButton()">
-                {% csrf_token %}
+            
+              
                 <button id="approve-btn" class="btn btn-danger" type="submit">Cancelar</button>
                 <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
-            </form>
+            
         </div>
+        </form>
     </div>
 </div>
 <script>

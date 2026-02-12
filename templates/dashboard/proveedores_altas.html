@@ -174,8 +174,13 @@
                         {% endif %}
 
                     {% endif %}
+                    
                     <td>
-                       <i class="fa-duotone fa-solid text-danger fa-file-xmark fa-2x"></i>
+                        {% if proveedor.dd_contestada %}
+                            <i class="fa-duotone fa-solid fa-file-check fa-2x text-success"></i>
+                        {% else %}
+                            <i class="fa-duotone fa-solid text-danger fa-file-xmark fa-2x"></i>
+                        {% endif %}
                     </td>
                     {% if usuario.tipo.proveedores_edicion %}
                     <td>
