@@ -572,8 +572,8 @@ def subproyectos_edit(request, pk):
 def staff(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-
-    perfiles = Profile.objects.filter(staff__staff__is_active = True, st_activo = True, sustituto__isnull=True, distritos = usuario.distritos).exclude(tipo__nombre = 'PROVEEDOR_EXTERNO')
+    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    perfiles = Profile.objects.filter(staff__staff__is_active = True, st_activo = True, sustituto__isnull=True, distritos__id__in = almacenes_distritos).exclude(tipo__nombre = 'PROVEEDOR_EXTERNO')
     cuenta_perfiles = perfiles.count()
 
     myfilter = ProfileFilter(request.GET, queryset=perfiles)
