@@ -1,5 +1,6 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
 from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
@@ -2636,6 +2637,17 @@ def descargar_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)
     buf = generar_pdf_nueva(compra)
     return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')
+
+@xframe_options_sameorigin
+def ver_oc_pdf(request, compra_id):
+    compra = get_object_or_404(Compra, pk=compra_id)
+    buf = generar_pdf(compra)  # tu función
+    filename = f"OC_{compra.get_folio}.pdf"
+
+    resp = FileResponse(buf, content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
+
 
 def attach_oc_pdf(request, pk):
     compra = get_object_or_404(Compra, id=pk)

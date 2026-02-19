@@ -2790,7 +2790,7 @@ def generate_excel_report(salidas):
 def generate_excel_report2(salidas):
     output = io.BytesIO()
 
-    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha', 'Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Moneda','TC','Total']
+    columns = ['Vale Salida', 'Folio Solicitud', 'Fecha','Solicitante', 'Proyecto', 'Subproyecto', 'Área', 'Código', 'Articulo', 'Material recibido por', 'Comentario','Cantidad', 'Precio', 'Moneda','TC','Total']
     data = [columns]
 
     for salida in salidas:
