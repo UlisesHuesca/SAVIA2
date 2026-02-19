@@ -327,7 +327,7 @@
                                 <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#pdfModal" data-pdf-url="{% url 'ver_oc_pdf' compra.id %}">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
-                                 <!-- Modal -->
+                                  <!-- Modal -->
                                 <div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
                                     <div class="modal-dialog modal-xl modal-dialog-centered">
                                         <div class="modal-content">
@@ -342,7 +342,7 @@
                                         </div>
                                     </div>
                                 </div>
-
+                               
 
                             </li>
                         </ul>
@@ -377,6 +377,8 @@
                 {% endfor %}
             </tbody>
         </table>
+        
+
         <nav aria-label="Page navigation example">
             <ul class="pagination justify-content-center">
                 {% if compras_list.has_previous %}
@@ -437,6 +439,25 @@ dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
 })
+
+document.addEventListener("show.bs.modal", function (event) {
+  const modal = event.target;
+  if (modal.id !== "pdfModal") return;
+
+  const button = event.relatedTarget;
+  const url = button?.getAttribute("data-pdf-url");
+  const frame = modal.querySelector("#pdfFrame");
+
+  if (url && frame) frame.src = url;
+});
+
+document.addEventListener("hidden.bs.modal", function (event) {
+  const modal = event.target;
+  if (modal.id !== "pdfModal") return;
+
+  const frame = modal.querySelector("#pdfFrame");
+  if (frame) frame.src = "about:blank";
+});
 
 // Función para obtener el valor de una cookie por su nombre
 function getCookie(name) {
