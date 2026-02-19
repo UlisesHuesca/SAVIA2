@@ -2641,7 +2641,7 @@ def descargar_pdf(request, pk):
 @xframe_options_sameorigin
 def ver_oc_pdf(request, compra_id):
     compra = get_object_or_404(Compra, pk=compra_id)
-    buf = generar_pdf(compra)  # tu función
+    buf = generar_pdf_nueva(compra)  # tu función
     filename = f"OC_{compra.get_folio}.pdf"
 
     resp = FileResponse(buf, content_type="application/pdf")
