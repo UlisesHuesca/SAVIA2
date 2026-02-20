@@ -2642,7 +2642,7 @@ def descargar_pdf(request, pk):
 def ver_oc_pdf(request, compra_id):
     compra = get_object_or_404(Compra, pk=compra_id)
     buf = generar_pdf_nueva(compra)  # tu función
-    filename = f"OC_{compra.get_folio}.pdf"
+    filename = f"OC_{compra.folio}.pdf"
 
     resp = FileResponse(buf, content_type="application/pdf")
     resp["Content-Disposition"] = f'inline; filename="{filename}"'
