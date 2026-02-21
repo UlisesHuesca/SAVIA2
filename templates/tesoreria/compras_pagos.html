@@ -489,13 +489,15 @@ if (form) {
 
     // ===== monto =====
     let monto = Number(document.getElementById('id_monto')?.value || "0");
+    console.log("Monto inicial:", monto);
+    
     if (requiere_tc) monto = monto / tc;
 
     // ===== comparación =====
     const tolerancia = 0.2;
     const valor_a_comparar = (parcialidad > 0 && parcialidad < remanente) ? parcialidad : remanente;
-
-    if (Math.abs(monto - valor_a_comparar) > tolerancia) {
+    console.log("Valor a comparar", valor_a_comparar)
+    if ((monto + torelancia) < valor_a_comparar) {
       Swal.fire({
         icon: 'error',
         title: 'Error de validación',
