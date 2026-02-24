@@ -13,6 +13,7 @@ from django.conf import settings
 from django.utils.timezone import localtime
 from django.utils.dateparse import parse_date
 from django.urls import reverse, NoReverseMatch
+from django.views.decorators.http import require_POST
 from user.models import Distrito, Empresa
 from compras.models import ArticuloComprado, Compra, TipoPrioridad
 from compras.forms import CompraForm
@@ -2663,11 +2664,12 @@ def control_bancos(request, pk):
         fecha_saldo = ultimo_saldo.fecha_inicial
         pagos = Pago.objects.filter(
             cuenta = cuenta,
+            eliminado=False,
             hecho=True,
             pagado_real__gte= fecha_saldo # Filtrar pagos hechos después del último saldo
         ).order_by('pagado_real',  'pagado_hora','-tipo__id')  
     else:
-        pagos = Pago.objects.filter(cuenta = cuenta, hecho= True).order_by('pagado_real', 'pagado_hora','-tipo__id')  
+        pagos = Pago.objects.filter(cuenta = cuenta, hecho= True, eliminado=False).order_by('pagado_real', 'pagado_hora','-tipo__id')  
     
     
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
@@ -2980,7 +2982,19 @@ def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, benefici
     }
     return datos
 
+@require_POST
+def eliminar_pago(request, pago_id):
+    print('estoy en eliminar_pago',pago_id)
+    pago = get_object_or_404(Pago, id=pago_id)
 
+    # Protección extra backend (NO confiar solo en template)
+    if pago.oc or pago.gasto or pago.viatico:
+        return redirect(request.META.get('HTTP_REFERER'))
+
+    pago.eliminado = True
+    pago.save()
+
+    return redirect(request.META.get('HTTP_REFERER'))
 
 def generar_archivo_zip(facturas, compra):
     nombre = compra.folio if compra.folio else ''
