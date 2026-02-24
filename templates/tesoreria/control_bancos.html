@@ -197,8 +197,8 @@
             <thead class="text-black sticky-header" style="background-color: #F5F5F5;">
                 <tr>
                     <th class="d-none d-lg-table-cell">Fecha</th>
-                    <th>Hora</th>
-                    <th>Editar</th>
+                    <!--<th>Hora</th>
+                    <th>Editar</th>-->
                     <th>Empresa Cuenta</th>
                     <th scope="col">Empresa/Proveedor</th>
                     <th scope="col">Concepto/Servicio</th>
@@ -225,7 +225,7 @@
                    
 
                     <!-- Campo visible -->
-                    <td class = "" id="pagado_hora_{{ pago.id|unlocalize }}">
+                    <!--<td class = "" id="pagado_hora_{{ pago.id|unlocalize }}">
                         {{ pago.pagado_hora|time:'H:i:s.u' }}
                     </td>
                     <td>
@@ -239,7 +239,7 @@
                         <a id="modificar_hora_{{pago.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_hora('{{pago.id|unlocalize}}')">
                             <i class="fa-duotone fa-solid fa-clock"></i>
                         </a>
-                    </td>
+                    </td>-->
                     <td>{{pago.cuenta.empresa.nombre}}</td>
                     <td>
                         {% if pago.detalles_comprobante and pago.detalles_comprobante.titular_cuenta_2 != "No disponible" %}{{pago.detalles_comprobante.titular_cuenta_2}}
