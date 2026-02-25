@@ -5273,7 +5273,7 @@ def generar_politica_antisoborno():
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(20,   segundo_parrafo - 8,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
-    c.rect(20,  segundo_parrafo - 160,565,5, fill=True, stroke=False) #Linea posterior horizontal
+    c.rect(20,  segundo_parrafo - 185,565,5, fill=True, stroke=False) #Linea posterior horizontal
    
    
     c.setFillColor(black)
@@ -5284,8 +5284,8 @@ def generar_politica_antisoborno():
     c.setFont('Helvetica',12)
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(20, cuarta_tabla - 8,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
-    c.rect(20, cuarta_tabla - 100,565,5, fill=True, stroke=False) #Linea posterior horizontal
+    c.rect(20, cuarta_tabla - 30,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
+    c.rect(20, cuarta_tabla - 120,565,5, fill=True, stroke=False) #Linea posterior horizontal
    
 
    
@@ -5308,17 +5308,17 @@ def generar_politica_antisoborno():
     
     texto2 = """Esta política es de observancia y aplicación estricta de todos y cada uno de los empleados, trabajadores, representantes,
 colaboradores, proveedores, distribuidores o cualquier tercero relacionado con las actividades comerciales de VORDCAB en nuestro país, 
-así como en aquellos países en los que cuenta con presencia operativa.<br/>
+así como en aquellos países en los que cuenta con presencia operativa.<br/><br/>
 VORDCAB contará con un Registro en relación con terceros, en donde se localicen sus nombres, términos y condiciones de los acuerdos que 
 tomen con VORDCAB, así como los pagos realizados a los terceros contratados por la Empresa, relacionados a transacciones con organismos 
-públicos o empresas estatales o privadas.<br/>
+públicos o empresas estatales o privadas.<br/><br/>
 En caso de sociedades conjuntas (joint ventures) o consorcios, contratistas y proveedores, deberá constar el consentimiento del tercero 
 para adoptar políticas anticorrupción y asegurarse de su cumplimiento, de acuerdo con los estándares comerciales aceptados, en apego a 
 la transparencia.<br/> """
     texto3 = """El presente documento, SEOV N1 11 Política Antisoborno Antisoborno, se encuentra disponible en su versión original en 
     medios electrónicos para mayor referencia, para lo cual podrá visitar la página www.grupovordcab.com, facilitando su debido cumplimiento.
     En caso de existir alguna duda o comentario en la relación con la presente, podrá contactarse al siguiente correo 
-    contactointerno@grupovordcab.com, directamente con el área de Jurídico, de GRUPO VORDCAB, S.A. DE C.V..<br/>"""
+    denuncia@grupovordcab.com, directamente con el área de Jurídico, de GRUPO VORDCAB, S.A. DE C.V..<br/>"""
     titulo1 = """OBJETIVO"""
     titulo2 = """ALCANCE"""
     titulo3 = """NOTAS"""
@@ -5350,7 +5350,7 @@ la transparencia.<br/> """
     ancho, alto = letter  # Asegúrate de tener estas dimensiones definidas
     #frame = Frame(120, 720, ancho - 100, alto - 100, id='frameTextoConstante')  # Ajusta las dimensiones según sea necesario
     elementos = [titulo1, Spacer(1,25), parrafo, Spacer(1,25),titulo2,Spacer(1,25), parrafo2, Spacer(1,250),titulo3,Spacer(1,25), parrafo3]
-    frame = Frame(30, 0, width-50, height-100, id='frameTextoConstante')
+    frame = Frame(20, 0, width-50, height-100, id='frameTextoConstante')
     frame.addFromList(elementos, c)
 
     c.save()
@@ -5388,7 +5388,7 @@ def generar_codigo_etica():
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
     c.rect(140,750,260,20, fill=True, stroke=False) #Barra azul superior Título
     c.rect(20,caja_proveedor - 7,565,20, fill=True, stroke=False) #Barra azul superior |Objetivo
-    c.rect(20,caja_proveedor - 300,565,5, fill=True, stroke=False) #Linea posterior horizontal
+    c.rect(20,caja_proveedor - 310,565,5, fill=True, stroke=False) #Linea posterior horizontal
     c.setFillColor(white)
     c.setLineWidth(.2)
     c.setFont('Helvetica-Bold',14)
@@ -5420,7 +5420,7 @@ def generar_codigo_etica():
     c.setFont('Helvetica',12)
     c.setFillColor(prussian_blue)
     # REC (Dist del eje Y, Dist del eje X, LARGO DEL RECT, ANCHO DEL RECT)
-    c.rect(20, cuarta_tabla - 8,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
+    c.rect(20, cuarta_tabla - 20,565,20, fill=True, stroke=False) #Barra azul superior | Datos Bancarios Dólares
     c.rect(20, cuarta_tabla - 100,565,5, fill=True, stroke=False) #Linea posterior horizontal
    
 
@@ -5433,28 +5433,25 @@ def generar_codigo_etica():
    
 
 
-    texto = """El desarrollo de relaciones de confianza con los proveedores ha contribuido a que Grupo Vordcab se encuentre como la empresa líder en
-    fabricación y servicios de Sistemas Artificiales de Producción en México. Por tal motivo buscamos siempre que la relación con nuestros proveedores se base en
-    la transparencia, la confianza y la confidencialidad entre nosotros.<br/>
-Tenemos el compromiso de otorgar a los proveedores las mismas oportunidades de contratarlos ya que la evaluación de las ofertas para selección de proveedores se basa
- en criterios establecidos por nuestra empresa. Las propuestas son revisadas de manera integral considerando precio, valor agregado y calidad de los productos y 
- servicios que se ofrecen.<br/>
-Las negociaciones son llevadas a cabo de manera honesta y equitativa; todo proveedor es tratado con respeto, transparencia y justicia.<br/>
-El respeto de los acuerdos, los términos, licencias y compromisos establecidos en nuestros contratos son un principio en Grupo Vordcab.<br/>
-Estamos comprometidos con la confidencialidad de los datos de nuestros proveedores, respetamos los derechos de propiedad intelectual e industrial es por ello que 
-siempre buscamos establecer relaciones con contratistas o proveedores que demuestren que están debidamente autorizados para el uso o comercialización de productos 
-o servicios.<br/>
-Establecer acuerdos claros en términos y condiciones de pago, así como establecer procesos estables y transparentes de pago oportuno nos permite cumplir nuestros 
-compromisos con nuestros proveedores.<br/>
-En Grupo Vordcab se encuentra estrictamente prohibida cualquier situación de corrupción, por tanto, no aceptamos dinero, regalos, servicios, descuentos, viajes, 
-entretenimientos o cualquier otro bien que pudiera poner en entre dicho nuestra transparencia en los procesos licitatorios o de compras. Sin embargo, también 
-entendemos la necesidad de nuestros proveedores de hacer esfuerzos por promover sus marcas por lo que sí está permitida la entrega de productos promocionales 
-siempre y cuando el valor de los mismos sea simbólico. <br/>
+    texto = """El desarrollo de relaciones de confianza con nuestros proveedores ha consolidado a Grupo Vordcab como la empresa líder en fabricación y servicios de 
+    Sistemas Artificiales de Producción en México. Por ello, buscamos siempre que nuestro vínculo se base en la transparencia y la confidencialidad mutua.<br/><br/>
+Tenemos el compromiso de otorgar igualdad de oportunidades en la contratación; la selección se realiza bajo criterios institucionales claros, donde las propuestas son
+revisadas de manera integral, considerando precio, calidad y valor agregado. Todas nuestras negociaciones se conducen con honestidad, equidad y respeto.<br/><br/>
+
+En Grupo Vordcab, el cumplimiento de los acuerdos, términos, licencias y compromisos contractuales es un principio fundamental. Asimismo, protegemos la confidencialidad de
+los datos y respetamos los derechos de propiedad intelectual e industrial, relacionándonos exclusivamente con proveedores debidamente autorizados.<br/><br/>
+
+Establecer procesos de pago estables, transparentes y oportunos es una prioridad que nos permite honrar nuestros compromisos financieros.<br/><br/>
+
+Finalmente, mantenemos una política de cero tolerancia a la corrupción. Queda estrictamente prohibido aceptar dinero, regalos, viajes, entretenimientos, 
+servicios o cualquier beneficio que pueda comprometer la imparcialidad de nuestros procesos licitatorios o de compra. Sin embargo, entendemos la necesidad de nuestros 
+proveedores de hacer esfuerzos por promover sus marcas por lo que se permite únicamente artículos promocionales de valor simbólico destinados a la difusión de marca.
+<br/><br/>
 """
     
     texto3 = """El presente documento, SEOV-N1-04 Código de Ética, se encuentra disponible en su versión original en medios electrónicos para mayor referencia,
       para lo cual podrá visitar la página www.grupovordcab.com, facilitando su debido cumplimiento. En caso de existir alguna duda o comentario en la relación con la 
-      presente, podrá contactarse al siguiente correo contactointerno@grupovordcab.com, directamente con el área de Jurídico, de GRUPO VORDCAB, S.A. DE C.V.<br/> """
+      presente, podrá contactarse al siguiente correo denuncia@grupovordcab.com, directamente con el área de Jurídico, de GRUPO VORDCAB, S.A. DE C.V.<br/> """
     
     titulo1 = """Con los proveedores"""
     titulo3 = """NOTAS"""
@@ -5489,7 +5486,7 @@ siempre y cuando el valor de los mismos sea simbólico. <br/>
         titulo3,Spacer(1,25), 
         parrafo3
     ]
-    frame = Frame(30, 0, width-50, height-100, id='frameTextoConstante')
+    frame = Frame(20, 0, width-50, height-100, id='frameTextoConstante')
     frame.addFromList(elementos, c)
 
     c.save()
@@ -5848,7 +5845,7 @@ solicitado por autoridades competentes.<br/>
     c.drawString(255,caja_iso-20,'Nivel del documento')
     c.drawString(280,caja_iso-30, 'N5')
     c.drawString(340,caja_iso-20,'Revisión No.')
-    c.drawString(352,caja_iso-30,'000')
+    c.drawString(352,caja_iso-30,'001')
     c.drawString(410,caja_iso-20,'Fecha de Emisión')
     c.drawString(425,caja_iso-30,'14/02/2022')
     c.drawString(510,caja_iso-20,'Fecha de Revisión')
@@ -5907,7 +5904,7 @@ solicitado por autoridades competentes.<br/>
     c.drawString(255,caja_iso-20,'Nivel del documento')
     c.drawString(280,caja_iso-30, 'N5')
     c.drawString(340,caja_iso-20,'Revisión No.')
-    c.drawString(352,caja_iso-30,'000')
+    c.drawString(352,caja_iso-30,'001')
     c.drawString(410,caja_iso-20,'Fecha de Emisión')
     c.drawString(425,caja_iso-30,'14/02/2022')
     c.drawString(510,caja_iso-20,'Fecha de Revisión')
