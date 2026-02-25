@@ -15,5 +15,5 @@ urlpatterns = [
     path('rentabilidad/reporte_depreciaciones', views.reporte_depreciaciones, name = 'reporte-depreciaciones'),
     path('rentabilidad/rentabilidad_resumen', views.reporte_rentabilidad_mensual, name = 'rentabilidad-resumen'),
     path('rentabilidad/conceptos_costos/<int:pk>', views.conceptos_costos, name='conceptos-costos'),
-    path('rentabilidad/costos/carga-excel/', views.carga_costos_excel, name='carga-costos-excel'),
+    path('rentabilidad/costos/carga-excel/<str:tipo>', views.carga_costos_excel, name='carga-costos-excel'),
 ]

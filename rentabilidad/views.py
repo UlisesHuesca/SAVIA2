@@ -176,7 +176,7 @@ def normalizar_clave(valor):
     return s.upper()
 
 @perfil_seleccionado_required
-def carga_costos_excel(request):
+def carga_costos_excel(request, tipo):
     pk_perfil = request.session.get("selected_profile_id")
     usuario = Profile.objects.get(id=pk_perfil)
 
@@ -235,7 +235,7 @@ def carga_costos_excel(request):
 
         if not filas:
             messages.warning(request, "No se encontraron filas válidas para cargar.")
-            return redirect("add-costo", tipo="directo")
+            return redirect("add-costo", tipo=tipo)
 
         # 2) Resolver conceptos existentes (sin crear nuevos)
         nombres = sorted({c for c, _ in filas})
@@ -276,7 +276,7 @@ def carga_costos_excel(request):
             extra = "" if len(faltantes) <= max_show else f" ... (+{len(faltantes)-max_show} más)"
             messages.warning(request, f"No se encontraron en el catálogo: {lista}{extra}")
 
-        return redirect("add-costo", tipo="directo")
+        return redirect("add-costo", tipo=tipo)
 
     else:
         form = UploadExcelForm()

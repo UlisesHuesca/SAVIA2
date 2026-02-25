@@ -238,7 +238,7 @@
   <div class="modal-dialog">
     <div class="modal-content">
 
-      <form method="post" enctype="multipart/form-data" action="{% url 'carga-costos-excel' %}">
+      <form method="post" enctype="multipart/form-data" action="{% url 'carga-costos-excel' tipo %}">
         {% csrf_token %}
 
         <div class="modal-header">
