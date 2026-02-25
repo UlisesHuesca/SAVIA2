@@ -199,18 +199,17 @@
                     <th class="d-none d-lg-table-cell">Fecha</th>
                     <!--<th>Hora</th>
                     <th>Editar</th>-->
-                    <th>Empresa Cuenta</th>
-                    <th scope="col">Empresa/Proveedor</th>
+                    <th>Empresa/Colaborador</th>
+                    <th>Folio</th>
                     <th scope="col">Concepto/Servicio</th>
-                    <th>Comentarios</th>
-                    <th>Editar</th>
                     <th>Proyecto</th>
                     <th>Subproyecto</th>
                     <th>Distrito</th>
                     <th>Cargo</th>
                     <th>Abono</th>
                     <th>Eliminar</th>
-                    <!--<th>Saldo</th>-->
+                    <th>Comentario Pago</th>
+                    <th>Editar</th>
                 </tr>
             </thead>
             <tbody>
@@ -240,9 +239,9 @@
                             <i class="fa-duotone fa-solid fa-clock"></i>
                         </a>
                     </td>-->
-                    <td>{{pago.cuenta.empresa.nombre}}</td>
+                
                     <td>
-                        {% if pago.detalles_comprobante and pago.detalles_comprobante.titular_cuenta_2 != "No disponible" %}{{pago.detalles_comprobante.titular_cuenta_2}}
+                        {{pago.cuenta.empresa.nombre}}{% if pago.detalles_comprobante and pago.detalles_comprobante.titular_cuenta_2 != "No disponible" %}{{pago.detalles_comprobante.titular_cuenta_2}}
                         {% elif pago.oc %} {{pago.oc.proveedor.nombre.razon_social}} 
                         {% elif pago.gasto %}  {% if pago.gasto.colaborador %} {{pago.gasto.colaborador.staff.staff.first_name}} {{pago.gasto.colaborador.staff.staff.last_name}} {% else %} {{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}{% endif %}
                         {% elif pago.viatico %} {% if pago.viatico.colaborador %} {{pago.viatico.colaborador.staff.staff.first_name}} {{pago.viatico.colaborador.staff.staff.last_name}}{% else %}{{pago.viatico.staff.staff.first_name}} {{pago.viatico.staff.staff.last_name}} {% endif %}
@@ -255,28 +254,31 @@
                         {% else %} {{pago.tipo}}
                         {% endif %}
                     </td>
-                    <td class="d-none" id="form_comentario_{{pago.id|unlocalize}}">
-                        <input type="textarea" class="form-control" id="comentario-input_{{ pago.id|unlocalize }}" value="{{ pago.comentario }}">
-                    </td>
-                    <td class="" id="comentario_{{pago.id|unlocalize}}">{% if pago.comentario %}Pago: {{pago.comentario}}
+                    <td>
+                        {% if pago.oc %}
+                            {% for producto in pago.oc.articulocomprado_set.all %}
+                                {{ producto.producto.producto.articulos.producto.producto.nombre }}{% if not forloop.last %}, {% endif %}
+                            {% empty %}
+                                No hay comentarios disponibles
+                            {% endfor %}
                         {% else %}
-                        {% if pago.oc and pago.oc.req.orden.comentario %}{{pago.oc.req.orden.comentario}} {% endif %}
-                        {% if pago.gasto and pago.gasto.comentario %}{{pago.gasto.comentario}} {% endif %}
-                        {% if pago.viatico and pago.viatico.comentario_general %}{{pago.viatico.comentario_general}}{% endif %}
+                        {{pago.oc.req.orden.comentario}} 
                         {% endif %}
+                        {% if pago.gasto %}  
+                            {% if pago.gasto.comentario %}
+                                {{pago.gasto.comentario}}
+                            {% else %}
+                                {% for articulo in pago.gasto.articulos.all %}
+                                    {{ articulo.comentario }}{% if not forloop.last %}, {% endif %}
+                                {% empty %}
+                                    No hay comentarios disponibles
+                                {% endfor %}
+                            {% endif %}
+                        {% endif %}
+                        {% if pago.viatico %}{{pago.viatico.lugar_partida}}-{{pago.viatico.lugar_comision}} | {{pago.viatico.comentario_general}}{% endif %}
 
                     </td>
-                    <td>
-                        <button type="button" id="save_comment_{{pago.id|unlocalize}}" onclick="aceptar_edicion('{{pago.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
-                            <i class="fa-regular fa-circle-check"></i>
-                        </button>
-                        <button id="cancel_edit_{{pago.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{pago.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
-                            <i class="fa-solid fa-circle-xmark"></i>
-                        </button>
-                        <a id="modificar_comentario_{{pago.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{pago.id|unlocalize}}')">
-                            <i class="fa-regular fa-comment"></i>
-                        </a>
-                    </td>
+                 
                     <td> {% if pago.oc %}{{pago.oc.req.orden.proyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.proyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.subproyecto.nombre}}{% elif pago.viatico %}{{pago.viatico.subproyecto.nombre}}{% endif %}</td>
                     <td> {% if pago.oc %}{{pago.oc.req.orden.distrito.nombre}}
@@ -296,6 +298,24 @@
                             </button>
                         </form>
                         {% endif %}
+                    </td>
+                    <td class="d-none" id="form_comentario_{{pago.id|unlocalize}}">
+                        <input type="textarea" class="form-control" id="comentario-input_{{ pago.id|unlocalize }}" value="{{ pago.comentario }}">
+                    </td>
+                    <td class="" id="comentario_{{pago.id|unlocalize}}">{% if pago.comentario %}{{pago.comentario}}
+                        {% else %} No hay comentarios disponibles
+                        {% endif %}
+                    </td>
+                       <td>
+                        <button type="button" id="save_comment_{{pago.id|unlocalize}}" onclick="aceptar_edicion('{{pago.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
+                            <i class="fa-regular fa-circle-check"></i>
+                        </button>
+                        <button id="cancel_edit_{{pago.id|unlocalize}}" type="button" class="btn add-btn d-none" onclick="cancelar_edicion('{{pago.id|unlocalize}}')" style="color:ghostwhite; background-color:#980F0F ;">
+                            <i class="fa-solid fa-circle-xmark"></i>
+                        </button>
+                        <a id="modificar_comentario_{{pago.id|unlocalize}}" class="btn btn-outline-info" onclick="modificar_comentario('{{pago.id|unlocalize}}')">
+                            <i class="fa-regular fa-comment"></i>
+                        </a>
                     </td>
                 </tr>
                 {% endfor %}

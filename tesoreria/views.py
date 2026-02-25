@@ -5639,7 +5639,7 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
     worksheet.write('J10', saldo_inicial, h_money_style)
     worksheet.write('I11', 'SALDO FINAL', header_format)
 
-    columns = ['Fecha','Empresa/Colaborador','Folio','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo']
+    columns = ['Fecha','Empresa/Colaborador','Folio','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo','Comentario Pago']
 
     columna_max = len(columns)+2
 
@@ -5718,9 +5718,8 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
        
 
         # Determinar contrato y sector
-        if pago.comentario:
-            comentarios = pago.comentario
-        elif hasattr(pago, 'oc') and pago.oc:
+       
+        if hasattr(pago, 'oc') and pago.oc:
             comentarios = (pago.oc.req.orden.comentario or '').upper()
         elif hasattr(pago, 'viatico') and pago.viatico:            
             comentarios = (pago.viatico.comentario_general or '').upper()
@@ -5737,7 +5736,10 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
         else:
             comentarios = 'NO HAY COMENTARIOS DISPONIBLES'
             
-                    
+
+        if pago.comentario:
+            comentario_pago = pago.comentario
+
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else (pago.distrito.nombre if pago.distrito else '')))
         cargo = ''
         abono = ''
@@ -5761,7 +5763,7 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
         worksheet.write(row_num, 6, distrito)
         worksheet.write(row_num, 7, cargo, money_style)
         worksheet.write(row_num, 8, abono, money_style)
-        #worksheet.write(row_num, 9, comentarios)
+        worksheet.write(row_num, 10, comentario_pago)
         # Saldo en la columna 9 (índice 9 = columna J)
         if row_num <= 12:
             # Primera fila de saldo, usa saldo inicial
