@@ -162,6 +162,7 @@ def compras_por_pagar(request):
         elif 'btnDescargarFacturas' in request.POST:
             print("Descargas")
             compra_ids = request.POST.getlist('compra_ids_accion')  # <- tus checkboxes actuales
+            print(compra_ids)
             # Si hay selección, filtra; si no, usa todas
             compras_descarga = compras    
             if compra_ids:
