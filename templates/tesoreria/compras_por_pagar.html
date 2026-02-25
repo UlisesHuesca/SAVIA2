@@ -240,6 +240,7 @@
                     <th>Cancelar</th>
                     <th>Para Pago</th>
                     <th>Parcialidad</th>
+                    <th>Para descarga</th>
                     {% endif %}
                 </tr>
             </thead>
@@ -339,10 +340,14 @@
                             <input class="oc_checkbox form-check-input" style="transform: scale(2); margin: 5px;" data-id="{{ compra.id|unlocalize }}" type="checkbox" name="compra_ids" value="{{ compra.id|unlocalize }}">
                             {% endif %}
                         </td>
+                       
                         <td>
                             <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="costo_plus_adicionales" value="{{ compra.costo_plus_adicionales|unlocalize }}">
                             <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
                             <input class="form-control diferencia" type="textbox" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
+                        </td>
+                         <td>
+                            <input class="oc_checkbox_accion form-check-input" style="transform: scale(2); margin: 5px;" type="checkbox" name="compra_ids_accion" value="{{ compra.id|unlocalize }}">
                         </td>
                         
                     {% endif %}

@@ -161,8 +161,11 @@ def compras_por_pagar(request):
             return response
         elif 'btnDescargarFacturas' in request.POST:
             print("Descargas")
-       
-                
+            compra_ids = request.POST.getlist('compra_ids')  # <- tus checkboxes actuales
+            # Si hay selección, filtra; si no, usa todas
+            compras_descarga = compras    
+            if compra_ids:
+                compras_descarga = compras.filter(id__in=compra_ids).distinct()
             print('usuario.usuario.tipo.documentos:', usuario.tipo.documentos)
             #if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
             zip_buffer = BytesIO()
@@ -173,7 +176,7 @@ def compras_por_pagar(request):
                 #zip_file.mkdir("GENERAL_PDFs")
                 #zip_file.mkdir("GENERAL_XMLs")
 
-                for compra in compras:
+                for compra in compras_descarga:
                     carpeta = None   
                         
                         
