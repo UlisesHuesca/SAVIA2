@@ -3054,7 +3054,8 @@ def convert_excel_gasto_matriz(gastos):
     wb.add_named_style(percent_style)
 
     columns = ['Folio','Fecha Autorización','Distrito','Proyectos','Subproyectos','Comentarios','Colaborador','Solicitado para',
-               'Importe','Importe Pagado','Restante','Fecha Creación','Status','Autorizado por','Tiene Facturas','Status de Pago']
+               'Importe','Importe Pagado','Monto autorizado por SIA','Restante','Fecha Creación','Status','Autorizado por',
+               'Tiene Facturas','Status de Pago','Banco','Cuenta','CLABE']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -3142,6 +3143,11 @@ def convert_excel_gasto_matriz(gastos):
             autorizado_por = "Faltan autorizaciones"
             status = "Faltan autorizaciones"
 
+        if gasto.parcial:
+            monto_autorizado = gasto.parcial
+        else:
+            monto_autorizado = gasto.get_total_solicitud
+
         proyectos = set()
         subproyectos = set()
         comentarios = set()
@@ -3160,6 +3166,14 @@ def convert_excel_gasto_matriz(gastos):
 
         restante =  gasto.get_total_solicitud - gasto.monto_pagado
 
+        if gasto.colaborador:
+            banco = gasto.colaborador.staff.banco.nombre if gasto.colaborador.staff.banco else "Sin registro"
+            cuenta = gasto.colaborador.staff.cuenta_bancaria if gasto.colaborador.staff.cuenta_bancaria else "Sin registo"
+            clabe = gasto.colaborador.staff.clabe if gasto.colaborador.staff.clabe else "Sin registro"
+        else:
+            banco = gasto.staff.staff.banco.nombre if gasto.staff.staff.banco else "Sin registro"
+            cuenta = gasto.staff.staff.cuenta_bancaria if gasto.staff.staff.cuenta_bancaria else "Sin registo"
+            clabe = gasto.staff.staff.clabe if gasto.staff.staff.clabe else "Sin registro"
 
         row = [
             gasto.folio,
@@ -3178,16 +3192,18 @@ def convert_excel_gasto_matriz(gastos):
             autorizado_por,
             tiene_facturas,
             pagada,
-            #f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
-            #created_at_naive,
+            status,
+            banco,
+            cuenta,
+            clabe
         ]
 
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 1 or col_num == 11:
+            if col_num in [1, 12]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 8 or col_num == 9 or col_num == 10:
+            if col_num in [8, 9, 10]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     
