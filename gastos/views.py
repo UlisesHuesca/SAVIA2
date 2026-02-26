@@ -3612,7 +3612,7 @@ def crear_pdf_cfdi_buffer(factura):
     return buffer
 
 def descargar_vale_rosa_pdf(request, vale_id, color):
-    buffer = generar_pdf_vale_rosa(vale_id, color)
+    buffer = generar_pdf_vale_rosa(vale_id)
     if color == 'azul':
         filename = f"vale_azul_{vale_id}.pdf"
     else:
@@ -3635,14 +3635,14 @@ def crear_pdf_cfdi_gasto(factura):
         tmp_file.write(buffer.read())
         return tmp_file.name
 
-def generar_pdf_vale_rosa(vale_id, color):
+def generar_pdf_vale_rosa(vale_id):
     vale = ValeRosa.objects.select_related('gasto', 'creado_por').get(id=vale_id)
     
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    if color == 'azul':
+    if vale.color == 'azul':
         c.setFillColorRGB(0.7, 0.85, 1)
     else:
         # Establecer fondo rosa

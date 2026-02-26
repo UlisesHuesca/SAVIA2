@@ -22,7 +22,7 @@ from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_cod
 from dashboard.models import Subproyecto, Producto_Calidad
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago, EstadoCuenta
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
-from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto
+from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto, generar_pdf_vale_rosa
 from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
 from finanzas.models import Exhibit, Linea_Exhibit
@@ -2266,7 +2266,7 @@ def control_documentos(request):
                                         zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
                                         uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                         zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
-
+                            agregar_vales_rosa_generados(zip_file, carpeta, gasto=gasto)
                             if gasto.id not in processed_docs:
                                 pdf_buf = render_pdf_gasto(gasto.id)
                                 zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
@@ -2685,6 +2685,20 @@ def control_documentos(request):
         }
 
     return render(request, 'tesoreria/control_documentos.html',context)
+
+def agregar_vales_rosa_generados(zip_file, carpeta, gasto=None, viatico=None):
+    if gasto is not None:
+        vales = gasto.vales_rosa.filter(esta_aprobado=True)  # related_name='vales_rosa'
+    
+    elif viatico is not None:
+       vales = viatico.vales_rosa_viatico.filter(esta_aprobado=True)  # related_name='vales_rosa_viatico'
+    else:
+        return
+
+    for vale in vales:
+        pdf_buf = generar_pdf_vale_rosa(vale.id) 
+        nombre_pdf = f"VALE_{vale.color}_{vale.id}.pdf"
+        zip_file.writestr(os.path.join(carpeta, "VALES", nombre_pdf), pdf_buf.getvalue())
 
 @perfil_seleccionado_required
 def control_cuentas(request):
