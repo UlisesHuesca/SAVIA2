@@ -44,7 +44,7 @@
     <div class="card">
         <div class="card-header">
             {% if modo_vale_azul %}
-            <h5>Vale Azul | Gasto: {{gasto.folio}} </h5>
+            <h5>Vale Azul| {% if tipo == "gasto" %}Gasto:{% endif %} {{objeto.folio}}</h5>
             {% else %}
             <h5 id="gasto" value="{{gasto.id}}">Gasto: {{gasto.folio}} </h5>
             {% endif %}

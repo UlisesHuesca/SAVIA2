@@ -171,6 +171,11 @@ class Vale_Rosa_Form(forms.ModelForm):
         model = ValeRosa
         fields = ['motivo','monto','comprobante_pdf']
 
+class Vale_Azul_Form(forms.ModelForm):
+    class Meta:
+        model = ValeRosa
+        fields = ['monto','comprobante_pdf','fecha_pago']
+
 class Cargo_Abono_Tipo_Form(forms.ModelForm):
     class Meta:
         model = Pago

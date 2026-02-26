@@ -3,6 +3,13 @@
     <td>{{ vale.id }}</td>
     <td>{{ vale.motivo }}</td>
     <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
+    {% if color == 'azul' %}
+        {% if vale.fecha_pago %}
+            <td>{{ vale.fecha_pago|date:"d/m/Y" }}</td>
+        {% else %}
+            <td><span class="text-muted">No especificada</span></td>
+        {% endif %}
+    {% endif %}
     <td>
         {% if vale.esta_aprobado %}
             ✅ Aprobado
@@ -19,7 +26,7 @@
         </form>
     </td>
     <td>
-        <a href="{% url 'descargar_vale_rosa_pdf' vale.id %}" class="btn btn-outline-info" target="_blank">
+        <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}" class="btn btn-outline-info" target="_blank">
             <i class="fa fa-file-pdf"></i>
         </a>
     </td>

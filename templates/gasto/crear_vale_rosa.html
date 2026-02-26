@@ -16,11 +16,12 @@
 <div class="col-lg-6 offset-3">
 <div class="card mt-4" id="cardValeRosa">
         <div class="card-header">
-            <h4>Agregar Vale {{color}}</h4>
+            <h4>Vale Azul | {% if tipo == "gasto" %}Gasto:{% else %}Viático:{% endif %} {{objeto.folio}}</h4>
         </div>
         <div class="card-body">
             <form method="POST" id="formValeRosa" enctype="multipart/form-data">
                 {% csrf_token %}
+                {% if color == 'rosa' %}
                 <div class="row my-2">
                     <div class="col-12">
                         <div class="input-group mb-3">
@@ -32,6 +33,7 @@
                         </div>
                     </div>
                 </div>
+                {% endif %}
                 <div class="row my-2">
                     <div class="col-12">
                         <div class="input-group mb-3">
@@ -43,6 +45,20 @@
                         </div>
                     </div>
                 </div>
+                {% if color == 'azul' %}
+                <div class="row my-2">
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-calendar-days"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field form.fecha_pago type="date" class="form-control" %}
+                                <label style="color: #121212;" for="id_comentario">Fecha de Pago</label>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endif %}
+                                
                 <div id="subir_pdf" class="row">
                     <div class="input-group mb-3" style="height:60px" >
                         {{form.comprobante_pdf|add_class:"form-control"}}
@@ -71,7 +87,10 @@
                         <th>ID</th>
                         <th>Motivo</th>
                         <th>Monto</th>
-                        <th>Estado</th>
+                        {% if color == 'azul' %}
+                        <th>Fecha de Pago</th>
+                        {% endif %}
+                        <th>Status</th>
                         <th>Eliminar</th>
                         <th>Comprobante S2</th>
                         <th>Comprobante PDF</th>

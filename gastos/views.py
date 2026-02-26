@@ -23,7 +23,7 @@ from smtplib import SMTPException
 import logging
 import socket
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
-from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form, Vale_Rosa_Form, Cargo_Abono_Tipo_Form
+from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form, Vale_Rosa_Form, Vale_Azul_Form, Cargo_Abono_Tipo_Form
 from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
 from user.models import Profile, Distrito, Empresa 
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
@@ -654,17 +654,26 @@ def agregar_vale_rosa(request, pk):
         messages.error(request, 'Tipo de vale no reconocido.')
         return redirect('mis-gastos')  # o cualquier página segura
     
-    form = Vale_Rosa_Form()
+    if color == 'rosa':
+        form = Vale_Rosa_Form()
+    elif color == 'azul':
+        form = Vale_Azul_Form()
     
     if request.method == 'POST':
-        form = Vale_Rosa_Form(request.POST, request.FILES or None)
+        if color == 'rosa':
+            form = Vale_Rosa_Form(request.POST, request.FILES or None)
+        elif color == 'azul':
+            form = Vale_Azul_Form(request.POST, request.FILES or None)
         if form.is_valid():
             vale = form.save(commit=False)
             vale.creado_por = objeto.staff
             vale.color = color
+           
             
             if tipo == 'gasto':
                 vale.gasto = objeto
+                if color == 'azul':
+                    vale.motivo = f"Depósito correspondiente al gasto folio {vale.gasto.folio}"
             elif tipo == 'viatico':
                 vale.viatico = objeto
                 print(objeto)
@@ -3602,9 +3611,13 @@ def crear_pdf_cfdi_buffer(factura):
 
     return buffer
 
-def descargar_vale_rosa_pdf(request, vale_id):
-    buffer = generar_pdf_vale_rosa(vale_id)
-    return FileResponse(buffer, as_attachment=True, filename=f"vale_rosa_{vale_id}.pdf")
+def descargar_vale_rosa_pdf(request, vale_id, color):
+    buffer = generar_pdf_vale_rosa(vale_id, color)
+    if color == 'azul':
+        filename = f"vale_azul_{vale_id}.pdf"
+    else:
+        filename = f"vale_rosa_{vale_id}.pdf"
+    return FileResponse(buffer, as_attachment=True, filename=filename)
     
 def generar_cfdi_gasto(request, pk):
     factura = Factura.objects.get(id=pk)
@@ -3622,15 +3635,18 @@ def crear_pdf_cfdi_gasto(factura):
         tmp_file.write(buffer.read())
         return tmp_file.name
 
-def generar_pdf_vale_rosa(vale_id):
+def generar_pdf_vale_rosa(vale_id, color):
     vale = ValeRosa.objects.select_related('gasto', 'creado_por').get(id=vale_id)
     
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
     width, height = letter
 
-    # Establecer fondo rosa
-    c.setFillColorRGB(1, 0.9, 0.9)
+    if color == 'azul':
+        c.setFillColorRGB(0.7, 0.85, 1)
+    else:
+        # Establecer fondo rosa
+        c.setFillColorRGB(1, 0.9, 0.9)
     c.rect(0, 0, width, height, stroke=0, fill=1)
 
     # Colores y fuentes
@@ -3674,7 +3690,7 @@ def generar_pdf_vale_rosa(vale_id):
     styleN.fontName = 'Helvetica'
     styleN.fontSize = 10
     styleN.leading = 14  # Espaciado entre líneas
-
+   
     texto = (vale.motivo or "").replace('\n', '<br/>')  # Reemplaza saltos de línea por etiquetas HTML
     parrafo = Paragraph(texto, styleN)
     pad = 6

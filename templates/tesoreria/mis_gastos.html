@@ -232,11 +232,12 @@
                        
                     </td>
                      <td>
-                       
-                            {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
                             <a type="button" class="btn" style="background-color: #d1ecf1; border: 1px solid #0c5460; color: #0c5460;" href="{% url 'agregar-vale-rosa' gasto.id %}?tipo=gasto&&color=azul&next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Vale Azul">
                                 <i class="fa-regular fa-file-import"></i>
                             </a> 
+                       
+                            {% if gasto.tipo.tipo != "APOYOS A EMPLEADOS" and gasto.creado_reciente %}
+                           
                             {% endif %}
                        
                     </td>
