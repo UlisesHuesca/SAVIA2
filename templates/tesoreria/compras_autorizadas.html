@@ -165,9 +165,10 @@
 </div>
 
 <div class="card bg-white my-2">
-    <form id="mass_payment_form" method="post" action="{% url 'vista_pagos_masivos' %}">
+    <form id="mass_payment_form" method="post" action="{% url 'compras-autorizadas' %}">
     {% if usuario.tipo.tesoreria %}
-        <input type="submit" value="Layout Pagos" class="btn btn-primary">
+        <!--<input type="submit" value="Layout Pagos" class="btn btn-primary">-->
+        <button type="submit" name="btnDescargarFacturas" class="btn btn-primary btn-lg"><i class="fa-solid fa-circle-chevron-down"></i> Facturas</button>
     {% endif %}
     {% csrf_token %}
     <div class="col-md-12">
@@ -197,7 +198,7 @@
                     
                     <th scope="col">Acción</th>
                     <th>Cancelar</th>
-                    <th>Layout</th>
+                    <th>Descargar</th>
                     {% endif %}
                   
                     
@@ -273,11 +274,9 @@
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
                     </td>
-                        {% if usuario.tipo.finanzas or usuario.tipo.nombre == "CONTADOR" %}
-                            <td></td>
-                        {% else %}
-                            <td><input type="checkbox" name="compra_id" value="{{ compra.id|unlocalize }}"></td>
-                        {% endif %}
+                    <td>
+                        <input class="oc_checkbox_accion form-check-input" style="transform: scale(2); margin: 5px;" type="checkbox" name="compra_ids_accion" value="{{ compra.id|unlocalize }}">
+                    </td>
                     {% endif %}
                   
                 </tr>

@@ -287,6 +287,7 @@ def compras_autorizadas(request):
             total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),
             autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__oc__isnull=False), then=Value(1))))
         ).order_by('-folio')
+    
         
     
    
@@ -313,7 +314,76 @@ def compras_autorizadas(request):
                 return convert_excel_matriz_compras_tesoreria(compras)
             else:
                 return convert_excel_matriz_compras_autorizadas(compras)
-        
+        elif 'btnDescargarFacturas' in request.POST:
+            print("Descargas")
+            compra_ids = request.POST.getlist('compra_ids_accion')  # <- tus checkboxes actuales
+            print(compra_ids)
+            # Si hay selección, filtra; si no, usa todas
+            compras_descarga = compras    
+            if compra_ids:
+                compras_descarga = compras.filter(id__in=compra_ids).distinct()
+            print('usuario.usuario.tipo.documentos:', usuario.tipo.documentos)
+            #if usuario.distritos.nombre == "MATRIZ" and usuario.tipo.documentos == False:
+            zip_buffer = BytesIO()
+            datos_xml_lista = []
+            processed_docs = set()
+
+            with zipfile.ZipFile(zip_buffer, 'w') as zip_file:
+                #zip_file.mkdir("GENERAL_PDFs")
+                #zip_file.mkdir("GENERAL_XMLs")
+
+                for compra in compras_descarga:
+                    carpeta = None   
+                        
+                        
+                    carpeta = f'COMPRA_{compra.folio}_{compra.req.orden.distrito.nombre}'
+                    #zip_file.mkdir(carpeta)
+                    for factura in compra.facturas.all():
+                        if factura.factura_pdf:
+                            zip_file.write(factura.factura_pdf.path, os.path.join(carpeta, os.path.basename(factura.factura_pdf.path)))
+                            uuid = factura.uuid if factura.uuid else 'SIN_UUID'
+                            zip_file.write(factura.factura_pdf.path, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
+                        if factura.factura_xml:
+                            zip_file.write(factura.factura_xml.path, os.path.join(carpeta, os.path.basename(factura.factura_xml.path)))
+                            uuid = factura.uuid if factura.uuid else 'SIN_UUID'
+                            gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
+                            zip_file.write(factura.factura_xml.path, gen_path)
+                            datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"OC{compra.folio}", factura.fecha_subido, compra.req.orden.distrito.nombre, "NA", gen_path, factura))
+                        for complemento in factura.complementos.all():
+                            if complemento.complemento_pdf:     #Encarpeta el complemento_pdf
+                                complemento_file_name = os.path.basename(complemento.complemento_pdf.path)
+                                zip_file.write(complemento.complemento_pdf.path, os.path.join(carpeta, complemento_file_name))
+                            if complemento.complemento_xml:     #Encarpeta el complemento_xml
+                                complemento_file_name = os.path.basename(complemento.complemento_xml.path)
+                                zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
+                    if compra.id not in processed_docs:
+                        pdf_buf = generar_pdf(compra)
+                        zip_file.writestr(os.path.join(carpeta, f'OC_{compra.folio}.pdf'), pdf_buf.getvalue())
+                        processed_docs.add(compra.id)
+                        # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
+                                
+                # Excel de resumen
+                output = BytesIO()
+                wb = Workbook()
+                ws = wb.active
+                ws.title = "Resumen XML"
+                columnas = ['Distrito','Folio','Fecha subida','Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)', 
+                            'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago','Método de Pago',
+                            'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','Fecha Validación SAT', 'EstadoSAT']
+                ws.append(columnas)
+                for dato in datos_xml_lista:
+                    ws.append([dato.get(col, '') for col in columnas])
+                for col in ['G']:
+                    for row in range(2, ws.max_row + 1):
+                        ws[f"{col}{row}"].number_format = numbers.FORMAT_CURRENCY_USD_SIMPLE
+                wb.save(output)
+                zip_file.writestr("GENERAL_XMLs/reporte_facturas.xlsx", output.getvalue())
+
+            zip_buffer.seek(0)
+            response = HttpResponse(zip_buffer, content_type='application/zip')
+            response.set_cookie('descarga_iniciada', 'true', max_age=20)
+            response['Content-Disposition'] = 'attachment; filename=pagos.zip'
+            return response
     
 
     context= {

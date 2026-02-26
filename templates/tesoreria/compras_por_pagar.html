@@ -192,7 +192,7 @@
     </div>
 </div>
 
-<div class="card bg-white my-2">
+<div class="card bg-white">
     
     <form id="mass_payment_form" method="post" action="{% url 'compras-por-pagar' %}">
         {% if usuario.tipo.para_pago %}
@@ -349,7 +349,7 @@
                             <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
                             <input class="form-control diferencia" type="textbox" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
                         </td>
-                         <td>
+                        <td>
                             <input class="oc_checkbox_accion form-check-input" style="transform: scale(2); margin: 5px;" type="checkbox" name="compra_ids_accion" value="{{ compra.id|unlocalize }}">
                         </td>
                         
