@@ -339,6 +339,7 @@ def contratos(request):
     contratos = Contrato.objects.filter(complete = True)
 
     myfilter= ContratoFilter(request.GET, queryset=contratos)
+    contratos = myfilter.qs
 
     #Set up pagination
     p = Paginator(contratos, 10)
