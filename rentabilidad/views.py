@@ -1192,7 +1192,7 @@ def reporte_rentabilidad_mensual(request):
     totales = {
         "ingresos": 0,
         "depreciaciones": 0,
-        "rentabilidad": 0,
+        "margen_operativo": 0,
         "directos": 0,
         "ind_adm": 0,
         "ind_oper": 0,
@@ -1383,7 +1383,7 @@ def reporte_rentabilidad_mensual(request):
                 # ------------------------
                 # Rentabilidad
                 # ------------------------
-                row["rentabilidad"] = (
+                row["margen_operativo"] = (
                     row["ingresos"]
                     - row["directos"]
                     - row["ind_oper"]
@@ -1391,7 +1391,12 @@ def reporte_rentabilidad_mensual(request):
                     - row["ind_central"]
                     - row["depreciaciones"]
                 )
-
+                
+                # % margen operativo
+                row["pct_margen_operativo"] = (
+                    (row["margen_operativo"] / row["ingresos"]) * 100
+                    if row["ingresos"] else 0
+                )
                 contratos_data.append(row)
 
                      # ------------------------
@@ -1403,7 +1408,11 @@ def reporte_rentabilidad_mensual(request):
                 totales["ind_adm"] += row["ind_adm"]
                 totales["ind_central"] += row["ind_central"]
                 totales["depreciaciones"] += row["depreciaciones"]
-                totales["rentabilidad"] += row["rentabilidad"]
+                totales["margen_operativo"] += row["margen_operativo"]
+                totales["pct_margen_operativo"] = (
+                    (totales["margen_operativo"] / totales["ingresos"]) * 100
+                    if totales["ingresos"] else 0
+                )
 
 
     

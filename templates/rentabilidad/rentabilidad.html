@@ -58,6 +58,7 @@
                 <th>Indirectos Centrales</th>
                 <th>Amortización</th>
                 <th>Margen Operativo</th>
+                <th>%</th>
             </tr>
         </thead>
         <tbody>
@@ -74,7 +75,8 @@
                 <td>{{ row.ind_central|floatformat:2 }}</td>
 
                 <td>{{ row.depreciaciones|floatformat:2 }}</td>
-                <td><strong>{{ row.rentabilidad|floatformat:2 }}</strong></td>
+                <td><strong>{{ row.margen_operativo|floatformat:2 }}</strong></td>
+                <td><strong>{{ row.pct_margen_operativo|floatformat:2 }}%</strong></td>
             </tr>
             {% endfor %}
 
