@@ -14,7 +14,7 @@ class CompraForm(forms.ModelForm):
         model = Compra
         fields = ['proveedor','cond_de_pago','uso_del_cfdi','dias_de_credito','tesorero',
                   'monto_anticipo','dias_de_entrega','impuestos','costo_fletes', 'retencion','comentario_solicitud',
-                  'opciones_condiciones','moneda','tipo_de_cambio','logistica', 'referencia','comparativo_model','local']
+                  'opciones_condiciones','moneda','tipo_de_cambio','logistica', 'referencia','comparativo_model','local','tipo_contratacion']
     
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)

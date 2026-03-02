@@ -3477,7 +3477,7 @@ def generar_pdf_nueva(compra):
 
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Proceso:')
-    # c.line(col_inicio + 45, campo_y - 1, col_inicio + col_ancho - 5, campo_y - 1)  # Línea de llenado eliminada
+    c.drawString(col_inicio + 80, campo_y, compra.tipo_contratacion.abreviatura if compra.tipo_contratacion else 'NA')
 
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Elaboró:')

@@ -227,6 +227,13 @@ class Moneda(models.Model):
     def __str__(self):
         return f'{self.nombre}'
 
+class Tipo_contrato(models.Model):
+    nombre = models.CharField(max_length=40)
+    abreviatura = models.CharField(max_length=10)
+
+    def __str__(self):
+        return f'{self.nombre}'
+
 
 class Proveedor_direcciones(models.Model):
     nombre = models.ForeignKey(Proveedor, on_delete=models.CASCADE, null=True, related_name="direcciones")
@@ -262,6 +269,7 @@ class Proveedor_direcciones(models.Model):
     referencia = models.CharField(max_length=20, null=True, blank = True)
     convenio = models.CharField(max_length=20, null=True, blank = True)
     comentario_status = models.CharField(max_length=255, null=True, help_text="Comentario asociado al estatus del proveedor")
+    
 
     @property
     def fecha_vencimiento(self):
@@ -427,7 +435,7 @@ class Compra(models.Model):
     comentario_cierre = models.TextField(blank=True, null=True)
     tipo_prioridad = models.ForeignKey(TipoPrioridad, on_delete=models.SET_NULL, null=True, blank=True)
     local = models.BooleanField(default = True)
-
+    tipo_contratacion = models.ForeignKey(Tipo_contrato, on_delete=models.CASCADE, null=True, blank=True)  #Nuevo campo para tipo de contratación
 
 
     @property
