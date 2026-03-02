@@ -209,6 +209,7 @@
                     <th>Abono</th>
                     <th>Eliminar</th>
                     <th>Comentario Pago</th>
+                    <th>Activo Fijo</th>
                     <th>Editar</th>
                 </tr>
             </thead>
@@ -306,6 +307,7 @@
                         {% else %} No hay comentarios disponibles
                         {% endif %}
                     </td>
+                    <td>{% if pago.oc.req.orden.activo %}{{pago.oc.req.orden.activo.eco_unidad}}{% endif %}</td>
                        <td>
                         <button type="button" id="save_comment_{{pago.id|unlocalize}}" onclick="aceptar_edicion('{{pago.id|unlocalize}}')"    class="btn btn-outline-primary d-none">
                             <i class="fa-regular fa-circle-check"></i>

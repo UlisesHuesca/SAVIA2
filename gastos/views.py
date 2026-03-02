@@ -3195,6 +3195,7 @@ def convert_excel_gasto_matriz(gastos):
             gasto.colaborador.staff.staff.first_name + ' '  + gasto.colaborador.staff.staff.last_name if gasto.colaborador else '',
             gasto.get_total_solicitud,
             gasto.monto_pagado,
+            gasto.parcial,
             restante,
             created_at_naive,
             status,
@@ -3212,7 +3213,7 @@ def convert_excel_gasto_matriz(gastos):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
             if col_num in [1, 12]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [8, 9, 10]:
+            if col_num in [8, 9, 10, 11]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     

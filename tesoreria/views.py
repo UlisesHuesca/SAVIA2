@@ -5727,7 +5727,7 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
     worksheet.write('J10', saldo_inicial, h_money_style)
     worksheet.write('I11', 'SALDO FINAL', header_format)
 
-    columns = ['Fecha','Empresa/Colaborador','Folio','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo','Comentario Pago']
+    columns = ['Fecha','Empresa/Colaborador','Folio','Concepto/Servicio','Proyecto','Subproyecto','Distrito','Cargo','Abono','Saldo','Comentario Pago','Activo Fijo']
 
     columna_max = len(columns)+2
 
@@ -5780,8 +5780,10 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
             folio = f"OC{pago.oc.folio}"
             contrato = pago.oc.req.orden.proyecto.nombre
             sector = pago.oc.req.orden.subproyecto.nombre
+            activo = pago.oc.req.orden.activo.eco_unidad if pago.oc.req.orden.activo else ''
         elif hasattr(pago, 'gasto') and pago.gasto:
             folio = f"G{pago.gasto.folio}"
+            activo = ''
             articulos_gasto = Articulo_Gasto.objects.filter(gasto=pago.gasto)
             proyectos = set()
             subproyectos = set()
@@ -5798,19 +5800,30 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
             folio = f"V{pago.viatico.folio}"
             contrato = pago.viatico.proyecto.nombre
             sector = pago.viatico.subproyecto.nombre
+            activo = ''
         else:
             concepto_servicio = str(pago.tipo)
             folio = f'NA - {pago.tipo.nombre}'
             contrato = ''
             sector = ''
+            activo = ''
        
 
         # Determinar contrato y sector
        
         if hasattr(pago, 'oc') and pago.oc:
-            comentarios = (pago.oc.req.orden.comentario or '').upper()
+           
+            productos = pago.oc.articulocomprado_set.all()
+
+            nombres = [
+                producto.producto.producto.articulos.producto.producto.nombre
+                for producto in productos
+                if producto.producto
+            ]
+
+            comentarios = ', '.join(nombres).upper() if nombres else 'NO HAY COMENTARIOS DISPONIBLES'
         elif hasattr(pago, 'viatico') and pago.viatico:            
-            comentarios = (pago.viatico.comentario_general or '').upper()
+            comentarios = f"{pago.viatico.lugar_partida}-{pago.viatico.lugar_comision} | {pago.viatico.comentario_general}"
         elif hasattr(pago, 'gasto') and pago.gasto:
             
             if pago.gasto.comentario:
@@ -5822,7 +5835,7 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
                 ]
                 comentarios = ', '.join(comentarios_articulos) if comentarios_articulos else 'NO HAY COMENTARIOS DISPONIBLES'
         else:
-            comentarios = 'NO HAY COMENTARIOS DISPONIBLES'
+            comentarios = pago.comentario
             
 
         if pago.comentario:
@@ -5854,6 +5867,7 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
         worksheet.write(row_num, 7, cargo, money_style)
         worksheet.write(row_num, 8, abono, money_style)
         worksheet.write(row_num, 10, comentario_pago)
+        worksheet.write(row_num, 11, activo)  # Ajusta la altura de la fila para comentarios largos
         # Saldo en la columna 9 (índice 9 = columna J)
         if row_num <= 12:
             # Primera fila de saldo, usa saldo inicial
