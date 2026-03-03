@@ -1490,13 +1490,14 @@ def vales_rosa_pendientes_autorizar(request):
         vales_rosa = ValeRosa.objects.filter(
             Q(gasto__complete=True, gasto__autorizar2=True) |
             Q(viatico__autorizar2=True),
-            esta_aprobado=None
+            esta_aprobado=None,
+            color = 'ROSA'
         ).order_by(
             '-gasto__folio'  # o '-viatico__folio' si quieres alternar según tipo
         )
     elif perfil.distritos.nombre == 'MATRIZ':
         vales_rosa = ValeRosa.objects.filter(
-        esta_aprobado=None
+        esta_aprobado=None,  color = 'ROSA'
         ).filter(
             Q(
                 gasto__isnull=False,
@@ -1513,7 +1514,7 @@ def vales_rosa_pendientes_autorizar(request):
         ).order_by('-gasto__folio', '-viatico__folio')
     else:
         vales_rosa = ValeRosa.objects.filter(
-        esta_aprobado=None
+        esta_aprobado=None,  color = 'ROSA'
         ).filter(
             Q(
                 gasto__isnull=False,
