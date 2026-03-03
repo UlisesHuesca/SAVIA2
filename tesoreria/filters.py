@@ -2,6 +2,7 @@ import django_filters
 from .models import Compra, Pago, EstadoCuenta
 from django_filters import CharFilter, DateFilter, ChoiceFilter, BooleanFilter
 from django.db.models import Q
+from django import forms
 
 class PagoFilter(django_filters.FilterSet):
     oc = CharFilter(field_name='oc__folio', lookup_expr='icontains')
@@ -95,9 +96,32 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
 
 class Estado_Cuenta_Filter(django_filters.FilterSet):
     #cuenta = CharFilter(field_name='cuenta__cuenta', lookup_expr='icontains')
-    periodo = DateFilter(field_name='periodo', lookup_expr='exact')
-    tipo = CharFilter(field_name='tipo', lookup_expr='icontains')
+    periodo = CharFilter(method="filter_periodo_mes", label="Periodo",
+        widget=forms.TextInput(attrs={
+            "type": "month",
+            "class": "form-control",
+        })
+    )
+
+     # Dropdown usando choices del modelo
+    tipo = django_filters.ChoiceFilter(
+        field_name="tipo",
+        choices=EstadoCuenta.TipoEstado.choices,
+        empty_label="Todos",  # opcional
+        label="Tipo",
+        widget=forms.Select(attrs={"class": "form-control"})
+    )
 
     class Meta:
         model = EstadoCuenta
         fields = [ 'periodo', 'tipo']
+
+    def filter_periodo_mes(self, queryset, name, value):
+        value = (value or "").strip()
+        if not value:
+            return queryset
+        try:
+            y, m = value.split("-")  # "YYYY-MM"
+            return queryset.filter(periodo__year=int(y), periodo__month=int(m))
+        except ValueError:
+            return queryset
