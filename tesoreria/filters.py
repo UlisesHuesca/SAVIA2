@@ -1,5 +1,5 @@
 import django_filters
-from .models import Compra, Pago
+from .models import Compra, Pago, EstadoCuenta
 from django_filters import CharFilter, DateFilter, ChoiceFilter, BooleanFilter
 from django.db.models import Q
 
@@ -92,3 +92,12 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
                 Q(tesorero__staff__staff__first_name__icontains=value) | 
                 Q(tesorero__staff__staff__last_name__icontains=value)
             )
+
+class Estado_Cuenta_Filter(django_filters.FilterSet):
+    #cuenta = CharFilter(field_name='cuenta__cuenta', lookup_expr='icontains')
+    periodo = DateFilter(field_name='periodo', lookup_expr='exact')
+    tipo = CharFilter(field_name='tipo', lookup_expr='icontains')
+
+    class Meta:
+        model = EstadoCuenta
+        fields = [ 'periodo', 'tipo']

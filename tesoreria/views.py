@@ -28,7 +28,7 @@ from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatic
 from finanzas.models import Exhibit, Linea_Exhibit
 from requisiciones.views import get_image_base64
 from .forms import PagoForm, Facturas_Form, Facturas_Completas_Form, Saldo_Form, ComprobanteForm, CompraSaldo_Form, Cargo_Abono_Form, Cargo_Abono_Tipo_Form, Saldo_Inicial_Form, Transferencia_Form, UploadFileForm, UploadComplementoForm, Cargo_Abono_No_Documento_Form, EstadoCuentaForm
-from .filters import PagoFilter, Matriz_Pago_Filter
+from .filters import PagoFilter, Matriz_Pago_Filter, Estado_Cuenta_Filter
 from viaticos.filters import Solicitud_Viatico_Filter
 from gastos.filters import Solicitud_Gasto_Filter
 from user.models import Profile
@@ -6556,7 +6556,7 @@ def subir_estado_cuenta(request, pk):
 
             estado.save()
             messages.success(request, "Estado de cuenta cargado correctamente.")
-            return redirect('control-bancos', pk=pk)
+            return redirect('estados-cuenta', cuenta_id=pk)
     else:
         form = EstadoCuentaForm()
 
@@ -6570,30 +6570,19 @@ def subir_estado_cuenta(request, pk):
 @login_required(login_url="user-login")
 def estados_cuenta(request, cuenta_id):
     cuenta = get_object_or_404(Cuenta, pk=cuenta_id)
+    estados = EstadoCuenta.objects.filter(cuenta=cuenta).select_related("cuenta").order_by("-periodo", "-id")
 
-    qs = (EstadoCuenta.objects
-          .filter(cuenta_id=cuenta_id)
-          .select_related("cuenta", "subido_por")
-          .order_by("-periodo", "-id"))
-
-    # Filtro por mes (YYYY-MM)
-    periodo = (request.GET.get("periodo") or "").strip()  # ej: "2025-01"
-    if periodo:
-        try:
-            y, m = periodo.split("-")
-            qs = qs.filter(periodo__year=int(y), periodo__month=int(m))
-        except ValueError:
-            pass  # si viene malformado, ignora filtro
-
-    # Búsqueda simple (comentario)
-    q = (request.GET.get("q") or "").strip()
-    if q:
-        qs = qs.filter(comentario__icontains=q)
+    myfilter = Estado_Cuenta_Filter(request.GET, queryset=estados)
+    gastos = myfilter.qs
+    #myfilter = Estado_Cuenta_Filter(request.GET,queryset=EstadoCuenta.objects.filter(cuenta=cuenta).select_related("cuenta"))
+    estados = myfilter.qs.order_by("-periodo", "-id")
+    
+    
+   
 
     context = {
         "cuenta": cuenta,
-        "estados": qs,
-        "periodo": periodo,
-        "q": q,
+        "estados": estados,
+        "myfilter": myfilter,
     }
     return render(request, "tesoreria/estados_cuenta.html", context)

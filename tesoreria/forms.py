@@ -131,7 +131,7 @@ class EstadoCuentaForm(forms.ModelForm):
 
     class Meta:
         model = EstadoCuenta
-        fields = ['archivo_pdf','comentario','periodo']
+        fields = ['archivo_pdf','comentario','periodo','tipo']
 
     def clean_periodo(self):
         """

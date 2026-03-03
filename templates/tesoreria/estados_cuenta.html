@@ -1,10 +1,12 @@
 {% extends 'partials/base.html' %}
 {% load static %}
-
+{% load widget_tweaks %}
 {% block title %}Estados de cuenta{% endblock %}
 
 {% block content %}
-<hr><hr><hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
 
 <div class="card">
   <div class="card-header">
@@ -13,23 +15,29 @@
 
   <div class="card-body">
     <form method="GET">
-      <div class="row g-2 align-items-end">
-
+      <div class="row">
         <div class="col-lg-3 col-sm-12">
-          <label class="form-label">Periodo</label>
-          <input type="month" name="periodo" value="{{ periodo }}" class="form-control">
+            <div class="input-group mb-3">
+              <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                <div class="form-floating form-floating-group flex-grow-1">   
+                    {{myfilter.form.tipo|add_class:"form-control"|append_attr:"placeholder= Tipo"}}
+                    <label style="color: #121212;" for="id_tipo">Tipo</label>
+                </div>
+            </div>
         </div>
+     
 
-        <div class="col-lg-6 col-sm-12">
-          <label class="form-label">Comentario</label>
-          <input type="text" name="q" value="{{ q }}" class="form-control" placeholder="Buscar en comentario...">
+        <div class="col-2">
+          <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
         </div>
-
-        <div class="col-lg-3 col-sm-12">
-          <button class="btn btn-outline-success w-100" type="submit">
-            <i class="fa-solid fa-magnifying-glass"></i> Buscar
-          </button>
-        </div>
+        <hr>
+        <ul class="nav nav-pills">
+          <li class="nav-item mx-2">
+            <a type="button" class="btn btn-lg btn-outline-secondary" href="{% url 'subir-estado-cuenta' cuenta.id %}" data-toggle="tooltip" data-placement="top" title="Subir Estado de Cuenta">
+              <i class="fa-duotone fa-solid fa-file-arrow-up"></i>
+            </a>
+          </li>
+        </ul>
 
       </div>
     </form>
@@ -43,6 +51,7 @@
         <tr>
           <th>Periodo</th>
           <th>Comentario</th>
+          <th>Tipo</th>
           <th>Subido por</th>
           <th>Creado</th>
           <th>PDF</th>
@@ -54,6 +63,7 @@
           <tr>
             <td>{{ ec.periodo|date:"M/Y" }}</td>
             <td>{{ ec.comentario|default:"—" }}</td>
+            <td>{{ ec.tipo }}</td>
             <td>{{ ec.subido_por }}</td>
             <td>{{ ec.created_at|date:"d/M/Y H:i" }}</td>
             <td>

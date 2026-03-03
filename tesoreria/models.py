@@ -1,4 +1,4 @@
-from django.db import models
+from django.db import models, transaction
 from compras.models import Compra, Moneda, Banco
 from user.models import Profile, Distrito, Banco, Empresa
 from gastos.models import Solicitud_Gasto
@@ -489,14 +489,54 @@ class Complemento_Pago(models.Model):
             'imp_pagado': imp_pagado,
         }
 
+
+
 class EstadoCuenta(models.Model):
+    class TipoEstado(models.TextChoices):
+        SIMPLIFICADO = 'SIMPLIFICADO', 'Simplificado'
+        MENSUAL = 'MENSUAL', 'Mensual'
     cuenta = models.ForeignKey (Cuenta, on_delete = models.CASCADE, null=True)
     periodo = models.DateField(null=True)
     archivo_pdf = models.FileField(blank=True, null=True, upload_to='estado_cuenta_pdf',validators=[FileExtensionValidator(['pdf'])])
     subido_por = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='estado_cuenta_subido_por')
     created_at = models.DateTimeField(auto_now_add=True)
     comentario = models.CharField(max_length=100, null=True, blank=True)
+    tipo = models.CharField(max_length=20, choices=TipoEstado.choices, default=TipoEstado.SIMPLIFICADO, blank=True)  # Nuevo campo para el tipo de estado de cuenta
    
+    #def __str__(self):
+    #    return f'id:{self.id} cuenta:{self.cuenta}'
+
+    class Meta:
+        constraints = [
+            models.UniqueConstraint(
+                fields=["cuenta", "periodo", "tipo"],
+                name="uq_estado_cuenta_cuenta_periodo_tipo",
+            )
+        ]
+
     def __str__(self):
-        return f'id:{self.id} cuenta:{self.cuenta}'
+        tipo = self.get_tipo_display() if self.tipo else "Sin tipo"
+        return f"id:{self.id} cuenta:{self.cuenta} tipo:{tipo} periodo:{self.periodo}"
+
+    def delete(self, *args, **kwargs):
+        # Borra también el archivo físico del storage
+        if self.archivo_pdf:
+            self.archivo_pdf.delete(save=False)
+        return super().delete(*args, **kwargs)
+
+    def save(self, *args, **kwargs):
+        with transaction.atomic():
+            if self.tipo and self.cuenta_id and self.periodo:
+                # Si suben uno nuevo, elimina el anterior de la misma cuenta+periodo+tipo
+                (EstadoCuenta.objects
+                    .select_for_update()
+                    .filter(
+                        cuenta_id=self.cuenta_id,
+                        periodo=self.periodo,
+                        tipo=self.tipo,
+                    )
+                    .exclude(pk=self.pk)
+                    .delete())
+
+            super().save(*args, **kwargs)
 
