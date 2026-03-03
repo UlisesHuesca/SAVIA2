@@ -258,10 +258,7 @@
                             {% empty %}
                                 No hay comentarios disponibles
                             {% endfor %}
-                        {% else %}
-                        {{pago.oc.req.orden.comentario}} 
-                        {% endif %}
-                        {% if pago.gasto %}  
+                        {% elif pago.gasto %}  
                             {% if pago.gasto.comentario %}
                                 {{pago.gasto.comentario}}
                             {% else %}
@@ -271,8 +268,12 @@
                                     No hay comentarios disponibles
                                 {% endfor %}
                             {% endif %}
+                        {% elif pago.viatico %}
+                            {{pago.viatico.lugar_partida}}-{{pago.viatico.lugar_comision}} | {{pago.viatico.comentario_general}}
+                        {% else %}
+                            {{pago.comentario}}    
                         {% endif %}
-                        {% if pago.viatico %}{{pago.viatico.lugar_partida}}-{{pago.viatico.lugar_comision}} | {{pago.viatico.comentario_general}}{% endif %}
+                        
 
                     </td>
                  

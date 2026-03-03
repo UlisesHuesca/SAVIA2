@@ -340,9 +340,14 @@
                             {% if vale.esta_aprobado %}
                                 ✅ Validado
                             {% else %}
-                                <a href="{% url 'vale_azul_abono' vale.id %}?next={{ request.path }}" class="btn btn-outline-primary">
-                                    Validar abono
-                                </a>
+                                {% if usuario.tipo.tesoreria %}
+                                    <a href="{% url 'vale_azul_abono' vale.id %}?next={{ request.path }}" class="btn btn-outline-primary">
+                                        Validar abono
+                                    </a>
+                                {% else %}
+                                    <span class="text-secondary">⏳ Pendiente</span>
+                                {% endif %}
+                                
                             {% endif %}
                         </td>
                         <td>

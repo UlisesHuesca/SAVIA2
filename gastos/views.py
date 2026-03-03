@@ -3064,7 +3064,7 @@ def convert_excel_gasto_matriz(gastos):
 
     columns = ['Folio','Fecha Autorización','Distrito','Proyectos','Subproyectos','Comentarios','Colaborador','Solicitado para',
                'Importe','Importe Pagado','Monto autorizado por SIA','Restante','Fecha Creación','Status','Autorizado por',
-               'Tiene Facturas','Status de Pago','Banco','Cuenta','CLABE']
+               'Tiene Facturas','Status de Pago','Status de Autorición','Banco','Cuenta','CLABE','Tipo']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -3205,7 +3205,8 @@ def convert_excel_gasto_matriz(gastos):
             status,
             banco,
             cuenta,
-            clabe
+            clabe,
+            gasto.tipo.tipo if gasto.tipo else '',
         ]
 
     
