@@ -39,6 +39,9 @@
                         <li class="nav-item mx-2">
                             <a class="btn btn-outline-info" href="{% url 'add-ingreso' %}"><i class="fa-solid fa-plus"></i>Agregar Ingresos</a>
                         </li>
+                        <li class="nav-item mx-2">
+                            <a class="btn btn-outline-primary" href="{% url 'resumen_mes_contrato' %}"><i class="fa-solid fa-chart-bar"></i>Resumen Mensual por Contrato</a>
+                        </li>
                     </ul>
                     </form>
                 </div>
@@ -99,6 +102,7 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">Distrito</th>
+                    <th>Contrato</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
                 </tr>
@@ -107,9 +111,10 @@
                 {% for ingreso in ingresos %}
                 <tr>
                     
-                    <td>{{ingreso.distrito}}</td>
-                    <td>{{ingreso.fecha|date:"F Y"}}</td>
-                    <td>${{ingreso.get_total|floatformat:2 }}</td>
+                    <td>{{ingreso.solicitud.distrito.nombre}}</td>
+                    <td>{{ingreso.contrato.nombre}}</td>
+                    <td>{{ingreso.solicitud.fecha|date:"F Y"}}</td>
+                    <td>${{ingreso.monto|floatformat:2 }}</td>
                 </tr>
                 {% endfor %}
             </tbody>

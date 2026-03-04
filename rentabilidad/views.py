@@ -1,6 +1,6 @@
 from django.shortcuts import render, redirect
 from django.db import transaction
-from django.db.models import Sum, Q
+from django.db.models import Sum, Q, F, Case, When, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncMonth
 from django.conf import settings
 from django.contrib import messages
@@ -539,7 +539,9 @@ def generar_costos_excel(tabla, meses, distrito_id=None, tipo_id=None, fecha_ini
 def ingresos(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    ingresos = Solicitud_Ingresos.objects.filter(complete = True)
+    #ingresos = Solicitud_Ingresos.objects.filter(complete = True)
+    ingresos = Ingresos.objects.filter(solicitud__complete=True)
+
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False)
     #myfilter= ContratoFilter(request.GET, queryset=contratos)
 
@@ -555,6 +557,65 @@ def ingresos(request):
          }
 
     return render(request,'rentabilidad/ingresos.html', context)
+
+
+def resumen_ingresos_mes_contrato(request):
+    qs = (
+        Ingresos.objects
+        .filter(
+            solicitud__fecha__isnull=False,
+            contrato__isnull=False,
+            solicitud__complete=True,
+            complete=True,
+        )
+    )
+
+    # Normalizar monto (USD -> MXN) igual que tu lógica
+    monto_base = Case(
+        When(
+            moneda__nombre="DOLARES",
+            tipo_cambio__isnull=False,
+            then=ExpressionWrapper(
+                F('monto') * F('tipo_cambio'),
+                output_field=DecimalField(max_digits=18, decimal_places=2)
+            )
+        ),
+        # si es DOLARES sin tipo_cambio, puedes decidir: 0 o monto "tal cual"
+        When(moneda__nombre="DOLARES", tipo_cambio__isnull=True, then=Decimal('0.00')),
+        default=F('monto'),
+        output_field=DecimalField(max_digits=18, decimal_places=2)
+    )
+
+    qs = qs.annotate(monto_base=monto_base)
+
+    # 1) Totales por mes (para que cada mes sea 100%)
+    totales_mes = dict(
+        qs.annotate(mes=TruncMonth('solicitud__fecha'))
+          .values_list('mes')
+          .annotate(total_mes=Sum('monto_base'))
+          .values_list('mes', 'total_mes')
+    )
+
+    # 2) Totales por mes+contrato
+    rows = (
+        qs.annotate(mes=TruncMonth('solicitud__fecha'))
+          .values('mes', 'contrato__id', 'contrato__nombre')
+          .annotate(total_mes_contrato=Sum('monto_base'))
+          .order_by('mes', 'contrato__nombre')
+    )
+
+    # 3) % dentro del mes
+    for r in rows:
+        total_mes = totales_mes.get(r['mes']) or Decimal('0')
+        r['total_mes'] = total_mes
+        r['pct_mes'] = (r['total_mes_contrato'] / total_mes) * Decimal('100') if total_mes > 0 else Decimal('0')
+
+    context = {
+        'rows': rows,
+        'totales_mes': totales_mes,  # opcional por si quieres mostrar el total del mes
+    }
+    
+    return render(request, 'rentabilidad/resumen_mes_contrato.html', context)
 
 @perfil_seleccionado_required
 def add_ingresos(request):
@@ -1388,7 +1449,7 @@ def reporte_rentabilidad_mensual(request):
                     - row["directos"]
                     - row["ind_oper"]
                     - row["ind_adm"]
-                    - row["ind_central"]
+                    #- row["ind_central"]
                     - row["depreciaciones"]
                 )
                 

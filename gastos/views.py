@@ -2044,7 +2044,11 @@ def pago_gasto(request, pk):
     ).filter(
     Q(tipo=cargos) | Q(tipo__isnull=True)
     )
-    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+
+    if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
+        cuentas = Cuenta.objects.filter(distrito__nombre = 'BRASIL')
+    else:
+        cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
     error_messages = []
     
     form = Pago_Gasto_Form()

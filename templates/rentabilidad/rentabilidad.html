@@ -55,10 +55,10 @@
                 <th>Directos</th>
                 <th>Indirectos Operativos</th>
                 <th>Indirectos Administrativos</th>
-                <th>Indirectos Centrales</th>
                 <th>Amortización</th>
                 <th>Margen Operativo</th>
                 <th>%</th>
+                <th>Indirectos Centrales</th>
             </tr>
         </thead>
         <tbody>
@@ -72,11 +72,12 @@
 
                 <td>{{ row.ind_oper|floatformat:2 }}</td>
                 <td>{{ row.ind_adm|floatformat:2 }}</td>
-                <td>{{ row.ind_central|floatformat:2 }}</td>
+                
 
                 <td>{{ row.depreciaciones|floatformat:2 }}</td>
                 <td><strong>{{ row.margen_operativo|floatformat:2 }}</strong></td>
                 <td><strong>{{ row.pct_margen_operativo|floatformat:2 }}%</strong></td>
+                <td>{{ row.ind_central|floatformat:2 }}</td>
             </tr>
             {% endfor %}
 
@@ -86,10 +87,11 @@
                 <td><strong>{{totales.directos}}</strong></td>
                 <td><strong>{{ totales.ind_oper|floatformat:2 }}</strong></td>
                 <td><strong>{{ totales.ind_adm|floatformat:2 }}</strong></td>
-                <td><strong>{{ totales.ind_central|floatformat:2 }}</strong></td>
+                
                 <td><strong>{{ totales.depreciaciones|floatformat:2 }}</strong></td>
                 <td><strong>{{ totales.margen_operativo|floatformat:2 }}</strong></td>
                 <td><strong>{{ totales.pct_margen_operativo|floatformat:2 }}%</strong></td>
+                <td><strong>{{ totales.ind_central|floatformat:2 }}</strong></td>
             </tr>
         </tbody>
     </table>

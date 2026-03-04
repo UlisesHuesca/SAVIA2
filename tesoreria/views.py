@@ -708,12 +708,17 @@ def compras_pagos(request, pk):
         else:
             suma_pago = suma_pago + pago.monto
 
+    
+   
     if compra.moneda.nombre == 'PESOS':
         cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
         remanente = compra.costo_plus_adicionales - suma_pago
     if compra.moneda.nombre == 'DOLARES':
         cuentas = Cuenta.objects.all()
         remanente = compra.costo_plus_adicionales - suma_pago_usd
+
+    if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
+        cuentas = Cuenta.objects.filter(distrito__nombre = 'BRASIL')
 
 
     cuentas_para_select2 = [

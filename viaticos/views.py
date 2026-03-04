@@ -681,7 +681,10 @@ def viaticos_pagos(request, pk):
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico=viatico)
     pagos = Pago.objects.filter(viatico=viatico, hecho=True)
-    cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
+    if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
+        cuentas = Cuenta.objects.filter(distrito__nombre = 'BRASIL')
+    else:
+        cuentas = Cuenta.objects.filter(moneda__nombre = 'PESOS')
     pago, created = Pago.objects.get_or_create(tesorero = usuario, viatico__distrito = usuario.distritos, hecho=False, viatico=viatico)
     form = Pago_Viatico_Form()
     remanente = viatico.get_total - viatico.monto_pagado

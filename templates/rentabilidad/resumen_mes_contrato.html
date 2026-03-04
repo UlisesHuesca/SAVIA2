@@ -1,0 +1,42 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load tt_extras %}
+<html>
+<head>
+{% block title %}Resumen Ingresos{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<div class="col-md-7 col-lg-12">
+    <div class="card ">
+        <table class="table table-sm">
+        <thead>
+            <tr>
+            <th>Mes</th>
+            <th>Contrato</th>
+            <th class="text-end">Total</th>
+            <th class="text-end">% del mes</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for r in rows %}
+            <tr>
+                <td>{{ r.mes|date:"F Y" }}</td>
+                <td>{{ r.contrato__nombre }}</td>
+                <td class="text-end">${{ r.total_mes_contrato|floatformat:2 }}</td>
+                <td class="text-end">{{ r.pct_mes|floatformat:2 }}%</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>
