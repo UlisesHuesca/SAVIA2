@@ -2713,9 +2713,9 @@ def control_cuentas(request):
     if usuario.distritos.nombre == "MATRIZ":
         if usuario.tipo.supervisor:
             if usuario.tipo.tesoreria:
-                cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True)
+                cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True).exclude(distrito__nombre = "BRASIL")
             elif usuario.tipo.finanzas:
-                cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True)
+                cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True).exclude(distrito__nombre = "BRASIL")
         else:
             if usuario.tipo.tesoreria:
                 cuentas = Cuenta.objects.filter(encargado = usuario)
