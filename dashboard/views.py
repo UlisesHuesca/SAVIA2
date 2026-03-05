@@ -2394,7 +2394,9 @@ def generar_pdf_dd(proveedor, request):
         documento_csf = DocumentosProveedor.objects.get(
                 proveedor = proveedor,
                 tipo_documento="csf",
-                activo=True
+                activo=True,
+                validada=True,
+                obsoleto = False,
             ) 
     except DocumentosProveedor.DoesNotExist:
         documento_csf = None
