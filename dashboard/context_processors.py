@@ -152,7 +152,7 @@ def contadores_processor(request):
             conteo_pagos = oc_pendientes.count()
 
         if usuario.tipo.tesoreria == True:
-            oc_pendientes = Compra.objects.filter(Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos)
+            oc_pendientes = Compra.objects.filter(Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos, cerrar_sin_pago_completo = False,)
             viaticos_por_asignar = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, montos_asignados=False, distrito = usuario.distritos)
             gastos_por_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, distrito = usuario.distritos  )
             gastos_a_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, para_pago = True, distrito = usuario.distritos  )

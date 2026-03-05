@@ -55,9 +55,14 @@
                     <div class="col-sm-12 col-md-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-location-dot"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
+                            <div class="form-floating form-floating-group flex-grow-1">
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            {{form.domicilio|add_class:"form-control required"|append_attr:"placeholder=Endereço"}}
+                            <label for="id_lugar_partida">Endereço*</label>
+                            {% else %}
                             {{form.domicilio|add_class:"form-control required"|append_attr:"placeholder=Domicilio"}}
                             <label for="id_lugar_partida">Domicilio*</label>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -65,8 +70,13 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            {{form.contacto|add_class:"form-control required"|append_attr:"placeholder=Contato"}}
+                            <label for="id_lugar_partida">Contato*</label>
+                            {% else %}
                             {{form.contacto|add_class:"form-control required"|append_attr:"placeholder=Contacto"}}
                             <label for="id_lugar_partida">Contacto*</label>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -103,9 +113,14 @@
                         <div class="col-5">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                {{form.cuenta|add_class:"form-control"|append_attr:"placeholder=Conta"}}
+                                <label for="id_lugar_partida">Conta*</label>
+                                {% else %}   
                                 {{form.cuenta|add_class:"form-control"|append_attr:"placeholder=Cuenta"}}
                                 <label for="id_lugar_partida">Cuenta*</label>
+                                {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -122,18 +137,23 @@
                             </div>
                             <div class="col-6">
                                 <div class="input-group mb-3">
-                                <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                                    <div class="form-floating form-floating-group flex-grow-1">   
+                                <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                    <div class="form-floating form-floating-group flex-grow-1">  
+                                    {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Finaciamento"}}
+                                    <label for="id_lugar_partida">Financiamento*</label>
+                                    {% else %}
                                     {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
                                     <label for="id_lugar_partida">Financiamiento*</label>
                                     </div>
+                                    {% endif %}
                                 </div>
                             </div>
                     </div>
                     <div class="row">
                                 <div class="col-6">
                                     <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.dias_credito|add_class:"form-control"|append_attr:"placeholder=Días de crédito"}}
                                         <label for="id_lugar_partida">Días de crédito*</label>
@@ -142,7 +162,7 @@
                                 </div>
                                 <div class="col-6">
                                     <div class="input-group mb-3">
-                                    <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                         <div class="form-floating form-floating-group flex-grow-1">   
                                         {{form.estatus|add_class:"form-control"|append_attr:"placeholder=Status"}}
                                         <label for="id_lugar_partida">Status*</label>
@@ -154,9 +174,14 @@
                         <div class="col-lg-6 col-sm-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
+                                <div class="form-floating form-floating-group flex-grow-1"> 
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                {{form.moneda|add_class:"form-control"|append_attr:"placeholder=Moeda"}}
+                                <label for="id_lugar_partida">Moeda*</label>
+                                {% else %}
                                 {{form.moneda|add_class:"form-control"|append_attr:"placeholder=Moneda"}}
                                 <label for="id_lugar_partida">Moneda*</label>
+                                {% endif %}
                                 </div>
                             </div>
                         </div> 
@@ -182,10 +207,15 @@
                         </div>
                         <div class="col-6">
                             <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
-                                <label for="id_lugar_partida">Convenio</label>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">  
+                                    {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Número de Banco"}}
+                                    <label for="id_lugar_partida">Número de Banco</label>
+                                    {% else %}
+                                    {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
+                                    <label for="id_lugar_partida">Convenio</label>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -193,42 +223,70 @@
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
-                                <label for="id_clabe">Swift*</label>
+                                    {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{form.swift|add_class:"form-control"|append_attr:"placeholder=Sucursal"}}
+                                    <label for="id_clabe">Sucursal</label>
+                                    {% else %}
+                                    {{form.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
+                                    <label for="id_clabe">Swift</label>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
                         <div class="col-6">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{form.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
-                                <label for="id_clabe">Spid*</label>
+                                <div class="form-floating form-floating-group flex-grow-1">  
+                                    {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{form.spid|add_class:"form-control"|append_attr:"placeholder=Pix"}}
+                                    <label for="id_clabe">Pix*</labeokl>
+                                    {% else %} 
+                                    {{form.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
+                                    <label for="id_clabe">Spid*</label>
+                                    
+                                    {% endif %}
                                 </div>
                             </div>
-                        </div>
-                    </div>
+                        </div>  
                     <div class="row ms-3 my-2">
                                     <div class="form-check form-switch col-sm">
-                                    <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>
+                                  
+                                    <label for="form.logistica" class="form-check-label">
+                                        <strong>
+                                              {% if usuario.distritos.nombre == "BRASIL" %}Produto{% else %}Producto{% endif %}
+                                        </strong>
+                                    </label>
                                         {{form.producto|add_class:"form-check-input"}}
                                     </div>
                     </div>
                     <div class="row ms-3 my-2">
                                     <div class="form-check form-switch col-sm">
-                                    <label for="form.logistica" class="form-check-label"><strong>Servicio</strong></label>
+                                    <label for="form.logistica" class="form-check-label">
+                                        <strong>
+                                        {% if usuario.distritos.nombre == "BRASIL" %}Serviço{% else %}Servicio{% endif %}
+                                        </strong>
+                                    </label>
                                         {{form.servicio|add_class:"form-check-input"}}
                                     </div>
                     </div>
                     <div class="row ms-3 my-2">
                                     <div class="form-check form-switch col-sm">
-                                    <label for="form.logistica" class="form-check-label"><strong>Arrendamiento</strong></label>
+                                    <label for="form.logistica" class="form-check-label">
+                                        <strong>
+                                            {% if usuario.distritos.nombre == "BRASIL" %}Alugel{% else %}Arrendamiento{% endif %}
+                                        </strong>
+                                    </label>
                                         {{form.arrendamiento|add_class:"form-check-input"}}
                                     </div>
                     </div>
-                    <hr>
+                    <div class="col-lg-12">
                     <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}">Cancelar</a>
+                    {% if usuario.distritos.nombre == "BRASIL" %}
+                    <input class="btn btn-outline-info" type='submit' value="Atualizar">
+                    {% else %}
                     <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                    {% endif %}
+                    </div>
                 </form>
                 </div>
             </div>
