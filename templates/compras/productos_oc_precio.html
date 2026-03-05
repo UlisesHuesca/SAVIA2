@@ -1,0 +1,96 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+<html>
+<head>
+{% block title %}Productos OC{% endblock %}
+</head>
+<body>
+{% block content %}
+<!-- Esta es la zona donde se crean los mensajes excitantes con sweet alert -->
+<div class="row my-4">
+    <div class="col-md-4">
+    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+        {% if messages %}
+            {% for message in messages %}
+                {% if message.tags == "error" %}
+                <script>
+                Swal.fire({
+                    "title":"Error",
+                    "text":"{{message}}",
+                    "icon":"error",
+                })
+                </script>
+                {% else %}
+                <script>
+                Swal.fire({
+                    "title":"Excelente",
+                    "text":"{{message}}",
+                    "icon":"success",
+                })
+                </script>
+                {% endif %}
+            {% endfor %}
+        {% endif %}
+    </div>
+</div>
+    <div class="card">
+        <div class="card-header">
+            <h5 class="card-title" id="compra" value={{compra.id}}>Compra: {{compra.folio}}</h5>
+        </div>
+
+        <div class="card-body">
+                <table class='table table-striped'>
+                    <thead>
+                        <tr>
+                            <th scope="col-3">#</th>
+                            <th scope="col-2">Código</th>
+                            <th scope="col-3">Artículos</th>
+                            <th scope="col-3">Cantidad</th>
+                            <th scope="col-3">P.U.</th>
+                            <th scope="col-3">Subtotal</th>
+                            <th scope="col-3">IVA</th>
+                            <th scope="col-3">Total</th>
+                            <th>Comentario</th>
+                            <th>Precios</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                    {% for producto in productos %}
+                        <tr>
+                            <th scope="row"><img class='row-image' src="{{producto.producto.producto.articulos.producto.producto.imageURL}}"></th>
+                            <td>{{producto.producto.producto.articulos.producto.producto.codigo}}</td>
+                            <td>{{producto.producto.producto.articulos.producto.producto.nombre}}</td>
+                            <td>{{producto.cantidad}}</td>
+                            <td>${{producto.precio_unitario|floatformat:2}}</td>
+                            <td>${{producto.subtotal_parcial|floatformat:2}}</td>
+                            <td>${{producto.iva_parcial|floatformat:2}}</td>
+                            <td>${{producto.total|floatformat:2}}</td>
+                            <td>{{producto.producto.producto.articulos.comentario}}</td>
+                            <td>   
+                                <a type = "button" class="btn btn-outline-primary" href="{% url 'producto-precios-detalle' producto.producto.producto.articulos.producto.id %}">
+                                    Históricos
+                                </a>
+                            </td> 
+                        
+                        </tr>
+                   {% endfor %}
+                   </tbody>
+                </table>
+                <h6>Activo: {% if compra.req.orden.activo %} {{compra.req.orden.activo}} {% else %} No hay activo definido {% endif %} </h6>
+                <h6>Comentario Gerente: {% if compra.comentario_gerencia %} {{compra.comentario_gerencia}} {% else %} No hay comentario {% endif %}</h6>
+                <h6>Comentario Compra: {% if compra.comentarios %} {{compra.comentarios}} {%else%} No hay comentario {% endif %}</h6>
+                <h6>Comentario Superintendente:   {%if compra.req.comentario_super%} {{compra.req.comentario_super}} {% else %} No hay comentario {% endif %}</h6>
+                <h6>Comentario Almacén: {%if compra.req.comentario_compras %} {{compra.req.comentario_compras}} {% else %}No hay comentario{% endif %}</h6>
+                <h6>Comentario Usuario: {%if compra.req.orden.comentario %} {{compra.req.orden.comentario}} {% else %} No hay comentario {% endif %}</h6> 
+                
+        </div>
+
+        <div class="card-footer">
+        </div>
+    </div>
+
+{% endblock %}
+
+</body>
+</html>

@@ -148,6 +148,7 @@
                     <th class="numeric">Proveedor</th>
                     <th class="numeric">Costo</th>
                     <th class="numeric">Moneda</th>
+                    <th>Precios</th>
                     <th class="d-none d-lg-table-cell">Condición</th>
                     <th class="numeric">Acción</th>
                 </tr>
@@ -164,6 +165,12 @@
                     <td class="numeric">{{compra.proveedor}}</td>
                     <td class="numeric">${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td class="numeric">{{compra.moneda}}</td>
+                    <td>
+                        <a id="myBtn" type="button" title= "Productos y Comentarios" class="btn btn-outline-info" href="{% url 'productos-oc-precio' compra.id %}">
+                            <i class="fa-duotone fa-solid fa-circle-info"></i>
+                        </a>
+                    </td>
+                    </td>
                     <td class="d-none d-lg-table-cell">{{compra.cond_de_pago}}</td>
                     <td class="numeric">
                         <ul class="nav nav-pills">
@@ -204,8 +211,6 @@
                                         </div>
                                     </div>
                                 </div>
-                               
-
                             </li>
                         </ul>
                     </td>

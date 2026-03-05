@@ -33,6 +33,7 @@ urlpatterns = [
     path('compras/compras_devueltas', views.compras_devueltas,name='compras-devueltas'),
     path('compras/compra_edicion/<int:pk>', views.compra_edicion, name='compra-edicion'),
     path('compras/matriz_oc_productos/', views.matriz_oc_productos, name='matriz-oc-productos'),
+    path('compras/productos_oc_precio/<int:pk>/', views.productos_oc_precio, name='productos-oc-precio'),
     path('compras/comparativos', views.comparativos, name='comparativos'),
     path('compras/crear_comparativo', views.crear_comparativo, name='crear_comparativo'),
     path('carga_proveedor', views.carga_proveedor, name='carga-proveedor'),

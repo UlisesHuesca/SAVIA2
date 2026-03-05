@@ -1154,6 +1154,19 @@ def productos_oc(request, pk):
     return render(request,'compras/oc_producto.html',context)
 
 @perfil_seleccionado_required
+def productos_oc_precio(request, pk):
+    compra = Compra.objects.get(id=pk)
+    productos = ArticuloComprado.objects.filter(oc=compra)
+
+
+    context = {
+        'compra':compra,
+        'productos':productos,
+    }
+
+    return render(request,'compras/productos_oc_precio.html',context)
+
+@perfil_seleccionado_required
 def upload_facturas(request, pk):
     pago = Pago.objects.get(id = pk)
     facturas = Facturas.objects.filter(pago = pago, hecho=True)
