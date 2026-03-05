@@ -1,0 +1,109 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+{% load widget_tweaks %}
+{% load tt_extras %}
+{% load l10n %}
+<html>
+<head>
+{% block title %}Matriz de Precios{% endblock %}
+</head>
+<body>
+{% block content %}
+<hr>
+<hr>
+<hr>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+    <div class = "card">
+        <div class="card-header">
+          <h3>{{ producto.producto.codigo}} - {{ producto.producto.nombre }}</h3>
+        </div>
+        <div class="card-body">
+
+            {% if ultimo %}
+              <p><b>Último precio autorizado: ${{ ultimo.precio_unitario|floatformat:2 }}</b> ({{ ultimo.created_at|date:"d/m/Y" }})</p>
+            {% else %}
+              <p>No hay precios autorizados para este producto.</p>
+            {% endif %}
+            {% if chart_count >= 3 %}
+              
+            <div style="height:280px">
+              <canvas id="priceChart"></canvas>
+            </div>
+
+             {{ chart_data|json_script:"chart-data" }}
+
+            <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+            <script>
+              const raw = JSON.parse(document.getElementById('chart-data').textContent);
+
+              const labels = raw.map(x => new Date(x.created_at).toLocaleDateString());
+              const data = raw.map(x => Number(x.precio_unitario));
+
+              const ctx = document.getElementById('priceChart');
+
+              new Chart(ctx, {
+                type: 'line',
+                data: {
+                  labels,
+                  datasets: [{
+                    label: 'Precio',
+                    data,
+                    tension: 0.25,
+                    pointRadius: 4,
+                  }]
+                },
+                options: {
+                  responsive: true,
+                  maintainAspectRatio: false,   // <-- CLAVE
+                  plugins: { legend: { display: true } },
+                  scales: {
+                    y: { beginAtZero: true }
+                  }
+                }
+              });
+            </script>
+
+            <style>
+              .chart-wrap{
+                position: relative;   /* <-- CLAVE */
+                height: 280px;
+                width: 100%;
+                margin-bottom: 16px;  /* separación con la tabla */
+              }
+              #priceChart{
+                display: block;       /* <-- CLAVE */
+                width: 100% !important;
+                height: 100% !important;
+              }
+            </style>
+
+          {% endif %}
+        {% if chart_count > 1 %}
+          <table class="table bg-white">
+            <thead class="text-black" style="background-color: #F5F5F5;">
+              <tr>
+                <th>Fecha</th>
+                <th>Precio</th>
+                <th>OC</th>
+                <th>Proveedor</th>
+              </tr>
+            </thead>
+          <tbody>
+          {% for r in historico %}
+            <tr>
+              <td>{{ r.created_at|date:"d/m/Y" }}</td>
+              <td>${{ r.precio_unitario|floatformat:2 }}</td>
+              <td>{{ r.oc.folio|unlocalize }}</td>
+              <td>{{ r.oc.proveedor.nombre }}</td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+       {% endif %}
+        </div>
+    </div>
+{% endblock %}
+</body>
+</html>

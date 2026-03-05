@@ -58,6 +58,8 @@ urlpatterns = [
     #path('politicas/aceptar/', views.aceptar_politica, name='aceptar-politica'),
     path('politica/proveedores/', views.descargar_proveedores_pdf, name='politica-proveedores'),
     path("compras/<int:compra_id>/pdf/", views.ver_oc_pdf, name="ver_oc_pdf"),
+    path("compras/catalogo/", views.catalogo_precios, name="catalogo-precios"),
+    path("compras/catalogo/<int:producto_id>/precios/", views.producto_precios_detalle, name="producto-precios-detalle"),
     ]
 
 if settings.DEBUG:

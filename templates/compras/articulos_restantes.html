@@ -34,7 +34,9 @@
                                 <th>
                                     Calidad
                                 </th>
-                               
+                                <th>
+                                    Precio
+                                </th>
                             </tr>
                         </thead>
                         <tbody id="mytbl">
@@ -51,7 +53,14 @@
                                 <td>
                                     <button type="button" class = "btn btn-danger" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'select-product-quality' producto.producto.articulos.producto.producto.id %}"><i class="fa-solid fa-q"></i></button>
                                 </td>
+                                {% else %}
+                                <td></td>
                                 {% endif %}
+                                <td>
+                                    <a type = "button" class="btn btn-outline-primary" href="{% url 'producto-precios-detalle' producto.producto.articulos.producto.id %}">
+                                        <i class="fa-duotone fa-solid fa-chart-line"></i>  
+                                    </a>
+                                </td>
                             </tr>
                             {% endfor %}
                         </tbody>

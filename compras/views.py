@@ -3,7 +3,7 @@ from django.contrib.auth.decorators import login_required
 from django.views.decorators.clickjacking import xframe_options_sameorigin
 from django.http import JsonResponse, HttpResponse, HttpResponseRedirect, FileResponse
 from django.views.decorators.cache import cache_page
-from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField
+from django.db.models import F, Avg, Value, ExpressionWrapper, fields, Sum, Q, DateField, Count, Case, When, Value, DecimalField, OuterRef, Subquery, DateTimeField
 from django.db.models.functions import Concat, Coalesce
 from django.utils import timezone
 from django.contrib import messages
@@ -16,7 +16,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.urls import reverse
 from .tasks import convert_excel_matriz_compras_task, convert_excel_solicitud_matriz_productos_task, convert_excel_solicitud_matriz_productos_task2
-from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir, Producto_Calidad
+from dashboard.models import Inventario, Activo, Order, ArticulosOrdenados, ArticulosparaSurtir, Producto_Calidad, Product
+from solicitudes.filters import InventoryFilter
 from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Profile
 from tesoreria.models import Pago, Facturas
@@ -1062,6 +1063,82 @@ def matriz_oc_productos(request):
         #    return convert_excel_solicitud_matriz_productos(articulos)
         
     return render(request, 'compras/matriz_oc_productos.html',context)
+
+def catalogo_precios(request):
+    pk = request.session.get("selected_profile_id")
+    usuario = Profile.objects.get(id=pk)
+
+    # catálogo de inventario por distrito (como ya lo haces)
+    productos = Inventario.objects.filter(complete=True, distrito=usuario.distritos)
+    productos = productos.select_related("producto").order_by("producto__nombre")
+    myfilter=InventoryFilter(request.GET, queryset=productos)
+    productos = myfilter.qs
+
+    
+
+    p = Paginator(productos, 30)
+    page = request.GET.get("page")
+    productos_list = p.get_page(page)
+
+    context = {
+        "productos_list": productos_list,
+        "myfilter": myfilter,
+    }
+    return render(request, "compras/catalogo_precios.html", context)
+
+def producto_precios_detalle(request, producto_id):
+    pk = request.session.get("selected_profile_id")
+    usuario = Profile.objects.get(id=pk)
+    distrito_id = usuario.distritos.id
+
+    # producto catálogo
+    producto = get_object_or_404(Inventario, id=producto_id)
+
+    # historial autorizado (últimos 50 para tabla)
+    historico = (
+        ArticuloComprado.objects.filter(
+            oc__req__orden__distrito_id=usuario.distritos.id,
+            oc__autorizado2=True,
+            precio_unitario__isnull=False,
+            producto__producto__articulos__producto=producto,   # <-- AJUSTA esta relación
+        )
+        .select_related("oc", "producto")
+        .order_by("-created_at")[:50]
+    )
+
+    ultimo = historico[0] if historico else None
+
+    # últimos 5 para gráfico (en orden cronológico)
+    ultimos5 = list(
+        ArticuloComprado.objects
+        .filter(
+            oc__req__orden__distrito_id=distrito_id,
+            oc__autorizado2=True,
+            precio_unitario__isnull=False,
+            producto__producto__articulos__producto=producto,   # <-- AJUSTA
+        )
+        .order_by("-created_at")
+        .values("created_at", "precio_unitario")[:5]
+    )
+    ultimos5 = list(reversed(ultimos5))  # para graficar de viejo->nuevo
+    chart_data = [
+        {
+            "created_at": x["created_at"].isoformat(),          # "2023-01-23T16:59:21+00:00"
+            "precio_unitario": float(x["precio_unitario"] or 0) # 294.8276
+        }
+        for x in ultimos5
+    ]
+    
+    context = {
+        "producto": producto,
+        "ultimo": ultimo,
+        "historico": historico,
+        "chart_data": chart_data,  # se lo pasas a JS
+        "chart_count": len(chart_data),
+    }
+    return render(request, "compras/producto_precios_detalle.html", context)
+
+
 
 @perfil_seleccionado_required
 def productos_oc(request, pk):
