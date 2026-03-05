@@ -257,6 +257,20 @@
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 
+
+document.getElementById('pdfModal').addEventListener('show.bs.modal', function (event) {
+  const button = event.relatedTarget;
+  const url = button.getAttribute('data-pdf-url');
+  const iframe = document.getElementById('pdfFrame');
+  iframe.src = url;
+});
+
+// opcional: limpiar al cerrar para que no se quede cargado
+document.getElementById('pdfModal').addEventListener('hidden.bs.modal', function () {
+  document.getElementById('pdfFrame').src = '';
+});
+
+
 var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
 dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)

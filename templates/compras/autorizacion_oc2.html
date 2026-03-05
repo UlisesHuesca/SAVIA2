@@ -181,8 +181,27 @@
                                 </li>
                                 {% endif %}
                             {% endif %}
-                            <li class="nav-item m-1">
-                                <a type="button" class="btn btn-outline-info btn-lg" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="Orden de Compra"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                            <li class="nav-item m-2">
+                                <button class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" data-pdf-url="{% url 'ver_oc_pdf' compra.id %}">
+                                    <i class="fa-solid fa-eye"></i>
+                                </button>
+                                  <!-- Modal -->
+                                <div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                                        <div class="modal-content">
+                                        <div class="modal-header">
+                                            <h5 class="modal-title">Orden de compra</h5>
+                                            <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                        </div>
+
+                                        <div class="modal-body" style="height:80vh;">
+                                            <iframe id="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
+                                        </div>
+                                        </div>
+                                    </div>
+                                </div>
+                               
+
                             </li>
                         </ul>
                     </td>
@@ -204,6 +223,18 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
+
+document.getElementById('pdfModal').addEventListener('show.bs.modal', function (event) {
+  const button = event.relatedTarget;
+  const url = button.getAttribute('data-pdf-url');
+  const iframe = document.getElementById('pdfFrame');
+  iframe.src = url;
+});
+
+// opcional: limpiar al cerrar para que no se quede cargado
+document.getElementById('pdfModal').addEventListener('hidden.bs.modal', function () {
+  document.getElementById('pdfFrame').src = '';
+});
 
 var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
 dataSpyList.forEach(function (dataSpyEl) {
