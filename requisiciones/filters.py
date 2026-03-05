@@ -13,14 +13,24 @@ class RequisFilter(django_filters.FilterSet):
     end_date = DateFilter(field_name='created_at',lookup_expr='lte')
     start_approved = DateFilter(field_name = 'approved_at', lookup_expr='gte')
     end_approved = DateFilter(field_name='approved_at',lookup_expr='lte')
+    autorizar = django_filters.ChoiceFilter(field_name='autorizar',choices=(('true', 'Autorizado'),('false', 'No autorizado'),('null', 'Desconocido'),),method='filter_autorizar',)
 
 
     class Meta:
         model = Requis
-        fields = ['requisicion','solicitud','solicitante','start_date','end_date','start_approved','end_approved']
+        fields = ['requisicion','solicitud','solicitante','start_date','end_date','start_approved','end_approved','autorizar']
 
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(orden__staff__staff__staff__first_name__icontains = value) | Q(orden__staff__staff__staff__last_name__icontains=value))
+    
+    def filter_autorizar(self, queryset, name, value):
+        if value == 'true':
+            return queryset.filter(autorizar=True)
+        if value == 'false':
+            return queryset.filter(autorizar=False)
+        if value == 'null':
+            return queryset.filter(autorizar__isnull=True)
+        return queryset
     
 class RequisProductosFilter(django_filters.FilterSet):
     requisicion = CharFilter(field_name='req__folio', lookup_expr='icontains')

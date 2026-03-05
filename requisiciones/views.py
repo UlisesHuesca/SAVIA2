@@ -74,6 +74,9 @@ def requisiciones_status(request):
     
     if perfil.tipo.nombre == "PROVEEDORES" or perfil.tipo.nombre == "VIS_ADQ":
         requis = Requis.objects.filter(complete = True).order_by('-folio')
+    if perfil.tipo.nombre == "ADQUISICIONES":
+        requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True,).filter(
+            Q(autorizar=False)|Q(autorizar__isnull=True)).order_by('-folio')
     else:
         requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True).order_by('-folio')
    

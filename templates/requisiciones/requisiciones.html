@@ -70,7 +70,7 @@
                     <div class="row">
                         <div class="col-lg-3 col-sm-12">
                             <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{myfilter.form.requisicion|add_class:"form-control"|append_attr:"placeholder= Requisición"}}
                                     <label style="color: #121212;" for="id_producto">Requisición</label>
@@ -88,13 +88,25 @@
                         </div>
                         <div class="col-lg-3 col-sm-12">
                             <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-notdog fa-solid fa-user"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {{myfilter.form.solicitante|add_class:"form-control"|append_attr:"placeholder= Solicitante"}}
                                     <label style="color: #121212;" for="id_producto">Solicitante</label>
                                 </div>
                             </div>
                         </div>
+                         <div class="col-lg-3 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-check-circle"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {{myfilter.form.autorizar|add_class:"form-control"}}
+                                    <label style="color: #121212;" for="id_autorizar">Autorizar</label>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="row">
+                       
                         <div id="serie" class="col-lg-2 col-sm-12">
                             <div class="input-group mb-3">
                             <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
@@ -207,7 +219,7 @@
                     <th class="d-none d-lg-table-cell">Operación</th>
                     <th class="d-none d-lg-table-cell">Creada</th>
                     <th>Status</th>
-                    <td class="d-none d-lg-table-cell">Comentario Rechazo</td>
+                    <th class="d-none d-lg-table-cell">Comentario Rechazo</th>
                     <th scope="col">Autorizado</th>
                     <th scope="col">Acción</th>
                     <th>Registro</th>

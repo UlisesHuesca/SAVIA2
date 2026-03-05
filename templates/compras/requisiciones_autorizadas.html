@@ -76,7 +76,7 @@
     <div class=" col-3" >
         <div class="card text-center" style="width:20rem">
             <div class="card-header">
-                <h5 class="card-title">Req. Autorizadas</h5>
+                <h5 class="card-title">Menú Botones</h5>
             </div>
             <div class="card-body">
                 <ul class="nav nav-pills text-center">
@@ -91,6 +91,11 @@
                     <li class="nav-item mx-2">
                         <a type="button" class="btn btn-outline-info mt-2" href="{% url 'catalogo-precios' %}">
                           <i class="fa-duotone fa-solid fa-chart-line"></i>  
+                        </a>
+                    </li>
+                    <li>
+                        <a type="button" class="btn btn-outline-info mt-2" href="{% url 'requisiciones-status' %}">
+                          Requis NO autorizadas
                         </a>
                     </li>
                 </ul>
