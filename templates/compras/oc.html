@@ -372,7 +372,6 @@
                         {% else %}
                         <th scope="col">Producto</th>
                         <th scope="col">Cantidad</th>
-                        <th>Marca</th>
                         <th scope="col">P.U.</th>
                         <th scope="col">Subtotal</th>
                         <th scope="col" class="col-sm-2">Acción</th>
@@ -651,7 +650,8 @@ updateBtn.addEventListener('click',function(){
         var quantity = document.getElementById('id_cantidad');
         var precio = document.getElementById('id_precio_unitario');
         var val_cantidad = quantity.value;
-        var marca = document.getElementById('id_marca').value;
+        var marcaInput = document.getElementById('id_marca');
+        var marca = marcaInput ? marcaInput.value : "NR";
 
         console.log('val_cantidad:',val_cantidad, 'cantidad_pendiente:', cantidad_pendiente,'marca:', marca)
         var val_precio = precio.value;
