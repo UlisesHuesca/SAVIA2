@@ -2378,7 +2378,16 @@ def extraer_domicilio_fiscal(pdf_path: str) -> str:
 
 def descargar_pdf_dd(request, pk):
     proveedor = get_object_or_404(Proveedor, id=pk)
+   
+    dd = Debida_Diligencia.objects.filter(proveedor=proveedor, terminada=True).first()
+
+    if not dd:
+        messages.error(request, 'La debida diligencia no está terminada, no se puede generar el PDF.')
+        next_url = request.GET.get('next')
+        return redirect(next_url if next_url else 'documentacion-proveedores')
+
     buf = generar_pdf_dd(proveedor, request)
+
     return FileResponse(buf, as_attachment=True, filename='cuestionario_debida_diligencia_' + str(proveedor.razon_social) + '.pdf')
     
 def generar_pdf_dd(proveedor, request):

@@ -1247,7 +1247,7 @@
                                 Cuestionario Debida Diligencia
                             </td>
                             <td>
-                                <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'descargar-pdf-dd' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
+                                <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'descargar-pdf-dd' proveedor.id %}?next={{request.path}}&razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
                                     <i class="fa-duotone fa-solid fa-file-check"></i>
                                 </a>
                             </td>
