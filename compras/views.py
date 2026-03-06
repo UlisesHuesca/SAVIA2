@@ -2748,7 +2748,7 @@ def ver_oc_pdf(request, compra_id):
 
 
 def attach_oc_pdf(request, pk):
-    compra = get_object_or_404(Compra, pk=compra_id)
+    compra = get_object_or_404(Compra, pk=pk)
     if compra.req.orden.distrito.nombre != "BRASIL":
         buf = generar_pdf_nueva(compra)  # tu función
     else:
