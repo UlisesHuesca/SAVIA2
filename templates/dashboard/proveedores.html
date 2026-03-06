@@ -49,7 +49,7 @@
     <div class="col-lg-6 col-sm-12">
         <div class="card">
             <div class="card-header">
-                <h5>Filtro de Proveedores</h5>
+                <h5>{% if usuario.distritos.nombre == "BRASIL" %}Filtro de Fornecedores{% else %}Filtro de Proveedores{% endif %}</h5>
             </div>
                 {% csrf_token %}
             <div class="card-body">
@@ -59,8 +59,13 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razón Social"}}
-                                <label style="color: #121212;" for="id_razon_social">Razón Social</label>
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            {{myfilter.form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razão Social"}}
+                            <label style="color: #121212;" for="id_razon_social">Razão Social</label>
+                            {% else %}
+                            {{myfilter.form.razon_social|add_class:"form-control"|append_attr:"placeholder= Razón Social"}}
+                            <label style="color: #121212;" for="id_razon_social">Razón Social</label>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -68,8 +73,13 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                                {{myfilter.form.rfc|add_class:"form-control"|append_attr:"placeholder= RFC"}}
-                                <label style="color: #121212;" for="id_rfc">RFC</label>
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            {{myfilter.form.rfc|add_class:"form-control"|append_attr:"placeholder=CNPJ/CPF"}}
+                            <label style="color: #121212;" for="id_rfc">CNPJ/CPF</label>
+                            {% else %}
+                            {{myfilter.form.rfc|add_class:"form-control"|append_attr:"placeholder= RFC"}}
+                            <label style="color: #121212;" for="id_rfc">RFC</label>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -92,10 +102,12 @@
                             {% endif %}
                             {% if usuario.tipo.proveedores_edicion %}
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add_proveedores2' %}">
-                                <i class="fa-solid fa-plus"> Agregar Proveedor</i>
+                                <i class="fa-solid fa-plus"> {% if usuario.distritos.nombre == "BRASIL" %} Adicionar fornecedor {% else %} Agregar Proveedor {% endif %}</i>
                             </a>
                            
-                            <a type="button" class="btn btn-outline-info m-1"  href="{% url 'matriz-oc-productos' %}">Reporte Productos OC</a>
+                            <a type="button" class="btn btn-outline-info m-1"  href="{% url 'matriz-oc-productos' %}">
+                                {% if usuario.distritos.nombre == "BRASIL" %} Relatorio Produtos OC {% else %} Reporte Productos OC {% endif %}
+                            </a>
                             {% endif %}
                         </li>
 
@@ -108,7 +120,7 @@
     <div class="col-lg-3 col-sm-3 mt-2">
         <div class="card">
             <div class = "card-header">
-                <h5 class="card-title">Reportes</h5>
+                <h5 class="card-title">{% if usuario.distritos.nombre == "BRASIL" %} Relatorios {% else %} Reportes {% endif %}</h5>
             </div>
             <div class="card-body">
                 <form method=POST>
@@ -137,7 +149,7 @@
     <div class="col-lg-2 col-sm-3 mt-2">
         <div class="card">
             <div class="card-header">
-                <h5 class="card-title">Proveedores:</h5>
+                <h5 class="card-title">{% if usuario.distritos.nombre == "BRASIL" %} Fornecedores: {% else %} Proveedores: {% endif %}</h5>
             </div>
             <div class="card-body">
                     <form method=POST>
@@ -160,19 +172,36 @@
                 <tr>
                     <th scope="col">ID</th>
                     <!--<th>Folio</th>-->
-                    <th scope="col">Razón Social</th>
-                    <th scope="col">Contacto</th>
-                    <th scope="col">Telefono</th>
-                    <th scope="col">Distrito</th>
-                    <th scope="col">Domicilio</th>
-                    <th scope="col">Nombre Comercial</th>
-                    <th scope="col">RFC</th>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <th scope="col">Edición</th>
-                    {% endif %}
-                    <th scope="col">Direcciones</th>
-                    {% if usuario.tipo.proveedores_edicion %}
-                    <th>Documentación</th>
+                    {% if usuario.distritos.nombre == "BRASIL" %}
+                        <th>Razão Social</th>
+                        <th>Contato</th>
+                        <th>Telefone</th>
+                        <th>Distrito</th>
+                        <th>Endereço</th>
+                        <th>Nome Fantasia</th>
+                        <th>CNPJ/CPF</th>
+                        {% if usuario.tipo.proveedores_edicion %}
+                            <th scope="col">Edição</th>
+                        {% endif %}
+                        <th scope="col">Endereços</th>
+                        {% if usuario.tipo.proveedores_edicion %}
+                            <th>Documentação</th>
+                        {% endif %}
+                    {% else %}
+                        <th>Razón Social</th>
+                        <th scope="col">Contacto</th>
+                        <th scope="col">Telefono</th>
+                        <th scope="col">Distrito</th>
+                        <th scope="col">Domicilio</th>
+                        <th scope="col">Nombre Comercial</th>
+                        <th scope="col">RFC</th>
+                        {% if usuario.tipo.proveedores_edicion %}
+                            <th scope="col">Edición</th>
+                        {% endif %}
+                        <th scope="col">Direcciones</th>
+                        {% if usuario.tipo.proveedores_edicion %}
+                            <th>Documentación</th>
+                        {% endif %}
                     {% endif %}
                     <!-- <th>Debida Diligencia</th> -->
                 </tr>

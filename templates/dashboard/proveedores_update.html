@@ -41,12 +41,11 @@
         <div class="col-md-6 offset-md-3">
             <div class="card">
                 <div class="card-header">
-                <h3>Editar Proveedor</h3>
+                <h3>Editar {% if usuario.distritos.nombre == "BRASIL" %}Fornecedor{% else %}Proveedor{% endif %}</h3>
                 </div>
                 <div class="card-body">
                 <form method="POST" name="next" value="{{next}}">
                     {% csrf_token %}
-                    <hr>
                     {% if error_messages %}
                             <div class="alert alert-danger" role="alert">
                                 {{error_messages}}
@@ -56,8 +55,13 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user-tie"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            {{form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razão Social"}}
+                            <label for="id_lugar_partida">Razão Social*</label>
+                            {% else %}
                             {{form.razon_social|add_class:"form-control"|append_attr:"placeholder=Razón Social"}}
                             <label for="id_lugar_partida">Razón Social*</label>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -65,8 +69,13 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            {{form.rfc|add_class:"form-control"|append_attr:"paceholder=CNPJ/CPF"}}
+                            <label for="id_lugar_partida">CNPJ/CPF*</label>
+                            {% else %}
                             {{form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC"}}
                             <label for="id_lugar_partida">RFC*</label>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -92,7 +101,11 @@
                         </div>
                     </div>
                     <a class="btn btn-outline-secondary" href="{% url 'dashboard-proveedores' %}?razon_social={{ razon }}&rfc={{ rfc }}">Cancelar</a>
+                    {% if usuario.distritos.nombre == "BRASIL" %}
+                    <input class="btn btn-outline-info" type='submit' value="Atualizar">
+                    {% else %}
                     <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                    {% endif %}
                 </form>
                 </div>
             </div>

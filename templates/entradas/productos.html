@@ -24,6 +24,9 @@
                             <tr>
                                 <th>Código</th>
                                 <th>Artículo</th>
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                <th>Marca</th>
+                                {% endif %}
                                 <th>Cantidad Pendiente</th>
                                 <th>Calidad</th>
                             </tr>
@@ -33,6 +36,9 @@
                             <tr>
                                 <td>{{articulo_comprado.producto.producto.articulos.producto.producto.codigo}}</td>
                                 <td>{{articulo_comprado.producto.producto.articulos.producto.producto.nombre}}</td>
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                <td>{{articulo_comprado.marca}}</td>
+                                {% endif %}
                                 <td><p class='quantity' id='prod_quantity'>
                                     {% if articulo_comprado.cantidad_pendiente == None %}
                                         {{articulo_comprado.cantidad}}

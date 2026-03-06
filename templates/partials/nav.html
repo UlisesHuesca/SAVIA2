@@ -466,7 +466,7 @@
                                 <div>
                             {% endif %}
                                 <a class="dropdown-item" href="{% url 'autorizacion-oc1' %}">
-                                {% if usuario.tipo.nombre == "Gerente Br" %}
+                                {% if usuario.distritos.nombre == "BRASIL" and usuario.tipo.oc_gerencia == True %}
                                 OC Gerente Brasil
                                 {% elif usuario.tipo.subdirector %}
                                 OC Subdirector
@@ -502,7 +502,7 @@
                                 </a>
                                 </div>
 
-                            {% if usuario.tipo.oc_gerencia == False %}
+                            {% if usuario.tipo.oc_gerencia == False or usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL" %}
                                 <div class="d-none">
                             {% else %}
                                 <div>

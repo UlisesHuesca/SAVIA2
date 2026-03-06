@@ -140,7 +140,7 @@
                                 <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">  
                                     {% if usuario.distritos.nombre == "BRASIL" %}
-                                    {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Finaciamento"}}
+                                    {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamento"}}
                                     <label for="id_lugar_partida">Financiamento*</label>
                                     {% else %}
                                     {{form.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
@@ -210,8 +210,8 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">  
                                     {% if usuario.distritos.nombre == "BRASIL" %}
-                                    {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Número de Banco"}}
-                                    <label for="id_lugar_partida">Número de Banco</label>
+                                    {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Código de Banco"}}
+                                    <label for="id_lugar_partida">Código de Banco</label>
                                     {% else %}
                                     {{form.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
                                     <label for="id_lugar_partida">Convenio</label>
@@ -224,8 +224,8 @@
                             <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                                 <div class="form-floating form-floating-group flex-grow-1">   
                                     {% if usuario.distritos.nombre == "BRASIL" %}
-                                    {{form.swift|add_class:"form-control"|append_attr:"placeholder=Sucursal"}}
-                                    <label for="id_clabe">Sucursal</label>
+                                    {{form.swift|add_class:"form-control"|append_attr:"placeholder=Agencia"}}
+                                    <label for="id_clabe">Agencia</label>
                                     {% else %}
                                     {{form.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
                                     <label for="id_clabe">Swift</label>
@@ -239,11 +239,10 @@
                                 <div class="form-floating form-floating-group flex-grow-1">  
                                     {% if usuario.distritos.nombre == "BRASIL" %}
                                     {{form.spid|add_class:"form-control"|append_attr:"placeholder=Pix"}}
-                                    <label for="id_clabe">Pix*</labeokl>
+                                    <label for="id_clabe">Pix*</label>
                                     {% else %} 
                                     {{form.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
                                     <label for="id_clabe">Spid*</label>
-                                    
                                     {% endif %}
                                 </div>
                             </div>

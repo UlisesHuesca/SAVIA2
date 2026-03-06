@@ -38,8 +38,13 @@
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-id-card-clip"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC"}}
-                            <label for="id_lugar_partida">RFC*</label>
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                                {{form.rfc|add_class:"form-control"|append_attr:"placeholder=CNPJ/CPF"}}
+                                <label for="id_lugar_partida">CPF*</label>
+                            {% else %}
+                                {{form.rfc|add_class:"form-control"|append_attr:"placeholder=RFC"}}
+                                <label for="id_lugar_partida">RFC*</label>
+                            {% endif %}
                             </div>
                         </div>
                     </div>
@@ -153,16 +158,21 @@
                     </div>
                     <div class="col-6">
                         <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
-                            <label for="id_clabe">Swift*</label>
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                {{f.swift|add_class:"form-control"|append_attr:"placeholder=Agencia"}}
+                                <label for="id_clabe">Sucursal</label>
+                                {% else %}
+                                {{f.swift|add_class:"form-control"|append_attr:"placeholder=Swift"}}
+                                <label for="id_clabe">Swift</label>
+                                {% endif %}
                             </div>
                         </div>
                     </div>
                     <div class="col-6">
                         <div class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                             <div class="form-floating form-floating-group flex-grow-1">   
                             {{f.financiamiento|add_class:"form-control"|append_attr:"placeholder=Financiamiento"}}
                             <label for="id_lugar_partida">Financiamiento*</label>
@@ -209,12 +219,17 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="col-6">
+                         <div class="col-6">
                             <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-sharp fa-solid fa-gear"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                {{f.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
-                                <label for="id_lugar_partida">Convenio</label>
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">  
+                                    {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{f.convenio|add_class:"form-control"|append_attr:"placeholder=Número de Banco"}}
+                                    <label for="id_lugar_partida">Número de Banco</label>
+                                    {% else %}
+                                    {{f.convenio|add_class:"form-control"|append_attr:"placeholder=Convenio"}}
+                                    <label for="id_lugar_partida">Convenio</label>
+                                    {% endif %}
                                 </div>
                             </div>
                         </div>
@@ -222,12 +237,17 @@
                     <div class="col-6">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                            <div class="form-floating form-floating-group flex-grow-1">   
-                            {{f.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
-                            <label for="id_clabe">Spid*</label>
+                            <div class="form-floating form-floating-group flex-grow-1">  
+                                {% if usuario.distritos.nombre == "BRASIL" %}
+                                    {{f.spid|add_class:"form-control"|append_attr:"placeholder=Pix"}}
+                                    <label for="id_clabe">Pix*</label>
+                                {% else %} 
+                                    {{f.spid|add_class:"form-control"|append_attr:"placeholder=Spid"}}
+                                    <label for="id_clabe">Spid*</label>    
+                                {% endif %}
                             </div>
                         </div>
-                    </div>
+                    </div>  
                     <div class="row ms-3 my-2">
                         <div class="form-check form-switch col-sm">
                         <label for="form.logistica" class="form-check-label"><strong>Producto</strong></label>

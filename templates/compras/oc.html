@@ -18,7 +18,7 @@
         <div class="card" id="form-wrapper">
             <div class="card-header mb-4">
             <!-- Aqui es el encabezado de los filtros -->
-                <h5 id="oc" target={{oc.id|unlocalize}}>ORDEN DE COMPRA: {{folio}}</h5>
+                <h5 id="oc" target={{oc.id|unlocalize}}>{% if usuario.distritos.nombre == "BRASIL" %} ORDEM DE COMPRA: {% else %} ORDEN DE COMPRA {% endif %} {{folio}}</h5>
             </div>
             <div class="card-body">
             <form id="id_formulario" method="POST">
@@ -41,8 +41,9 @@
                 <div class="row my-2">
                     <div id="etiqueta_domicilio" class="col-12">
                         <div class="alert alert-secondary" role="alert">
-                        <h6>Domicilio:</h6><h6 style="color: #121212;" id="lbl_domicilio"></h6>   
+                        <h6> {% if usuario.distritos.nombre == "BRASIL" %} Endereço {% else %} Domicilio:{% endif %}</h6><h6 style="color: #121212;" id="lbl_domicilio"></h6>  
                         </div>
+                         
                     </div>
                 </div>
                 <div class="row my-2">
@@ -317,8 +318,13 @@
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
+                            {% if usuario.distritos.nombre == "BRASIL" %}
+                            {{form_product.cantidad|add_class:"form-control"|append_attr:"placeholder= Quantidade"}}
+                            <label style="color: #121212;" for="id_cantidad">Quantidade</label>
+                            {% else %}
                             {{form_product.cantidad|add_class:"form-control"|append_attr:"placeholder= Cantidad"}}
                             <label style="color: #121212;" for="id_cantidad">Cantidad</label>
+                            {% endif %}
                         </div>
                     </div>
                 </div>
@@ -332,11 +338,23 @@
                         </div>
                     </div>
                 </div>
+                {% if usuario.distritos.nombre == "BRASIL" %}
+                <div class="col-lg-4">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.marca|add_class:"form-control"|append_attr:"placeholder= Marca"}}
+                            <label style="color: #121212;" for="id_marca">Marca</label>
+                        </div>
+                    </div>
+                </div>
+                 {% endif %}
                 <div class="col-sm-1 mt-3">
                     <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
                         <i class="fa-solid fa-circle-plus"></i>
                     </a>
                 </div>
+               
             </div>
             <hr>
             <div class ="table-responsive-sm">
@@ -344,11 +362,22 @@
                 <thead>
                     <tr>
                         <th class="d-none d-lg-table-cell">#</th>
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                         <th>Produto</th>
+                        <th>Quantidade</th> 
+                        <th>Marca</th>
+                        <th>P.U.</th>
+                        <th scope="col">Subtotal</th>
+                        <th scope="col" class="col-sm-2">Ação</th>
+                        {% else %}
                         <th scope="col">Producto</th>
                         <th scope="col">Cantidad</th>
+                        <th>Marca</th>
                         <th scope="col">P.U.</th>
                         <th scope="col">Subtotal</th>
                         <th scope="col" class="col-sm-2">Acción</th>
+                        {% endif %}
+
                     </tr>
                 </thead>
                 <tbody id="mytbl">
@@ -357,6 +386,9 @@
                         <td class="d-none d-lg-table-cell">{{product.producto.producto.articulos.producto.producto.codigo}}</td>
                         <td>{{product.producto.producto.articulos.producto.producto.nombre}}</td>
                         <td>{{product.cantidad}}</td>
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                        <td>{% if product.marca %}{{product.marca}}{% else %}NR {% endif %}</td>
+                        {% endif %}
                         <td>${{product.precio_unitario|floatformat:2}}</td>
                         {% if product.precio_unitario != None  and product.cantidad != None %}
                         <td scope="col">${% widthratio product.precio_unitario 1 product.cantidad %}</td>
@@ -375,10 +407,18 @@
                 </tr>
                 </thead>
             <tbody>
+                {% if oc.req.orden.distrito.nombre != "BRASIL" %}
                 <tr>
                     <th>IVA</th>
                     <td valor="{{iva|unlocalize}}"  id="iva">${{iva|floatformat:2}}</td>
                 </tr>
+                {% else %}
+                <tr class="d-none">
+                    <th>ICMS</th>
+                    <td valor="0"  id="iva">${{iva|floatformat:2}}</td> 
+                </tr>
+                
+                {% endif %}
                 <tr id="impuestos_total" class="d-none">
                     <th>Impuesto</th>
                     <td id="valor_impuesto"></td>
@@ -611,7 +651,9 @@ updateBtn.addEventListener('click',function(){
         var quantity = document.getElementById('id_cantidad');
         var precio = document.getElementById('id_precio_unitario');
         var val_cantidad = quantity.value;
-        console.log('val_cantidad',val_cantidad, 'cantidad_pendiente', cantidad_pendiente)
+        var marca = document.getElementById('id_marca').value;
+
+        console.log('val_cantidad:',val_cantidad, 'cantidad_pendiente:', cantidad_pendiente,'marca:', marca)
         var val_precio = precio.value;
         //console.log('val_precio',val_precio)
         var action = "add";
@@ -643,7 +685,7 @@ updateBtn.addEventListener('click',function(){
                     "icon":"error",
             })
         } else {
-            ActualizarArticulos(oc,id,val_cantidad,val_precio,action);
+            ActualizarArticulos(oc,id,val_cantidad,val_precio,action,marca);
             document.getElementById("id_cantidad").value= null;
             document.getElementById("id_precio_unitario").value= null;
             updateBtn.classList.add('disabled')
@@ -653,7 +695,7 @@ updateBtn.addEventListener('click',function(){
 
 //ActualizarArticulos(array_id_prod)
 
-function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
+function ActualizarArticulos(oc,id,val_cantidad,val_precio,action, marca){
     console.log('User is logged in, sending data...' )
     
     var url = '/compras/update_oc/'
@@ -664,7 +706,7 @@ function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
             'Content-Type':'application/json',
             'X-CSRFToken': csrftoken,
         },
-        body:JSON.stringify({'oc':oc, 'id':id, 'val_cantidad':val_cantidad, 'val_precio':val_precio, 'action':action})
+        body:JSON.stringify({'oc':oc, 'id':id, 'val_cantidad':val_cantidad, 'val_precio':val_precio, 'action':action, 'marca':marca,})
     })
     .then((response)=>{
         return response.json()
@@ -685,12 +727,13 @@ function deleteRow(elemento) {
     let iva_resp = btn_delete.getAttribute('iva');
     let precio = btn_delete.getAttribute('precio');
     let val_precio = precio;
+    let marca = 'x'
     btn_delete.classList.add('disabled')
     //console.log(id)
     //console.log(precio)
     var action = "remove";
 
-    ActualizarArticulos(oc, id, val_cantidad, val_precio, action);
+    ActualizarArticulos(oc, id, val_cantidad, val_precio, action, marca);
 
     var select = document.getElementById('producto');
 
@@ -1187,11 +1230,12 @@ function formatRepoSelection(repo) {
 
 var datosProductos = {{ productos_para_select2|safe }};
 
+
 $(document).ready(function() {
     $('#id_producto').select2({
         allowClear: true,
         width: '100%',
-        placeholder: 'Selecciona un producto',
+        placeholder: 'Seleccione un producto',
         data: datosProductos,
         templateResult: formatRepo, // Función para renderizar los resultados
         templateSelection: formatRepoSelection // Función para renderizar la selección

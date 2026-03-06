@@ -558,6 +558,7 @@ class ArticuloComprado(models.Model):
     precio_unitario = models.DecimalField(max_digits=20, decimal_places=6, null=True, blank=True)
     created_at = models.DateTimeField(auto_now_add=True)
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))
+    marca = models.CharField(max_length=100, null=True, blank=True)
 
     @property
     def get_entradas(self):

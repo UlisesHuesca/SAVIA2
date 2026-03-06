@@ -37,7 +37,7 @@ class CompraForm(forms.ModelForm):
 class ArticuloCompradoForm(forms.ModelForm):
     class Meta:
         model = ArticuloComprado
-        fields = ['producto','cantidad','precio_unitario']
+        fields = ['producto','cantidad','precio_unitario','marca']
 
     def __init__(self,*args, **kwargs):
         super().__init__(*args, **kwargs)

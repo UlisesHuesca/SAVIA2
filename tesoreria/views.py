@@ -18,7 +18,7 @@ from user.models import Distrito, Empresa
 from compras.models import ArticuloComprado, Compra, TipoPrioridad
 from compras.forms import CompraForm
 from compras.filters import CompraFilter
-from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf #convert_excel_matriz_compras
+from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf_nueva #convert_excel_matriz_compras
 from dashboard.models import Subproyecto, Producto_Calidad
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago, EstadoCuenta
 from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
@@ -202,7 +202,7 @@ def compras_por_pagar(request):
                                 complemento_file_name = os.path.basename(complemento.complemento_xml.path)
                                 zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
                     if compra.id not in processed_docs:
-                        pdf_buf = generar_pdf(compra)
+                        pdf_buf = generar_pdf_nueva(compra)
                         zip_file.writestr(os.path.join(carpeta, f'OC_{compra.folio}.pdf'), pdf_buf.getvalue())
                         processed_docs.add(compra.id)
                         # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
@@ -357,7 +357,7 @@ def compras_autorizadas(request):
                                 complemento_file_name = os.path.basename(complemento.complemento_xml.path)
                                 zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
                     if compra.id not in processed_docs:
-                        pdf_buf = generar_pdf(compra)
+                        pdf_buf = generar_pdf_nueva(compra)
                         zip_file.writestr(os.path.join(carpeta, f'OC_{compra.folio}.pdf'), pdf_buf.getvalue())
                         processed_docs.add(compra.id)
                         # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
@@ -716,9 +716,12 @@ def compras_pagos(request, pk):
     if compra.moneda.nombre == 'DOLARES':
         cuentas = Cuenta.objects.all()
         remanente = compra.costo_plus_adicionales - suma_pago_usd
+    if compra.moneda.nombre == 'REAIS':
+        cuentas = Cuenta.objects.filter(moneda__nombre = 'REAIS')
+        remanente = compra.costo_plus_adicionales - suma_pago
 
-    if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
-        cuentas = Cuenta.objects.filter(distrito__nombre = 'BRASIL')
+    #if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
+    #    cuentas = Cuenta.objects.filter(distrito__nombre = 'BRASIL')
 
 
     cuentas_para_select2 = [
@@ -1529,7 +1532,7 @@ def matriz_pagos(request):
                                         complemento_file_name = os.path.basename(complemento.complemento_xml.path)
                                         zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
                             if oc.id not in processed_docs:
-                                pdf_buf = generar_pdf(oc)
+                                pdf_buf = generar_pdf_nueva(oc)
                                 zip_file.writestr(os.path.join(carpeta, f'OC_{oc.folio}.pdf'), pdf_buf.getvalue())
                                 processed_docs.add(oc.id)
                                      # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
@@ -1808,7 +1811,7 @@ def matriz_pagos(request):
                         
                         # Generar e incluir la OC en el ZIP solo si no ha sido procesada
                         if factura.oc.id not in processed_ocs:
-                            buf = generar_pdf(factura.oc)
+                            buf = generar_pdf_nueva(factura.oc)
                             oc_file_name = f'OC_{factura.oc.folio}.pdf'
                             zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
                             processed_ocs.add(factura.oc.id)
@@ -1952,7 +1955,7 @@ def matriz_pagos(request):
                     buffer = render_pdf_gasto(pago.gasto.id)
                     facturas = pago.gasto.facturas.filter(hecho=True)
                 elif pago.oc:
-                    buffer = generar_pdf(pago.oc)
+                    buffer = generar_pdf_nueva(pago.oc)
                     facturas = pago.oc.facturas.filter(hecho=True)
                 elif pago.viatico:
                     buffer = generar_pdf_viatico(pago.viatico.id)
@@ -2314,7 +2317,7 @@ def control_documentos(request):
                                         complemento_file_name = os.path.basename(complemento.complemento_xml.path)
                                         zip_file.write(complemento.complemento_xml.path, os.path.join(carpeta, complemento_file_name))
                             if oc.id not in processed_docs:
-                                pdf_buf = generar_pdf(oc)
+                                pdf_buf = generar_pdf_nueva(oc)
                                 zip_file.writestr(os.path.join(carpeta, f'OC_{oc.folio}.pdf'), pdf_buf.getvalue())
                                 processed_docs.add(oc.id)
                                      # 🚀 Incluir los complementos de pago relacionados en la misma carpeta
@@ -2580,7 +2583,7 @@ def control_documentos(request):
                         
                         # Generar e incluir la OC en el ZIP solo si no ha sido procesada
                         if factura.oc.id not in processed_ocs:
-                            buf = generar_pdf(factura.oc)
+                            buf = generar_pdf_nueva(factura.oc)
                             oc_file_name = f'OC_{factura.oc.folio}.pdf'
                             zip_file.writestr(os.path.join(folder_name, oc_file_name), buf.getvalue())
                             processed_ocs.add(factura.oc.id)

@@ -22,7 +22,7 @@ from django.contrib.auth.decorators import login_required
 from rest_framework.views import APIView
 
 
-from compras.views import generar_pdf
+from compras.views import generar_pdf_nueva
 from rest_framework import status
 from user.decorators import perfil_seleccionado_required
 from api.models import TablaFestivos
@@ -437,7 +437,7 @@ def descargar_pdf_oc(request, pk):
         )
 
     # Generar el PDF si la OC existe
-    buf = generar_pdf(compra)
+    buf = generar_pdf_nueva(compra)
 
     # Devolver el PDF como respuesta
     return FileResponse(buf, as_attachment=True, filename='oc_' + str(compra.folio) + '.pdf')

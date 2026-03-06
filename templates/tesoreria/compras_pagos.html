@@ -49,71 +49,82 @@
                 <table class='table table-striped'>
                     <thead>
                         <tr>
-                        <th scope="col">Proveedor:</th>
+                        <th scope="col">{% if usuario.distritos.nombre == "BRASIL" %}Fornecedor:{% else %}Proveedor:{% endif %}</th>
                         <th scope="col">{{compra.proveedor.nombre.razon_social}}</th>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <th scope="col">RFC:</th>
+                            <th scope="col">{% if usuario.distritos.nombre == "BRASIL" %} CNPJ/CPF:{% else %} RFC:{% endif %}</th>
                             <th scope="col">{{compra.proveedor.nombre.rfc}}</th>
                         </tr>
-                        {% if compra.deposito_comprador %}
-                         <tr>
-                            <th scope="col">Comentario:</th>
-                            <th scope="col">Esta depósito se realizará a la cuenta de {{compra.deposito_comprador.staff.first_name}} {{compra.deposito_comprador.staff.last_name}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Banco Colaborador:</th>
-                            <th scope="col">{{compra.deposito_comprador.banco.nombre}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Cuenta:</th>
-                            <th scope="col">{{compra.proveedor.cuenta}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Clabe:</th>
-                            <th scope="col">{{compra.proveedor.clabe}}</th>
-                        </tr>
+                        {% if usuario.distritos.nombre == "BRASIL" %}
+                            <tr>
+                                <th scope="col">Banco:</th>
+                                <th scope="col">{{compra.proveedor.banco}}</th>
+                            </tr>
+                            <tr>
+                                <th scope="col">Cód. Banco</th>
+                                <th scope="col">{% if compra.proveedor.convenio %}{{compra.proveedor.convenio}}{% else %} NR {% endif %}</th>
+                            </tr>
+                            <tr>
+                                <th scope="col">Agencia:</th>
+                                <th scope="col">{{compra.proveedor.swift}}</th>
+                            </tr>
+                            <tr>
+                                <th scope="col">Conta:</th>
+                                <th scope="col">{{compra.proveedor.cuenta}}</th>
+                            </tr>
+                            <tr>
+                                <th scope="col">Chave Pix:</th>
+                                <th scope="col">{{compra.proveedor.spid}}</th>
+                            </tr>
+                            <tr>
+                                <th scope="col">Moeda</th>
+                                <th scope="col">{{compra.moneda.nombre}}</th>
+                            </tr>
                         {% else %}
-                        <tr>
-                            <th scope="col">Banco:</th>
-                            <th scope="col">{{compra.proveedor.banco}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Cuenta:</th>
-                            <th scope="col">{{compra.proveedor.cuenta}}</th>
-                        </tr>
-                        <tr>
-                            <th scope="col">Clabe:</th>
-                            <th scope="col">{{compra.proveedor.clabe}}</th>
-                        </tr>
-                        {% if compra.monto_anticipo %}
-                        <tr>
-                            <th scope="col">Anticipo en OC</th>
-                            <th scope="col">{{compra.monto_anticipo}}</th>
-                        </tr>
+                            <tr>
+                                <th scope="col">Banco:</th>
+                                <th scope="col">{{compra.proveedor.banco}}</th>
+                            </tr>
+                            <tr>
+                                <th scope="col">Cuenta:</th>
+                                <th scope="col">{{compra.proveedor.cuenta}}</th>
+                            </tr>
+                            <tr>
+                                <th scope="col">Clabe:</th>
+                                <th scope="col">{{compra.proveedor.clabe}}</th>
+                            </tr>
+                            {% if compra.monto_anticipo %}
+                                <tr>
+                                    <th scope="col">Anticipo en OC</th>
+                                    <th scope="col">{{compra.monto_anticipo}}</th>
+                                </tr>
+                            {% endif %}
+                       
+                            {% if compra.referencia %}
+                                <tr>
+                                    <th scope="col">Referencia</th>
+                                    <th scope="col">{{compra.referencia}}</th>
+                                </tr>
+                            {% else %}
+                                <tr> </tr>
+                            {% endif %}
+                            <tr>
+                                <th scope="col">Moneda</th>
+                                <th scope="col">{{compra.moneda.nombre}}</th>
+                            </tr>
+                           
                         {% endif %}
-                        {% if compra.referencia %}
-                        <tr>
-                            <th scope="col">Referencia</th>
-                            <th scope="col">{{compra.referencia}}</th>
-                        </tr>
-                        {% else %}
-                        <tr> </tr>
-                        {% endif %}
-                        {% endif %}
-                        <tr>
-                            <th scope="col">Moneda</th>
-                            <th scope="col">{{compra.moneda.nombre}}</th>
-                        </tr>
+                       
                     </tbody>
                 </table>
               
                 <table class='table table-striped'>
                     <thead>
                         <tr>
-                        <th scope="col">Importe Compra</th>
+                        <th scope="col">{% if usuario.distritos.nombre == "BRASIL" %}Valor Total{% else %}Importe Compra{% endif %}</th>
                         <th id="importe" value={{compra.costo_plus_adicionales}} moneda={{compra.moneda.nombre}} scope="col"> ${{compra.costo_oc|floatformat:4}}</th>
                         </tr>
                     </thead>

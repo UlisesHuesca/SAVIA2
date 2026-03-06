@@ -197,6 +197,7 @@
                     {% else %}
                     
                     <th scope="col">Acción</th>
+                    <th>OC</th>
                     <th>Cancelar</th>
                     <th>Descargar</th>
                     {% endif %}
@@ -265,11 +266,31 @@
                                 <button id="myBtn2" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'saldo-a-favor' compra.id %}">Saldo a Favor</button>
                             </li>
                             {% endif %}
-                            <li>
+                            <!--<li>
                                 <a type="button" class="btn btn-outline-info" href="{% url 'oc-pdf' compra.id%}" data-bs-toggle="tooltip" data-bs-placement="top" title="OC"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
-                            </li>
+                            </li>-->
                             
                         </ul>
+                    </td>
+                    <td>
+                        <button type="button"  class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal" data-pdf-url="{% url 'ver_oc_pdf' compra.id %}">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                                  <!-- Modal -->
+                                <div class="modal fade" id="pdfModal" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Orden de compra</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body" style="height:80vh;">
+                                               <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                     </td>
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document"  hx-swap="innerHTML" hx-get="{% url 'cancelar-oc2' compra.id %}"><i class="fa-solid fa-xmark"></i></a>
@@ -347,6 +368,25 @@ var myModal = document.getElementById('dialog')
 myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
+
+document.addEventListener("show.bs.modal", function (event) {
+  const modal = event.target;
+  if (modal.id !== "pdfModal") return;
+
+  const button = event.relatedTarget;
+  const url = button?.getAttribute("data-pdf-url");
+  const frame = modal.querySelector(".pdfFrame");
+
+  if (url && frame) frame.src = url;
+});
+
+document.addEventListener("hidden.bs.modal", function (event) {
+  const modal = event.target;
+  if (modal.id !== "pdfModal") return;
+
+  const frame = modal.querySelector(".pdfFrame");
+  if (frame) frame.src = "about:blank";
+});
 
 </script>
 {% endblock %}
