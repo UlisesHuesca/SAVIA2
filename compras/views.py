@@ -3220,12 +3220,13 @@ def generar_pdf_brasil(compra):
 
     # Sección de la tabla de productos
     data = []
-    data.append(['''Código''', '''Produto / Serviço''', '''Qtd.''', '''Uni.''', '''P. U.''', '''Valor total'''])
+    data.append(['''Código''', '''Produto / Serviço''', '''Marca''','''Qtd.''', '''Uni.''', '''P. U.''', '''Valor total'''])
 
     for producto in productos:
         importe = producto.precio_unitario * producto.cantidad
         importe_rounded = round(importe, 4)
         descripcion = Paragraph(producto.producto.producto.articulos.producto.producto.nombre, style_desc)
+        #marca 
         precio_unitario = f"{producto.precio_unitario:,.4f}"
         data.append([
             producto.producto.producto.articulos.producto.producto.codigo,
@@ -3240,7 +3241,7 @@ def generar_pdf_brasil(compra):
     c.setFont('Helvetica', 8)
 
     # Dibujar la tabla de productos en la nueva ubicación
-    table = Table(data, colWidths=[1.2 * cm, 12 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 2.5 * cm])
+    table = Table(data, colWidths=[1.2 * cm, 10 * cm, 2 * cm, 1.5 * cm, 1.5 * cm, 1.5 * cm, 2.5 * cm])
     table_style = TableStyle([  # estilos de la tabla
         ('INNERGRID', (0, 0), (-1, -1), 0.25, colors.white),
         ('BOX', (0, 0), (-1, -1), 0.25, colors.black),
