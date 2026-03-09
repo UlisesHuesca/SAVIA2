@@ -332,6 +332,17 @@
                         </div>
                     </div>
                 </div>
+                {% if usuario.distritos.nombre == "BRASIL" %}
+                <div class="col-lg-4">
+                    <div class="input-group mb-3">
+                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-gear"></i></span>
+                        <div class="form-floating form-floating-group flex-grow-1">   
+                            {{form_product.marca|add_class:"form-control"|append_attr:"placeholder= Marca"}}
+                            <label style="color: #121212;" for="id_marca">Marca</label>
+                        </div>
+                    </div>
+                </div>
+                 {% endif %}
                 <div class="col-sm-1 mt-3">
                     <a class="btn btn-success update-purchase" id="update-purchase" name="purchase">
                         <i class="fa-solid fa-circle-plus"></i>
@@ -657,6 +668,8 @@ updateBtn.addEventListener('click',function(){
         var val_precio = precio.value;
         console.log('val_precio',val_precio)
         var action = "add";
+        var marcaInput = document.getElementById('id_marca');
+        var marca = marcaInput ? marcaInput.value : "NR";
 
 
         if (!value) {
@@ -686,7 +699,7 @@ updateBtn.addEventListener('click',function(){
                     "icon":"error",
             })
         } else {
-            ActualizarArticulos(oc,id,val_cantidad,val_precio,action);
+            ActualizarArticulos(oc,id,val_cantidad,val_precio,action,marca);
             document.getElementById("id_cantidad").value= null;
             document.getElementById("id_precio_unitario").value= null;
 
@@ -695,7 +708,7 @@ updateBtn.addEventListener('click',function(){
 
 //ActualizarArticulos(array_id_prod)
 
-function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
+function ActualizarArticulos(oc,id,val_cantidad,val_precio,action, marca){
    
     console.log('User is logged in, sending data...' )
 
@@ -707,7 +720,7 @@ function ActualizarArticulos(oc,id,val_cantidad,val_precio,action){
             'Content-Type':'application/json',
             'X-CSRFToken': csrftoken,
         },
-        body:JSON.stringify({'oc':oc, 'id':id, 'val_cantidad':val_cantidad, 'val_precio':val_precio, 'action':action})
+        body:JSON.stringify({'oc':oc, 'id':id, 'val_cantidad':val_cantidad, 'val_precio':val_precio, 'action':action, 'marca':marca,})
     })
     .then((response)=>{
         return response.json()
@@ -725,14 +738,14 @@ function deleteRow(elemento) {
     let oc = oc_tag.getAttribute('target');
     var id = elemento;
     let val_cantidad = btn_delete.getAttribute('cantidad');
-
+    let marca = 'x'
     let iva_resp = btn_delete.getAttribute('iva');
     let precio = btn_delete.getAttribute('precio');
     let val_precio = precio;
     console.log(id)
     console.log(precio)
     var action = "remove";
-    ActualizarArticulos(oc, id, val_cantidad, val_precio, action);
+    ActualizarArticulos(oc, id, val_cantidad, val_precio, action, marca);
 
     var select = document.getElementById('producto');
 
