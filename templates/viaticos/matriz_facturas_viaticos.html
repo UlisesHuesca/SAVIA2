@@ -315,6 +315,8 @@
                         <td>
                             {% if vale.esta_aprobado %}
                                 ✅ Aprobado
+                            {% elif vale.esta_aprobado == False %}
+                                ❌ Rechazado 
                             {% else %}
                                 ⏳ Pendiente
                             {% endif %}
