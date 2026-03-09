@@ -1232,7 +1232,10 @@ def autorizacion_oc1(request):
     if usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL"):
         #if usuario.distritos.nombre == "MATRIZ": #Esto lo comenté para que sirvan los cambios para Brasil
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__superintendente = usuario).order_by('-folio')
-   
+    #elif usuario.tipo.subdirector == True and usuario.tipo.rh = True:
+    #    compras = 
+        #else:
+        #    compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     elif usuario.tipo.oc_superintendencia == True:
         compras = Compra.objects.filter(complete=True, autorizado1= None, req__orden__distrito = usuario.distritos).order_by('-folio')
     else:
@@ -1611,7 +1614,7 @@ def autorizar_oc1(request, pk):
             compra.oc_autorizada_por = usuario
             compra.autorizado_at = datetime.now()
             #compra.autorizado_hora1 = datetime.now().time()
-            if usuario.tipo.subdirector == True  or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL"):
+            if usuario.tipo.subdirector == True or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL"):
                 compra = form.save(commit = False)
                 compra.autorizado2 = True
                 compra.oc_autorizada_por2 = usuario
