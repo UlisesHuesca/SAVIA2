@@ -46,7 +46,10 @@
 </div>
 <div class="card mt-3">
 {% if mes_anio %}
-<h4>Rentabilidad de {{ distrito_nombre }} en {{ fecha_label }}</h4>
+<div class="card-header">
+    <h4>Rentabilidad de {{ distrito_nombre }} en {{ fecha_label }}</h4>
+</div>
+<div class="card-body">
     <table class="table table-bordered table-striped">
         <thead class="table-dark">
             <tr>
@@ -59,42 +62,55 @@
                 <th>Margen Operativo</th>
                 <th>%</th>
                 <th>Indirectos Centrales</th>
+                <th>Impuestos</th>
+                <th>Costo Financiero</th>
+                <th>Utilidad / Pérdida</th>
+                <th>%</th>
             </tr>
         </thead>
         <tbody>
             {% for row in contratos_data %}
             <tr>
                 <td>{{ row.contrato }}</td>
-                <td>{{ row.ingresos|floatformat:2 }}</td>
+                <td style="text-align:right;">${{ row.ingresos|floatformat:2 }}</td>
 
                
-                <td>{{ row.directos|default:"0"|floatformat:2 }}</td>
+                <td style="text-align:right;">${{ row.directos|default:"0"|floatformat:2 }}</td>
 
-                <td>{{ row.ind_oper|floatformat:2 }}</td>
-                <td>{{ row.ind_adm|floatformat:2 }}</td>
+                <td style="text-align:right;">${{ row.ind_oper|floatformat:2 }}</td>
+                <td style="text-align:right;">${{ row.ind_adm|floatformat:2 }}</td>
                 
 
-                <td>{{ row.depreciaciones|floatformat:2 }}</td>
-                <td><strong>{{ row.margen_operativo|floatformat:2 }}</strong></td>
-                <td><strong>{{ row.pct_margen_operativo|floatformat:2 }}%</strong></td>
-                <td>{{ row.ind_central|floatformat:2 }}</td>
+                <td style="text-align:right;">${{ row.depreciaciones|floatformat:2 }}</td>
+                <td style="text-align:right;"><strong>${{ row.margen_operativo|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>{{ row.pct_margen_operativo|floatformat:2 }}%</strong></td>
+                <td style="text-align:right;">${{ row.ind_central|floatformat:2 }}</td>
+                <td style="text-align:right;">${{ row.impuestos|floatformat:2 }}</td>
+                <td style="text-align:right;">${{row.costo_financiero|floatformat:2}}</td>
+                <td style="text-align:right;">${{row.utilidad_perdida|floatformat:2}}</td>
+                <td style="text-align:right;"><strong>{{ row.pct_utilidad_perdida|floatformat:2 }}%</strong></td>
             </tr>
             {% endfor %}
 
             <tr class="table-success">
                 <td><strong>Total</strong></td>
-                <td><strong>{{ totales.ingresos|floatformat:2 }}</strong></td>
-                <td><strong>{{totales.directos}}</strong></td>
-                <td><strong>{{ totales.ind_oper|floatformat:2 }}</strong></td>
-                <td><strong>{{ totales.ind_adm|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.ingresos|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{totales.directos|floatformat:2}}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.ind_oper|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.ind_adm|floatformat:2 }}</strong></td>
                 
-                <td><strong>{{ totales.depreciaciones|floatformat:2 }}</strong></td>
-                <td><strong>{{ totales.margen_operativo|floatformat:2 }}</strong></td>
-                <td><strong>{{ totales.pct_margen_operativo|floatformat:2 }}%</strong></td>
-                <td><strong>{{ totales.ind_central|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.depreciaciones|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.margen_operativo|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>{{ totales.pct_margen_operativo|floatformat:2 }}%</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.ind_central|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.impuestos|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.costo_financiero|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>${{ totales.utilidad_perdida|floatformat:2 }}</strong></td>
+                <td style="text-align:right;"><strong>{{ totales.pct_utilidad_perdida|floatformat:2 }}%</strong></td>
             </tr>
         </tbody>
     </table>
+</div>
 {% endif %}
 
 </div>

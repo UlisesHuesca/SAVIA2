@@ -76,6 +76,7 @@ def add_costo(request, tipo):
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
     solicitud, created =  Solicitud_Costos.objects.get_or_create(created_by=usuario, complete = False)
     costos = Costos.objects.filter(solicitud = solicitud)
+    print('tipo recibido', tipo)
     if tipo == "directo":
         form = Solicitud_Costo_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [2])
@@ -89,7 +90,17 @@ def add_costo(request, tipo):
     elif tipo == "central":
         form = Solicitud_Costo_Indirecto_Central_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [1])
-        print('siii')
+    elif tipo == "impuesto":
+        form = Solicitud_Costo_Form()
+        tipos = Tipo_Costo.objects.filter(id__in = [5])
+        form.fields['tipo'].queryset = tipos
+        form.fields['distrito'].queryset = distritos
+        # debugging print('siii')
+    elif tipo == "financiero":
+        form = Solicitud_Costo_Form()
+        tipos = Tipo_Costo.objects.filter(id__in = [6])
+        form.fields['tipo'].queryset = tipos
+        form.fields['distrito'].queryset = distritos
     costo_form = Costo_Form()
 
     #El problema reciente es que aparecen 5 tipos de costos, pero solo tengo definidos:
@@ -101,13 +112,13 @@ def add_costo(request, tipo):
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
-            if tipo == "directo":
+            if tipo == "directo" or tipo == "impuesto" or tipo == "financiero":
                 form = Solicitud_Costo_Form(request.POST, instance = solicitud)
             elif tipo == "indirecto":
                 form = Solicitud_Costo_Indirecto_Form(request.POST, instance = solicitud)
             elif tipo == "central":
                 form = Solicitud_Costo_Indirecto_Central_Form(request.POST, instance = solicitud)
-            print('estou aqui')
+            # debugging print('estou aqui')
             if form.is_valid():
                 
                 solicitud = form.save(commit=False)
@@ -1258,6 +1269,9 @@ def reporte_rentabilidad_mensual(request):
         "ind_adm": 0,
         "ind_oper": 0,
         "ind_central": 0,
+        "impuestos": 0,
+        "costo_financiero": 0,
+        "utilidad_perdida": 0,
     }
 
     tipos_costos_totales = {}  # acumulados por tipo de costo
@@ -1327,6 +1341,9 @@ def reporte_rentabilidad_mensual(request):
                     "ind_adm": 0,
                     "ind_central": 0,
                     "margen operativo": 0,
+                    "impuestos": 0,
+                    "costo_financiero": 0,
+                    "utilidad_perdida": 0,
                 }
 
                 # ------------------------
@@ -1359,7 +1376,7 @@ def reporte_rentabilidad_mensual(request):
                     Costos.objects.filter(
                         solicitud__distrito__id= distrito_id,
                         solicitud__contrato = contrato,
-                        #solicitud__tipo__nombre="Directo",
+                        solicitud__tipo__nombre="Directo",
                         solicitud__fecha__year=y,
                         solicitud__fecha__month=m,
                     ).aggregate(total=Sum("monto"))["total"]
@@ -1418,7 +1435,8 @@ def reporte_rentabilidad_mensual(request):
                 #print('prorrateo nacional', prorrateo_nacional) >>> verificado, parece estar correcto
                 row["ind_central"] = total_ind_central * (prorrateo_nacional / 100)
 
-               
+              
+
                 
 
                  # ------------------------
@@ -1458,7 +1476,46 @@ def reporte_rentabilidad_mensual(request):
                     (row["margen_operativo"] / row["ingresos"]) * 100
                     if row["ingresos"] else 0
                 )
+
+                   # NUEVO: Impuestos
+                row["impuestos"] = (
+                    Costos.objects.filter(
+                        solicitud__distrito__id=distrito_id,
+                        solicitud__contrato=contrato,
+                        solicitud__tipo__nombre="Impuesto",
+                        solicitud__fecha__year=y,
+                        solicitud__fecha__month=m,
+                    ).aggregate(total=Sum("monto"))["total"]
+                    or Decimal("0.00")
+                )
+
+                row["costo_financiero"] = (
+                    Costos.objects.filter(
+                        solicitud__distrito__id=distrito_id,
+                        solicitud__contrato=contrato,
+                        solicitud__tipo__nombre="Costo Financiero",
+                        solicitud__fecha__year=y,
+                        solicitud__fecha__month=m,
+                    ).aggregate(total=Sum("monto"))["total"]
+                    or Decimal("0.00")
+                )
+
+                print('costo financiero', row["costo_financiero"])
+
+                row["utilidad_perdida"] = (
+                    row["margen_operativo"]
+                    - row["ind_central"]
+                    - row["impuestos"]
+                    - row["costo_financiero"]
+                )
+
+                row["pct_utilidad_perdida"] = (
+                    (row["utilidad_perdida"] / row["ingresos"]) * 100
+                    if row["ingresos"] else 0
+                )
                 contratos_data.append(row)
+
+
 
                      # ------------------------
                 # Totales
@@ -1472,6 +1529,13 @@ def reporte_rentabilidad_mensual(request):
                 totales["margen_operativo"] += row["margen_operativo"]
                 totales["pct_margen_operativo"] = (
                     (totales["margen_operativo"] / totales["ingresos"]) * 100
+                    if totales["ingresos"] else 0
+                )
+                totales["impuestos"] += row["impuestos"]
+                totales["costo_financiero"] += row["costo_financiero"]
+                totales["utilidad_perdida"] += row["utilidad_perdida"]
+                totales["pct_utilidad_perdida"] = (
+                    (totales["utilidad_perdida"] / totales["ingresos"]) * 100
                     if totales["ingresos"] else 0
                 )
 

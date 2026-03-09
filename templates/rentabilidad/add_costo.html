@@ -57,6 +57,10 @@
                         Registro de Costos Directos
                     {% elif tipo == "indirecto" %}
                         Registro de Costos Indirectos
+                    {% elif tipo == "impuesto" %}
+                        Registro de Impuestos
+                    {% elif tipo == "financiero" %}
+                        Registro de Costos Financieros
                     {% else %}
                         Registro de Costo
                     {% endif %}
@@ -70,7 +74,7 @@
                             {{error_messages}}
                         </div>
                         {% endif %}
-                        {% if  tipo == "directo" or tipo == "indirecto" %}
+                        {% if  tipo == "directo" or tipo == "indirecto" or tipo == "impuesto" or tipo == "financiero"%}
                         <div class="row my-2">
                             <div class="col-12">
                                 <div class="input-group mb-3">
@@ -95,7 +99,7 @@
                             </div>
                         </div> 
                         {% endif %}
-                        {% if tipo == "directo" %}
+                        {% if tipo == "directo" or tipo == "impuesto" or tipo == "financiero" %}
                          <div class="row" id="distrito">
                             <div class="col-12">
                                 <div class="input-group mb-3">
