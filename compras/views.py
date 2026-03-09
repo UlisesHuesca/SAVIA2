@@ -1611,7 +1611,7 @@ def autorizar_oc1(request, pk):
             compra.oc_autorizada_por = usuario
             compra.autorizado_at = datetime.now()
             #compra.autorizado_hora1 = datetime.now().time()
-            if usuario.tipo.subdirector == True  or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL")
+            if usuario.tipo.subdirector == True  or (usuario.tipo.oc_gerencia == True and usuario.distritos.nombre == "BRASIL"):
                 compra = form.save(commit = False)
                 compra.autorizado2 = True
                 compra.oc_autorizada_por2 = usuario
