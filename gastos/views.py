@@ -3722,6 +3722,8 @@ def generar_pdf_vale_rosa(vale_id):
             autorizado = str(vale.aprobado_por.staff.staff.first_name+' '+ vale.aprobado_por.staff.staff.last_name)
         else:
             autorizado = "AUTORIZADO"
+    elif vale.esta_aprobado is False:
+        autorizado = "RECHAZADO"
     else:
         autorizado = "PENDIENTE"
     #autorizado = str(vale.aprobado_por.staff.staff.first_name+' '+ vale.aprobado_por.staff.staff.last_name) if vale.aprobado_por else "PENDIENTE"
@@ -3742,7 +3744,7 @@ def generar_pdf_vale_rosa(vale_id):
     c.setFont("Helvetica-Bold", 10)
     c.drawString(60, 110, fecha_vale)
     c.drawString(230, 110, autorizado)
-    c.drawString(410, 110, recibido)
+    c.drawString(390, 110, recibido)
 
     c.setFont("Helvetica", 7)
     c.drawString(50, 50, "Generado automáticamente por SAVIA")
