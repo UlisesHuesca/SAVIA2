@@ -5626,20 +5626,30 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
         fecha_saldo_inicial = saldo_inicial_objeto.fecha_inicial
 
         if start_date and start_date > saldo_inicial_objeto.fecha_inicial:
+            #pagos intermedios se refiere a los pagos que están entre la fecha del saldo inicial de la cuenta y la fecha de inicio que se va a usar para el reporte. 
             pagos_intermedios = Pago.objects.filter(
                 cuenta=cuenta,
                 hecho=True,
                 pagado_real__gte=saldo_inicial_objeto.fecha_inicial,
-                pagado_real__lt=start_date
+                pagado_real__lt=start_date,
+                eliminado=False
             )
+            print('pagos_intermedios_count:', pagos_intermedios.count())
 
-            total_intermedios = sum(
-                p.monto if p.tipo is not None and p.tipo.nombre == "ABONO"
-                else -p.monto
-                for p in pagos_intermedios
+            total_abonos = sum(
+                p.monto for p in pagos_intermedios
+                if p.tipo is not None and p.tipo.nombre == "ABONO"
             )
-            print(total_intermedios)
-            saldo_inicial += total_intermedios
+            total_cargos = sum(
+                p.monto for p in pagos_intermedios
+                if p.tipo is None 
+                or p.tipo.nombre == "CARGO"
+                or p.tipo.nombre == "TRANSFERENCIA"
+            )
+            print('saldo_inicial', saldo_inicial)
+            print('total_abonos:', total_abonos)
+            print('total_cargos:', total_cargos)
+            saldo_inicial += total_abonos - total_cargos
             fecha_saldo_inicial = start_date
     print(start_date)
     #print(saldo_inicial_objeto.fecha_inicial)
