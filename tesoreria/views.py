@@ -3801,7 +3801,7 @@ def mis_gastos(request):
         return convert_excel_gasto(gastos)
     
     usuario_view = True
-    print('usuario_view:',usuario_view)
+    #print('usuario_view:',usuario_view) 
     context= {
         'gastos':gastos,
         'myfilter':myfilter,
@@ -3830,11 +3830,14 @@ def mis_viaticos(request):
     p = Paginator(viaticos, 20)
     page = request.GET.get('page')
     viaticos_list = p.get_page(page)
+
+    usuario_view = True
         
     context= {
         'viaticos':viaticos,
         'myfilter':myfilter,
         'viaticos_list': viaticos_list,
+        'usuario_view': usuario_view,
         }
 
     return render(request, 'tesoreria/mis_viaticos.html',context)

@@ -308,6 +308,7 @@
                 </thead>
                 <tbody id="valesRosaLista">
                     {% for vale in viatico.vales_rosa_viatico.all %}
+                     {% if vale.color == "rosa" %}
                     <tr data-aprobado="{{ vale.esta_aprobado }}">
                         <td>{{ vale.id }}</td>
                         <td>{{ vale.motivo }}</td>
@@ -336,6 +337,7 @@
                             </a>
                         </td>
                     </tr>
+                    {% endif %}
                     {% empty %}
                         <tr><td colspan="4" class="text-center">Sin vales rosa aún</td></tr>
                     {% endfor %}
@@ -347,6 +349,65 @@
                         <td colspan="3"></td>
                     </tr>
                 </tfoot>
+            </table>
+               <table class="table table-bordered">
+                <thead>
+                    <tr  style="background-color:#0c5460; color: white">
+                        <th>ID</th>
+                        <th>Motivo</th>
+                        <th>Monto</th>
+                        <th>Fecha de Pago</th>
+                        <th>Estado</th>
+                        <th>Eliminar</th>
+                        <th>Vale</th>
+                    </tr>
+                </thead>
+                <tbody id="valesRosaLista">
+                    {% for vale in viatico.vales_rosa_viatico.all %}
+                    {% if vale.color == "azul" %}
+                    <tr>
+                        <td>{{ vale.id }}</td>
+                        <td>{{ vale.motivo }}</td>
+                        <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
+                        <td>{% if vale.fecha_pago %}{{ vale.fecha_pago|date:"d/m/Y" }}{% else %}Sin fecha definida{% endif %}</td>
+                        <td>
+                            {% if vale.esta_aprobado %}
+                                ✅ Validado
+                            {% else %}
+                                {% if usuario.tipo.tesoreria %}
+                                    <a href="{% url 'vale_azul_abono' vale.id %}?next={{ request.path }}" class="btn btn-outline-primary">
+                                        Validar abono
+                                    </a>
+                                {% else %}
+                                    <span class="text-secondary">⏳ Pendiente</span>
+                                {% endif %}
+                                
+                            {% endif %}
+                        </td>
+                        <td>
+                            <form method="POST">
+                                {% csrf_token %}
+                                <input type="hidden" name ="vale_id" value="{{vale.id}}">
+                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale rosa?')" >
+                                    <i class="fa-regular fa-trash-can"></i>
+                                </button>
+                            </form>
+                        </td>
+                       
+                        <td>
+                            {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}" class="btn btn-outline-danger" target="_blank">
+                                 <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+                            </a>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endif %}
+                    {% empty %}
+                        <tr><td colspan="4" class="text-center">Sin vales azules aún</td></tr>
+                   
+                    {% endfor %}
+                </tbody>
             </table>
                 <div class="row ms-3 my-2">
                     {% if usuario.tipo.nombre == "RH" or usuario.tipo.nombre == "Admin" %}

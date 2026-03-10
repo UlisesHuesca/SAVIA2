@@ -5,6 +5,7 @@ from django.core.files.base import ContentFile
 from django.db import transaction
 from django.db.models.functions import Concat
 from django.db.models import Sum, Q, Prefetch, Max, Value,Count, When, Case,DecimalField
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
@@ -674,11 +675,15 @@ def agregar_vale_rosa(request, pk):
                 vale.gasto = objeto
                 if color == 'azul':
                     vale.motivo = f"Depósito correspondiente al gasto folio {vale.gasto.folio}"
+                    messages.success(request, 'Vale Rosa agregado exitosamente')
             elif tipo == 'viatico':
                 vale.viatico = objeto
+                if color == 'azul':
+                    vale.motivo = f"Depósito correspondiente al viático folio {vale.viatico.folio}"
+                    messages.success(request, 'Vale Azul agregado exitosamente')
                 print(objeto)
             vale.save()
-            messages.success(request, 'Vale Rosa agregado exitosamente')
+            
             next_url = request.GET.get('next') or 'mis-gastos'
             return redirect(next_url)
         else:
@@ -712,9 +717,15 @@ def vale_azul_abono(request, pk):
 
     # El vale azul siempre pertenece a gasto o viatico. Para usar pago_gasto template,
     # anclamos al gasto (si quieres soportar viatico también, te lo armo similar).
-    
-    gasto = vale.gasto
-
+    if vale.gasto:
+        gasto = vale.gasto
+        # Remanente del gasto (si no quieres que el vale azul afecte parcialidades del gasto,
+        remanente = gasto.get_total_solicitud - gasto.monto_pagado
+        objeto = vale
+    elif vale.viatico:
+        viatico = vale.viatico
+        remanente = viatico.get_total - viatico.monto_pagado 
+        objeto = vale
     # Tipos (ajusta IDs reales en tu sistema)
     tipo = Tipo_Pago.objects.get(nombre='ABONO')
     
@@ -724,10 +735,8 @@ def vale_azul_abono(request, pk):
     error_messages = []
     form = Cargo_Abono_Tipo_Form()
 
-    # Remanente del gasto (si no quieres que el vale azul afecte parcialidades del gasto,
-    # te recomiendo NO tocar gasto.parcial / gasto.pagada aquí)
-    remanente = gasto.get_total_solicitud - gasto.monto_pagado
-
+ 
+    
     # Si ya está aprobado, típicamente ya debe existir pago (por regla de negocio)
     if vale.esta_aprobado:
         messages.info(request, "Este vale azul ya fue aprobado.")
@@ -735,13 +744,23 @@ def vale_azul_abono(request, pk):
 
     if request.method == 'POST' and "myBtn" in request.POST:
         # Borrador de pago ligado al vale
-        pago, created = Pago.objects.get_or_create(
-            tesorero=usuario,
-            hecho=False,
-            gasto=gasto,
-            tipo=tipo,
-            comentario = f"Abono por Vale Azul #{vale.id}",
-        )
+        if vale.gasto:
+            pago, created = Pago.objects.get_or_create(
+                tesorero=usuario,
+                hecho=False,
+                gasto=gasto,
+                tipo=tipo,
+                comentario = f"Abono por Vale Azul #{vale.id} Gasto #{gasto.folio}",
+            )
+        if vale.viatico:
+            pago, created = Pago.objects.get_or_create(
+                tesorero=usuario,
+                hecho=False,
+                viatico=viatico,
+                tipo=tipo,
+                comentario = f"Abono por Vale Azul #{vale.id} Viático #{viatico.folio}",
+            )
+
         form = Cargo_Abono_Tipo_Form(request.POST or None, instance=pago)
 
         if form.is_valid():
@@ -785,7 +804,7 @@ def vale_azul_abono(request, pk):
                 error_messages.append(f"{field}: {errors.as_text()}")
 
     context = {
-        'gasto': gasto,  # el template pago_gasto espera 'gasto'
+        'objeto': objeto,  # el template pago_gasto espera 'gasto'
         'cuentas_para_select2': cuentas_para_select2,
         'form': form,
         'error_messages': error_messages,
@@ -2560,6 +2579,20 @@ def descargar_pdf_gasto(request, pk):
     gasto = get_object_or_404(Solicitud_Gasto, id=pk)
     buf = render_pdf_gasto(gasto.id)
     return FileResponse(buf, as_attachment=True, filename='gasto_' + str(gasto.folio) + '.pdf')
+
+
+@xframe_options_sameorigin
+def ver_gasto_pdf(request, pk):
+    gasto = get_object_or_404(Solicitud_Gasto, id=pk)
+    #if compra.req.orden.distrito.nombre != "BRASIL":
+    #    buf = generar_pdf_nueva(compra)  # tu función
+    #else:
+    buf = render_pdf_gasto(gasto.id)  
+    filename = f"Gasto_{gasto.folio}.pdf"
+
+    resp = FileResponse(buf, content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
 
 def attach_gasto_pdf(request, pk):
     gasto = get_object_or_404(Solicitud_Gasto, id=pk)

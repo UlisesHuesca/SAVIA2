@@ -288,8 +288,10 @@
                         <td>{{ vale.motivo }}</td>
                         <td class="monto-vale">${{ vale.monto|floatformat:2 }}</td>
                         <td>
-                            {% if vale.esta_aprobado %}
+                         {% if vale.esta_aprobado %}
                                 ✅ Aprobado
+                            {% elif vale.esta_aprobado == False %}
+                                ❌ Rechazado 
                             {% else %}
                                 ⏳ Pendiente
                             {% endif %}

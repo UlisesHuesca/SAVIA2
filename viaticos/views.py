@@ -1,8 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Max, Q
+from django.db.models import Max, Q, Count, Case, When, Value, CharField
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
+from django.http import HttpResponseRedirect
 from django.core.mail import EmailMessage, BadHeaderError
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 from smtplib import SMTPException
 import socket
 from django.core.paginator import Paginator
@@ -24,8 +26,6 @@ from .filters import Solicitud_Viatico_Filter
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from decimal import Decimal, ROUND_HALF_UP, InvalidOperation
 from api.models import TablaFestivos
-from django.db.models import Count, Q, Case, When, Value, CharField
-from django.http import HttpResponseRedirect
 
 
 import io
@@ -839,9 +839,11 @@ def facturas_viaticos(request, pk):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk_perfil)
+   
 
     concepto = Concepto_Viatico.objects.get(id = pk)
     viatico = Solicitud_Viatico.objects.get(id = concepto.viatico.id)
+    vales_rosa = ValeRosa.objects.filter(viatico = viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho=True)
     factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico = viatico, hecho=False)
 
@@ -869,6 +871,7 @@ def facturas_viaticos(request, pk):
         'form':form,
         'facturas':facturas,
         'viatico':viatico,
+        'vales_rosa':vales_rosa,
         }
 
     return render(request, 'viaticos/matriz_facturas.html', context)
@@ -1229,6 +1232,19 @@ def render_pdf_viatico(request, pk):
     viatico = get_object_or_404(Solicitud_Viatico, id=pk)
     buf = generar_pdf_viatico(viatico.id)
     return FileResponse(buf, as_attachment=True, filename='V_' + str(viatico.folio) + '.pdf')
+
+@xframe_options_sameorigin
+def ver_viatico_pdf(request, pk):
+    viatico = get_object_or_404(Solicitud_Viatico, id=pk)
+    #if compra.req.orden.distrito.nombre != "BRASIL":
+    #    buf = generar_pdf_nueva(compra)  # tu función
+    #else:
+    buf = generar_pdf_viatico(viatico.id)  
+    filename = f"Viatico_{viatico.folio}.pdf"
+
+    resp = FileResponse(buf, content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
 
 def attach_viatico_pdf(request, pk):
     viatico = get_object_or_404(Solicitud_Viatico, id=pk)

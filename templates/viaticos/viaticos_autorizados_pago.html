@@ -3,6 +3,7 @@
 {% load static %}
 {% load widget_tweaks %}
 {% load tt_extras %}
+{% load l10n %}
 <html>
 <head>
 {% block title %}Matriz de Viáticos autorizadas{% endblock %}
@@ -206,13 +207,25 @@
                     </td>
                     <td><a id="myBtn" type="button" class="btn btn-outline-info btn-lg" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos2' viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a>
                     <td>
-                        <ul class="nav nav-pills">
-                            <li>
-                                <a type="button" class="btn btn-outline-info" href="{% url 'render-pdf-viatico' viatico.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
-                            </li>
-                            
-                        </ul>
-                    </td>
+                        <button type = "button" class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{viatico.id|unlocalize}}" data-pdf-url="{% url 'ver_viatico_pdf' viatico.id %}">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                        <!-- Modal -->
+                        <div class="modal fade" id="pdfModal{{viatico.id|unlocalize}}" tabindex="-1" aria-hidden="true">
+                            <div class="modal-dialog modal-xl modal-dialog-centered">
+                                <div class="modal-content">
+                                    <div class="modal-header">
+                                        <h5 class="modal-title">Registro de Gasto</h5>
+                                        <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                    </div>
+
+                                    <div class="modal-body" style="height:80vh;">
+                                        <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>      
+                    </td>  
                     {% if usuario.tipo.nombre == 'CONTADOR' %}
                     <div></div>
                     {% else %}
@@ -283,6 +296,32 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
 
+
+document.addEventListener("show.bs.modal", function (event) {
+  const modal = event.target;
+
+  if (!modal.id.startsWith("pdfModal")) return;
+
+  const button = event.relatedTarget;
+  const url = button?.getAttribute("data-pdf-url");
+  const frame = modal.querySelector(".pdfFrame");
+
+  if (url && frame) {
+    frame.src = url;
+  }
+});
+
+document.addEventListener("hidden.bs.modal", function (event) {
+  const modal = event.target;
+
+  if (!modal.id.startsWith("pdfModal")) return;
+
+  const frame = modal.querySelector(".pdfFrame");
+
+  if (frame) {
+    frame.src = "about:blank";
+  }
+});
 </script>
 {% endblock %}
 </body>

@@ -44,7 +44,7 @@
     <div class="card">
         <div class="card-header">
             {% if modo_vale_azul %}
-            <h5>Vale Azul| {% if tipo == "gasto" %}Gasto:{% endif %} {{objeto.folio}}</h5>
+            <h5>Vale Azul| {% if objeto.gasto is not None %}Gasto: {{objeto.gasto.folio}}{% elif objeto.viatico is not None %}Viático: {{objeto.viatico.folio}}{% endif %}</h5>
             {% else %}
             <h5 id="gasto" value="{{gasto.id}}">Gasto: {{gasto.folio}} </h5>
             {% endif %}
@@ -64,7 +64,7 @@
              
                 <table class='table table-striped'>
                     <thead>
-                       
+                        {% if gasto %}
                         <tr>
                             <th scope="col">Solicitante:</th>
                             <th>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</th>
@@ -80,6 +80,38 @@
                                 {% endif %}
                             </th>
                         </tr>
+                         {% elif gasto %}
+                        <tr>
+                            <th scope="col">Solicitante:</th>
+                            <th>{{objeto.gasto.staff.staff.staff.first_name}} {{objeto.gasto.staff.staff.staff.last_name}}</th>
+                        </tr>
+                        <tr>
+                            <th>Solicitado para:</th>
+                           
+                            <th scope="col">
+                                {% if objeto.gasto.proveedor %}<span class="badge bg-primary"> {{objeto.gasto.proveedor}} </span>
+                                {% elif objeto.gasto.tipo.familia == "rh_nomina" %}<span class="badge bg-primary"> NOMINA </span>
+                                {% elif objeto.gasto.colaborador %}{{objeto.gasto.colaborador.staff.staff.first_name}} {{objeto.gasto.colaborador.staff.staff.last_name}}
+                                {% else %} NA
+                                {% endif %}
+                            </th>
+                        </tr>
+                        {% elif objeto.viatico %}
+                         <tr>
+                            <th scope="col">Solicitante:</th>
+                            <th>{{objeto.viatico.staff.staff.staff.first_name}} {{objeto.viatico.staff.staff.staff.last_name}}</th>
+                        </tr>
+                        <tr>
+                            <th>Solicitado para:</th>
+                           
+                            <th scope="col">
+                                {% if objeto.viatico.colaborador %}{{objeto.viatico.colaborador.staff.staff.first_name}} {{objeto.viatico.colaborador.staff.staff.last_name}}
+                                {% else %} NA
+                                {% endif %}
+                            </th>
+                        </tr>
+
+                        {% endif %}
                     </thead>
                     <tbody>
                          {% if gasto.tipo.familia == "rh_nomina" %}
@@ -129,6 +161,7 @@
                 </table>
                 <hr>
                 <table class='table table-striped'>
+                    {% if gasto %}
                     <thead>
                         <tr>
                         <th scope="col">Importe Gasto</th>
@@ -149,6 +182,49 @@
                             <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
                         </tr>
                     </tbody>
+                    {% elif objeto.gasto %}
+                    <thead>
+                        <tr>
+                        <th scope="col">Importe Gasto</th>
+                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">${{objeto.gasto.get_total_solicitud}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">Pagado:</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{objeto.gasto.monto_pagado|floatformat:2}}</th>
+                        </tr>
+                        <tr>
+                            <th>Parcialidad:</th>
+                            <th  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{objeto.gasto.parcial|floatformat:2}}</th>
+                        </tr>
+                        <tr>
+                            <th>Remanente:</th>
+                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
+                        </tr>
+                    </tbody>
+                    {% elif objeto.viatico %}
+                    <thead>
+                        <tr>
+                        <th scope="col">Importe Viático</th>
+                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">${{objeto.viatico.get_total|floatformat:2}}</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <th scope="col">Pagado:</th>
+                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{objeto.viatico.monto_pagado|floatformat:2}}</th>
+                        </tr>
+                        <tr>
+                            <th>Parcialidad:</th>
+                            <th  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{objeto.viatico.parcial|floatformat:2}}</th>
+                        </tr>
+                        <tr>
+                            <th>Remanente:</th>
+                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
+                        </tr>
+                    </tbody>
+                    {% endif %}
                 </table>
 
                 <table class='table table-striped'>
@@ -237,10 +313,16 @@
         </div>   
         <div class="card-footer text-end">
             {% if usuario.tipo.supervisor and usuario.tipo.tesoreria %}
-                   
+                  {% if modo_vale_azul %}
+                    <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning d-none">
+                        Cerrar Gasto
+                    </button>
+           
+                   {% else %}
                     <button id="btnCerrar" name="cerrar_sin_pago" type="submit" class="btn btn-warning">
                         Cerrar Gasto
                     </button>
+                    {% endif %}
                     
             {% endif %}
             <button id="myBtn" name="myBtn" type = "submit" class="btn btn-success">Registrar</button>
