@@ -2244,15 +2244,20 @@ def control_documentos(request):
                             
                             fecha_pago = ''
 
-                            if not pago.pagado_real:
-                                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
-                                if fecha_obj:
+                            if not pago.pagado_real and fecha_str and fecha_str != "No disponible":
+                                try:
+                                    fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
+
                                     if isinstance(fecha_obj, date):
-                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')
                                     else:
                                         fecha_pago = str(fecha_obj).replace('/', '-')
+
                                     pago.pagado_real = fecha_obj
                                     pago.save()
+
+                                except ValueError:
+                                    print(f"Fecha inválida encontrada: {fecha_str}")
                             carpeta = f'{pago.pagado_real}_GASTO_{gasto.folio}_{gasto.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
                             for factura in gasto.facturas.all():
