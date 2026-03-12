@@ -2711,7 +2711,7 @@ def agregar_vales_rosa_generados(zip_file, carpeta, gasto=None, viatico=None):
         return
 
     for vale in vales:
-        pdf_buf = generar_pdf_vale_rosa(vale.id, vale.color) 
+        pdf_buf = generar_pdf_vale_rosa(vale.id) 
         nombre_pdf = f"VALE_{vale.color}_{vale.id}.pdf"
         zip_file.writestr(os.path.join(carpeta, "VALES", nombre_pdf), pdf_buf.getvalue())
 
