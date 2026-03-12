@@ -2241,7 +2241,8 @@ def control_documentos(request):
                             texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                             variables_pago = encontrar_variables(texto_pago)
                             fecha_str = variables_pago.get('fecha')
-                            
+                           
+
                             fecha_pago = ''
 
                             if not pago.pagado_real and fecha_str and fecha_str != "No disponible":
@@ -2359,6 +2360,7 @@ def control_documentos(request):
                                         zip_file.write(ruta_pdf, os.path.join(carpeta, os.path.basename(ruta_pdf)))
                                         uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                         zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
+                            agregar_vales_rosa_generados(zip_file, carpeta, viatico=viatico)
                             if viatico.id not in processed_docs:
                                 pdf_buf = generar_pdf_viatico(viatico.id)
                                 zip_file.writestr(os.path.join(carpeta, f'VIATICO_{viatico.folio}.pdf'), pdf_buf.getvalue())
