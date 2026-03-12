@@ -5871,7 +5871,7 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
         else:
             comentario_pago = 'NO HAY COMENTARIOS DISPONIBLES'
 
-        distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.subproyecto.nombre if hasattr(pago, 'viatico') and pago.viatico else (pago.distrito.nombre if pago.distrito else '')))
+        distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.distrito.nombre if hasattr(pago, 'viatico') and pago.viatico else (pago.distrito.nombre if pago.distrito else '')))
         cargo = ''
         abono = ''
         if pago.tipo == None or pago.tipo.nombre == "CARGO" or pago.tipo.nombre == "TRANSFERENCIA":
