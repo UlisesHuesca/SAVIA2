@@ -42,7 +42,8 @@
 <h6 class="d-lg-none">&nbsp;</h6>
 <h6 class="d-lg-none">&nbsp;</h6>
 <div class="row">
-    <div class="card col-lg-6 col-md-12">
+<div class="col-lg-6">
+    <div class="card">
             <div class="card-header">
             <!-- Aqui es el encabezado de los filtros -->
                 <h5 id="requi" orden={{orden.id|unlocalize}} target={{requi.id|unlocalize}}>Requisición: {{folio}}</h5>
@@ -92,76 +93,83 @@
 
                
             </div>
-            <div class="text-end">
+            <div class="card-footer text-end">
+                {% if productos_requisitados %}
                 <button type="submit" id="crear" name="crear" class="btn btn-outline-success col-2">Crear</button>
+                {% else %}
+                <button type="submit" id="crear" name="crear" class="btn btn-outline-success col-2 d-none">Crear</button>
+                {% endif %}
                 <a type="button" class="btn btn-secondary" href="{% url 'requisicion-autorizada' %}">Salir</a>
             </div>
             </form>
         
     </div>
+</div>
     <div class="col-lg-6">
-        <div class="box-element">
-            <div class="row">
-                <div class="col-12">
-                    <div id="input_subproyecto" class="input-group mb-3">
-                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">
-                            <label  style="font-size:10px; color:gray;" for="superintendente">Productos*</label>
-                            <select style="font-size:16px" class="form-select form-select-sm" placeholder="Productos" id="producto">
-                                <option style="color:gray;" value="" selected disabled>Productos</option>
-                                {% for producto in productos %}
-                                <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar|unlocalize}}" comentario="{{producto.articulos.comentario}}">
-                                    {{producto.articulos.producto.producto.nombre}}
-                                </option>
-                                {% endfor %}
-                            </select>
+        <div class="card">
+            <div class="card-body">
+                <div class="row">
+                    
+                        <div id="input_subproyecto" class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-box"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                <label  style="font-size:10px; color:gray;" for="superintendente">Productos*</label>
+                                <select style="font-size:16px" class="form-select form-select-sm" placeholder="Productos" id="producto">
+                                    <option style="color:gray;" value="" selected disabled>Productos</option>
+                                    {% for producto in productos %}
+                                    <option id="js" target="{{producto.id|unlocalize}}" producto="{{producto.producto.articulos.producto}}" cantidad="{{producto.cantidad_requisitar|unlocalize}}" comentario="{{producto.articulos.comentario}}">
+                                        {{producto.articulos.producto.producto.nombre}}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    
+                </div>
+                <div class="row">
+                    <div id="etiqueta_solicitado" class="col-4">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
                         </div>
                     </div>
-                </div>
-            </div>
-            <div class="row">
-                <div id="etiqueta_solicitado" class="col-4">
-                    <div class="alert alert-secondary" role="alert">
-                    <h6>Solicitado:</h6><h6 style="color: #121212;" id="solicitado"></h6>   
+                
+                    <div id="etiqueta_solicitado" class="col-8">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Comentario:</h6><h6 style="color: #121212;" id="comentario"></h6>   
+                        </div>
+                    </div>
+                        
+                    <div class="col-sm-1">
+                        <a class="btn btn-outline-success update-purchase" id="update-requi" name="requi">
+                        <i class="fa-solid fa-circle-plus"></i>
+                        </a>
                     </div>
                 </div>
-               
-                <div id="etiqueta_solicitado" class="col-8">
-                    <div class="alert alert-secondary" role="alert">
-                    <h6>Comentario:</h6><h6 style="color: #121212;" id="comentario"></h6>   
-                    </div>
+                <hr>
+                <div class ="table-responsive-sm">
+                    <table class="table table-light table-striped table-hover mx-2">
+                    <thead>
+                        <tr>
+                            <th scope="col">#</th>
+                            <th scope="col">Producto</th>
+                            <th scope="col">Cantidad</th>
+                            <th>Comentario</th>
+                            <th scope="col" class="col-sm-2">Eliminar</th>
+                        </tr>
+                    </thead>
+                    <tbody id="mytbl">
+                        {% for product in productos_requisitados%}
+                        <tr>
+                            <td scope="col">{{product.producto.articulos.producto.producto.codigo}}</td>
+                            <td scope="col">{{product.producto.articulos.producto.producto.nombre}}</td>
+                            <td scope="col">{{product.cantidad}}</td>
+                            <td>{{product.producto.articulos.comentario}}</td>
+                            <td scope="col"><button type="button" class="btn" style="background-color: #980F0F; color:ghostwhite" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                    </table>
                 </div>
-                    
-                <div class="col-sm-1">
-                    <a class="btn btn-outline-success update-purchase" id="update-requi" name="requi">
-                    <i class="fa-solid fa-circle-plus"></i>
-                    </a>
-                </div>
-            </div>
-            <hr>
-            <div class ="table-responsive-sm">
-            <table class="table table-light table-striped table-hover mx-2">
-            <thead>
-                <tr>
-                    <th scope="col">#</th>
-                    <th scope="col">Producto</th>
-                    <th scope="col">Cantidad</th>
-                    <th>Comentario</th>
-                    <th scope="col" class="col-sm-2">Eliminar</th>
-                </tr>
-            </thead>
-            <tbody id="mytbl">
-                {% for product in productos_requisitados%}
-                <tr>
-                    <td scope="col">{{product.producto.articulos.producto.producto.codigo}}</td>
-                    <td scope="col">{{product.producto.articulos.producto.producto.nombre}}</td>
-                    <td scope="col">{{product.cantidad}}</td>
-                    <td>{{product.producto.articulos.comentario}}</td>
-                    <td scope="col"><button type="button" class="btn" style="background-color: #980F0F; color:ghostwhite" value="Delete" onclick="deleteRow(this)" id="delete" producto="{{product.producto.id|unlocalize}}" cantidad="{{product.cantidad}}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></button></td>
-                </tr>
-                {% endfor %}
-            </tbody>
-            </table>
             </div>
         </div>
     </div>
@@ -256,7 +264,7 @@ let suma = 0;
 let suma_iva = 0;
 
 updateBtn.addEventListener('click',function(){
-        console.log('algo')
+        //console.log('algo')
         let requi_tag = document.getElementById('requi');
         let requi = requi_tag.getAttribute('target');
         let orden = requi_tag.getAttribute('orden')
@@ -271,7 +279,7 @@ updateBtn.addEventListener('click',function(){
         //Esta es la cantidad comprada de acuerdo a la requisición
         var default_op = document.getElementById('default_sel');
         console.log('cantidad',cantidad)
-        console.log('requi',requi)
+        console.log('orden',orden)
         console.log('id',id)
 
         var action = "add";
@@ -291,7 +299,7 @@ updateBtn.addEventListener('click',function(){
                 })
         } else {
             mostrarLoading();
-            ActualizarArticulos(requi,id,cantidad,action);
+            ActualizarArticulos(orden,id,cantidad,action);
             
             
         }
@@ -299,7 +307,7 @@ updateBtn.addEventListener('click',function(){
 
 //ActualizarArticulos(array_id_prod)
 
-function ActualizarArticulos(requi,id,cantidad,action){
+function ActualizarArticulos(orden,id,cantidad,action){
     
     console.log('User is logged in, sending data...' )
 
@@ -311,7 +319,7 @@ function ActualizarArticulos(requi,id,cantidad,action){
             'Content-Type':'application/json',
             'X-CSRFToken': csrftoken,
         },
-        body:JSON.stringify({'requi':requi, 'id':id, 'cantidad':cantidad, 'action':action})
+        body:JSON.stringify({'orden':orden, 'id':id, 'cantidad':cantidad, 'action':action})
     })
     .then((response)=>{
         return response.json()
@@ -326,13 +334,13 @@ function ActualizarArticulos(requi,id,cantidad,action){
 function deleteRow(element) {
     let btn_delete = document.getElementById('delete');
     let requi_tag = document.getElementById('requi');
-    let requi = requi_tag.getAttribute('target');
+    let orden = requi_tag.getAttribute('orden');
     let id = btn_delete.getAttribute('producto');
     let cantidad = btn_delete.getAttribute('cantidad');
 
     console.log(id)
     var action = "remove";
-    ActualizarArticulos(requi, id, cantidad, action);
+    ActualizarArticulos(orden, id, cantidad, action);
 
     var select = document.getElementById('producto');
 

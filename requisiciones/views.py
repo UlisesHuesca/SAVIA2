@@ -1001,27 +1001,31 @@ def update_requisicion(request):
     data= json.loads(request.body)
     action = data["action"]
     producto_id = data["id"]
-    pk = data["requi"]
+    pk = data["orden"]
     cantidad = decimal.Decimal(data["cantidad"])
-    
-    requi = Requis.objects.get(id=pk)
-    orden = Order.objects.get(id=requi.orden.id)
+    print('data',data)
+    #requi = Requis.objects.get(id=pk)
+    orden = Order.objects.get(id=pk)
 
     producto = ArticulosparaSurtir.objects.get(id = producto_id)
-    ordenado = ArticulosOrdenados.objects.filter(orden = orden, producto = producto.articulos.id)
+    
+    #ordenado = ArticulosOrdenados.objects.filter(orden = orden, producto = producto.articulos.id)
    
     if action == "add":
-        item, created = ArticulosRequisitados.objects.get_or_create(req=requi, producto = producto, cantidad = cantidad)  
+        requi, created = Requis.objects.get_or_create(complete=False,orden=orden)
+        item, created = ArticulosRequisitados.objects.get_or_create(req=requi, producto = producto)
+        item.cantidad = cantidad  
         producto.requisitar = False
         producto.seleccionado = True
-        producto.save()
-        item.save()
+        producto.save(update_fields=['requisitar','seleccionado'])
+        requi.save()
+        item.save(update_fields=['cantidad'])
     if action == "remove":
-        item = ArticulosRequisitados.objects.get(req = requi, producto = producto)
+        item = ArticulosRequisitados.objects.get(producto = producto)
         articulo_requisitado = ArticulosparaSurtir.objects.get(id =producto_id)
         articulo_requisitado.requisitar = True
         articulo_requisitado.seleccionado = False
-        articulo_requisitado.save()
+        articulo_requisitado.save(update_fields=['requisitar','seleccionado'])
         item.delete()
 
     return JsonResponse('Item updated, action executed: '+data["action"], safe=False)
@@ -1048,55 +1052,56 @@ def requisicion_detalle(request, pk):
     #Vista de creación de requisición
     productos = ArticulosparaSurtir.objects.filter(articulos__orden__id = pk, requisitar= True)
     orden = Order.objects.get(id = pk)
-    pk = request.session.get('selected_profile_id')
-    usuario = Profile.objects.get(id = pk)
+    requi = Requis.objects.filter(complete=False, orden=orden).first()
+ 
     requisiciones = Requis.objects.all()
-    requi, created = requisiciones.get_or_create(complete=False, orden=orden)
+    
     requis = requisiciones.filter(orden__distrito = orden.distrito, complete = True)
     # Extraemos solo los números de los folios del distrito
     last_requi = requis.order_by('-folio').first()
-    if last_requi:
-        folio = last_requi.folio + 1
-    else:
-        folio = 1
+    folio_preview = str(last_requi.folio + 1 if last_requi else 1)
     
-    abrev = usuario.distritos.abreviado
-    folio_preview = str(folio)
-    #for producto in productos:
-    productos_requisitados = ArticulosRequisitados.objects.filter(req = requi)
+  
+    productos_requisitados = ArticulosRequisitados.objects.filter(req = requi) if requi else ArticulosRequisitados.objects.none()
     error_messages = {}
     form = RequisForm()
     
 
 
     if request.method == 'POST':
+        requi = Requis.objects.filter(complete=False, orden=orden).first()
         form = RequisForm(request.POST, instance = requi)
         if form.is_valid():
             requi = form.save(commit=False)
             requi.created_by = usuario
             requi.complete = True
-            orden.requisitado = True
-            conteo_pendientes_requisitar = productos.filter(requisitar = True).count()
-            if conteo_pendientes_requisitar > 0: #cuento cuantos productos están pendientes por requisitar 
-                orden.requisitado = False
-            else:
-                orden.requisitado = True
-            for producto in productos:
+            last_requi_real = Requis.objects.filter(
+                orden__distrito=orden.distrito,
+                complete=True
+            ).order_by('-folio').first()
+
+            folio_real = last_requi_real.folio + 1 if last_requi_real else 1
+
+            requi.folio = folio_real
+            requi.save(update_fields=['created_by','complete','folio'])
+            #Esto es prácticamente una pregunta directa que es de la orden cuantos productos existen con el status de requisitar 
+            #igual a True, si existen entonces tenemos pendientes (True)
+            pendientes = ArticulosparaSurtir.objects.filter(articulos__orden=orden, requisitar=True).exists()
+          
+            #print('pendientes:',pendientes)
+            orden.requisitado = not pendientes
+            orden.requisitar = pendientes
+            orden.save(update_fields=['requisitado','requisitar'])
+   
+            productos_seleccionados = ArticulosparaSurtir.objects.filter(articulos__orden__id = pk, seleccionado= True)
+            for producto in productos_seleccionados:
                 producto.seleccionado = False
-                producto.save()
-                #if producto.requisitar == False:
-                #    orden.requisitado = False
-                #    orden.save()
-            if productos_requisitados:
-                #folio_consecutivo = obtener_consecutivo(usuario.distrito, requisiciones)
-                requi.folio = folio
-                requi.save()
-                form.save()
-                orden.save()
-                messages.success(request,f'Has realizado la requisición {requi.folio} con éxito')
-                return redirect('solicitud-autorizada-orden')
-            else:
-                messages.error(request,'No se puede crear la requisición debido a que no hay productos agregados')
+                producto.save(update_fields=['seleccionado'])
+            
+                
+            messages.success(request,f'Has realizado la requisición {requi.folio} con éxito')
+            return redirect('solicitud-autorizada-orden')
+           
         else:
             for field, errors in form.errors.items():
                 error_messages[field] = errors.as_text()
