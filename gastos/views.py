@@ -3676,7 +3676,7 @@ def crear_pdf_cfdi_gasto(factura):
         return tmp_file.name
 
 def generar_pdf_vale_rosa(vale_id):
-    vale = ValeRosa.objects.select_related('gasto', 'creado_por').get(id=vale_id)
+    vale = ValeRosa.objects.select_related('creado_por').get(id=vale_id)
     
     buffer = io.BytesIO()
     c = canvas.Canvas(buffer, pagesize=letter)
