@@ -1,24 +1,38 @@
-from django.shortcuts import render,  redirect
+from django.shortcuts import render,  redirect, get_object_or_404
 from django.http import FileResponse, JsonResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
+from django.contrib.auth.decorators import login_required
+from django.contrib import messages
+from django.utils import timezone
+from django.db.models import Sum, Q
+from django.db.models.functions import Coalesce
+from django.contrib.auth.models import User
+from django.conf import settings
+
 from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import generics
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
+
 from dashboard.models import Inventario, Order, Product, ArticulosOrdenados, ArticulosparaSurtir
 from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor, ArticuloComprado
 from solicitudes.models import Proyecto, Subproyecto
 from requisiciones.models import Requis, ArticulosRequisitados
+from tesoreria.models import Saldo_Cuenta, Pago, Cuenta
+from tesoreria.filters import Matriz_Pago_Filter
+
 from user.models import Profile, Distrito
 from .serializers import  CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
 from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer, Compra_tabla_Serializer
 from .serializers import InventarioSerializer, ProductSerializer, Articulos_Ordenados_Serializer,Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer
+from .serializers import PagoControlBancosSerializer 
 
 import requests
-from django.contrib.auth.models import User
+
 from user.models import CustomUser, Empresa
-from django.contrib.auth.decorators import login_required
+
 from rest_framework.views import APIView
 
 
@@ -26,17 +40,17 @@ from compras.views import generar_pdf_nueva
 from rest_framework import status
 from user.decorators import perfil_seleccionado_required
 from api.models import TablaFestivos
-from datetime import datetime
-from django.contrib import messages
+from datetime import datetime, date
+from decimal import Decimal
 import logging
-from django.utils import timezone
+
 logger = logging.getLogger("user.middleware")
 
 #import openai
 
 from openai import OpenAI
 #import os
-from django.conf import settings
+
 import mysql.connector
 client = OpenAI(
     organization='org-9Legd0seRBYosepjlvTnzipq',
@@ -689,3 +703,146 @@ def status_solicitud(folio, distrito):
                     resultado += f'\nLa requisición con folio {requi.folio} ha sido autorizada.'
     else:
         resultado = f'No se encontró la solicitud con folio {folio} en el distrito {distrito}.'
+
+
+def obtener_pagos_control_bancos(cuenta):
+    cuenta_saldos = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial')
+    ultimo_saldo = cuenta_saldos.filter(hecho=True).first() if cuenta_saldos.exists() else None
+
+    if ultimo_saldo is not None:
+        fecha_saldo = ultimo_saldo.fecha_inicial
+        pagos = Pago.objects.filter(
+            cuenta=cuenta,
+            eliminado=False,
+            hecho=True,
+            pagado_real__gte=fecha_saldo
+        ).order_by('pagado_real', 'pagado_hora', '-tipo__id')
+    else:
+        pagos = Pago.objects.filter(
+            cuenta=cuenta,
+            hecho=True,
+            eliminado=False
+        ).order_by('pagado_real', 'pagado_hora', '-tipo__id')
+
+    return pagos, ultimo_saldo
+
+def calcular_saldos_control_bancos(cuenta, pagos, start_date=None, end_date=None):
+    saldo_obj = (
+        Saldo_Cuenta.objects
+        .filter(cuenta=cuenta, hecho=True)
+        .order_by('-fecha_inicial')
+        .first()
+    )
+
+    saldo_base = (saldo_obj.monto_inicial if saldo_obj else Decimal('0.00')) or Decimal('0.00')
+    fecha_base = saldo_obj.fecha_inicial if saldo_obj else None
+
+    if isinstance(start_date, str) and start_date:
+        start_date = datetime.strptime(start_date, '%Y-%m-%d').date()
+
+    if isinstance(end_date, str) and end_date:
+        end_date = datetime.strptime(end_date, '%Y-%m-%d').date()
+
+    if fecha_base and start_date and start_date > fecha_base:
+        intermedios = pagos.filter(
+            pagado_real__gte=fecha_base,
+            pagado_real__lt=start_date
+        ).aggregate(
+            cargos=Coalesce(
+                Sum('monto', filter=Q(tipo__isnull=True) | Q(tipo__nombre='CARGO')),
+                Decimal('0.00')
+            ),
+            abonos=Coalesce(
+                Sum('monto', filter=Q(tipo__isnull=False) & ~Q(tipo__nombre='CARGO')),
+                Decimal('0.00')
+            ),
+        )
+        saldo_trasladado = saldo_base - intermedios['cargos'] + intermedios['abonos']
+        inicio_periodo = start_date
+    else:
+        saldo_trasladado = saldo_base
+        inicio_periodo = fecha_base if fecha_base else None
+
+    fin_periodo = end_date or date.today()
+
+    movimientos_cargos = Decimal('0.00')
+    movimientos_abonos = Decimal('0.00')
+
+    if inicio_periodo:
+        periodo = pagos.filter(
+            pagado_real__gte=inicio_periodo,
+            pagado_real__lte=fin_periodo
+        ).aggregate(
+            cargos=Coalesce(
+                Sum('monto', filter=Q(tipo__isnull=True) | ~Q(tipo__nombre='ABONO')),
+                Decimal('0.00')
+            ),
+            abonos=Coalesce(
+                Sum('monto', filter=Q(tipo__isnull=False) & Q(tipo__nombre='ABONO')),
+                Decimal('0.00')
+            ),
+        )
+        movimientos_cargos = periodo['cargos']
+        movimientos_abonos = periodo['abonos']
+
+    saldo_final = saldo_trasladado - movimientos_cargos + movimientos_abonos
+
+    return {
+        'saldo_base': saldo_base,
+        'fecha_base': fecha_base,
+        'saldo_trasladado': saldo_trasladado,
+        'saldo_final': saldo_final,
+        'start_date': start_date,
+        'end_date': end_date,
+        'movimientos_cargos': movimientos_cargos,
+        'movimientos_abonos': movimientos_abonos,
+    }
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def control_bancos_api(request, pk):
+    cuenta = get_object_or_404(Cuenta, id=pk)
+
+    pagos, ultimo_saldo = obtener_pagos_control_bancos(cuenta)
+
+    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+    pagos_filtrados = myfilter.qs
+
+    start_date = request.GET.get('start_date')
+    end_date = request.GET.get('end_date')
+
+    calculos = calcular_saldos_control_bancos(
+        cuenta=cuenta,
+        pagos=pagos_filtrados,
+        start_date=start_date,
+        end_date=end_date
+    )
+
+    paginator = PageNumberPagination()
+    paginator.page_size = 25
+    page = paginator.paginate_queryset(pagos_filtrados, request)
+
+    serializer = PagoControlBancosSerializer(page, many=True, context={'request': request})
+
+    return paginator.get_paginated_response({
+        'cuenta': {
+            'id': cuenta.id,
+            'nombre': str(cuenta),
+        },
+        'ultimo_saldo': {
+            'fecha_inicial': ultimo_saldo.fecha_inicial if ultimo_saldo else None,
+            'monto_inicial': ultimo_saldo.monto_inicial if ultimo_saldo else None,
+        } if ultimo_saldo else None,
+        'resumen': {
+            'saldo_base': calculos['saldo_base'],
+            'fecha_base': calculos['fecha_base'],
+            'saldo_trasladado': calculos['saldo_trasladado'],
+            'movimientos_cargos': calculos['movimientos_cargos'],
+            'movimientos_abonos': calculos['movimientos_abonos'],
+            'saldo_final': calculos['saldo_final'],
+            'start_date': calculos['start_date'],
+            'end_date': calculos['end_date'],
+        },
+        'pagos': serializer.data,
+    })

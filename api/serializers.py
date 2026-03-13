@@ -324,3 +324,56 @@ class InventarioSerializer(serializers.ModelSerializer):
     class Meta:
         model = Inventario
         fields = '__all__'
+
+
+from rest_framework import serializers
+from .models import Pago
+
+
+class PagoControlBancosSerializer(serializers.ModelSerializer):
+    tipo_nombre = serializers.CharField(source='tipo.nombre', read_only=True)
+    cuenta_nombre = serializers.SerializerMethodField()
+    tesorero_nombre = serializers.SerializerMethodField()
+    distrito_nombre = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Pago
+        fields = [
+            'id',
+            'folio',
+            'tipo',
+            'tipo_nombre',
+            'cuenta',
+            'cuenta_nombre',
+            'tesorero',
+            'tesorero_nombre',
+            'monto',
+            'comentario',
+            'pagado_date',
+            'pagado_real',
+            'pagado_hora',
+            'hecho',
+            'tipo_de_cambio',
+            'saldo',
+            'indice',
+            'control_documentos',
+            'fecha_control_documentos',
+            'empresa_beneficiario',
+            'eliminado',
+            'distrito',
+            'distrito_nombre',
+            'oc',
+            'gasto',
+            'viatico',
+            'exhibit',
+            'comprobante_pago',
+        ]
+
+    def get_cuenta_nombre(self, obj):
+        return str(obj.cuenta) if obj.cuenta else None
+
+    def get_tesorero_nombre(self, obj):
+        return str(obj.tesorero) if obj.tesorero else None
+
+    def get_distrito_nombre(self, obj):
+        return str(obj.distrito) if obj.distrito else None
