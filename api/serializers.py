@@ -326,10 +326,6 @@ class InventarioSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-from rest_framework import serializers
-from .models import Pago
-
-
 class PagoControlBancosSerializer(serializers.ModelSerializer):
     tipo_nombre = serializers.CharField(source='tipo.nombre', read_only=True)
     cuenta_nombre = serializers.SerializerMethodField()
