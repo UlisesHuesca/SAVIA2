@@ -27,5 +27,5 @@ urlpatterns = [
     path('tabla_festivos/', views.tabla_festivos, name='tabla_festivos'),
     path('oc-pdf/<int:pk>/', views.descargar_pdf_oc, name='api-oc-pdf'),
     path('chatbot/', views.chatbot_view, name='chatbot'),
-    path('api/control-bancos/<int:pk>/', views.control_bancos_api, name='control_bancos_api'),
+    #path('api/control-bancos/<int:pk>/', views.control_bancos_api, name='control_bancos_api'),
     ]

@@ -705,7 +705,7 @@ def status_solicitud(folio, distrito):
         resultado = f'No se encontró la solicitud con folio {folio} en el distrito {distrito}.'
 
 
-def obtener_pagos_control_bancos(cuenta):
+""""def obtener_pagos_control_bancos(cuenta):
     cuenta_saldos = Saldo_Cuenta.objects.filter(cuenta=cuenta).order_by('-fecha_inicial')
     ultimo_saldo = cuenta_saldos.filter(hecho=True).first() if cuenta_saldos.exists() else None
 
@@ -845,4 +845,4 @@ def control_bancos_api(request, pk):
             'end_date': calculos['end_date'],
         },
         'pagos': serializer.data,
-    })
+    })"""
