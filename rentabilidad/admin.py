@@ -11,7 +11,7 @@ class Costos_Admin(admin.ModelAdmin):
     list_display = ('id','solicitud','concepto','categorizacion','monto','complete')
 
 class Depreciaciones_Admin(admin.ModelAdmin):
-    list_display = ('id', 'contrato','distrito','concepto')
+    list_display = ('id', 'contrato','distrito','concepto','created_by')
 
 
 # Register your models here.
