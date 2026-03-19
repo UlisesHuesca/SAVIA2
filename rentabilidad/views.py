@@ -40,7 +40,7 @@ def costos(request):
     tipos = Tipo_Costo.objects.all()
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False)
     myfilter= Costos_Form(request.GET, queryset=costos)
-
+    costos = myfilter.qs
     #Set up pagination
     p = Paginator(costos, 20)
     page = request.GET.get('page')
