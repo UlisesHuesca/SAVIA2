@@ -9,6 +9,11 @@ class Ingresos_Admin(admin.ModelAdmin):
 
 class Costos_Admin(admin.ModelAdmin):
     list_display = ('id','solicitud','concepto','categorizacion','monto','complete')
+
+class Depreciaciones_Admin(admin.ModelAdmin):
+    list_display = ('id', 'contrato','distrito','concepto')
+
+
 # Register your models here.
 admin.site.register(Concepto)
 
@@ -22,4 +27,4 @@ admin.site.register(Solicitud_Ingresos)
 
 admin.site.register(Ingresos, Ingresos_Admin)
 
-admin.site.register(Depreciaciones)
+admin.site.register(Depreciaciones, Depreciaciones_Admin)
