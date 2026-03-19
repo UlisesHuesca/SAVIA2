@@ -684,8 +684,8 @@ def update_entrada(request):
         producto_surtir = ArticulosparaSurtir.objects.get(id= producto_comprado.producto.producto.id)
 
     if producto_inv.producto.servicio == False:
-        monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.cantidad_apartada * producto_inv.price
-        cantidad_inventario = producto_inv.cantidad + producto_inv.cantidad_apartada
+        monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.apartada() * producto_inv.price
+        cantidad_inventario = producto_inv.cantidad + producto_inv.apartada()
         monto_total = monto_inventario + entrada_item.cantidad * producto_comprado.precio_unitario
         nueva_cantidad_inventario =  cantidad_inventario + entrada_item.cantidad
     
@@ -695,7 +695,7 @@ def update_entrada(request):
         entrada_item.cantidad = cantidad
         entrada_item.cantidad_por_surtir = cantidad
         entrada_item.referencia = referencia
-        entrada_item.save()
+        entrada_item.save(update_fields=['cantidad','cantidad_por_surtir','referencia'])
         total_entradas_pendientes = pendientes_surtir + entrada_item.cantidad
         total_entradas = suma_cantidad + entrada_item.cantidad
         print('total entradas:',total_entradas)
@@ -724,23 +724,24 @@ def update_entrada(request):
                         producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #la cantidad de entrada es igual a la sumatoria de la cantidad pendiente_surtir + cantidad de la entrada 
                         producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad 
                         producto_inv.cantidad = producto_inv.cantidad + entrada_item.cantidad 
+                        producto_inv.cantidad_apartada =  producto_inv.apartada()
                         if producto_surtir.cantidad_requisitar == 0:
                             producto_surtir.requisitar = False
                         producto_surtir.precio = producto_comprado.precio_unitario
                         producto_surtir.save()
                         producto_inv.save()
-                    producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para resurtimiento'
+                    producto_inv._change_reason = f'Se modifica el inventario en view: update_entrada. Esto es una entrada para resurtimiento Entrada:{entrada_item.entrada.folio}'
                 else:
-                    print('Es una entrada normal')
+                    print('Es una entrada normal')  
                     producto_inv.cantidad_entradas = pendientes_surtir + entrada_item.cantidad #Todo lo que está pendiente en una entrada más la entrada misma
-                    producto_inv.cantidad_apartada = producto_inv.cantidad_apartada + entrada_item.cantidad #producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
-                    producto_surtir.cantidad = producto_surtir.cantidad + entrada_item.cantidad  
-                    print(producto_surtir)
-                    print('producto_surtir_cantidad', producto_surtir.cantidad)                     #Al producto disponible para surtir se le suma lo que entra
+                    producto_inv.cantidad_apartada =  producto_inv.apartada() #producto_inv.apartada_entradas        #No se si esto siga teniendo sentido
+                    producto_surtir.cantidad += entrada_item.cantidad  
+                    #print(producto_surtir)
+                    #print('producto_surtir_cantidad', producto_surtir.cantidad)                     #Al producto disponible para surtir se le suma lo que entra
                     #Es probable que esta cantidad ya le esté restando en otro lado
-                    producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar - entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
-                    producto_inv.save()
+                    producto_surtir.cantidad_requisitar -= entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
                     producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para solicitud normal'
+                    producto_inv.save()
                     entrada.entrada_date = date.today()
                     entrada.entrada_hora = datetime.now().time()
                     entrada.save()
@@ -782,7 +783,7 @@ def update_entrada(request):
                 producto_surtir.cantidad_requisitar = producto_surtir.cantidad_requisitar + entrada_item.cantidad
                 producto_inv.cantidad = producto_inv.cantidad - entrada_item.cantidad
                 producto_surtir.requisitar = True
-                producto_surtir.save()
+                producto_surtir.save(update_fields=['cantidad','cantidad_requisitar','requisitar'])
                 #if producto_surtir.cantidad > entrada_item.cantidad:
                 #    producto_surtir.cantidad = producto_surtir.cantidad - entrada_item.cantidad
                 #if producto_surtir.cantidad <= entrada_item.cantidad:

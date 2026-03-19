@@ -381,7 +381,6 @@ def checkout(request):
                         #cond:1 evalua si la cantidad en inventario es mayor que lo solicitado
                         elif prod_inventario.cantidad >= producto.cantidad and order.tipo.tipo == "normal":  #si la cantidad solicitada es menor que la cantidad en inventario
                             prod_inventario.cantidad = prod_inventario.cantidad - producto.cantidad
-                            prod_inventario.cantidad_apartada = producto.cantidad + prod_inventario.cantidad_apartada
                             ordensurtir.cantidad = producto.cantidad
                             ordensurtir.precio = prod_inventario.price
                             ordensurtir.procesado = True
@@ -389,6 +388,7 @@ def checkout(request):
                             ordensurtir.requisitar = False
                             prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id}|{order.folio} | S{ordensurtir.cantidad} cond:1'
                             ordensurtir.save()
+                            prod_inventario.cantidad_apartada = prod_inventario.apartada()
                             prod_inventario.save()
                         elif prod_inventario.cantidad < producto.cantidad and producto.cantidad > 0 and order.tipo.tipo == "normal": #si la cantidad solicitada es mayor que la cantidad en inventario
                             ordensurtir.cantidad = prod_inventario.cantidad #lo que puedes surtir es igual a lo que tienes en el inventario
@@ -396,7 +396,6 @@ def checkout(request):
                             ordensurtir.cantidad_requisitar = producto.cantidad - ordensurtir.cantidad #lo que falta por surtir
                             #if prod_inventario.cantidad_apartada == None: #Esto es solo para evitar Nulls
                             #    prod_inventario.cantidad_apartada = 0
-                            prod_inventario.cantidad_apartada = prod_inventario.cantidad_apartada + prod_inventario.cantidad
                             prod_inventario.cantidad = 0
                             if ordensurtir.cantidad > 0: #si lo que se puede surtir es mayor que 0
                                 ordensurtir.surtir = True
@@ -404,8 +403,9 @@ def checkout(request):
                             order.requisitar = True
                             ordensurtir.procesado = True
                             prod_inventario._change_reason = f'Se modifica el inventario en view: autorizada_sol:{order.id}|{order.folio} | S{ordensurtir.cantidad} R{ordensurtir.cantidad_requisitar} cond:2'
-                            prod_inventario.save()
                             ordensurtir.save()
+                            prod_inventario.cantidad_apartada = prod_inventario.apartada()
+                            prod_inventario.save()
                             order.save()
                         elif prod_inventario.cantidad + prod_inventario.cantidad_entradas == 0:
                             ordensurtir.requisitar = True

@@ -798,8 +798,8 @@ def calcular_saldos_control_bancos(cuenta, pagos, start_date=None, end_date=None
         'movimientos_abonos': movimientos_abonos,
     }
 
-
 @api_view(['GET'])
+@authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def control_bancos_api(request, pk):
     cuenta = get_object_or_404(Cuenta, id=pk)
