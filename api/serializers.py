@@ -326,7 +326,7 @@ class InventarioSerializer(serializers.ModelSerializer):
         fields = '__all__'
 
 
-class PagoSerializer(serializers.ModelSerializer):
+class PagoControlBancosSerializer(serializers.ModelSerializer):
     tipo_nombre = serializers.CharField(source='tipo.nombre', read_only=True)
     cuenta_nombre = serializers.SerializerMethodField()
     tesorero_nombre = serializers.SerializerMethodField()
