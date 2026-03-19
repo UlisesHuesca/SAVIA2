@@ -17,7 +17,7 @@ class Cuenta(models.Model):
     cuenta = models.CharField(max_length=16, null=True)
     clabe = models.CharField(max_length=22, null=True)
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
-    encargado = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True)
+    encargado = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='cuentas_encargado')
     banco = models.ForeignKey(Banco, on_delete = models.CASCADE, null=True)
     monto_inicial = models.DecimalField(max_digits=14,decimal_places=2, null=True, blank=True)
     saldo = models.DecimalField(max_digits=14,decimal_places=2, null=True, blank=True)
@@ -25,6 +25,7 @@ class Cuenta(models.Model):
     status = models.BooleanField(default=True)
     descripcion = models.CharField(max_length=250, null=True, blank=True)
     empresa = models.ForeignKey(Empresa, on_delete= models.CASCADE, null=True)
+    visor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='cuentas_visor')
 
 
     def __str__(self):
