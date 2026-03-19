@@ -159,6 +159,7 @@
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
+                    <th>#</th>
                     <th>Contrato</th>
                     <th scope="col">Distrito</th>
                     <th scope="col">Fecha</th>
@@ -170,6 +171,7 @@
             <tbody>
                 {% for costo in costos_list %}
                 <tr>
+                    <td>{{costo.id}}</td>
                     <td>{{costo.contrato}}</td>
                     <td>{{costo.distrito}}</td>
                     <td>{{costo.fecha|date:"F Y"}}</td>
