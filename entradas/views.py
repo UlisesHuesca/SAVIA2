@@ -101,7 +101,7 @@ def pendientes_entrada(request):
             oc=OuterRef('pk'),
             entrada_completa=False
         ).filter(
-            Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True)
+            Q(cantidad_pendiente__gt=0) | Q(cantidad_pendiente__isnull=True) | Q(seleccionado=True)
         )
         compras = compras.annotate(
             tiene_pendientes=Exists(pendientes_qs)
@@ -309,7 +309,7 @@ def articulos_entrada(request, pk):
         num_art_entregados = articulos_entregados.count()
         for elemento in articulos_seleccionados:
             elemento.seleccionado = False
-            elemento.save()
+            elemento.save(update_fields=['seleccionado'])
         
         #Parte para envio de mensaje si hay productos criticos en las entradas
         articulos_html = """
