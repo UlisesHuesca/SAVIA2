@@ -166,6 +166,7 @@
                     <th scope="col">Monto</th>
                     <th scope="col">Tipo</th>
                     <th>Detalle</th>
+                    <th>Edición</th>
                 </tr>
             </thead>
             <tbody>
@@ -180,6 +181,11 @@
                     <td>
                         <a id="myBtn" type="button" title= "Productos y Comentarios" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'conceptos-costos' costo.id %}">
                             <i class="fa-duotone fa-solid fa-circle-info"></i>
+                        </a>
+                    </td>
+                    <td>
+                         <a href="{% url 'editar-costo' costo.id %}" class="btn btn-outline-info" title="Editar costo">
+                            <i class="fa-solid fa-pen-to-square"></i>
                         </a>
                     </td>
                 </tr>

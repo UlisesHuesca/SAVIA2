@@ -4,7 +4,7 @@ from .import views
 urlpatterns = [
     path('rentabilidad/costos', views.costos, name='rentabilidad-costos'),
     path('rentabilidad/add_costo/<str:tipo>', views.add_costo, name='add-costo'),
-    path('rentabilidad/delete_costo/<str:tipo>/<int:pk>', views.delete_costo, name='delete-costo'),
+    path('rentabilidad/delete_costo/<str:tipo>/<int:pk>/<str:origen>', views.delete_costo, name='delete-costo'),
     path('rentabilidad/reporte_costos', views.reporte_costos, name = 'reporte-costos'),
     path('rentabilidad/ingresos', views.ingresos, name='rentabilidad-ingresos'),
     path('rentabilidad/add_ingresos', views.add_ingresos, name='add-ingreso'),
@@ -18,4 +18,5 @@ urlpatterns = [
     path('rentabilidad/costos/carga-excel/<str:tipo>', views.carga_costos_excel, name='carga-costos-excel'),
     path('resumen-mes-contrato/',views.resumen_ingresos_mes_contrato,name='resumen_mes_contrato'),
     path('rentabilidad/depreciacion/eliminar/<int:pk>/', views.eliminar_depreciacion, name='eliminar-depreciacion'),
+    path('rentabilidad/costos/editar/<int:pk>/', views.editar_costo, name='editar-costo'),
 ]

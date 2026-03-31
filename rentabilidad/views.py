@@ -152,9 +152,73 @@ def add_costo(request, tipo):
         'costo_form': costo_form,
         'costos':costos,
         'solicitud':solicitud,
+        'editar': False,
         }
 
     return render(request,'rentabilidad/add_costo.html',context)
+
+
+
+@perfil_seleccionado_required
+def editar_costo(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+    distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False) #7 MATRIZ ALTERNATIVO, 8 ALTAMIRA ALTERNATIVO,16 BRASIL
+    solicitud = get_object_or_404(Solicitud_Costos, pk=pk)
+    tipo = solicitud.tipo.nombre
+    form = Solicitud_Costo_Form()
+    tipos = Tipo_Costo.objects.filter(id__in = [5])
+    form.fields['tipo'].queryset = tipos
+    form.fields['distrito'].queryset = distritos
+    costos = Costos.objects.filter(solicitud=solicitud)
+    print(tipo)
+   
+    solicitud_form = Solicitud_Costo_Form(instance=solicitud)
+    costo_form = Costo_Form()
+
+    if request.method == 'POST':
+        if "btn_editar" in request.POST:
+            if tipo == "Directo" or tipo == "Impuesto" or tipo == "Financiero":
+                form = Solicitud_Costo_Form(request.POST, instance = solicitud)
+            elif tipo == "Indirecto":
+                form = Solicitud_Costo_Indirecto_Form(request.POST, instance = solicitud)
+            elif tipo == "central":
+                form = Solicitud_Costo_Indirecto_Central_Form(request.POST, instance = solicitud)
+            # debugging print('estou aqui')
+            if form.is_valid():
+                solicitud = form.save(commit=False)
+                solicitud.created_at = date.today()
+                if tipo == "central":
+                    distrito = Distrito.objects.get(nombre = "MATRIZ")
+                    solicitud.distrito = distrito
+                    solicitud.tipo = Tipo_Costo.objects.get(nombre = "Indirecto Central")
+                solicitud.complete = True
+                solicitud.save()
+                messages.success(request,'Has editado correctamente la Solicitud')
+                return redirect('rentabilidad-costos')  
+            else:
+                print('Nao é valido')
+                print(form.errors)  
+        if "btn_costo" in request.POST:
+            costo, created = Costos.objects.get_or_create(complete = False, solicitud = solicitud)
+            form = Costo_Form(request.POST, instance = costo)
+            if form.is_valid():
+                costo = form.save(commit=False)
+                costo.complete = True
+                costo.save()
+                messages.success(request,'Has agregado correctamente un costo')
+                return redirect('editar-costo', pk=solicitud.pk)
+
+    context = {
+        'tipo': tipo,
+        'form': solicitud_form,
+        'costo_form': costo_form,
+        'costos': costos,
+        'solicitud': solicitud,
+        'editar': True,
+    }
+
+    return render(request, 'rentabilidad/add_costo.html', context)
 
 def _to_decimal(value):
     """
@@ -296,12 +360,16 @@ def carga_costos_excel(request, tipo):
 
 
 @perfil_seleccionado_required
-def delete_costo(request, tipo, pk):
+def delete_costo(request, tipo, pk, origen):
     costo = Costos.objects.get(id=pk)
+    
     messages.success(request,f'El costo {costo.concepto} ha sido eliminado exitosamente')
     costo.delete()
-
-    return redirect('add-costo', tipo=tipo)
+    #print('origen', origen)
+    if origen == 'editar':
+        return redirect('editar-costo', pk=costo.solicitud.id)
+    else:
+        return redirect('add-costo', tipo=tipo)
 
 
 def reporte_costos(request):

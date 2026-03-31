@@ -74,7 +74,7 @@
                             {{error_messages}}
                         </div>
                         {% endif %}
-                        {% if  tipo == "Directo" or tipo == "indirecto" or tipo == "impuesto" or tipo == "financiero"%}
+                        {% if  tipo == "directo" or tipo == "indirecto" or tipo == "impuesto" or tipo == "financiero"%}
                         <div class="row my-2">
                             <div class="col-12">
                                 <div class="input-group mb-3">
@@ -99,7 +99,7 @@
                             </div>
                         </div> 
                         {% endif %}
-                        {% if tipo == "Directo" or tipo == "impuesto" or tipo == "financiero" %}
+                        {% if tipo == "directo" or tipo == "impuesto" or tipo == "financiero" %}
                          <div class="row" id="distrito">
                             <div class="col-12">
                                 <div class="input-group mb-3">
@@ -124,11 +124,8 @@
                         {% if costos %}
                             <div class="text-end">
                      
-                                {% if editar %}
-                                <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_editar" id="btn_editar" type="submit" value='{% trans "Editar Solicitud" %}'>
-                                {% else %}
+                        
                                 <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Crear Solicitud" %}'>
-                                {% endif %}
                             </div>
                         {% endif %}
                             
@@ -208,15 +205,10 @@
 
                 <tr>
                     <td scope="col">{{costo.concepto}}</td>
-                    <td scope="col">{% if not costo.comentario %}NR{% else %}{{costo.comentario}}{% endif %}</td>
+                    <td scope="col">{{costo.comentario}}</td>
                     <td >{{costo.monto}}</td>
-                    {% if editar %}
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' tipo costo.id 'editar'  %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
-                    {% else %}
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' tipo costo.id 'normal'  %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
-                    {% endif %}
-                    </tr>
-
+                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' tipo costo.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                </tr>
                 {% endfor %}
             </tbody>
             </table>
