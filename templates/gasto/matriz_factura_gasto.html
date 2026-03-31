@@ -299,14 +299,14 @@
                         <td>
                             <form method="POST">
                                 {% csrf_token %}
-                                <input type="hidden" name ="vale_id" value="{{vale.id}}">
+                                <input type="hidden" name ="vale_id" value="{{vale.id|unlocalize}}">
                                 <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale rosa?')" >
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </form>
                         </td>
                         <td>
-                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id|unlocalize vale.color %}" class="btn btn-outline-danger" target="_blank">
+                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}" class="btn btn-outline-danger" target="_blank">
                                  <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                             </a>
                         </td>
@@ -355,8 +355,8 @@
                         <td>
                             <form method="POST">
                                 {% csrf_token %}
-                                <input type="hidden" name ="vale_id" value="{{vale.id}}">
-                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale rosa?')" >
+                                <input type="hidden" name ="vale_id" value="{{vale.id|unlocalize}}">
+                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale azul?')" >
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </form>
@@ -364,7 +364,7 @@
                        
                         <td>
                             {% if usuario.tipo.nombre == "Tesoreria_Documentos" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id|unlocalize vale.color %}" class="btn btn-outline-danger" target="_blank">
+                            <a href="{% url 'descargar_vale_rosa_pdf' vale.id vale.color %}" class="btn btn-outline-danger" target="_blank">
                                  <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                             </a>
                             {% endif %}
