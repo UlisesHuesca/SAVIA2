@@ -116,17 +116,45 @@ class ProveedorDireccionesSerializer(serializers.ModelSerializer):
         model = Proveedor_direcciones
         fields = ['id','distrito','nombre','domicilio','telefono','estado','contacto','email','banco','clabe','cuenta','financiamiento','dias_credito','estatus']
 
-class CompraSerializer(serializers.ModelSerializer):
-    descargar = serializers.SerializerMethodField()
+
+class CompraTablaLiteSerializer(serializers.ModelSerializer):
+    folio_req = serializers.IntegerField(source='req.folio', read_only=True)
+    folio_solicitud = serializers.IntegerField(source='req.orden.folio', read_only=True)
+    distrito = serializers.CharField(source='req.orden.distrito.nombre', read_only=True)
+    proyecto = serializers.CharField(
+        source='req.orden.proyecto.nombre',
+        read_only=True,
+        allow_null=True,
+        default=None,
+    )
+    subproyecto = serializers.CharField(
+        source='req.orden.subproyecto.nombre',
+        read_only=True,
+        allow_null=True,
+        default=None,
+    )
+    created_at = serializers.DateTimeField(read_only=True, format='%d/%m/%Y')
+    proveedor_nombre = serializers.CharField(source='proveedor.nombre.razon_social', read_only=True)
+    costo_oc = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    monto_pagado = serializers.DecimalField(max_digits=12, decimal_places=2, read_only=True)
+    moneda_nombre = serializers.CharField(source='moneda.nombre', read_only=True)
 
     class Meta:
         model = Compra
-        fields = ['id','folio','proveedor','creada_por','req','created_at','moneda','cond_de_pago','costo_oc','pagada','descargar']
-    
-    def get_descargar(self, obj):
-        # Retorna la URL del PDF con el ID de la compra
-        return f'https://grupovordcab.cloud/api/oc-pdf/{obj.id}/'
-        #return f'http://127.0.0.1:8000/api/oc-pdf/{obj.id}/'
+        fields = [
+            'folio',
+            'folio_req',
+            'folio_solicitud',
+            'distrito',
+            'proyecto',
+            'subproyecto',
+            'created_at',
+            'proveedor_nombre',
+            'costo_oc',
+            'monto_pagado',
+            'moneda_nombre',
+            'pagada',
+        ]
     
 
 class Compra_tabla_Serializer(serializers.ModelSerializer):

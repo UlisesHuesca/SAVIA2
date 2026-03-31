@@ -13,6 +13,7 @@ urlpatterns = [
     path('requisiciones_api', views.requisiciones_api, name ='requisiciones-api'),
     path('productos_requisitados_api', views.productos_requisitados_api, name ='productos-requisitados-api'),
     path('compras_api', views.CompraAPI, name ='compras-api'),
+    path('compras-resumen-api/', views.compras_resumen_api, name='compras-resumen-api'),
     path('Compra_tabla_api', views.Compra_tabla_api, name ='Compra-tabla-api'),
     path('productos_comprados_api', views.productos_comprados_api, name ='productos-comprados-api'),
     path('proveedor_direccion_api', views.proveedor_direccion_api, name="proveedor-direccion-api"),

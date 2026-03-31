@@ -4,8 +4,8 @@ from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Sum, Q
-from django.db.models.functions import Coalesce
+from django.db.models import Sum, Q, F, Count, Value, CharField, DecimalField, DateField
+from django.db.models.functions import ExtractYear, ExtractMonth, Concat, Coalesce, TruncYear, TruncMonth, Cast
 from django.contrib.auth.models import User
 from django.conf import settings
 
@@ -24,7 +24,7 @@ from tesoreria.models import Saldo_Cuenta, Pago, Cuenta
 from tesoreria.filters import Matriz_Pago_Filter
 
 from user.models import Profile, Distrito
-from .serializers import  CompraSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
+from .serializers import  CompraTablaLiteSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
 from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer, Compra_tabla_Serializer
 from .serializers import InventarioSerializer, ProductSerializer, Articulos_Ordenados_Serializer,Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer
 from .serializers import PagoControlBancosSerializer 
@@ -234,13 +234,229 @@ def Compra_tabla_api(request):
 @authentication_classes([TokenAuthentication])
 @permission_classes([IsAuthenticated])
 def CompraAPI(request):
+    compras_qs = (
+        Compra.objects
+        .filter(complete=True)
+        .select_related(
+            'req',
+            'req__orden',
+            'req__orden__distrito',
+            'req__orden__proyecto',
+            'req__orden__subproyecto',
+            'proveedor',
+            'proveedor__nombre',
+            'moneda',
+        )
+        .order_by('-folio')
+    )
+
+    # filtros básicos opcionales
+    folio = request.query_params.get('folio')
+    proveedor = request.query_params.get('proveedor')
+    distrito = request.query_params.get('distrito')
+    proyecto = request.query_params.get('proyecto')
+    fecha_desde = request.query_params.get('fecha_desde')
+    fecha_hasta = request.query_params.get('fecha_hasta')
+
+    if folio:
+        compras_qs = compras_qs.filter(folio__icontains=folio)
+
+    if proveedor:
+        compras_qs = compras_qs.filter(proveedor__nombre__razon_social__icontains=proveedor)
+
+    if distrito:
+        compras_qs = compras_qs.filter(req__orden__distrito__nombre__icontains=distrito)
+
+    if proyecto:
+        compras_qs = compras_qs.filter(req__orden__proyecto__nombre__icontains=proyecto)
+
+    if fecha_desde:
+        compras_qs = compras_qs.filter(created_at__date__gte=fecha_desde)
+
+    if fecha_hasta:
+        compras_qs = compras_qs.filter(created_at__date__lte=fecha_hasta)
+
+    page = int(request.query_params.get('page', 1))
+    per_page = int(request.query_params.get('per_page', 50))
+
+    paginator = Paginator(compras_qs, per_page=per_page)
+
+    try:
+        compras_page = paginator.page(number=page)
+    except EmptyPage:
+        return Response({
+            "results": [],
+            "page": page,
+            "per_page": per_page,
+            "total": paginator.count,
+            "total_pages": paginator.num_pages,
+            "has_next": False,
+            "has_previous": False,
+        })
+
+    serializer = CompraTablaLiteSerializer(compras_page.object_list, many=True)
+
+    return Response({
+        "results": serializer.data,
+        "page": page,
+        "per_page": per_page,
+        "total": paginator.count,
+        "total_pages": paginator.num_pages,
+        "has_next": compras_page.has_next(),
+        "has_previous": compras_page.has_previous(),
+    })
 
 
-    compras = Compra.objects.filter(complete = True)
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def compras_resumen_api(request):
+    qs = (
+        Compra.objects
+        .filter(complete=True)
+        .exclude(req__orden__distrito__nombre__in=[
+            'BRASIL',
+            'ALTAMIRA ALTERNATIVO',
+            'VH SECTOR 6',
+        ])
+        .exclude(autorizado1=False)
+        .exclude(autorizado2=False)
+    )
 
-    serialized_compras = CompraSerializer(compras, many=True)
-        
-    return Response(serialized_compras.data)
+    distrito = request.query_params.get('distrito')
+    proveedor = request.query_params.get('proveedor')
+    proyecto = request.query_params.get('proyecto')
+    subproyecto = request.query_params.get('subproyecto')
+    anio = request.query_params.get('anio')
+    mes = request.query_params.get('mes')
+    pagada = request.query_params.get('pagada')
+    fecha_desde = request.query_params.get('fecha_desde')
+    fecha_hasta = request.query_params.get('fecha_hasta')
+    group_by = request.query_params.get('group_by', 'proveedor')
+
+    if distrito:
+        qs = qs.filter(req__orden__distrito__nombre=distrito)
+
+    if proveedor:
+        qs = qs.filter(proveedor__nombre__razon_social__icontains=proveedor)
+
+    if proyecto:
+        qs = qs.filter(req__orden__proyecto__nombre__icontains=proyecto)
+
+    if subproyecto:
+        qs = qs.filter(req__orden__subproyecto__nombre__icontains=subproyecto)
+
+    if anio and group_by != 'anio':
+        qs = qs.filter(created_at__year=anio)
+
+    if mes and group_by != 'mes':
+        qs = qs.filter(created_at__month=mes)
+
+    if pagada in ['true', 'false']:
+        qs = qs.filter(pagada=(pagada == 'true'))
+
+    if fecha_desde:
+        qs = qs.filter(created_at__date__gte=fecha_desde)
+
+    if fecha_hasta:
+        qs = qs.filter(created_at__date__lte=fecha_hasta)
+
+    monto_total_expr = Coalesce(
+        Sum('costo_oc'),
+        Value(Decimal('0.00')),
+        output_field=DecimalField(max_digits=14, decimal_places=2)
+    )
+
+    monto_pagado_expr = Coalesce(
+        Sum('monto_pagado'),
+        Value(Decimal('0.00')),
+        output_field=DecimalField(max_digits=14, decimal_places=2)
+    )
+
+    if group_by == 'proveedor':
+        resumen = list(
+            qs.order_by()
+            .values(grupo=F('proveedor__nombre__razon_social'))
+            .annotate(
+                total_compras=Count('id'),
+                monto_total=monto_total_expr,
+                monto_pagado_total=monto_pagado_expr,
+                compras_pagadas=Count('id', filter=Q(pagada=True)),
+                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
+            )
+            .order_by('-monto_total')
+        )
+
+    elif group_by == 'distrito':
+        resumen = list(
+            qs.order_by()
+            .values(grupo=F('req__orden__distrito__nombre'))
+            .annotate(
+                total_compras=Count('id'),
+                monto_total=monto_total_expr,
+                monto_pagado_total=monto_pagado_expr,
+                compras_pagadas=Count('id', filter=Q(pagada=True)),
+                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
+            )
+            .order_by('-monto_total')
+        )
+
+    elif group_by == 'anio':
+        resumen = list(
+            qs.exclude(created_at__isnull=True)
+            .order_by()
+            .annotate(fecha_base=Cast('created_at', output_field=DateField()))
+            .annotate(grupo=ExtractYear('fecha_base'))
+            .values('grupo')
+            .annotate(
+                total_compras=Count('id'),
+                monto_total=monto_total_expr,
+                monto_pagado_total=monto_pagado_expr,
+                compras_pagadas=Count('id', filter=Q(pagada=True)),
+                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
+            )
+            .order_by('grupo')
+        )
+
+    elif group_by == 'mes':
+        resumen_qs = (
+            qs.exclude(created_at__isnull=True)
+            .order_by()
+            .annotate(fecha_base=Cast('created_at', output_field=DateField()))
+            .annotate(
+                anio_num=ExtractYear('fecha_base'),
+                mes_num=ExtractMonth('fecha_base'),
+            )
+            .values('anio_num', 'mes_num')
+            .annotate(
+                total_compras=Count('id'),
+                monto_total=monto_total_expr,
+                monto_pagado_total=monto_pagado_expr,
+                compras_pagadas=Count('id', filter=Q(pagada=True)),
+                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
+            )
+            .order_by('anio_num', 'mes_num')
+        )
+
+        resumen = [
+            {
+                "grupo": f"{row['anio_num']}-{str(row['mes_num']).zfill(2)}",
+                "total_compras": row["total_compras"],
+                "monto_total": row["monto_total"],
+                "monto_pagado_total": row["monto_pagado_total"],
+                "compras_pagadas": row["compras_pagadas"],
+                "compras_no_pagadas": row["compras_no_pagadas"],
+            }
+            for row in resumen_qs
+        ]
+
+    else:
+        return Response(
+            {"detail": "group_by inválido. Usa: proveedor, distrito, anio o mes"},
+            status=400
+        )
+
+    return Response(resumen)
 
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])
@@ -317,7 +533,7 @@ def distritos_api(request):
     #ip_address = request.META.get('REMOTE_ADDR')
     #logger.info(f"GET {request.path} by {user.first_name} {user.last_name} from {ip_address}")
     
-    distritos = Distrito.objects.filter(status = True)
+    distritos = Distrito.objects.filter(status = True).exclude(nombre__in=['BRASIL','ALTAMIRA ALTERNATIVO','MATRIZ ALTERNATIVO','VH SECTOR 6'])
     #page = request.query_params.get('page', 1)
     #per_page = request.query_params.get('per_page', 20)
     #

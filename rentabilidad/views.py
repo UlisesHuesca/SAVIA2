@@ -1,4 +1,4 @@
-from django.shortcuts import render, redirect
+from django.shortcuts import render, redirect, get_object_or_404
 from django.db import transaction
 from django.db.models import Sum, Q, F, Case, When, DecimalField, ExpressionWrapper
 from django.db.models.functions import TruncMonth
@@ -15,7 +15,7 @@ from solicitudes.models import Contrato
 from compras.models import Moneda
 from user.decorators import perfil_seleccionado_required
 from .forms import Costo_Form, Solicitud_Costo_Form, Solicitud_Ingreso_Form, Ingreso_Form, Depreciacion_Form, Solicitud_Costo_Indirecto_Form, Solicitud_Costo_Indirecto_Central_Form, UploadExcelForm
-from .filters import Costos_Form
+from .filters import Costos_Filter, Depreciaciones_Filter
 from datetime import date, datetime, timedelta
 from dateutil.relativedelta import relativedelta
 import re
@@ -39,7 +39,7 @@ def costos(request):
     costos = Solicitud_Costos.objects.filter(complete = True)
     tipos = Tipo_Costo.objects.all()
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False)
-    myfilter= Costos_Form(request.GET, queryset=costos)
+    myfilter= Costos_Filter(request.GET, queryset=costos)
     costos = myfilter.qs
     #Set up pagination
     p = Paginator(costos, 20)
@@ -959,21 +959,31 @@ def depreciaciones(request):
     depreciaciones = Depreciaciones.objects.filter(complete = True)
     #tipos = Tipo_Costo.objects.all()
     distritos = Distrito.objects.exclude(id__in = [7,8,16]).exclude(status=False)
-    #myfilter= ContratoFilter(request.GET, queryset=contratos)
-
+    myfilter= Depreciaciones_Filter(request.GET, queryset=depreciaciones)
+    depreciaciones = myfilter.qs
+    
     #Set up pagination
-    #p = Paginator(contratos, 10)
-    #page = request.GET.get('page')
-    #contratos_list = p.get_page(page)
+    p = Paginator(depreciaciones, 20)
+    page = request.GET.get('page')
+    depreciaciones_list = p.get_page(page)
+   
 
     context = {
-        'depreciaciones': depreciaciones,
-        #'myfilter': myfilter,
+        'depreciaciones': depreciaciones_list,
+        'myfilter': myfilter,
         #'tipos': tipos,
         'distritos':distritos,
          }
 
     return render(request,'rentabilidad/depreciaciones.html', context)
+
+def eliminar_depreciacion(request, pk):
+    if request.method == 'POST':
+        depreciacion = get_object_or_404(Depreciaciones, id=pk)
+        depreciacion.delete()
+        messages.success(request, "Registro eliminado correctamente.")
+    
+    return redirect('rentabilidad-depreciaciones')  # la vista donde está la tabla
 
 
 def reporte_depreciaciones(request):

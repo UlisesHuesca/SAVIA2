@@ -277,6 +277,7 @@ MEDIA_URL = '/images/'
 
 CORS_ALLOWED_ORIGINS = [
     'https://uliseshuesca.pythonanywhere.com',
+    'http://localhost:3000',
 ]
 
 #STATIC_ROOT = os.path.join(BASE_DIR, "static/")

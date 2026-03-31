@@ -20,11 +20,73 @@
                 <h5>Filtro de Depreciaciones</h5>
             </div>
             <div class="card-body">
-            <!--    <form method="GET" class="row g-7">
-                    {% csrf_token %}
-        
+                <form method="GET">
+                {% csrf_token %}
+                <div class="row g-12">
+                    <div class="col-lg-5 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                                <label style="color: #121212;" for="id_id">Distrito</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-5 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.contrato|add_class:"form-control"|append_attr:"placeholder= Contrato"}}
+                                <label style="color: #121212;" for="id_id">Contrato</label>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                </form>-->
+                <div class="row g-12">
+                    <div id="serie" class="col-lg-5 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.mes_inicial type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Fecha:</label>
+                            </div>
+                        </div>
+                    </div>
+                
+                    <div class="col-2">
+                        <!--onclick="regenerar()"-->
+                        <button id="btnBuscar" class="btn btn-outline-success btn-block btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
+                    </div>
+                </div>
+                </form>
+
+                <div class = "row mt-2 bg-white">
+                    <form method=POST>
+                        {% csrf_token %}
+                    <ul class="nav nav-pills">
+                        
+                        <!--<li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" name="btnReporte"><i class="fa-duotone fa-solid fa-file-excel fa-2xl"></i></button>
+                        </li>-->
+                        <li class="nav-item mx-2">
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' 'directo' %}"><i class="fa-solid fa-plus"></i>Agregar Costo Directo</a>
+                        </li>
+                         <li class="nav-item mx-2">
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' 'indirecto' %}"><i class="fa-solid fa-plus"></i>Agregar Costo Indirecto</a>
+                        </li>
+                        <li class="nav-item mx-2">
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' 'central' %}"><i class="fa-solid fa-plus"></i>Agregar Costo Central</a>
+                        </li>
+                        <li class="nav-item mx-2 mt-2">
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' 'impuesto' %}"><i class="fa-solid fa-plus"></i>Agregar Impuesto</a>
+                        </li>
+                        <li class="nav-item mx-2 mt-2">
+                            <a class="btn btn-outline-info" href="{% url 'add-costo' 'financiero' %}"><i class="fa-solid fa-plus"></i>Agregar Costo Financiero</a>
+                        </li>
+                    </ul>
+                    </form>
+                </div>
+           
                 <div class = "row mt-2 bg-white">
                     <form method=POST>
                         {% csrf_token %}
@@ -98,10 +160,12 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">Distrito</th>
+                    <th>Contrato</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
                     <th scope="col">Meses</th>
                     <th>Monto Mensual</th>
+                    <th>Eliminar</th>
                 </tr>
             </thead>
             <tbody>
@@ -109,10 +173,20 @@
                 <tr>
                     
                     <td>{{depreciacion.distrito}}</td>
+                    <td>{{depreciacion.contrato}}</td>
                     <td>{{depreciacion.mes_inicial|date:"F Y"}}</td>
                     <td>${{depreciacion.monto}}</td>
                     <td>{{depreciacion.meses_a_depreciar}}</td>
                     <td>${{depreciacion.get_depreciacion_mensual|floatformat:2}}</td>
+                    <td>
+                        <form method="POST" action="{% url 'eliminar-depreciacion' depreciacion.id %}" style="display:inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-outline-danger btn-sm"
+                                    onclick="return confirm('¿Seguro que deseas eliminar este registro?');">
+                                 <i class="fa-solid fa-trash-can"></i>
+                            </button>
+                        </form>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
