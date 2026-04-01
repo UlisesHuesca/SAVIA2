@@ -360,17 +360,31 @@ def carga_costos_excel(request, tipo):
 
 
 @perfil_seleccionado_required
-def delete_costo(request, tipo, pk, origen):
-    costo = Costos.objects.get(id=pk)
-    
-    messages.success(request,f'El costo {costo.concepto} ha sido eliminado exitosamente')
-    costo.delete()
-    #print('origen', origen)
-    if origen == 'editar':
-        return redirect('editar-costo', pk=costo.solicitud.id)
-    else:
-        return redirect('add-costo', tipo=tipo)
+def delete_costos(request, tipo, origen):
+    if request.method == "POST":
+        costo_ids = request.POST.getlist("costo_ids")
 
+        if costo_ids:
+            costos = Costos.objects.filter(id__in=costo_ids)
+
+            # tomar referencia de la solicitud antes de borrar
+            primer_costo = costos.first()
+            solicitud_id = primer_costo.solicitud.id if primer_costo else None
+
+            cantidad = costos.count()
+            costos.delete()
+
+            messages.success(request, f'Se eliminaron {cantidad} costo(s) exitosamente.')
+
+            if origen == 'editar' and solicitud_id:
+                return redirect('editar-costo', pk=solicitud_id)
+            else:
+                return redirect('add-costo', tipo=tipo)
+
+        else:
+            messages.warning(request, 'No seleccionaste ningún costo.')
+
+    return redirect('add-costo', tipo=tipo)
 
 def reporte_costos(request):
     tipo_id = request.GET.get("tipo_id")  # <- capturamos el valor del select

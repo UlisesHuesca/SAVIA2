@@ -4,7 +4,7 @@ from .import views
 urlpatterns = [
     path('rentabilidad/costos', views.costos, name='rentabilidad-costos'),
     path('rentabilidad/add_costo/<str:tipo>', views.add_costo, name='add-costo'),
-    path('rentabilidad/delete_costo/<str:tipo>/<int:pk>/<str:origen>', views.delete_costo, name='delete-costo'),
+    path('rentabilidad/delete_costos/<str:tipo>/<str:origen>', views.delete_costos, name='delete-costos'),
     path('rentabilidad/reporte_costos', views.reporte_costos, name = 'reporte-costos'),
     path('rentabilidad/ingresos', views.ingresos, name='rentabilidad-ingresos'),
     path('rentabilidad/add_ingresos', views.add_ingresos, name='add-ingreso'),

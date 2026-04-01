@@ -192,15 +192,34 @@
             </div>
         </form>
         </div>
-        
+        <hr>
         <div class ="table-responsive-sm">
+            <form method="POST" action="{% url 'delete-costos' tipo editar|yesno:'editar,normal' %}">
+            {% csrf_token %}
+
+            <div class="d-flex justify-content-between align-items-center mb-2">
+                {% if costos %}
+                <div>
+                    <input type="checkbox" style="transform: scale(1.5);" id="check_todos" class="form-check-input">
+                    <label for="check_todos" class="ms-1"><strong>Todos</strong></label>
+                </div>
+
+               
+                {% endif %}
+            </div>
             <table class="table table-light table-striped table-hover">
             <thead>
                 <tr>
                     <th scope="col">{% trans "Concepto" %}</th>
                     <th scope="col">{% trans "Comentario" %}</th>
                     <th scope="col">{% trans "Monto" %}</th>
-                    <th>Acción</th>
+                    <th> 
+                        <button type="submit"
+                            class="btn btn-danger btn-sm"
+                            onclick="return confirm('¿Seguro que deseas eliminar los costos seleccionados?');">
+                            <i class="fa-solid fa-trash-can"></i> 
+                        </button>
+                    </th>
                 </tr>
             </thead>
             <tbody id="mytbl">
@@ -210,16 +229,19 @@
                     <td scope="col">{{costo.concepto}}</td>
                     <td scope="col">{% if not costo.comentario %}NR{% else %}{{costo.comentario}}{% endif %}</td>
                     <td >{{costo.monto}}</td>
-                    {% if editar %}
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' tipo costo.id 'editar'  %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
-                    {% else %}
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-costo' tipo costo.id 'normal'  %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
-                    {% endif %}
-                    </tr>
-
+                    <td>
+                    <input class="costo_checkbox form-check-input"
+                           style="transform: scale(1.5); margin: 5px;"
+                           type="checkbox"
+                           name="costo_ids"
+                           value="{{ costo.id }}">
+                    </td>
+                  
+                </tr>
                 {% endfor %}
             </tbody>
             </table>
+            </form> 
         </div>
             <table class="table table-light table-striped">
             <thead>
@@ -311,6 +333,8 @@
         
         const form = document.getElementById('OrderForm');
         const btnAgregar = document.getElementById('btn_agregar');
+        const checkTodos = document.getElementById("check_todos");
+        const checkboxes = document.querySelectorAll(".costo_checkbox");
         //sumarTotales();
         console.log('jv')
         form.addEventListener('submit', function() {
@@ -318,6 +342,14 @@
                 btnAgregar.disabled = true;
             }, 50); // desactivar el botón 50ms después del clic
         });
+
+        checkTodos.addEventListener('change', function() {
+            checkboxes.forEach(function(checkbox) {
+                checkbox.checked = checkTodos.checked;
+            });
+        });
+
+
     });
 
     $(document).ready(function() {
@@ -350,6 +382,8 @@ function formatRepo (repo) {
 function formatRepoSelection (repo) {
     return repo.text || repo.id;
 }
+
+
 
 </script>
 {% endblock %}
