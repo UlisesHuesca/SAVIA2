@@ -8,7 +8,7 @@ urlpatterns = [
     path('rentabilidad/reporte_costos', views.reporte_costos, name = 'reporte-costos'),
     path('rentabilidad/ingresos', views.ingresos, name='rentabilidad-ingresos'),
     path('rentabilidad/add_ingresos', views.add_ingresos, name='add-ingreso'),
-    path('rentabilidad/delete_ingreso/<int:pk>', views.delete_ingreso, name='delete-ingreso'),
+    path('rentabilidad/delete_ingreso/<int:pk>/<str:editar>', views.delete_ingreso, name='delete-ingreso'),
     path('rentabilidad/reporte_ingresos', views.reporte_ingresos, name = 'reporte-ingresos'),
     path('rentabilidad/depreciaciones', views.depreciaciones, name='rentabilidad-depreciaciones'),
     path('rentabilidad/add_depreciacion', views.add_depreciacion, name='add-depreciacion'),
@@ -19,4 +19,5 @@ urlpatterns = [
     path('resumen-mes-contrato/',views.resumen_ingresos_mes_contrato,name='resumen_mes_contrato'),
     path('rentabilidad/depreciacion/eliminar/<int:pk>/', views.eliminar_depreciacion, name='eliminar-depreciacion'),
     path('rentabilidad/costos/editar/<int:pk>/', views.editar_costo, name='editar-costo'),
+    path('rentabilidad/ingresos/editar/<int:pk>/', views.editar_ingresos, name='editar-ingreso'),
 ]

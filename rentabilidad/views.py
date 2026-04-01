@@ -742,17 +742,93 @@ def add_ingresos(request):
         'ingreso_form': ingreso_form,
         'ingresos':ingresos,
         'solicitud':solicitud,
+        'editar': False,
         }
 
     return render(request,'rentabilidad/add_ingreso.html',context)
 
 @perfil_seleccionado_required
-def delete_ingreso(request, pk):
+def editar_ingresos(request, pk):
+    pk_perfil = request.session.get('selected_profile_id')
+    usuario = Profile.objects.get(id=pk_perfil)
+
+    distritos = Distrito.objects.exclude(id__in=[7, 8, 16]).exclude(status=False)
+    monedas = Moneda.objects.exclude(id__in=[3])
+
+    solicitud = get_object_or_404(Solicitud_Ingresos, pk=pk)
+    ingresos = Ingresos.objects.filter(solicitud=solicitud)
+
+    # Validación opcional de permiso
+    # if solicitud.created_by != usuario:
+    #     messages.error(request, 'No tienes permiso para editar esta solicitud.')
+    #     return redirect('rentabilidad-ingresos')
+
+    form = Solicitud_Ingreso_Form(instance=solicitud)
+    form.fields['distrito'].queryset = distritos
+
+    ingreso_form = Ingreso_Form()
+    ingreso_form.fields['moneda'].queryset = monedas
+
+    if request.method == 'POST':
+
+        if "btn_editar" in request.POST:
+            form = Solicitud_Ingreso_Form(request.POST, instance=solicitud)
+            form.fields['distrito'].queryset = distritos
+
+            if form.is_valid():
+                solicitud = form.save(commit=False)
+
+                # En edición normalmente no conviene volver a tocar created_at
+                # solicitud.created_at = date.today()
+
+                solicitud.complete = True
+                solicitud.save()
+
+                messages.success(request, 'Has actualizado correctamente la Solicitud')
+                return redirect('rentabilidad-ingresos') 
+            else:
+                print(form.errors)
+
+        elif "btn_ingreso" in request.POST:
+            ingreso, created = Ingresos.objects.get_or_create(
+                complete=False,
+                solicitud=solicitud
+            )
+
+            ingreso_form = Ingreso_Form(request.POST, instance=ingreso)
+            ingreso_form.fields['moneda'].queryset = monedas
+
+            if ingreso_form.is_valid():
+                ingreso = ingreso_form.save(commit=False)
+                ingreso.solicitud = solicitud
+                ingreso.complete = True
+                ingreso.save()
+
+                messages.success(request, 'Has agregado correctamente un ingreso')
+                return redirect('editar-ingreso', pk=solicitud.pk)
+            else:
+                print(ingreso_form.errors)
+
+    context = {
+        'form': form,
+        'ingreso_form': ingreso_form,
+        'ingresos': ingresos,
+        'solicitud': solicitud,
+        'editar': True,
+    }
+
+    return render(request, 'rentabilidad/add_ingreso.html', context)
+
+@perfil_seleccionado_required
+def delete_ingreso(request, pk, editar):
     ingreso = Ingresos.objects.get(id=pk)
     messages.success(request,f'El ingreso {ingreso.concepto} ha sido eliminado exitosamente')
     ingreso.delete()
 
-    return redirect('add-ingreso')
+    if editar == "editar":
+        return redirect('editar-ingreso', pk=ingreso.solicitud.id)
+    else:
+        return redirect('add-ingreso')
 
 def get_tabla_ingresos_distrito(distrito_id, fecha_inicio=None, fecha_fin=None):
     ingresos = Ingresos.objects.filter(solicitud__complete=True, solicitud__distrito_id=distrito_id)

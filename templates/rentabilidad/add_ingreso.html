@@ -87,9 +87,11 @@
                         </div> 
                         {% if ingresos %}
                             <div class="text-end">
-                     
-                        
+                                {% if editar %}
+                                <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_editar" id="btn_editar" type="submit" value='{% trans "Editar Solicitud" %}'>
+                                {% else %}
                                 <input class="btn btn-outline-info btn-block my-2 btn-lg" name="btn_agregar" id="btn_agregar" type="submit" value='{% trans "Crear Solicitud" %}'>
+                                {% endif %}
                             </div>
                         {% endif %}
                             
@@ -192,7 +194,14 @@
                     <td >{{ingreso.monto}}</td>
                     <td>{{ingreso.moneda}}</td>
                     <td>{% if ingreso.tipo_cambio %}{{ingreso.tipo_cambio}}{% endif %}</td>
-                    <td scope="col"><a type="button" class="btn btn-danger" value="Delete" name="btn_delete" id="delete" href="{% url 'delete-ingreso' ingreso.id %}" aria-label="Close"><i class="fa-solid fa-trash-can"></i></a>
+                    <td>
+                        <a type="button" class="btn btn-outline-danger" value="Delete" name="btn_delete" id="delete" 
+                        href="{% url 'delete-ingreso' ingreso.id editar|yesno:'editar,normal'  %}" 
+                        onclick="return confirm('¿Eliminar este ingreso?');"
+                        title="Eliminar ingreso">
+                            <i class="fa-solid fa-trash-can"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>

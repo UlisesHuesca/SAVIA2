@@ -27,7 +27,7 @@
                 </form>-->
                 <div class = "row mt-2 bg-white">
                     <form method=POST>
-                        {% csrf_token %}
+                    {% csrf_token %}
                     <ul class="nav nav-pills">
                         
                         <li class="nav-item mx-2">
@@ -105,6 +105,7 @@
                     <th>Contrato</th>
                     <th scope="col">Fecha</th>
                     <th scope="col">Monto</th>
+                    <th>Editar</th>
                 </tr>
             </thead>
             <tbody>
@@ -115,6 +116,11 @@
                     <td>{{ingreso.contrato.nombre}}</td>
                     <td>{{ingreso.solicitud.fecha|date:"F Y"}}</td>
                     <td>${{ingreso.monto|floatformat:2 }}</td>
+                    <td>
+                        <a href="{% url 'editar-ingreso' ingreso.solicitud.id %}" class="btn btn-outline-info btn-sm" title="Editar ingreso">
+                            <i class="fa-solid fa-pen-to-square"></i>
+                        </a>
+                    </td>
                 </tr>
                 {% endfor %}
             </tbody>
