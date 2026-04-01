@@ -118,18 +118,16 @@
                     <select name="distrito_id" class="form-select mx-2" style="width: 250px;">
                         <option value="">-- Distrito --</option>
                         {% for distrito in distritos %}
-                            <option value="{{ distrito.id }}" {% if tipo_id == distrito.id|stringformat:"s" %}selected{% endif %}>
+                            <option value="{{ distrito.id }}" {% if distrito_id == distrito.id|stringformat:"s" %}selected{% endif %}>
                                 {{ distrito.nombre }}
                             </option>
                         {% endfor %}
                     </select>
-                    <div class="col-auto">
-                        <input type="month" name="fecha_inicio" value="{{ fecha_inicio }}" class="form-control">
+                    <div class="col-auto mx-2">
+                        <input type="month" name="fecha_corte" value="{{ fecha_corte }}" class="form-control">
                     </div>
 
-                    <div class="col-auto">
-                        <input type="month" name="fecha_fin" value="{{ fecha_fin }}" class="form-control">
-                    </div>
+
                     <button type="submit" class="btn btn-outline-info">
                        Ver Reporte
                     </button>

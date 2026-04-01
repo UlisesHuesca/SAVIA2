@@ -1253,89 +1253,75 @@ def reporte_depreciaciones_original(request):
     }
     return render(request, "rentabilidad/reporte_depreciaciones.html", context)
 
-from collections import defaultdict
-from datetime import date, datetime, timedelta
-from calendar import monthrange
+
 
 def reporte_depreciaciones(request):
     distrito_id = request.GET.get("distrito_id")
-    fecha_inicio = request.GET.get("fecha_inicio")   # "YYYY-MM"
-    fecha_fin = request.GET.get("fecha_fin")         # "YYYY-MM"
+    fecha_corte = request.GET.get("fecha_corte")   # "YYYY-MM"
 
+   
     hoy = date.today()
-    mes_corte = date(hoy.year, hoy.month, 1)
 
-    # 1) Parseo de fechas
-    if fecha_inicio and fecha_fin:
+    # Si no seleccionan mes, usar el actual
+    if fecha_corte:
         try:
-            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m").date()
-            y, m = [int(x) for x in fecha_fin.split("-")]
-            last_day = monthrange(y, m)[1]
-            fecha_fin = date(y, m, last_day)
+            fecha_corte_date = datetime.strptime(fecha_corte, "%Y-%m").date()
+            mes_corte = date(fecha_corte_date.year, fecha_corte_date.month, 1)
         except ValueError:
-            fecha_inicio = fecha_fin = None
+            fecha_corte = ""
+            mes_corte = date(hoy.year, hoy.month, 1)
+    else:
+        fecha_corte = hoy.strftime("%Y-%m")
+        mes_corte = date(hoy.year, hoy.month, 1)
 
-    # 2) Query de depreciaciones del distrito
-    depreciaciones = Depreciaciones.objects.filter(
-        distrito__id=distrito_id,
-        complete=True
-    )
+    print("Mes de corte:", mes_corte)
+    print("Fecha de corte:", fecha_corte)
+    depreciaciones = Depreciaciones.objects.filter(complete=True)
 
-    # 3) Meses (claves internas y etiquetas visibles)
-    meses = []
-    meses_formateados = {}
-    if fecha_inicio and fecha_fin:
-        actual = fecha_inicio
-        while actual <= fecha_fin:
-            key = actual.strftime("%Y-%m")
-            label = actual.strftime("%b %Y")
-            meses.append(key)
-            meses_formateados[key] = label
+    if distrito_id:
+        depreciaciones = depreciaciones.filter(distrito__id=distrito_id)
 
-            days_in_month = monthrange(actual.year, actual.month)[1]
-            actual += timedelta(days=days_in_month)
-
-    # 4) Tabla actual por contrato/concepto/mes
-    tabla = defaultdict(lambda: defaultdict(dict))
-    remanentes = defaultdict(dict)
-
-    # 🔹 NUEVO: detalle plano para tu reporte tipo Excel
     filas_detalle = []
 
     for dep in depreciaciones:
+        if not dep.mes_inicial:
+            continue
+
         meses_dep = dep.meses_a_depreciar or 1
         monto_total = dep.monto or 0
         monto_mensual = monto_total / meses_dep
 
         inicio = date(dep.mes_inicial.year, dep.mes_inicial.month, 1)
 
-        # ✅ meses transcurridos incluyendo el mes actual
+        # calcular mes final
+        offset = meses_dep - 1
+        year_final = inicio.year + (inicio.month - 1 + offset) // 12
+        month_final = (inicio.month - 1 + offset) % 12 + 1
+        mes_final = date(year_final, month_final, 1)
+
+        print("Mes final:", mes_final)
+
+        # ✅ solo mostrar depreciaciones activas en el mes elegido
+        if not (inicio <= mes_corte <= mes_final):
+            continue
+
         meses_trans = _months_inclusive(inicio, mes_corte)
         meses_trans = min(meses_trans, meses_dep)
 
-        remanente = monto_total - (meses_trans * monto_mensual)
+        depreciacion_acumulada = meses_trans * monto_mensual
+        if depreciacion_acumulada > monto_total:
+            depreciacion_acumulada = monto_total
+
+        remanente = monto_total - depreciacion_acumulada
         if remanente < 0:
             remanente = 0
 
         contrato_nombre = getattr(dep.contrato, "nombre", str(dep.contrato))
         concepto = dep.concepto or "Sin concepto"
 
-        remanentes[contrato_nombre][concepto] = f"${remanente:,.2f}"
-
-        # 🔹 NUEVO: mes final
-        offset = meses_dep - 1
-        year_final = inicio.year + (inicio.month - 1 + offset) // 12
-        month_final = (inicio.month - 1 + offset) % 12 + 1
-        mes_final = date(year_final, month_final, 1)
-
-        # 🔹 NUEVO: depreciación acumulada
-        depreciacion_acumulada = meses_trans * monto_mensual
-        if depreciacion_acumulada > monto_total:
-            depreciacion_acumulada = monto_total
-
-        # 🔹 NUEVO: fila plana para el reporte detallado
         filas_detalle.append({
             "eco": concepto,
+            "contrato": contrato_nombre,
             "tipo_unidad": dep.tipo_unidad or "",
             "meses_a_depreciar": meses_dep,
             "sector": dep.distrito.nombre if dep.distrito else "",
@@ -1345,62 +1331,27 @@ def reporte_depreciaciones(request):
             "depreciacion_mensual": monto_mensual,
             "depreciacion_acumulada": depreciacion_acumulada,
             "saldo_por_redimir": remanente,
-            "contrato": contrato_nombre,
         })
 
-        # lógica original para la tabla por meses
-        for i in range(meses_dep):
-            year = inicio.year + (inicio.month - 1 + i) // 12
-            month = (inicio.month - 1 + i) % 12 + 1
-            fecha_mes = date(year, month, 1)
-            key = fecha_mes.strftime("%Y-%m")
-
-            if fecha_inicio and fecha_fin and fecha_inicio <= fecha_mes <= fecha_fin:
-                tabla[contrato_nombre][concepto][key] = f"${monto_mensual:,.2f}"
-
-    # 5) Contexto
     distrito_nombre = ""
-    first_dep = depreciaciones.first()
-    if first_dep and first_dep.distrito:
-        distrito_nombre = first_dep.distrito.nombre
-
-    tabla_dict = {
-        str(contrato): {
-            str(concepto): dict(valores)
-            for concepto, valores in sorted(conceptos.items(), key=lambda x: x[0])
-        }
-        for contrato, conceptos in sorted(tabla.items(), key=lambda x: x[0])
-    }
-
-    totales = {mes: 0 for mes in meses}
-
-    for contrato, conceptos in tabla_dict.items():
-        for concepto, valores in conceptos.items():
-            for mes in meses:
-                if mes in valores:
-                    monto = float(valores[mes].replace("$", "").replace(",", ""))
-                    totales[mes] += monto
-
-    totales_fmt = {mes: f"${totales[mes]:,.2f}" for mes in meses}
+    if distrito_id:
+        first_dep = depreciaciones.first()
+        if first_dep and first_dep.distrito:
+            distrito_nombre = first_dep.distrito.nombre
 
     if request.method == "POST" and "btnReporte" in request.POST:
         return generar_depreciaciones_excel(
-        filas_detalle,
-        distrito_id,
-        fecha_inicio,
-        fecha_fin
-    )
+            filas_detalle,
+            distrito_id,
+            mes_corte
+        )
 
     context = {
+        "distrito_id": distrito_id,
+        "fecha_corte": fecha_corte,
+        "fecha_corte_label": mes_corte.strftime("%b %Y"),
         "distrito_nombre": distrito_nombre,
-        "fecha_inicio": fecha_inicio.strftime("%b %Y") if fecha_inicio else "",
-        "fecha_fin": fecha_fin.strftime("%b %Y") if fecha_fin else "",
-        "meses": meses,
-        "meses_formateados": meses_formateados,
-        "tabla": tabla_dict,
-        "totales": totales_fmt,
-        "remanentes": dict(remanentes),
-        "filas_detalle": filas_detalle,   # 👈 nuevo
+        "filas_detalle": filas_detalle,
     }
 
     return render(request, "rentabilidad/reporte_depreciaciones.html", context)
