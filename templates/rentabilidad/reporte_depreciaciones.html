@@ -42,35 +42,39 @@
         <table class="table table-bordered table-striped">
             <thead class="table-dark">
                 <tr>
-                    <th>Contrato / Concepto</th>
-                    {% for mes in meses %}
-                    <th>{{ meses_formateados|get_item:mes }}</th>
-                    {% endfor %}
-                    <th>Remanente</th>
+                    <th>ECO</th>
+                    <th>Contrato</th>
+                    <th>Tipo de Unidad</th>
+                    <th>Meses a Depreciar</th>
+                    <th>Sector</th>
+                    <th>Mes Inicial</th>
+                    <th>Mes Final</th>
+                    <th>Valor de Adquisición</th>
+                    <th>Depreciación Mensual</th>
+                    <th>Depreciación Acumulada</th>
+                    <th>Saldo por Redimir</th>
                 </tr>
-                </thead>
-                <tbody>
-                {% for contrato, conceptos in tabla.items %}
-                    <tr class="table-primary">
-                    <td colspan="{{ meses|length|add:1 }}"><strong>{{ contrato }}</strong></td>
-                    </tr>
-                    {% for concepto, valores in conceptos.items %}
-                    <tr>
-                        <td>{{ concepto }}</td>
-                        {% for mes in meses %}
-                        <td>{{ valores|get_item:mes|default:"-" }}</td>
-                        {% endfor %}
-                        <td>{{ remanentes|get_item:contrato|get_item:concepto|default:"-" }}</td>
-                    </tr>
-                   
-                    {% endfor %}
+            </thead>
+            <tbody>
+                {% for fila in filas_detalle %}
+                <tr>
+                    <td>{{ fila.eco }}</td>
+                    <td>{{ fila.contrato }}</td>
+                    <td>{{ fila.tipo_unidad }}</td>
+                    <td>{{ fila.meses_a_depreciar }}</td>
+                    <td>{{ fila.sector }}</td>
+                    <td>{{ fila.mes_inicial|date:"F Y" }}</td>
+                    <td>{{ fila.mes_final|date:"F Y" }}</td>
+                    <td>${{ fila.valor_adquisicion|floatformat:2 }}</td>
+                    <td>${{ fila.depreciacion_mensual|floatformat:2 }}</td>
+                    <td>${{ fila.depreciacion_acumulada|floatformat:2 }}</td>
+                    <td>${{ fila.saldo_por_redimir|floatformat:2 }}</td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="11" class="text-center">No hay depreciaciones en este rango.</td>
+                </tr>
                 {% endfor %}
-                <tr class="table-secondary">
-                    <td><strong>Total</strong></td>
-                    {% for mes in meses %}
-                        <td><strong>{{ totales|get_item:mes|default:"-" }}</strong></td>
-                    {% endfor %}
-                </tr>
             </tbody>
         </table>
     </div>

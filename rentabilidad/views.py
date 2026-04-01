@@ -25,7 +25,7 @@ import unicodedata
 from decimal import Decimal, InvalidOperation
 
 import openpyxl
-from openpyxl.styles import NamedStyle, Font, PatternFill
+from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
 from openpyxl import load_workbook
@@ -1130,7 +1130,7 @@ def eliminar_depreciacion(request, pk):
     return redirect('rentabilidad-depreciaciones')  # la vista donde está la tabla
 
 
-def reporte_depreciaciones(request):
+def reporte_depreciaciones_original(request):
     distrito_id = request.GET.get("distrito_id")
     fecha_inicio = request.GET.get("fecha_inicio")   # "YYYY-MM"
     fecha_fin = request.GET.get("fecha_fin")         # "YYYY-MM"
@@ -1253,6 +1253,158 @@ def reporte_depreciaciones(request):
     }
     return render(request, "rentabilidad/reporte_depreciaciones.html", context)
 
+from collections import defaultdict
+from datetime import date, datetime, timedelta
+from calendar import monthrange
+
+def reporte_depreciaciones(request):
+    distrito_id = request.GET.get("distrito_id")
+    fecha_inicio = request.GET.get("fecha_inicio")   # "YYYY-MM"
+    fecha_fin = request.GET.get("fecha_fin")         # "YYYY-MM"
+
+    hoy = date.today()
+    mes_corte = date(hoy.year, hoy.month, 1)
+
+    # 1) Parseo de fechas
+    if fecha_inicio and fecha_fin:
+        try:
+            fecha_inicio = datetime.strptime(fecha_inicio, "%Y-%m").date()
+            y, m = [int(x) for x in fecha_fin.split("-")]
+            last_day = monthrange(y, m)[1]
+            fecha_fin = date(y, m, last_day)
+        except ValueError:
+            fecha_inicio = fecha_fin = None
+
+    # 2) Query de depreciaciones del distrito
+    depreciaciones = Depreciaciones.objects.filter(
+        distrito__id=distrito_id,
+        complete=True
+    )
+
+    # 3) Meses (claves internas y etiquetas visibles)
+    meses = []
+    meses_formateados = {}
+    if fecha_inicio and fecha_fin:
+        actual = fecha_inicio
+        while actual <= fecha_fin:
+            key = actual.strftime("%Y-%m")
+            label = actual.strftime("%b %Y")
+            meses.append(key)
+            meses_formateados[key] = label
+
+            days_in_month = monthrange(actual.year, actual.month)[1]
+            actual += timedelta(days=days_in_month)
+
+    # 4) Tabla actual por contrato/concepto/mes
+    tabla = defaultdict(lambda: defaultdict(dict))
+    remanentes = defaultdict(dict)
+
+    # 🔹 NUEVO: detalle plano para tu reporte tipo Excel
+    filas_detalle = []
+
+    for dep in depreciaciones:
+        meses_dep = dep.meses_a_depreciar or 1
+        monto_total = dep.monto or 0
+        monto_mensual = monto_total / meses_dep
+
+        inicio = date(dep.mes_inicial.year, dep.mes_inicial.month, 1)
+
+        # ✅ meses transcurridos incluyendo el mes actual
+        meses_trans = _months_inclusive(inicio, mes_corte)
+        meses_trans = min(meses_trans, meses_dep)
+
+        remanente = monto_total - (meses_trans * monto_mensual)
+        if remanente < 0:
+            remanente = 0
+
+        contrato_nombre = getattr(dep.contrato, "nombre", str(dep.contrato))
+        concepto = dep.concepto or "Sin concepto"
+
+        remanentes[contrato_nombre][concepto] = f"${remanente:,.2f}"
+
+        # 🔹 NUEVO: mes final
+        offset = meses_dep - 1
+        year_final = inicio.year + (inicio.month - 1 + offset) // 12
+        month_final = (inicio.month - 1 + offset) % 12 + 1
+        mes_final = date(year_final, month_final, 1)
+
+        # 🔹 NUEVO: depreciación acumulada
+        depreciacion_acumulada = meses_trans * monto_mensual
+        if depreciacion_acumulada > monto_total:
+            depreciacion_acumulada = monto_total
+
+        # 🔹 NUEVO: fila plana para el reporte detallado
+        filas_detalle.append({
+            "eco": concepto,
+            "tipo_unidad": dep.tipo_unidad or "",
+            "meses_a_depreciar": meses_dep,
+            "sector": dep.distrito.nombre if dep.distrito else "",
+            "mes_inicial": inicio,
+            "mes_final": mes_final,
+            "valor_adquisicion": monto_total,
+            "depreciacion_mensual": monto_mensual,
+            "depreciacion_acumulada": depreciacion_acumulada,
+            "saldo_por_redimir": remanente,
+            "contrato": contrato_nombre,
+        })
+
+        # lógica original para la tabla por meses
+        for i in range(meses_dep):
+            year = inicio.year + (inicio.month - 1 + i) // 12
+            month = (inicio.month - 1 + i) % 12 + 1
+            fecha_mes = date(year, month, 1)
+            key = fecha_mes.strftime("%Y-%m")
+
+            if fecha_inicio and fecha_fin and fecha_inicio <= fecha_mes <= fecha_fin:
+                tabla[contrato_nombre][concepto][key] = f"${monto_mensual:,.2f}"
+
+    # 5) Contexto
+    distrito_nombre = ""
+    first_dep = depreciaciones.first()
+    if first_dep and first_dep.distrito:
+        distrito_nombre = first_dep.distrito.nombre
+
+    tabla_dict = {
+        str(contrato): {
+            str(concepto): dict(valores)
+            for concepto, valores in sorted(conceptos.items(), key=lambda x: x[0])
+        }
+        for contrato, conceptos in sorted(tabla.items(), key=lambda x: x[0])
+    }
+
+    totales = {mes: 0 for mes in meses}
+
+    for contrato, conceptos in tabla_dict.items():
+        for concepto, valores in conceptos.items():
+            for mes in meses:
+                if mes in valores:
+                    monto = float(valores[mes].replace("$", "").replace(",", ""))
+                    totales[mes] += monto
+
+    totales_fmt = {mes: f"${totales[mes]:,.2f}" for mes in meses}
+
+    if request.method == "POST" and "btnReporte" in request.POST:
+        return generar_depreciaciones_excel(
+        filas_detalle,
+        distrito_id,
+        fecha_inicio,
+        fecha_fin
+    )
+
+    context = {
+        "distrito_nombre": distrito_nombre,
+        "fecha_inicio": fecha_inicio.strftime("%b %Y") if fecha_inicio else "",
+        "fecha_fin": fecha_fin.strftime("%b %Y") if fecha_fin else "",
+        "meses": meses,
+        "meses_formateados": meses_formateados,
+        "tabla": tabla_dict,
+        "totales": totales_fmt,
+        "remanentes": dict(remanentes),
+        "filas_detalle": filas_detalle,   # 👈 nuevo
+    }
+
+    return render(request, "rentabilidad/reporte_depreciaciones.html", context)
+
 
 def _months_inclusive(start_month: date, current_month: date) -> int:
     """Meses entre start y current INCLUYENDO el mes actual.
@@ -1299,108 +1451,172 @@ def add_depreciacion(request):
     return render(request,'rentabilidad/add_depreciaciones.html',context)
 
 
-def generar_depreciaciones_excel(tabla, meses, remanentes, distrito_id=None, fecha_inicio=None, fecha_fin=None):
+
+
+
+def generar_depreciaciones_excel(filas_detalle, distrito_id=None, fecha_inicio=None, fecha_fin=None):
     wb = openpyxl.Workbook()
     ws = wb.active
     ws.title = "Depreciaciones"
 
-    money_style = NamedStyle(name="money_style")
-    money_style.number_format = u'"$"#,##0.00'   # 👈 formato moneda
-    money_style.font = Font(name="Calibri", size=10)
-    wb.add_named_style(money_style)
+    # =========================
+    # ESTILOS
+    # =========================
+    if "money_style" not in wb.named_styles:
+        money_style = NamedStyle(name="money_style")
+        money_style.number_format = u'"$"#,##0.00'
+        money_style.font = Font(name="Calibri", size=10)
+        wb.add_named_style(money_style)
 
-    # Logo
+    if "date_style" not in wb.named_styles:
+        date_style = NamedStyle(name="date_style")
+        date_style.number_format = 'MMMM YYYY'
+        date_style.font = Font(name="Calibri", size=10)
+        wb.add_named_style(date_style)
+
+    if "head_style" not in wb.named_styles:
+        head_style = NamedStyle(name="head_style")
+        head_style.font = Font(name='Arial', color='00FFFFFF', bold=True, size=11)
+        head_style.fill = PatternFill("solid", fgColor='4F81BD')
+        head_style.alignment = Alignment(horizontal="center", vertical="center", wrap_text=True)
+        wb.add_named_style(head_style)
+
+    # =========================
+    # LOGO
+    # =========================
     img_path = "static/images/logo_vordcab.jpg"
-    img = Image(img_path)
-    img.width = img.width * 1
-    img.height = img.height * 1
-    ws.add_image(img, "A1")
-    ws.row_dimensions[1].height = 70 
+    try:
+        img = Image(img_path)
+        ws.add_image(img, "A1")
+        ws.row_dimensions[1].height = 70
+    except:
+        pass
 
-    # Encabezado de filtros
+    # =========================
+    # ENCABEZADO DE FILTROS
+    # =========================
     fila = 2
+
     if distrito_id:
         try:
             distrito_nombre = Distrito.objects.get(id=distrito_id).nombre
         except Distrito.DoesNotExist:
-            distrito_nombre = distrito_id
+            distrito_nombre = str(distrito_id)
+
         ws.cell(row=fila, column=1, value=f"Distrito: {distrito_nombre}")
         fila += 1
+
     if fecha_inicio and fecha_fin:
-        ws.cell(row=fila, column=1, value=f"Rango de meses: {fecha_inicio} → {fecha_fin}")
-        fila += 2  # dejar un espacio antes de la tabla
+        fecha_inicio_txt = fecha_inicio.strftime("%b %Y") if hasattr(fecha_inicio, "strftime") else str(fecha_inicio)
+        fecha_fin_txt = fecha_fin.strftime("%b %Y") if hasattr(fecha_fin, "strftime") else str(fecha_fin)
+        ws.cell(row=fila, column=1, value=f"Rango de meses: {fecha_inicio_txt} → {fecha_fin_txt}")
+        fila += 2
+    else:
+        fila += 1
 
-    # Estilo encabezado
-    head_style = NamedStyle(name="head_style")
-    head_style.font = Font(name='Arial', color='00FFFFFF', bold=True, size=11)
-    head_style.fill = PatternFill("solid", fgColor='00003366')
-    if "head_style" not in wb.named_styles:
-        wb.add_named_style(head_style)
+    # =========================
+    # ENCABEZADOS DE TABLA
+    # =========================
+    encabezados = [
+        "ECO",
+        "Contrato",
+        "Tipo de Unidad",
+        "Meses a Depreciar",
+        "Sector",
+        "Mes Inicial",
+        "Mes Final",
+        "Valor de Adquisición",
+        "Depreciación Mensual",
+        "Depreciación Acumulada",
+        "Saldo por Redimir",
+    ]
 
-    # Encabezados de tabla
-    ws.cell(row=fila, column=1, value="Contrato / Concepto").style = head_style
-    for col_idx, mes in enumerate(meses, start=2):
-        ws.cell(row=fila, column=col_idx, value=mes).style = head_style
-    ws.cell(row=fila, column=len(meses)+2, value="Remanente").style = head_style
-    # Filas de datos
+    for col_idx, encabezado in enumerate(encabezados, start=1):
+        cell = ws.cell(row=fila, column=col_idx, value=encabezado)
+        cell.style = "head_style"
+
+    ws.row_dimensions[fila].height = 30
+
+    # =========================
+    # FILAS DE DATOS
+    # =========================
     row_idx = fila + 1
-    for contrato, conceptos in tabla.items():
-        # Fila contrato
-        ws.cell(row=row_idx, column=1, value=contrato).font = Font(bold=True)
+
+    for fila_detalle in filas_detalle:
+        ws.cell(row=row_idx, column=1, value=fila_detalle.get("eco", ""))
+        ws.cell(row=row_idx, column=2, value=fila_detalle.get("contrato", ""))
+        ws.cell(row=row_idx, column=3, value=fila_detalle.get("tipo_unidad", ""))
+        ws.cell(row=row_idx, column=4, value=fila_detalle.get("meses_a_depreciar", 0))
+        ws.cell(row=row_idx, column=5, value=fila_detalle.get("sector", ""))
+
+        cell_mes_inicial = ws.cell(row=row_idx, column=6, value=fila_detalle.get("mes_inicial"))
+        cell_mes_inicial.style = "date_style"
+
+        cell_mes_final = ws.cell(row=row_idx, column=7, value=fila_detalle.get("mes_final"))
+        cell_mes_final.style = "date_style"
+
+        cell_valor = ws.cell(row=row_idx, column=8, value=float(fila_detalle.get("valor_adquisicion", 0) or 0))
+        cell_valor.style = "money_style"
+
+        cell_dep_mensual = ws.cell(row=row_idx, column=9, value=float(fila_detalle.get("depreciacion_mensual", 0) or 0))
+        cell_dep_mensual.style = "money_style"
+
+        cell_dep_acum = ws.cell(row=row_idx, column=10, value=float(fila_detalle.get("depreciacion_acumulada", 0) or 0))
+        cell_dep_acum.style = "money_style"
+
+        cell_saldo = ws.cell(row=row_idx, column=11, value=float(fila_detalle.get("saldo_por_redimir", 0) or 0))
+        cell_saldo.style = "money_style"
+
         row_idx += 1
 
-        for concepto, valores in conceptos.items():
-            ws.cell(row=row_idx, column=1, value=concepto)
-            for col_idx, mes in enumerate(meses, start=2):
-                monto_str = valores.get(mes, 0)
-                try:
-                    # quitar $ y comas si es string
-                    monto = float(str(monto_str).replace("$", "").replace(",", ""))
-                except:
-                    monto = 0
-                cell = ws.cell(row=row_idx, column=col_idx, value=monto)
-                cell.style = money_style   # 👈 formato moneda
-
-            # 👉 Columna de remanente
-            rem_str = remanentes.get(contrato, {}).get(concepto, 0)
-            try:
-                rem = float(str(rem_str).replace("$", "").replace(",", ""))
-            except:
-                rem = 0
-            rem_cell = ws.cell(row=row_idx, column=len(meses)+2, value=rem)
-            rem_cell.style = money_style
-            row_idx += 1
-
+    # =========================
+    # FILA DE TOTALES
+    # =========================
     ws.cell(row=row_idx, column=1, value="TOTAL").font = Font(bold=True)
 
-    for col_idx, mes in enumerate(meses, start=2):
-        # Calculamos el rango desde la primera fila de datos hasta la fila anterior
+    columnas_monto = [8, 9, 10, 11]  # Valor adquisición, dep mensual, dep acumulada, saldo
+    for col_idx in columnas_monto:
         col_letter = get_column_letter(col_idx)
-        start_row = fila + 1   # justo después de los encabezados
-        end_row = row_idx - 1  # última fila antes del total
+        start_row = fila + 1
+        end_row = row_idx - 1
         formula = f"=SUM({col_letter}{start_row}:{col_letter}{end_row})"
-
         cell = ws.cell(row=row_idx, column=col_idx, value=formula)
-        cell.style = money_style
+        cell.style = "money_style"
         cell.font = Font(bold=True)
 
-    # 👉 Columna de remanente total (puede ser suma también)
-    col_letter = get_column_letter(len(meses)+2)
-    start_row = fila + 1
-    end_row = row_idx - 1
-    formula = f"=SUM({col_letter}{start_row}:{col_letter}{end_row})"
-    cell = ws.cell(row=row_idx, column=len(meses)+2, value=formula)
-    cell.style = money_style
-    cell.font = Font(bold=True)
+    # =========================
+    # FILTROS
+    # =========================
+    ws.auto_filter.ref = f"A{fila}:K{max(row_idx - 1, fila)}"
 
-     # Ajustar anchos
-    for i, col in enumerate(ws.columns, start=1):
-        col_letter = get_column_letter(i)
-        ws.column_dimensions[col_letter].width = max(
-            (len(str(cell.value)) for cell in col if cell.value), default=10
-        ) + 2
+    # =========================
+    # CONGELAR PANELES
+    # =========================
+    ws.freeze_panes = f"A{fila + 1}"
 
-    # Respuesta HTTP
+    # =========================
+    # AJUSTE DE ANCHOS
+    # =========================
+    widths = {
+        "A": 25,  # ECO
+        "B": 18,  # Contrato
+        "C": 20,  # Tipo de Unidad
+        "D": 18,  # Meses a Depreciar
+        "E": 18,  # Sector
+        "F": 16,  # Mes Inicial
+        "G": 16,  # Mes Final
+        "H": 20,  # Valor de Adquisición
+        "I": 20,  # Depreciación Mensual
+        "J": 22,  # Depreciación Acumulada
+        "K": 20,  # Saldo por Redimir
+    }
+
+    for col_letter, width in widths.items():
+        ws.column_dimensions[col_letter].width = width
+
+    # =========================
+    # RESPUESTA HTTP
+    # =========================
     response = HttpResponse(
         content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
     )
