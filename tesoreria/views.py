@@ -3136,6 +3136,7 @@ def matriz_facturas_nomodal(request, pk):
         if perfil.tipo.nombre == "PROVEEDOR_EXTERNO":
             base_url = reverse('matriz-oc-proveedores')
             compra = get_object_or_404(Compra, id=pk, proveedor__nombre = perfil.proveedor)
+            
         else:
             compra = get_object_or_404(Compra, id=pk)
             next_url = request.GET.get('next', 'matriz-compras')
@@ -3146,6 +3147,7 @@ def matriz_facturas_nomodal(request, pk):
 
     except Http404:
         messages.error(request, "No tienes acceso a esta orden de compra.")
+
         #return redirect(next_url)
     facturas = Facturas.objects.filter(oc = compra, hecho=True)
     pagos = Pago.objects.filter(oc = compra)
@@ -3179,7 +3181,7 @@ def matriz_facturas_nomodal(request, pk):
         #connector = '&' if '?' in base_url else '?'
         #print(query_string)
         redirect_url = f"{base_url}?{query_string}" if query_string else base_url
-        #print('imprimiendo',redirect_url)
+        print('imprimiendo',redirect_url)
         form = Facturas_Completas_Form(request.POST, instance=compra)
         if "btn_factura_completa" in request.POST:
             fecha_hora = datetime.today()
