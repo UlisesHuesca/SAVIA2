@@ -108,7 +108,7 @@ def add_costo(request, tipo):
     #  2 directo
     #  3 operativo < indirecto
     #  4 administrativo < indirecto
-
+    error_messages = []
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
@@ -133,7 +133,9 @@ def add_costo(request, tipo):
                 return redirect('rentabilidad-costos')  
             else:
                 print('Nao é valido')
-                print(form.errors)  
+                
+                error_messages = form.errors
+                print(error_messages)  
         if "btn_costo" in request.POST:
             costo, created = Costos.objects.get_or_create(complete = False, solicitud = solicitud)
             form = Costo_Form(request.POST, instance = costo)
@@ -153,6 +155,7 @@ def add_costo(request, tipo):
         'costos':costos,
         'solicitud':solicitud,
         'editar': False,
+        'error_messages': error_messages,
         }
 
     return render(request,'rentabilidad/add_costo.html',context)
