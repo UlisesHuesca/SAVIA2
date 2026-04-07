@@ -603,11 +603,16 @@ def product(request):
 
     myfilter=ProductFilter(request.GET, queryset=items)
     items = myfilter.qs
-
+    
+    if request.method == 'POST' and 'btnExcel' in request.POST:
+        return convert_excel_productos_xlsxwriter(items)
     #Set up pagination
     p = Paginator(items, 50)
     page = request.GET.get('page')
     items_list = p.get_page(page)
+
+    
+   
 
     context = {
         'usuario':usuario,
@@ -3794,3 +3799,128 @@ def actualizar_comentario_status(request, pk):
         direccion.save()
 
         return JsonResponse({'ok': True})
+    
+from io import BytesIO
+from django.http import HttpResponse
+import datetime as dt
+import xlsxwriter
+
+def convert_excel_productos_xlsxwriter(items):
+    output = BytesIO()
+    workbook = xlsxwriter.Workbook(output, {'in_memory': True})
+    worksheet = workbook.add_worksheet('Productos')
+
+    # Estilos
+    head_style = workbook.add_format({
+        'bold': True,
+        'font_color': 'white',
+        'bg_color': '333366',
+        'font_name': 'Arial',
+        'font_size': 11,
+        'align': 'center',
+        'valign': 'vcenter',
+        'border': 1,
+        'text_wrap': True
+    })
+
+    body_style = workbook.add_format({
+        'font_name': 'Calibri',
+        'font_size': 10,
+        'border': 1,
+        'valign': 'top'
+    })
+
+    money_style = workbook.add_format({
+        'num_format': '$ #,##0.00',
+        'font_name': 'Calibri',
+        'font_size': 10,
+        'border': 1
+    })
+
+    percent_style = workbook.add_format({
+        'num_format': '0.00%',
+        'font_name': 'Calibri',
+        'font_size': 10,
+        'border': 1
+    })
+
+    title_style = workbook.add_format({
+        'bold': True,
+        'font_size': 14,
+        'font_name': 'Arial'
+    })
+
+    # Título
+    worksheet.merge_range('A1:J1', f'Reporte de Productos - {dt.date.today().strftime("%d/%m/%Y")}', title_style)
+
+    # Encabezados
+    columns = [
+        'Código',
+        'Producto',
+        'Familia',
+        'Subfamilia',
+        'Unidad',
+        'IVA',
+        'Activo',
+        'Crítico',
+        'Servicio',
+        #'Precio Referencia',
+        #'Porcentaje',
+    ]
+
+    header_row = 2
+    for col_num, column in enumerate(columns):
+        worksheet.write(header_row, col_num, column, head_style)
+
+    # Anchos de columna
+    worksheet.set_column('A:A', 12)
+    worksheet.set_column('B:B', 45)
+    worksheet.set_column('C:C', 18)
+    worksheet.set_column('D:D', 18)
+    worksheet.set_column('E:E', 10)
+    worksheet.set_column('F:I', 10)
+    worksheet.set_column('J:J', 18)
+    worksheet.set_column('K:K', 12)
+
+    # Freeze panes
+    worksheet.freeze_panes(3, 0)
+
+    # Datos
+    row_num = 3
+    for item in items:
+        worksheet.write(row_num, 0, item.codigo or '', body_style)
+        worksheet.write(row_num, 1, item.nombre or '', body_style)
+        worksheet.write(row_num, 2, item.familia.nombre if item.familia else '', body_style)
+        worksheet.write(row_num, 3, item.subfamilia.nombre if item.subfamilia else '', body_style)
+        worksheet.write(row_num, 4, item.unidad.nombre if item.unidad else '', body_style)
+        worksheet.write(row_num, 5, 'Sí' if item.iva else 'No', body_style)
+        worksheet.write(row_num, 6, 'Sí' if item.activo else 'No', body_style)
+        worksheet.write(row_num, 7, 'Sí' if item.critico else 'No', body_style)
+        worksheet.write(row_num, 8, 'Sí' if item.servicio else 'No', body_style)
+
+        # Precio
+        #worksheet.write(row_num, 9, item.precioref or 0, money_style)
+
+        # Porcentaje
+        # Si guardas 0.15 en BD, usa percent_style directo
+        # Si guardas 15, entonces divide entre 100
+        #porcentaje = item.porcentaje or 0
+        #if porcentaje > 1:
+        #    porcentaje = porcentaje / 100
+        #worksheet.write(row_num, 10, porcentaje, percent_style)
+
+        row_num += 1
+
+    workbook.close()
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(),
+        content_type='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
+
+    response.set_cookie('iniciada', 'true', max_age=20)
+    response['Content-Disposition'] = f'attachment; filename=Reporte_Productos_{dt.date.today()}.xlsx'
+
+    output.close()
+    return response

@@ -2,6 +2,7 @@
 {% load crispy_forms_tags %}
 {% load widget_tweaks %}
 {% load tt_extras %}
+{% load static %}
 <html>
 <head>
 {% block title %}Productos{% endblock %}
@@ -89,18 +90,39 @@
                 </div>
                 <hr>
                 </form>
+                    
+                    
                     <ul class="nav nav-pills">
+
                         <li class="nav-item mx-2">
+                            {% if  usuario.tipo.nombre == "Admin" %}
                             <a type="button" class="btn btn-outline-light" style="background-color:#9a9b9d" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'upload_batch_products' %}">
                                 <i class="fa-solid fa-file-arrow-up"> Carga Masiva</i>
                             </a>
+                            {% endif %}
                             <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'add-product' %}">
                                 <i class="fa-solid fa-plus"> Agregar Producto</i>
                             </a>
                         </li>
+                        <li class="nav-item mx-2">
+                            <form method=POST onsubmit="mostrarIndicadorCarga();">
+                                {% csrf_token %}
+                                <button type="submit" name="btnExcel" class="btn btn-outline-success">
+                                    <i class="fa-solid fa-file-excel fa-2xl"></i>
+                                </button>
+                            </form>
+                        </li>
                     </ul>
+                    
             </div>
         </div>
+</div>
+
+<div id="loadingIndicator" style="display:none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); z-index: 1000;">
+    <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: flex; flex-direction: row; align-items: center; justify-content: center;">
+        <img src="{% static 'images/SAVIA_Logo.png' %}" alt="Logo" style="width: 100px; height: 100px; border-radius: 50%; margin-right: 10px;">
+        <p style="color: white; margin: 0;">Generando reporte, por favor espera...</p>
+    </div>
 </div>
 
 <div class="col-lg-8  offset-md-2">
@@ -231,6 +253,41 @@
             //location.reload();
         },3000);
     })
+    function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        const cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            const cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
+
+function mostrarIndicadorCarga() {
+    document.getElementById('loadingIndicator').style.display = 'block';
+    verificarDescargaIniciada();
+}
+
+function verificarDescargaIniciada(){
+    const checkDescarga = setInterval(() => {
+        const descargaIniciada = getCookie('iniciada');
+        if (descargaIniciada === 'true') {
+            // Ocultar el indicador de carga
+            document.getElementById('loadingIndicator').style.display = 'none';
+            
+            // Opcional: Borrar la cookie si es necesario
+            document.cookie = 'descarga_iniciada=; Max-Age=-99999999;';
+            
+            clearInterval(checkDescarga);
+        }
+    }, 1000); // Revisar cada segundo
+}
   </script>
 {% endblock %}
 
