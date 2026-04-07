@@ -389,13 +389,19 @@ def delete_costos(request, tipo, origen):
 def reporte_costos(request):
     tipo_id = request.GET.get("tipo_id")  # <- capturamos el valor del select
     distrito_id = request.GET.get("distrito_id", 1)  # puedes hacerlo dinámico también
-    print(tipo_id)
+    fecha_inicio = request.GET.get("fecha_inicio")  # viene como YYYY-MM
+    fecha_fin = request.GET.get("fecha_fin")        # viene como YYYY-MM
+
+    if not tipo_id:
+        messages.error(request, "Debes seleccionar un tipo de costo.")
+        return redirect('add-costo', tipo='directo')  # ajusta esta ruta si corresponde
+
+    #print(tipo_id)
     if int(tipo_id) == 1:
         distrito_id = 6
         
     costos = Costos.objects.filter(solicitud__distrito_id=distrito_id, solicitud__tipo_id=tipo_id)
-    fecha_inicio = request.GET.get("fecha_inicio")  # viene como YYYY-MM
-    fecha_fin = request.GET.get("fecha_fin")        # viene como YYYY-MM
+    
 
     tabla, meses = get_tabla_costos(tipo_id, distrito_id, fecha_inicio, fecha_fin)
     distrito_nombre = Distrito.objects.get(id=distrito_id).nombre
