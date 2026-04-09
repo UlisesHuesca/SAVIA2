@@ -1,10 +1,10 @@
 from django.shortcuts import render,  redirect, get_object_or_404
-from django.http import FileResponse, JsonResponse
+from django.http import FileResponse, JsonResponse, HttpResponse
 from django.core.paginator import Paginator, EmptyPage, PageNotAnInteger
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.utils import timezone
-from django.db.models import Sum, Q, F, Count, Value, CharField, DecimalField, DateField
+from django.db.models import Sum, Q, F, Count, Value, CharField, DecimalField, DateField, ExpressionWrapper
 from django.db.models.functions import ExtractYear, ExtractMonth, Concat, Coalesce, TruncYear, TruncMonth, Cast
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -34,6 +34,8 @@ import requests
 from user.models import CustomUser, Empresa
 
 from rest_framework.views import APIView
+from openpyxl import Workbook
+from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 
 
 from compras.views import generar_pdf_nueva
@@ -313,7 +315,10 @@ def CompraAPI(request):
 def compras_resumen_api(request):
     qs = (
         Compra.objects
-        .filter(complete=True)
+        .filter(
+            complete=True,
+            solo_servicios=True,
+        )
         .exclude(req__orden__distrito__nombre__in=[
             'BRASIL',
             'ALTAMIRA ALTERNATIVO',
@@ -332,7 +337,6 @@ def compras_resumen_api(request):
     pagada = request.query_params.get('pagada')
     fecha_desde = request.query_params.get('fecha_desde')
     fecha_hasta = request.query_params.get('fecha_hasta')
-    group_by = request.query_params.get('group_by', 'proveedor')
 
     if distrito:
         qs = qs.filter(req__orden__distrito__nombre=distrito)
@@ -346,10 +350,10 @@ def compras_resumen_api(request):
     if subproyecto:
         qs = qs.filter(req__orden__subproyecto__nombre__icontains=subproyecto)
 
-    if anio and group_by != 'anio':
+    if anio:
         qs = qs.filter(created_at__year=anio)
 
-    if mes and group_by != 'mes':
+    if mes:
         qs = qs.filter(created_at__month=mes)
 
     if pagada in ['true', 'false']:
@@ -361,102 +365,499 @@ def compras_resumen_api(request):
     if fecha_hasta:
         qs = qs.filter(created_at__date__lte=fecha_hasta)
 
-    monto_total_expr = Coalesce(
-        Sum('costo_oc'),
-        Value(Decimal('0.00')),
-        output_field=DecimalField(max_digits=14, decimal_places=2)
+    proveedores = list(
+    qs.order_by()
+    .values(
+        proveedor_master_id=F('proveedor__nombre_id'),
+        proveedor_nombre=F('proveedor__nombre__razon_social'),
+    )
+    .annotate(
+        total_compras=Count('id'),
+        monto_total=Coalesce(
+            Sum('costo_oc'),
+            Value(Decimal('0.00')),
+            output_field=DecimalField(max_digits=14, decimal_places=2)
+        ),
+        monto_pagado_total=Coalesce(
+            Sum('monto_pagado'),
+            Value(Decimal('0.00')),
+            output_field=DecimalField(max_digits=14, decimal_places=2)
+        ),
+        compras_pagadas=Count('id', filter=Q(pagada=True)),
+        compras_no_pagadas=Count('id', filter=Q(pagada=False)),
+    )
+    .order_by('-monto_total')
+)
+
+    productos_por_proveedor = list(
+        ArticuloComprado.objects
+        .filter(oc__in=qs)
+        .order_by()
+        .values(
+            proveedor_fk=F('oc__proveedor__nombre_id'),
+            producto_nombre=Coalesce(
+                F('producto__producto__articulos__producto__producto__nombre'),
+                Value('SIN DESCRIPCIÓN'),
+                output_field=CharField()
+            ),
+        )
+        .annotate(
+            total_ocs=Count('oc', distinct=True),
+            cantidad_total=Coalesce(
+                Sum('cantidad'),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=14, decimal_places=2)
+            ),
+            monto_total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F('cantidad') * F('precio_unitario'),
+                        output_field=DecimalField(max_digits=20, decimal_places=2)
+                    )
+                ),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=20, decimal_places=2)
+            )
+        )
+        .order_by('proveedor_fk', '-monto_total')
     )
 
-    monto_pagado_expr = Coalesce(
-        Sum('monto_pagado'),
-        Value(Decimal('0.00')),
-        output_field=DecimalField(max_digits=14, decimal_places=2)
+    mapa_productos = {}
+    for item in productos_por_proveedor:
+        proveedor_id = item["proveedor_fk"]
+        mapa_productos.setdefault(proveedor_id, []).append({
+            "producto": item["producto_nombre"],
+            "total_ocs": item["total_ocs"],
+            "cantidad_total": item["cantidad_total"],
+            "monto_total": item["monto_total"],
+        })
+
+    resultado = []
+    for prov in proveedores:
+        resultado.append({
+            "proveedor_id": prov["proveedor_master_id"],
+            "proveedor": prov["proveedor_nombre"],
+            "total_compras": prov["total_compras"],
+            "monto_total": prov["monto_total"],
+            "monto_pagado_total": prov["monto_pagado_total"],
+            "compras_pagadas": prov["compras_pagadas"],
+            "compras_no_pagadas": prov["compras_no_pagadas"],
+            "productos": mapa_productos.get(prov["proveedor_master_id"], []),
+        })
+    
+    return Response(resultado)
+
+from io import BytesIO
+from django.http import HttpResponse
+from openpyxl import Workbook
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def compras_resumen_excel(request):
+    print("entra excel")
+
+    data = construir_compras_resumen(request)
+    print("data construida:", len(data))
+
+    wb = Workbook()
+    ws = wb.active
+    ws.title = "Resumen Compras"
+
+    # 🎨 ESTILOS
+    title_fill = PatternFill(fill_type="solid", fgColor="163A5F")
+    header_fill = PatternFill(fill_type="solid", fgColor="D9EAF7")
+    title_font = Font(color="FFFFFF", bold=True, size=14)
+    header_font = Font(bold=True)
+    body_font = Font(size=11)
+
+    border = Border(
+        left=Side(style="thin", color="D9D9D9"),
+        right=Side(style="thin", color="D9D9D9"),
+        top=Side(style="thin", color="D9D9D9"),
+        bottom=Side(style="thin", color="D9D9D9"),
     )
 
-    if group_by == 'proveedor':
-        resumen = list(
-            qs.order_by()
-            .values(grupo=F('proveedor__nombre__razon_social'))
-            .annotate(
-                total_compras=Count('id'),
-                monto_total=monto_total_expr,
-                monto_pagado_total=monto_pagado_expr,
-                compras_pagadas=Count('id', filter=Q(pagada=True)),
-                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
-            )
-            .order_by('-monto_total')
+    # 🧾 TÍTULO
+    ws.merge_cells("A1:E1")
+    ws["A1"] = "Resumen de Compras"
+    ws["A1"].fill = title_fill
+    ws["A1"].font = title_font
+    ws["A1"].alignment = Alignment(horizontal="center", vertical="center")
+
+    # 📌 HEADERS
+    headers = [
+        "Proveedor",
+        "Servicio",
+        "Total OCs",
+        "Cantidad Total",
+        "Monto Total",
+    ]
+
+    header_row = 3
+
+    for col, header in enumerate(headers, start=1):
+        cell = ws.cell(row=header_row, column=col, value=header)
+        cell.fill = header_fill
+        cell.font = header_font
+        cell.alignment = Alignment(horizontal="center")
+        cell.border = border
+
+    # 📊 DATOS
+    current_row = header_row + 1
+
+    for prov in data:
+        proveedor = prov["proveedor"]
+
+        for prod in prov["productos"]:
+            ws.cell(row=current_row, column=1, value=proveedor)
+            ws.cell(row=current_row, column=2, value=prod["producto"])
+            ws.cell(row=current_row, column=3, value=prod["total_ocs"])
+            ws.cell(row=current_row, column=4, value=float(prod["cantidad_total"]))
+            ws.cell(row=current_row, column=5, value=float(prod["monto_total"]))
+
+            for col in range(1, 6):
+                cell = ws.cell(row=current_row, column=col)
+                cell.font = body_font
+                cell.border = border
+
+                if col in [3, 4, 5]:
+                    cell.alignment = Alignment(horizontal="right")
+                else:
+                    cell.alignment = Alignment(horizontal="left")
+
+            current_row += 1
+
+    # 💰 FORMATO NUMÉRICO
+    for row in range(header_row + 1, current_row):
+        ws.cell(row=row, column=4).number_format = '#,##0.00'
+        ws.cell(row=row, column=5).number_format = '$#,##0.00'
+
+    # 🔍 AUTOFILTRO
+    ws.auto_filter.ref = f"A{header_row}:E{current_row - 1}"
+
+    # ❄️ CONGELAR ENCABEZADO
+    ws.freeze_panes = "A4"
+
+    # 📏 ANCHOS DE COLUMNA
+    ws.column_dimensions["A"].width = 35
+    ws.column_dimensions["B"].width = 45
+    ws.column_dimensions["C"].width = 12
+    ws.column_dimensions["D"].width = 16
+    ws.column_dimensions["E"].width = 18
+
+    # ALTURA
+    ws.row_dimensions[1].height = 25
+    ws.row_dimensions[3].height = 22
+
+    # 💾 GUARDAR
+    output = BytesIO()
+    wb.save(output)
+    output.seek(0)
+
+    contenido = output.getvalue()
+    print("bytes excel:", len(contenido))
+
+    response = HttpResponse(
+        contenido,
+        content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+    )
+    response["Content-Disposition"] = 'attachment; filename="resumen_compras.xlsx"'
+    response["Content-Length"] = str(len(contenido))
+
+    print("response listo")
+    return response
+
+def construir_compras_resumen(request):
+    print("1. entra helper")
+
+    qs = (
+        Compra.objects
+        .filter(
+            complete=True,
+            solo_servicios=True,
         )
+        .exclude(req__orden__distrito__nombre__in=[
+            'BRASIL',
+            'ALTAMIRA ALTERNATIVO',
+            'VH SECTOR 6',
+        ])
+        .exclude(autorizado1=False)
+        .exclude(autorizado2=False)
+    )
 
-    elif group_by == 'distrito':
-        resumen = list(
-            qs.order_by()
-            .values(grupo=F('req__orden__distrito__nombre'))
-            .annotate(
-                total_compras=Count('id'),
-                monto_total=monto_total_expr,
-                monto_pagado_total=monto_pagado_expr,
-                compras_pagadas=Count('id', filter=Q(pagada=True)),
-                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
-            )
-            .order_by('-monto_total')
+    print("2. queryset base armado")
+
+    distrito = request.query_params.get('distrito')
+    proveedor = request.query_params.get('proveedor')
+    proyecto = request.query_params.get('proyecto')
+    subproyecto = request.query_params.get('subproyecto')
+    anio = request.query_params.get('anio')
+    mes = request.query_params.get('mes')
+    pagada = request.query_params.get('pagada')
+    fecha_desde = request.query_params.get('fecha_desde')
+    fecha_hasta = request.query_params.get('fecha_hasta')
+
+    print("3. params leídos")
+
+    if distrito:
+        qs = qs.filter(req__orden__distrito__nombre=distrito)
+    if proveedor:
+        qs = qs.filter(proveedor__nombre__razon_social__icontains=proveedor)
+    if proyecto:
+        qs = qs.filter(req__orden__proyecto__nombre__icontains=proyecto)
+    if subproyecto:
+        qs = qs.filter(req__orden__subproyecto__nombre__icontains=subproyecto)
+    if anio:
+        qs = qs.filter(created_at__year=anio)
+    if mes:
+        qs = qs.filter(created_at__month=mes)
+    if pagada in ['true', 'false']:
+        qs = qs.filter(pagada=(pagada == 'true'))
+    if fecha_desde:
+        qs = qs.filter(created_at__date__gte=fecha_desde)
+    if fecha_hasta:
+        qs = qs.filter(created_at__date__lte=fecha_hasta)
+
+    print("4. filtros aplicados")
+
+    print("5. count qs:", qs.count())
+
+    proveedores = list(
+        qs.order_by()
+        .values(
+            proveedor_master_id=F('proveedor__nombre_id'),
+            proveedor_nombre=F('proveedor__nombre__razon_social'),
         )
-
-    elif group_by == 'anio':
-        resumen = list(
-            qs.exclude(created_at__isnull=True)
-            .order_by()
-            .annotate(fecha_base=Cast('created_at', output_field=DateField()))
-            .annotate(grupo=ExtractYear('fecha_base'))
-            .values('grupo')
-            .annotate(
-                total_compras=Count('id'),
-                monto_total=monto_total_expr,
-                monto_pagado_total=monto_pagado_expr,
-                compras_pagadas=Count('id', filter=Q(pagada=True)),
-                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
-            )
-            .order_by('grupo')
+        .annotate(
+            total_compras=Count('id'),
+            monto_total=Coalesce(
+                Sum('costo_oc'),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=14, decimal_places=2)
+            ),
+            monto_pagado_total=Coalesce(
+                Sum('monto_pagado'),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=14, decimal_places=2)
+            ),
+            compras_pagadas=Count('id', filter=Q(pagada=True)),
+            compras_no_pagadas=Count('id', filter=Q(pagada=False)),
         )
+        .order_by('-monto_total')
+    )
 
-    elif group_by == 'mes':
-        resumen_qs = (
-            qs.exclude(created_at__isnull=True)
-            .order_by()
-            .annotate(fecha_base=Cast('created_at', output_field=DateField()))
-            .annotate(
-                anio_num=ExtractYear('fecha_base'),
-                mes_num=ExtractMonth('fecha_base'),
-            )
-            .values('anio_num', 'mes_num')
-            .annotate(
-                total_compras=Count('id'),
-                monto_total=monto_total_expr,
-                monto_pagado_total=monto_pagado_expr,
-                compras_pagadas=Count('id', filter=Q(pagada=True)),
-                compras_no_pagadas=Count('id', filter=Q(pagada=False)),
-            )
-            .order_by('anio_num', 'mes_num')
+    print("6. proveedores listos:", len(proveedores))
+
+    productos_por_proveedor = list(
+        ArticuloComprado.objects
+        .filter(oc__in=qs)
+        .order_by()
+        .values(
+            proveedor_fk=F('oc__proveedor__nombre_id'),
+            producto_nombre=Coalesce(
+                F('producto__producto__articulos__producto__producto__nombre'),
+                Value('SIN DESCRIPCIÓN'),
+                output_field=CharField()
+            ),
         )
-
-        resumen = [
-            {
-                "grupo": f"{row['anio_num']}-{str(row['mes_num']).zfill(2)}",
-                "total_compras": row["total_compras"],
-                "monto_total": row["monto_total"],
-                "monto_pagado_total": row["monto_pagado_total"],
-                "compras_pagadas": row["compras_pagadas"],
-                "compras_no_pagadas": row["compras_no_pagadas"],
-            }
-            for row in resumen_qs
-        ]
-
-    else:
-        return Response(
-            {"detail": "group_by inválido. Usa: proveedor, distrito, anio o mes"},
-            status=400
+        .annotate(
+            total_ocs=Count('oc', distinct=True),
+            cantidad_total=Coalesce(
+                Sum('cantidad'),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=14, decimal_places=2)
+            ),
+            monto_total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F('cantidad') * F('precio_unitario'),
+                        output_field=DecimalField(max_digits=20, decimal_places=2)
+                    )
+                ),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=20, decimal_places=2)
+            )
         )
+        .order_by('proveedor_fk', '-monto_total')
+    )
 
-    return Response(resumen)
+    print("7. productos listos:", len(productos_por_proveedor))
+
+    mapa_productos = {}
+    for item in productos_por_proveedor:
+        proveedor_id = item["proveedor_fk"]
+        mapa_productos.setdefault(proveedor_id, []).append({
+            "producto": item["producto_nombre"],
+            "total_ocs": item["total_ocs"],
+            "cantidad_total": item["cantidad_total"],
+            "monto_total": item["monto_total"],
+        })
+
+    print("8. mapa listo")
+
+    resultado = []
+    for prov in proveedores:
+        resultado.append({
+            "proveedor_id": prov["proveedor_master_id"],
+            "proveedor": prov["proveedor_nombre"],
+            "total_compras": prov["total_compras"],
+            "monto_total": prov["monto_total"],
+            "monto_pagado_total": prov["monto_pagado_total"],
+            "compras_pagadas": prov["compras_pagadas"],
+            "compras_no_pagadas": prov["compras_no_pagadas"],
+            "productos": mapa_productos.get(prov["proveedor_master_id"], []),
+        })
+
+    print("9. resultado listo:", len(resultado))
+    return resultado
+
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def compras_resumen_chart(request):
+    qs = (
+        Compra.objects
+        .filter(
+            complete=True,
+            solo_servicios=True,
+        )
+        .exclude(req__orden__distrito__nombre__in=[
+            'BRASIL',
+            'ALTAMIRA ALTERNATIVO',
+            'VH SECTOR 6',
+        ])
+        .exclude(autorizado1=False)
+        .exclude(autorizado2=False)
+    )
+
+    distrito = request.query_params.get('distrito')
+    proveedor = request.query_params.get('proveedor')
+    proyecto = request.query_params.get('proyecto')
+    subproyecto = request.query_params.get('subproyecto')
+    anio = request.query_params.get('anio')
+    mes = request.query_params.get('mes')
+    pagada = request.query_params.get('pagada')
+    fecha_desde = request.query_params.get('fecha_desde')
+    fecha_hasta = request.query_params.get('fecha_hasta')
+    top = int(request.query_params.get('top', 10))
+
+    if distrito:
+        qs = qs.filter(req__orden__distrito__nombre=distrito)
+
+    if proveedor:
+        qs = qs.filter(proveedor__nombre__razon_social__icontains=proveedor)
+
+    if proyecto:
+        qs = qs.filter(req__orden__proyecto__nombre__icontains=proyecto)
+
+    if subproyecto:
+        qs = qs.filter(req__orden__subproyecto__nombre__icontains=subproyecto)
+
+    if anio:
+        qs = qs.filter(created_at__year=anio)
+
+    if mes:
+        qs = qs.filter(created_at__month=mes)
+
+    if pagada in ['true', 'false']:
+        qs = qs.filter(pagada=(pagada == 'true'))
+
+    if fecha_desde:
+        qs = qs.filter(created_at__date__gte=fecha_desde)
+
+    if fecha_hasta:
+        qs = qs.filter(created_at__date__lte=fecha_hasta)
+
+    data = list(
+        qs.values(
+            label=F('proveedor__nombre__razon_social')
+        )
+        .annotate(
+            monto_total=Coalesce(
+                Sum('costo_oc'),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=14, decimal_places=2)
+            )
+        )
+        .order_by('-monto_total')[:top]
+    )
+
+    return Response(data)
+
+@api_view(['GET'])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def compras_resumen_chart_proveedores(request):
+    qs = (
+        Compra.objects
+        .filter(
+            complete=True,
+            solo_servicios=True,
+        )
+        .exclude(req__orden__distrito__nombre__in=[
+            'BRASIL',
+            'ALTAMIRA ALTERNATIVO',
+            'VH SECTOR 6',
+        ])
+        .exclude(autorizado1=False)
+        .exclude(autorizado2=False)
+    )
+
+    distrito = request.query_params.get('distrito')
+    proveedor = request.query_params.get('proveedor')
+    proyecto = request.query_params.get('proyecto')
+    subproyecto = request.query_params.get('subproyecto')
+    anio = request.query_params.get('anio')
+    mes = request.query_params.get('mes')
+    pagada = request.query_params.get('pagada')
+    fecha_desde = request.query_params.get('fecha_desde')
+    fecha_hasta = request.query_params.get('fecha_hasta')
+    top = int(request.query_params.get('top', 10))
+
+    if distrito:
+        qs = qs.filter(req__orden__distrito__nombre=distrito)
+
+    if proveedor:
+        qs = qs.filter(proveedor__nombre__razon_social__icontains=proveedor)
+
+    if proyecto:
+        qs = qs.filter(req__orden__proyecto__nombre__icontains=proyecto)
+
+    if subproyecto:
+        qs = qs.filter(req__orden__subproyecto__nombre__icontains=subproyecto)
+
+    if anio:
+        qs = qs.filter(created_at__year=anio)
+
+    if mes:
+        qs = qs.filter(created_at__month=mes)
+
+    if pagada in ['true', 'false']:
+        qs = qs.filter(pagada=(pagada == 'true'))
+
+    if fecha_desde:
+        qs = qs.filter(created_at__date__gte=fecha_desde)
+
+    if fecha_hasta:
+        qs = qs.filter(created_at__date__lte=fecha_hasta)
+
+    data = list(
+        qs.values(
+            label=F('proveedor__nombre__razon_social')
+        )
+        .annotate(
+            monto_total=Coalesce(
+                Sum('costo_oc'),
+                Value(Decimal('0.00')),
+                output_field=DecimalField(max_digits=14, decimal_places=2)
+            )
+        )
+        .order_by('-monto_total')[:top]
+    )
+
+    return Response(data)
 
 @api_view(["GET"])
 @authentication_classes([TokenAuthentication])

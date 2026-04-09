@@ -1948,6 +1948,7 @@ def generar_rentabilidad_excel(contratos_data, tipos_costos_totales, distrito_id
     if "head_style" not in wb.named_styles:
         wb.add_named_style(head_style)
 
+
     # 👉 Encabezados dinámicos
     col_idx = 1
     ws.cell(row=fila, column=col_idx, value="Contrato").style = head_style
@@ -1955,16 +1956,30 @@ def generar_rentabilidad_excel(contratos_data, tipos_costos_totales, distrito_id
     ws.cell(row=fila, column=col_idx, value="Ingresos").style = head_style
     col_idx += 1
 
+
+
     # Tipos de costos en columnas
     tipos_order = list(tipos_costos_totales.keys())
     for tipo in tipos_order:
         ws.cell(row=fila, column=col_idx, value=tipo).style = head_style
         col_idx += 1
 
+    # Nuevas columnas fijas antes del margen operativo
+    ws.cell(row=fila, column=col_idx, value="Directos").style = head_style
+    col_idx += 1
+    ws.cell(row=fila, column=col_idx, value="Indirectos Operación").style = head_style
+    col_idx += 1
+    ws.cell(row=fila, column=col_idx, value="Indirectos Administración").style = head_style
+    col_idx += 1
     ws.cell(row=fila, column=col_idx, value="Amortización").style = head_style
     col_idx += 1
-    ws.cell(row=fila, column=col_idx, value="Rentabilidad").style = head_style
-
+    ws.cell(row=fila, column=col_idx, value="Margen Operativo").style = head_style
+    col_margen = col_idx
+    col_idx += 1
+    ws.cell(row=fila, column=col_idx, value="% Margen").style = head_style
+    col_porcentaje_margen = col_idx
+    col_idx += 1
+   
     # 👉 Filas de datos
     row_idx = fila + 1
     for row in contratos_data:
@@ -1984,28 +1999,64 @@ def generar_rentabilidad_excel(contratos_data, tipos_costos_totales, distrito_id
             cell.style = money_style
             col += 1
 
+        # Directos
+        cell = ws.cell(row=row_idx, column=col, value=row.get("directos", 0))
+        cell.style = money_style
+        col += 1
+
+        # Indirectos Operación
+        cell = ws.cell(row=row_idx, column=col, value=row.get("ind_oper", 0))
+        cell.style = money_style
+        col += 1
+
+        # Indirectos Administración
+        cell = ws.cell(row=row_idx, column=col, value=row.get("ind_adm", 0))
+        cell.style = money_style
+        col += 1
+
         # Depreciaciones
         cell = ws.cell(row=row_idx, column=col, value=row["depreciaciones"])
         cell.style = money_style
         col += 1
 
         # Rentabilidad
-        cell = ws.cell(row=row_idx, column=col, value=row["rentabilidad"])
+        cell = ws.cell(row=row_idx, column=col, value=row["margen_operativo"])
         cell.style = money_style
+        col += 1
+
+        # % Margen  ← ESTA PARTE sí va dentro del loop
+        col_ingresos = 2
+        col_ingresos_letter = get_column_letter(col_ingresos)
+        col_margen_letter = get_column_letter(col_margen)
+
+        formula = f"=IF(B{row_idx}=0,0,{get_column_letter(col_margen)}{row_idx}/B{row_idx})"
+        cell = ws.cell(row=row_idx, column=col, value=formula)
+        cell.number_format = '0.00%'
         col += 1
 
         row_idx += 1
 
+    start_row = fila + 1
+    end_row = row_idx - 1
     # 👉 Totales con fórmula
     ws.cell(row=row_idx, column=1, value="TOTAL").font = Font(bold=True)
-    for col in range(2, len(tipos_order) + 5):  # ingresos + tipos + amortización + rentabilidad
+    for col in range(2, col_porcentaje_margen + 1):
         col_letter = get_column_letter(col)
-        start_row = fila + 1
-        end_row = row_idx - 1
-        formula = f"=SUM({col_letter}{start_row}:{col_letter}{end_row})"
-        cell = ws.cell(row=row_idx, column=col, value=formula)
-        cell.style = money_style
-        cell.font = Font(bold=True)
+
+        if col == col_porcentaje_margen:
+            col_ingresos_letter = get_column_letter(2)
+            col_margen_letter = get_column_letter(col_margen)
+
+            formula = f"=IF({col_ingresos_letter}{row_idx}=0,0,{col_margen_letter}{row_idx}/{col_ingresos_letter}{row_idx})"
+            cell = ws.cell(row=row_idx, column=col, value=formula)
+            cell.number_format = '0.00%'
+            cell.font = Font(bold=True)
+        else:
+            formula = f"=SUM({col_letter}{start_row}:{col_letter}{end_row})"
+            cell = ws.cell(row=row_idx, column=col, value=formula)
+            cell.style = money_style
+            cell.font = Font(bold=True)
+
 
     # Ajustar anchos
     for i, col in enumerate(ws.columns, start=1):
@@ -2013,6 +2064,8 @@ def generar_rentabilidad_excel(contratos_data, tipos_costos_totales, distrito_id
         ws.column_dimensions[col_letter].width = max(
             (len(str(cell.value)) for cell in col if cell.value), default=10
         ) + 2
+
+    
 
     # Respuesta HTTP
     response = HttpResponse(
