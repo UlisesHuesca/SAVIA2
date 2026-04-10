@@ -41,6 +41,15 @@ class Contrato(models.Model):
 class Tipo_Proyecto(models.Model):
     nombre = models.CharField(max_length=15, null=True)
 
+    def __str__(self):
+        return f'{self.nombre}'
+
+class Clase_Costo_Proyecto(models.Model):
+    nombre = models.CharField(max_length=30, null=True)
+
+    def __str__(self):
+        return f'{self.nombre}'
+
 class Proyecto(models.Model):
     nombre = models.CharField(max_length=50, null=True)
     descripcion = models.CharField(max_length=100, null=True, blank=True)
@@ -58,6 +67,7 @@ class Proyecto(models.Model):
     cuenta_contable = models.ForeignKey(Cuenta_Contable, on_delete=models.CASCADE, null=True, blank=True)
     tipo = models.ForeignKey(Tipo_Proyecto, on_delete=models.CASCADE, null=True)
     contrato = models.ForeignKey(Contrato, on_delete = models.CASCADE, null=True, related_name="proyectos")
+    #clase = models.ForeignKey(Clase_Costo_Proyecto, on_delete=models.CASCADE, null=True)
 
     class Meta:
         unique_together = ('nombre', 'distrito',)
