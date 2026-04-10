@@ -1538,6 +1538,7 @@ def cuestionario_debida_diligencia(request, proveedor_id):
                 tipo_documento="csf",
                 activo=True,
                 obsoleto=False,
+                validada=True
             ) 
         except DocumentosProveedor.DoesNotExist:
             documento_csf = None
