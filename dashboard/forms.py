@@ -162,13 +162,13 @@ class Contrato_form(forms.ModelForm):
 class Proyectos_Form(forms.ModelForm):
     class Meta:
         model = Proyecto
-        fields = ['descripcion','nombre','status_de_entrega','contrato'] #Se retiran campos 'cliente','factura','fecha_factura','folio_cotizacion','oc_cliente','activo',
+        fields = ['descripcion','nombre','status_de_entrega','contrato','clase'] #Se retiran campos 'cliente','factura','fecha_factura','folio_cotizacion','oc_cliente','activo',
 
 
 class Proyectos_Add_Form(forms.ModelForm):
     class Meta:
         model = Proyecto
-        fields = ['descripcion','nombre','status_de_entrega','contrato'] #'cliente','factura','fecha_factura','folio_cotizacion','oc_cliente',
+        fields = ['descripcion','nombre','status_de_entrega','contrato','clase'] #'cliente','factura','fecha_factura','folio_cotizacion','oc_cliente',
 
 class Subproyectos_Add_Form(forms.ModelForm):
     class Meta:
