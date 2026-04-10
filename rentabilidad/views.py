@@ -1153,6 +1153,9 @@ def eliminar_depreciacion(request, pk):
     return redirect('rentabilidad-depreciaciones')  # la vista donde está la tabla
 
 
+
+
+
 def reporte_depreciaciones_original(request):
     distrito_id = request.GET.get("distrito_id")
     fecha_inicio = request.GET.get("fecha_inicio")   # "YYYY-MM"
@@ -1195,6 +1198,10 @@ def reporte_depreciaciones_original(request):
     tabla = defaultdict(lambda: defaultdict(dict))
     remanentes = defaultdict(dict)
 
+    def months_diff(start_date, end_date):
+        months = (end_date.year - start_date.year) * 12 + (end_date.month - start_date.month)
+        return max(0, months)
+
     for dep in depreciaciones:
         meses_dep = dep.meses_a_depreciar or 1
         monto_mensual = dep.monto / meses_dep
@@ -1205,7 +1212,10 @@ def reporte_depreciaciones_original(request):
         # ✅ meses transcurridos INCLUYENDO el mes actual
         meses_trans = _months_inclusive(inicio, mes_corte)
         # no puede exceder los meses a depreciar
+        
+        meses_trans = months_diff(inicio, mes_corte)
         meses_trans = min(meses_trans, meses_dep)
+        
         remanente = monto_total - (meses_trans * monto_mensual)
         contrato_nombre = getattr(dep.contrato, "nombre", str(dep.contrato))
         concepto = dep.concepto or "Sin concepto"
