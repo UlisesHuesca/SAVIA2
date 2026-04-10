@@ -680,7 +680,7 @@
                                             </a>
                                         {% else %}
                                             {% for documento in documentos %}
-                                                {% if documento.tipo_documento == "opinion_cumplimiento" %}
+                                                {% if documento.tipo_documento == "opinion_cumplimiento" and not documento.obsoleto %}
                                                     {% if documento.validada  %}
                                                         <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfOpinion{{documento.id|unlocalize }}" title="Ver Opinión de Cumplimiento">
                                                             <i class="fa-duotone fa-solid fa-file-pdf fa-xl" aria-hidden="true"></i>
