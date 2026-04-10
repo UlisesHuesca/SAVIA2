@@ -67,7 +67,7 @@ class Proyecto(models.Model):
     cuenta_contable = models.ForeignKey(Cuenta_Contable, on_delete=models.CASCADE, null=True, blank=True)
     tipo = models.ForeignKey(Tipo_Proyecto, on_delete=models.CASCADE, null=True)
     contrato = models.ForeignKey(Contrato, on_delete = models.CASCADE, null=True, related_name="proyectos")
-    #clase = models.ForeignKey(Clase_Costo_Proyecto, on_delete=models.CASCADE, null=True)
+    clase = models.ForeignKey(Clase_Costo_Proyecto, on_delete=models.CASCADE, default=1)
 
     class Meta:
         unique_together = ('nombre', 'distrito',)
