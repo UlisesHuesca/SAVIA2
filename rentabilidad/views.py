@@ -1204,6 +1204,7 @@ def reporte_depreciaciones_original(request):
 
     for dep in depreciaciones:
         meses_dep = dep.meses_a_depreciar or 1
+        #print(f"Depreciación {dep.id}: meses a depreciar = {meses_dep}")
         monto_mensual = dep.monto / meses_dep
         monto_total = dep.monto
 
@@ -1211,6 +1212,7 @@ def reporte_depreciaciones_original(request):
         inicio = date(dep.mes_inicial.year, dep.mes_inicial.month, 1)
         # ✅ meses transcurridos INCLUYENDO el mes actual
         meses_trans = _months_inclusive(inicio, mes_corte)
+        print("Meses transcurridos (inclusive):", meses_trans)
         # no puede exceder los meses a depreciar
         
         meses_trans = months_diff(inicio, mes_corte)
@@ -1332,13 +1334,13 @@ def reporte_depreciaciones(request):
         month_final = (inicio.month - 1 + offset) % 12 + 1
         mes_final = date(year_final, month_final, 1)
 
-        print("Mes final:", mes_final)
+        #print("Mes final:", mes_final)
 
         # ✅ solo mostrar depreciaciones activas en el mes elegido
         if not (inicio <= mes_corte <= mes_final):
             continue
 
-        meses_trans = _months_inclusive(inicio, mes_corte)
+        meses_trans = _months_elapsed(inicio, mes_corte)
         meses_trans = min(meses_trans, meses_dep)
 
         depreciacion_acumulada = meses_trans * monto_mensual
@@ -1390,12 +1392,13 @@ def reporte_depreciaciones(request):
     return render(request, "rentabilidad/reporte_depreciaciones.html", context)
 
 
-def _months_inclusive(start_month: date, current_month: date) -> int:
-    """Meses entre start y current INCLUYENDO el mes actual.
-       Si current < start, regresa 0."""
+def _months_elapsed(start_month: date, current_month: date) -> int:
+    """Meses transcurridos entre start y current, sin incluir el mes inicial.
+    Si current < start, regresa 0.
+    """
     if current_month < start_month:
         return 0
-    return (current_month.year - start_month.year) * 12 + (current_month.month - start_month.month) + 1
+    return (current_month.year - start_month.year) * 12 + (current_month.month - start_month.month)
 
 @perfil_seleccionado_required
 def add_depreciacion(request):
