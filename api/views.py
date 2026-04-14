@@ -310,7 +310,7 @@ def CompraAPI(request):
 
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def compras_resumen_api(request):
     qs = (
@@ -452,7 +452,7 @@ from django.http import HttpResponse
 from openpyxl import Workbook
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def compras_resumen_excel(request):
     print("entra excel")
@@ -568,6 +568,9 @@ def compras_resumen_excel(request):
     print("response listo")
     return response
 
+
+#@api_view(['GET'])
+#@permission_classes([IsAuthenticated])
 def construir_compras_resumen(request):
     print("1. entra helper")
 
@@ -787,7 +790,7 @@ def compras_resumen_chart(request):
     return Response(data)
 
 @api_view(['GET'])
-@authentication_classes([TokenAuthentication])
+@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def compras_resumen_chart_proveedores(request):
     qs = (
@@ -925,7 +928,7 @@ def proveedor_api(request):
     return Response(serialized_proveedores.data)
 
 @api_view(['GET'])
-@authentication_classes([SessionAuthentication,TokenAuthentication])
+@authentication_classes([SessionAuthentication])
 @permission_classes([IsAuthenticated])
 def distritos_api(request):
     #registra el acceso a la api
