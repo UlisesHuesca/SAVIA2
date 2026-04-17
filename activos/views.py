@@ -735,7 +735,7 @@ def render_pdf_responsiva_activos(request, pk):
     #Here ends conf.
     todos_activos = Activo.objects.all()
     activo = todos_activos.get(id=pk)
-    activos = todos_activos.filter(responsable=activo.responsable, estatus__nombre = "ALTA")
+    activos = todos_activos.filter(responsable=activo.responsable, estatus__nombre__in=["ALTA", "REPARACION STOCK"])
 
    #Azul Vordcab
     prussian_blue = Color(0.0859375,0.1953125,0.30859375)

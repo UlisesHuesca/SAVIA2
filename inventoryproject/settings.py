@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'api.apps.ApiConfig',
     'proveedores_externos.apps.ProveedoresExternosConfig',
     'rentabilidad.apps.RentabilidadConfig',
+    'ventas.apps.VentasConfig',
     
 
 
