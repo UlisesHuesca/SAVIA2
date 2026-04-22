@@ -3827,7 +3827,7 @@ def mis_viaticos(request):
     if usuario.sustituto:
         usuario = Profile.objects.filter(staff = usuario.staff, tipo__subdirector = True, st_activo = True).first()
     
-    viaticos = Solicitud_Viatico.objects.filter(Q(staff = usuario) |Q(colaborador = usuario), complete=True).order_by('-folio')
+    viaticos = Solicitud_Viatico.objects.filter(Q(staff__staff = usuario.staff) |Q(colaborador__staff = usuario.staff), complete=True).order_by('-folio')
     myfilter = Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
 
