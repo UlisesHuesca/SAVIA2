@@ -1095,7 +1095,7 @@
                                                 {% endif %}
                                             {% endfor %}
                                             {% if documentos_count.cotizacion > documentos_validados_count.cotizacion %}
-                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documentos de Calidad" hx-target="#document" hx-get="{% url 'edit-calidad' proveedor.id %}">
+                                            <a type="button" class="btn btn-outline-secondary" data-bs-toggle="modal" data-bs-target='#dialog' data-bs-toggle="tooltip" data-bs-placement="top" title="Cambiar Documentos de Calidad" hx-target="#document" hx-get="{% url 'edit-cotizacion' proveedor.id %}">
                                                 <i class="fa-duotone fa-regular fa-cloud-arrow-up fa-xl" aria-hidden="true"></i>
                                             </a>
                                             {% endif %}
