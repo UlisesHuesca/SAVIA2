@@ -8,7 +8,7 @@ class ProyectoAdmin(admin.ModelAdmin):
 
 class SubproyectoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre','proyecto')
-    search_fields = ['nombre','proyecto']
+    search_fields = ['nombre','proyecto__nombre']
 
 
 # Register your models here.
