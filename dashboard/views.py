@@ -1144,13 +1144,11 @@ def edit_proveedores(request, pk):
                         campos_modificados.append('Banco')
                         detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
 
-                    tesoreros = Profile.objects.filter(
-                        distritos = usuario.distritos,
-                        tipo__tesoreria=True,
+                    tesoreros = Profile.objects.filter(Q(tipo__tesoreria=True, tipo__pagos=True) | Q(tipo__comprador=True),
+                        distritos = usuario.distritos,         
                         st_activo = True,
-                        tipo__pagos = True
+                        
                     )
-
                     print('tesoreros:', tesoreros)
 
                     correos = [
@@ -1255,14 +1253,13 @@ def edit_proveedor_direccion(request, pk):
                         campos_modificados.append('Banco')
                         detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
 
-                    tesoreros = Profile.objects.filter(
-                        distritos = usuario.distritos,
-                        tipo__tesoreria=True,
+                    tesoreros = Profile.objects.filter(Q(tipo__tesoreria=True, tipo__pagos=True) | Q(tipo__comprador=True),
+                        distritos = usuario.distritos,         
                         st_activo = True,
-                        tipo__pagos = True
+                        
                     )
 
-                    print('tesoreros:', tesoreros)
+                    print('tesoreros???:', tesoreros)
 
                     correos = [
                         tesorero.staff.staff.email
