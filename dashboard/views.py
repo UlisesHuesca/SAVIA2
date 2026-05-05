@@ -1169,7 +1169,7 @@ def edit_proveedores(request, pk):
                         <h3>Actualización de datos bancarios de proveedor</h3>
                         <p><strong>RFC:</strong> {proveedor.rfc}</p>
                         <p><strong>Proveedor:</strong> {proveedor.razon_social}</p>
-                        <p><strong>Dirección:</strong> {direccion.domicilio}</p>
+                        <p><strong>Dirección:</strong> {proveedor.direccion.domicilio}</p>
                         <p><strong>Campos modificados:</strong> {", ".join(campos_modificados)}</p>
                         <p><strong>Actualizado por:</strong> {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}</p>
                         <p><strong>Cambios:</strong></p>
