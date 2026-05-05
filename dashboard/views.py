@@ -4,6 +4,7 @@ from django.http import HttpResponse, Http404, JsonResponse, FileResponse
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
+from django.core.mail import EmailMessage
 from django.utils import translation
 from django.utils.dateparse import parse_date
 from django.urls import reverse
@@ -1102,10 +1103,10 @@ def edit_proveedores(request, pk):
     proveedor = Proveedor.objects.get(id = proveedor_direccion.nombre.id)
     #romper
 
-    ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form =Edit_ProveedoresDireccionesForm, extra=0)
+    ProveedorDireccionesFormSet = inlineformset_factory(Proveedor, Proveedor_direcciones, form =ProveedoresDireccionesForm, extra=0)
     form = ProveedoresForm(instance=proveedor)
     formset = ProveedorDireccionesFormSet(instance=proveedor)
-
+    print('estoy aquí antes del post')  
     if request.method == 'POST':
         form = ProveedoresForm(request.POST or None, instance =proveedor)
         formset = ProveedorDireccionesFormSet(request.POST or None, instance=proveedor)
@@ -1113,10 +1114,86 @@ def edit_proveedores(request, pk):
             
             form.save()
             direcciones = formset.save(commit=False)
-            for item in direcciones:
+            print('estoy aquí')  
+            for form_direccion in formset.forms:
+                item = form_direccion.instance
+                print('item:', item)
+                cambio_cuenta = 'cuenta' in form.changed_data
+                cambio_clabe = 'clabe' in form.changed_data
+                cambio_banco = 'banco' in form.changed_data
+                nuevo_valor_clabe = form.cleaned_data.get('clabe')
+                nuevo_valor_cuenta = form.cleaned_data.get('cuenta')
+                nuevo_valor_banco = form.cleaned_data.get('banco')
                 item.actualizado_por = usuario
                 item.modificado_fecha = date.today()
                 item.save()
+              
+                if cambio_cuenta or cambio_clabe or cambio_banco:
+                    campos_modificados = []
+                    detalles = []
+
+                    if cambio_cuenta:
+                        campos_modificados.append('Cuenta')
+                        detalles.append(f'Cuenta nueva: {nuevo_valor_cuenta}')
+
+                    if cambio_clabe:
+                        campos_modificados.append('CLABE')
+                        detalles.append(f'CLABE nueva: {nuevo_valor_clabe}')
+
+                    if cambio_banco:
+                        campos_modificados.append('Banco')
+                        detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
+
+                    tesoreros = Profile.objects.filter(
+                        distritos = usuario.distritos,
+                        tipo__tesoreria=True,
+                        st_activo = True,
+                        tipo__pagos = True
+                    )
+
+                    print('tesoreros:', tesoreros)
+
+                    correos = [
+                        tesorero.staff.staff.email
+                        for tesorero in tesoreros
+                    ]
+
+                    mi_correo = 'ulises_huesc@hotmail.com'
+                    if mi_correo not in correos:
+                        correos.append(mi_correo)
+
+                    fecha_formateada = date.today().strftime('%d/%m/%Y')
+
+                    if correos:
+                        correo_html = f"""
+                        <h3>Actualización de datos bancarios de proveedor</h3>
+                        <p><strong>RFC:</strong> {proveedor.rfc}</p>
+                        <p><strong>Proveedor:</strong> {proveedor.razon_social}</p>
+                        <p><strong>Dirección:</strong> {direccion.domicilio}</p>
+                        <p><strong>Campos modificados:</strong> {", ".join(campos_modificados)}</p>
+                        <p><strong>Actualizado por:</strong> {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}</p>
+                        <p><strong>Cambios:</strong></p>
+                        <ul>
+                            {''.join(f'<li>{d}</li>' for d in detalles)}
+                        </ul>
+                        <p><strong>Fecha:</strong> {fecha_formateada}</p>
+                        <p>Atte.<br>
+                            {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}<br>
+                            GRUPO VORDCAB S.A. de C.V.</p>
+                        <p><i>Este mensaje ha sido automáticamente generado por SAVIA VORDCAB.</i></p>
+                        """
+
+                        email = EmailMessage(
+                            'Actualización de datos bancarios de proveedor|PRUEBAS SAVIA',
+                            correo_html,
+                            settings.DEFAULT_FROM_EMAIL,
+                            correos,
+                        )
+
+                        email.content_subtype = "html"
+                        email.send()
+
+
             messages.success(request, 'Has agregado correctamente el proveedor y sus direcciones')
             return redirect('dashboard-proveedores')
         else:
@@ -1142,6 +1219,7 @@ def edit_proveedor_direccion(request, pk):
     usuario = colaborador.get(id = pk_perfil)
     next_param = request.POST.get('next') or request.GET.get('next')
     print('next_param:', next_param)
+    #print('estoy aquí')
     if usuario.tipo.proveedores == True:
         direccion = Proveedor_direcciones.objects.get(id = pk)
         proveedor = Proveedor.objects.get(id = direccion.nombre.id)
@@ -1149,10 +1227,83 @@ def edit_proveedor_direccion(request, pk):
         if request.method =='POST':
             form = ProveedoresDireccionesForm(request.POST, instance = direccion, profile = usuario)
             if form.is_valid():
+                cambio_cuenta = 'cuenta' in form.changed_data
+                cambio_clabe = 'clabe' in form.changed_data
+                cambio_banco = 'banco' in form.changed_data
+                nuevo_valor_clabe = form.cleaned_data.get('clabe')
+                nuevo_valor_cuenta = form.cleaned_data.get('cuenta')
+                nuevo_valor_banco = form.cleaned_data.get('banco')
+
                 direccion = form.save(commit=False)
                 direccion.actualizado_por = usuario
                 direccion.completo = True
                 direccion.save()
+
+                if cambio_cuenta or cambio_clabe or cambio_banco:
+                    campos_modificados = []
+                    detalles = []
+
+                    if cambio_cuenta:
+                        campos_modificados.append('Cuenta')
+                        detalles.append(f'Cuenta nueva: {nuevo_valor_cuenta}')
+
+                    if cambio_clabe:
+                        campos_modificados.append('CLABE')
+                        detalles.append(f'CLABE nueva: {nuevo_valor_clabe}')
+
+                    if cambio_banco:
+                        campos_modificados.append('Banco')
+                        detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
+
+                    tesoreros = Profile.objects.filter(
+                        distritos = usuario.distritos,
+                        tipo__tesoreria=True,
+                        st_activo = True,
+                        tipo__pagos = True
+                    )
+
+                    print('tesoreros:', tesoreros)
+
+                    correos = [
+                        tesorero.staff.staff.email
+                        for tesorero in tesoreros
+                    ]
+
+                    mi_correo = 'ulises_huesc@hotmail.com'
+                    if mi_correo not in correos:
+                        correos.append(mi_correo)
+
+                    fecha_formateada = date.today().strftime('%d/%m/%Y')
+
+                    if correos:
+                        correo_html = f"""
+                        <h3>Actualización de datos bancarios de proveedor</h3>
+                        <p><strong>RFC:</strong> {proveedor.rfc}</p>
+                        <p><strong>Proveedor:</strong> {proveedor.razon_social}</p>
+                        <p><strong>Dirección:</strong> {direccion.domicilio}</p>
+                        <p><strong>Campos modificados:</strong> {", ".join(campos_modificados)}</p>
+                        <p><strong>Actualizado por:</strong> {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}</p>
+                        <p><strong>Cambios:</strong></p>
+                        <ul>
+                            {''.join(f'<li>{d}</li>' for d in detalles)}
+                        </ul>
+                        <p><strong>Fecha:</strong> {fecha_formateada}</p>
+                        <p>Atte.<br>
+                            {usuario.staff.staff.first_name} {usuario.staff.staff.last_name}<br>
+                            GRUPO VORDCAB S.A. de C.V.</p>
+                        <p><i>Este mensaje ha sido automáticamente generado por SAVIA VORDCAB.</i></p>
+                        """
+
+                        email = EmailMessage(
+                            'Actualización de datos bancarios de proveedor|PRUEBAS SAVIA',
+                            correo_html,
+                            settings.DEFAULT_FROM_EMAIL,
+                            correos,
+                        )
+
+                        email.content_subtype = "html"
+                        email.send()
+
                 base_url = reverse('proveedor-direcciones', kwargs={'pk': proveedor.id})
                 messages.success(request,'Has actualizado correctamente la direccion del proveedor')
                   # Agregamos el `next` a la URL si existe
