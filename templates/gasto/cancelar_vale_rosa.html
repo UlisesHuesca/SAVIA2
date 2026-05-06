@@ -14,7 +14,7 @@
             <h5 class="modal-title">Cancelar Vale Rosa: {{objeto.folio}}</h5>
             <button class="btn-close" type="button" data-bs-dismiss="modal" aria-label="Close"></button>
         </div>
-        <form action="{% url 'autorizar-vale-rosa' vale.id %}" method=POST>
+        <form action="{% url 'cancelar-vale-rosa' vale.id %}" method=POST>
         {% csrf_token %}
         <div class="modal-body">
         {% if tipo == "gasto" %}  

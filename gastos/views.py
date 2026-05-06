@@ -1753,6 +1753,7 @@ def autorizar_vale_rosa(request, pk):
 
 @perfil_seleccionado_required
 def cancelar_vale_rosa(request, pk):
+    print('cancelar_vale_rosa')
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     pk_perfil = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk_perfil)    
@@ -1772,9 +1773,9 @@ def cancelar_vale_rosa(request, pk):
         #if perfil.tipo.subdirector == True:
         #    gasto.autorizar2 = True
         #    gasto.approbado_fecha2 = datetime.now()
-        
+        print(f'Cancelación del vale rosa: {vale.id}')
         vale.save()
-        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {vale.id}')
+        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has cancelado la solicitud {vale.id}')
         return redirect ('vales-rosa-pendientes-autorizar')
 
 
