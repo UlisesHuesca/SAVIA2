@@ -1,6 +1,5 @@
 from django.contrib import admin
 from .models import Compra, ArticuloComprado, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, Estatus_proveedor, Uso_cfdi, Cond_pago, Moneda, Estado, Comparativo, Item_Comparativo, DocumentosProveedor, TipoPrioridad, Responsable_Interaccion, Tipo_contrato
-
 class Tipo_contrato_Admin(admin.ModelAdmin):
     list_display = ('id','nombre','abreviatura')
     #search_fields = ['nombre','abreviatura']
@@ -43,6 +42,7 @@ class DocumentosProveedorAdmin(admin.ModelAdmin):
     list_display = ('id','proveedor','tipo_documento','archivo',)
     raw_id_fields = ('proveedor',)
 
+ 
 # Register your models here.
 admin.site.register(Compra, CompraAdmin)
 
@@ -75,3 +75,4 @@ admin.site.register(TipoPrioridad)
 admin.site.register(Responsable_Interaccion)
 
 admin.site.register(Tipo_contrato, Tipo_contrato_Admin)
+

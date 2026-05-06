@@ -1,8 +1,14 @@
 from django.contrib import admin
 from compras.models import InvitacionProveedor, Debida_Diligencia, Miembro_Alta_Direccion, Funcionario_Publico_Relacionado
 admin.site.site_header = 'SAVIA 2.0 | Administración'
+
+
+class InvitacionProveedorAdmin(admin.ModelAdmin):
+    search_fields = ('email',)
+    list_display = ('id','proveedor','email')
+    
 # Register your models here.
-admin.site.register(InvitacionProveedor)
+admin.site.register(InvitacionProveedor, InvitacionProveedorAdmin)
 
 admin.site.register(Debida_Diligencia)
 admin.site.register(Miembro_Alta_Direccion)
