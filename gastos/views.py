@@ -1502,7 +1502,7 @@ def vales_rosa_pendientes_autorizar(request):
     if perfil.sustituto:
         perfil = Profile.objects.filter(staff=perfil.staff, tipo=perfil.tipo, distritos=perfil.distritos).first()
     #vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__superintendente = perfil).order_by('-gasto__folio')
-    #print(perfil.tipo.nombre)
+    print(perfil.tipo.nombre)
     #if perfil.tipo.nombre == "Admin": #Temporalmente hasta que este listo el desarrollo
     if perfil.distritos.nombre == 'MATRIZ' and perfil.tipo.nombre == "Admin":
         print('entra a matriz')
@@ -1522,13 +1522,13 @@ def vales_rosa_pendientes_autorizar(request):
                 gasto__isnull=False,
                 gasto__complete=True,
                 gasto__autorizar2=True,
-                gasto__superintendente=perfil
+                gasto__superintendente__staff= perfil.staff
             ) |
             Q(
                 viatico__isnull=False,
                 viatico__complete=True,
                 viatico__autorizar2=True,
-                viatico__superintendente=perfil
+                viatico__superintendente__staff = perfil.staff
             )
         ).order_by('-gasto__folio', '-viatico__folio')
     else:
@@ -1539,13 +1539,13 @@ def vales_rosa_pendientes_autorizar(request):
                 gasto__isnull=False,
                 gasto__complete=True,
                 gasto__autorizar2=True,
-                gasto__autorizado_por2 = perfil
+                gasto__autorizado_por2__staff = perfil.staff
             ) |
             Q(
                 viatico__isnull=False,
                 viatico__complete=True,
                 viatico__autorizar2=True,
-                viatico__gerente = perfil
+                viatico__gerente__staff = perfil.staff
             )
         ).order_by('-gasto__folio', '-viatico__folio')
     #   vales_rosa = ValeRosa.objects.none()

@@ -135,7 +135,22 @@ def contadores_processor(request):
             gastos_gerencia = Solicitud_Gasto.objects.filter(complete=True, autorizar=True, autorizar2=None, distrito = usuario.distritos)
             #viaticos_gerencia = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = usuario.distritos, superintendente = usuario)
             viaticos_gerencia = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = usuario.distritos).exclude(Q(colaborador=usuario) | Q(staff=usuario))
-            vales_rosa = ValeRosa.objects.filter(esta_aprobado = None, gasto__complete = True, gasto__autorizar2 = True, gasto__autorizado_por2 = usuario ).order_by('-gasto__folio')
+            vales_rosa = ValeRosa.objects.filter(
+                esta_aprobado=None,  color = 'ROSA'
+                ).filter(
+                    Q(
+                        gasto__isnull=False,
+                        gasto__complete=True,
+                        gasto__autorizar2=True,
+                        gasto__autorizado_por2__staff = usuario.staff
+                    ) |
+                    Q(
+                        viatico__isnull=False,
+                        viatico__complete=True,
+                        viatico__autorizar2=True,
+                        viatico__gerente__staff = usuario.staff
+                    )
+                ).order_by('-gasto__folio', '-viatico__folio')
             conteo_oc = oc.count()
             conteo_viaticos_gerencia = viaticos_gerencia.count()
             conteo_gastos_gerencia = gastos_gerencia.count()
