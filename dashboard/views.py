@@ -1292,7 +1292,7 @@ def edit_proveedor_direccion(request, pk):
                         """
 
                         email = EmailMessage(
-                            'Actualización de datos bancarios de proveedor|PRUEBAS SAVIA',
+                            'Actualización de datos bancarios de proveedor',
                             correo_html,
                             settings.DEFAULT_FROM_EMAIL,
                             correos,
