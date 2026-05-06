@@ -1254,7 +1254,7 @@ def edit_proveedor_direccion(request, pk):
                         detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
 
                     tesoreros = Profile.objects.filter(Q(tipo__tesoreria=True, tipo__pagos=True) | Q(tipo__comprador=True),
-                        distritos = direccion.distritos,         
+                        distritos = direccion.distrito,         
                         st_activo = True,
                         
                     )
