@@ -400,8 +400,10 @@ def compras_autorizadas(request):
 def tiempo_proceso_autorizacion(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+    almacenes_distritos = set(usuario.almacen.values_list('almacenes__id', flat=True))
     num_almacenes = usuario.almacen.count()
+
+    print(num_almacenes)
     if usuario.tipo.nombre == "Admin":  
         compras = Compra.objects.filter(
             autorizado2 = True, 

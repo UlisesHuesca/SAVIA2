@@ -52,7 +52,7 @@ class CompraFilter(django_filters.FilterSet):
 
     class Meta:
         model = Compra
-        fields = ['folio','proveedor','creada_por','req','solicitud','proyecto','subproyecto','start_date','end_date', 'costo_oc','atrasado','pago', 'moneda','pagada']
+        fields = ['folio','proveedor','creada_por','req','solicitud','proyecto','subproyecto','start_date','end_date', 'costo_oc','atrasado','pago', 'moneda','pagada','distrito']
 
     def filter_by_pago(self, queryset, name, value):
         # Asegúrate de que 'value' coincida con las opciones 'CREDITO' o 'CONTADO'
