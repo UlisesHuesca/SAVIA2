@@ -136,6 +136,8 @@
                                             <span class="badge bg-danger">{{ direccion.estatus }}</span>
                                         {% elif direccion.estatus.nombre == "SUSPENDIDO" %}
                                             <span class="badge bg-danger">{{ direccion.estatus }}</span>
+                                        {% elif direccion.estatus.nombre == "PREAPROBAD" %}
+                                            <span class="badge bg-info">{{ direccion.estatus }}</span>
                                         {% else %}
                                             <span class="badge bg-secondary">Sin estatus</span>
                                         {% endif %}
@@ -147,6 +149,7 @@
                                         <option value="APROBADO">APROBADO</option>
                                         <option value="RECHAZADO">RECHAZADO</option>
                                         <option value="SUSPENDIDO">SUSPENDIDO</option>
+                                        <option value="PREAPROBAD">PREAPROBADO</option>
                                     </select>
 
                                     <button class="btn btn-sm btn-outline-info" type="button"
