@@ -1120,7 +1120,7 @@ def edit_proveedores(request, pk):
                 print('item:', item)
                 cambio_cuenta = 'cuenta' in form.changed_data
                 cambio_clabe = 'clabe' in form.changed_data
-                cambio_banco = 'banco' in form.changed_data
+                #cambio_banco = 'banco' in form.changed_data
                 nuevo_valor_clabe = form.cleaned_data.get('clabe')
                 nuevo_valor_cuenta = form.cleaned_data.get('cuenta')
                 nuevo_valor_banco = form.cleaned_data.get('banco')
@@ -1128,7 +1128,7 @@ def edit_proveedores(request, pk):
                 item.modificado_fecha = date.today()
                 item.save()
               
-                if cambio_cuenta or cambio_clabe or cambio_banco:
+                if cambio_cuenta or cambio_clabe:
                     campos_modificados = []
                     detalles = []
 
@@ -1140,9 +1140,9 @@ def edit_proveedores(request, pk):
                         campos_modificados.append('CLABE')
                         detalles.append(f'CLABE nueva: {nuevo_valor_clabe}')
 
-                    if cambio_banco:
-                        campos_modificados.append('Banco')
-                        detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
+                    
+                    campos_modificados.append('Banco')
+                    detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
 
                     tesoreros = Profile.objects.filter(Q(tipo__tesoreria=True, tipo__pagos=True) | Q(tipo__comprador=True),
                         distritos = usuario.distritos,         
@@ -1227,7 +1227,7 @@ def edit_proveedor_direccion(request, pk):
             if form.is_valid():
                 cambio_cuenta = 'cuenta' in form.changed_data
                 cambio_clabe = 'clabe' in form.changed_data
-                cambio_banco = 'banco' in form.changed_data
+                #cambio_banco = 'banco' in form.changed_data
                 nuevo_valor_clabe = form.cleaned_data.get('clabe')
                 nuevo_valor_cuenta = form.cleaned_data.get('cuenta')
                 nuevo_valor_banco = form.cleaned_data.get('banco')
@@ -1237,7 +1237,7 @@ def edit_proveedor_direccion(request, pk):
                 direccion.completo = True
                 direccion.save()
 
-                if cambio_cuenta or cambio_clabe or cambio_banco:
+                if cambio_cuenta or cambio_clabe:
                     campos_modificados = []
                     detalles = []
 
@@ -1249,9 +1249,9 @@ def edit_proveedor_direccion(request, pk):
                         campos_modificados.append('CLABE')
                         detalles.append(f'CLABE nueva: {nuevo_valor_clabe}')
 
-                    if cambio_banco:
-                        campos_modificados.append('Banco')
-                        detalles.append(f'Banco nuevo: {nuevo_valor_banco}')
+                    
+                    campos_modificados.append('Banco')
+                    detalles.append(f'Banco registrado: {nuevo_valor_banco}')
 
                     tesoreros = Profile.objects.filter(Q(tipo__tesoreria=True, tipo__pagos=True) | Q(tipo__comprador=True),
                         distritos = direccion.distrito,         
