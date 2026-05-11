@@ -400,7 +400,8 @@ def compras_autorizadas(request):
 def tiempo_proceso_autorizacion(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
-    almacenes_distritos = set(usuario.almacen.values_list('almacenes__id', flat=True))
+    almacenes_distritos = set(usuario.almacen.values_list('id', flat=True))
+    print('almacenes:',almacenes_distritos)
     num_almacenes = usuario.almacen.count()
 
     print(num_almacenes)
@@ -415,7 +416,8 @@ def tiempo_proceso_autorizacion(request):
             autorizado2 = True, 
             req__orden__distrito__in = almacenes_distritos
         ).order_by('-folio')#.annotate(
-     
+        print(compras)
+
     myfilter = CompraFilter(request.GET, queryset=compras)
     compras = myfilter.qs
     
