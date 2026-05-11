@@ -138,10 +138,12 @@
                     <thead class="text-black" style="background-color: #F5F5F5;">
                         <tr>
                             <th scope="col">Concepto [XML]</th>
+                            
                             <th>Fecha de Carga</th>
                             <th scope="col">Proveedor [XML]</th>
                             <th>Fecha Timbrado[XML]</th>
                             <th scope="col">Monto [XML]</th>
+                            <th>Método de Pago</th>
                             <th>PDF</th>
                             <th>XML</th>
                             <th>PDF-Render</th>
@@ -168,7 +170,10 @@
                             {% else %}
                             <td>{{ factura.monto }}</td>
                             {% endif %}
-
+                            <td>{% if factura.archivo_xml %}
+                                {{ factura.emisor.metodo_pago}}
+                                
+                                {% endif %}
                             <!-- Archivos PDF y XML -->
                             <td>
                                 <ul class="nav nav-pills">
