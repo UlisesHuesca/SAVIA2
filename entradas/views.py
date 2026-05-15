@@ -679,11 +679,13 @@ def update_entrada(request):
 
     if entrada.oc.req.orden.tipo.tipo == 'resurtimiento': #si es resurtimiento
         #Esto es solo el artículo original
+    
         producto_surtir = ArticulosparaSurtir.objects.get(articulos = producto_comprado.producto.producto.articulos, surtir=False, articulos__orden__tipo__tipo = 'resurtimiento')
+        print('resurtimiento_producto_surtir:', producto_surtir)
     else:
         #id= producto_comprado.producto.producto.id
         producto_surtir = ArticulosparaSurtir.objects.get(id= producto_comprado.producto.producto.id)
-
+        print('producto_surtir:', producto_surtir)
     if producto_inv.producto.servicio == False:
         monto_inventario = producto_inv.cantidad * producto_inv.price + producto_inv.apartada() * producto_inv.price
         cantidad_inventario = producto_inv.cantidad + producto_inv.apartada()
@@ -743,10 +745,10 @@ def update_entrada(request):
                     producto_surtir.cantidad_requisitar -= entrada_item.cantidad   #Al producto pendiente por requisitar se le resta lo que entra
                     producto_inv._change_reason = 'Se modifica el inventario en view: update_entrada. Esto es una entrada para solicitud normal'
                     producto_inv.save()
-                    entrada.entrada_date = date.today()
-                    entrada.entrada_hora = datetime.now().time()
-                    entrada.save()
-                    producto_surtir.save()
+                entrada.entrada_date = date.today()
+                entrada.entrada_hora = datetime.now().time()
+                entrada.save()
+                producto_surtir.save()
             #Se guardan todas las bases de datos
             ##########################################################Fin
 
