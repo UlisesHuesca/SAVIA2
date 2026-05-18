@@ -2857,12 +2857,12 @@ def generate_excel_report2(salidas):
         data.append(rows)
 
     # Crear el archivo Excel usando pyexcelerate
-    wb = Workbook()
+    wb = PyWorkbook()
     ws = wb.new_sheet("Matriz_Salidas", data=data)
 
     # Aplicar estilos a los encabezados
     header_style = Style(
-        font=Font(bold=True, color=PXColor(255, 255, 255)),
+        font=PyFont(bold=True, color=PXColor(255, 255, 255)),
         fill=Fill(background=PXColor(51, 51, 102)),
         alignment=Alignment(horizontal='center', vertical='center')
     )
