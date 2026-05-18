@@ -50,7 +50,7 @@ import datetime as dt
 from datetime import date, datetime, timedelta
 from pathlib import Path
 
-from pyexcelerate import Workbook, Color as PXColor, Style, Font, Fill, Alignment, Format
+from pyexcelerate import Workbook as PyWorkbook, Color as PXColor, Style, Font as PyFont, Fill, Alignment, Format
 #PDF generator
 from reportlab.pdfgen import canvas
 from reportlab.lib import colors
@@ -1776,7 +1776,8 @@ def convert_solicitud_autorizada_to_xls(productos):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Solicitudes_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.create_sheet(title='Solicitudes')
+    ws = wb.create_sheet(title = "Solicitudes")
+    
     #Comenzar en la fila 1
     row_num = 1
 
@@ -1814,7 +1815,7 @@ def convert_solicitud_autorizada_to_xls(productos):
 
     rows = productos.values_list(
         'articulos__orden__folio',
-        Concat('articulos__orden__staff__staff__first_name',Value(' '),'articulos__orden__staff__staff__last_name'),
+        Concat('articulos__orden__staff__staff__staff__first_name',Value(' '),'articulos__orden__staff__staff__staff__last_name'),
         'articulos__orden__proyecto__nombre',
         'articulos__orden__subproyecto__nombre',
         'articulos__producto__producto__codigo',
@@ -1826,11 +1827,11 @@ def convert_solicitud_autorizada_to_xls(productos):
         row_num += 1
         for col_num in range(len(row)):
             if col_num == 6:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num == 7 or col_num == 4:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
+                (ws.cell(row = row_num, column = col_num + 1, value=row[col_num])).style = date_style
+            elif col_num == 7 or col_num == 4:
+                (ws.cell(row = row_num, column = col_num + 1, value=row[col_num])).style = number_style
             else:
-                (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+                (ws.cell(row = row_num, column = col_num + 1, value=str(row[col_num]))).style = body_style
     
     sheet = wb['Sheet']
     wb.remove(sheet)
@@ -1843,7 +1844,8 @@ def convert_solicitud_autorizada_orden_to_xls(ordenes):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Solicitudes_pend_requisicion' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.create_sheet(title='Solicitudes')
+    ws = wb.active
+    ws.title = 'Solicitudes Pendientes de Requisición'
     #Comenzar en la fila 1
     row_num = 1
 
