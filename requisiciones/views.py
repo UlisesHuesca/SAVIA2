@@ -1844,8 +1844,7 @@ def convert_solicitud_autorizada_orden_to_xls(ordenes):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Solicitudes_pend_requisicion' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
-    ws = wb.active
-    ws.title = 'Solicitudes Pendientes de Requisición'
+    ws = wb.create_sheet(title = "Solicitudes")
     #Comenzar en la fila 1
     row_num = 1
 
