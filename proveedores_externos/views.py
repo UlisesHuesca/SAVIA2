@@ -1064,7 +1064,9 @@ def invitar_proveedor(request):
                     messages.error(request, 'Este correo ya está registrado como usuario en SAVIA.')
                     return redirect('invitar-proveedor')
 
-
+                if InvitacionProveedor.objects.filter(email=email, usado = False).exists():
+                    messages.error(request, 'Ya existe una invitación activa para este correo.')
+                    return redirect('invitar-proveedor')
              
 
                 invitacion = InvitacionProveedor.objects.create(

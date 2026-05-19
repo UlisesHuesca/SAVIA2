@@ -297,7 +297,7 @@ class InvitacionProveedor(models.Model):
         ('NUEVA_DIRECCION', 'NUEVA_DIRECCION'),
         ('NUEVO_USUARIO', 'NUEVO_USUARIO'),
     )
-    email = models.EmailField(unique=True)
+    email = models.EmailField()
     rfc = models.CharField(max_length=14)
     token = models.UUIDField(default=uuid.uuid4, unique=True, editable=False)
     proveedor = models.ForeignKey('compras.Proveedor', null=True, blank=True, on_delete=models.SET_NULL)
