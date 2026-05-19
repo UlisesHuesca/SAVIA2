@@ -2555,12 +2555,12 @@ def convert_entradas_to_xls2(entradas):
 
         data.append(row)
 
-    wb = Workbook()
+    wb = PyWorkbook()
     ws = wb.new_sheet("Entradas", data=data)
 
     # Aplicar estilos a los encabezados
     header_style = Style(
-        font=Font(bold=True, color=PXColor(255, 255, 255)),
+        font=PyFont(bold=True, color=PXColor(255, 255, 255)),
         fill=Fill(background=PXColor(51, 51, 102)),
         alignment=Alignment(horizontal='center', vertical='center')
     )
