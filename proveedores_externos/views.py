@@ -1077,6 +1077,7 @@ def invitar_proveedor(request):
                     producto=producto,
                     servicio=servicio,
                     arrendamiento=arrendamiento,
+                    usado= False,
                 )
 
                 if tipo == "NUEVA_DIRECCION":
