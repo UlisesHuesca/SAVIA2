@@ -1114,6 +1114,13 @@ def matriz_facturas_viaticos(request, pk):
             return response
         elif 'salir' in request.POST:
             return redirect(next_url)
+        elif 'btn_deletevalerosa' in request.POST:
+            print('borrando_vale')
+            vale_id = request.POST.get('vale_id')
+            vale = get_object_or_404(ValeRosa, pk=vale_id)
+            #gasto_id = vale.gasto.id  # ValeRosa tiene FK a Gasto
+            vale.delete()
+            return redirect('matriz-facturas-viaticos', viatico.id)
 
     context={
         'next_url':next_url,

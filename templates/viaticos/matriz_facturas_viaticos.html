@@ -403,8 +403,8 @@
                         <td>
                             <form method="POST">
                                 {% csrf_token %}
-                                <input type="hidden" name ="vale_id" value="{{vale.id}}">
-                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale rosa?')" >
+                                <input type="hidden" name ="vale_id" value="{{vale.id|unlocalize}}">
+                                <button type="submit" name="btn_deletevalerosa" class="btn btn-outline-danger" onclick="return confirm('¿Eliminar vale azul?')" >
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
                             </form>
