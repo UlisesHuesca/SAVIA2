@@ -238,60 +238,76 @@
                             <td></td>
                             <td></td>
                             <th>Total Hospedaje</th>
-                            <td scope="col" id="hospedaje"></td>
+                            <td scope="col" id="hospedaje" class="totales"></td>
                             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <td scope="col" id="hospedaje-autorizadas"></td>
+                            <td scope="col" id="hospedaje-autorizadas" class="totales-autorizados"></td>
                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Gasolina</th>
-                            <td scope="col" id="gasolina"></td>
+                            <td scope="col" id="gasolina" class="totales"></td>
                             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <td scope="col" id="gasolina-autorizadas"></td>
+                            <td scope="col" id="gasolina-autorizadas" class="totales-autorizados"></td>
                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Alimentos</th>
-                            <td scope="col" id="alimentos"></td>
+                            <td scope="col" id="alimentos" class="totales"></td>
                             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <td scope="col" id="alimentos-autorizadas"></td>
+                            <td scope="col" id="alimentos-autorizadas" class="totales-autorizados"></td>
                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Peajes</th>
-                            <td scope="col" id="peaje"></td>
+                            <td scope="col" id="peaje" class="totales"></td>
                             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <td scope="col" id="peaje-autorizadas"></td>
+                            <td scope="col" id="peaje-autorizadas" class="totales-autorizados"></td>
                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Otros</th>
-                            <td scope="col" id="otros"></td>
+                            <td scope="col" id="otros" class="totales"></td>
                             {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
-                            <td scope="col" id="otros-autorizadas"></td>
+                            <td scope="col" id="otros-autorizadas" class="totales-autorizados"></td>
+                            {% endif %}
+                        </tr>
+                        <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total Mixto</th>
+                            <td scope="col" id="mixto" class="totales"></td>
+                            {% if usuario.tipo.nombre == "CONTADOR" or usuario.tipo.nombre == "TESORERIA" or  usuario.tipo.nombre == "Admin" %}
+                            <td scope="col" id="mixto-autorizadas" class="totales-autorizados"></td>
                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Vales Rosa </th>
-                            <td scope="col" id="vales-rosa"></td>
-                            <td scope="col" id="vales-rosa-autorizados"></td>
+                            <td scope="col" id="vales-rosa" class ="totales" total="{{totales.rosas|unlocalize }}" >${{totales.rosas|floatformat:2 }}</td>
+                            <td scope="col" id="vales-rosa-autorizados" class="totales-autorizados" total="{{totales.rosas_aprobados|unlocalize}}" >${{ totales.rosas_aprobados|floatformat:2 }}</td>
+                        </tr>
+                          <tr>
+                            <td></td>
+                            <td></td>
+                            <th>Total Vales Azules </th>
+                            <td scope="col" id="vales-azules" class="totales" total="{{totales.azules|unlocalize}}" >${{totales.azules|floatformat:2 }} </td>
+                            <td scope="col" id="vales-azules-autorizados" class="totales-autorizados" total="{{totales.azules_aprobados|unlocalize}}" >${{ totales.azules_aprobados|floatformat:2 }}</td>
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total</th>
-                            <td scope="col" id="total2"></td>
-                            <td scope="col" id="total3"></td>
+                            <td scope="col" id="totales"></td>
+                            <td scope="col" id="totales-autorizados"></td>
                         </tr>
                     </tbody>
                 </table>
@@ -490,6 +506,11 @@ myModal.addEventListener('hidden.bs.modal', function (event) {
 // Funciones para la primera tabla
 var xml = document.getElementsByClassName('total-xml');
 var elementos_t = document.getElementsByClassName('total-linea');
+const totalValesRosaAprobados = parseFloat("{{ totales.rosas_aprobados|default:'0.00' }}");
+var totales = document.getElementsByClassName('totales');
+var totales_autorizados = document.getElementsByClassName('totales-autorizados');
+console.log('totales',totales)
+//var totales_autorizados = document.getElementsByClassName('totales-autorizados');
 
 function calcularTotal(elementos, id) {
     var lbltotal = document.getElementById(id);
@@ -500,18 +521,19 @@ function calcularTotal(elementos, id) {
     }
     console.log('entra',id,total)
     // 🔁 Aquí sumas los vales rosa aprobados
-    if  (id != "total"){
-        console.log('entra',id,total)
-        
-        total += calcularMontoValesRosaAprobados();
-    }
+   
+    
     
     lbltotal.innerText = `$${total.toFixed(2)}`;
 
 }
 
+
+
 calcularTotal(elementos_t, 'total');
-calcularTotal(xml, 'total2');
+//calcularTotal(xml, 'total2');
+
+
 
 function calcularTotalesPorClasificacion(elementos, clasificacion) {
     var total = 0;
@@ -528,9 +550,11 @@ function calcularTotalesPorClasificacion(elementos, clasificacion) {
 
 function mostrarTotalPorClasificacion(clasificacion, id) {
     var elementos = document.querySelectorAll('td[data-clasificacion]');
+    console.log(elementos)
     var total = calcularTotalesPorClasificacion(elementos, clasificacion);
     var lblTotal = document.getElementById(id);
     lblTotal.innerText = `$${total.toFixed(2)}`;
+    lblTotal.setAttribute('total', total.toFixed(2));
 }
 
 // Calcular y mostrar los totales por clasificación
@@ -539,7 +563,7 @@ mostrarTotalPorClasificacion('Gasolina', 'gasolina');
 mostrarTotalPorClasificacion('Peaje', 'peaje');
 mostrarTotalPorClasificacion('Hospedaje', 'hospedaje');
 mostrarTotalPorClasificacion('Otros', 'otros');
-mostrarTotalValesRosaAutorizados()
+mostrarTotalPorClasificacion('Mixto', 'mixto');
 
 // Funciones para la tabla de autorizados
 function calcularTotalesPorClasificacionAutorizadas(elementos, clasificacion) {
@@ -561,9 +585,12 @@ function calcularTotalesPorClasificacionAutorizadas(elementos, clasificacion) {
 
 function mostrarTotalPorClasificacionAutorizadas(clasificacion, id) {
     var elementos = document.querySelectorAll('td[data-clasificacion]');
+    console.log(elementos)
     var total = calcularTotalesPorClasificacionAutorizadas(elementos, clasificacion);
     var lblTotal = document.getElementById(id);
     lblTotal.innerText = `$${total.toFixed(2)}`;
+    lblTotal.setAttribute('total', total.toFixed(2));
+
 }
 
 // Calcular y mostrar los totales autorizadas
@@ -572,37 +599,36 @@ mostrarTotalPorClasificacionAutorizadas('Gasolina', 'gasolina-autorizadas');
 mostrarTotalPorClasificacionAutorizadas('Peaje', 'peaje-autorizadas');
 mostrarTotalPorClasificacionAutorizadas('Hospedaje', 'hospedaje-autorizadas');
 mostrarTotalPorClasificacionAutorizadas('Otros', 'otros-autorizadas');
-mostrarTotalValesRosaAprobados('total-vales-rosa-aprobados');
+mostrarTotalPorClasificacionAutorizadas('Mixto', 'mixto-autorizadas');
 // Total general autorizadas
-function calcularTotalAutorizadas() {
+/*function calcularTotalAutorizadas() {
     var total = 0;
     var elementos = document.querySelectorAll('td[data-clasificacion]');
 
     for (var i = 0; i < elementos.length; i++) {
         var autorizada = elementos[i].closest('tr').querySelector('input[type="checkbox"]').checked;
+
         if (autorizada) {
             var totalElementoEl = elementos[i].closest('tr').querySelector('.total-xml');
-            var totalElemento = totalElementoEl ? Number(totalElementoEl.getAttribute('total')) : 0; 
+            var totalElemento = totalElementoEl ? Number(totalElementoEl.getAttribute('total') || 0) : 0;
             total += totalElemento;
-            console.log(total)
         }
     }
-    // 🔁 Aquí sumas los vales rosa aprobados
-    total += calcularMontoValesRosaAprobados();
-    //var lblTotal = document.getElementById('total3');
-    //lblTotal.innerText = `$${(total || 0).toFixed(2)}`;
-    return total; 
-}
+
+    total += totalValesRosaAprobados;
+
+    return total;
+}*/
 
 
-var totalAutorizadas = calcularTotalAutorizadas();
-document.getElementById('total3').innerText = `$${totalAutorizadas.toFixed(2)}`;
+// var totalAutorizadas = calcularTotalAutorizadas();
+//document.getElementById('total3').innerText = `$${totalAutorizadas.toFixed(2)}`;
 
 // Actualizar totales
 function actualizarTotales() {
     // Actualiza totales generales
-    calcularTotal(xml, 'total2');
-    calcularTotal(elementos_t, 'total');
+    //calcularTotal(elemntos, 'totales');
+    //calcularTotal(elementos_t, 'totales-autorizados');
    
 
     // Actualiza totales por clasificación
@@ -620,10 +646,12 @@ function actualizarTotales() {
     mostrarTotalPorClasificacionAutorizadas('Otros', 'otros-autorizadas');
 
     // Actualiza total general autorizadas
-    calcularTotalAutorizadas();
+    
     
 }
 
+calcularTotal(totales, 'totales');
+calcularTotal(totales_autorizados, 'totales-autorizados');
 //Parte del modal factura eliminar
 function setDeleteUrl(facturaId) {
     const deleteForm = document.getElementById('deleteForm');
@@ -669,43 +697,9 @@ function enviarFormulario() {
     });
 })();
 
-function calcularMontoValesRosaAprobados() {
-    var total = 0;
-    var filas = document.querySelectorAll('#valesRosaLista tr');
 
-    filas.forEach(function (fila) {
-        var aprobado = fila.getAttribute('data-aprobado');
-        if (aprobado === "True" || aprobado === "true") {
-            var montoCell = fila.querySelector('.monto-vale');
-            if (montoCell) {
-                var texto = montoCell.innerText.replace('$', '').replace(',', '').trim();
-                var monto = parseFloat(texto);
-                if (!isNaN(monto)) {
-                    total += monto;
-                }
-            }
-        }
-    });
 
-    return total;
-}
 
-function mostrarTotalValesRosaAprobados(idElemento) {
-    var total = calcularMontoValesRosaAprobados();
-    var lblTotal = document.getElementById(idElemento);
-    if (lblTotal) {
-        lblTotal.innerText = `$${total.toFixed(2)}`;
-    }
-}
-function mostrarTotalValesRosaAutorizados() {
-    var total = calcularMontoValesRosaAprobados();
-    var lbl = document.getElementById('vales-rosa-autorizados');
-    var lbl2 = document.getElementById('vales-rosa');
-    if (lbl) {
-        lbl.innerText = `$${total.toFixed(2)}`;
-        lbl2.innerText = `$${total.toFixed(2)}`;
-    }
-}
 
 // Recargar la página cuando se cierre el modal de confirmación
 var confirmModal = document.getElementById('confirmModal');

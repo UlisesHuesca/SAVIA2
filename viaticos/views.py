@@ -1,5 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
-from django.db.models import Max, Q, Count, Case, When, Value, CharField
+from django.db.models import Max, Q, Count, Case, Sum, When, Value, CharField
 from django.contrib.auth.decorators import login_required
 from django.contrib import messages
 from django.http import HttpResponseRedirect
@@ -836,6 +836,7 @@ def viaticos_pagos(request, pk):
 
 @perfil_seleccionado_required
 def facturas_viaticos(request, pk):
+    
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
     usuario = colaborador.get(id = pk_perfil)
@@ -846,6 +847,9 @@ def facturas_viaticos(request, pk):
     vales_rosa = ValeRosa.objects.filter(viatico = viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho=True)
     factura, created = Viaticos_Factura.objects.get_or_create(solicitud_viatico = viatico, hecho=False)
+
+
+  
 
     form = Viaticos_Factura_Form()
 
@@ -872,6 +876,7 @@ def facturas_viaticos(request, pk):
         'facturas':facturas,
         'viatico':viatico,
         'vales_rosa':vales_rosa,
+      
         }
 
     return render(request, 'viaticos/matriz_facturas.html', context)
@@ -1046,12 +1051,36 @@ def matriz_facturas_viaticos(request, pk):
     next_url = request.GET.get('next', 'mis-viaticos')
     # Obtener días festivos de la base de datos
     festivos = set(TablaFestivos.objects.values_list('dia_festivo', flat=True))
+    vales_rosa = ValeRosa.objects.filter(viatico = viatico)
 
+    totales = ValeRosa.objects.filter(
+    viatico=viatico
+    ).aggregate(
+        rosas_aprobados=Sum(
+            'monto',
+            filter=Q(color='rosa', esta_aprobado=True)
+        ),
+        rosas=Sum(
+            'monto',
+            filter=Q(color='rosa')
+        ),
+        azules_aprobados=Sum(
+            'monto',
+            filter=Q(color='azul', esta_aprobado=True)
+        ),
+        azules=Sum(
+            'monto',
+            filter=Q(color='azul' )
+        ),
+    )
+    
+    print('Total vales rosa autorizados:', totales)
+    print('Total vales azules autorizados:', totales['azules_aprobados'])
     # Calcular la fecha límite
     fecha_limite = calcular_fecha_limite(viatico.fecha_retorno, 10, festivos) #Se define en 10 díash habiles por intrucción del contador Heriberto 23/10/24
 
     #print('Fecha limite retorno:', viatico.fecha_retorno)
-    print('Fecha limite para ingresar factura:', fecha_limite)
+    #print('Fecha limite para ingresar factura:', fecha_limite)
     #print('Fecha actual:', date.today())
     fuera_de_tiempo = date.today() > fecha_limite
     #print(fuera_de_tiempo)
@@ -1093,6 +1122,7 @@ def matriz_facturas_viaticos(request, pk):
         'conceptos_viatico': concepto_viatico,
         'viatico': viatico,
         'fuera_de_tiempo':fuera_de_tiempo,
+        'totales': totales,
         }
 
     return render(request, 'viaticos/matriz_facturas_viaticos.html', context)
@@ -1261,6 +1291,7 @@ def generar_pdf_viatico(pk):
     conceptos = Concepto_Viatico.objects.filter(viatico = viatico)
     facturas = Viaticos_Factura.objects.filter(solicitud_viatico = viatico, hecho = True, autorizada=True)
     vales = ValeRosa.objects.filter(viatico = viatico)
+    print('vales:', vales)
 
     #Configuraciones por default 
     styles = getSampleStyleSheet()
@@ -1556,6 +1587,7 @@ def generar_pdf_viatico(pk):
     for vale in vales:
         if vale.esta_aprobado:
             total_vales += float(vale.monto)
+            #print('total vales:', total_vales)
 
     total_facturas = 0
     suma_total = Decimal('0.00')
@@ -1568,9 +1600,11 @@ def generar_pdf_viatico(pk):
             resultados = datos_emisor.get('resultados', [])
             nombre = datos_emisor.get('nombre', 'No disponible')
             total_xml_str = datos_emisor.get('total', '0.00')  # Obtener el total o usar '0.00' como predeterminado
+            print('total xml:', total_xml_str)
             #Para el total de todas las factuas
             total = datos_emisor.get('total', 0.0)  # Obtener el total o usar 0.0 si no está disponible
             total_facturas += float(total)  # Sumar el total al total general
+            print('total facturas:', total_facturas)
             try:
                 total_factura = Decimal(total_xml_str)  # Convertir a Decimal
             except (InvalidOperation, ValueError):
