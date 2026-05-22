@@ -220,12 +220,12 @@
                                     <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                                 </a>
                             </td>
-
+                             <td>
                             <!-- Checkbox de autorización -->
                             {% if usuario.tipo.tesoreria %}
-                            <td>
+                           
                                 <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %}>
-                            </td>
+                            
                             {% else %}
                                 {% if factura.autorizada %}
                                     <span class="text-success"><i class="fa-solid fa-check"></i></span>
@@ -234,7 +234,7 @@
                                 {% endif %}
                             {% endif %}
                          
-                            
+                            </td>
                           
                             <!-- Botón de eliminación -->
                             <td>
