@@ -213,11 +213,20 @@
                                     </a>
                                 {% endif %}
                             </td>
-                            {% if usuario.tipo.tesoreria %}
+                           
                             <td>
+                                 {% if usuario.tipo.tesoreria %}
                                 <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %} onchange="actualizarTotales()">
+                                {% else %}
+                                    {% if factura.autorizada %}
+                                        <span class="text-success"><i class="fa-solid fa-check"></i></span>
+                                    {% else %}
+                                        <span class="text-danger"><i class="fa-solid fa-xmark"></i></span>
+                                    {% endif %}
+                                {% endif %}
+
                             </td>
-                            {% endif %}
+                           
                             <td>
                                {% if factura.autorizada %}
                                   
