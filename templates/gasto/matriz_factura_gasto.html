@@ -149,6 +149,8 @@
                             <th>PDF-Render</th>
                             {% if usuario.tipo.tesoreria %}
                             <th>Validar</th>
+                            {% else %}
+                            <th>Validado</th>
                             {% endif %}
                             <th>Eliminar</th>
                         </tr>
@@ -163,14 +165,16 @@
                                 {% endif %}
                             </td>
                             <td>{% if factura.archivo_xml %}
-                                {{ factura.fecha_timbrado|date:"d/m/Y" }}
+                                    {{ factura.fecha_timbrado|date:"d/m/Y" }}
                                 {% endif %}
+                            </td> 
                             {% if factura.archivo_xml %}
-                            <td class="total-xml" total="{{ factura.emisor.total }}">${{ factura.emisor.total }}</td>
+                                <td class="total-xml" total="{{ factura.emisor.total }}">${{ factura.emisor.total }}</td>
                             {% else %}
-                            <td>{{ factura.monto }}</td>
+                                <td>{{ factura.monto }}</td>
                             {% endif %}
-                            <td>{% if factura.archivo_xml %}
+                            <td>
+                            {% if factura.archivo_xml %}
                                 {{ factura.emisor.metodo_pago}}
                                 
                                 {% endif %}
@@ -198,16 +202,16 @@
                                         </div>
                                     </div>
                                     {% endif %}
-                                </td>
-                                <td>
-                                    {% if factura.archivo_xml %}
+                            </td>
+                            <td>
+                            {% if factura.archivo_xml %}
                                     
-                                        <a href="{{ factura.archivo_xml.url }}" download class="btn btn-outline-secondary">
-                                            <i class="fa-duotone fa-solid fa-file-xml fa-xl"></i>
-                                        </a>
+                                <a href="{{ factura.archivo_xml.url }}" download class="btn btn-outline-secondary">
+                                    <i class="fa-duotone fa-solid fa-file-xml fa-xl"></i>
+                                </a>
                                     
-                                    {% endif %}
-                                </ul>
+                            {% endif %}
+                                
                             </td>
 
                             <!-- PDF Render -->
