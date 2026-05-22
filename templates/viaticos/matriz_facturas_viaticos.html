@@ -125,9 +125,9 @@
                             <th>PDF</th>
                             <th>XML</th>
                             <th>PDF-render</th>
-                            {% if usuario.tipo.tesoreria %}
+                           
                             <th>Validar</th>
-                            {% endif %}
+                           
                             <th>Eliminar</th>
                         </tr>
                     </thead>
@@ -219,9 +219,13 @@
                             </td>
                             {% endif %}
                             <td>
+                               {% if factura.autorizada %}
+                                  
+                               {% else %}
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize}})">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
