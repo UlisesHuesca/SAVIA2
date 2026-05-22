@@ -565,7 +565,7 @@ function calcularTotalesPorClasificacion(elementos, clasificacion) {
     for (var i = 0; i < elementos.length; i++) {
         var elementoClasificacion = elementos[i].getAttribute('data-clasificacion');
         if (elementoClasificacion === clasificacion) {
-            var totalElemento = Number(elementos[i].closest('tr').querySelector('.total-xml').getAttribute('total'));
+            var totalElemento = Number(elementos[i].closest('tr').querySelector('.total-xml').getAttribute('total'))
             total += totalElemento || 0;
         }
     }
