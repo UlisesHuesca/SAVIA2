@@ -387,11 +387,12 @@
                         {% else %}
                             <td>{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
                         {% endif %}
-                        {% if pago.gasto.facturas_completas == True %}
+                        <!--{% if pago.gasto.facturas_completas == True %}
                             <td>Completas</td>
                         {% else %}
                             <td>Incompletas</td>
-                        {% endif %}
+                        {% endif %}-->
+                        <td>{% if pago.tipo == null %}<span class="badge bg-info">Pago</span>{% elif pago.tipo == "Abono" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
                             <td>
                                 <ul class="nav nav-pills">
                                     <li class="nav-item mx-1">
@@ -425,11 +426,12 @@
                         {% else %}
                             <td>{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
                         {% endif %}
-                        {% if pago.viatico.facturas_completas == True %}
+                        <!--{% if pago.viatico.facturas_completas == True %}
                             <td>Completas</td>
                         {% else %}
                             <td>Incompletas</td>
-                        {% endif %}
+                        {% endif %} -->
+                        <td>{% if pago.tipo == null %}<span class="badge bg-info">Pago</span>{% elif pago.tipo == "Abono" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
                             <td>
                                 <ul class="nav nav-pills">
                                     <li class="nav-item mx-1">
