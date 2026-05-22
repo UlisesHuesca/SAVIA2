@@ -10,7 +10,7 @@ from compras.models import Compra, Proveedor
 from viaticos.models import Solicitud_Viatico
 from user.models import Profile, Tipo_perfil
 from entradas.models import EntradaArticulo
-from django.db.models import Q
+from django.db.models import Q, Count, Case, When, Value
 from django.conf import settings
 from django.utils import translation
 
@@ -170,8 +170,24 @@ def contadores_processor(request):
             oc_pendientes = Compra.objects.filter(Q(tesorero__isnull=True) | Q(tesorero__tipo__tesoreria=True), pagada=False, para_pago = True, autorizado2=True, req__orden__distrito = usuario.distritos, cerrar_sin_pago_completo = False,)
             viaticos_por_asignar = Solicitud_Viatico.objects.filter(complete = True, autorizar=True, montos_asignados=False, distrito = usuario.distritos)
             gastos_por_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, distrito = usuario.distritos  )
-            gastos_a_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, para_pago = True, distrito = usuario.distritos  )
-            viaticos_por_pagar = Solicitud_Viatico.objects.filter(complete = True, autorizar2=True, pagada=False, distrito = usuario.distritos)
+            if usuario.distritos.nombre == 'MATRIZ':
+                gastos_a_pagar = Solicitud_Gasto.objects.filter(
+                     Q(distrito=usuario.distritos) & ~Q(tipo__familia="rh_nomina") | Q(tipo__familia="rh_nomina"),
+                    autorizar=True, pagada=False, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = True
+                    ).annotate(
+                        total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False, facturas__hecho = True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
+                    )).order_by('-approbado_fecha2')
+            else:
+                gastos_a_pagar = Solicitud_Gasto.objects.filter(
+                    autorizar=True, pagada=False, distrito = usuario.distritos, autorizar2=True, cerrar_sin_pago_completo = False, para_pago = True
+                    ).exclude(
+                        tipo__familia="rh_nomina"
+                    ).annotate(
+                        total_facturas=Count('facturas', filter=Q(facturas__solicitud_gasto__isnull=False, facturas__hecho = True)),autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__solicitud_gasto__isnull=False), then=Value(1)))
+                    )).order_by('-approbado_fecha2')
+            #gastos_a_pagar = Solicitud_Gasto.objects.filter(complete=True, autorizar2= True, pagada=False, para_pago = True, distrito = usuario.distritos  )
+            viaticos_por_pagar = Solicitud_Viatico.objects.filter(complete=True,distrito=usuario.distritos,autorizar=True,autorizar2=True,pagada=False, cerrar_sin_pago_completo = False)
+            #viaticos_por_pagar = Solicitud_Viatico.objects.filter(complete = True, autorizar2=True, pagada=False, distrito = usuario.distritos)
             conteo_viaticos_pagar = viaticos_por_pagar.count()
             conteo_gastos_pagar = gastos_por_pagar.count()
             conteo_gastos_a_pagar = gastos_a_pagar.count()
