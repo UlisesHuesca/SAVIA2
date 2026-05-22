@@ -231,83 +231,92 @@
                             <td></td>
                             <th></th>
                             <th></th>
+                            {% if usuario.tipo.tesoreria %}
                             <th class="center">Autorizadas</th>
+                            {% endif %}
                         </tr>
-                  
+                       
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Hospedaje</th>
                             <td scope="col" id="hospedaje" class="totales"></td>
-                            
+                             {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="hospedaje-autorizadas" class="totales-autorizados"></td>
-                           
+                              {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Gasolina</th>
                             <td scope="col" id="gasolina" class="totales"></td>
-                           
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="gasolina-autorizadas" class="totales-autorizados"></td>
-                            
+                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Alimentos</th>
                             <td scope="col" id="alimentos" class="totales"></td>
-                            
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="alimentos-autorizadas" class="totales-autorizados"></td>
-                           
+                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Peajes</th>
                             <td scope="col" id="peaje" class="totales"></td>
-                           
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="peaje-autorizadas" class="totales-autorizados"></td>
-                            
+                            {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Otros</th>
                             <td scope="col" id="otros" class="totales"></td>
-                           
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="otros-autorizadas" class="totales-autorizados"></td>
-                          
+                             {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Mixto</th>
                             <td scope="col" id="mixto" class="totales"></td>
-                            
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="mixto-autorizadas" class="totales-autorizados"></td>
-                           
+                            {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total Vales Rosa </th>
                             <td scope="col" id="vales-rosa" class ="totales" total="{{totales.rosas|unlocalize }}" >${{totales.rosas|floatformat:2 }}</td>
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="vales-rosa-autorizados" class="totales-autorizados" total="{{totales.rosas_aprobados|unlocalize}}" >${{ totales.rosas_aprobados|floatformat:2 }}</td>
+                            {% endif %}
                         </tr>
                           <tr>
                             <td></td>
                             <td></td>
                             <th>Total Vales Azules </th>
                             <td scope="col" id="vales-azules" class="totales" total="{{totales.azules|unlocalize}}" >${{totales.azules|floatformat:2 }} </td>
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="vales-azules-autorizados" class="totales-autorizados" total="{{totales.azules_aprobados|unlocalize}}" >${{ totales.azules_aprobados|floatformat:2 }}</td>
+                            {% endif %}
                         </tr>
                         <tr>
                             <td></td>
                             <td></td>
                             <th>Total</th>
                             <td scope="col" id="totales"></td>
+                            {% if usuario.tipo.tesoreria %}
                             <td scope="col" id="totales-autorizados"></td>
+                             {% endif %}
+
                         </tr>
                     </tbody>
                 </table>
