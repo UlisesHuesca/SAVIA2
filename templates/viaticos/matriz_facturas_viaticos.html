@@ -401,7 +401,7 @@
                             {% endif %}
                         </td>
                         <td>
-                            {% if vale.esta_aprobado == False % }
+                            {% if vale.esta_aprobado == False %}
                             <form method="POST">
                                 {% csrf_token %}
                                 <input type="hidden" name ="vale_id" value="{{vale.id|unlocalize}}">
