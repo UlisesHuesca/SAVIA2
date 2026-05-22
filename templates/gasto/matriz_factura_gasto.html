@@ -222,14 +222,25 @@
                             <td>
                                 <input type="checkbox" style="transform: scale(2); margin: 5px;" name="autorizar_factura_{{ factura.id | unlocalize }}" {% if factura.autorizada %}checked{% endif %}>
                             </td>
-                         
+                            {% else %}
+                                {% if factura.autorizada %}
+                                    <span class="text-success"><i class="fa-solid fa-check"></i></span>
+                                {% else %}
+                                    <span class="text-danger"> ⏳ </i></span>
+                                {% endif %}
                             {% endif %}
+                         
+                            
                           
                             <!-- Botón de eliminación -->
                             <td>
+                                {% if factura.autorizada %}
+                                
+                                {% else %}
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize }})">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
+                                {% endif %}
                             </td>
                         </tr>
                         {% endfor %}
