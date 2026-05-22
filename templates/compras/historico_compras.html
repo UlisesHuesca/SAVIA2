@@ -82,7 +82,8 @@
                     <th scope="col">Autorizado Sppte</th>
                     <th scope="col">Autorizado Gerente</th>
                     <th>Pagada</th>
-                    <th>Monto</th>
+                    <th>Monto OC</th>
+                    <th>Monto Pagado</th>
                     <th scope="col">Devolucion OC</th>
 
                     <th scope="col">Status Previo |Autorizado Sppte</th>
@@ -101,6 +102,7 @@
                     <td>{{registro.autorizado2}}</td>
                     <td>{{registro.pagada}}</td>
                     <td>${{registro.costo_oc|floatformat:2}}</td>
+                    <td>${{registro.monto_pagado|floatformat:2}}</td>
                     <td>{{registro.regresar_oc}}</td>
                     <td>{{registro.prev_record.autorizado1}}</td>
                     <td>{{registro.prev_record.autorizado2}}</td>
