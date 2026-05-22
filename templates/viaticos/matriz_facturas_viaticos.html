@@ -541,6 +541,7 @@ function calcularTotal(elementos, id) {
     var total = 0;
 
     for (var i = 0; i < elementos.length; i++) {
+        console.log('elemento',elementos[i],elementos[i].getAttribute('total'))
         total += Number(elementos[i].getAttribute('total'));
     }
     console.log('entra',id,total)
