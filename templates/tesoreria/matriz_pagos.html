@@ -316,7 +316,8 @@
                     <th scope="col">Autorizado</th>
                     <th scope="col">Proveedor/Colaborador</th>
                    
-                    <th scope="col">Facturas Completas</th>
+                    <!--<th scope="col">Facturas Completas</th>-->
+                    <th>Tipo</th>
                     <th>Facturas</th>
                     <th class="d-none d-md-table-cell">Status Entrada</th>
                     <th scope="col">Importe</th>
@@ -339,12 +340,8 @@
                         <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
                         <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
                         <td>{{pago.oc.proveedor}}</td>
-                       
-                        {% if pago.oc.facturas_completas == True %}
-                            <td>Completas</td>
-                        {% else %}
-                            <td>Incompletas</td>
-                        {% endif %}
+                        
+                        <td>{% if pago.tipo == null %}<span class="badge bg-info">Pago</span>{% elif pago.tipo == "Abono" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
                         
                             <td>
                                 <ul class="nav nav-pills">
