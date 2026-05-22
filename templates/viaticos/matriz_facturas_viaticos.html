@@ -541,8 +541,8 @@ function calcularTotal(elementos, id) {
     var total = 0;
 
     for (var i = 0; i < elementos.length; i++) {
-        console.log('elemento',elementos[i],elementos[i].getAttribute('total'))
-        total += Number(elementos[i].getAttribute('total'));
+        
+        total += Number(elementos[i].getAttribute('total')) || 0;
     }
     console.log('entra',id,total)
     // 🔁 Aquí sumas los vales rosa aprobados
