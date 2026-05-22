@@ -830,11 +830,14 @@ def matriz_oc(request):
     colaborador_sel = Profile.objects.all()
     usuario = colaborador_sel.get(id = pk_perfil)
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
-   
-    compras = Compra.objects.filter(complete = True, req__orden__distrito__id__in = almacenes_distritos).annotate(
-        total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
-        autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
-        ).order_by('-folio')
+    
+    if usuario.tipo.compras:
+        compras = Compra.objects.filter(complete = True, req__orden__distrito__id__in = almacenes_distritos).annotate(
+            total_facturas=Count('facturas', filter=Q(facturas__hecho=True)),
+            autorizadas=Count(Case(When(Q(facturas__autorizada=True, facturas__hecho=True), then=Value(1))))
+            ).order_by('-folio')
+    else:
+        compras = Compra.objects.none()
     
     
     myfilter = CompraFilter(request.GET, queryset=compras)
