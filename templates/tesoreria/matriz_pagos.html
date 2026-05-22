@@ -431,7 +431,7 @@
                         {% else %}
                             <td>Incompletas</td>
                         {% endif %} -->
-                        <td>{% if pago.tipo == null %}<span class="badge bg-info">Pago</span>{% elif pago.tipo == "Abono" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
+                        <td>{% if pago.tipo == None %}<span class="badge bg-info">Pago</span>{% elif pago.tipo == "Abono" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
                             <td>
                                 <ul class="nav nav-pills">
                                     <li class="nav-item mx-1">
