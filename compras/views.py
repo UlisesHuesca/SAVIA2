@@ -3843,9 +3843,34 @@ def generar_pdf_nueva(compra):
         if compra.req.orden.activo is not None:
             eco_unidad = compra.req.orden.activo.eco_unidad
             descripcion = compra.req.orden.activo.descripcion
+            paragraph_content = f"{eco_unidad} {descripcion}"
             serie = compra.req.orden.activo.serie
-            c.drawString(col_inicio + 80, campo_y, f'{eco_unidad} {descripcion}')
             c.drawString(col_inicio + 80, campo_y - 12, serie)
+            ancho_texto = 250
+            alto_maximo = 14  # aprox. 2 líneas
+            font_size = 6
+
+            while font_size >= 4:
+                styleN = ParagraphStyle(
+                    'ActivoFijo',
+                    fontSize=font_size,
+                    leading=font_size + 1,
+                    alignment=TA_JUSTIFY,
+                )
+
+                conditional_paragraph = Paragraph(paragraph_content, styleN)
+                w, h = conditional_paragraph.wrap(ancho_texto, 100)
+
+                if h <= alto_maximo:
+                    break
+
+                font_size -= 0.5
+
+
+            conditional_paragraph.drawOn(
+                c,
+                col_inicio + 80,
+                campo_y - h + 4)
         else:
             c.drawString(col_inicio + 80, campo_y, 'NA')
             c.drawString(col_inicio + 80, campo_y - 12 , 'NA')
