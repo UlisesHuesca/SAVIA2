@@ -3846,7 +3846,7 @@ def generar_pdf_nueva(compra):
             paragraph_content = f"{eco_unidad} {descripcion}"
             serie = compra.req.orden.activo.serie
             c.drawString(col_inicio + 80, campo_y - 12, serie)
-            ancho_texto = 250
+            ancho_texto = 185
             alto_maximo = 14  # aprox. 2 líneas
             font_size = 6
 
@@ -3870,7 +3870,7 @@ def generar_pdf_nueva(compra):
             conditional_paragraph.drawOn(
                 c,
                 col_inicio + 80,
-                campo_y - h + 4)
+                campo_y - h + 8)
         else:
             c.drawString(col_inicio + 80, campo_y, 'NA')
             c.drawString(col_inicio + 80, campo_y - 12 , 'NA')
