@@ -1395,7 +1395,7 @@ def generar_pdf_viatico(pk):
     c.drawString(120,caja_proveedor-60, viatico.proyecto.nombre)
     c.drawString(120,caja_proveedor-80, viatico.subproyecto.nombre)
    
-    c.drawString(120,caja_proveedor-100, viatico.lugar_partida)
+    c.drawString(120, caja_proveedor - 100, str(viatico.lugar_partida or ""))
     #c.drawString(120,caja_proveedor-120, viatico.lugar_comision)
     style = styles['Normal']
     y_inicial = caja_proveedor - 120
