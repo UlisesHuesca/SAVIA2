@@ -1361,7 +1361,7 @@ def matriz_pagos(request):
         )
 
         facturas_viatico = Viaticos_Factura.objects.filter(
-            viatico=OuterRef('viatico'),
+            solicitud_viatico=OuterRef('viatico'),
             hecho=True
         )
 
