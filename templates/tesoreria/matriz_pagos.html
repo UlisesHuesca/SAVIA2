@@ -317,9 +317,10 @@
                     <th scope="col">Proveedor/Colaborador</th>
                    
                     <!--<th scope="col">Facturas Completas</th>-->
-                    <th>Tipo</th>
+                    
                     <th>Facturas</th>
                     <th class="d-none d-md-table-cell">Status Entrada</th>
+                    <th>Tipo</th>
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha</th>
                     
@@ -341,7 +342,7 @@
                         <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
                         <td>{{pago.oc.proveedor}}</td>
                         
-                        <td>{% if pago.tipo == null %}<span class="badge bg-info">Pago</span>{% elif pago.tipo == "Abono" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
+                      
                         
                             <td>
                                 <ul class="nav nav-pills">
@@ -392,7 +393,7 @@
                         {% else %}
                             <td>Incompletas</td>
                         {% endif %}-->
-                        <td>{% if pago.tipo == null %}<span class="badge bg-info">Pago</span>{% elif pago.tipo == "Abono" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
+                      
                             <td>
                                 <ul class="nav nav-pills">
                                     <li class="nav-item mx-1">
@@ -426,12 +427,8 @@
                         {% else %}
                             <td>{{pago.viatico.staff.staff.staff.first_name}} {{pago.viatico.staff.staff.staff.last_name}}</td>
                         {% endif %}
-                        <!--{% if pago.viatico.facturas_completas == True %}
-                            <td>Completas</td>
-                        {% else %}
-                            <td>Incompletas</td>
-                        {% endif %} -->
-                        <td>{% if pago.tipo.nombre == None %}<span class="badge bg-info">Pago</span>{% elif pago.tipo.nombre == "ABONO" %}<span class="badge bg-secondary">Devolución</span>{% else %} <span class="badge bg-info">Pago</span>{% endif %}</td>
+                      
+                        
                             <td>
                                 <ul class="nav nav-pills">
                                     <li class="nav-item mx-1">
@@ -453,7 +450,13 @@
                             </td>
                             <td></td>
                     {% endif %}
-                    <td>{{pago.monto|floatformat:2}}</td>
+                    <td>
+                        {% if pago.tipo == "Abono" %}
+                            <span class="badge bg-secondary">Devolución</span>
+                        {% else %}
+                            <span class="badge bg-info">Pago</span>
+                        {% endif %}
+                    </td>
                     <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
                     <td>
                         <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}">             
