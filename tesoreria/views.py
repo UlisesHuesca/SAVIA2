@@ -1352,7 +1352,7 @@ def matriz_pagos(request):
         )
 
         facturas_gasto = Factura.objects.filter(
-            gasto=OuterRef('gasto'),
+            solicitud_gasto=OuterRef('gasto'),
             hecho=True
         )
 
