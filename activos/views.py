@@ -331,8 +331,8 @@ def edit_activo(request, pk):
     productos_para_select2 = [
         {
             'id': producto.id, 
-            'text': producto.producto.nombre,
-            'cantidad':str(producto.cantidad),
+            'text': f"{producto.producto.nombre} - {producto.distrito.nombre}",
+            'cantidad':str(producto.cantidad)
         } for producto in productos_activos
     ]
     print(productos_para_select2)
