@@ -1273,65 +1273,65 @@ def matriz_pagos(request):
             Q(gasto__distrito__in=almacenes_distritos, gasto__autorizar2=True)
         )
 
-        pagos = (
-            Pago.objects
-            .filter(filtro_pagos, hecho=True)
-            .exclude(gasto__tipo__tipo="NOMINA")
-            .select_related(
-                'oc',
-                'oc__req',
-                'oc__req__orden',
-                'oc__req__orden__distrito',
-                'viatico',
-                'viatico__distrito',
-                'gasto',
-                'gasto__distrito',
-                'gasto__tipo',
-            )
-            .annotate(
-                total_facturas=(
-                    Count(
-                        'oc__facturas',
-                        filter=Q(oc__facturas__hecho=True),
-                        distinct=True
-                    ) +
-                    Count(
-                        'gasto__facturas',
-                        filter=Q(gasto__facturas__hecho=True),
-                        distinct=True
-                    ) +
-                    Count(
-                        'viatico__facturas',
-                        filter=Q(viatico__facturas__hecho=True),
-                        distinct=True
-                    )
-                ),
-                autorizadas=(
-                    Count(
-                        'oc__facturas',
-                        filter=Q(
-                            oc__facturas__hecho=True,
-                            oc__facturas__autorizada=True
-                        ),
-                        distinct=True
-                    ) +
-                    Count(
-                        'gasto__facturas',
-                        filter=Q(
-                            gasto__facturas__hecho=True,
-                            gasto__facturas__autorizada=True
-                        ),
-                        distinct=True
-                    ) +
-                    Count(
-                        'viatico__facturas',
-                        filter=Q(
-                            viatico__facturas__hecho=True,
-                            viatico__facturas__autorizada=True
-                        ),
-                        distinct=True
-                    )
+    pagos = (
+        Pago.objects
+        .filter(filtro_pagos, hecho=True)
+        .exclude(gasto__tipo__tipo="NOMINA")
+        .select_related(
+            'oc',
+            'oc__req',
+            'oc__req__orden',
+            'oc__req__orden__distrito',
+            'viatico',
+            'viatico__distrito',
+            'gasto',
+            'gasto__distrito',
+            'gasto__tipo',
+        )
+        .annotate(
+            total_facturas=(
+                Count(
+                    'oc__facturas',
+                    filter=Q(oc__facturas__hecho=True),
+                    distinct=True
+                ) +
+                Count(
+                    'gasto__facturas',
+                    filter=Q(gasto__facturas__hecho=True),
+                    distinct=True
+                ) +
+                Count(
+                    'viatico__facturas',
+                    filter=Q(viatico__facturas__hecho=True),
+                    distinct=True
                 )
+            ),
+            autorizadas=(
+                Count(
+                    'oc__facturas',
+                    filter=Q(
+                        oc__facturas__hecho=True,
+                        oc__facturas__autorizada=True
+                    ),
+                    distinct=True
+                ) +
+                Count(
+                    'gasto__facturas',
+                    filter=Q(
+                        gasto__facturas__hecho=True,
+                        gasto__facturas__autorizada=True
+                    ),
+                    distinct=True
+                ) +
+                Count(
+                    'viatico__facturas',
+                    filter=Q(
+                        viatico__facturas__hecho=True,
+                        viatico__facturas__autorizada=True
+                    ),
+                    distinct=True
+                )
+            )
             )
             .order_by('-pagado_real')
         )
