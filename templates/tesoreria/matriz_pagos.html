@@ -451,7 +451,13 @@
                             <td></td>
                     {% endif %}
                     <td>
-                     NA
+                    <td>
+                        {% if pago.tipo == "Abono" %}
+                            <span class="badge bg-secondary">Devolución</span>
+                        {% else %}
+                            <span class="badge bg-info">Pago</span>
+                        {% endif %}
+                    </td>
                     </td>
                     <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
                     <td>
