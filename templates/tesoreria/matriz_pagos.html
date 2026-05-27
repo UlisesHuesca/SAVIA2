@@ -452,7 +452,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}"  {% if pago.estado_facturas == 'todas_autorizadas' %}checked{% endif %}>             
+                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}"  {% if pago.estado_facturas == 'todas_autorizadas' %}checked disabled{% endif %}>             
                     </td>
                     <td>
                         <ul class="nav nav-pills">
@@ -763,7 +763,7 @@ document.addEventListener('DOMContentLoaded', function() {
     checkboxes_validation.forEach(checkbox => {
         const id = checkbox.getAttribute('data-id').toString().trim();
 
-        if (selectedIds_validation.map(String).includes(id)) {
+        if (!checkbox.disabled && selectedIds_validation.map(String).includes(id)) {
             checkbox.checked = true;
         }
     });
@@ -847,7 +847,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedIds_validation.forEach(id => {
             const input = document.createElement('input');
             input.type = 'hidden';
-            input.name = 'pagos_ids';  // Django espera una lista con este nombre
+            input.name = 'pago_ids';  // Django espera una lista con este nombre
             input.value = id;
             form.appendChild(input);
         });
@@ -868,7 +868,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedIds_validation.forEach(id => {
             const input = document.createElement('input');
             input.type = 'hidden';
-            input.name = 'pagos_ids';  // Django espera una lista con este nombre
+            input.name = 'pago_ids';  // Django espera una lista con este nombre
             input.value = id;
             form.appendChild(input);
         });
