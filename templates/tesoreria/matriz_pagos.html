@@ -341,9 +341,6 @@
                         <td  class="d-none d-lg-table-cell">{{pago.oc.req.orden.subproyecto.nombre}}</td>
                         <td>{{pago.oc.oc_autorizada_por2.staff.staff.first_name}} {{pago.oc.oc_autorizada_por2.staff.staff.last_name}}</td>
                         <td>{{pago.oc.proveedor}}</td>
-                        
-                      
-                        
                         <td>
                             <ul class="nav nav-pills">
                                 <li class="nav-item mx-1">
@@ -385,12 +382,6 @@
                         {% else %}
                             <td>{{pago.gasto.staff.staff.staff.first_name}} {{pago.gasto.staff.staff.staff.last_name}}</td>
                         {% endif %}
-                        <!--{% if pago.gasto.facturas_completas == True %}
-                            <td>Completas</td>
-                        {% else %}
-                            <td>Incompletas</td>
-                        {% endif %}-->
-                      
                         <td>
                             <ul class="nav nav-pills">
                                 <li class="nav-item mx-1">
@@ -453,14 +444,13 @@
                         {% endif %}
                     </td>
                     <td>${{pago.monto|floatformat:2}}</td>
-                     <td>
-                        {% if pago.fecha_pago %}
-                            {{ pago.fecha_pago|date:"d/m/Y" }}
-                        {% else %}
-                            No pagado
+                   
+                    <td>{% if pago.pagado_real %}
+                            {{pago.pagado_real|date:"d/m/Y"}}
+                        {% elif pago.pagado_date %}
+                            {{pago.pagado_date|date:"d/m/Y"}}
                         {% endif %}
                     </td>
-                    <td>{{pago.pagado_date|date:"d/m/Y"}}</td>
                     <td>
                         <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}">             
                     </td>
