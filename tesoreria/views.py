@@ -1371,7 +1371,7 @@ def matriz_pagos(request):
             autorizada__isnull=True
         )
 
-        print(facturas_gasto_pendientes)
+        
 
         facturas_viatico = Viaticos_Factura.objects.filter(
             solicitud_viatico=OuterRef('viatico'),
@@ -2080,16 +2080,20 @@ def matriz_pagos(request):
                 return response
         elif 'validacion' in request.POST:
             pago_ids = request.POST.getlist('pago_ids')
+            print("Pagos seleccionados para imprimir:", pago_ids)  # Debug: Verificar los IDs recibidos
             pagos = Pago.objects.filter(id__in=pago_ids)
-
+            print(pagos)
             for pago in pagos:
                 facturas = []
                 if pago.gasto:
                     facturas = pago.gasto.facturas.filter(hecho=True)
+                    print(facturas)
                 elif pago.oc:
                     facturas = pago.oc.facturas.filter(hecho=True)
+                    print(facturas)
                 elif pago.viatico:
                     facturas = pago.viatico.facturas.filter(hecho=True)
+                    print(facturas)
 
                 for factura in facturas:
                     if not factura.autorizada:
@@ -2101,6 +2105,7 @@ def matriz_pagos(request):
             return redirect('matriz-pagos') 
         elif 'btnImprimir' in request.POST:
             pago_ids = request.POST.getlist('pago_ids')
+            print("Pagos seleccionados para imprimir:", pago_ids)  # Debug: Verificar los IDs recibidos
             pagos = Pago.objects.filter(id__in=pago_ids)
 
             if not pagos.exists():

@@ -843,17 +843,29 @@ document.addEventListener('DOMContentLoaded', function() {
         // Evitar envío inmediato
         event.preventDefault();
 
+
+        // Limpiar inputs previos por si ya existían
+        //document.querySelectorAll('.input-pago-temp').forEach(e => e.remove());
         // Añadir inputs ocultos al form con los IDs seleccionados
         selectedIds_validation.forEach(id => {
             const input = document.createElement('input');
             input.type = 'hidden';
+            
             input.name = 'pago_ids';  // Django espera una lista con este nombre
             input.value = id;
             form.appendChild(input);
         });
 
-        // Limpiar el localStorage para el siguiente ciclo
-        //localStorage.removeItem('selectedPayments');
+        // VER QUÉ SE ENVÍA
+        const formData = new FormData(form);
+
+        console.log('====== DATOS DEL FORM ======');
+
+        for (let [key, value] of formData.entries()) {
+            console.log(key, value);
+        }
+
+        console.log('selectedIds_validation:', selectedIds_validation);
 
         // Enviar el formulario
         form.submit();
