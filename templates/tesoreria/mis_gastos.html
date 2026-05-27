@@ -164,9 +164,7 @@
                     <td class="d-none d-lg-table-cell">
                         {{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}
                     </td>
-                    <td>
-                        {{gasto.tipo.tipo}}
-                    </td>
+                    
                     <td>{% if gasto.comentario %}
                         {{gasto.comentario}}
                         {% else %}
@@ -176,6 +174,9 @@
                             No hay comentarios disponibles
                             {% endfor %}
                         {% endif %}
+                    </td>
+                    <td>
+                        {{gasto.tipo.tipo}}
                     </td>
                     {% if gasto.get_validado %}
                     <td>{{gasto.superintendente.staff.staff.first_name}} {{gasto.superintendente.staff.staff.last_name}}
