@@ -867,16 +867,16 @@ def solicitud_autorizada_orden(request):
     #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
     #productos= ArticulosparaSurtir.objects.filter(Q(salida=False) | Q(requisitar=True), articulos__orden__autorizar = True )
     myfilter=SolicitudesFilter(request.GET, queryset=ordenes)
-    ordenes = myfilter.qs
+    ordenes_qs = myfilter.qs
 
-    p = Paginator(ordenes, 50)
+    p = Paginator(ordenes_qs, 50)
     page = request.GET.get('page')
     ordenes = p.get_page(page)
 
 
     if request.method == "POST" and 'btnExcel' in request.POST:
 
-        return convert_solicitud_autorizada_orden_to_xls(ordenes)
+        return convert_solicitud_autorizada_orden_to_xls(ordenes_qs)
 
     context= {
         'ordenes':ordenes,
@@ -1874,18 +1874,26 @@ def convert_solicitud_autorizada_orden_to_xls(ordenes):
 
     columna_max = len(columns)+2
 
-    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por Savia V2. UH}')).style = messages_style
+    (ws.cell(column = columna_max, row = 1, value='{Reporte Creado Automáticamente por SAVIA V2. UH}')).style = messages_style
     (ws.cell(column = columna_max, row = 2, value='{Software desarrollado por Vordcab S.A. de C.V.}')).style = messages_style
 
-    rows = ordenes.values_list('id',Concat('staff__staff__first_name',Value(' '),'staff__staff__last_name'),
+    rows = ordenes.values_list('folio',Concat('staff__staff__staff__first_name',Value(' '),'staff__staff__staff__last_name'),
                             'proyecto__nombre','subproyecto__nombre','created_at')
 
     for row in rows:
         row_num += 1
         for col_num in range(len(row)):
-            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+           
             if col_num == 4:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
+                fecha = row[col_num]
+
+                if fecha:
+                    fecha = timezone.localtime(fecha).replace(tzinfo=None)
+
+                celda = ws.cell(row=row_num, column=col_num+1, value=fecha)
+                celda.style = date_style
+            else:
+                (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
 
     sheet = wb['Sheet']
     wb.remove(sheet)
