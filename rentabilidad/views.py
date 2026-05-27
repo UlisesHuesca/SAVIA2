@@ -1765,7 +1765,7 @@ def reporte_rentabilidad_mensual(request):
                 )
 
                 #print('ind adm',total_ind_adm)
-
+                prorrateo_distrito = Decimal(str(prorrateo_distrito or 0))
                 row["ind_oper"] = total_ind_op * (prorrateo_distrito / 100)
                 row["ind_adm"] = total_ind_adm * (prorrateo_distrito / 100)
 
