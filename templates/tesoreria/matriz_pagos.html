@@ -741,7 +741,7 @@ document.addEventListener('DOMContentLoaded', function() {
     const checkboxes_validation = document.querySelectorAll('.validacion_checkbox');
     const ocCountElement = document.getElementById('oc_count');  // Ajusta el id si es necesario
     const ocSumElement = document.getElementById('oc_sum');
-    //const layoutPagosButton = document.getElementById('enviar_a_pago_button');
+    const layoutPagosButton = document.getElementById('enviar_a_pago_button');
     const ValidacionButton = document.getElementById('validacion');
     const ImprimirButton = document.getElementById('btnImprimir');
     const form = document.getElementById('mass_payment_form');
@@ -816,7 +816,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
 
     // Al enviar el formulario
-    /*layoutPagosButton.addEventListener('click', function(event) {
+    layoutPagosButton.addEventListener('click', function(event) {
         // Evitar envío inmediato
         event.preventDefault();
 
@@ -834,7 +834,7 @@ document.addEventListener('DOMContentLoaded', function() {
 
         // Enviar el formulario
         form.submit();
-    });*/
+    });
     
      // Al enviar el formulario
     ValidacionButton.addEventListener('click', function(event) {
