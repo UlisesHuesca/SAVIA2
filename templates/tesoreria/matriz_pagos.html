@@ -761,7 +761,8 @@ document.addEventListener('DOMContentLoaded', function() {
     });
     checkboxes_validation.forEach(checkbox => {
         const id = checkbox.getAttribute('data-id').toString().trim();
-        if (selectedIds_validation.includes(id)) {
+
+        if (selectedIds_validation.map(String).includes(id)) {
             checkbox.checked = true;
         }
     });
