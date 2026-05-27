@@ -452,7 +452,7 @@
                         {% endif %}
                     </td>
                     <td>
-                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}">             
+                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}"  {% if pago.estado_facturas == 'todas_autorizadas' %}checked{% endif %}>             
                     </td>
                     <td>
                         <ul class="nav nav-pills">

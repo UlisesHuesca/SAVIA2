@@ -1246,7 +1246,7 @@ def matriz_pagos(request):
         )
 
         facturas_oc_pendientes = facturas_oc.filter(
-            autorizada=False
+            autorizada__isnull=True
         )
 
         facturas_gasto = Factura.objects.filter(
@@ -1255,8 +1255,10 @@ def matriz_pagos(request):
         )
 
         facturas_gasto_pendientes = facturas_gasto.filter(
-            autorizada=False
+            autorizada__isnull=True
         )
+
+       
 
         facturas_viatico = Viaticos_Factura.objects.filter(
             solicitud_viatico=OuterRef('viatico'),
@@ -1264,7 +1266,7 @@ def matriz_pagos(request):
         )
 
         facturas_viatico_pendientes = facturas_viatico.filter(
-            autorizada=False
+            autorizada__isnull=True
         )
         
         pagos = (Pago.objects
@@ -1334,7 +1336,16 @@ def matriz_pagos(request):
         )
             .order_by('-pagado_real')
         )
-        
+
+        #for p in pagos[:20]:
+        #    print(
+        #        p.id,
+        #        p.gasto_id,
+        #        p.tiene_facturas_gasto,
+        #        p.pendientes_gasto,
+        #        p.estado_facturas
+        #    )
+            
     else:    
         filtro_pagos = (
             Q(oc__req__orden__distrito__in=almacenes_distritos, oc__autorizado2=True) |
@@ -1348,7 +1359,7 @@ def matriz_pagos(request):
         )
 
         facturas_oc_pendientes = facturas_oc.filter(
-            autorizada=False
+            autorizada__isnull=True
         )
 
         facturas_gasto = Factura.objects.filter(
@@ -1357,8 +1368,10 @@ def matriz_pagos(request):
         )
 
         facturas_gasto_pendientes = facturas_gasto.filter(
-            autorizada=False
+            autorizada__isnull=True
         )
+
+        print(facturas_gasto_pendientes)
 
         facturas_viatico = Viaticos_Factura.objects.filter(
             solicitud_viatico=OuterRef('viatico'),
@@ -1366,7 +1379,7 @@ def matriz_pagos(request):
         )
 
         facturas_viatico_pendientes = facturas_viatico.filter(
-            autorizada=False
+            autorizada__isnull=True
         )
 
     pagos = (
