@@ -2082,20 +2082,22 @@ def matriz_pagos(request):
             pago_ids = request.POST.getlist('pago_ids')
             print("Pagos seleccionados para imprimir:", pago_ids)  # Debug: Verificar los IDs recibidos
             pagos = Pago.objects.filter(id__in=pago_ids)
-            print(pagos)
+           
             for pago in pagos:
                 facturas = []
                 if pago.gasto:
                     facturas = pago.gasto.facturas.filter(hecho=True)
-                    print(facturas)
+                    
                 elif pago.oc:
                     facturas = pago.oc.facturas.filter(hecho=True)
-                    print(facturas)
+                   
                 elif pago.viatico:
+                    
                     facturas = pago.viatico.facturas.filter(hecho=True)
-                    print(facturas)
+                    #print(facturas)
 
                 for factura in facturas:
+                    #print(f"Validando factura {factura.id} del pago {pago.id}")  # Debug: Verificar qué facturas se están validando
                     if not factura.autorizada:
                         factura.autorizada = True
                         factura.autorizada_el = timezone.now()  # Opcional
