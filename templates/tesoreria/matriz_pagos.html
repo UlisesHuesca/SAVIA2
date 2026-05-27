@@ -573,7 +573,8 @@
                         </ul>
                     </td>
                     <td>
-                        {% if pago.tiene_facturas and not pago.tiene_facturas_pendientes %}
+                        
+                        {% if pago.estado_facturas == 'todas_autorizadas' %}
                             {% if pago.oc %}
                             <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                             {% elif pago.gasto %}
