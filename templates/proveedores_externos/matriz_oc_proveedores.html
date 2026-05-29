@@ -237,6 +237,9 @@
                     <td class="d-none d-lg-table-cell">{% if compra.dias_de_entrega %}{{compra.dias_de_entrega}}{% else %} ND {% endif %} </td>
                     <td class="d-none d-lg-table-cell">{{compra.fechas_pago}}</td>
                     <td>
+                        {% if not compra.es_ppd %}
+                            <p>No Aplica</p>
+                        {% else %}
                         {% with tiene_complemento=False %}
                             {% for factura in compra.facturas.all %}
                                 {% if not tiene_complemento and factura.complementos.exists %}
@@ -245,6 +248,7 @@
                                 {% endif %}
                             {% endfor %}
                         {% endwith %}
+                        {% endif %}
                     </td>
                     <td>
                         <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>

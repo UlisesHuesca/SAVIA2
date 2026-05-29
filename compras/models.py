@@ -545,6 +545,14 @@ class Compra(models.Model):
             entrada_total = round(entrada * 100,2) 
         
         return entrada_total
+    
+
+    @property
+    def es_ppd(self):
+        return any(
+            factura.emisor and factura.emisor.get('metodo_pago') == 'PPD'
+            for factura in self.facturas.all()
+        )
 
 
 
