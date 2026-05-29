@@ -347,7 +347,7 @@
                             </li>
                         </ul>
                     </td>
-                    {% if usuario.tipo.comprador %}
+                    {% if usuario.tipo.comprador or usuario.tipo.oc_superintendencia %}
                     <td>
 
                     {% if compra.proveedor.estatus.nombre == 'NUEVO' or compra.proveedor.estatus.nombre == 'APROBADO' %}
