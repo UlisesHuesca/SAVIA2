@@ -220,7 +220,23 @@
                     <td>${{compra.costo_fletes}}</td>
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
                     <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
-                    <td class="d-none d-lg-table-cell">{% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>{% elif compra.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{compra.entrada_parcial}}%</span>{% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}</td>
+                    <td class="d-none d-lg-table-cell">
+                        {% if compra.no_conformidad.all|length > 0 %}
+                            <span class="badge bg-danger">
+                                NC: {{ compra.no_conformidad.first.tipo_nc }}
+                            </span>
+                        {% endif %}
+                        {% if compra.entrada_completa %}<span class="badge bg-primary">Entregada</span>
+                            {% for entrada in compra.vale_entrada.all %}
+                                {% if entrada.entrada_date %}
+                                    {{ entrada.entrada_date|default_if_none:''|date:'d/m/Y' }}
+                                {% endif %}
+                            {% endfor %}
+                        {% elif compra.entrada_parcial > 0 %}<span class="badge bg-success">Avance: {{compra.entrada_parcial}}%</span>
+                        
+                        {% else %}<span class="badge bg-warning">No entregado aún</span> {% endif %}
+                        {% if compra.monto_anticipo > 0 %} <span class="badge bg-success">Anticipo: ${{compra.monto_anticipo}}</span>{% endif %}
+                    </td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
                     <td>
                         <ul class="nav nav-pills">
@@ -259,9 +275,11 @@
                                 <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'productos-oc' compra.id %}">Productos</a>
                             </li>
                             {% if usuario.tipo.pagos == True %}
-                            <li class="nav-item m-1">
-                                <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'compras-pagos' compra.id %}?proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}">Pago</a>
-                            </li>
+                               
+                                <li class="nav-item m-1">
+                                    <a id="myBtn" type="button" class="btn btn-outline-info" href="{% url 'compras-pagos' compra.id %}?proveedor={{ request.GET.proveedor }}&distrito={{ request.GET.distrito }}&start_date={{request.GET.start_date}}&end_date={{request.GET.end_date}}">Pago</a>
+                                </li>
+                              
                             <li class="nav-item m-1">
                                 <button id="myBtn2" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'saldo-a-favor' compra.id %}">Saldo a Favor</button>
                             </li>

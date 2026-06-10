@@ -2007,7 +2007,7 @@ def convert_excel_solicitud_matriz(ordenes):
     wb.add_named_style(money_resumen_style)
     # Construir la ruta completa a la imagen
     static_path = settings.STATIC_ROOT
-    img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+    img_path = os.path.join(static_path,'images','logo_vordcab.jpg')
     # Añadir imagen
     img = Image(img_path)
     # Ajustar tamaño de la imagen

@@ -332,7 +332,9 @@
                     </button>
                     
                 {% endif %}
+                {% if compra.no_conformidad.all|length == 0 %}
                 <button id="myBtn" name = "envio" type="submit" class="btn btn-success">Registrar</button>
+                {% endif %} 
                 <a type="button" class="btn btn-secondary" href="{% url 'compras-autorizadas' %}">Cerrar</a>
             </div>
 

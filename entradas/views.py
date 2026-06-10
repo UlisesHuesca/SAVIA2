@@ -1021,7 +1021,7 @@ def cierre_nc(request, pk):
             oc = Compra.objects.get(id = nc.oc.id)
             producto = ArticuloComprado.objects.get(id = articulos_nc.articulo_comprado.id)
             if nc.cierre.id == 3:
-                #Se debería de reactivas la OC, en la variable entrada_completa = False
+                #Se debería de reactivar la OC, en la variable entrada_completa = False
                 oc.entrada_completa = False
                 producto.entrada_completa = False
                 producto.cantidad_pendiente = producto.cantidad_pendiente - articulos_nc.cantidad
