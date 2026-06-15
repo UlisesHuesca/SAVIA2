@@ -1957,7 +1957,7 @@ def generar_cfdi_buffer(request, pk):
         impuesto = item['impuesto']
         tasa = item['tasa_cuota']
         if impuesto != 'N/A':
-            impuesto = float(impuesto)
+            impuesto = float(impuesto or 0)
         else:
             impuesto = 0.0  # o cualquier valor predeterminado que consideres adecuado
         
