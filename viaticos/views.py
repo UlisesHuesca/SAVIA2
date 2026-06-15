@@ -1962,7 +1962,7 @@ def generar_cfdi_buffer(request, pk):
             impuesto = 0.0  # o cualquier valor predeterminado que consideres adecuado
         
         if tasa != 'N/A':
-            tasa = float(tasa)
+            tasa = float(tasa or 0)
         else:
             tasa = 0.0  # o cualquier valor predeterminado que consideres adecuado
         clave = item['clave_prod_serv']
