@@ -455,6 +455,9 @@ def compra_edicion(request, pk):
                 iva = round(subtotal * decimal.Decimal(0.16),2)
             total = decimal.Decimal(subtotal + decimal.Decimal(iva))
 
+        comentario_solicitud_actual = oc.comentario_solicitud
+
+
         if request.method == 'POST' and  "crear" in request.POST:
             form = CompraForm(request.POST, instance=oc)
             costo_oc = 0
@@ -481,6 +484,7 @@ def compra_edicion(request, pk):
                 #    if articulo.producto.producto.articulos.producto.producto.iva == True:
                 #        costo_iva = decimal.Decimal(costo_oc * decimal.Decimal(0.16))
                 oc = form.save(commit = False)
+                oc.comentario_solicitud = comentario_solicitud_actual
                 oc.complete = True
                 oc.costo_iva = iva
                 oc.costo_oc = total
