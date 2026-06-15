@@ -1559,7 +1559,7 @@ def matriz_pagos(request):
             response['Content-Disposition'] = 'attachment; filename=reporte_facturas.xlsx'
             response.set_cookie('descarga_iniciada', 'true', max_age=20)
             return response
-        elif 'btnDescargarFacturas' in request.POST:
+        elif 'btnDescargarFacturas' in request.POST:   # Este es el correcto para descargar
             fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
             distrito_id = request.POST.get('distrito')
@@ -1613,7 +1613,7 @@ def matriz_pagos(request):
             else:
                 #print('Aquí también entró')
                 pagos = pagos.filter(
-                    Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
+                    Q(pagado_real__range=[fecha_inicio, fecha_fin]), #|Q(pagado_date__range=[fecha_inicio, fecha_fin]
                     Q(gasto__distrito=usuario.distritos) |
                     Q(oc__req__orden__distrito=usuario.distritos) |
                     Q(viatico__distrito=usuario.distritos)
