@@ -14,6 +14,7 @@ class PagoFilter(django_filters.FilterSet):
     start_date = DateFilter(field_name = 'pagado_date', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_date',lookup_expr='lte')
     id = CharFilter(field_name='id', lookup_expr='icontains')
+    
 
     class Meta:
         model = Compra
