@@ -5,127 +5,133 @@
 {% load tt_extras %}
 <html>
 <head>
-{% block title %}Solicitudes | Vista: Por orden{% endblock %}
+{% block title %}Matriz Solicitudes{% endblock %}
 </head>
 <body>
 {% block content %}
 <hr>
-<hr>
-<hr>
+
 <h6>&nbsp;</h6>
-<div class="row my-4">
-        <div class="card">
-           <div class="card-header">
-            <h5>Filtro de solicitudes| {{perfil.tipo.nombre}}</h5>
-            </div>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+
+    <div class="card">
+        <div class="card-header">
+            <h5>Filtro de solicitudes</h5>
+        </div>
         <div class="card-body">
             
-            <form method="GET" class="row g-7">
-                {% csrf_token %}
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
-                            <label style="color: #121212;" for="id_staff">Solicitado por</label>
+            <form method="GET">
+                <div class="row">
+                    {% csrf_token %}
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-user"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.staff|add_class:"form-control"|append_attr:"placeholder= Solicitado por"}}
+                                <label style="color: #121212;" for="id_staff">Solicitado por</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
+                                <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
+                                <label style="color: #121212;" for="id_proyecto">Folio solicitud</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.activo|add_class:"form-control"|append_attr:"placeholder= Activo Fijo"}}
+                                <label style="color: #121212;" for="id_proyecto">Activo Fijo</label>
+                            </div>
                         </div>
                     </div>
                 </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.proyecto|add_class:"form-control"|append_attr:"placeholder= Proyecto"}}
-                            <label style="color: #121212;" for="id_proyecto">Proyecto</label>
+                <div class="row">
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
+                                <label style="color: #121212;" for="id_proyecto">Producto</label>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder= Folio"}}
-                            <label style="color: #121212;" for="id_proyecto">Folio solicitud</label>
+                    {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Control" %}
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                                <label style="color: #121212;" for="id_proyecto">Distrito</label>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.activo|add_class:"form-control"|append_attr:"placeholder= Activo Fijo"}}
-                            <label style="color: #121212;" for="id_proyecto">Activo Fijo</label>
+                    {% endif %}
+                    
+                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Desde:</label>
+                            </div>
                         </div>
                     </div>
-                </div>
-                <div class="col-lg-3 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.producto|add_class:"form-control"|append_attr:"placeholder= Producto"}}
-                            <label style="color: #121212;" for="id_proyecto">Producto</label>
+                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
+                            </div>
                         </div>
                     </div>
-                </div>
                 
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Desde:</label>
-                        </div>
+                    <div class="col-auto">
+                    <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
                     </div>
                 </div>
-                <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
-                        <label style="color: #121212;" for="id_subproyecto">Hasta:</label>
-                        </div>
-                    </div>
-                </div>
-                {% if usuario.tipo.nombre == "Admin" %}
-                <div class="col-lg-4 col-sm-12">
-                    <div class="input-group mb-3">
-                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
-                        <div class="form-floating form-floating-group flex-grow-1">   
-                            {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
-                            <label style="color: #121212;" for="id_proyecto">Distrito</label>
-                        </div>
-                    </div>
-                </div>
-                {% endif %}
-                <div class="col-auto">
-                <button class="btn btn-outline-success btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-            </div>
             </form>
             <hr>
             <div class = "row mt-2 bg-white">
                 <form method=POST>
                     {% csrf_token %}
-                <ul class="nav nav-pills">
-                    <!--<li class="nav-item mx-2">
-                        <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
-                    </li> -->
-                    <li class="nav-item mx-2">
-                        <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
-                    </li>
-                    <!--<li class="nav-item mx-2">
-                        <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
-                    </li>-->
-                    <li class="nav-item mx-2">
-                        <a class="btn btn-outline-info" href="{% url 'solicitud-matriz-productos' %}">Productos</a>
-                    </li>
-                </ul>
+                    <ul class="nav nav-pills">
+                        <!--<li class="nav-item mx-2">
+                            <a class="btn btn-outline-secondary" href="{% url 'solicitud-product-selection' %}"><i class="fa-solid fa-angle-left"></i> Volver a solicitud elegir productos</a>
+                        </li> -->
+                        <li class="nav-item mx-2">
+                            <button type="submit" class="btn btn-outline-success" name="btnExcel"><i class="fa-solid fa-file-excel fa-2xl"></i></button>
+                        </li>
+                        <!--<li class="nav-item mx-2">
+                            <button type="button" class="btn btn-outline-danger"><i class="fa-solid fa-file-pdf fa-2xl"></i></button>
+                        </li>-->
+                        <li class="nav-item mx-2">
+                            <a class="btn btn-outline-info" href="{% url 'solicitud-matriz-productos' %}">Productos</a>
+                        </li>
+                    </ul>
                 </form>
             </div>
         </div>
     </div>
-</div>
 
-<div class="row my-4">
+
+
     <div class="col-md-4">
         {% for message in messages %}
             {% if message %}
@@ -137,23 +143,29 @@
             {% endif %}
         {% endfor %}
     </div>
-</div>
-<div class = "row mt-2">
+
+<div class = "card mt-4">
     <div class ="table-responsive-sm">
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th scope="col">Folio</th>
                     <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    <th class="d-none d-lg-table-cell">Autorización N1</th>
-                    <th class="d-none d-lg-table-cell">Autorización N2</th>
+                    {% if usuario.tipo.distrito.nombre != "MATRIZ"  or usuario.tipo.nombre == "Control" %}
+                    <th class="d-none d-lg-table-cell">Autoriza Requisición</th>
+                    <th class="d-none d-lg-table-cell">Autoriza Solicitud</th>
+                    {% else %}
+                    <th class="d-none d-lg-table-cell">Autoriza OC</th>
+                    <th class="d-none d-lg-table-cell">Autoriza Solicitud/Requisición</th>
+                    {% endif %}
                     <th>Distrito</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th> A.F.</th>
                     <th class="d-none d-lg-table-cell">Operación</th>
                     <th scope="col">Creado</th>
-                    <th scope="col">Acción</th>
+                    <th scope="col">Trazabilidad</th>
+                    <th>Registro</th>
                 </tr>
             </thead>
             <tbody>
@@ -171,6 +183,8 @@
                     <td>{{orden.created_at}}</td>
                     <td><!--<a class="btn btn-outline-info" href="">Actualizar</a>-->
                     <a class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-shoe-prints"></i></a>
+                    </td>
+                    <td>
                     <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
                     </td>
                 </tr>

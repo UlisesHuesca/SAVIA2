@@ -92,6 +92,18 @@
                             </div>
                         </div>
                     </div>
+                    {% if usuario.tipo.nombre == "Control" %}
+                    <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                            {{myfilter.form.distrito|add_class:'form-control'|append_attr:"placeholder= Distrito"}}
+                            <label style="color: #121212;" for="id_distrito">Distrito</label>
+                            </div>
+                        </div>
+                    </div>
+                    {% endif %}
+
                     <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
@@ -188,6 +200,10 @@
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
                     <th class="d-none d-md-table-cell">Folio Solicitud</th>
+                   
+                    {% if usuario.tipo.nombre == "Control" %}
+                    <th>Distrito</th>
+                    {% endif %}
                     <th>Folio Vale</th>
                     <th class="d-none d-md-table-cell">Fecha</th>
                     <th class="d-none d-lg-table-cell">Solicitado por</th>
@@ -209,6 +225,9 @@
                     <form method=POST>
                     {% csrf_token %}
                     <th class="d-none d-md-table-cell">{{salida.vale_salida.solicitud.folio}}</th>
+                    {% if usuario.tipo.nombre == "Control" %}
+                    <th>{{salida.vale_salida.solicitud.distrito.nombre}}</th>
+                    {% endif %}
                     <th>{{salida.vale_salida.folio}}</th>
                     <td  class="d-none d-md-table-cell">{{salida.created_at}}</td>
                     <td class="d-none d-lg-table-cell">{{salida.vale_salida.solicitud.staff.staff.staff.first_name}} {{salida.vale_salida.solicitud.staff.staff.staff.last_name}}</td>
@@ -225,6 +244,7 @@
                             <i class="fa-solid fa-file-pdf fa-2xl"></i>
                         </a>
                     </td>
+                    
                     {% if salida.cancelada_at and salida.cancelada == False  %}
                     <td class="d-none d-lg-table-cell">
                         <span class="badge bg-warning">En proceso de devolución</span>
@@ -234,11 +254,17 @@
                         <span class="badge bg-danger">Realizada</span>
                     </td>
                     {% else %}
-                    <td class="d-none d-lg-table-cell">
-                        <a href="{% url 'devolucion-material-salida' salida.id %}" class="btn btn-outline-info btn-lg">
-                            <i class="fa-solid fa-backward"></i>
-                        </a>
-                    </td>
+                        {% if usuario.tipo.almacen == True %}
+                        <td class="d-none d-lg-table-cell">
+                            <a href="{% url 'devolucion-material-salida' salida.id %}" class="btn btn-outline-info btn-lg">
+                                <i class="fa-solid fa-backward"></i>
+                            </a>
+                        </td>
+                        {% else %}
+                        <td class="d-none d-lg-table-cell">
+                            
+                        </td>
+                        {% endif %}
                     {% endif %}
                     </form>
                 </tr>

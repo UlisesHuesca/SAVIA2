@@ -79,9 +79,7 @@
                                 <label style="color: #121212;" for="id_proyecto">Proyecto</label>
                             </div>
                         </div>
-                    </div>     
-                </div>
-                <div class="row my-2">
+                    </div>
                     <div class="col-lg-3 col-sm-12">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
@@ -90,7 +88,19 @@
                                 <label style="color: #121212;" for="id_proyecto">Subproyecto</label>
                             </div>
                         </div>
-                    </div>  
+                    </div>
+                    <div class="col-lg-3 col-sm-12">
+                        <div class="input-group mb-3">
+                        <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-diagram-project"></i></span>
+                            <div class="form-floating form-floating-group flex-grow-1">   
+                                {{myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder= Distrito"}}
+                                <label style="color: #121212;" for="id_proyecto">Distrito</label>
+                            </div>
+                        </div>
+                    </div>         
+                </div>
+                <div class="row my-2">
+                    
                     <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
                         <div class="input-group mb-3">
                         <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
@@ -184,6 +194,9 @@
                     <th>Vale</th>
                     <th scope="col-sm">Solicitud</th>
                     <th>Compra</th>
+                    {% if usuario.tipo.nombre == "Control" %}
+                    <th>Distrito</th>
+                    {% endif %}
                     <th class="d-none d-lg-table-cell">Fecha</th>
                     <th class="d-none d-lg-table-cell">Solicitado por</th>
                     <th scope="col-sm">Proyecto</th>
@@ -200,6 +213,9 @@
                     <th>{{entrada.entrada.folio}}</th>
                     <th scope="row">{{entrada.entrada.oc.req.orden.folio}}</th>
                     <th>{{entrada.entrada.oc.folio}}</th>
+                    {% if usuario.tipo.nombre == "Control" %}
+                    <th>{{entrada.entrada.oc.req.orden.distrito.nombre}}</th>
+                    {% endif %}
                     <td class="d-none d-lg-table-cell">{{entrada.created_at}}</td>
                     <td class="d-none d-lg-table-cell">{{entrada.articulo_comprado.producto.producto.articulos.orden.staff.staff.staff.first_name}} {{entrada.articulo_comprado.producto.producto.articulos.orden.staff.staff.staff.last_name}}</td>
                     <td>{{entrada.articulo_comprado.producto.producto.articulos.orden.proyecto.nombre}}</td>

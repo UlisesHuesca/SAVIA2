@@ -72,9 +72,13 @@ def requisiciones_status(request):
     pk = request.session.get('selected_profile_id')
     perfil = Profile.objects.get(id = pk)
     
-    if perfil.tipo.nombre == "PROVEEDORES" or perfil.tipo.nombre == "VIS_ADQ":
+
+    if perfil.tipo.nombre == "Control": #tiene acceso solo a los distritos definidos como almacén en su perfil, por ello se hace el filtro por distrito para este perfil
+        almacenes_distritos = set(perfil.almacen.values_list('distrito__id', flat=True))
+        requis = Requis.objects.filter(complete = True, orden__distrito__id__in=almacenes_distritos).order_by('-folio')
+    elif perfil.tipo.nombre == "PROVEEDORES" or perfil.tipo.nombre == "VIS_ADQ":  #Estos a diferencia del perfil de control tienen acceso a todas las requisiciones completas, sin importar el distrito, por ello no se les hace el filtro por distrito
         requis = Requis.objects.filter(complete = True).order_by('-folio')
-    if perfil.tipo.nombre == "ADQUISICIONES":
+    elif perfil.tipo.nombre == "ADQUISICIONES" and perfil.distritos.nombre == "BRASIL": #Se pidió específicamente que el distrito de Brasil no viera las requisiciones rechazadas o pendientes de autorización, por ello se hace esta condición específica
         requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True,).filter(
             Q(autorizar=False)|Q(autorizar__isnull=True)).order_by('-folio')
     else:
@@ -1553,7 +1557,12 @@ def render_pdf_view(request, pk):
 def reporte_entradas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    entradas = EntradaArticulo.objects.filter(entrada__completo = True, entrada__cancelada = False, articulo_comprado__producto__producto__articulos__producto__producto__servicio = False, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
+    if usuario.tipo.nombre == "Control":
+        almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+        entradas = EntradaArticulo.objects.filter(entrada__completo = True, entrada__cancelada = False, articulo_comprado__producto__producto__articulos__producto__producto__servicio = False, entrada__oc__req__orden__distrito__id__in = almacenes_distritos ).order_by('-entrada__entrada_date')
+    else:    
+        entradas = EntradaArticulo.objects.filter(entrada__completo = True, entrada__cancelada = False, articulo_comprado__producto__producto__articulos__producto__producto__servicio = False, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
+    
     myfilter = EntradasFilter(request.GET, queryset=entradas)
     entradas = myfilter.qs
    
@@ -1649,7 +1658,11 @@ def reporte_entradas_servicios(request):
 def reporte_salidas(request):
     pk_perfil = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_perfil)
-    salidas = Salidas.objects.filter(vale_salida__solicitud__distrito = usuario.distritos, vale_salida__complete = True).order_by('-vale_salida__folio')
+    if usuario.tipo.nombre == "Control":
+        almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
+        salidas = Salidas.objects.filter(vale_salida__solicitud__distrito__id__in = almacenes_distritos, vale_salida__complete = True).order_by('-vale_salida__folio')
+    else:
+        salidas = Salidas.objects.filter(vale_salida__solicitud__distrito = usuario.distritos, vale_salida__complete = True).order_by('-vale_salida__folio')
     myfilter = SalidasFilter(request.GET, queryset=salidas)
     salidas = myfilter.qs
     salidas_filtradas = salidas.filter(producto__articulos__producto__producto__servicio = False)

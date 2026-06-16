@@ -821,9 +821,10 @@ def solicitud_matriz(request):
 
 
      #Este es un filtro por perfil supervisor o superintendente, es decir puede ver todo lo del distrito
-    if perfil.tipo.nombre == "Admin":
-        ordenes = Order.objects.filter(complete=True).order_by('-created_at','-folio')
-    elif perfil.tipo.superintendente == True or perfil.tipo.nombre == "Control":
+    if perfil.tipo.nombre == "Admin" or perfil.tipo.nombre == "Control":
+        almacenes_distritos = set(perfil.almacen.values_list('distrito__id', flat=True))
+        ordenes = Order.objects.filter(complete=True, distrito__in=almacenes_distritos).order_by('-created_at','-folio')
+    elif perfil.tipo.superintendente == True:
         ordenes = Order.objects.filter(complete=True, distrito=perfil.distritos).order_by('-created_at','-folio')
     elif perfil.tipo.supervisor == True:
         ordenes = Order.objects.filter(Q(supervisor = perfil) | Q(staff = perfil), complete=True, distrito=perfil.distritos).order_by('-created_at','-folio')

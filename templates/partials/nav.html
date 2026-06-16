@@ -583,7 +583,7 @@
                             Matriz Productos Requisiciones
                         </a>
                         <a class="dropdown-item" href="{% url 'reporte-entradas-servicios' %}">Matriz Entradas Servicios</a>
-                        {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.nombre == "Comprador" or usuario.tipo.nombre == "Tesoreria" %}
+                        {% if usuario.tipo.almacen == True or usuario.tipo.nombre == "Gerente" or usuario.tipo.nombre == "Comprador" or usuario.tipo.nombre == "Tesoreria" or usuario.tipo.nombre == "Control" %}
                             <div>
                         {% else %}
                             <div class="d-none">

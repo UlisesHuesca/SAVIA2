@@ -51,6 +51,8 @@ from reportlab.lib.colors import Color, black, blue, red, white
 from reportlab.lib.units import cm
 from reportlab.lib.pagesizes import letter
 from reportlab.rl_config import defaultPageSize
+from reportlab.pdfbase.pdfmetrics import stringWidth
+
 
 from reportlab.lib.styles import getSampleStyleSheet, ParagraphStyle
 from reportlab.lib.enums import TA_CENTER, TA_JUSTIFY
@@ -2792,10 +2794,7 @@ def attach_aviso_privacidad_pdf(request):
     buf = generar_aviso_privacidad()
     return buf.getvalue()
 
-from reportlab.pdfbase.pdfmetrics import stringWidth
-from reportlab.lib.styles import ParagraphStyle
-from reportlab.platypus import Paragraph
-from reportlab.lib.units import cm
+
 
 def wrap_text_to_fit(text, width, style):
     # Determinar la anchura máxima del texto que cabe en la columna

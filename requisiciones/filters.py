@@ -8,6 +8,7 @@ from django.db.models import Q
 class RequisFilter(django_filters.FilterSet):
     requisicion = CharFilter(field_name='folio', lookup_expr='icontains')
     solicitud = CharFilter(field_name='orden__folio', lookup_expr='icontains')
+    distrito = CharFilter(field_name='orden__distrito__nombre', lookup_expr='icontains')
     solicitante = CharFilter(method ='my_custom_filter', label="Search")
     start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at',lookup_expr='lte')
@@ -18,7 +19,7 @@ class RequisFilter(django_filters.FilterSet):
 
     class Meta:
         model = Requis
-        fields = ['requisicion','solicitud','solicitante','start_date','end_date','start_approved','end_approved','autorizar']
+        fields = ['requisicion','solicitud','solicitante','start_date','end_date','start_approved','end_approved','autorizar', 'distrito']
 
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(orden__staff__staff__staff__first_name__icontains = value) | Q(orden__staff__staff__staff__last_name__icontains=value))
@@ -80,10 +81,11 @@ class SalidasFilter(django_filters.FilterSet):
     subproyecto = CharFilter(field_name='producto__articulos__orden__subproyecto__nombre', lookup_expr='icontains')
     start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at',lookup_expr='lte')
+    distrito = CharFilter(field_name='vale_salida__solicitud__distrito__nombre', lookup_expr='icontains')
 
     class Meta:
         model = Salidas
-        fields = ['vale','solicitud','producto','codigo','nombre','proyecto','subproyecto','start_date','end_date',]
+        fields = ['vale','solicitud','producto','codigo','nombre','proyecto','subproyecto','start_date','end_date','distrito']
     
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(producto__articulos__orden__staff__staff__staff__first_name__icontains = value) | Q(producto__articulos__orden__staff__staff__staff__last_name__icontains=value))
@@ -92,6 +94,7 @@ class EntradasFilter(django_filters.FilterSet):
     producto = CharFilter(field_name='articulo_comprado__producto__producto__articulos__producto__producto__nombre', lookup_expr='icontains')
     folio = CharFilter(field_name = 'articulo_comprado__oc__folio', lookup_expr='icontains')
     folio_solicitud = CharFilter(field_name = 'articulo_comprado__oc__req__orden__folio', lookup_expr='icontains')
+    distrito = CharFilter(field_name='articulo_comprado__oc__req__orden__distrito__nombre', lookup_expr='icontains')
     codigo = CharFilter(field_name='articulo_comprado__producto__producto__articulos__producto__producto__codigo', lookup_expr='icontains')
     nombre = CharFilter(method ='my_custom_filter', label="Search")
     proyecto = CharFilter(field_name='articulo_comprado__producto__producto__articulos__orden__proyecto__nombre', lookup_expr='icontains')
@@ -101,7 +104,7 @@ class EntradasFilter(django_filters.FilterSet):
 
     class Meta:
         model = EntradaArticulo
-        fields = ['producto','folio','codigo','nombre','proyecto','subproyecto','start_date','end_date','folio_solicitud']
+        fields = ['producto','folio','codigo','nombre','proyecto','subproyecto','start_date','end_date','folio_solicitud','distrito']
 
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(articulo_comprado__producto__articulos__orden__staff__staff__first_name__icontains = value) | Q(articulo_comprado__producto__articulos__orden__staff__staff__last_name__icontains=value))

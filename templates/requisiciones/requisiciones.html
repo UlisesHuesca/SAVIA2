@@ -106,6 +106,18 @@
                         </div>
                     </div>
                     <div class="row">
+                         {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Control" %}
+                         <div id="serie" class="col-lg-2 col-sm-12">
+                            <div class="input-group mb-3">
+                            <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
+                                <div class="form-floating form-floating-group flex-grow-1">   
+                                    {% render_field myfilter.form.distrito  class="form-control" %}
+                                <label style="color: #121212;" for="id_subproyecto">Distrito:</label>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
+                        
                        
                         <div id="serie" class="col-lg-2 col-sm-12">
                             <div class="input-group mb-3">
@@ -211,7 +223,7 @@
                     <th scope="col">RQ</th>
                     <th scope="col">Solicitud</th>
                     <th class="d-none d-lg-table-cell">Solicitado por</th>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" %}
+                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Control" %}
                     <th scope="col">Distrito</th>
                     {% endif %}
                     <th scope="col">Proyecto</th>
@@ -231,7 +243,7 @@
                     <th scope="row">{{req.folio}}</th>
                     <th scope="row">{{req.orden.folio}}</th>
                     <th class="d-none d-lg-table-cell">{{req.orden.staff.staff.staff.first_name}} {{req.orden.staff.staff.staff.last_name}}</th>
-                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" %}
+                    {% if usuario.tipo.nombre == "PROVEEDORES" or usuario.tipo.nombre == "VIS_ADQ" or usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Control" %}
                     <td>{{req.orden.distrito.nombre}}</td>
                     {% endif %}
                     <td>{{req.orden.proyecto.nombre}}</td>
