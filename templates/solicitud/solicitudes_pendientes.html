@@ -3,6 +3,7 @@
 {% load widget_tweaks %}
 {% load static %}
 {% load tt_extras %}
+{% load l10n %}
 <html>
 <head>
 {% block title %}Matriz Solicitudes{% endblock %}
@@ -189,7 +190,24 @@
                     <a class="btn btn-outline-warning" type="button" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'status_sol' orden.id %}"><i class="fa-solid fa-shoe-prints"></i></a>
                     </td>
                     <td>
-                    <a type="button" class="btn btn-outline-info" href="{% url 'solicitud-pdf' orden.id%}"><i class="fa-solid fa-file-pdf fa-2xl"></i></a>
+                         <button type = "button" class="btn btn-lg btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{orden.id|unlocalize}}" data-pdf-url="{% url 'ver_solicitud_pdf' orden.id %}">
+                            <i class="fa-solid fa-eye"></i>
+                        </button>
+                                  <!-- Modal -->
+                                <div class="modal fade" id="pdfModal{{orden.id|unlocalize}}" tabindex="-1" aria-hidden="true">
+                                    <div class="modal-dialog modal-xl modal-dialog-centered">
+                                        <div class="modal-content">
+                                            <div class="modal-header">
+                                                <h5 class="modal-title">Registro de solicitud</h5>
+                                                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                                            </div>
+
+                                            <div class="modal-body" style="height:80vh;">
+                                               <iframe class="pdfFrame" src="" style="width:100%; height:100%; border:0;"></iframe>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
                     </td>
                 </tr>
                 {% endfor %}
@@ -226,11 +244,44 @@
 </div>
 
 <!--Este es el modal-->
-<div class="modal fade" id ="dialog" tabindex="-1" role="dialog">
-    <div class="modal-dialog modal-lg" id="document" role="document">
+<div class="modal fade" id ="dialog" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1" role="dialog">
+    <div class="modal-dialog modal-lg modal-dialog-centered" id="document" role="document" hx-target="this">
 
     </div>
 </div>
+
+
+</div>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<script>
+document.addEventListener("show.bs.modal", function (event) {
+  const modal = event.target;
+
+  if (!modal.id.startsWith("pdfModal")) return;
+
+  const button = event.relatedTarget;
+  const url = button?.getAttribute("data-pdf-url");
+  const frame = modal.querySelector(".pdfFrame");
+
+  if (url && frame) {
+    frame.src = url;
+  }
+});
+
+document.addEventListener("hidden.bs.modal", function (event) {
+  const modal = event.target;
+
+  if (!modal.id.startsWith("pdfModal")) return;
+
+  const frame = modal.querySelector(".pdfFrame");
+
+  if (frame) {
+    frame.src = "about:blank";
+  }
+});
+</script>
 
 {% endblock %}
 </body>

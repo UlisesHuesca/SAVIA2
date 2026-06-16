@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.core.files.base import ContentFile
 from django.core.mail import EmailMessage, BadHeaderError
+from django.views.decorators.clickjacking import xframe_options_sameorigin
 import socket
 from smtplib import SMTPException
 from django.core.paginator import Paginator
@@ -1315,7 +1316,23 @@ def requisicion_cancelar(request, pk):
      }
     return render(request,'requisiciones/requisiciones_cancelar.html', context)
 
-def render_pdf_view(request, pk):
+def descargar_solicitud_pdf(request, pk):
+    solicitud = get_object_or_404(Order, id=pk)
+    buf = render_pdf_view(pk)  # tu función
+   
+    return FileResponse(buf, as_attachment=True, filename='Solicitud_' + str(solicitud.folio) + '.pdf')
+
+@xframe_options_sameorigin
+def ver_solicitud_pdf(request, pk):
+    solicitud = get_object_or_404(Order, id=pk)
+    buf = render_pdf_view(pk)  # tu función
+    filename = f"Solicitud_{solicitud.folio}.pdf"
+
+    resp = FileResponse(buf, content_type="application/pdf")
+    resp["Content-Disposition"] = f'inline; filename="{filename}"'
+    return resp
+
+def render_pdf_view( pk):
     #Configuration of the PDF object
     buf = io.BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
@@ -1551,7 +1568,7 @@ def render_pdf_view(request, pk):
     c.save()
     buf.seek(0)
 
-    return FileResponse(buf, as_attachment=True, filename='reporte_' + str(orden.folio) +'.pdf')
+    return buf
 
 @perfil_seleccionado_required
 def reporte_entradas(request):
