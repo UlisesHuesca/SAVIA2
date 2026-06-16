@@ -158,7 +158,9 @@
                     <th class="d-none d-lg-table-cell">Autoriza OC</th>
                     <th class="d-none d-lg-table-cell">Autoriza Solicitud/Requisición</th>
                     {% endif %}
+                    {% if usuario.tipo.nombre == "Admin"  or usuario.tipo.nombre == "Control" %}
                     <th>Distrito</th>
+                    {% endif %}
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th> A.F.</th>
@@ -175,7 +177,9 @@
                     <td class="d-none d-lg-table-cell">{{orden.staff.staff.staff.first_name}} {{orden.staff.staff.staff.last_name}}</td>
                     <td class="d-none d-lg-table-cell">{{orden.superintendente.staff.staff.first_name}} {{orden.superintendente.staff.staff.last_name}}</td>
                     <td class="d-none d-lg-table-cell">{{orden.supervisor.staff.staff.first_name}} {{orden.supervisor.staff.staff.last_name}}</td>
+                    {% if usuario.tipo.nombre == "Admin"  or usuario.tipo.nombre == "Control" %}
                     <td>{{orden.distrito.nombre}}</td>
+                    {% endif %}
                     <td>{{orden.proyecto.nombre}}</td>
                     <td>{{orden.subproyecto.nombre}}</td>
                     <td>{{orden.activo.eco_unidad}}</td>
