@@ -129,7 +129,7 @@
         <div class="card-body">
             <ul class="nav nav-pills">
                     <li class="nav-item mx-2">
-                        <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel'>
+                        <button name="btnReporte" type="submit" class="btn btn-outline-success" value='Reporte Excel' title="Reporte de Pagos">
                             <i class="fa-solid fa-file-excel fa-2xl"></i>
                         </button>
                     </li>
@@ -224,15 +224,15 @@
                         </div>
                     </div>
                 </div>
-                <div class="form-check mt-2">
+                <!--<div class="form-check mt-2">
                     <input class="form-check-input" type="checkbox" id="validacion" name="validacion">
                     <img src="{% static 'images/SAT.jpg' %}" alt="Validar SAT"
                     style="width: 40px; height: auto; vertical-align: middle; margin-right: 8px;">
                     <label class="form-check-label" for="validacion">Validar en SAT</label>
-                </div>
+                </div>-->
             </div>
             <div class="col-lg-3 col-sm-12 m-3">
-                <button type="submit" name="btnDescargarFacturas" class="btn btn-primary "><i class="fa-solid fa-circle-chevron-down"></i></button>
+                <button type="submit" name="btnDescargarFacturas" class="btn btn-primary" title="Descargar Facturas"><i class="fa-solid fa-circle-chevron-down"></i></button>
                  <button name="btnReporteXML" type="submit" class="btn btn-outline-success" value='Reporte Excel de XML' title ="Generar reporte de XML">
                     <i class="fa-solid fa-file-excel fa-2xl"></i>
                 </button>
@@ -325,7 +325,9 @@
                     <th scope="col">Fecha</th>
                     
                     <th>Validar/Imprimir</th>
-                    <th scope="col">Acción</th>
+                   
+                    <th>Registro</th>
+                     <th scope="col">Pago</th>
                     <th>Control de Documentos</th>
                     <th>Fecha Control</th>
                 </tr>
@@ -452,13 +454,15 @@
                         {% endif %}
                     </td>
                     <td>
+                         {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
                         <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}"  {% if pago.estado_facturas == 'todas_autorizadas' %}checked disabled{% endif %}>             
+                        {% endif %}
                     </td>
                     <td>
                         <ul class="nav nav-pills">
                             {% if pago.oc %}
                             <li class="nav-item">
-                                <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.oc.id|unlocalize}}" data-pdf-url="{% url 'ver_oc_pdf' pago.oc.id %}">
+                                <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.oc.id|unlocalize}}" data-pdf-url="{% url 'ver_oc_pdf' pago.oc.id %}" title="Ver OC en PDF">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                                   <!-- Modal -->
@@ -479,6 +483,8 @@
                                
 
                             </li>
+                      
+                    
                             {% endif %}
                             {% if pago.gasto %}
                             <li class="nav-item mx-1">
@@ -508,7 +514,7 @@
                            
                             {% if pago.viatico %}
                             <li class="nav-item mx-1">
-                                 <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.viatico.id|unlocalize}}" data-pdf-url="{% url 'ver_viatico_pdf' pago.viatico.id %}">
+                                 <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.viatico.id|unlocalize}}" data-pdf-url="{% url 'ver_viatico_pdf' pago.viatico.id %}" title="Registro de viático">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>
                                 <!-- Modal -->
@@ -528,15 +534,13 @@
                                 </div>      
                             </li>
                             {% endif %}
-                             
+                        </ul>
+                    </td>
+                    <td>
                             {% if pago.comprobante_pago %}
-
-                            <li class="nav-item mx-1">
-                                <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
-                                    <i class="fa-solid fa-file-invoice-dollar"></i>
-                                </button>
-                               
-                            </li>
+                            <button type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{ pago.id|unlocalize }}" title="Ver comprobante de pago">
+                                <i class="fa-solid fa-file-invoice-dollar"></i>
+                            </button>
                             <!-- Modal con visor de PDF -->
                             <div class="modal fade" id="pdfModal{{ pago.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ pago.id|unlocalize }}" aria-hidden="true">
                                 <div class="modal-dialog modal-xl">
@@ -552,44 +556,31 @@
                                 </div>
                             </div>
                             {% endif %}
-                            {% if pago.oc %}
-                            {% endif %}
-                            <!--<li class="nav-item mx-1">
-                                {% if pago.oc %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
-                                <i class="fa-solid fa-file-pdf"></i></a>
-                                {% endif %}
-                                {% if pago.gasto %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-gasto' pago.gasto.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
-                                <i class="fa-solid fa-file-pdf"></i>
-                                </a>
-                                {% endif %}
-                                {% if pago.viatico %}
-                                <a type="button" class="btn btn-outline-danger" href="{% url 'matriz-facturas-viaticos' pago.viatico.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas">
-                                    <i class="fa-solid fa-file-pdf"></i>
-                                </a>
-                                {% endif %}
-                            </li>-->
-                        </ul>
+                            
+                
                     </td>
+                 
                     <td>
-                        
-                        {% if pago.estado_facturas == 'todas_autorizadas' %}
-                            {% if pago.oc %}
-                            <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
-                            {% elif pago.gasto %}
-                            <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
-                            {% elif pago.viatico %}
-                            <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                        {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
+                            {% if pago.estado_facturas == 'todas_autorizadas' %}
+                                {% if pago.oc %}
+                                <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                {% elif pago.gasto %}
+                                <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                {% elif pago.viatico %}
+                                <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                                {% endif %}
                             {% endif %}
                         {% endif %}
                     </td>
                    <td>
-                        {% if pago.fecha_control_documentos %}
-                            {{ pago.fecha_control_documentos|date:"d/m/Y" }}
-                        {% else %}
-                            No enviado a control
-                        {% endif %}
+                       
+                            {% if pago.fecha_control_documentos %}
+                                {{ pago.fecha_control_documentos|date:"d/m/Y" }}
+                            {% else %}
+                                No enviado a control
+                            {% endif %}
+                       
                     </td>
 
                 </tr>
