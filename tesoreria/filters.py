@@ -39,11 +39,13 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     start_date = DateFilter(field_name ='pagado_real', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_real', lookup_expr='lte')
     proveedor = CharFilter(method = 'beneficiario_proveedor', lookup_expr='icontains')
+    distrito = CharFilter(method='filter_distrito', label='Distrito')
+   
 
 
     class Meta:
         model = Pago
-        fields = ['oc','pagado_date','tesorero','cuenta']
+        fields = ['oc','pagado_date','tesorero','cuenta', 'distrito']
 
     def my_filter(self, queryset, name, value):
         return queryset.filter(Q(oc__folio__icontains = value) | Q(gasto__folio__icontains = value)| Q(viatico__folio__icontains = value))
@@ -54,6 +56,14 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     def my_proyecto(self, queryset, name, value):
         return queryset.filter(Q(oc__req__orden__proyecto__nombre__icontains = value) | Q(gasto__articulos__proyecto__nombre__icontains = value) | Q(viatico__proyecto__nombre__icontains = value))
     
+
+    def filter_distrito(self, queryset, name, value):
+        return queryset.filter(
+            Q(oc__req__orden__distrito__nombre__icontains=value) |
+            Q(viatico__distrito__nombre__icontains=value) |
+            Q(gasto__distrito__nombre__icontains=value)
+        )
+
     def filter_by_tipo(self, queryset, name, value):  # new method
         if value.lower() == 'compra':
             return queryset.filter(oc__isnull=False)

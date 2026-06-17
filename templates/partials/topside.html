@@ -666,10 +666,15 @@ function mostrarModalInicial() {
 }
 
 document.addEventListener('DOMContentLoaded', async function () {
-  console.log("=== SCRIPT POLITICAS v2026-02-03 A ===");
-  {% if usuario.tipo.proveedor_externo %}
-  await mostrarModalInicial();
-  {% endif %}
+   {% if usuario.tipo.proveedor_externo %}
+    if (!sessionStorage.getItem("modalInicialMostrado")) {
+    await mostrarModalInicial();
+    sessionStorage.setItem("modalInicialMostrado", "true");
+    }
+    {% endif %}
+  
+
+  console.log("Ya cerraron el modal inicial, ahora sí continuo...");
 
   // 2) Aquí ya corre lo demás (tu script de políticas, etc.)
   console.log("Ya cerraron el modal inicial, ahora sí continuo...");
