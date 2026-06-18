@@ -47,15 +47,21 @@
                     </div>
                 </div>
                 <div class="row my-2">
-                    <div id="etiqueta_status" class="col-lg-6 col-md-6">
+                    <div id="etiqueta_status" class="col-lg-4 col-md-4 col-sm-12">
                         <div class="alert alert-secondary" role="alert">
                         <h6>Status:</h6><h6 style="color: #121212;" id="lbl_status"></h6>   
                         </div>
                     </div>
                     
-                    <div id="etiqueta_distrito" class="col-lg-6 col-md-6">
+                    <div id="etiqueta_distrito" class="col-lg-4 col-md-4 col-sm-12">
                         <div class="alert alert-secondary" role="alert">
                         <h6>Distrito:</h6><h6 style="color: #121212;" id="lbl_distrito"></h6>   
+                        </div>
+                    </div>
+
+                    <div id="etiqueta_banco" class="col-lg-4 col-md-4 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                        <h6>Banco:</h6><h6 style="color: #121212;" id="lbl_banco"></h6>   
                         </div>
                     </div>
                 </div>
@@ -1087,6 +1093,7 @@ $(document).ready(function(){
                             id: item.id,
                             text: item.nombre__razon_social, 
                             distrito: item.distrito__nombre,
+                            banco: item.banco__nombre,
                             status: item.estatus__nombre,
                             domicilio: item.domicilio,
                             financiamiento: item.financiamiento,
@@ -1124,6 +1131,7 @@ $(document).ready(function(){
         $('#id_proveedor').on('select2:unselect', function(e){
        
          datosCompra.lbl_distrito = '';
+         datosCompra.lbl_banco = '';
          datosCompra.lbl_domicilio ='';
          datosCompra.lbl_status ='';
          datosCompra.proveedor='';
@@ -1131,6 +1139,7 @@ $(document).ready(function(){
          datosCompra.financiamiento='';
          datosCompra.proveedor_text =''; 
          $('#lbl_distrito').text('');
+         $('#lbl_banco').text('');
          $('#lbl_domicilio').text('');
          $('#lbl_status').text(''); 
          $('#id_cond_de_pago').val('').trigger('change');
@@ -1142,6 +1151,7 @@ $(document).ready(function(){
         var data = e.params.data; // Aquí obtienes el objeto de datos seleccionado
         var distrito = data.distrito; // Aquí obtienes el valor de distrito
         var domicilio = data.domicilio;
+        var banco = data.banco;
         var status = data.status;
         var financiamiento = data.financiamiento;
         var dias = data.dias_credito;
@@ -1159,6 +1169,7 @@ $(document).ready(function(){
         //localStorage.setItem("id_formulario_" + oc, JSON.stringify(object));
         $('#lbl_distrito').text(distrito);
         $('#lbl_domicilio').text(domicilio);
+        $('#lbl_banco').text(banco);
         $('#lbl_status').text(status);  
         $('#lbl_distrito').attr('dias',dias)
         
@@ -1180,6 +1191,7 @@ $(document).ready(function(){
         datosCompra.lbl_domicilio = domicilio;
         datosCompra.lbl_status = status;
         datosCompra.lbl_distrito = distrito;
+        datosCompra.lbl_banco = banco;
         datosCompra.financiamiento = financiamiento;
         datosCompra.dias_de_credito = dias;
         precio_ref()

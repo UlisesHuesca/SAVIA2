@@ -2555,7 +2555,7 @@ def carga_proveedor(request):
          Q(estatus__nombre="NUEVO") | Q(estatus__nombre="APROBADO"),
          distrito = usuario.distritos, 
          nombre__razon_social__icontains = term
-    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito','moneda__nombre')
+    ).values('id','nombre__razon_social','distrito__nombre','domicilio','estatus__nombre','financiamiento','dias_credito','moneda__nombre', 'banco__nombre',)
     data = list(proveedores)
     print(proveedores)
     return JsonResponse(data, safe=False)
