@@ -478,7 +478,8 @@ def get_tabla_costos(tipo_id=None, distrito_id=None, fecha_inicio=None, fecha_fi
         # 🚩 Caso especial: Indirecto Central
         tabla_ingresos, meses_ingresos = get_tabla_ingresos_contrato(
             fecha_inicio.strftime("%Y-%m"),
-            fecha_fin.strftime("%Y-%m")
+            fecha_fin.strftime("%Y-%m"),
+            distrito_id
         )
 
         tabla_distribuida = {}
@@ -911,7 +912,7 @@ from decimal import Decimal
 
 def get_tabla_ingresos_contrato(fecha_inicio=None, fecha_fin=None, distrito_id=None):
     ingresos = Ingresos.objects.filter(solicitud__complete=True)
-
+    print(distrito_id)
     if distrito_id:
         ingresos = ingresos.filter(solicitud__distrito_id=distrito_id)
 
@@ -1653,7 +1654,8 @@ def reporte_rentabilidad_mensual(request):
             
             # 👉 Traemos los ingresos prorrateados (por contrato y mes)
             tabla_ingresos, _ = get_tabla_ingresos_contrato(
-                fecha_inicio=mes_anio, fecha_fin=mes_anio
+                fecha_inicio=mes_anio, fecha_fin=mes_anio,
+                distrito_id=distrito_id
             )
             # total nacional de ingresos (para Indirecto Central)
             ingreso_total_nacional = sum(

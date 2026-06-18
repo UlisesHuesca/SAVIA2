@@ -3,12 +3,15 @@ from .models import Concepto, Tipo_Costo, Costos, Ingresos, Depreciaciones, Soli
 
 class Solicitud_Costos_Admin(admin.ModelAdmin):
     list_display = ('id','contrato','distrito','tipo','fecha','complete')
+    search_fields = ('contrato__nombre',)
 
 class Ingresos_Admin(admin.ModelAdmin):
-    list_display = ('id','solicitud','contrato','concepto','complete')
+    list_display = ('id','solicitud','contrato','concepto','complete','monto')
+    search_fields = ('contrato__nombre',)
 
 class Costos_Admin(admin.ModelAdmin):
     list_display = ('id','solicitud','concepto','categorizacion','monto','complete')
+    search_fields = ('solicitud__contrato__nombre',)
 
 class Depreciaciones_Admin(admin.ModelAdmin):
     list_display = ('id', 'contrato','distrito','concepto','created_by')
