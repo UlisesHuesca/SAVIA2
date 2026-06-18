@@ -61,6 +61,7 @@
                     {% else %}
                         <h4 style="color: #121212;">&nbsp;Producto en inventario:&nbsp;No asignado</h4> 
                     {% endif %}
+                    <h6 style="color: #121212;">&nbsp;Distrito:&nbsp;{{activo.activo.distrito.nombre}} | Distrito de Responsable: {{activo.responsable.distritos.nombre}}</h6>   
                     <h6 style="color: #121212;">&nbsp;Activo:&nbsp;{{activo.eco_unidad}}</h6>   
                     <h6 style="color: #121212;">&nbsp;Familia:&nbsp;{{familia}}</h6>  
                     <h6 style="color: #121212;">&nbsp;Subfamilia:&nbsp;{{subfamilia}}</h6>  
@@ -88,9 +89,14 @@
                             </div>
                         </div>
                     </div>
-                    <div id="etiqueta_cantidad" class="col-lg-4 col-sm-12">
+                    <div id="etiqueta_cantidad" class="col-lg-3 col-sm-12">
                         <div class="alert alert-secondary" role="alert">
                             <h6>Disponible:</h6><h6 style="color: #121212;" id="cantidad"></h6>   
+                        </div>
+                    </div>
+                     <div id="etiqueta_distrito" class="col-lg-2 col-sm-12">
+                        <div class="alert alert-secondary" role="alert">
+                            <h6>Distrito:</h6><h6 style="color: #121212;" id="lblDistrito"></h6>   
                         </div>
                     </div>
                 </div>
@@ -331,7 +337,7 @@ $(document).ready(function () {
     var cantidadEtiqueta = $('#cantidad');
     var form = $('.post-form'); // Selecciona el formulario
     var productoActivoId = {{ id_actual|default:"null"|unlocalize }};
-    ProductoSelect.empty();
+    
     
     // Inicializar select2
     ProductoSelect.select2({
@@ -342,16 +348,21 @@ $(document).ready(function () {
         templateResult: formatRepo,
         templateSelection: formatRepoSelection
     });
+    // Seleccionar producto predeterminado
+
 
     // Evento para actualizar la cantidad
     ProductoSelect.on('change', function () {
         var selectedId = $(this).val(); // ID del producto seleccionado
         var productoSeleccionado = datosProductos.find(producto => producto.id == selectedId);
-
+        console.log(productoSeleccionado)
         if (productoSeleccionado) {
             cantidadEtiqueta.text(productoSeleccionado.cantidad || 0);
+            $('#lblDistrito').text(productoSeleccionado.distrito || '-');
         } else {
+            console.log("No se encontró el producto seleccionado en los datos.");
             cantidadEtiqueta.text(0);
+            $('#lblDistrito').text('-');
         }
     });
 

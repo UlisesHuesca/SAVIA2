@@ -324,17 +324,20 @@ def edit_activo(request, pk):
     else:
         marca_p = None
 
-    productos_activos = productos.filter(activo_disponible = True) #Filtrar a aquellos productos activo disponibles
+    #productos_activos = productos.filter(activo_disponible = True) #Filtrar a aquellos productos activo disponibles
     form = Edit_Activo_Form(instance = activo)
     form.fields['activo'].queryset = productos
 
     productos_para_select2 = [
         {
             'id': producto.id, 
-            'text': f"{producto.producto.nombre} - {producto.distrito.nombre}",
-            'cantidad':str(producto.cantidad)
-        } for producto in productos_activos
+            'text': str(producto.producto.nombre),
+            'cantidad':str(producto.cantidad),
+            'distrito': str(producto.distrito.nombre),
+        } for producto in productos
     ]
+
+
     print(productos_para_select2)
     if activo.activo:
         producto_predeterminado = {
