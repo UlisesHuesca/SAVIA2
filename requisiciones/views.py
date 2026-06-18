@@ -77,7 +77,7 @@ def requisiciones_status(request):
     if perfil.tipo.nombre == "Control": #tiene acceso solo a los distritos definidos como almacén en su perfil, por ello se hace el filtro por distrito para este perfil
         almacenes_distritos = set(perfil.almacen.values_list('distrito__id', flat=True))
         requis = Requis.objects.filter(complete = True, orden__distrito__id__in=almacenes_distritos).order_by('-folio')
-    elif perfil.tipo.nombre == "PROVEEDORES" or perfil.tipo.nombre == "VIS_ADQ":  #Estos a diferencia del perfil de control tienen acceso a todas las requisiciones completas, sin importar el distrito, por ello no se les hace el filtro por distrito
+    elif perfil.tipo.nombre == "PROVEEDORES" or perfil.tipo.nombre == "VIS_ADQ" or perfil.tipo.nombre == "Gerente_compras":  #Estos a diferencia del perfil de control tienen acceso a todas las requisiciones completas, sin importar el distrito, por ello no se les hace el filtro por distrito
         requis = Requis.objects.filter(complete = True).order_by('-folio')
     elif perfil.tipo.nombre == "ADQUISICIONES" and perfil.distritos.nombre == "BRASIL": #Se pidió específicamente que el distrito de Brasil no viera las requisiciones rechazadas o pendientes de autorización, por ello se hace esta condición específica
         requis = Requis.objects.filter(orden__distrito = perfil.distritos, complete = True,).filter(
