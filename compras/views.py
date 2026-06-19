@@ -5331,7 +5331,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             pagado_text,
             comentarios,
             articulo.oc.comentarios if articulo.oc.comentarios else "Sin comentario",
-            articulo.oc.tipo_de_contratacion if articulo.oc.tipo_de_contratacion else "Sin tipo de contratación",
+            articulo.oc.tipo_contratacion if articulo.oc.tipo_contratacion else "Sin tipo de contratación",
             visita,
         ]
         data.append(row)
