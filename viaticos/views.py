@@ -558,9 +558,8 @@ def viaticos_autorizados(request):
     page = request.GET.get('page')
     ordenes_list = p.get_page(page)
 
-    #if request.method =='POST' and 'btnExcel' in request.POST:
-
-        #return convert_excel_solicitud_matriz(solicitudes)
+    if request.method =='POST' and 'btnExcel' in request.POST:
+        return convert_excel_solicitud_matriz(solicitudes)
 
     context= {
         'ordenes_list':ordenes_list,
@@ -633,6 +632,7 @@ def delete_viatico(request, pk):
 
 @perfil_seleccionado_required
 def viaticos_autorizados_pago(request):
+    print('estoy en autorizados para pago')
     #obtengo el id de usuario, lo paso como argumento a id de profiles para obtener el objeto profile que coindice con ese usuario_id
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
@@ -655,9 +655,8 @@ def viaticos_autorizados_pago(request):
     page = request.GET.get('page')
     viaticos_list = p.get_page(page)
 
-    #if request.method =='POST' and 'btnExcel' in request.POST:
-
-        #return convert_excel_solicitud_matriz(solicitudes)
+    if request.method =='POST' and 'btnReporte' in request.POST:
+        return convert_excel_viatico(viaticos_list)
     # Calcular el estado de las facturas basado en los conteos
     for viatico in viaticos_list:
         if viatico.total_facturas == 0:
@@ -1724,7 +1723,8 @@ def convert_excel_viatico(viaticos):
     wb.add_named_style(percent_style)
 
     columns = ['Folio','Fecha Autorización','Distrito','Colaborador','Solicitado para','Proyecto','Subproyecto',
-               'Importe','Fecha Creación','Status','Autorizado por','Tiene_Facturas','Status de Pago']
+               'Importe','Fecha Creación','Status','Autorizado por','Partida','Destino','Fecha Partida','Fecha Retorno','Comentario General',
+               'Tiene_Facturas','Status de Pago']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -1828,6 +1828,12 @@ def convert_excel_viatico(viaticos):
             created_at_naive,
             status,
             autorizado_por,
+           
+            viatico.lugar_partida,
+            viatico.lugar_comision,
+            viatico.fecha_partida,
+            viatico.fecha_retorno,
+            viatico.comentario_general,
             tiene_facturas,
             pagada,
             #f'=IF(I{row_num}="",G{row_num},I{row_num}*G{row_num})',  # Calcula total en pesos usando la fórmula de Excel
@@ -1837,7 +1843,7 @@ def convert_excel_viatico(viaticos):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num ==1 or col_num == 8:
+            if col_num in [1, 8, 13,14]:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num == 7:
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
