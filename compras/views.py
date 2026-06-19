@@ -5004,7 +5004,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
     return response
 
 
-
+#Obsoleto
 def convert_excel_solicitud_matriz_productos(productos):
     print(productos.count())
     #response= HttpResponse(content_type = "application/ms-excel")
@@ -5040,7 +5040,8 @@ def convert_excel_solicitud_matriz_productos(productos):
     number_style = NamedStyle(name='number_style', number_format='#,##0.00')
     number_style.font = Font(name ='Calibri', size = 10)
 
-    columns = ['OC','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor','Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada','Comentario Solicitud']
+    columns = ['Compra','Código', 'Producto','Cantidad','Unidad','Tipo Item','Familia','Subfamilia','P.U.','Moneda','TC','Subtotal','IVA','Total','Proveedor',
+               'Status Proveedor','Fecha','Proyecto','Subproyecto','Distrito','RQ','Sol','Status','Pagada','Comentario Solicitud','Comentario OC']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -5122,6 +5123,7 @@ def convert_excel_solicitud_matriz_productos(productos):
             status,
             pagado_text,
             comentarios,
+            articulo.oc.comentarios,
         ]
         rows.append(row)
 
@@ -5155,7 +5157,7 @@ def convert_excel_solicitud_matriz_productos(productos):
 
     return response
 
-
+#obsoleto
 def convert_excel_solicitud_matriz_productos_prov(productos):
     #print(productos.count())
     output = io.BytesIO()
@@ -5269,7 +5271,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
 
     columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC',
                 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Estado','Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 
-                'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Visita']
+                'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Comentario','Visita']
     data = [columns]
 
     for articulo in productos:
@@ -5328,6 +5330,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             status,
             pagado_text,
             comentarios,
+            articulo.oc.comentarios if articulo.oc.comentarios else "Sin comentario",
             visita,
         ]
         data.append(row)
