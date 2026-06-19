@@ -238,9 +238,7 @@
                           
                             <!-- Botón de eliminación -->
                             <td>
-                                {% if factura.autorizada %}
-                                
-                                {% else %}
+                                {% if factura.autorizada == False or usuario.tipo.nombre == "CONTADOR" %}
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize }})">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
