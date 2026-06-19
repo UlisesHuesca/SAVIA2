@@ -4854,7 +4854,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
 
     columns = ['Compra', 'Requisición', 'Solicitud','Distrito', 'Proyecto', 'Subproyecto', 'Área', 'Solicitante','Comprador', 'Creado', 'Req. Autorizada', 'Proveedor',
                'Status Proveedor','Crédito/Contado', 'Costo', 'Monto Pagado', 'Status Pago','Fecha Pago', 'Status Autorización','Tipo Item', 'Días de entrega', 'Moneda',
-               'Tipo de cambio', 'Entregada','Tiene Facturas', 'Activo Fijo', "Total en pesos"]
+               'Tipo de cambio', 'Entregada','Tiene Facturas', 'Activo Fijo','Tipo de Contratación','Comentarios','Comentarios Usuarios', 'Total en pesos']
 
     columna_max = len(columns)+2
 
@@ -4876,7 +4876,7 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
          num_approved_requis=1
     indicador = num_requis_atendidas/num_approved_requis
     letra_columna = xl_col_to_name(columna_max)
-    formula = f"={letra_columna}9/{letra_columna}10"
+    formula = f"=IFERROR({letra_columna}9/{letra_columna}10,0)"
     # Escribir datos y fórmulas
     worksheet.write(2, columna_max, start_date, date_style)  # Ejemplo de escritura de fecha
     worksheet.write(3, columna_max, end_date, date_style)
@@ -4964,6 +4964,9 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
             'Entregada' if compra_list.entrada_completa else 'No Entregada',
             'Sí' if compra_list.facturas.exists() else 'No',
             activo,
+            compra_list.tipo_contratacion.nombre if compra_list.tipo_contratacion else '',
+            compra_list.comentarios,
+            compra_list.req.orden.comentario,
         ]
         
         for col_num, cell_value in enumerate(row):
@@ -4975,14 +4978,14 @@ def convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_req
                 cell_format = date_style
         
             # Aplica el formato de dinero para las columnas con valores monetarios
-            elif col_num in [13, 14]:  # Asume que estas son tus columnas de dinero
+            elif col_num in [14, 15]:  # Asume que estas son tus columnas de dinero
                 cell_format = money_style
 
             # Finalmente, escribe la celda con el valor y el formato correspondiente
             worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
-        worksheet.write_formula(row_num, 26, f'=IF(ISBLANK(W{row_num+1}), O{row_num+1}, O{row_num+1}*W{row_num+1})', money_style)
+        worksheet.write_formula(row_num, 29, f'=IF(ISBLANK(W{row_num+1}), O{row_num+1}, O{row_num+1}*W{row_num+1})', money_style)
     
    
     workbook.close()
