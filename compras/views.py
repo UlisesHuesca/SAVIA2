@@ -5271,7 +5271,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
 
     columns = ['OC', 'Distrito', 'Código', 'Producto', 'Cantidad', 'Unidad', 'Tipo Item', 'Familia', 'Subfamilia', 'P.U.', 'Moneda', 'TC',
                 'Subtotal', 'IVA', 'Total', 'Proveedor', 'Status Proveedor', 'Dirección', 'Estado','Fecha', 'Proyecto', 'Subproyecto', 'Distrito', 
-                'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Comentario','Visita']
+                'RQ', 'Sol', 'Status', 'Pagada', 'Comentario Solicitud','Comentario','Tipo de Contratación','Visita']
     data = [columns]
 
     for articulo in productos:
@@ -5331,6 +5331,7 @@ def convert_excel_solicitud_matriz_productos_prov2(productos):
             pagado_text,
             comentarios,
             articulo.oc.comentarios if articulo.oc.comentarios else "Sin comentario",
+            articulo.oc.tipo_de_contratacion if articulo.oc.tipo_de_contratacion else "Sin tipo de contratación",
             visita,
         ]
         data.append(row)
