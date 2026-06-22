@@ -67,7 +67,7 @@ class Solicitud_Gasto(models.Model):
     @property
     def get_validado(self):
         productos = self.articulos.all()
-        productos = productos.filter(producto__nombre="MATERIALES", completo=True, validacion = False, gasto__tipo__tipo = "REEMBOLSO")
+        productos = productos.filter(producto__nombre="Materiales (Almacén)", completo=True, validacion = False, gasto__tipo__tipo = "REEMBOLSO")
         conteo_productos = productos.count()
         if productos == None:
             valor = True
@@ -76,7 +76,7 @@ class Solicitud_Gasto(models.Model):
                 valor = True
             else:
                 valor = False
-            
+        print(valor)
         return valor
 
     @property
