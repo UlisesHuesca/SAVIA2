@@ -1500,7 +1500,7 @@ def reporte_solicitudes_api(request):
 
     data = []
 
-    for salida in salidas:
+    for salida in salidas_qs:
         vale = salida.vale_salida
         order = vale.solicitud if vale else None
         #print(order)
