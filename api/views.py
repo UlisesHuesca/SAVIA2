@@ -1473,7 +1473,7 @@ def control_bancos_api(request, pk):
 def reporte_solicitudes_api(request):
     last_id = int(request.query_params.get("last_id", 0))
     limit = int(request.query_params.get("limit", 2000))
-    salidas = (
+    salidas_qs = (
         Salidas.objects
         .select_related(
             "vale_salida",
