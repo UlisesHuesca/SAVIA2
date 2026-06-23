@@ -1473,6 +1473,7 @@ def control_bancos_api(request, pk):
 def reporte_solicitudes_api(request):
     last_id = int(request.query_params.get("last_id", 0))
     limit = int(request.query_params.get("limit", 2000))
+    fecha_inicio = request.query_params.get("fecha_inicio")
     salidas_qs = (
         Salidas.objects
         .select_related(
@@ -1489,9 +1490,13 @@ def reporte_solicitudes_api(request):
             "producto__articulosrequisitados_set__articulocomprado_set",
             "producto__articulosrequisitados_set__articulocomprado_set__entradaarticulo_set__entrada",
         )
-    ).filter(id__gt=last_id).order_by("id")[:limit]
+    )
 
-    fecha_inicio = request.query_params.get("fecha_inicio")
+    salidas_qs = salidas_qs.filter(
+        id__gt=last_id
+    ).order_by("id")
+
+    salidas = salidas_qs[:limit]
 
     if fecha_inicio:
         salidas_qs = salidas_qs.filter(
