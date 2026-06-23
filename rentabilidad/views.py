@@ -1753,7 +1753,7 @@ def reporte_rentabilidad_mensual(request):
                         solicitud__fecha__year=y,
                         solicitud__fecha__month=m,
                     ).aggregate(total=Sum("monto"))["total"]
-                    or 0
+                    or Decimal('0')
                 )
 
                 total_ind_adm = (
@@ -1763,7 +1763,7 @@ def reporte_rentabilidad_mensual(request):
                         solicitud__fecha__year=y,
                         solicitud__fecha__month=m,
                     ).aggregate(total=Sum("monto"))["total"]
-                    or 0
+                    or Decimal('0')
                 )
 
                 #print('ind adm',total_ind_adm)
@@ -1780,14 +1780,14 @@ def reporte_rentabilidad_mensual(request):
                         solicitud__fecha__year=y,
                         solicitud__fecha__month=m,
                     ).aggregate(total=Sum("monto"))["total"]
-                    or 0
+                    or Decimal('0')
                 )
 
 
                 prorrateo_nacional = (
                     (ingreso_contrato / ingreso_total_nacional * 100)
                     if ingreso_total_nacional
-                    else 0
+                    else Decimal('0')
                 )
                 #print('ingreso contrato', ingreso_contrato)
                 #print('ingreso total nacional', ingreso_total_nacional)
@@ -1888,14 +1888,14 @@ def reporte_rentabilidad_mensual(request):
                 totales["margen_operativo"] += row["margen_operativo"]
                 totales["pct_margen_operativo"] = (
                     (totales["margen_operativo"] / totales["ingresos"]) * 100
-                    if totales["ingresos"] else 0
+                    if totales["ingresos"] else Decimal('0')
                 )
                 totales["impuestos"] += row["impuestos"]
                 totales["costo_financiero"] += row["costo_financiero"]
                 totales["utilidad_perdida"] += row["utilidad_perdida"]
                 totales["pct_utilidad_perdida"] = (
                     (totales["utilidad_perdida"] / totales["ingresos"]) * 100
-                    if totales["ingresos"] else 0
+                    if totales["ingresos"] else Decimal('0')
                 )
 
 
