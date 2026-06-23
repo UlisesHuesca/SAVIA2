@@ -1474,6 +1474,7 @@ def reporte_solicitudes_api(request):
     last_id = int(request.query_params.get("last_id", 0))
     limit = int(request.query_params.get("limit", 2000))
     fecha_inicio = request.query_params.get("fecha_inicio")
+    print(fecha_inicio)
     salidas_qs = (
         Salidas.objects
         .select_related(
@@ -1492,17 +1493,24 @@ def reporte_solicitudes_api(request):
         )
     )
 
+    #print(salidas_qs)
+    
+
+    if fecha_inicio:
+        print('estoy entrando a filtrar por fecha')
+        salidas_qs = salidas_qs.filter(
+            vale_salida__created_at__gte=fecha_inicio
+        )
+
+        #print(salidas_qs)
+
     salidas_qs = salidas_qs.filter(
         id__gt=last_id
     ).order_by("id")
 
+    #print(salidas_qs)
     salidas = salidas_qs[:limit]
-
-    if fecha_inicio:
-        salidas_qs = salidas_qs.filter(
-            created_at__date__gte=fecha_inicio
-        )
-
+    #print(salidas)
     data = []
 
     for salida in salidas:
