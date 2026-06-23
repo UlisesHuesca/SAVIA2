@@ -1833,7 +1833,7 @@ def reporte_rentabilidad_mensual(request):
                 # % margen operativo
                 row["pct_margen_operativo"] = (
                     (row["margen_operativo"] / row["ingresos"]) * 100
-                    if row["ingresos"] else 0
+                    if row["ingresos"] else Decimal("0.00")
                 )
 
                    # NUEVO: Impuestos
