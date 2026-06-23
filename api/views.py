@@ -1491,6 +1491,13 @@ def reporte_solicitudes_api(request):
         )
     ).filter(id__gt=last_id).order_by("id")[:limit]
 
+    fecha_inicio = request.query_params.get("fecha_inicio")
+
+    if fecha_inicio:
+        salidas_qs = salidas_qs.filter(
+            created_at__date__gte=fecha_inicio
+        )
+
     data = []
 
     for salida in salidas:
