@@ -1620,16 +1620,16 @@ def reporte_rentabilidad_mensual(request):
 
     contratos_data = []
     totales = {
-        "ingresos": 0,
-        "depreciaciones": 0,
-        "margen_operativo": 0,
-        "directos": 0,
-        "ind_adm": 0,
-        "ind_oper": 0,
-        "ind_central": 0,
-        "impuestos": 0,
-        "costo_financiero": 0,
-        "utilidad_perdida": 0,
+        "ingresos": Decimal('0'),
+        "depreciaciones":  Decimal('0'),
+        "margen_operativo":  Decimal('0'),
+        "directos":  Decimal('0'),
+        "ind_adm":  Decimal('0'),
+        "ind_oper":  Decimal('0'),
+        "ind_central":  Decimal('0'),
+        "impuestos": Decimal('0'),
+        "costo_financiero": Decimal('0'),
+        "utilidad_perdida": Decimal('0'),
     }
 
     tipos_costos_totales = {}  # acumulados por tipo de costo
@@ -1693,16 +1693,16 @@ def reporte_rentabilidad_mensual(request):
             for contrato in contratos:
                 row = {
                     "contrato": contrato.nombre or str(contrato),
-                    "ingresos": 0,
-                    "depreciaciones": 0,
-                    "directos": 0,  # cada tipo de costo → monto
-                    "ind_oper": 0,
+                    "ingresos": Decimal('0'),
+                    "depreciaciones": Decimal('0'),
+                    "directos":  Decimal('0'),  # cada tipo de costo → monto
+                    "ind_oper":  Decimal('0'),
                     "ind_adm":  Decimal('0'),
                     "ind_central": Decimal('0'),
                     "margen operativo":  Decimal('0'),
                     "impuestos": Decimal('0'),
                     "costo_financiero": Decimal('0'),
-                    "utilidad_perdida": 0,
+                    "utilidad_perdida": Decimal('0'),
                 }
 
                 # ------------------------
