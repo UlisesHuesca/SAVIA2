@@ -1,5 +1,5 @@
 import django_filters
-from .models import Compra, Pago, EstadoCuenta
+from .models import Compra, Pago, EstadoCuenta, Cuenta
 from django_filters import CharFilter, DateFilter, ChoiceFilter, BooleanFilter
 from django.db.models import Q
 from django import forms
@@ -35,7 +35,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     tiene_facturas = django_filters.BooleanFilter(method='filter_by_tiene_facturas', label='Tiene Facturas')
     tesorero = CharFilter(method='tesorero_nombre', lookup_expr='icontains')
     #proyecto = CharFilter(field_name='proyecto__nombre', lookup_expr='icontains')
-    cuenta = CharFilter(field_name = 'cuenta__cuenta', lookup_expr='icontains')
+    cuenta = django_filters.ModelChoiceFilter(field_name='cuenta',queryset=Cuenta.objects.none(),label='Cuenta bancaria')
     start_date = DateFilter(field_name ='pagado_real', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_real', lookup_expr='lte')
     proveedor = CharFilter(method = 'beneficiario_proveedor', lookup_expr='icontains')
@@ -62,6 +62,14 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
             Q(oc__req__orden__distrito__nombre__icontains=value) |
             Q(viatico__distrito__nombre__icontains=value) |
             Q(gasto__distrito__nombre__icontains=value)
+        )
+    
+    def __init__(self, *args, tesorero=None, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.filters['cuenta'].queryset = (
+            Cuenta.objects.filter(encargado=tesorero)
+            if tesorero
+            else Cuenta.objects.none()
         )
 
     def filter_by_tipo(self, queryset, name, value):  # new method

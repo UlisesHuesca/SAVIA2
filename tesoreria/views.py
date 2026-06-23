@@ -1451,7 +1451,7 @@ def matriz_pagos(request):
     )
         .order_by('-pagado_real')
     )
-    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos, tesorero = usuario)
     pagos = myfilter.qs
     
 
@@ -5204,13 +5204,17 @@ def convert_excel_matriz_pagos(pagos):
     # Función para manejar los IDs de las compras, gastos o viáticos
     def get_transaction_id(pago):
         if pago.oc:
-            return 'OC'+str(pago.oc.folio)
+            return 'Compra'
         elif pago.gasto:
-            return 'G'+str(pago.gasto.folio)
+            if pago.tipo and pago.tipo.nombre == 'ABONO':
+                return 'Gasto - ' + str(pago.tipo.nombre)
+            if pago.gasto.tipo:
+                return 'Gasto - ' + str(pago.gasto.tipo.tipo)
+            else:
+                return 'Gasto'
         elif pago.viatico:
-            return 'V'+str(pago.viatico.folio)
-        else:
-            return None
+            return 'Viático'
+       
 
     #Create heading style and adding to workbook | Crear el estilo del encabezado y agregarlo al Workbook
     head_style = NamedStyle(name = "head_style")
@@ -5239,8 +5243,8 @@ def convert_excel_matriz_pagos(pagos):
     percent_style.font = Font(name ='Calibri', size = 10)
     wb.add_named_style(percent_style)
 
-    columns = ['Distrito','Compra/Gasto','Solicitado','Autorizado','Fecha Creación','Fecha Autorización','Proyecto','Subproyecto','Proveedor/Colaborador',
-               'Producto/Concepto','Importe', 'Moneda','Tipo de cambio', 'Total en Pesos','Fecha de pago', 'Tiene Facturas',]
+    columns = ['Distrito','Folio','Tipo','Solicitado','Autorizado','Fecha Creación','Fecha Autorización','Proyecto','Subproyecto','Proveedor/Colaborador',
+               'Producto/Concepto','Importe', 'Moneda','Tipo de cambio', 'Total en Pesos','Fecha de pago', 'Tiene Facturas','Cuenta',]
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -5270,6 +5274,7 @@ def convert_excel_matriz_pagos(pagos):
     for pago in pagos:
         row_num = row_num + 1
         # Define los valores de las columnas basándote en el tipo de pago
+        cuenta = pago.cuenta.cuenta if pago.cuenta else ''
         if pago.oc:
             articulos_compra = ArticuloComprado.objects.filter(oc=pago.oc)
             solicitado = pago.oc.req.orden.staff.staff.staff.first_name + ' ' + pago.oc.req.orden.staff.staff.staff.last_name if pago.oc else ''
@@ -5277,14 +5282,16 @@ def convert_excel_matriz_pagos(pagos):
             proveedor = pago.oc.proveedor
             #facturas_completas = pago.oc.facturas_completas
             cuenta_moneda = pago.cuenta.moneda.nombre if pago.cuenta else None
+           
             proyectos = pago.oc.req.orden.proyecto.nombre if pago.oc else ''
             subproyectos = pago.oc.req.orden.subproyecto.nombre if pago.oc else ''
             autorizado = pago.oc.oc_autorizada_por2.staff.staff.first_name + ' ' + pago.oc.oc_autorizada_por2.staff.staff.last_name if pago.oc.oc_autorizada_por2 else ''
             fecha_creacion = pago.oc.created_at.replace(tzinfo=None)
             fecha_autorizacion = (
-                pago.oc.autorizado_at_2.replace(tzinfo=None).strftime("%Y-%m-%d")
+                pago.oc.autorizado_at_2.replace(tzinfo=None)
                 if pago.oc.autorizado_at_2 else ''
             )
+            folio = pago.oc.folio
             productos = set()
             for articulo in articulos_compra:
                 if articulo.producto:
@@ -5307,7 +5314,7 @@ def convert_excel_matriz_pagos(pagos):
             distrito = pago.gasto.distrito.nombre
             solicitado = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             fecha_creacion = pago.gasto.created_at.replace(tzinfo=None)
-
+            folio = pago.gasto.folio
             fecha_autorizacion = (
                 pago.gasto.approbado_fecha2.replace(tzinfo=None)
                 if pago.gasto.approbado_fecha2 else ''
@@ -5347,13 +5354,14 @@ def convert_excel_matriz_pagos(pagos):
            
             
         elif pago.viatico:
+            folio = pago.viatico.folio 
             articulos_viatico = Concepto_Viatico.objects.filter(viatico=pago.viatico)
             proyectos = pago.viatico.proyecto.nombre if pago.viatico else ''
             subproyectos = pago.viatico.subproyecto.nombre if pago.viatico else ''
             distrito = pago.viatico.distrito.nombre
             fecha_creacion = pago.viatico.created_at.replace(tzinfo=None)
             fecha_autorizacion = (
-                pago.viatico.approved_at.replace(tzinfo=None).strftime("%Y-%m-%d")
+                pago.viatico.approved_at.replace(tzinfo=None)
                 if pago.viatico and pago.viatico.approved_at
                 else ''
             )
@@ -5385,6 +5393,7 @@ def convert_excel_matriz_pagos(pagos):
 
         row = [
             distrito,
+            folio,
             get_transaction_id(pago),
             solicitado,
             autorizado,
@@ -5397,17 +5406,18 @@ def convert_excel_matriz_pagos(pagos):
             pago.monto,
             pago.oc.moneda.nombre if pago.oc else 'PESOS',  # Modificación aquí
             tipo_de_cambio,
-            f'=IF(M{row_num}="",K{row_num},K{row_num}*M{row_num})',  # Calcula total en pesos usando la fórmula de Excel
+            f'=IF(N{row_num}="",L{row_num},L{row_num}*N{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             pago.pagado_date.replace(tzinfo=None),
             tiene_facturas,
+            cuenta,
         ]
 
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num in (4, 5, 14):
+            if col_num in (5, 6, 15):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in (10, 12, 13):
+            if col_num in (11, 13, 14):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
        
     

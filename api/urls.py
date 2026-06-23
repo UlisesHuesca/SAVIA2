@@ -31,4 +31,5 @@ urlpatterns = [
     path('oc-pdf/<int:pk>/', views.descargar_pdf_oc, name='api-oc-pdf'),
     path('chatbot/', views.chatbot_view, name='chatbot'),
     path('control-bancos/<int:pk>/', views.control_bancos_api, name='control_bancos_api'),
+    path("reporte-solicitudes/", views.reporte_solicitudes_api, name="reporte_solicitudes_api"),
     ]

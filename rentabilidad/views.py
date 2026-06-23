@@ -1697,11 +1697,11 @@ def reporte_rentabilidad_mensual(request):
                     "depreciaciones": 0,
                     "directos": 0,  # cada tipo de costo → monto
                     "ind_oper": 0,
-                    "ind_adm": 0,
-                    "ind_central": 0,
-                    "margen operativo": 0,
-                    "impuestos": 0,
-                    "costo_financiero": 0,
+                    "ind_adm":  Decimal('0'),
+                    "ind_central": Decimal('0'),
+                    "margen operativo":  Decimal('0'),
+                    "impuestos": Decimal('0'),
+                    "costo_financiero": Decimal('0'),
                     "utilidad_perdida": 0,
                 }
 

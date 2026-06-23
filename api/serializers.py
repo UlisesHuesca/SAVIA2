@@ -401,3 +401,24 @@ class PagoControlBancosSerializer(serializers.ModelSerializer):
 
     def get_distrito_nombre(self, obj):
         return str(obj.distrito) if obj.distrito else None
+
+
+class ReporteSolicitudesSerializer(serializers.Serializer):
+    salida_id = serializers.IntegerField()
+    distrito = serializers.CharField(allow_blank=True, required=False)
+    quien_solicita = serializers.CharField(allow_blank=True, required=False)
+    economico = serializers.CharField(allow_blank=True,allow_null=True,required=False)
+    folio = serializers.CharField(allow_blank=True, required=False)
+    fecha_solicitud = serializers.CharField(allow_blank=True, required=False)
+
+    numero_requisicion = serializers.CharField(allow_blank=True, required=False)
+    fecha_requisicion = serializers.CharField(allow_blank=True, required=False)
+    fecha_autorizacion_requisicion = serializers.CharField(allow_blank=True, required=False)
+    status_de_autorizacion = serializers.CharField(allow_blank=True, required=False)
+
+    fecha_llegada_almacen = serializers.CharField(allow_blank=True, required=False)
+    fecha_entrega_de_almacen = serializers.CharField(allow_blank=True, required=False)
+
+    material_o_servicio_solicitado = serializers.CharField(allow_blank=True, required=False)
+    cantidad_de_material = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
+    costo = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)

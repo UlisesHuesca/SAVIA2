@@ -13,13 +13,13 @@ from rest_framework.response import Response
 from rest_framework.decorators import api_view, authentication_classes, permission_classes
 from rest_framework import generics
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.pagination import PageNumberPagination
 
 from dashboard.models import Inventario, Order, Product, ArticulosOrdenados, ArticulosparaSurtir
 from compras.models import Compra, Proveedor_direcciones, Moneda, Proveedor, ArticuloComprado
 from solicitudes.models import Proyecto, Subproyecto
-from requisiciones.models import Requis, ArticulosRequisitados
+from requisiciones.models import Requis, ArticulosRequisitados, Salidas
 from tesoreria.models import Saldo_Cuenta, Pago, Cuenta
 from tesoreria.filters import Matriz_Pago_Filter
 
@@ -27,7 +27,7 @@ from user.models import Profile, Distrito
 from .serializers import  CompraTablaLiteSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
 from .serializers import ProfileSerializer, DistritoSerializer, RequisicionSerializer, ProveedorSerializer, OrdenSerializer, Compra_tabla_Serializer
 from .serializers import InventarioSerializer, ProductSerializer, Articulos_Ordenados_Serializer,Articulos_para_Surtir_Serializer, Articulos_Requisitados_Serializer, Articulo_Comprado_Serializer
-from .serializers import PagoControlBancosSerializer 
+from .serializers import PagoControlBancosSerializer, ReporteSolicitudesSerializer
 
 import requests
 
@@ -1465,4 +1465,99 @@ def control_bancos_api(request, pk):
             'end_date': calculos['end_date'],
         },
         'pagos': serializer.data,
+    })
+
+@api_view(["GET"])
+@authentication_classes([TokenAuthentication])
+@permission_classes([IsAuthenticated])
+def reporte_solicitudes_api(request):
+    last_id = int(request.query_params.get("last_id", 0))
+    limit = int(request.query_params.get("limit", 2000))
+    salidas = (
+        Salidas.objects
+        .select_related(
+            "vale_salida",
+            "vale_salida__solicitud",
+            "vale_salida__solicitud__distrito",
+            "vale_salida__solicitud__staff__staff__staff",
+            "vale_salida__solicitud__activo",
+            "producto__articulos__producto",
+            
+        )
+        .prefetch_related(
+            "producto__articulosrequisitados_set__req",
+            "producto__articulosrequisitados_set__articulocomprado_set",
+            "producto__articulosrequisitados_set__articulocomprado_set__entradaarticulo_set__entrada",
+        )
+    ).filter(id__gt=last_id).order_by("id")[:limit]
+
+    data = []
+
+    for salida in salidas:
+        vale = salida.vale_salida
+        order = vale.solicitud if vale else None
+        #print(order)
+
+        articulo_para_surtir = salida.producto
+        articulo_ordenado = articulo_para_surtir.articulos if articulo_para_surtir else None
+
+        req = None
+        entrada = None
+
+        if articulo_para_surtir:
+            for art_req in articulo_para_surtir.articulosrequisitados_set.all():
+                req = art_req.req
+
+                art_comp = art_req.articulocomprado_set.first()
+                if art_comp:
+                    entrada_articulo = art_comp.entradaarticulo_set.first()
+                    if entrada_articulo:
+                        entrada = entrada_articulo.entrada
+
+                if req or entrada:
+                    break
+
+        solicitante = ""
+        try:
+            user = order.staff.staff.staff
+            solicitante = f"{user.first_name} {user.last_name}".strip()
+        except Exception:
+            pass
+
+        material = ""
+        try:
+            material = articulo_ordenado.producto.producto.nombre
+        except Exception:
+            material = ""
+
+        item = {
+            "salida_id": salida.id,
+            "distrito": order.distrito.nombre if order and order.distrito else "",
+            "quien_solicita": solicitante,
+            "economico": order.activo.eco_unidad if order and order.activo and order.activo.eco_unidad else "NA",
+            "folio": str(order.folio) if order and order.folio else "",
+            "fecha_solicitud": order.created_at.strftime("%d/%m/%Y") if order and order.created_at else "",
+
+            "numero_requisicion": str(req.folio) if req and req.folio else "",
+            "fecha_requisicion": req.created_at.strftime("%d/%m/%Y") if req and req.created_at else "",
+            "fecha_autorizacion_requisicion": req.approved_at.strftime("%d/%m/%Y") if req and req.approved_at else "",
+            "status_de_autorizacion": "Autorizada" if req and req.autorizar else "Pendiente",
+
+            "fecha_llegada_almacen": entrada.entrada_date.strftime("%d/%m/%Y") if entrada and entrada.entrada_date else "",
+            "fecha_entrega_de_almacen": salida.created_at.strftime("%d/%m/%Y") if salida.created_at else "",
+
+            "material_o_servicio_solicitado": material,
+            "cantidad_de_material": salida.cantidad or 0,
+            "costo": salida.precio or 0,
+        }
+
+        serializer = ReporteSolicitudesSerializer(data=item)
+        serializer.is_valid(raise_exception=True)
+
+        data.append(serializer.data)
+
+    return Response({
+        "results": data,
+        "last_id": data[-1]["salida_id"] if data else None,
+        "has_more": len(data) == limit,
     })
