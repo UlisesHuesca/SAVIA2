@@ -74,7 +74,8 @@
                             {{error_messages}}
                         </div>
                         {% endif %}
-                        {% if  tipo == "directo" or tipo == "indirecto" or tipo == "impuesto" or tipo == "financiero"%}
+                        {{tipo}}
+                        {% if  tipo == "Directo" %}
                         <div class="row my-2">
                             <div class="col-12">
                                 <div class="input-group mb-3">
@@ -99,7 +100,7 @@
                             </div>
                         </div> 
                         {% endif %}
-                        {% if tipo == "directo" or tipo == "impuesto" or tipo == "financiero" %}
+                        {% if tipo == "Directo"  %}
                          <div class="row" id="distrito">
                             <div class="col-12">
                                 <div class="input-group mb-3">
