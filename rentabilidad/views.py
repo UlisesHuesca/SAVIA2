@@ -77,26 +77,26 @@ def add_costo(request, tipo):
     solicitud, created =  Solicitud_Costos.objects.get_or_create(created_by=usuario, complete = False)
     costos = Costos.objects.filter(solicitud = solicitud)
     print('tipo recibido', tipo)
-    if tipo == "directo":
+    if tipo == "Directo":
         form = Solicitud_Costo_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [2])
         form.fields['tipo'].queryset = tipos
         form.fields['distrito'].queryset = distritos
-    elif tipo == "indirecto":
+    elif tipo == "Indirecto":
         form = Solicitud_Costo_Indirecto_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [3,4])
         form.fields['tipo'].queryset = tipos
         form.fields['distrito'].queryset = distritos
-    elif tipo == "central":
+    elif tipo == "Central":
         form = Solicitud_Costo_Indirecto_Central_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [1])
-    elif tipo == "impuesto":
+    elif tipo == "Impuesto":
         form = Solicitud_Costo_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [5])
         form.fields['tipo'].queryset = tipos
         form.fields['distrito'].queryset = distritos
         # debugging print('siii')
-    elif tipo == "financiero":
+    elif tipo == "Financiero":
         form = Solicitud_Costo_Form()
         tipos = Tipo_Costo.objects.filter(id__in = [6])
         form.fields['tipo'].queryset = tipos
@@ -112,11 +112,11 @@ def add_costo(request, tipo):
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
-            if tipo == "directo" or tipo == "impuesto" or tipo == "financiero":
+            if tipo == "Directo" or tipo == "Impuesto" or tipo == "Financiero":
                 form = Solicitud_Costo_Form(request.POST, instance = solicitud)
-            elif tipo == "indirecto":
+            elif tipo == "Indirecto":
                 form = Solicitud_Costo_Indirecto_Form(request.POST, instance = solicitud)
-            elif tipo == "central":
+            elif tipo == "Central":
                 form = Solicitud_Costo_Indirecto_Central_Form(request.POST, instance = solicitud)
             # debugging print('estou aqui')
             if form.is_valid():
