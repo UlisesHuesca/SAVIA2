@@ -1491,8 +1491,13 @@ def reporte_solicitudes_api(request):
             "producto__articulosrequisitados_set__articulocomprado_set",
             "producto__articulosrequisitados_set__articulocomprado_set__entradaarticulo_set__entrada",
         )
-    )
+        .exclude(vale_salida__solicitud__distrito__nombre__in=[
+            'BRASIL',
+            'ALTAMIRA ALTERNATIVO',
+            'VH SECTOR 6',
+        ])
 
+    )
     #print(salidas_qs)
     
 
