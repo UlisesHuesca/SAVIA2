@@ -1,5 +1,6 @@
 from django.db import models
 from django.db.models import Sum
+from decimal import Decimal
 from user.models import Distrito, Profile
 from solicitudes.models import Contrato
 from compras.models import Moneda
@@ -98,8 +99,11 @@ class Depreciaciones(models.Model):
     def __str__(self):
         return f'{self.concepto}'
 
+   
+
     @property
     def get_depreciacion_mensual(self):
-        depreciacion_mensual = self.monto/self.meses_a_depreciar
-        return depreciacion_mensual
-        
+        if not self.meses_a_depreciar or self.meses_a_depreciar <= 0:
+            return Decimal("0.00")
+
+        return self.monto / Decimal(self.meses_a_depreciar)
