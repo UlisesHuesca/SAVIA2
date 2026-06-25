@@ -28,10 +28,11 @@
     </div>
 </div>
 
-<div class="card my-2 mx-1">
-    <div class="card card-body">
+<div class="card">
+    <div class="card-header">
         <h5>Filtro Productos</h5>
-        <hr>
+    </div>
+    <div class="card-body">
         {% csrf_token %}
         <form method="GET">
         <div class="row g-12">
@@ -70,7 +71,7 @@
                 <button class="btn btn-outline-success btn-block my-2 btn-lg" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
             </div>
         </div>
-        <hr>
+        
         </form>
     </div>
 </div>
@@ -87,6 +88,7 @@
                     <th class="d-none d-lg-table-cell">Razón del cambio</th>
                     <th class="d-none d-lg-table-cell">Tipo de cambio</th>
                     <th scope="col">Código</th>
+                    <th>Código Anterior</th>
                     <th scope="col">Nombre</th>
                     <th scope="col">Nombre Anterior</th>
                     <th>Servicio</th>
@@ -101,6 +103,7 @@
                     <td class="d-none d-lg-table-cell">{{registro.history_change_reason}}</td>
                     <td class="d-none d-lg-table-cell">{{registro.history_type}}</td>
                     <td>{{registro.codigo}}</td>
+                    <td>{{registro.prev_record.codigo}}</td>
                     <td>{{registro.nombre}}</td>
                     <td>{{registro.prev_record.nombre}}</td>
                     <td>{{registro.servicio}}</td>
