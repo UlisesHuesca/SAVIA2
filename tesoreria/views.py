@@ -1671,6 +1671,23 @@ def matriz_pagos(request):
                                     gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                     zip_file.write(factura.archivo_xml.path, gen_path)
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
+                            # Generar y agregar vales rosa aprobados
+                            for vale in gasto.vales_rosa.filter(esta_aprobado=True):
+                                pdf_vale_buf = generar_pdf_vale_rosa(vale.id)
+
+                                nombre_archivo = f"VALE_ROSA_{vale.id}_GASTO_{gasto.folio}.pdf"
+
+                                zip_file.writestr(
+                                    os.path.join(carpeta, "VALES_ROSA", nombre_archivo),
+                                    pdf_vale_buf.getvalue()
+                                )
+
+                                zip_file.writestr(
+                                    f"GENERAL_VALES_ROSA/{nombre_archivo}",
+                                    pdf_vale_buf.getvalue()
+                                )
+                            
+                            
                             if gasto.id not in processed_docs:
                                 pdf_buf = render_pdf_gasto(gasto.id)
                                 zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
