@@ -1671,7 +1671,14 @@ def matriz_pagos(request):
                                     gen_path = f"GENERAL_XMLs/{factura.id}_{uuid}.xml"
                                     zip_file.write(factura.archivo_xml.path, gen_path)
                                     datos_xml_lista.append(extraer_datos_xml_carpetas(factura.archivo_xml.path, f"G{gasto.folio}", fecha_subida, gasto.distrito.nombre, beneficiario, gen_path, factura))
-                            # Generar y agregar vales rosa aprobados
+                       
+                            
+                            if gasto.id not in processed_docs:
+                                pdf_buf = render_pdf_gasto(gasto.id)
+                                zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
+                                processed_docs.add(gasto.id)
+                                 # Generar y agregar vales rosa aprobados
+                            
                             for vale in gasto.vales_rosa.filter(esta_aprobado=True):
                                 pdf_vale_buf = generar_pdf_vale_rosa(vale.id)
 
@@ -1686,12 +1693,6 @@ def matriz_pagos(request):
                                     f"GENERAL_VALES_ROSA/{nombre_archivo}",
                                     pdf_vale_buf.getvalue()
                                 )
-                            
-                            
-                            if gasto.id not in processed_docs:
-                                pdf_buf = render_pdf_gasto(gasto.id)
-                                zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
-                                processed_docs.add(gasto.id)
                         elif pago.oc:
                             oc = pago.oc
                             carpeta = f'{pago.pagado_real}_COMPRA_{oc.folio}_{oc.req.orden.distrito.nombre}'
@@ -1741,6 +1742,24 @@ def matriz_pagos(request):
                                 pdf_buf = generar_pdf_viatico(viatico.id)
                                 zip_file.writestr(os.path.join(carpeta, f'VIATICO_{viatico.folio}.pdf'), pdf_buf.getvalue())
                                 processed_docs.add(viatico.id)
+
+                            # Generar y agregar vales aprobados relacionados al viático
+                            for vale in viatico.vales_rosa_viatico.filter(esta_aprobado=True):
+                                pdf_vale_buf = generar_pdf_vale_rosa(vale.id)
+
+                                tipo_vale = "AZUL" if vale.color == "azul" else "ROSA"
+                                nombre_archivo = f"VALE_{tipo_vale}_{vale.id}_VIATICO_{viatico.folio}.pdf"
+
+                                zip_file.writestr(
+                                    os.path.join(carpeta, "VALES", nombre_archivo),
+                                    pdf_vale_buf.getvalue()
+                                )
+
+                                zip_file.writestr(
+                                    f"GENERAL_VALES/{nombre_archivo}",
+                                    pdf_vale_buf.getvalue()
+                                )
+
 
                         if pago.comprobante_pago and carpeta is not None:
                             fecha_pago = pago.pagado_real.strftime('%Y-%m-%d') if pago.pagado_real else 'SIN_FECHA'
@@ -2463,10 +2482,27 @@ def control_documentos(request):
                                         uuid = factura.uuid if factura.uuid else 'SIN_UUID'
                                         zip_file.write(ruta_pdf, f"GENERAL_PDFs/{factura.id}_{uuid}.pdf")
                             agregar_vales_rosa_generados(zip_file, carpeta, gasto=gasto)
+                        
                             if gasto.id not in processed_docs:
                                 pdf_buf = render_pdf_gasto(gasto.id)
                                 zip_file.writestr(os.path.join(carpeta, f'GASTO_{gasto.folio}.pdf'), pdf_buf.getvalue())
                                 processed_docs.add(gasto.id)
+                        
+                            for vale in gasto.vales_rosa.filter(esta_aprobado=True):
+                                pdf_vale_buf = generar_pdf_vale_rosa(vale.id)
+
+                                nombre_archivo = f"VALE_ROSA_{vale.id}_GASTO_{gasto.folio}.pdf"
+
+                                zip_file.writestr(
+                                    os.path.join(carpeta, "VALES_ROSA", nombre_archivo),
+                                    pdf_vale_buf.getvalue()
+                                )
+
+                                zip_file.writestr(
+                                    f"GENERAL_VALES_ROSA/{nombre_archivo}",
+                                    pdf_vale_buf.getvalue()
+                                )
+                        
                         elif pago.oc:
                             oc = pago.oc
                             if not pago.pagado_real:
