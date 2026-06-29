@@ -335,9 +335,31 @@
                         </td>
                         <td>
                             {% if vale.comprobante_pdf %}
-                            <a href="{{ vale.comprobante_pdf.url }}" class="btn btn-outline-success" target="_blank">
-                                 <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
-                            </a>
+                            <ul class="nav nav-pills">
+                                  
+                                        
+                                <li class="nav-item mx-1">
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ vale.comprobante_pdf.id|unlocalize }}" title="Ver comprobante de pago">
+                                        <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+                                    </button>
+                                </li>
+                            </ul>
+                                        <!-- Modal con visor de PDF -->
+                                        <div class="modal fade" id="pdfModal{{ vale.comprobante_pdf.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ vale.comprobante_pdf.id|unlocalize }}" aria-hidden="true">
+                                            <div class="modal-dialog modal-xl">
+                                                <div class="modal-content">
+                                                    <div class="modal-header">
+                                                        <h5 class="modal-title" id="pdfModalLabel{{ vale.comprobante_pdf.id|unlocalize }}">Comprobante de Pago</h5>
+                                                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                                                    </div>
+                                                    <div class="modal-body">
+                                                        <iframe src="{{ vale.comprobante_pdf.url }}#zoom=80" width="100%" height="750px"></iframe>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endif %}
+                                </ul>
                             {% else %}  
                             <span class="text-secondary">Sin comprobante</span>
                             {% endif %}
