@@ -333,7 +333,8 @@
                                  <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                             </a>
                         </td>
-                        <td>
+                        </td>
+                                
                             {% if vale.comprobante_pdf %}
                             <ul class="nav nav-pills">
                                   
@@ -344,6 +345,7 @@
                                     </button>
                                 </li>
                             </ul>
+
                                         <!-- Modal con visor de PDF -->
                                         <div class="modal fade" id="pdfModal{{ vale.comprobante_pdf.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ vale.comprobante_pdf.id|unlocalize }}" aria-hidden="true">
                                             <div class="modal-dialog modal-xl">
@@ -359,10 +361,12 @@
                                             </div>
                                         </div>
                         
-                            </ul>
+                           
                             {% else %}  
                             <span class="text-secondary">Sin comprobante</span>
                             {% endif %}
+                        </td>
+
                     </tr>
                     {% endif %}
                     {% empty %}
