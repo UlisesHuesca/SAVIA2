@@ -300,6 +300,7 @@
                         <th>Estado</th>
                         <th>Eliminar</th>
                         <th>Vale</th>
+                        <th>Comprobante</th>
                     </tr>
                 </thead>
                 <tbody id="valesRosaLista">
@@ -332,6 +333,14 @@
                                  <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                             </a>
                         </td>
+                        <td>
+                            {% if vale.comprobante_pago %}
+                            <a href="{{ vale.comprobante_pago.url }}" class="btn btn-outline-success" target="_blank">
+                                 <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
+                            </a>
+                            {% else %}  
+                            <span class="text-secondary">Sin comprobante</span>
+                            {% endif %}
                     </tr>
                     {% endif %}
                     {% empty %}
