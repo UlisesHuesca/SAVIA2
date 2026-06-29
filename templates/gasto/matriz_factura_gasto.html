@@ -340,18 +340,18 @@
                                   
                                         
                                 <li class="nav-item mx-1">
-                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ vale.comprobante_pdf.id|unlocalize }}" title="Ver comprobante de pago">
+                                    <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#pdfModal{{ vale.id|unlocalize }}" title="Ver comprobante de pago">
                                         <i class="fa-duotone fa-solid fa-file-pdf fa-xl"></i>
                                     </button>
                                 </li>
                             </ul>
 
                                         <!-- Modal con visor de PDF -->
-                                        <div class="modal fade" id="pdfModal{{ vale.comprobante_pdf.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ vale.comprobante_pdf.id|unlocalize }}" aria-hidden="true">
+                                        <div class="modal fade" id="pdfModal{{ vale.id|unlocalize }}" tabindex="-1" aria-labelledby="pdfModalLabel{{ vale.id|unlocalize }}" aria-hidden="true">
                                             <div class="modal-dialog modal-xl">
                                                 <div class="modal-content">
                                                     <div class="modal-header">
-                                                        <h5 class="modal-title" id="pdfModalLabel{{ vale.comprobante_pdf.id|unlocalize }}">Comprobante de Pago</h5>
+                                                        <h5 class="modal-title" id="pdfModalLabel{{ vale.id|unlocalize }}">Comprobante</h5>
                                                         <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                                     </div>
                                                     <div class="modal-body">
