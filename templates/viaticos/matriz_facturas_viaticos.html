@@ -228,7 +228,7 @@
                             </td>
                            
                             <td>
-                               {% if factura.autorizada == False or usuario.tipo.nombre == "CONTADOR" %}
+                               {% if factura.autorizada != True or usuario.tipo.nombre == "CONTADOR" %}
                                 <button type="button" class="btn btn-outline-danger" data-bs-toggle="modal" data-bs-target="#confirmModal" onclick="setDeleteUrl({{ factura.id | unlocalize}})">
                                     <i class="fa-regular fa-trash-can"></i>
                                 </button>
