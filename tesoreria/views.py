@@ -2145,7 +2145,7 @@ def matriz_pagos(request):
             messages.success(request, f'{len(pago_ids)} pagos validados correctamente.')
             return redirect('matriz-pagos') 
         elif 'btnImprimir' in request.POST:
-            pago_ids = request.POST.getlist('pago_ids')
+            pago_ids = request.POST.getlist('imprimir_ids')
             print("Pagos seleccionados para imprimir:", pago_ids)  # Debug: Verificar los IDs recibidos
             pagos = Pago.objects.filter(id__in=pago_ids)
 

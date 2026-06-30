@@ -335,7 +335,8 @@
                     <th scope="col">Importe</th>
                     <th scope="col">Fecha</th>
                     
-                    <th>Validar/Imprimir</th>
+                    <th>Validar</th>
+                    <th>Imprimir</th>
                    
                     <th>Registro</th>
                      <th scope="col">Pago</th>
@@ -476,6 +477,9 @@
                         {% endif %}
                     </td>
                     <td>
+                        <input  style="transform: scale(2); margin: 5px;" class="print_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="imprimir_ids" value="{{ pago.id|unlocalize }}">
+                    </td>
+                    <td>
                         <ul class="nav nav-pills">
                             {% if pago.oc %}
                             <li class="nav-item">
@@ -590,6 +594,7 @@
                             {% endif %}
                         {% endif %}
                     </td>
+                  
                    <td>
                        
                             {% if pago.fecha_control_documentos %}
@@ -888,7 +893,7 @@ document.addEventListener('DOMContentLoaded', function() {
         selectedIds_validation.forEach(id => {
             const input = document.createElement('input');
             input.type = 'hidden';
-            input.name = 'pago_ids';  // Django espera una lista con este nombre
+            input.name = 'imprimir_ids';  // Django espera una lista con este nombre
             input.value = id;
             form.appendChild(input);
         });
