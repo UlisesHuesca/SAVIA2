@@ -666,6 +666,7 @@ def update_salida(request):
     id_salida =data["id_salida"]
     producto = ArticulosparaSurtir.objects.get(id = producto_id)
     print(producto_id, producto, 'cantidad_sal', cantidad)
+    print('orden:',producto.articulos.orden)
     vale_salida = ValeSalidas.objects.get(id = vale_salida_id)
     inv_del_producto = Inventario.objects.get(producto = producto.articulos.producto.producto, distrito = producto.articulos.orden.distrito)
     entradas = EntradaArticulo.objects.filter(articulo_comprado__producto__producto = producto, agotado=False, entrada__oc__req__orden= producto.articulos.orden).aggregate(cantidad_surtir=Sum('cantidad_por_surtir'))
@@ -735,8 +736,9 @@ def update_salida(request):
                         #inv_del_producto.cantidad = inv_del_producto.cantidad - salida.cantidad si hago una salida que proviene de entradas voy a obtener un inv_del_producto negativo
                         inv_del_producto.save()
             elif entrada_res.exists():   #si hay resurtimiento
+                print('resurtimiento')
                 for entrada in entrada_res:
-                    if cantidad > 0: #Se cambia producto.cantidad, se tiene que comparar con la cantidad de la salida no contra la cantidad disponible
+                    if cantidad > 0: #Se cambia producto.cantidad, se tiene que comparar con la cantidad de la salida no contra la cantidad disponible 
                         salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
                         #Que hace el código a continuación la cantidad de la salida se compara contra la cantidad por surtir de la entrada
                         #L1 si es mayor la se guarda la cantidad_ant 
@@ -746,12 +748,26 @@ def update_salida(request):
                         # Y si no la cantidad de la salida es igual a la cantidad(puede ser modificada por el bucle anterior o no) y 
                         # entrada por surtir es igual a la cantidad por surtir menos la cantidad de la salida y la cantidad se agota 04/12/2024 
                         print('entrada_res',cantidad)
-                        if cantidad >= entrada.cantidad_por_surtir:
+                       
+                        if cantidad == entrada.cantidad_por_surtir:
+                            print('cantidad == entrada.cantidad_por_surtir')
                             cantidad_ant = cantidad
                             cantidad = cantidad - entrada.cantidad_por_surtir
                             salida.cantidad = cantidad_ant - cantidad
                             entrada.cantidad_por_surtir = 0
                             entrada.agotado = True
+                            inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad == entrada.cantidad_por_surtir {salida.id}'
+                        elif cantidad > entrada.cantidad_por_surtir:
+                            salida.cantidad = entrada.cantidad_por_surtir
+                            if inv_del_producto.cantidad >= (cantidad - entrada.cantidad_por_surtir):
+                                inv_del_producto.cantidad = inv_del_producto.cantidad - (cantidad - entrada.cantidad_por_surtir)
+                                salida_inv, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=True, entrada=0, precio=inv_del_producto.price)
+                                salida_inv.cantidad = cantidad - entrada.cantidad_por_surtir
+                                salida_inv.complete = True
+                                salida_inv.save()
+                                entrada.cantidad_por_surtir = 0
+                                entrada.agotado = True
+                                inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad > entrada.cantidad_por_surtir {salida.id}'
                         else:
                             salida.cantidad = cantidad
                             entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
@@ -767,7 +783,7 @@ def update_salida(request):
                         entrada.save()
                         producto.save()
                         inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
-                        inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario {salida.id}'
+                        
                         salida.precio = entrada.articulo_comprado.precio_unitario
                         salida.save()
             else:    #si no hay resurtimiento
@@ -798,13 +814,16 @@ def update_salida(request):
     if action == "remove":
         item = Salidas.objects.get(vale_salida = vale_salida, id = id_salida)
         id_entrada = item.entrada
-        if id_entrada != None:
-            if id_entrada != 0:
-                entrada = EntradaArticulo.objects.get(id=item.entrada)
-                inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas + item.cantidad
-                entrada.cantidad_por_surtir = entrada.cantidad_por_surtir + item.cantidad
-                entrada.agotado = False
-                entrada.save()
+        if item.entrada and item.entrada != 0:
+            entrada = EntradaArticulo.objects.get(id=item.entrada)
+            inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas + item.cantidad
+            entrada.cantidad_por_surtir += item.cantidad 
+            inv_del_producto.cantidad_entradas += item.cantidad
+            producto.cantidad += item.cantidad
+            entrada.agotado = False
+            entrada.save()
+        else:
+            inv_del_producto.cantidad += item.cantidad
             #if entrada.entrada.oc.req.orden.tipo.tipo == "normal":
             #    inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
         if vale_salida.solicitud.tipo.tipo == "normal":
@@ -812,7 +831,7 @@ def update_salida(request):
         #inv_del_producto.cantidad = inv_del_producto.cantidad + item.cantidad
         producto.seleccionado_salida = False
         producto.salida= False
-        producto.cantidad = producto.cantidad + item.cantidad
+        #producto.cantidad = producto.cantidad + item.cantidad
         producto.surtir = True
         producto.seleccionado_por = None 
         #producto.cantidad_requisitar = producto.cantidad_requisitar + producto.cantidad
