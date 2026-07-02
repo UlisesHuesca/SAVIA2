@@ -1385,7 +1385,7 @@ def matriz_pagos(request):
     pagos = (
         Pago.objects
         .filter(filtro_pagos, hecho=True)
-        .exclude(gasto__tipo__tipo="NOMINA")
+        .exclude(gasto__tipo__tipo__in=["NOMINA","PTU"])
         .select_related(
             'oc',
             'oc__req',
