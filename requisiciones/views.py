@@ -769,6 +769,8 @@ def update_salida(request):
                                 entrada.cantidad_por_surtir = 0
                                 entrada.agotado = True
                                 inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad > entrada.cantidad_por_surtir {salida.id}'
+                                #Se asume que si la cantidad del inventario es mayor o igual a la cantidad que se quiere surtir menos la cantidad de la entrada, entonces se puede surtir el resto desde el inventario
+                                #por tanto al cantidad pasara a ser 0
                                 cantidad = 0
                         else:
                             salida.cantidad = cantidad
