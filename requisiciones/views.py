@@ -738,6 +738,7 @@ def update_salida(request):
             elif entrada_res.exists():   #si hay resurtimiento
                 print('resurtimiento')
                 for entrada in entrada_res:
+                    print('cantidad:',cantidad)
                     if cantidad > 0: #Se cambia producto.cantidad, se tiene que comparar con la cantidad de la salida no contra la cantidad disponible 
                         salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
                         #Que hace el código a continuación la cantidad de la salida se compara contra la cantidad por surtir de la entrada
@@ -768,6 +769,7 @@ def update_salida(request):
                                 entrada.cantidad_por_surtir = 0
                                 entrada.agotado = True
                                 inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad > entrada.cantidad_por_surtir {salida.id}'
+                                cantidad = 0
                         else:
                             salida.cantidad = cantidad
                             entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
