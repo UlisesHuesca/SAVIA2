@@ -3774,9 +3774,9 @@ def generar_pdf_nueva(compra):
     print(compra.created_at)
     for h in compra.proveedor.history.all():
         print(h.history_date, h.history_type)
-    proveedor_oc = compra.proveedor.history.as_of(compra.created_at)
+    #proveedor_oc = compra.proveedor.history.as_of(compra.created_at)
     
-    print(proveedor_oc.cuenta_bancaria)
+    #print(proveedor_oc.cuenta_bancaria)
 
     if compra.proveedor.nombre.razon_social == 'COLABORADOR':
         c.drawString(panel_derecho_inicio + 80,campo_y, compra.deposito_comprador.staff.staff.first_name+' '+compra.deposito_comprador.staff.staff.last_name)
