@@ -1966,7 +1966,7 @@ def gastos_por_pagar(request):
                         pagada=False,
                         autorizar2=True,
                         cerrar_sin_pago_completo=False,
-                        para_pago=True
+                        para_pago=False
                     ).annotate(
                         total_facturas=Count(
                             'facturas',
@@ -1989,7 +1989,7 @@ def gastos_por_pagar(request):
                     distrito=usuario.distritos,
                     autorizar2=True,
                     cerrar_sin_pago_completo=False,
-                    para_pago=True
+                    para_pago=False
                 ).exclude(
                     tipo__familia="rh_nomina"
                 ).annotate(
