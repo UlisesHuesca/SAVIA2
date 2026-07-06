@@ -1206,7 +1206,7 @@ def matriz_pagos(request):
     almacenes_distritos = set(usuario.almacen.values_list('distrito__id', flat=True))
     if usuario.tipo.rh == True:
         pagos = Pago.objects.filter(
-        gasto__distrito__in = almacenes_distritos, gasto__autorizar2 = True, gasto__tipo__tipo__in = ['APOYO DE MANTENIMIENTO', 'APOYO DE RENTA'] , 
+        gasto__distrito__in = almacenes_distritos, gasto__autorizar2 = True, gasto__tipo__tipo__in = ['APOYOS A EMPLEADOS', 'APOYO DE RENTA',] , 
         hecho=True
         ).annotate(
         # Detectar la relación que tiene facturas
@@ -1382,75 +1382,75 @@ def matriz_pagos(request):
             autorizada__isnull=True
         )
 
-    pagos = (
-        Pago.objects
-        .filter(filtro_pagos, hecho=True)
-        .exclude(gasto__tipo__tipo__in=["NOMINA","PTU"])
-        .select_related(
-            'oc',
-            'oc__req',
-            'oc__req__orden',
-            'oc__req__orden__distrito',
-            'viatico',
-            'viatico__distrito',
-            'gasto',
-            'gasto__distrito',
-            'gasto__tipo',
+        pagos = (
+            Pago.objects
+            .filter(filtro_pagos, hecho=True)
+            .exclude(gasto__tipo__tipo__in=["NOMINA","PTU"])
+            .select_related(
+                'oc',
+                'oc__req',
+                'oc__req__orden',
+                'oc__req__orden__distrito',
+                'viatico',
+                'viatico__distrito',
+                'gasto',
+                'gasto__distrito',
+                'gasto__tipo',
+            )
+            .annotate(
+            tiene_facturas_oc=Exists(facturas_oc),
+            pendientes_oc=Exists(facturas_oc_pendientes),
+
+            tiene_facturas_gasto=Exists(facturas_gasto),
+            pendientes_gasto=Exists(facturas_gasto_pendientes),
+
+            tiene_facturas_viatico=Exists(facturas_viatico),
+            pendientes_viatico=Exists(facturas_viatico_pendientes),
         )
-         .annotate(
-        tiene_facturas_oc=Exists(facturas_oc),
-        pendientes_oc=Exists(facturas_oc_pendientes),
+        .annotate(
+            estado_facturas=Case(
+                # OC
+                When(
+                    oc__isnull=False,
+                    tiene_facturas_oc=False,
+                    then=Value('sin_facturas')
+                ),
+                When(
+                    oc__isnull=False,
+                    pendientes_oc=False,
+                    then=Value('todas_autorizadas')
+                ),
 
-        tiene_facturas_gasto=Exists(facturas_gasto),
-        pendientes_gasto=Exists(facturas_gasto_pendientes),
+                # Gasto
+                When(
+                    gasto__isnull=False,
+                    tiene_facturas_gasto=False,
+                    then=Value('sin_facturas')
+                ),
+                When(
+                    gasto__isnull=False,
+                    pendientes_gasto=False,
+                    then=Value('todas_autorizadas')
+                ),
 
-        tiene_facturas_viatico=Exists(facturas_viatico),
-        pendientes_viatico=Exists(facturas_viatico_pendientes),
-    )
-    .annotate(
-        estado_facturas=Case(
-            # OC
-            When(
-                oc__isnull=False,
-                tiene_facturas_oc=False,
-                then=Value('sin_facturas')
-            ),
-            When(
-                oc__isnull=False,
-                pendientes_oc=False,
-                then=Value('todas_autorizadas')
-            ),
+                # Viático
+                When(
+                    viatico__isnull=False,
+                    tiene_facturas_viatico=False,
+                    then=Value('sin_facturas')
+                ),
+                When(
+                    viatico__isnull=False,
+                    pendientes_viatico=False,
+                    then=Value('todas_autorizadas')
+                ),
 
-            # Gasto
-            When(
-                gasto__isnull=False,
-                tiene_facturas_gasto=False,
-                then=Value('sin_facturas')
-            ),
-            When(
-                gasto__isnull=False,
-                pendientes_gasto=False,
-                then=Value('todas_autorizadas')
-            ),
-
-            # Viático
-            When(
-                viatico__isnull=False,
-                tiene_facturas_viatico=False,
-                then=Value('sin_facturas')
-            ),
-            When(
-                viatico__isnull=False,
-                pendientes_viatico=False,
-                then=Value('todas_autorizadas')
-            ),
-
-            default=Value('pendientes'),
-            output_field=CharField()
+                default=Value('pendientes'),
+                output_field=CharField()
+            )
         )
-    )
-        .order_by('-pagado_real')
-    )
+            .order_by('-pagado_real')
+        )
     myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos, tesorero = usuario)
     pagos = myfilter.qs
     

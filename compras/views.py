@@ -3771,6 +3771,13 @@ def generar_pdf_nueva(compra):
     c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
     campo_y = panel_inicio_y - 8
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Nombre:')
+    print(compra.created_at)
+    for h in compra.proveedor.history.all():
+        print(h.history_date, h.history_type)
+    proveedor_oc = compra.proveedor.history.as_of(compra.created_at)
+    
+    print(proveedor_oc.cuenta_bancaria)
+
     if compra.proveedor.nombre.razon_social == 'COLABORADOR':
         c.drawString(panel_derecho_inicio + 80,campo_y, compra.deposito_comprador.staff.staff.first_name+' '+compra.deposito_comprador.staff.staff.last_name)
         c.drawString(panel_derecho_inicio + 80,campo_y- 24, compra.deposito_comprador.banco.nombre)
