@@ -1917,6 +1917,9 @@ def pago_gastos_autorizados(request):
 
         for gasto in gastos_list:
             # Determinar estado basado en total_facturas y autorizadas
+            print(gasto.folio)
+            print('total_facturas:', gasto.total_facturas)
+            print('autorizadas:', gasto.autorizadas)
             if gasto.total_facturas == 0:
                 gasto.estado_facturas = 'sin_facturas'
             elif gasto.autorizadas == gasto.total_facturas:
