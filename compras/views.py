@@ -3777,7 +3777,7 @@ def generar_pdf_nueva(compra):
 
     proveedor_oc = (
         compra.proveedor.history
-        .filter(history_date__lte=compra.created_at)
+        .filter(history_date__date__lte=compra.created_at.date())
         .order_by("-history_date")
         .first()
     )
