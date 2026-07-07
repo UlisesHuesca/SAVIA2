@@ -3775,9 +3775,17 @@ def generar_pdf_nueva(compra):
     for h in compra.proveedor.history.all():
         print(h.history_date, h.cuenta)
 
+    fecha_oc = compra.created_at.date()
+
+    fin_dia_oc = datetime.combine(
+        fecha_oc,
+        time.max,
+        tzinfo=compra.created_at.tzinfo
+    )
+
     proveedor_oc = (
         compra.proveedor.history
-        .filter(history_date__date=compra.created_at.date())
+        .filter(history_date__lte=fin_dia_oc)
         .order_by("-history_date")
         .first()
     )
@@ -3785,7 +3793,7 @@ def generar_pdf_nueva(compra):
     if proveedor_oc is None:
         proveedor_oc = (
             compra.proveedor.history
-            .filter(history_date__date__lt=compra.created_at.date())
+            .filter(history_date__lte=fin_dia_oc)
             .order_by("-history_date")
             .first()
         )
