@@ -40,9 +40,9 @@ import io
 import ssl
 import decimal
 from io import BytesIO
-from datetime import date, datetime, timedelta
+from datetime import date, datetime, timedelta, time as dt_time
 from num2words import num2words
-import time
+
 
 #PDF generator
 from reportlab.pdfgen import canvas
@@ -3779,7 +3779,7 @@ def generar_pdf_nueva(compra):
 
     fin_dia_oc = datetime.combine(
         fecha_oc,
-        time.max,
+        dt_time.max,
         tzinfo=compra.created_at.tzinfo
     )
 
