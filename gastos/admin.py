@@ -16,7 +16,7 @@ class Articulo_Gasto_Admin(admin.ModelAdmin):
     search_fields = ('gasto__folio','producto__nombre')
 
 class Entrada_Gasto_Ajuste_Admin(admin.ModelAdmin):
-    list_display =('id','gasto__producto','almacenista','completo')
+    list_display =('id','gasto','almacenista','completo')
     raw_id_fields = ('gasto','almacenista')
 
 class Factura_Admin(admin.ModelAdmin):
