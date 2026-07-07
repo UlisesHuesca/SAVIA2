@@ -17,6 +17,7 @@ class Articulo_Gasto_Admin(admin.ModelAdmin):
 
 class Entrada_Gasto_Ajuste_Admin(admin.ModelAdmin):
     list_display =('id','gasto','almacenista','completo')
+    raw_id_fields = ('gasto','almacenista')
 
 class Factura_Admin(admin.ModelAdmin):
     list_display = ('id','solicitud_gasto', 'fecha_subida', 'archivo_pdf', 'archivo_xml','uuid','hecho','autorizada')   
