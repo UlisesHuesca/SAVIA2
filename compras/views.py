@@ -3772,11 +3772,14 @@ def generar_pdf_nueva(compra):
     campo_y = panel_inicio_y - 8
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Nombre:')
     print(compra.created_at)
-    for h in compra.proveedor.history.all():
-        print(h.history_date, h.history_type)
-    #proveedor_oc = compra.proveedor.history.as_of(compra.created_at)
+   #for h in compra.proveedor.history.all():
+        #print(h.history_date, h.history_type)
+    try:
+        proveedor_oc = compra.proveedor.history.as_of(compra.created_at)
+    except Proveedor_direcciones.DoesNotExist:
+        proveedor_oc = compra.proveedor
     
-    #print(proveedor_oc.cuenta_bancaria)
+    print(proveedor_oc.cuenta)
 
     if compra.proveedor.nombre.razon_social == 'COLABORADOR':
         c.drawString(panel_derecho_inicio + 80,campo_y, compra.deposito_comprador.staff.staff.first_name+' '+compra.deposito_comprador.staff.staff.last_name)
@@ -3786,11 +3789,11 @@ def generar_pdf_nueva(compra):
         c.drawString(panel_derecho_inicio + 80,campo_y-60, compra.deposito_comprador.staff.staff.first_name+' '+compra.deposito_comprador.staff.staff.last_name)
         
     else:
-        c.drawString(panel_derecho_inicio + 80,campo_y, compra.proveedor.nombre.razon_social)
-        c.drawString(panel_derecho_inicio + 80,campo_y- 24, compra.proveedor.banco.nombre)
-        c.drawString(panel_derecho_inicio + 80,campo_y- 36, compra.proveedor.cuenta)
-        c.drawString(panel_derecho_inicio + 80,campo_y- 48, compra.proveedor.clabe)
-        c.drawString(panel_derecho_inicio + 80,campo_y-60, compra.proveedor.contacto)
+        c.drawString(panel_derecho_inicio + 80,campo_y, proveedor_oc.nombre.razon_social)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 24, proveedor_oc.banco.nombre)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 36, proveedor_oc.cuenta)
+        c.drawString(panel_derecho_inicio + 80,campo_y- 48, proveedor_oc.clabe)
+        c.drawString(panel_derecho_inicio + 80,campo_y-60, proveedor_oc.contacto)
 
     campo_y -= 12
     c.drawString(panel_derecho_inicio + 3, campo_y, 'RFC:')
