@@ -2591,9 +2591,10 @@ def gasto_entrada(request, pk):
                     )
                     #Calculo el precio  y agrega al inventario
 
-                    if producto_inventario.price == 0:
+                    if producto_inventario.cantidad == 0 and producto_inventario.price == 0:
                         producto_inventario.price = item_producto.precio_unitario
-                    producto_inventario.price = ((item_producto.precio_unitario * item_producto.cantidad)+ ((producto_inventario.apartada() + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + item_producto.cantidad + producto_inventario.cantidad_apartada)
+                    else:
+                        producto_inventario.price = ((item_producto.precio_unitario * item_producto.cantidad)+ ((producto_inventario.apartada() + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + item_producto.cantidad + producto_inventario.apartada())
                     #La cantidad en inventario + la cantidad del producto en la entrada <-----esta parte es la que no veo sucediendo
                     producto_inventario.cantidad_apartada = producto_inventario.apartada()
                     #producto_inventario.save()
