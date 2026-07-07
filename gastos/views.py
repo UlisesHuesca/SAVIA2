@@ -1820,7 +1820,7 @@ def pago_gastos_autorizados(request):
     if usuario.tipo.tesoreria == True:
         if usuario.tipo.rh == True:
             gastos = Solicitud_Gasto.objects.filter(
-                gasto__tipo__tipo__in = ['APOYOS A EMPLEADOS', 'APOYO DE RENTA',],
+                tipo__tipo__in = ['APOYOS A EMPLEADOS', 'APOYO DE RENTA',],
                 autorizar=True,
                 pagada=False,
                 distrito=usuario.distritos,
