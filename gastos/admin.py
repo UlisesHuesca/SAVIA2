@@ -8,6 +8,7 @@ class Solicitud_Gasto_Admin(admin.ModelAdmin):
 
 class Conceptos_Entradas_Admin(admin.ModelAdmin):
     list_display =('id', 'concepto_material', 'entrada',)
+    raw_id_fields = ('concepto_material')
 
 class Articulo_Gasto_Admin(admin.ModelAdmin):
     list_display =('id','gasto','staff','proyecto', 'subproyecto','producto','comentario','created_at', 'validacion')
