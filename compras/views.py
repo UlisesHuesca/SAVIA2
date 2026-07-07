@@ -3771,12 +3771,25 @@ def generar_pdf_nueva(compra):
     c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
     campo_y = panel_inicio_y - 8
     c.drawString(panel_derecho_inicio + 3, campo_y, 'Nombre:')
-    print(compra.created_at)
-   #for h in compra.proveedor.history.all():
-        #print(h.history_date, h.history_type)
-    try:
-        proveedor_oc = compra.proveedor.history.as_of(compra.created_at)
-    except Proveedor_direcciones.DoesNotExist:
+    print('compra_creada:',compra.created_at)
+    for h in compra.proveedor.history.all():
+        print(h.history_date, h.cuenta)
+
+    proveedor_oc = (
+        compra.proveedor.history
+        .filter(history_date__lte=compra.created_at)
+        .order_by("-history_date")
+        .first()
+    )
+
+    if proveedor_oc is None:
+        proveedor_oc = (
+            compra.proveedor.history
+            .order_by("history_date")
+            .first()
+        )
+
+    if proveedor_oc is None:
         proveedor_oc = compra.proveedor
     
     print(proveedor_oc.cuenta)
