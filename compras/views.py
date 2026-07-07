@@ -3777,10 +3777,18 @@ def generar_pdf_nueva(compra):
 
     proveedor_oc = (
         compra.proveedor.history
-        .filter(history_date__date__lte=compra.created_at.date())
+        .filter(history_date__date=compra.created_at.date())
         .order_by("-history_date")
         .first()
     )
+
+    if proveedor_oc is None:
+        proveedor_oc = (
+            compra.proveedor.history
+            .filter(history_date__date__lt=compra.created_at.date())
+            .order_by("-history_date")
+            .first()
+        )
 
     if proveedor_oc is None:
         proveedor_oc = (
