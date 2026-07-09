@@ -2183,10 +2183,22 @@ def matriz_pagos(request):
 
                 # Facturas
                 for factura in facturas:
-                    if pago.gasto and factura.archivo_pdf and os.path.exists(factura.archivo_pdf.path):
-                        merger.append(factura.archivo_pdf.path, import_outline=False)
-                    elif (pago.oc or pago.viatico) and factura.factura_pdf and os.path.exists(factura.factura_pdf.path):
-                        merger.append(factura.factura_pdf.path, import_outline=False)
+                    if pago.gasto and factura.archivo_pdf:
+                        path = factura.archivo_pdf.path
+
+                    elif (pago.oc or pago.viatico) and factura.factura_pdf:
+                        path = factura.factura_pdf.path
+
+                    else:
+                        continue
+
+                    ext = os.path.splitext(path)[1].lower()
+
+                    if ext != ".pdf":
+                        print(f"Se omitió porque no es PDF: Factura {factura.id} -> {path}")
+                        continue
+
+                    merger.append(path, import_outline=False)
 
             # Guardar PDF combinado final en archivo temporal
             with tempfile.NamedTemporaryFile(delete=False, suffix=".pdf") as temp_final:
