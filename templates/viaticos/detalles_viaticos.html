@@ -26,7 +26,7 @@
                 <tbody>
                     <tr>
                         <th scope="col"><i class="fa-solid fa-diagram-project"></i> Nivel:</th>
-                        <th scope="col">{{viatico.colaborador.nivel}}</th>
+                        <th scope="col">{{viatico.colaborador.staff.nivel}}</th>
                     </tr>
                 <tr>
                     <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
@@ -35,6 +35,10 @@
                 <tr>
                     <th scope="col"><i class="fa-solid fa-diagram-project"></i> Subproyecto:</th>
                     <th scope="col">{{viatico.subproyecto.nombre}}</th>
+                </tr>
+                <tr>
+                    <th>Motivo</th>
+                    <th scope="col"> {{viatico.motivo}}</th>
                 </tr>
                 <tr>
                     <th scope="col"><i class="fa-regular fa-calendar-days"></i> Fecha de Partida:</th>
@@ -69,6 +73,13 @@
                    
                     <th scope="col"> {% if viatico.comentario_general == "None" %}No hay comentario {% else %}{{viatico.comentario_general}}{% endif %}</th>
                 </tr>
+                {% if viatico.comentario_cierre %}
+                <tr>
+
+                    <th scope="col"><i class="fa-solid fa-comment"></i> Comentario Cierre</th>
+                    <th scope="col"> {{viatico.comentario_cierre}}</th>
+                </tr>
+                {% endif %}
                 </tbody> 
             </table>
         </div>   

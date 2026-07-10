@@ -72,6 +72,13 @@
                     <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
                     <th scope="col">{{viatico.comentario_general}}</th>
                 </tr>
+                 {% if viatico.comentario_cierre %}
+                <tr>
+
+                    <th scope="col"><i class="fa-solid fa-comment"></i> Comentario Cierre</th>
+                    <th scope="col"> {{viatico.comentario_cierre}}</th>
+                </tr>
+                {% endif %}
                 </tbody> 
             
             </table>

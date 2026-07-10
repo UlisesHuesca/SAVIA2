@@ -10,6 +10,11 @@ import os
 # Create your models here.
 
 class Solicitud_Viatico(models.Model):
+    TIPO_VIATICO_CHOICES = [
+        ('CON_PAGO', 'Con pago'),
+        ('SIN_PAGO', 'Sin pago'),
+    ]
+    tipo = models.CharField(max_length=15, choices=TIPO_VIATICO_CHOICES, default='CON_PAGO',verbose_name='Tipo de viático')
     folio = models.IntegerField(null=True)
     staff = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='Crea_Viatico')
     colaborador = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, blank=True, related_name='Colaborador_viatico')

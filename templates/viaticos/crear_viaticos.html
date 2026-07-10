@@ -53,6 +53,19 @@
                             {{error_messages}}
                         </div>
                         {% endif %}
+                        {% if usuario.distritos.nombre == "MATRIZ" %}
+                        <div class="row my-2">
+                            <div class="col-lg-12 col-sm-12" >
+                                <div class="input-group mb-3">
+                                    <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-message"></i></span>
+                                        <div class="form-floating form-floating-group flex-grow-1">   
+                                            {{form.tipo|add_class:"form-control"|append_attr:"placeholder=Tipo"}}
+                                            <label for="id_transporte">Tipo*</label>
+                                        </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endif %}
                         <div class="row">
                             <div class="col-12">
                                 <div class="input-group mb-3">
@@ -145,7 +158,7 @@
                                 <div class="input-group mb-3">
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-car"></i></span>
                                     <div class="form-floating form-floating-group flex-grow-1">
-                                        <select id="transporte" name="tipo" class="form-control" required onchange="actualizarEtiqueta()">
+                                        <select id="transporte" name="tipo_transporte" class="form-control" required onchange="actualizarEtiqueta()">
                                             <option value="" disabled selected>{% trans "Seleccione su transporte" %}</option>
                                             <option value="vehiculo_propio">{% trans "Vehículo propio" %}</option>
                                             <option value="vehiculo_empresa">{% trans "Vehículo empresa" %}</option>
@@ -504,8 +517,17 @@ document.addEventListener('DOMContentLoaded', function(){
     var submitButton = document.querySelector('#submit-button');
     var viatico = document.getElementById('viatico');
     var viatico_id = viatico.getAttribute('viatico_id');
+    const fechaPartida = document.getElementById('id_fecha_partida');
+    const fechaRetorno = document.getElementById('id_fecha_retorno');
     
+    fechaPartida.addEventListener('change', function () {
+        fechaRetorno.min = fechaPartida.value;
 
+            if (fechaRetorno.value && fechaRetorno.value < fechaPartida.value) {
+                fechaRetorno.value = fechaPartida.value;
+            }
+        });
+    
     document.getElementById("Lugar_Intermedio").addEventListener("submit", function(event){
      preventDoubleClick(document.getElementById("btn_punto"));
     });
@@ -791,7 +813,7 @@ function actualizarEtiqueta() {
     const opcionSeleccionada = select.options[select.selectedIndex].value;
 
     // Cambia el contenido de la etiqueta y el icono según la opción seleccionada
-    if (opcionSeleccionada === 'vehiculo_propio' || opcionSeleccionada === 'vehiculo_empresa') {
+    if (opcionSeleccionada === 'vehiculo_propio' || opcionSeleccionada === 'vehiculo_empresa' || opcionSeleccionada === 'tercero') {
         etiqueta.textContent = 'Transporte (marca, modelo, rendimiento)*';
         icono.className = 'fa-solid fa-car'; // Icono de coche
     } else if (opcionSeleccionada === 'autobus') {

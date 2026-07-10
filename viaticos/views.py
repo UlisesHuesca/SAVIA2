@@ -17,7 +17,7 @@ from dashboard.models import Inventario, Product
 from requisiciones.views import get_image_base64
 from tesoreria.models import Cuenta, Pago, Facturas
 from .models import Solicitud_Viatico, Concepto_Viatico, Viaticos_Factura, Puntos_Intermedios
-from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form
+from .forms import Solicitud_ViaticoForm, Concepto_ViaticoForm, Pago_Viatico_Form, Viaticos_Factura_Form, Puntos_Intermedios_Form, UploadFileForm, Cancelacion_viatico_Form, Solicitud_Viatico_Tipo_Form
 from tesoreria.forms import Facturas_Viaticos_Form
 #from tesoreria.views import eliminar_caracteres_invalidos, extraer_datos_del_xml
 from gastos.models import Factura, ValeRosa
@@ -159,10 +159,13 @@ def solicitud_viatico(request):
 
     if usuario.distritos.nombre == "MATRIZ":
         superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True)
+        form = Solicitud_Viatico_Tipo_Form(instance = viatico)
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
         superintendentes = colaborador.filter(tipo__superintendente = True, distritos = usuario.distritos, st_activo = True).exclude(tipo__nombre="Admin")
+        form = Solicitud_ViaticoForm(instance = viatico)
     else:
         superintendentes = colaborador.filter(tipo__superintendente = True, distritos = usuario.distritos, st_activo = True).exclude(tipo__nombre="Admin")
+        form = Solicitud_ViaticoForm(instance = viatico)
 
     max_folio = Solicitud_Viatico.objects.all().aggregate(Max('folio'))['folio__max']
     folio_probable = max_folio + 1
@@ -188,18 +191,22 @@ def solicitud_viatico(request):
         } for item in colaboradores
     ]
 
-    form = Solicitud_ViaticoForm(instance = viatico)
+    
+    
     form2 = Puntos_Intermedios_Form()
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
-            form = Solicitud_ViaticoForm(request.POST, instance=viatico)
+            if usuario.distritos.nombre == "MATRIZ":
+                form = Solicitud_Viatico_Tipo_Form(request.POST, instance=viatico)
+            else:
+                form = Solicitud_ViaticoForm(request.POST, instance=viatico)
             max_folio = Solicitud_Viatico.objects.all().aggregate(Max('folio'))['folio__max']
             nuevo_folio = (max_folio or 0) + 1
             #abrev= usuario.distrito.abreviado
             
             if form.is_valid():
-                transporte_seleccionado = request.POST.get('tipo')
+                transporte_seleccionado = request.POST.get('tipo_transporte')
                 cuenta_alterna = request.POST.get('toggleBankFields', 'false')  # 'true' si está marcado, 'false' si no
                 numero_emergencia = request.POST.get('toggleEmergencyPhone', 'false')  # 'true' si está marcado, 'false' si no
                 # Convertir a booleanos
@@ -220,6 +227,15 @@ def solicitud_viatico(request):
                 viatico.distrito = usuario.distritos
                 viatico.folio = nuevo_folio
                 viatico.transporte = transporte_seleccionado + '-'  + comentario_transporte
+                if viatico.tipo == 'SIN_PAGO':
+                    viatico.montos_asignados = True
+                    viatico.cerrar_sin_pago_completo = True
+                    viatico.comentario_cierre = (
+                        "Solicitud marcada como 'Sin pago' por el usuario. "
+                        "No requiere asignación de montos ni proceso de pago."
+                    )
+                    viatico.persona_cierre = usuario
+                    viatico.fecha_cierre = datetime.now().date()
                 if usuario.distritos.nombre == "MATRIZ":
                     viatico.gerente = viatico.superintendente
                 else:
@@ -228,7 +244,7 @@ def solicitud_viatico(request):
                     viatico.colaborador = usuario
                 viatico.save()
                 messages.success(request, f'La solicitud {viatico.folio} ha sido creada')
-                return redirect('solicitudes-viaticos')
+                return redirect('mis-viaticos')
             else:
                 for field, errors in form.errors.items():
                     error_messages[field] = errors.as_text()
@@ -287,6 +303,8 @@ def viaticos_pendientes_autorizar(request):
 
     if perfil.distritos.nombre == "MATRIZ":
         viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = None, distrito = perfil.distritos, superintendente = perfil).order_by('-folio')
+        if perfil.tipo.nombre == "Admin":
+            viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = None, distrito = perfil.distritos).order_by('-folio')
     else:
         viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = None, distrito = perfil.distritos).order_by('-folio')
 
@@ -341,6 +359,8 @@ def viaticos_pendientes_autorizar2(request):
             ).order_by('-folio')
         else:
             viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos, superintendente = perfil).order_by('-folio')
+    #elif perfil.tipo.nombre == "Admin":
+    #    viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos).order_by('-folio')
     else:
         viaticos = Solicitud_Viatico.objects.filter(complete=True, autorizar = True, montos_asignados=True, autorizar2 = None, distrito = perfil.distritos).exclude(Q(colaborador=perfil) | Q(staff=perfil)).order_by('-folio')
 
@@ -408,8 +428,120 @@ def autorizar_viaticos(request, pk):
     if request.method =='POST' and 'btn_autorizar' in request.POST:
         viatico.autorizar = True
         viatico.approved_at = datetime.now()
+        if viatico.tipo == 'SIN_PAGO':
+            viatico.autorizar2 = True
+            viatico.approved_at2 = datetime.now()
         #viatico.approved_at_time = datetime.now().time()
         viatico.save()
+        if viatico.tipo == 'SIN_PAGO':
+            personal_rh = Profile.objects.filter(
+                distritos=viatico.staff.distritos,
+                tipo__rh=True,
+                st_activo=True
+            )
+            static_path = settings.STATIC_ROOT
+            img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
+            img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+           
+           
+            
+            image_base64 = get_image_base64(img_path)
+            logo_v_base64 = get_image_base64(img_path2)
+            
+            fecha_partida = (
+                viatico.fecha_partida.strftime('%d/%m/%Y')
+                if viatico.fecha_partida
+                else 'No especificada'
+            )
+
+
+            fecha_retorno = (
+                viatico.fecha_retorno.strftime('%d/%m/%Y')
+                if viatico.fecha_retorno
+                else 'No especificada'
+            )
+
+            lugar_partida = viatico.lugar_partida or 'No especificado'
+            lugar_comision = viatico.lugar_comision or 'No especificado'
+
+            colaborador = viatico.colaborador if viatico.colaborador else viatico.staff
+
+            for persona in personal_rh:
+                html_message = f"""
+                <html>
+                    <head>
+                        <meta charset="UTF-8">
+                    </head>
+                    <body>
+                        <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
+                        <p>Estimado {persona.staff.staff.first_name} {persona.staff.staff.last_name},</p>
+                        <p>Se le notifica que la solicitud de viático con folio {viatico.folio} ha sido autorizada para {colaborador.staff.staff.first_name} {colaborador.staff.staff.last_name}.</p>
+                        <p><strong>Datos de la comisión:</strong></p>
+
+                        <table style="border-collapse:collapse; width:100%; max-width:650px;">
+                            <tr>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    <strong>Fecha de partida</strong>
+                                </td>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    {fecha_partida}
+                                </td>
+                            </tr>
+                            
+                            <tr>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    <strong>Fecha de retorno</strong>
+                                </td>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    {fecha_retorno}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    <strong>Lugar de partida</strong>
+                                </td>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    {lugar_partida}
+                                </td>
+                            </tr>
+                            <tr>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    <strong>Lugar de comisión</strong>
+                                </td>
+                                <td style="border:1px solid #cccccc; padding:8px;">
+                                    {lugar_comision}
+                                </td>
+                            </tr>
+                        </table>
+
+                        <p>
+                            Esta notificación se emite para los efectos y fines que para el departamento de RH sean aplicables.
+                        </p>
+                        <p>
+                            Autorizado por: {perfil.staff.staff.first_name} {perfil.staff.staff.last_name}.
+                        </p>
+                        <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
+                        <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
+                    </body>
+                </html>
+                """
+
+                try:
+                    email = EmailMessage(
+                        f'Viático autorizado {viatico.folio} | Correo informativo para RH',
+                        body=html_message,
+                        from_email=settings.DEFAULT_FROM_EMAIL,
+                        to=['ulises_huesc@hotmail.com',persona.staff.staff.email],
+                        headers={'Content-Type': 'text/html'}
+                    )
+                    email.content_subtype = "html"
+                    email.send()
+
+                except (BadHeaderError, SMTPException, socket.gaierror) as e:
+                    messages.warning(
+                        request,
+                        f'El viático fue autorizado, pero el correo de notificación a RH no pudo ser enviado: {e}'
+                    )
         messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {viatico.folio}')
         return redirect ('viaticos-pendientes-autorizar')
 
@@ -433,7 +565,9 @@ def autorizar_viaticos2(request, pk):
         #viatico.approved_at_time2 = datetime.now().time()
         viatico.gerente = perfil
         viatico.save()
-        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {viatico.id}')
+   
+
+        messages.success(request, f'{perfil.staff.staff.first_name} {perfil.staff.staff.last_name} has autorizado la solicitud {viatico.folio}')
         return redirect ('viaticos-pendientes-autorizar2')
 
 
@@ -726,9 +860,34 @@ def viaticos_pagos(request, pk):
                     static_path = settings.STATIC_ROOT
                     img_path = os.path.join(static_path,'images','SAVIA_Logo.png')
                     img_path2 = os.path.join(static_path,'images','logo_vordcab.jpg')
+
             
                     image_base64 = get_image_base64(img_path)
                     logo_v_base64 = get_image_base64(img_path2)
+                    
+                    fecha_partida = (
+                        viatico.fecha_partida.strftime('%d/%m/%Y')
+                        if viatico.fecha_partida
+                        else 'No especificada'
+                    )
+
+                    hora_partida = (
+                        viatico.hora_partida.strftime('%H:%M')
+                        if viatico.hora_partida
+                        else 'No especificada'
+                    )
+
+                    fecha_retorno = (
+                        viatico.fecha_retorno.strftime('%d/%m/%Y')
+                        if viatico.fecha_retorno
+                        else 'No especificada'
+                    )
+
+                    lugar_partida = viatico.lugar_partida or 'No especificado'
+                    lugar_comision = viatico.lugar_comision or 'No especificado'
+                    
+                    
+                    
                     # Crear el mensaje HTML
                     html_message = f"""
                     <html>
@@ -740,6 +899,41 @@ def viaticos_pagos(request, pk):
                             <p>Estimado {viatico.staff.staff.staff.first_name} {viatico.staff.staff.staff.last_name},</p>
                             <p>Estás recibiendo este correo porque el viático solicitado: {viatico.folio} ha sido pagado,</p>
                             <p>por {pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
+                            <table style="border-collapse:collapse; width:100%; max-width:650px;">
+                                <tr>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        <strong>Fecha de partida</strong>
+                                    </td>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        {fecha_partida}
+                                    </td>
+                                </tr>
+                                
+                                <tr>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        <strong>Fecha de retorno</strong>
+                                    </td>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        {fecha_retorno}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        <strong>Lugar de partida</strong>
+                                    </td>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        {lugar_partida}
+                                    </td>
+                                </tr>
+                                <tr>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        <strong>Lugar de comisión</strong>
+                                    </td>
+                                    <td style="border:1px solid #cccccc; padding:8px;">
+                                        {lugar_comision}
+                                    </td>
+                                </tr>
+                            </table>
                             <p>Buen viaje!</p>
                             <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
                             <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
@@ -779,6 +973,43 @@ def viaticos_pagos(request, pk):
                                 <p><img src="data:image/jpeg;base64,{logo_v_base64}" alt="Imagen" style="width:100px;height:auto;"/></p>
                                 <p>Estimado {persona.staff.staff.first_name} {persona.staff.staff.last_name},</p>
                                 <p>Para notificarte que el viático: {viatico.folio} ha sido pagado y se considere para los efectos y fines que para el departamento de RH sean aplicables</p>
+                                <table style="border-collapse:collapse; width:100%; max-width:650px;">
+                                    <tr>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            <strong>Fecha de partida</strong>
+                                        </td>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            {fecha_partida}
+                                        </td>
+                                    </tr>
+                                    
+                                    <tr>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            <strong>Fecha de retorno</strong>
+                                        </td>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            {fecha_retorno}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            <strong>Lugar de partida</strong>
+                                        </td>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            {lugar_partida}
+                                        </td>
+                                    </tr>
+                                    <tr>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            <strong>Lugar de comisión</strong>
+                                        </td>
+                                        <td style="border:1px solid #cccccc; padding:8px;">
+                                            {lugar_comision}
+                                        </td>
+                                    </tr>
+                                /table>
+                                
+                                
                                 <p>Tesorero que paga:{pago.tesorero.staff.staff.first_name} {pago.tesorero.staff.staff.last_name}.</p>
                                 <p><img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width:50px;height:auto;border-radius:50%"/></p>
                                 <p>Este mensaje ha sido automáticamente generado por SAVIA 2.0</p>
@@ -787,7 +1018,7 @@ def viaticos_pagos(request, pk):
                         """
                         try:
                             email = EmailMessage(
-                                f'Viatico Autorizado {viatico.folio} |Correo informativo para RH',
+                                f'Viatico Autorizado {viatico.folio} | Pagado |Correo informativo para RH',
                                 body=html_message,
                                 from_email = settings.DEFAULT_FROM_EMAIL,
                                 to = ['ulises_huesc@hotmail.com',persona.staff.staff.email],

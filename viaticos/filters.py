@@ -13,6 +13,7 @@ class Solicitud_Viatico_Filter(django_filters.FilterSet):
     subproyecto = CharFilter(field_name='subproyecto__nombre', lookup_expr='icontains')
     start_date = DateFilter(field_name ='created_at', lookup_expr='gte')
     end_date = DateFilter(field_name='created_at', lookup_expr='lte')
+    
 
     class Meta:
         model = Solicitud_Viatico
