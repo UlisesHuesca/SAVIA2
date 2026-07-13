@@ -620,6 +620,8 @@
                             </div>
                         {% if usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Admin" %}
                             <a class="dropdown-item" href="{% url 'price_ref_history' %}">Matriz de Precios de Referencia</a>
+                        {% endif %}
+                        {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector Administrativo" %}
                             <a class="dropdown-item" href="{% url 'matriz-vales-rosas' %}">Matriz Vales rosas</a>
                         {% endif %}
                                 

@@ -4060,7 +4060,7 @@ def convert_excel_vales_rosas(vales):
     head_style = workbook.add_format({
         'bold': True,
         'font_color': 'FFFFFF',
-        'bg_color': 'C2185B',
+        'bg_color': '333366',
         'font_name': 'Arial',
         'font_size': 11,
         'border': 1,
@@ -4102,8 +4102,7 @@ def convert_excel_vales_rosas(vales):
     })
 
     columns = [
-        'ID',
-        'Origen',
+        'Tipo',
         'Folio',
         'Distrito',
         'Motivo',
@@ -4114,8 +4113,6 @@ def convert_excel_vales_rosas(vales):
         'Aprobado por',
         'Beneficiario',
         'Fecha de aprobación',
-        'Fecha de pago',
-        'Comentarios',
         'Tiene comprobante',
     ]
 
@@ -4129,13 +4126,13 @@ def convert_excel_vales_rosas(vales):
     worksheet.set_column('A:A', 10)
     worksheet.set_column('B:B', 12)
     worksheet.set_column('C:C', 12)
-    worksheet.set_column('D:D', 18)
-    worksheet.set_column('E:E', 45)
-    worksheet.set_column('F:F', 16)
-    worksheet.set_column('G:G', 28)
-    worksheet.set_column('H:H', 20)
-    worksheet.set_column('I:I', 14)
-    worksheet.set_column('J:J', 28)
+    worksheet.set_column('D:D', 45)
+    worksheet.set_column('E:E', 12)
+    worksheet.set_column('F:F', 30)
+    worksheet.set_column('G:G', 16)
+    worksheet.set_column('H:H', 16)
+    worksheet.set_column('I:I', 30)
+    worksheet.set_column('J:J', 30)
     worksheet.set_column('K:L', 20)
     worksheet.set_column('M:M', 45)
     worksheet.set_column('N:N', 18)
@@ -4258,7 +4255,6 @@ def convert_excel_vales_rosas(vales):
             beneficiario = None
 
         row = [
-            vale.id,
             origen,
             folio,
             distrito,
@@ -4270,21 +4266,19 @@ def convert_excel_vales_rosas(vales):
             aprobado_por,
             beneficiario,
             aprobado_en,
-            vale.fecha_pago,
-            vale.comentarios or '',
             'Sí' if vale.comprobante_pdf else 'No',
         ]
 
         for col_num, cell_value in enumerate(row):
             cell_format = body_style
 
-            if col_num == 5:
+            if col_num == 4:
                 cell_format = money_style
 
-            elif col_num in [7, 10]:
+            elif col_num in [10]:
                 cell_format = datetime_style
 
-            elif col_num == 11:
+            elif col_num in [6]:
                 cell_format = date_style
 
             if cell_value is None:
