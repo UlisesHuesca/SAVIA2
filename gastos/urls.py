@@ -48,5 +48,6 @@ urlpatterns = [
     path('gasto/gastos_por_pagar/', views.gastos_por_pagar, name='gastos-por-pagar'),
     path('gasto/vale-azul/<int:pk>/', views.vale_azul_abono, name='vale_azul_abono'),
     path('gasto/ver_gasto/<int:pk>/pdf/', views.ver_gasto_pdf, name='ver_gasto_pdf'),
+    path('gasto/matriz-vales-rosas/', views.matriz_vales_rosas, name='matriz-vales-rosas'),
 ]
     

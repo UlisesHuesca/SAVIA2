@@ -1,0 +1,366 @@
+{% extends 'partials/base.html' %}
+{% load crispy_forms_tags %}
+{% load widget_tweaks %}
+{% load static %}
+{% load i18n %}
+
+{% block content %}
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6 class="d-lg-none">&nbsp;</h6>
+
+<div class="card mb-3">
+    <div class="card-header">
+        <h5 class="mb-0">Filtro de vales rosas</h5>
+    </div>
+
+    <div class="card-body">
+        <form method="GET" id="formFiltroVales">
+
+            <div class="row">
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-hashtag"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ myfilter.form.folio|add_class:"form-control"|append_attr:"placeholder=Folio" }}
+                            <label for="id_folio">Folio</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-file-lines"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ myfilter.form.origen|add_class:"form-control" }}
+                            <label for="id_origen">Origen</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-circle-check"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ myfilter.form.estatus|add_class:"form-control" }}
+                            <label for="id_estatus">Estatus</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-location-dot"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ myfilter.form.distrito|add_class:"form-control"|append_attr:"placeholder=Distrito" }}
+                            <label for="id_distrito">Distrito</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-message"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ myfilter.form.motivo|add_class:"form-control"|append_attr:"placeholder=Motivo" }}
+                            <label for="id_motivo">Motivo</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-user"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ myfilter.form.creado_por|add_class:"form-control"|append_attr:"placeholder=Creado por" }}
+                            <label for="id_creado_por">Creado por</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-4 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-solid fa-user-check"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {{ myfilter.form.aprobado_por|add_class:"form-control"|append_attr:"placeholder=Aprobado por" }}
+                            <label for="id_aprobado_por">Aprobado por</label>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-regular fa-calendar"></i>
+                        </span>
+                       
+                        <div class="form-floating flex-grow-1">
+                            {% render_field myfilter.form.start_date type="date" class="form-control" %}
+                            <label for="id_start_date">Creado desde</label>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-lg-3 col-md-6 col-sm-12">
+                    <div class="input-group mb-3">
+                        <span class="input-group-text">
+                            <i class="fa-regular fa-calendar"></i>
+                        </span>
+
+                        <div class="form-floating flex-grow-1">
+                            {% render_field myfilter.form.end_date type="date" class="form-control" %}
+                            <label for="id_end_date">Creado hasta</label>
+                        </div>
+                    </div>
+                </div>
+            
+            </div>
+
+            <div class="d-flex justify-content-end gap-2">
+                <a href="{% url 'matriz-vales-rosas' %}" class="btn btn-outline-secondary">
+                    <i class="fa-solid fa-eraser"></i>Limpiar
+                </a>
+
+                <button class="btn btn-outline-success" type="submit">
+                    <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                </button>
+                <form method=POST onsubmit="mostrarIndicadorCarga();">
+                {% csrf_token %}  
+                <button class="btn btn-outline-success" type="submit" name="exportar_excel" value="1">
+                    <i class="fa-solid fa-file-excel"></i>Excel
+                </button>
+                </form>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="container-fluid mt-3">
+    <div class="card shadow-sm">
+        <div class="card-header d-flex justify-content-between align-items-center">
+            <h4 class="mb-0">
+                <i class="fa-solid fa-ticket"></i>
+                Matriz de vales rosas
+            </h4>
+
+            <span class="badge bg-danger">
+                Total: {{ vales.paginator.count }}
+            </span>
+        </div>
+
+        <div class="card-body">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover align-middle">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>Origen</th>
+                            <th>Folio</th>
+                            <th>Motivo</th>
+                            <th>Monto</th>
+                            <th>Creado por</th>
+                            <th>Fecha de creación</th>
+                            <th>Estatus</th>
+                            <th>Aprobado por</th>
+                            <th>Fecha de aprobación</th>
+                            <th>Fecha de pago</th>
+                            <th>Comprobante</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for vale in vales %}
+                            <tr>
+                                <td>{{ vale.id }}</td>
+
+                                <td>
+                                    {% if vale.gasto %}
+                                        <span class="badge bg-primary">
+                                            Gasto
+                                        </span>
+                                    {% elif vale.viatico %}
+                                        <span class="badge bg-info text-dark">
+                                            Viático
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-secondary">
+                                            Sin destino
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if vale.gasto %}
+                                        {{ vale.gasto.folio }}
+                                    {% elif vale.viatico %}
+                                        {{ vale.viatico.folio }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ vale.motivo|default:"—"|truncatechars:80 }}
+                                </td>
+
+                                <td>
+                                    ${{ vale.monto|floatformat:2 }}
+                                </td>
+
+                                <td>
+                                    {% if vale.creado_por %}
+                                        {{ vale.creado_por.staff.staff.first_name }}
+                                        {{ vale.creado_por.staff.staff.last_name }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {{ vale.creado_en|date:"d/m/Y H:i" }}
+                                </td>
+
+                                <td>
+                                    {% if vale.esta_aprobado == True %}
+                                        <span class="badge bg-success">
+                                            Aprobado
+                                        </span>
+                                    {% elif vale.esta_aprobado == False %}
+                                        <span class="badge bg-danger">
+                                            Rechazado
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-warning text-dark">
+                                            Pendiente
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if vale.aprobado_por %}
+                                        {{ vale.aprobado_por.staff.staff.first_name }}
+                                        {{ vale.aprobado_por.staff.staff.last_name }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if vale.aprobado_en %}
+                                        {{ vale.aprobado_en|date:"d/m/Y H:i" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if vale.fecha_pago %}
+                                        {{ vale.fecha_pago|date:"d/m/Y" }}
+                                    {% else %}
+                                        —
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    {% if vale.comprobante_pdf %}
+                                        <a
+                                            href="{{ vale.comprobante_pdf.url }}"
+                                            target="_blank"
+                                            class="btn btn-sm btn-outline-danger"
+                                            title="Ver comprobante"
+                                        >
+                                            <i class="fa-solid fa-file-pdf"></i>
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted">
+                                            Sin comprobante
+                                        </span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                        {% empty %}
+                            <tr>
+                                <td colspan="12" class="text-center text-muted py-4">
+                                    No existen vales rosas registrados.
+                                </td>
+                            </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            {% if vales.has_other_pages %}
+                <nav aria-label="Paginación">
+                    <ul class="pagination justify-content-center mt-3">
+
+                        {% if vales.has_previous %}
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="?page={{ vales.previous_page_number }}"
+                                >
+                                    Anterior
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Anterior</span>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ vales.number }} de
+                                {{ vales.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if vales.has_next %}
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="?page={{ vales.next_page_number }}"
+                                >
+                                    Siguiente
+                                </a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled">
+                                <span class="page-link">Siguiente</span>
+                            </li>
+                        {% endif %}
+
+                    </ul>
+                </nav>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+{% endblock %}

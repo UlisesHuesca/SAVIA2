@@ -928,16 +928,6 @@ def matriz_oc(request):
     #task_id = request.session.get('task_id')
 
     if request.method == 'POST' and 'btnExcel' in request.POST:
-        #if compras.count() > 2400:
-        #    if not task_id:
-        #        task = convert_excel_matriz_compras_task.delay(compras_data, num_requis_atendidas, num_approved_requis, start_date, end_date)
-        #        task_id = task.id
-        #        request.session['task_id'] = task_id
-        #        context['task_id'] = task_id
-        #        cantidad = compras.count()
-        #        context['cantidad'] = cantidad
-        #        messages.success(request, f'Tu reporte se está generando {task_id}')
-        #else:
         return convert_excel_matriz_compras(compras, num_requis_atendidas, num_approved_requis, start_date, end_date)
         
         

@@ -1,8 +1,8 @@
 import django_filters
-from .models import Solicitud_Gasto, Conceptos_Entradas, Tipo_Gasto
+from .models import Solicitud_Gasto, Conceptos_Entradas, Tipo_Gasto, ValeRosa
 from solicitudes.models import Proyecto, Subproyecto
 from user.models import Distrito
-from django_filters import CharFilter, DateFilter
+from django_filters import CharFilter, DateFilter, ChoiceFilter, NumberFilter
 from django.db.models import Q
 from django.forms import TextInput
 
@@ -99,3 +99,90 @@ class Conceptos_EntradasFilter(django_filters.FilterSet):
     
     def solicitadoo(self, queryset, name, value):
         return queryset.filter(Q(entrada__gasto__staff__staff__staff__first_name__icontains = value) | Q(entrada__gasto__staff__staff__staff__last_name__icontains = value))
+    
+class ValeRosaFilter(django_filters.FilterSet):
+
+    ORIGEN_CHOICES = [
+        ('GASTO', 'Gasto'),
+        ('VIATICO', 'Viático'),
+    ]
+
+    ESTATUS_CHOICES = [
+        ('APROBADO', 'Aprobado'),
+        ('RECHAZADO', 'Rechazado'),
+        ('PENDIENTE', 'Pendiente'),
+    ]
+
+    folio = CharFilter(method='filter_folio',label='Folio')
+    origen = ChoiceFilter(choices=ORIGEN_CHOICES,method='filter_origen',label='Origen')
+    motivo = CharFilter(field_name='motivo',lookup_expr='icontains',label='Motivo')
+    creado_por = CharFilter(method='filter_creado_por',label='Creado por')
+    aprobado_por = CharFilter(method='filter_aprobado_por',label='Aprobado por')
+    distrito = CharFilter(method='filter_distrito',label='Distrito')
+    estatus = ChoiceFilter(choices=ESTATUS_CHOICES,method='filter_estatus',label='Estatus')
+    start_date = DateFilter(field_name='creado_en',lookup_expr='date__gte',label='Creado desde')
+    end_date = DateFilter(field_name='creado_en',lookup_expr='date__lte',label='Creado hasta')
+
+    class Meta:
+        model = ValeRosa
+
+        fields = ['folio','origen','motivo','creado_por','aprobado_por','distrito','estatus','start_date','end_date',]
+
+    def filter_folio(self, queryset, name, value):
+        return queryset.filter(
+            Q(gasto__folio__icontains=value) |
+            Q(viatico__folio__icontains=value)
+        )
+
+    def filter_origen(self, queryset, name, value):
+        if value == 'GASTO':
+            return queryset.filter(
+                gasto__isnull=False,
+                viatico__isnull=True
+            )
+
+        if value == 'VIATICO':
+            return queryset.filter(
+                viatico__isnull=False,
+                gasto__isnull=True
+            )
+
+        return queryset
+
+    def filter_creado_por(self, queryset, name, value):
+        return queryset.filter(
+            Q(
+                creado_por__staff__staff__first_name__icontains=value
+            ) |
+            Q(
+                creado_por__staff__staff__last_name__icontains=value
+            )
+        )
+
+    def filter_aprobado_por(self, queryset, name, value):
+        return queryset.filter(
+            Q(
+                aprobado_por__staff__staff__first_name__icontains=value
+            ) |
+            Q(
+                aprobado_por__staff__staff__last_name__icontains=value
+            )
+        )
+
+    def filter_distrito(self, queryset, name, value):
+        return queryset.filter(
+            Q(gasto__distrito__nombre__icontains=value) |
+            Q(viatico__distrito__nombre__icontains=value)
+        )
+
+    def filter_estatus(self, queryset, name, value):
+        if value == 'APROBADO':
+            return queryset.filter(esta_aprobado=True)
+
+        if value == 'RECHAZADO':
+            return queryset.filter(esta_aprobado=False)
+
+        if value == 'PENDIENTE':
+            return queryset.filter(esta_aprobado__isnull=True)
+
+        return queryset

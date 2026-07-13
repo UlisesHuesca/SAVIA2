@@ -25,7 +25,7 @@ import logging
 import socket
 from .models import Solicitud_Gasto, Articulo_Gasto, Entrada_Gasto_Ajuste, Conceptos_Entradas, Factura, Tipo_Gasto, ValeRosa, TipoArchivoSoporte, ArchivoSoporte
 from .forms import Solicitud_GastoForm, Articulo_GastoForm, Articulo_Gasto_Edit_Form, Pago_Gasto_Form, Entrada_Gasto_AjusteForm, Conceptos_EntradasForm, UploadFileForm, FacturaForm, Autorizacion_Gasto_Form, Vale_Rosa_Form, Vale_Azul_Form, Cargo_Abono_Tipo_Form
-from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter
+from .filters import Solicitud_Gasto_Filter, Conceptos_EntradasFilter, ValeRosaFilter
 from user.models import Profile, Distrito, Empresa 
 from dashboard.models import Inventario, Order, ArticulosparaSurtir, ArticulosOrdenados, Tipo_Orden, Product
 from solicitudes.models import Proyecto, Subproyecto, Operacion
@@ -4001,3 +4001,327 @@ def delete_gasto_rh(request, pk):
     articulo.delete()
 
     return redirect('editar-gasto-rh', pk = gasto.id)
+
+
+@perfil_seleccionado_required
+def matriz_vales_rosas(request):
+    vales = (
+        ValeRosa.objects
+        .filter(color='rosa', esta_aprobado=True)
+        .filter(
+        Q(gasto__autorizar2=True) |
+        Q(viatico__autorizar2=True)
+        )
+        .select_related(
+            'gasto',
+            'viatico',
+            'creado_por',
+            'creado_por__staff',
+            'creado_por__staff__staff',
+            'aprobado_por',
+            'aprobado_por__staff',
+            'aprobado_por__staff__staff',
+        )
+        .order_by('-creado_en')
+    )
+
+    myfilter = ValeRosaFilter(request.GET,queryset=vales)
+
+   
+
+    vales_filtrados = myfilter.qs
+
+     # Descargar todos los registros filtrados, sin paginación
+    if request.GET.get('exportar_excel') == '1':
+        return convert_excel_vales_rosas(vales_filtrados)
+
+    paginator = Paginator(vales_filtrados, 50)
+    page_number = request.GET.get('page')
+    vales_page = paginator.get_page(page_number)
+
+    context = {
+        'vales': vales_page,
+        'myfilter': myfilter,
+    }
+
+    return render(request,'gasto/matriz_vales_rosas.html',context)
+
+
+def convert_excel_vales_rosas(vales):
+    output = BytesIO()
+
+    workbook = xlsxwriter.Workbook(
+        output,
+        {'in_memory': True}
+    )
+
+    worksheet = workbook.add_worksheet('Vales_Rosas')
+
+    head_style = workbook.add_format({
+        'bold': True,
+        'font_color': 'FFFFFF',
+        'bg_color': 'C2185B',
+        'font_name': 'Arial',
+        'font_size': 11,
+        'border': 1,
+        'align': 'center',
+        'valign': 'vcenter',
+    })
+
+    body_style = workbook.add_format({
+        'font_name': 'Calibri',
+        'font_size': 10,
+        'border': 1,
+        'valign': 'top',
+    })
+
+    money_style = workbook.add_format({
+        'num_format': '$ #,##0.00',
+        'font_name': 'Calibri',
+        'font_size': 10,
+        'border': 1,
+    })
+
+    date_style = workbook.add_format({
+        'num_format': 'dd/mm/yyyy',
+        'font_name': 'Calibri',
+        'font_size': 10,
+        'border': 1,
+    })
+
+    datetime_style = workbook.add_format({
+        'num_format': 'dd/mm/yyyy hh:mm',
+        'font_name': 'Calibri',
+        'font_size': 10,
+        'border': 1,
+    })
+
+    message_style = workbook.add_format({
+        'font_name': 'Arial Narrow',
+        'font_size': 11,
+    })
+
+    columns = [
+        'ID',
+        'Origen',
+        'Folio',
+        'Distrito',
+        'Motivo',
+        'Monto',
+        'Creado por',
+        'Fecha de creación',
+        'Estatus',
+        'Aprobado por',
+        'Beneficiario',
+        'Fecha de aprobación',
+        'Fecha de pago',
+        'Comentarios',
+        'Tiene comprobante',
+    ]
+
+    # Encabezados
+    for col_num, column in enumerate(columns):
+        worksheet.write(0, col_num, column, head_style)
+
+    worksheet.freeze_panes(1, 0)
+    worksheet.autofilter(0, 0, 0, len(columns) - 1)
+
+    worksheet.set_column('A:A', 10)
+    worksheet.set_column('B:B', 12)
+    worksheet.set_column('C:C', 12)
+    worksheet.set_column('D:D', 18)
+    worksheet.set_column('E:E', 45)
+    worksheet.set_column('F:F', 16)
+    worksheet.set_column('G:G', 28)
+    worksheet.set_column('H:H', 20)
+    worksheet.set_column('I:I', 14)
+    worksheet.set_column('J:J', 28)
+    worksheet.set_column('K:L', 20)
+    worksheet.set_column('M:M', 45)
+    worksheet.set_column('N:N', 18)
+
+    worksheet.write(
+        0,
+        len(columns) + 1,
+        'Reporte creado automáticamente por SAVIA 2.0',
+        message_style
+    )
+
+    worksheet.write(
+        1,
+        len(columns) + 1,
+        f'Total de vales: {vales.count()}',
+        message_style
+    )
+
+    row_num = 1
+
+    for vale in vales:
+        if vale.gasto:
+            origen = 'Gasto'
+            folio = vale.gasto.folio
+            distrito = (
+                vale.gasto.distrito.nombre
+                if vale.gasto.distrito
+                else ''
+            )
+
+        elif vale.viatico:
+            origen = 'Viático'
+            folio = vale.viatico.folio
+            distrito = (
+                vale.viatico.distrito.nombre
+                if vale.viatico.distrito
+                else ''
+            )
+
+        else:
+            origen = 'Sin destino'
+            folio = ''
+            distrito = ''
+
+        if vale.esta_aprobado is True:
+            estatus = 'Aprobado'
+        elif vale.esta_aprobado is False:
+            estatus = 'Rechazado'
+        else:
+            estatus = 'Pendiente'
+
+        creado_por = ''
+
+        if vale.creado_por:
+            creado_por = (
+                f'{vale.creado_por.staff.staff.first_name} '
+                f'{vale.creado_por.staff.staff.last_name}'
+            ).strip()
+
+        aprobado_por = ''
+
+        if vale.aprobado_por:
+            aprobado_por = (
+                f"{vale.aprobado_por.staff.staff.first_name} "
+                f"{vale.aprobado_por.staff.staff.last_name}"
+            ).strip()
+
+        elif vale.gasto:
+            if vale.gasto.distrito.nombre =="MATRIZ":
+                aprobado_por = (
+                    f"{vale.gasto.superintendente.staff.staff.first_name} "
+                    f"{vale.gasto.superintendente.staff.staff.last_name}"
+                ).strip()
+            else:
+                aprobado_por = (
+                    f"{vale.gasto.autorizado_por2.staff.staff.first_name} "
+                    f"{vale.gasto.autorizado_por2.staff.staff.last_name}"
+                ).strip()
+
+        elif vale.viatico and vale.viatico.gerente:
+            aprobado_por = (
+                f"{vale.viatico.gerente.staff.staff.first_name} "
+                f"{vale.viatico.gerente.staff.staff.last_name}"
+            ).strip()
+
+       
+        creado_en = vale.creado_en
+        aprobado_en = vale.aprobado_en
+
+        # XlsxWriter no acepta fechas con zona horaria
+        if creado_en and creado_en.tzinfo:
+            creado_en = creado_en.replace(tzinfo=None)
+
+        if aprobado_en and aprobado_en.tzinfo:
+            aprobado_en = aprobado_en.replace(tzinfo=None)
+
+        if vale.gasto:
+            origen = 'Gasto'
+            folio = vale.gasto.folio
+
+            solicitado_por = vale.gasto.staff
+            if vale.gasto.colaborador:
+                beneficiario = (f"{vale.gasto.colaborador.staff.staff.first_name} " f"{vale.gasto.colaborador.staff.staff.last_name}")
+            else:
+                beneficiario = (f"{vale.gasto.staff.staff.staff.first_name} " f"{vale.gasto.staff.staff.staff.last_name}")
+
+        elif vale.viatico:
+            origen = 'Viático'
+            folio = vale.viatico.folio
+            if vale.viatico.colaborador:
+            #solicitado_por = vale.viatico.staff
+                beneficiario = (f"{vale.viatico.colaborador.staff.staff.first_name} " f"{vale.viatico.colaborador.staff.staff.last_name}")
+            else:
+                beneficiario = (f"{vale.viatico.staff.staff.staff.first_name} " f"{vale.viatico.staff.staff.staff.last_name}")
+
+        else:
+            origen = 'Sin destino'
+            folio = ''
+            #solicitado_por = None
+            beneficiario = None
+
+        row = [
+            vale.id,
+            origen,
+            folio,
+            distrito,
+            vale.motivo or '',
+            vale.monto,
+            creado_por,
+            creado_en,
+            estatus,
+            aprobado_por,
+            beneficiario,
+            aprobado_en,
+            vale.fecha_pago,
+            vale.comentarios or '',
+            'Sí' if vale.comprobante_pdf else 'No',
+        ]
+
+        for col_num, cell_value in enumerate(row):
+            cell_format = body_style
+
+            if col_num == 5:
+                cell_format = money_style
+
+            elif col_num in [7, 10]:
+                cell_format = datetime_style
+
+            elif col_num == 11:
+                cell_format = date_style
+
+            if cell_value is None:
+                cell_value = ''
+
+            worksheet.write(
+                row_num,
+                col_num,
+                cell_value,
+                cell_format
+            )
+
+        row_num += 1
+
+    workbook.close()
+
+    output.seek(0)
+
+    response = HttpResponse(
+        output.read(),
+        content_type=(
+            'application/vnd.openxmlformats-officedocument.'
+            'spreadsheetml.sheet'
+        )
+    )
+
+    response['Content-Disposition'] = (
+        f'attachment; '
+        f'filename=Matriz_vales_rosas_{dt.date.today()}.xlsx'
+    )
+
+    response.set_cookie(
+        'descarga_iniciada',
+        'true',
+        max_age=3
+    )
+
+    output.close()
+
+    return response
