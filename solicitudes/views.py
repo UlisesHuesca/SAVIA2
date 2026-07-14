@@ -1782,7 +1782,7 @@ def cancelada_sol(request, pk):
 
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
-def status_sol(request, pk):
+def status_sol_old(request, pk):
     solicitud = Order.objects.get(id = pk)
     product_solicitudes = ArticulosOrdenados.objects.filter(orden=pk)
     #product_surtir = ArticulosparaSurtir.objects.filter(articulos__orden = pk)
@@ -1793,6 +1793,578 @@ def status_sol(request, pk):
     }
 
     return render(request,'solicitud/detalle.html', context)
+
+
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def status_sol(request, pk):
+
+    solicitud = get_object_or_404(
+        Order.objects
+        .select_related(
+            'distrito',
+            'supervisor__staff__staff',
+            'superintendente__staff__staff',
+            'superintendente__tipo',
+        )
+        .prefetch_related(
+            'productos',
+            'requis__productos',
+            'requis__compras__pagos',
+            'requis__compras__vale_entrada',
+            'requis__compras__articulocomprado_set',
+            'vale_salida',
+        ),
+        pk=pk
+    )
+
+    trazabilidad = []
+
+    # =====================================================
+    # FUNCIONES AUXILIARES
+    # =====================================================
+
+    def nombre_perfil(perfil):
+        if not perfil:
+            return 'No asignado'
+
+        try:
+            nombre = perfil.staff.staff.first_name
+            apellido = perfil.staff.staff.last_name
+
+            return f'{nombre} {apellido}'.strip()
+
+        except AttributeError:
+            return str(perfil)
+
+    def agregar_siguiente_etapa(
+        tipo,
+        descripcion,
+        icono,
+        responsable_accion=None,
+        responsable_autorizacion=None,
+        autorizador=None,
+    ):
+        trazabilidad.append({
+            'tipo': tipo,
+            'folio': 'Siguiente etapa',
+            'estado': 'pendiente',
+            'descripcion': descripcion,
+            'fecha': None,
+            'icono': icono,
+            'detalle': None,
+            'objeto': None,
+            'es_siguiente_etapa': True,
+
+            'responsable_accion': responsable_accion,
+
+            'rol_autorizador': responsable_autorizacion,
+            'autorizador': autorizador,
+        })
+
+    # =====================================================
+    # DATOS GENERALES
+    # =====================================================
+
+    es_matriz = (
+        solicitud.distrito.nombre.strip().upper() == 'MATRIZ'
+    )
+
+    nombre_supervisor = nombre_perfil(solicitud.supervisor)
+    nombre_superintendente = nombre_perfil(
+        solicitud.superintendente
+    )
+
+    # -----------------------------------------------------
+    # RUTAS POSIBLES
+    # -----------------------------------------------------
+    requisiciones = list(solicitud.requis.all())
+
+    ruta_almacen = (
+        solicitud.complete is True
+        and solicitud.autorizar is True
+        and not solicitud.requisitar
+        and not solicitud.requisitado
+        and not requisiciones
+    )
+
+    ruta_compra = (
+        solicitud.requisitar is True
+        or solicitud.requisitado is True
+        or bool(requisiciones)
+    )
+
+    if ruta_almacen:
+        ruta_solicitud = 'Surtido directo por almacén'
+
+    elif ruta_compra:
+        ruta_solicitud = 'Requisición y compra'
+
+    else:
+        ruta_solicitud = 'Ruta pendiente de definir'
+
+    # =====================================================
+    # VARIABLES DE CONTROL DEL AVANCE
+    # =====================================================
+
+    hay_requisiciones = False
+    hay_requisicion_autorizada = False
+
+    hay_compras = False
+    hay_compra_autorizada = False
+    hay_compra_con_servicios = False
+
+    hay_pagos = False
+    hay_pago_realizado = False
+
+    hay_entradas = False
+    hay_entrada_completa = False
+
+    hay_salidas = False
+    hay_salida_completa = False
+
+
+
+    # =====================================================
+    # 1. SOLICITUD
+    # =====================================================
+
+    if solicitud.autorizar is True:
+        estado = 'completado'
+        descripcion = 'Solicitud autorizada'
+        fecha = solicitud.approved_at
+
+    elif solicitud.autorizar is False:
+        estado = 'cancelado'
+        descripcion = 'Solicitud cancelada'
+        fecha = None
+
+    else:
+        estado = 'proceso'
+        descripcion = 'Solicitud pendiente de autorización'
+        fecha = None
+
+    trazabilidad.append({
+        'tipo': 'Solicitud',
+        'folio': solicitud.folio,
+        'estado': estado,
+        'descripcion': descripcion,
+        'fecha': fecha,
+        'icono': 'fa-file-circle-check',
+        'detalle': 'solicitud',
+        'objeto': solicitud,
+        'rol_autorizador': 'Supervisor',
+        'autorizador': nombre_supervisor,
+    })
+
+    # =====================================================
+    # RUTA DE REQUISICIÓN Y COMPRA
+    # =====================================================
+
+    if ruta_compra:
+
+        requisiciones = list(solicitud.requis.all())
+        hay_requisiciones = bool(requisiciones)
+
+        # =================================================
+        # 2. REQUISICIONES
+        # =================================================
+
+        for requisicion in requisiciones:
+
+            if requisicion.autorizar is True:
+                estado = 'completado'
+                descripcion = 'Requisición autorizada'
+                fecha = requisicion.approved_at
+                hay_requisicion_autorizada = True
+
+            elif requisicion.autorizar is False:
+                estado = 'cancelado'
+                descripcion = 'Requisición cancelada'
+                fecha = None
+
+            elif requisicion.complete is False:
+                estado = 'proceso'
+                descripcion = 'Requisición en elaboración'
+                fecha = None
+
+            else:
+                estado = 'proceso'
+                descripcion = 'Requisición pendiente de autorización'
+                fecha = None
+
+            if es_matriz:
+                rol_autorizador = 'Supervisor'
+                autorizador = nombre_supervisor
+            else:
+                rol_autorizador = 'Superintendente'
+                autorizador = nombre_superintendente
+
+            trazabilidad.append({
+                'tipo': 'Requisición',
+                'folio': requisicion.folio or 'Sin folio',
+                'estado': estado,
+                'descripcion': descripcion,
+                'fecha': fecha,
+                'icono': 'fa-clipboard-list',
+                'detalle': 'requisicion',
+                'objeto': requisicion,
+                'rol_autorizador': rol_autorizador,
+                'autorizador': autorizador,
+            })
+
+            compras = list(requisicion.compras.all())
+
+            if compras:
+                hay_compras = True
+
+            # =============================================
+            # 3. ÓRDENES DE COMPRA
+            # =============================================
+
+            for compra in compras:
+
+                if es_matriz:
+                    rol_autorizador_compra = 'Subdirector'
+                    autorizador_compra = nombre_superintendente
+                else:
+                    rol_autorizador_compra = 'Gerente del distrito'
+                    autorizador_compra = 'No asignado'
+
+                if compra.solo_servicios:
+                    hay_compra_con_servicios = True
+
+                if compra.autorizado2 is True:
+                    estado = 'completado'
+                    descripcion = 'Orden de compra autorizada'
+                    fecha = compra.autorizado_at_2
+                    hay_compra_autorizada = True
+
+                elif compra.autorizado1 is False:
+                    estado = 'cancelado'
+                    if es_matriz:
+                        descripcion = (
+                            'Orden de compra cancelada por Subdirector'
+                        )
+                    else:
+                        descripcion = (
+                            'Orden de compra cancelada por Superintendente'
+                           
+                        )
+
+                    fecha = compra.autorizado_at_2
+
+
+                elif compra.autorizado2 is False:
+                    estado = 'cancelado'
+                    descripcion = (
+                        'Orden de compra cancelada por Gerencia'
+                    )
+                    fecha = compra.autorizado_at_2
+                
+               
+
+                elif compra.autorizado1 is True:
+                    estado = 'proceso'
+
+                    if es_matriz:
+                        descripcion = (
+                            'Pendiente de autorización del Subdirector'
+                        )
+                    else:
+                        descripcion = (
+                            'Pendiente de autorización del Gerente '
+                            'del distrito'
+                        )
+
+                    fecha = compra.autorizado_at
+
+                elif compra.autorizado1 is False:
+                    estado = 'cancelado'
+                    descripcion = (
+                        'Orden de compra cancelada en la '
+                        'primera autorización'
+                    )
+                    fecha = compra.autorizado_at
+
+                elif compra.complete:
+                    estado = 'proceso'
+                    descripcion = (
+                        'Orden de compra pendiente de autorización'
+                    )
+                    fecha = compra.created_at
+
+                else:
+                    estado = 'proceso'
+                    descripcion = 'Orden de compra en elaboración'
+                    fecha = compra.created_at
+
+                trazabilidad.append({
+                    'tipo': 'Orden de compra',
+                    'folio': compra.folio or 'Sin folio',
+                    'estado': estado,
+                    'descripcion': descripcion,
+                    'fecha': fecha,
+                    'icono': 'fa-cart-shopping',
+                    'detalle': 'compra',
+                    'objeto': compra,
+                    'rol_autorizador': rol_autorizador_compra,
+                    'autorizador': autorizador_compra,
+                    'compra_con_servicios': compra.solo_servicios, 
+                })
+
+                # =========================================
+                # 4. PAGOS
+                # =========================================
+
+                pagos = list(compra.pagos.all())
+
+                if pagos:
+                    hay_pagos = True
+
+                for pago in pagos:
+
+                    if pago.hecho:
+                        estado = 'completado'
+                        descripcion = 'Pago realizado'
+                        fecha = (
+                            pago.pagado_real
+                            or pago.pagado_date
+                        )
+                        hay_pago_realizado = True
+
+                    else:
+                        estado = 'proceso'
+                        descripcion = 'Pago pendiente'
+                        fecha = None
+
+                    trazabilidad.append({
+                        'tipo': 'Pago',
+                        'folio': f'Pago #{pago.id}',
+                        'estado': estado,
+                        'descripcion': descripcion,
+                        'fecha': fecha,
+                        'icono': 'fa-money-check-dollar',
+                        'objeto': pago,
+                    })
+
+                # =========================================
+                # 5. ENTRADAS
+                # =========================================
+
+                entradas = list(compra.vale_entrada.all())
+
+                if entradas:
+                    hay_entradas = True
+
+                for entrada in entradas:
+
+                    if entrada.completo:
+                        estado = 'completado'
+                        descripcion = (
+                            'Material recibido en almacén'
+                        )
+                        fecha = getattr(
+                            entrada,
+                            'entrada_date',
+                            getattr(entrada, 'fecha', None)
+                        )
+                        hay_entrada_completa = True
+
+                    else:
+                        estado = 'proceso'
+                        descripcion = (
+                            'Recepción de material en proceso'
+                        )
+                        fecha = None
+
+                    trazabilidad.append({
+                        'tipo': 'Entrada de almacén',
+                        'folio': entrada.folio or 'Sin folio',
+                        'estado': estado,
+                        'descripcion': descripcion,
+                        'fecha': fecha,
+                        'icono': 'fa-warehouse',
+                        'detalle': 'entrada',
+                        'objeto': entrada,
+                    })
+
+    # =====================================================
+    # 6. SALIDAS
+    # Aplica para las dos rutas
+    # =====================================================
+
+    salidas = list(solicitud.vale_salida.all())
+    hay_salidas = bool(salidas)
+
+    for vale in salidas:
+
+        if vale.complete:
+            estado = 'completado'
+            descripcion = 'Material entregado al solicitante'
+            fecha = vale.created_at
+            hay_salida_completa = True
+
+        else:
+            estado = 'proceso'
+            descripcion = 'Surtido de almacén en proceso'
+            fecha = vale.created_at
+
+        trazabilidad.append({
+            'tipo': 'Salida de almacén',
+            'folio': vale.folio or 'Sin folio',
+            'estado': estado,
+            'descripcion': descripcion,
+            'fecha': fecha,
+            'icono': 'fa-truck-ramp-box',
+            'detalle': 'salida',
+            'objeto': vale,
+        })
+
+    # =====================================================
+    # SIGUIENTE ETAPA
+    # Se agrega después de analizar todo el proceso
+    # =====================================================
+
+    if solicitud.autorizar is True:
+
+        # -------------------------------------------------
+        # RUTA 1: SURTIDO DIRECTO DESDE ALMACÉN
+        # -------------------------------------------------
+
+        if ruta_almacen:
+
+            if not hay_salidas:
+                agregar_siguiente_etapa(
+                    tipo='Surtido de almacén',
+                    descripcion=(
+                        'La solicitud está autorizada y está '
+                        'pendiente de ser surtida por el almacén'
+                    ),
+                    icono='fa-boxes-stacked',
+                    responsable_accion='Almacén',
+                )
+
+            # Si ya existe salida en proceso, su tarjeta
+            # real ya muestra el estado.
+
+        # -------------------------------------------------
+        # RUTA 2: REQUISICIÓN Y COMPRA
+        # -------------------------------------------------
+
+        elif ruta_compra:
+
+            if not hay_requisiciones:
+                agregar_siguiente_etapa(
+                    tipo='Requisición',
+                    descripcion='Pendiente de elaboración de la requisición',
+                    icono='fa-clipboard-list',
+                    responsable_accion='Almacén',
+                    responsable_autorizacion=(
+                        'Supervisor'
+                        if es_matriz
+                        else 'Superintendente'
+                    ),
+                    autorizador=(
+                        nombre_supervisor
+                        if es_matriz
+                        else nombre_superintendente
+                    ),
+                )
+            elif not hay_requisicion_autorizada:
+                # La tarjeta de requisición ya informa
+                # quién debe autorizar.
+                pass
+
+            elif not hay_compras:
+                agregar_siguiente_etapa(
+                    tipo='Orden de compra',
+                    descripcion=(
+                        'Pendiente de elaboración de la '
+                        'Orden de Compra'
+                    ),
+                    icono='fa-cart-shopping',
+                    responsable_accion='Área de Compras',
+             
+                )
+
+            elif not hay_compra_autorizada:
+                # La tarjeta de la OC ya muestra
+                # el autorizador correspondiente.
+                pass
+
+            elif hay_compra_autorizada:
+                if not hay_pagos:
+                    agregar_siguiente_etapa(
+                        tipo='Pago',
+                        descripcion='Pendiente de programación del pago',
+                        icono='fa-money-check-dollar',
+                        responsable_accion='Tesorería',
+                    )
+
+                elif not hay_pago_realizado:
+                    # Ya existe un pago pendiente.
+                    pass
+
+                            
+                # -----------------------------------------
+                # RECEPCIÓN / ENTRADA / SALIDA
+                # -----------------------------------------
+
+                if not hay_entradas:
+                    agregar_siguiente_etapa(
+                        tipo='Entrada de almacén',
+                        descripcion=(
+                            'Pendiente de recepción del material '
+                            'en almacén'
+                        ),
+                        icono='fa-warehouse',
+                        responsable_accion='Almacén',
+                    )
+
+                elif not hay_entrada_completa:
+                    # Ya existe una entrada en proceso.
+                    pass
+
+                elif not hay_compra_con_servicios and not hay_salidas:
+                    agregar_siguiente_etapa(
+                        tipo='Salida de almacén',
+                        descripcion=(
+                            'Pendiente de entrega del material '
+                            'al solicitante'
+                        ),
+                        icono='fa-truck-ramp-box',
+                        responsable_accion='Almacén',
+                    )
+
+        # -------------------------------------------------
+        # RUTA NO DEFINIDA
+        # -------------------------------------------------
+
+        else:
+            agregar_siguiente_etapa(
+                tipo='Definición de surtimiento',
+                descripcion=(
+                    'La solicitud está autorizada, pero todavía '
+                    'no se ha definido si será surtida directamente '
+                    'por almacén o mediante requisición'
+                ),
+                icono='fa-code-branch',
+            )
+
+    context = {
+        'solicitud': solicitud,
+        'productos_solicitados': solicitud.productos.all(),
+        'trazabilidad': trazabilidad,
+        'ruta_solicitud': ruta_solicitud,
+    }
+
+    return render(
+        request,
+        'solicitud/trazabilidad.html',
+        context
+    )
 
 
 # AJAX

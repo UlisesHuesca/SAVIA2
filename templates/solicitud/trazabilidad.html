@@ -1,0 +1,472 @@
+{% extends 'partials/base_w_nav.html' %}
+{% load crispy_forms_tags %}
+{% load static %}
+<html>
+<head>
+{% block title %}Solicitudes{% endblock %}
+</head>
+<body>
+{% block content %}
+<style>
+.timeline {
+    position: relative;
+    padding: 10px 0;
+}
+
+.timeline::before {
+    content: "";
+    position: absolute;
+    top: 25px;
+    bottom: 25px;
+    left: 25px;
+    width: 3px;
+    background-color: #dee2e6;
+}
+
+.timeline-item {
+    position: relative;
+    display: flex;
+    gap: 18px;
+    padding-bottom: 25px;
+}
+
+.timeline-item:last-child {
+    padding-bottom: 0;
+}
+
+.timeline-marker {
+    position: relative;
+    z-index: 2;
+    width: 52px;
+    min-width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    border: 4px solid white;
+    box-shadow: 0 0 0 2px #dee2e6;
+    font-size: 18px;
+}
+
+.timeline-content{
+    flex:1;
+}
+
+.timeline-completado .timeline-marker{
+    background:#198754;
+}
+
+.timeline-proceso .timeline-marker{
+    background:#ffc107;
+    color:#212529;
+}
+
+.timeline-cancelado .timeline-marker{
+    background:#dc3545;
+}
+
+.timeline-pendiente .timeline-marker{
+    background:#6c757d;
+}
+
+.timeline .card{
+    transition:.2s;
+}
+
+.timeline .card:hover{
+    transform:translateY(-2px);
+}
+</style>
+
+<div class="modal-dialog modal-xl" role="document">
+    <div class="modal-content">
+
+        <div class="modal-header">
+            <div>
+                <h5 class="modal-title mb-1">
+                    Trazabilidad de solicitud
+                </h5>
+
+                <h4 class="mb-0">
+                    <span class="badge bg-primary fs-6 px-3 py-2">
+                        Folio {{ solicitud.folio }}
+                    </span>
+                </h4>
+            </div>
+
+            <button
+                class="btn-close"
+                type="button"
+                data-bs-dismiss="modal"
+                aria-label="Cerrar">
+            </button>
+        </div>
+
+        <div class="modal-body">
+
+            <!-- Resumen del proceso -->
+            <div class="alert alert-light border mb-4">
+                <div class="d-flex align-items-center flex-wrap gap-2">
+
+                    <span class="fw-semibold">
+                        Proceso:    <span class="badge rounded-pill bg-primary"> Solicitud </span>
+                    </span>
+
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                    {% if ruta_solicitud == 'Requisición y compra' %}
+
+                    <span class="badge rounded-pill bg-primary">
+                        Requisición
+                    </span>
+
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                    <span class="badge rounded-pill bg-primary">
+                        Compra
+                    </span>
+
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                    <span class="badge rounded-pill bg-primary">
+                        Pago
+                    </span>
+
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                    <span class="badge rounded-pill bg-primary">
+                        Entrada
+                    </span>
+                 
+                    {% if trazabilidad.compra_con_servicios %}
+                    <i class="fa-solid fa-arrow-right text-muted"></i>
+                   
+                    <span class="badge rounded-pill bg-primary">
+                        Salida
+                    </span>
+                    {% endif %}
+
+                    {% elif ruta_solicitud == 'Surtido por almacén' %}
+
+                        <span class="badge rounded-pill bg-primary">
+                            Requisición
+                        </span>
+
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                        <span
+                            class="badge rounded-pill bg-info text-dark"
+                            title="Solicitud autorizada y lista para surtirse">
+                            Almacén
+                        </span>
+
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                        <span class="badge rounded-pill bg-primary">
+                            Salida
+                        </span>
+
+                    {% elif ruta_solicitud == 'Surtido directo por almacén' %}
+
+                        <span
+                            class="badge rounded-pill bg-info text-dark"
+                            title="Solicitud autorizada y lista para surtirse">
+                            Almacén
+                        </span>
+
+                        <i class="fa-solid fa-arrow-right text-muted"></i>
+
+                        <span class="badge rounded-pill bg-primary">
+                            Salida
+                        </span>
+
+                    {% else %}
+
+                    <span class="badge rounded-pill bg-secondary">
+                        Ruta pendiente
+                    </span>
+
+                {% endif %}
+
+            </div>
+        </div>  
+
+            <div class="timeline">
+
+                {% for etapa in trazabilidad %}
+
+                    <div class="timeline-item timeline-{{ etapa.estado }}">
+
+                        <!-- Círculo de la etapa -->
+                        <div class="timeline-marker">
+                            <i class="fa-solid {{ etapa.icono }}"></i>
+                        </div>
+
+                        <!-- Contenido -->
+                        <div class="timeline-content">
+
+                            <div class="card shadow-sm border-0">
+                                <div class="card-body">
+
+                                    <div class="d-flex justify-content-between align-items-start gap-3">
+
+                                        <div>
+                                            <div class="d-flex align-items-center flex-wrap gap-2 mb-1">
+
+                                                <h6 class="mb-0 text-dark">
+                                                    {{ etapa.tipo }}
+                                                </h6>
+
+                                                {% if etapa.estado == 'completado' %}
+                                                    <span class="badge bg-success">
+                                                        Completado
+                                                    </span>
+
+                                                {% elif etapa.estado == 'proceso' %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        En proceso
+                                                    </span>
+
+                                                {% elif etapa.estado == 'cancelado' %}
+                                                    <span class="badge bg-danger">
+                                                        Cancelado
+                                                    </span>
+
+                                                {% else %}
+                                                    <span class="badge bg-secondary">
+                                                        Pendiente
+                                                    </span>
+                                                {% endif %}
+
+                                            </div>
+
+                                            <div class="fw-semibold text-dark">
+                                                {{ etapa.folio }}
+                                            </div>
+
+                                            <div class="text-muted">
+                                                {{ etapa.descripcion }}
+                                            </div>
+                                        </div>
+                                        {% if etapa.responsable_accion %}
+                                            <div class="mt-2">
+                                                <small class="text-muted d-block">
+                                                    Responsable de elaboración
+                                                </small>
+
+                                                <span class="fw-semibold text-dark">
+                                                    {{ etapa.responsable_accion }}
+                                                </span>
+                                            </div>
+                                        {% endif %}
+
+                                        {% if etapa.rol_autorizador %}
+                                            <div class="mt-2">
+                                                <small class="text-muted d-block">
+                                                    Responsable de autorización
+                                                </small>
+
+                                                <span class="fw-semibold text-dark">
+                                                    {{ etapa.rol_autorizador }}
+                                                </span>
+
+                                                {% if etapa.autorizador %}
+                                                    <span class="text-muted">
+                                                        — {{ etapa.autorizador }}
+                                                    </span>
+                                                {% endif %}
+                                            </div>
+                                        {% endif %}
+
+                                        {% if etapa.fecha %}
+                                            <div class="text-end text-nowrap">
+                                               <small class="text-muted d-block">
+                                                    Fecha
+                                                </small>
+
+                                                <span style="color:#212529;font-weight:bold;">
+                                                    {{ etapa.fecha|date:"d/m/Y" }}
+                                                </span>
+                                            </div>
+                                        {% endif %}
+
+                                    </div>
+
+                                    {% if etapa.detalle %}
+                                        <div class="mt-3">
+
+                                            <button
+                                                class="btn btn-sm btn-outline-primary"
+                                                type="button"
+                                                data-bs-toggle="collapse"
+                                                data-bs-target="#detalleEtapa{{ forloop.counter }}"
+                                                aria-expanded="false"
+                                                aria-controls="detalleEtapa{{ forloop.counter }}">
+
+                                                <i class="fa-solid fa-circle-info me-1"></i>
+                                                Ver detalle
+                                            </button>
+
+                                            <div
+                                                class="collapse mt-3"
+                                                id="detalleEtapa{{ forloop.counter }}">
+
+                                                <div class="border rounded p-3 bg-light text-dark">
+
+                                                    {% if etapa.detalle == 'solicitud' %}
+
+                                                        <p class="mb-2">
+                                                            <strong>Productos solicitados</strong>
+                                                        </p>
+
+                                                        <ul class="mb-3">
+                                                            {% for producto in productos_solicitados %}
+                                                                <li>
+                                                                    {{ producto.producto }}
+                                                                    —
+                                                                    Cantidad: {{ producto.cantidad }}
+                                                                </li>
+                                                            {% empty %}
+                                                                <li>No hay productos registrados.</li>
+                                                            {% endfor %}
+                                                        </ul>
+
+                                                        <p class="mb-1">
+                                                            <strong>Supervisor:</strong>
+                                                            {{ solicitud.supervisor.staff.staff.first_name }}
+                                                            {{ solicitud.supervisor.staff.staff.last_name }}
+                                                        </p>
+
+                                                        <p class="mb-0">
+                                                            <strong>
+                                                                {% if solicitud.superintendente.tipo.nombre == "Subdirector" %}
+                                                                    Subdirector:
+                                                                {% else %}
+                                                                    Superintendente:
+                                                                {% endif %}
+                                                            </strong>
+
+                                                            {{ solicitud.superintendente.staff.staff.first_name }}
+                                                            {{ solicitud.superintendente.staff.staff.last_name }}
+                                                        </p>
+
+                                                    {% elif etapa.detalle == 'requisicion' %}
+
+                                                        <p class="mb-2">
+                                                            <strong>Productos requisitados</strong>
+                                                        </p>
+
+                                                        <ul class="mb-0">
+                                                            {% for producto in etapa.objeto.productos.all %}
+                                                                <li>
+                                                                    {{ producto.producto.articulos.producto.producto.nombre }}
+                                                                    —
+                                                                    Cantidad: {{ producto.cantidad }}
+                                                                </li>
+                                                            {% empty %}
+                                                                <li>No hay productos registrados.</li>
+                                                            {% endfor %}
+                                                        </ul>
+
+                                                    {% elif etapa.detalle == 'compra' %}
+
+                                                        <p class="mb-2">
+                                                            <strong>Creada:</strong>
+                                                            {{ etapa.objeto.created_at|date:"d/m/Y" }}
+                                                        </p>
+
+                                                        {% if etapa.objeto.creada_por %}
+                                                            <p class="mb-2">
+                                                                <strong>Creada por:</strong>
+                                                                {{ etapa.objeto.creada_por.staff.staff.first_name }}
+                                                                {{ etapa.objeto.creada_por.staff.staff.last_name }}
+                                                            </p>
+                                                        {% endif %}
+
+                                                        <p class="mb-2">
+                                                            <strong>Productos comprados</strong>
+                                                        </p>
+
+                                                        <ul class="mb-0">
+                                                            {% for producto in etapa.objeto.articulocomprado_set.all %}
+                                                                <li>
+                                                                    {{ producto.producto.producto.articulos.producto.producto.nombre }}
+                                                                    —
+                                                                    Cantidad: {{ producto.cantidad }}
+                                                                </li>
+                                                            {% empty %}
+                                                                <li>No hay productos registrados.</li>
+                                                            {% endfor %}
+                                                        </ul>
+
+                                                    {% elif etapa.detalle == 'pago' %}
+
+                                                    <p>
+                                                        
+                                                    </p> 
+
+                                                    {% elif etapa.detalle == 'entrada' %}
+
+                                                        <p class="mb-1">
+                                                            <strong>Folio:</strong>
+                                                            {{ etapa.objeto.folio|default:"Sin folio" }}
+                                                        </p>
+
+                                                        {% if etapa.objeto.almacenista %}
+                                                            <p class="mb-0">
+                                                                <strong>Almacenista:</strong>
+                                                                {{ etapa.objeto.almacenista.staff.staff.first_name }}
+                                                                {{ etapa.objeto.almacenista.staff.staff.last_name }}
+                                                            </p>
+                                                        {% endif %}
+
+                                                    {% elif etapa.detalle == 'salida' %}
+
+                                                        <p class="mb-0">
+                                                            El material fue procesado mediante el vale de salida
+                                                            <strong>
+                                                                {{ etapa.objeto.folio|default:"Sin folio" }}
+                                                            </strong>.
+                                                        </p>
+
+                                                    {% endif %}
+
+                                                </div>
+                                            </div>
+
+                                        </div>
+                                    {% endif %}
+
+                                </div>
+                            </div>
+
+                        </div>
+                    </div>
+
+                {% empty %}
+
+                    <div class="alert alert-warning">
+                        No se encontró información de trazabilidad.
+                    </div>
+
+                {% endfor %}
+
+            </div>
+        </div>
+
+        <div class="modal-footer">
+            <button
+                type="button"
+                class="btn btn-secondary"
+                data-bs-dismiss="modal">
+                Cerrar
+            </button>
+        </div>
+
+    </div>
+</div>
+{% endblock %}
+</body>
+</html>
