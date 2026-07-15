@@ -1496,7 +1496,7 @@ def reporte_solicitudes_api(request):
             'ALTAMIRA ALTERNATIVO',
             'VH SECTOR 6',
         ])
-        .exclude(vale_salida__solicitud__folio__isnull=True)
+        .exclude(vale_salida__folio__isnull=True)
 
     )
     #print(salidas_qs)
