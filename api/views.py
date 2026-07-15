@@ -1585,7 +1585,7 @@ def reporte_solicitudes_api(request):
             "status_de_autorizacion": "Autorizada" if req and req.autorizar else "Pendiente",
 
             "fecha_llegada_almacen": entrada.entrada_date.strftime("%d/%m/%Y") if entrada and entrada.entrada_date else "",
-            "fecha_entrega_de_almacen": salida.vale_salida.created_at.strftime("%d/%m/%Y") if salida.vale_salida and salida.vale_salida.created_at else "",
+            "fecha_entrega_de_almacen": salida.created_at.strftime("%d/%m/%Y") if salida.vale_salida and salida.created_at else "",
 
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
