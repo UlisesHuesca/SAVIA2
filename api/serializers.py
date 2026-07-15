@@ -408,8 +408,10 @@ class ReporteSolicitudesSerializer(serializers.Serializer):
     distrito = serializers.CharField(allow_blank=True, required=False)
     quien_solicita = serializers.CharField(allow_blank=True, required=False)
     economico = serializers.CharField(allow_blank=True,allow_null=True,required=False)
-    folio = serializers.CharField(allow_blank=True, required=False)
+    folio_solicitud = serializers.CharField(allow_blank=True, required=False)
     fecha_solicitud = serializers.CharField(allow_blank=True, required=False)
+    material_recibido_por = serializers.CharField(allow_blank=True)
+
 
     numero_requisicion = serializers.CharField(allow_blank=True, required=False)
     fecha_requisicion = serializers.CharField(allow_blank=True, required=False)
@@ -421,4 +423,4 @@ class ReporteSolicitudesSerializer(serializers.Serializer):
 
     material_o_servicio_solicitado = serializers.CharField(allow_blank=True, required=False)
     cantidad_de_material = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
-    costo = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
+    precio_unitario = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)

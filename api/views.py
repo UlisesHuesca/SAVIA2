@@ -1496,6 +1496,7 @@ def reporte_solicitudes_api(request):
             'ALTAMIRA ALTERNATIVO',
             'VH SECTOR 6',
         ])
+        .exclude(vale_salida__solicitud__folio__isnull=True)
 
     )
     #print(salidas_qs)
@@ -1521,7 +1522,20 @@ def reporte_solicitudes_api(request):
     for salida in salidas:
         vale = salida.vale_salida
         order = vale.solicitud if vale else None
-        #print(order)
+        material_recibido_por = ""
+
+        if vale and vale.material_recibido_por:
+            perfil_recibe = vale.material_recibido_por
+
+        try:
+            usuario_recibe = perfil_recibe.staff.staff
+            material_recibido_por = (
+                f"{usuario_recibe.first_name} "
+                f"{usuario_recibe.last_name}"
+            ).strip()
+        except AttributeError:
+            material_recibido_por = str(perfil_recibe)
+
 
         articulo_para_surtir = salida.producto
         articulo_ordenado = articulo_para_surtir.articulos if articulo_para_surtir else None
@@ -1558,9 +1572,11 @@ def reporte_solicitudes_api(request):
         item = {
             "salida_id": salida.id,
             "distrito": order.distrito.nombre if order and order.distrito else "",
+            "material_recibido_por": material_recibido_por,
+
             "quien_solicita": solicitante,
             "economico": order.activo.eco_unidad if order and order.activo and order.activo.eco_unidad else "NA",
-            "folio": str(order.folio) if order and order.folio else "",
+            "folio_solicitud": str(order.folio) if order and order.folio else "",
             "fecha_solicitud": order.created_at.strftime("%d/%m/%Y") if order and order.created_at else "",
 
             "numero_requisicion": str(req.folio) if req and req.folio else "",
@@ -1569,11 +1585,11 @@ def reporte_solicitudes_api(request):
             "status_de_autorizacion": "Autorizada" if req and req.autorizar else "Pendiente",
 
             "fecha_llegada_almacen": entrada.entrada_date.strftime("%d/%m/%Y") if entrada and entrada.entrada_date else "",
-            "fecha_entrega_de_almacen": salida.created_at.strftime("%d/%m/%Y") if salida.created_at else "",
+            "fecha_entrega_de_almacen": salida.vale_salida.created_at.strftime("%d/%m/%Y") if salida.vale_salida and salida.vale_salida.created_at else "",
 
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
-            "costo": salida.precio or 0,
+            "precio_unitario": salida.precio or 0,
         }
 
         serializer = ReporteSolicitudesSerializer(data=item)
