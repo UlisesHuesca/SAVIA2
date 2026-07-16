@@ -1543,19 +1543,10 @@ def reporte_solicitudes_api(request):
         if salida.precio is not None and salida.precio > 0:
             precio_original = salida.precio
 
-        elif (
-            salida.producto
-            and salida.producto.precio is not None
-            and salida.producto.precio > 0
-        ):
+        elif (salida.producto and salida.producto.precio is not None and salida.producto.precio > 0):
             precio_original = salida.producto.precio
 
-        elif (
-            salida.producto
-            and salida.producto.articulos
-            and salida.producto.articulos.producto
-            and salida.producto.articulos.producto.price
-        ):
+        elif (salida.producto and salida.producto.articulos and salida.producto.articulos.producto and salida.producto.articulos.producto.price):
             precio_original = salida.producto.articulos.producto.price
 
         else:
@@ -1565,18 +1556,19 @@ def reporte_solicitudes_api(request):
         tipo_cambio = Decimal("1")
 
         if salida.entrada and salida.entrada.oc:
-            moneda = (
-                salida.entrada.oc.moneda.nombre
-                if salida.entrada.oc.moneda
-                else "PESOS"
+            if salida.entrada.oc.moneda:
+                moneda = salida.entrada.oc.moneda.nombre
+
+            tipo_cambio = (
+                salida.entrada.oc.tipo_de_cambio
+                or Decimal("1")
             )
 
-            tipo_cambio = salida.entrada.oc.tipo_de_cambio or Decimal("1")
+
+        precio_unitario_pesos = precio_original
 
         if moneda.upper() in ["DOLARES", "DÓLARES", "USD"]:
             precio_unitario_pesos = precio_original * tipo_cambio
-        else:
-            precio_unitario_pesos = precio_original
         
         articulo_para_surtir = salida.producto
         articulo_ordenado = articulo_para_surtir.articulos if articulo_para_surtir else None
@@ -1630,7 +1622,7 @@ def reporte_solicitudes_api(request):
 
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
-            "precio_unitario": precio_original,
+            "precio_unitario": precio_unitario_pesos,
         }
 
         serializer = ReporteSolicitudesSerializer(data=item)
