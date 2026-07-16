@@ -1549,56 +1549,54 @@ def reporte_solicitudes_api(request):
         except AttributeError:
             material_recibido_por = str(perfil_recibe)
 
-        precio_salida = decimal_seguro(salida.precio)
+        # Precio base
+        if salida.precio is not None and salida.precio > 0:
+            precio_original = salida.precio
 
-        precio_producto = Decimal("0")
-        precio_catalogo = Decimal("0")
+        elif (
+            salida.producto
+            and salida.producto.precio is not None
+            and salida.producto.precio > 0
+        ):
+            precio_original = salida.producto.precio
 
-        if salida.producto:
-            precio_producto = decimal_seguro(salida.producto.precio)
+        elif (
+            salida.producto
+            and salida.producto.articulos
+            and salida.producto.articulos.producto
+            and salida.producto.articulos.producto.price is not None
+            and salida.producto.articulos.producto.price > 0
+        ):
+            precio_original = salida.producto.articulos.producto.price
 
-            try:
-                precio_catalogo = decimal_seguro(
-                    salida.producto.articulos.producto.price
-                )
-            except AttributeError:
-                precio_catalogo = Decimal("0")
-
-
-        if precio_salida > 0:
-            precio_original = precio_salida
-        elif precio_producto > 0:
-            precio_original = precio_producto
-        elif precio_catalogo > 0:
-            precio_original = precio_catalogo
         else:
             precio_original = Decimal("0")
 
 
+        # Valores predeterminados para salidas sin entrada
         moneda = "PESOS"
         tipo_cambio = Decimal("1")
 
+
+        # Solo consultar entrada y OC cuando existan
         if salida.entrada_id:
-            try:
-                entrada_salida = salida.entrada
-                oc = entrada_salida.oc
+            entrada = salida.entrada
 
-                if oc:
-                    if oc.moneda and oc.moneda.nombre:
-                        moneda = str(oc.moneda.nombre).strip().upper()
+            if entrada.oc_id:
+                oc = entrada.oc
 
-                    tipo_cambio = decimal_seguro(
-                        oc.tipo_de_cambio,
-                        default="1"
-                    )
+                if oc.moneda_id and oc.moneda.nombre:
+                    moneda = oc.moneda.nombre.strip().upper()
 
-                    if tipo_cambio <= 0:
-                        tipo_cambio = Decimal("1")
+                tipo_cambio = oc.tipo_de_cambio or Decimal("1")
 
-            except AttributeError:
-                moneda = "PESOS"
-                tipo_cambio = Decimal("1")
 
+        # Evitar tipos de cambio nulos o iguales a cero
+        if tipo_cambio <= 0:
+            tipo_cambio = Decimal("1")
+
+
+        # Convertir a pesos
         if moneda in ("DOLARES", "DÓLARES", "USD"):
             precio_unitario = precio_original * tipo_cambio
         else:
