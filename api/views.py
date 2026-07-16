@@ -1549,8 +1549,6 @@ def reporte_solicitudes_api(request):
         elif (salida.producto and salida.producto.articulos and salida.producto.articulos.producto and salida.producto.articulos.producto.price):
             precio_original = salida.producto.articulos.producto.price
 
-        else:
-            precio_original = Decimal("0")
 
         moneda = "PESOS"
         tipo_cambio = Decimal("1")
