@@ -22,6 +22,7 @@ from solicitudes.models import Proyecto, Subproyecto
 from requisiciones.models import Requis, ArticulosRequisitados, Salidas
 from tesoreria.models import Saldo_Cuenta, Pago, Cuenta
 from tesoreria.filters import Matriz_Pago_Filter
+from entradas.models import Entrada, EntradaArticulo
 
 from user.models import Profile, Distrito
 from .serializers import  CompraTablaLiteSerializer, ProveedorDireccionesSerializer, ProyectoSerializer, SubProyectoSerializer, MonedaSerializer
@@ -43,7 +44,7 @@ from rest_framework import status
 from user.decorators import perfil_seleccionado_required
 from api.models import TablaFestivos
 from datetime import datetime, date
-from decimal import Decimal
+from decimal import Decimal, InvalidOperation
 import logging
 
 logger = logging.getLogger("user.middleware")
@@ -1527,14 +1528,28 @@ def reporte_solicitudes_api(request):
         if vale and vale.material_recibido_por:
             perfil_recibe = vale.material_recibido_por
 
-        try:
-            usuario_recibe = perfil_recibe.staff.staff
-            material_recibido_por = (
-                f"{usuario_recibe.first_name} "
-                f"{usuario_recibe.last_name}"
-            ).strip()
-        except AttributeError:
-            material_recibido_por = str(perfil_recibe)
+            try:
+                usuario_recibe = perfil_recibe.staff.staff
+                material_recibido_por = (
+                    f"{usuario_recibe.first_name} "
+                    f"{usuario_recibe.last_name}"
+                ).strip()
+            except AttributeError:
+                material_recibido_por = str(perfil_recibe)
+
+        ###############################################################################################
+        # Funcion auxiliar para convertir valores a Decimal, manejando errores y valores predeterminados
+        ###############################################################################################
+
+        def convertir_decimal(valor, default="0"):
+            try:
+                if valor in (None, ""):
+                    return Decimal(default)
+
+                return Decimal(str(valor))
+
+            except (InvalidOperation, TypeError, ValueError):
+                return Decimal(default)
 
         precio_condicional = (
             salida.precio
@@ -1542,6 +1557,50 @@ def reporte_solicitudes_api(request):
             or salida.producto.articulos.producto.price
             or 0
         )
+
+        precio_condicional = convertir_decimal(precio_condicional)
+
+        moneda = "PESOS"
+        tipo_cambio = Decimal("0")
+
+        if salida.entrada:
+            entrada_articulo_id = salida.entrada
+
+            try:
+                entrada_articulo = (
+                    EntradaArticulo.objects
+                    .select_related(
+                        "entrada",
+                        "entrada__oc",
+                        "entrada__oc__moneda",
+                    )
+                    .get(pk=entrada_articulo_id)
+                )
+
+                oc = entrada_articulo.entrada.oc
+
+                if oc.moneda and oc.moneda.nombre:
+                    moneda = str(
+                        oc.moneda.nombre
+                    ).strip().upper()
+
+                tipo_cambio = convertir_decimal(
+                    oc.tipo_de_cambio
+                )
+
+            except (
+                EntradaArticulo.DoesNotExist,
+                AttributeError,
+            ):
+                moneda = "PESOS"
+                tipo_cambio = Decimal("0")
+
+
+        if tipo_cambio > Decimal("0"):
+            precio_unitario = precio_condicional * tipo_cambio
+        else:
+            precio_unitario = precio_condicional
+
         articulo_para_surtir = salida.producto
         articulo_ordenado = articulo_para_surtir.articulos if articulo_para_surtir else None
 
@@ -1594,7 +1653,7 @@ def reporte_solicitudes_api(request):
 
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
-            "precio_unitario": precio_condicional or 0,
+            "precio_unitario": precio_unitario,
         }
 
         serializer = ReporteSolicitudesSerializer(data=item)
