@@ -43,7 +43,7 @@ from rest_framework import status
 from user.decorators import perfil_seleccionado_required
 from api.models import TablaFestivos
 from datetime import datetime, date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal
 import logging
 
 logger = logging.getLogger("user.middleware")
@@ -1484,10 +1484,6 @@ def reporte_solicitudes_api(request):
             "vale_salida__solicitud__staff__staff__staff",
             "vale_salida__solicitud__activo",
             "producto__articulos__producto",
-               # Relaciones de la entrada y la OC
-            "entrada",
-            "entrada__oc",
-            "entrada__oc__moneda",
             
         )
         .prefetch_related(
@@ -1523,15 +1519,6 @@ def reporte_solicitudes_api(request):
     #print(salidas)
     data = []
 
-    def decimal_seguro(valor, default="0"):
-        try:
-            if valor in (None, ""):
-                return Decimal(default)
-
-            return Decimal(str(valor))
-        except (InvalidOperation, TypeError, ValueError):
-            return Decimal(default)
-
     for salida in salidas:
         vale = salida.vale_salida
         order = vale.solicitud if vale else None
@@ -1549,70 +1536,17 @@ def reporte_solicitudes_api(request):
         except AttributeError:
             material_recibido_por = str(perfil_recibe)
 
-        precio_salida = decimal_seguro(salida.precio)
-
-        precio_producto = Decimal("0")
-        precio_catalogo = Decimal("0")
-
-        if salida.producto:
-            precio_producto = decimal_seguro(
-                salida.producto.precio
-            )
-
-            try:
-                precio_catalogo = decimal_seguro(
-                    salida.producto.articulos.producto.price
-                )
-            except AttributeError:
-                precio_catalogo = Decimal("0")
-
-
-        if precio_salida > Decimal("0"):
-            precio_original = precio_salida
-        elif precio_producto > Decimal("0"):
-            precio_original = precio_producto
-        elif precio_catalogo > Decimal("0"):
-            precio_original = precio_catalogo
-        else:
-            precio_original = Decimal("0")
-
-
-        moneda = "PESOS"
-        tipo_cambio = Decimal("1")
-
-        if salida.entrada_id:
-            entrada_salida = salida.entrada
-
-            if entrada_salida and entrada_salida.oc_id:
-                oc = entrada_salida.oc
-
-                if oc.moneda_id and oc.moneda:
-                    moneda = str(
-                        oc.moneda.nombre or "PESOS"
-                    ).strip().upper()
-
-                tipo_cambio = decimal_seguro(
-                    oc.tipo_de_cambio,
-                    default="1"
-                )
-
-
-        if tipo_cambio <= Decimal("0"):
-            tipo_cambio = Decimal("1")
-
-
-        if moneda in ("DOLARES", "DÓLARES", "USD"):
-            precio_unitario = precio_original * tipo_cambio
-        else:
-            precio_unitario = precio_original
+        precio_condicional = (
+            salida.precio
+            or salida.producto.precio
+            or salida.producto.articulos.producto.price
+            or 0
+        )
         articulo_para_surtir = salida.producto
         articulo_ordenado = articulo_para_surtir.articulos if articulo_para_surtir else None
 
-
-
         req = None
         entrada = None
-
 
         if articulo_para_surtir:
             for art_req in articulo_para_surtir.articulosrequisitados_set.all():
@@ -1660,7 +1594,7 @@ def reporte_solicitudes_api(request):
 
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
-            "precio_unitario": precio_unitario,
+            "precio_unitario": precio_condicional or 0,
         }
 
         serializer = ReporteSolicitudesSerializer(data=item)
