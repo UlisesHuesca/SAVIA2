@@ -2921,7 +2921,7 @@ def generate_excel_report2(salidas):
         rows = [
             salida.vale_salida.folio,
             salida.vale_salida.solicitud.folio,
-            salida.created_at.date(),#.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
+            salida.vale_salida.created_at.date(),#.strftime('%Y-%m-%d'),  # Formatea la fecha para la celda
             solicitante,
             salida.vale_salida.solicitud.proyecto.nombre if salida.vale_salida.solicitud.proyecto else " ",
             salida.vale_salida.solicitud.subproyecto.nombre if salida.vale_salida.solicitud.subproyecto else " ",
