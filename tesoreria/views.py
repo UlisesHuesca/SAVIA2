@@ -5356,7 +5356,7 @@ def convert_excel_matriz_pagos(pagos):
                 pago.oc.autorizado_at_2.replace(tzinfo=None)
                 if pago.oc.autorizado_at_2 else ''
             )
-            folio = pago.oc.folio
+            folio = "C" + str(pago.oc.folio)
             productos = set()
             for articulo in articulos_compra:
                 if articulo.producto:
@@ -5379,7 +5379,7 @@ def convert_excel_matriz_pagos(pagos):
             distrito = pago.gasto.distrito.nombre
             solicitado = pago.gasto.staff.staff.staff.first_name + ' ' + pago.gasto.staff.staff.staff.last_name
             fecha_creacion = pago.gasto.created_at.replace(tzinfo=None)
-            folio = pago.gasto.folio
+            folio = "G" + str(pago.gasto.folio)
             fecha_autorizacion = (
                 pago.gasto.approbado_fecha2.replace(tzinfo=None)
                 if pago.gasto.approbado_fecha2 else ''
@@ -5419,7 +5419,7 @@ def convert_excel_matriz_pagos(pagos):
            
             
         elif pago.viatico:
-            folio = pago.viatico.folio 
+            folio = "V" + str(pago.viatico.folio)
             articulos_viatico = Concepto_Viatico.objects.filter(viatico=pago.viatico)
             proyectos = pago.viatico.proyecto.nombre if pago.viatico else ''
             subproyectos = pago.viatico.subproyecto.nombre if pago.viatico else ''
