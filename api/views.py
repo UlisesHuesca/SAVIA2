@@ -1536,7 +1536,12 @@ def reporte_solicitudes_api(request):
         except AttributeError:
             material_recibido_por = str(perfil_recibe)
 
-
+        precio_condicional = (
+            salida.precio
+            or salida.producto.precio
+            or salida.producto.articulos.producto.price
+            or 0
+        )
         articulo_para_surtir = salida.producto
         articulo_ordenado = articulo_para_surtir.articulos if articulo_para_surtir else None
 
@@ -1589,7 +1594,7 @@ def reporte_solicitudes_api(request):
 
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
-            "precio_unitario": salida.precio or 0,
+            "precio_unitario": precio_condicional or 0,
         }
 
         serializer = ReporteSolicitudesSerializer(data=item)
