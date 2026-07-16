@@ -44,7 +44,7 @@ from rest_framework import status
 from user.decorators import perfil_seleccionado_required
 from api.models import TablaFestivos
 from datetime import datetime, date
-from decimal import Decimal, InvalidOperation
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 import logging
 
 logger = logging.getLogger("user.middleware")
@@ -1567,9 +1567,7 @@ def reporte_solicitudes_api(request):
             entrada_articulo_id = salida.entrada
 
             try:
-                entrada_articulo = (
-                    EntradaArticulo.objects
-                    .select_related(
+                entrada_articulo = (EntradaArticulo.objects.select_related(
                         "entrada",
                         "entrada__oc",
                         "entrada__oc__moneda",
@@ -1579,19 +1577,17 @@ def reporte_solicitudes_api(request):
 
                 oc = entrada_articulo.entrada.oc
 
-                if oc.moneda and oc.moneda.nombre:
-                    moneda = str(
-                        oc.moneda.nombre
-                    ).strip().upper()
+                moneda = (
+                    str(oc.moneda.nombre).strip().upper()
+                    if oc.moneda and oc.moneda.nombre
+                    else "PESOS"
+                )
 
                 tipo_cambio = convertir_decimal(
                     oc.tipo_de_cambio
                 )
 
-            except (
-                EntradaArticulo.DoesNotExist,
-                AttributeError,
-            ):
+            except (EntradaArticulo.DoesNotExist, AttributeError,):
                 moneda = "PESOS"
                 tipo_cambio = Decimal("0")
 
@@ -1600,6 +1596,8 @@ def reporte_solicitudes_api(request):
             precio_unitario = precio_condicional * tipo_cambio
         else:
             precio_unitario = precio_condicional
+
+        precio_unitario = precio_unitario.quantize(Decimal("0.01"),rounding=ROUND_HALF_UP)
 
         articulo_para_surtir = salida.producto
         articulo_ordenado = articulo_para_surtir.articulos if articulo_para_surtir else None
