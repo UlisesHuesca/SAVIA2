@@ -5356,7 +5356,7 @@ def convert_excel_matriz_pagos(pagos):
                 pago.oc.autorizado_at_2.replace(tzinfo=None)
                 if pago.oc.autorizado_at_2 else ''
             )
-            folio = "C" + str(pago.oc.folio)
+            folio = "OC" + str(pago.oc.folio)
             productos = set()
             for articulo in articulos_compra:
                 if articulo.producto:
