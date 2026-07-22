@@ -1,4 +1,6 @@
 from django.db import models
+from django.db.models import Sum
+from decimal import Decimal
 # De django.contrib.auth.models estamos importando el modelo de usuarios de la administration
 from django.contrib.auth.models import User
 
@@ -132,8 +134,40 @@ class Subproyecto(models.Model):
     gastado = models.DecimalField(max_digits=14, decimal_places=2, default=0)
     status = models.ForeignKey(Status_Subproyecto, on_delete = models.CASCADE, null=True)
 
+    def actualizar_presupuesto(self):
+        total = self.periodos.aggregate(total=Sum('monto'))['total'] or Decimal('0.00')
+
+        self.presupuesto = total
+
+        self.save(update_fields=['presupuesto','updated_at',])
+
+        return total
+
     def __str__(self):
         return f'{self.nombre}'
+
+
+class PeriodoSubproyecto(models.Model):
+    subproyecto = models.ForeignKey( Subproyecto, on_delete=models.CASCADE, related_name='periodos')
+    periodo = models.DateField(help_text='Guardar el primer día del mes, por ejemplo: 2026-07-01')
+    monto = models.DecimalField(max_digits=14,decimal_places=2,default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['periodo']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['subproyecto', 'periodo'],
+                name='periodo_unico_por_subproyecto'
+            )
+        ]
+
+    def __str__(self):
+        return (
+            f'{self.subproyecto.nombre} - '
+            f'{self.periodo:%m/%Y} - ${self.monto}'
+        )
 
 class Sector(models.Model):
     nombre = models.CharField(max_length=100, null=True, unique=True)

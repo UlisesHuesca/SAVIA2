@@ -153,7 +153,7 @@
                             <th scope="col">{{item.comentario}}</th>
                             <th scope="col">
                             <td>
-                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.vale_devolucion.id}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
+                                <button type="button" class="btn btn-danger" onclick="deleteRow(this)" id="delete" value="Delete" id_salida ="{{item.vale_devolucion.id|unlocalize}}" cantidad="{{item.cantidad}}" producto="{{item.producto}}" producto_id="{{item.producto.id|unlocalize}}" action="remove">
                                     <i class="fa-solid fa-trash-can"></i>
                                 </button>
                             </td>

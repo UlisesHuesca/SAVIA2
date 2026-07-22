@@ -2,7 +2,8 @@ from django import forms
 from .models import Product, Subfamilia, Products_Batch, Inventario_Batch, Requerimiento_Calidad, Producto_Calidad, PriceRefChange
 from compras.models import Proveedor_Batch, Proveedor, Proveedor_direcciones, Proveedor_Direcciones_Batch, DocumentosProveedor
 from user.models import Distrito
-from solicitudes.models import Proyecto, Subproyecto, Contrato
+from solicitudes.models import Proyecto, Subproyecto, Contrato, PeriodoSubproyecto
+from django.forms import inlineformset_factory
 from user.models import Profile
 
 
@@ -173,7 +174,7 @@ class Proyectos_Add_Form(forms.ModelForm):
 class Subproyectos_Add_Form(forms.ModelForm):
     class Meta:
         model = Subproyecto
-        fields = ['nombre','descripcion','presupuesto','status']
+        fields = ['nombre','descripcion','status']
 
 class Add_Product_CriticoForm(forms.Form):
     product = forms.ModelChoiceField(
@@ -184,6 +185,45 @@ class Add_Product_CriticoForm(forms.Form):
 
     class Meta:
         fields = ['product']
+
+class PeriodoSubproyectoForm(forms.ModelForm):
+    periodo = forms.DateField(
+        input_formats=['%Y-%m'],
+        widget=forms.DateInput(
+            format='%Y-%m',
+            attrs={
+                'type': 'month',
+                'class': 'form-control',
+            }
+        )
+    )
+
+    class Meta:
+        model = PeriodoSubproyecto
+        fields = [
+            'periodo',
+            'monto',
+        ]
+        widgets = {
+            'monto': forms.NumberInput(
+                attrs={
+                    'class': 'form-control',
+                    'step': '0.01',
+                    'min': '0',
+                }
+            ),
+        }
+
+
+PeriodoSubproyectoFormSet = inlineformset_factory(
+    Subproyecto,
+    PeriodoSubproyecto,
+    form=PeriodoSubproyectoForm,
+    extra=1,
+    can_delete=False,
+    min_num=1,
+    validate_min=True,
+)
 
 
 class Comentario_Proveedor_Doc_Form(forms.ModelForm):

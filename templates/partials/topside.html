@@ -58,9 +58,14 @@
             backdrop-filter: blur(30px);">
                 <div class="card-header text-center">
                     <strong>
+                        {% if usuario.distritos.nombre == "NEGRO" %}
+                         <img class="rounded-circle" src="{% static 'images/SAVIA_Negro_verde.jpg' %}" id="logo" alt="SAVIA" style="width: 220px; height: 220px;">
+                        <h1 style="color: #337931">SAVIA 2.0</h1>
+                         {% else %}
                         <img class="rounded-circle" src="{% static 'images/SAVIA_Logo.jpg' %}" id="logo" alt="SAVIA" style="width: 220px; height: 220px;">
-                        <!--<img class="rounded-circle" src="{% static 'images/SAVIA_navideño.jpg' %}" id="logo" alt="SAVIA" style="width: 220px; height: 220px;">-->
                         <h1 style="color: #122D45">SAVIA 2.0</h1>
+                        {% endif %}
+                        
                         {% if usuario.tipo.proveedor_externo %}
                             {% if prealta %}<h4>Portal de Proveedor de Grupo Vordcab | PREALTA</h4>
                             {% else %}<h4>Portal de Proveedor de Grupo Vordcab</h4>
@@ -350,7 +355,11 @@
                                         <div class="card my-card shadow text-center p-3">
                                             <h4>Vales por Autorizar </h4>
                                             {% if conteo_vales == 0 %}
-                                            <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                {% if usuario.distritos.nombre == "NEGRO" %}
+                                                <h3><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </h3>
+                                                {% else %}
+                                                <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                {% endif %}
                                             {% else %}
                                                 <h3><span class="badge bg-danger">({{conteo_vales}})</span></h3>
                                             {% endif %}
@@ -362,7 +371,12 @@
                                             <div class="card my-card shadow text-center p-3">
                                                 <h4>Requis por Autorizar </h4>
                                                 {% if conteo_requis_pendientes == 0 %}
-                                                    <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                      {% if usuario.distritos.nombre == "NEGRO" %}
+                                                        <h3><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </h3>
+                                                        {% else %}
+                                                        <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                        {% endif %}
+                                                 
                                                 {% else %}
                                                     <h3><span class="badge bg-danger">({{conteo_requis_pendientes}})</span></h3>
                                                 {% endif %}
@@ -374,7 +388,11 @@
                                         <div class="card my-card shadow text-center p-3">
                                             <h4>Solicitudes por Autorizar </h4>
                                             {% if conteo_solicitudes == 0 %}
-                                                <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                {% if usuario.distritos.nombre == "NEGRO" %}
+                                                        <h3><span class="badge bg-secondary"><i class="fa-solid fa-mug-hot"></i></span> </h3>
+                                                        {% else %}
+                                                        <h3><span class="badge bg-primary"><i class="fa-solid fa-mug-hot"></i></span></h3>
+                                                {% endif %}
                                             {% else %}
                                                 <h3><span class="badge bg-danger">({{conteo_solicitudes}})</span></h3>
                                             {% endif %}

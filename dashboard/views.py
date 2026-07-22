@@ -11,7 +11,7 @@ from django.urls import reverse
 from django.conf import settings
 from django.forms import inlineformset_factory
 from django.utils.http import urlencode
-from django.db import IntegrityError
+from django.db import transaction
 #from dateutil.relativedelta import relativedelta
 from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
@@ -21,6 +21,7 @@ from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
 from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form, Comentario_Rechazo_Form
+from .forms import PeriodoSubproyectoFormSet
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from user.filters import ProfileFilter
@@ -525,22 +526,33 @@ def proyectos_add(request):
 @perfil_seleccionado_required
 def subproyectos_add(request, pk):
     proyecto = Proyecto.objects.get(id=pk)
-    form = Subproyectos_Add_Form()
+
+    # Instancia todavía no guardada
+    subproyecto = Subproyecto(proyecto = proyecto)
+
+
+    form = Subproyectos_Add_Form(request.POST or None, instance=subproyecto)
+
+    periodos_formset = PeriodoSubproyectoFormSet( request.POST or None, instance=subproyecto, prefix='periodos')
 
     if request.method =='POST':
-        form = Subproyectos_Add_Form(request.POST)
-        if form.is_valid():
-            subproyecto = form.save(commit=False)
-            subproyecto.proyecto = proyecto
-            subproyecto.save()
-            messages.success(request,'Has agregado correctamente el subproyecto')
+        if form.is_valid() and periodos_formset.is_valid():
+            with transaction.atomic():
+                subproyecto = form.save(commit=False)
+                subproyecto.proyecto = proyecto
+                subproyecto.save()
+                periodos_formset.instance = subproyecto
+                periodos_formset.save()
+                # Presupuesto = suma de los periodos
+                subproyecto.actualizar_presupuesto()
+            messages.success(request,'Has agregado correctamente el subproyecto y sus períodos')
             return redirect('subproyectos', pk=proyecto.id)
-    else:
-        form = Subproyectos_Add_Form()
+    
 
     context = {
         'form': form,
         'proyecto':proyecto,
+        'periodos_formset': periodos_formset,
         }
 
     return render(request,'dashboard/subproyectos_add.html',context)
@@ -550,21 +562,45 @@ def subproyectos_add(request, pk):
 def subproyectos_edit(request, pk):
     subproyecto = Subproyecto.objects.get(id=pk)
     proyecto = Proyecto.objects.get(id=subproyecto.proyecto.id)
-    form = Subproyectos_Add_Form(instance=subproyecto)
+    form = Subproyectos_Add_Form(
+        request.POST or None,
+        instance=subproyecto
+    )
 
-    if request.method =='POST':
-        form = Subproyectos_Add_Form(request.POST, instance=subproyecto)
-        if form.is_valid():
-            form.save()
-            messages.success(request,'Has editado correctamente el subproyecto')
-            return redirect('subproyectos', pk=subproyecto.proyecto.id)
-    else:
-        form = Subproyectos_Add_Form(instance=subproyecto)
+    periodos_formset = PeriodoSubproyectoFormSet(
+        request.POST or None,
+        instance=subproyecto,
+        prefix='periodos'
+    )
+
+    if request.method == 'POST':
+        if form.is_valid() and periodos_formset.is_valid():
+            with transaction.atomic():
+                subproyecto = form.save()
+
+                periodos_formset.instance = subproyecto
+                periodos_formset.save()
+
+                # Recalcular el presupuesto con los nuevos montos
+                subproyecto.actualizar_presupuesto()
+
+            messages.success(
+                request,
+                'Has editado correctamente el subproyecto'
+            )
+
+            return redirect(
+                'subproyectos',
+                pk=proyecto.id
+            )
 
     context = {
         'form': form,
-        'proyecto':proyecto,
-        }
+        'periodos_formset': periodos_formset,
+        'proyecto': proyecto,
+        'subproyecto': subproyecto,
+        'es_edicion': True,
+    }
 
     return render(request,'dashboard/subproyectos_add.html',context)
 

@@ -8,12 +8,21 @@
     <!--<script src="https://kit.fontawesome.com/259463dc50.js" crossorigin="anonymous"></script>-->
     <!--<script src="https://kit.fontawesome.com/b6755a6261.js" crossorigin="anonymous"></script>-->
 </head>
-<nav class="navbar fixed-top navbar-dark bg-dark">
+<nav class="navbar fixed-top navbar-dark 
+    {% if usuario.distritos.nombre != 'NEGRO' %}
+        bg-dark
+    {% else %}
+        " style = "background-color: #000000 !important;
+    {% endif %}
+">
     {% if user.is_authenticated %}
         <div class="container-fluid">
             <a class="navbar-brand" href="{% url 'dashboard-index' %}">
+                {% if usuario.distritos.nombre == "NEGRO" %}
+                <img src="{% static 'images/SAVIA_Negro_verde.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
+                {% else %}
                 <img src="{% static 'images/SAVIA_Logo.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">
-                <!--<img src="{% static 'images/SAVIA_navideño.jpg' %}" alt="SAVIA" width="50" height="50" class="rounded-circle">-->
+                {% endif %}
             </a>
             <ul class="nav nav-pills" >
                 <li class="nav-item d-none d-md-table-cell">

@@ -71,17 +71,7 @@
                             </div>
                         </div>
                     </div>
-                    <div class="row my-3">
-                        <div class="col-lg-12">
-                            <div class="input-group mb-3">
-                            <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-list"></i></span>
-                                <div class="form-floating form-floating-group flex-grow-1">   
-                                    {{form.presupuesto|add_class:"form-control"|append_attr:"placeholder= Monto"}}
-                                    <label style="color: #121212;" for="id_cond_de_pago">Monto*</label>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
+                   
                     <div class="row my-3">
                         <div class="col-lg-12">
                             <div class="input-group mb-3">
@@ -94,8 +84,143 @@
                         </div>
                     </div>
                     <hr>
-                    <a class="btn btn-outline-secondary" href="{% url 'subproyectos' proyecto.id %}">Cancelar</a>
-                    <input class="btn btn-outline-info" type='submit' value="Actualizar">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5 class="mb-0">Periodos del subproyecto</h5>
+
+                        <button
+                            type="button"
+                            id="agregar-periodo"
+                            class="btn btn-outline-success btn-sm"
+                        >
+                            <i class="fa-solid fa-plus"></i>
+                            Agregar periodo
+                        </button>
+                    </div>
+
+                    {{ periodos_formset.management_form }}
+
+                    {% if periodos_formset.non_form_errors %}
+                        <div class="alert alert-danger">
+                            {{ periodos_formset.non_form_errors }}
+                        </div>
+                    {% endif %}
+
+                        <div id="contenedor-periodos">
+                            {% for periodo_form in periodos_formset %}
+                                <div class="periodo-form card mb-3">
+                                    <div class="card-body">
+
+                                        {% for hidden in periodo_form.hidden_fields %}
+                                            {{ hidden }}
+                                        {% endfor %}
+
+                                        {% if periodo_form.non_field_errors %}
+                                            <div class="alert alert-danger">
+                                                {{ periodo_form.non_field_errors }}
+                                            </div>
+                                        {% endif %}
+
+                                        <div class="row">
+                                            <div class="col-md-5">
+                                                <label
+                                                    for="{{ periodo_form.periodo.id_for_label }}"
+                                                    class="form-label"
+                                                >
+                                                    Periodo
+                                                </label>
+
+                                                {{ periodo_form.periodo }}
+
+                                                {% for error in periodo_form.periodo.errors %}
+                                                    <div class="text-danger small">
+                                                        {{ error }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-md-5">
+                                                <label
+                                                    for="{{ periodo_form.monto.id_for_label }}"
+                                                    class="form-label"
+                                                >
+                                                    Monto
+                                                </label>
+
+                                                {{ periodo_form.monto }}
+
+                                                {% for error in periodo_form.monto.errors %}
+                                                    <div class="text-danger small">
+                                                        {{ error }}
+                                                    </div>
+                                                {% endfor %}
+                                            </div>
+
+                                            <div class="col-md-2 d-flex align-items-end">
+                                                <button
+                                                    type="button"
+                                                    class="btn btn-outline-danger eliminar-periodo"
+                                                >
+                                                    <i class="fa-solid fa-trash"></i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            {% endfor %}
+                        </div>
+                    <template id="periodo-form-vacio">
+                        <div class="periodo-form card mb-3">
+                            <div class="card-body">
+
+                                {% for hidden in periodos_formset.empty_form.hidden_fields %}
+                                    {{ hidden }}
+                                {% endfor %}
+
+                                <div class="row">
+                                    <div class="col-md-5">
+                                        <label class="form-label">
+                                            Periodo
+                                        </label>
+
+                                        {{ periodos_formset.empty_form.periodo }}
+                                    </div>
+
+                                    <div class="col-md-5">
+                                        <label class="form-label">
+                                            Monto
+                                        </label>
+
+                                        {{ periodos_formset.empty_form.monto }}
+                                    </div>
+
+                                    <div class="col-md-2 d-flex align-items-end">
+                                        <button
+                                            type="button"
+                                            class="btn btn-outline-danger eliminar-periodo"
+                                        >
+                                            <i class="fa-solid fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </template>
+
+                    <hr>
+
+                    <a
+                        class="btn btn-outline-secondary"
+                        href="{% url 'subproyectos' proyecto.id %}"
+                    >
+                        Cancelar
+                    </a>
+
+                    <input
+                        class="btn btn-outline-info"
+                        type="submit"
+                        value="Agregar"
+                    >
+                
                 </form>
             </div>
         </div>
@@ -108,6 +233,113 @@
   <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
   <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
   <script>
+  
+document.addEventListener('DOMContentLoaded', function () {
+    const contenedor = document.getElementById('contenedor-periodos');
+    const botonAgregar = document.getElementById('agregar-periodo');
+    const plantilla = document.getElementById('periodo-form-vacio');
 
-  </script>
+    // Busca automáticamente el management form
+    const totalForms = document.querySelector(
+        'input[name$="-TOTAL_FORMS"]'
+    );
+
+    if (!contenedor || !botonAgregar || !plantilla || !totalForms) {
+        console.error('No se pudo inicializar el formset', {
+            contenedor,
+            botonAgregar,
+            plantilla,
+            totalForms
+        });
+
+        return;
+    }
+
+    // Obtiene el prefijo real, por ejemplo:
+    // periodos, periodosubproyecto_set, etc.
+    const prefijo = totalForms.name.replace('-TOTAL_FORMS', '');
+
+    const expresionIndice = new RegExp(
+        `${prefijo}-\\d+-`,
+        'g'
+    );
+
+    function reindexarFormularios() {
+        const formularios = contenedor.querySelectorAll('.periodo-form');
+
+        formularios.forEach(function (formulario, indice) {
+            const elementos = formulario.querySelectorAll(
+                '[name], [id], label[for]'
+            );
+
+            elementos.forEach(function (elemento) {
+                if (elemento.name) {
+                    elemento.name = elemento.name.replace(
+                        expresionIndice,
+                        `${prefijo}-${indice}-`
+                    );
+                }
+
+                if (elemento.id) {
+                    elemento.id = elemento.id.replace(
+                        expresionIndice,
+                        `${prefijo}-${indice}-`
+                    );
+                }
+
+                if (elemento.htmlFor) {
+                    elemento.htmlFor = elemento.htmlFor.replace(
+                        expresionIndice,
+                        `${prefijo}-${indice}-`
+                    );
+                }
+            });
+        });
+
+        totalForms.value = formularios.length;
+    }
+
+    botonAgregar.addEventListener('click', function () {
+        const indice = parseInt(totalForms.value, 10);
+
+        const nuevoFormulario = plantilla.innerHTML.replace(
+            /__prefix__/g,
+            indice
+        );
+
+        contenedor.insertAdjacentHTML(
+            'beforeend',
+            nuevoFormulario
+        );
+
+        totalForms.value = indice + 1;
+    });
+
+    contenedor.addEventListener('click', function (event) {
+        const botonEliminar = event.target.closest(
+            '.eliminar-periodo'
+        );
+
+        if (!botonEliminar) {
+            return;
+        }
+
+        const formularios = contenedor.querySelectorAll('.periodo-form');
+
+        if (formularios.length <= 1) {
+            Swal.fire({
+                title: 'Atención',
+                text: 'El subproyecto debe tener al menos un periodo.',
+                icon: 'warning'
+            });
+
+            return;
+        }
+
+        botonEliminar.closest('.periodo-form').remove();
+        reindexarFormularios();
+    });
+});
+</script>
+ 
 {% endblock %}
