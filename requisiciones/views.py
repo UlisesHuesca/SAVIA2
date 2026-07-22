@@ -307,6 +307,7 @@ def update_devolucion(request):
             item = Devolucion_Articulos.objects.get(producto=producto, vale_devolucion = devolucion, complete = True)
         producto.cantidad = producto.cantidad + item.cantidad
         producto.seleccionado = False
+        producto.surtir = True
         messages.success(request,'Has eliminado un producto de tu listado')
         producto.save()
         item.delete()
