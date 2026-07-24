@@ -2887,7 +2887,7 @@ def analisis_rotacion(request):
                 entrada__completo=True,
                 entrada__cancelada=False,
                 entrada__entrada_date__isnull=False,
-                entrada__oc__created_at__isnull=False,
+                entrada__oc__req__orden__created_at__isnull=False,
                 entrada__entrada_date__gte=inicio_periodo,
                 entrada__entrada_date__lt=corte_final,
                 cantidad__gt=0,
@@ -2897,7 +2897,7 @@ def analisis_rotacion(request):
                 "entrada_id",
                 "cantidad",
                 "entrada__entrada_date",
-                "entrada__oc__created_at",
+                "entrada__oc__req__orden__created_at",
                 inventario_id=F(ruta_inventario_entrada),
             )
         )
@@ -2909,12 +2909,15 @@ def analisis_rotacion(request):
             cantidad = movimiento["cantidad"]
 
             fecha_entrada = movimiento["entrada__entrada_date"]
-            fecha_compra = movimiento["entrada__oc__created_at"]
+            #fecha_compra = movimiento["entrada__oc__created_at"]
 
             fecha_entrada = timezone.localtime(fecha_entrada).date()
-            fecha_compra = timezone.localtime(fecha_compra).date()
-
-            dias_reposicion = (fecha_entrada - fecha_compra).days
+            fecha_solicitud = timezone.localtime(
+                movimiento[
+                    "entrada__oc__req__orden__created_at"
+                ]
+            ).date()
+            dias_reposicion = (fecha_entrada - fecha_solicitud).days
 
             datos = acumulados_reposicion.setdefault(
                 inventario_id,
