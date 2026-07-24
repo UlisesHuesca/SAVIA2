@@ -2,7 +2,7 @@
 {% load humanize %}
 
 {% block title %}
-Análisis de rotación
+Análisis de Almacén
 {% endblock %}
 
 {% block content %}
@@ -14,7 +14,7 @@ Análisis de rotación
     <div class="card shadow-sm mb-4">
         <div class="card-header">
             <h5 class="mb-0">
-                Análisis de rotación de inventario
+                Análisis de Almacén
             </h5>
         </div>
 
@@ -153,6 +153,8 @@ Análisis de rotación
                                 <th class="text-end">Rotación</th>
                                 <th class="text-end">Precio unitario</th>
                                 <th class="text-end">Valor inventario promedio</th>
+                                <th class="text-end">Consumo diario</th>
+                                <th class="text-end">Cobertura</th>
                             </tr>
                         </thead>
 
@@ -216,6 +218,20 @@ Análisis de rotación
 
                                     <td class="text-end">
                                         ${{ fila.importe_promedio|floatformat:2|intcomma }}
+                                    </td>
+                                    <td class="text-end">
+                                        {{ fila.consumo_diario|floatformat:2 }}
+                                    </td>
+
+                                    <td class="text-end">
+                                        {% if fila.dias_cobertura is not None %}
+                                            {{ fila.dias_cobertura|floatformat:1 }}
+                                            días
+                                        {% else %}
+                                            <span class="badge bg-secondary">
+                                                Sin consumo
+                                            </span>
+                                        {% endif %}
                                     </td>
                                 </tr>
 

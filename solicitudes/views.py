@@ -2795,6 +2795,12 @@ def analisis_rotacion(request):
             for inventario in inventarios
         ]
 
+        ####################################################
+        # Calculando días del periodo
+        ####################################################
+        
+        dias_periodo = (fecha_final - fecha_inicio).days + 1
+
         # --------------------------------------------------
         # Cantidad apartada actual
         # --------------------------------------------------
@@ -3014,6 +3020,25 @@ def analisis_rotacion(request):
                 * precio_unitario
             )
 
+            # ----------------------------
+            # Indicador de días cobertura
+            # ----------------------------
+
+
+            if cantidad_salidas_periodo > 0:
+                consumo_diario = (
+                    cantidad_salidas_periodo
+                    / decimal.Decimal(dias_periodo)
+                )
+
+                dias_cobertura = (
+                    inventario.cantidad
+                    / consumo_diario
+                )
+            else:
+                consumo_diario = decimal.Decimal('0')
+                dias_cobertura = None
+
             resultados.append({
                 'inventario': inventario,
                 'cantidad_disponible':
@@ -3040,6 +3065,8 @@ def analisis_rotacion(request):
 
                 'precio_unitario': precio_unitario,
                 'importe_promedio': importe_promedio,
+                'consumo_diario': consumo_diario,
+                'dias_cobertura': dias_cobertura,
             })
 
         # Mayor rotación primero; los productos sin base quedan al final.
@@ -3127,6 +3154,8 @@ def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
         'Valor inventario promedio',
         'Salidas del periodo',
         'Rotación',
+        'Consumo diario',
+        'Días de cobertura',
     ]
 
     fila_encabezado = 5
@@ -3178,6 +3207,8 @@ def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
             resultado['importe_promedio'],
             resultado['cantidad_salidas'],
             resultado['rotacion'],
+            resultado['consumo_diario'],
+            resultado['dias_cobertura'],
         ]
 
         for numero_columna, valor in enumerate(
