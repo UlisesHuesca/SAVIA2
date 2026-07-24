@@ -2,6 +2,7 @@ from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib.auth.decorators import login_required
 from django.http import JsonResponse, HttpResponse
 from django.conf import settings
+
 import os
 import socket
 from django.contrib import messages
@@ -11,8 +12,10 @@ from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.db import transaction
 from django.db.models import Sum, Value, F, Sum, When, Case, DecimalField, Max, Q, ExpressionWrapper
+from django.utils import timezone
+from django.utils.text import slugify
 from dashboard.models import Activo, Inventario, Order, ArticulosOrdenados, ArticulosparaSurtir, Inventario_Batch, Marca, Product, Tipo_Orden, Plantilla, ArticuloPlantilla, Unidad, Producto_Calidad
-from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas
+from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas, Salidas
 from requisiciones.views import get_image_base64
 from compras.models import Compra
 from tesoreria.models import Pago
@@ -26,13 +29,13 @@ from user.decorators import perfil_seleccionado_required
 import json
 from .filters import InventoryFilter, SolicitudesFilter, SolicitudesProdFilter, InventarioFilter, HistoricalInventarioFilter, HistoricalProductoFilter
 import decimal
-from django.utils import timezone
+
 
 import xlsxwriter
 from django.http import HttpResponse
 from io import BytesIO
 # Import Pagination Stuff
-from datetime import date, datetime
+from datetime import date, datetime, timedelta, time
 # Import Excel Stuff
 
 import xlsxwriter
@@ -40,7 +43,7 @@ import xlsxwriter
 from io import BytesIO
 
 from openpyxl import Workbook
-from openpyxl.styles import NamedStyle, Font, PatternFill
+from openpyxl.styles import NamedStyle, Font, PatternFill, Alignment
 from openpyxl.utils import get_column_letter
 from openpyxl.drawing.image import Image
 import datetime as dt
@@ -2710,3 +2713,547 @@ def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entra
     output.close()
     return response
 
+
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+def analisis_rotacion(request):
+    hoy = timezone.localdate()
+
+    fecha_inicio_texto = request.GET.get('fecha_inicio',hoy.replace(day=1).isoformat(),)
+    fecha_final_texto = request.GET.get('fecha_final',hoy.isoformat(),)
+    distrito_id = request.GET.get('distrito')
+
+    resultados = []
+    error = None
+    distrito_seleccionado = None
+
+    # Sustituir este queryset por el filtro de distritos
+    # que el usuario tenga autorizado.
+    distritos = Distrito.objects.all().order_by('nombre')
+
+    try:
+        fecha_inicio = date.fromisoformat(fecha_inicio_texto)
+        fecha_final = date.fromisoformat(fecha_final_texto)
+    except ValueError:
+        fecha_inicio = hoy.replace(day=1)
+        fecha_final = hoy
+        error = 'Las fechas proporcionadas no son válidas.'
+
+    if fecha_inicio > fecha_final:
+        error = 'La fecha final no puede ser anterior a la inicial.'
+
+    if fecha_final > hoy:
+        error = 'La fecha final no puede ser posterior al día actual.'
+
+    if distrito_id and not error:
+        try:
+            distrito_seleccionado = distritos.get(id=distrito_id)
+        except Distrito.DoesNotExist:
+            error = 'El distrito seleccionado no es válido.'
+
+    if distrito_seleccionado and not error:
+        inicio_periodo = timezone.make_aware(
+            datetime.combine(fecha_inicio, time.min)
+        )
+
+        fin_exclusivo = timezone.make_aware(datetime.combine(fecha_final + timedelta(days=1),time.min,))
+
+        ahora = timezone.now()
+
+        # Si el reporte termina hoy, el corte final será
+        # la hora actual y no el final de un día aún incompleto.
+        corte_final = min(fin_exclusivo, ahora)
+
+        inventarios = list(
+            Inventario.objects
+            .filter(
+                distrito=distrito_seleccionado,
+                complete=True,
+                producto__servicio = False
+            )
+            .select_related('producto', 'distrito')
+            .order_by('producto')
+        )
+
+        inventario_ids = [
+            inventario.id
+            for inventario in inventarios
+        ]
+
+        # --------------------------------------------------
+        # Cantidad apartada actual
+        # --------------------------------------------------
+
+        apartados_query = (
+            ArticulosparaSurtir.objects
+            .filter(
+                articulos__producto_id__in=inventario_ids,
+                surtir=True,
+            )
+            .values(
+                inventario_id=F(
+                    'articulos__producto_id'
+                )
+            )
+            .annotate(
+                total_apartado=Sum('cantidad')
+            )
+        )
+
+        apartados = {
+            fila['inventario_id']:
+                fila['total_apartado'] or decimal.Decimal('0')
+            for fila in apartados_query
+        }
+
+        # --------------------------------------------------
+        # Entradas posteriores a los cortes
+        # --------------------------------------------------
+
+        ruta_inventario_entrada = (
+            'articulo_comprado__producto__producto'
+            '__articulos__producto_id'
+        )
+
+        entradas_query = (
+            EntradaArticulo.objects
+            .filter(
+                **{
+                    f'{ruta_inventario_entrada}__in':
+                        inventario_ids,
+                },
+                entrada__completo=True,
+                entrada__cancelada=False,
+                entrada__entrada_date__gte=inicio_periodo,
+                entrada__entrada_date__lte=ahora,
+            )
+            .values(
+                inventario_id=F(
+                    ruta_inventario_entrada
+                )
+            )
+            .annotate(
+                posteriores_inicio=Sum('cantidad'),
+                posteriores_final=Sum(
+                    'cantidad',
+                    filter=Q(
+                        entrada__entrada_date__gte=corte_final
+                    ),
+                ),
+            )
+        )
+
+        entradas = {
+            fila['inventario_id']: {
+                'posteriores_inicio':
+                    fila['posteriores_inicio']
+                    or decimal.Decimal('0'),
+                'posteriores_final':
+                    fila['posteriores_final']
+                    or decimal.Decimal('0'),
+            }
+            for fila in entradas_query
+        }
+
+        # --------------------------------------------------
+        # Salidas del periodo y posteriores a los cortes
+        # --------------------------------------------------
+
+        salidas_query = (
+            Salidas.objects
+            .filter(
+                producto__articulos__producto_id__in=
+                    inventario_ids,
+                complete=True,
+                vale_salida__cancelada=False,
+                created_at__gte=inicio_periodo,
+                created_at__lte=ahora,
+            )
+            .values(
+                inventario_id=F(
+                    'producto__articulos__producto_id'
+                )
+            )
+            .annotate(
+                posteriores_inicio=Sum('cantidad'),
+                posteriores_final=Sum(
+                    'cantidad',
+                    filter=Q(
+                        created_at__gte=corte_final
+                    ),
+                ),
+                salidas_periodo=Sum(
+                    'cantidad',
+                    filter=Q(
+                        created_at__lt=corte_final
+                    ),
+                ),
+            )
+        )
+
+        salidas = {
+            fila['inventario_id']: {
+                'posteriores_inicio':
+                    fila['posteriores_inicio']
+                    or decimal.Decimal('0'),
+                'posteriores_final':
+                    fila['posteriores_final']
+                    or decimal.Decimal('0'),
+                'salidas_periodo':
+                    fila['salidas_periodo']
+                    or decimal.Decimal('0'),
+            }
+            for fila in salidas_query
+        }
+
+        # --------------------------------------------------
+        # Construcción de resultados
+        # --------------------------------------------------
+
+        for inventario in inventarios:
+            apartado_actual = apartados.get(
+                inventario.id,
+                decimal.Decimal('0'),
+            )
+
+            inventario_fisico_actual = (
+                inventario.cantidad
+                + apartado_actual
+            )
+
+            datos_entradas = entradas.get(
+                inventario.id,
+                {},
+            )
+            datos_salidas = salidas.get(
+                inventario.id,
+                {},
+            )
+
+            entradas_posteriores_inicio = (
+                datos_entradas.get(
+                    'posteriores_inicio',
+                    decimal.Decimal('0'),
+                )
+            )
+            entradas_posteriores_final = (
+                datos_entradas.get(
+                    'posteriores_final',
+                    decimal.Decimal('0'),
+                )
+            )
+
+            salidas_posteriores_inicio = (
+                datos_salidas.get(
+                    'posteriores_inicio',
+                    decimal.Decimal('0'),
+                )
+            )
+            salidas_posteriores_final = (
+                datos_salidas.get(
+                    'posteriores_final',
+                    decimal.Decimal('0'),
+                )
+            )
+
+            cantidad_salidas_periodo = (
+                datos_salidas.get(
+                    'salidas_periodo',
+                    decimal.Decimal('0'),
+                )
+            )
+           
+           
+            inventario_inicial = (
+                inventario_fisico_actual
+                - entradas_posteriores_inicio
+                + salidas_posteriores_inicio
+            )
+
+            inventario_final = (
+                inventario_fisico_actual
+                - entradas_posteriores_final
+                + salidas_posteriores_final
+            )
+
+            inventario_promedio = (
+                inventario_inicial
+                + inventario_final
+            ) / decimal.Decimal('2')
+
+            if inventario_promedio > 0:
+                rotacion = (
+                    cantidad_salidas_periodo
+                    / inventario_promedio
+                )
+            else:
+                rotacion = None
+
+            precio_unitario = (
+                inventario.price
+                or decimal.Decimal('0')
+            )
+
+            importe_promedio = (
+                inventario_promedio
+                * precio_unitario
+            )
+
+            resultados.append({
+                'inventario': inventario,
+                'cantidad_disponible':
+                    inventario.cantidad,
+                'cantidad_apartada':
+                    apartado_actual,
+                'inventario_fisico_actual':
+                    inventario_fisico_actual,
+
+                'entradas_posteriores':
+                    entradas_posteriores_inicio,
+                'salidas_posteriores':
+                    salidas_posteriores_inicio,
+
+                'inventario_inicial':
+                    inventario_inicial,
+                'inventario_final':
+                    inventario_final,
+                'inventario_promedio':
+                    inventario_promedio,
+                'cantidad_salidas':
+                    cantidad_salidas_periodo,
+                'rotacion': rotacion,
+
+                'precio_unitario': precio_unitario,
+                'importe_promedio': importe_promedio,
+            })
+
+        # Mayor rotación primero; los productos sin base quedan al final.
+        resultados.sort(
+            key=lambda fila: (
+                fila['rotacion'] is not None,
+                fila['rotacion'] or decimal.Decimal('0'),
+            ),
+            reverse=True,
+        )
+
+    if request.GET.get('exportar') == 'excel':
+        return exportar_rotacion_excel(resultados=resultados, distrito=distrito_seleccionado, fecha_inicio=fecha_inicio, fecha_final=fecha_final,)
+
+    paginator = Paginator(resultados, 50)
+    pagina = paginator.get_page(request.GET.get('page'))
+
+    parametros = request.GET.copy()
+    parametros.pop('page', None)
+
+    context = {
+        'distritos': distritos,
+        'distrito_seleccionado':
+            distrito_seleccionado,
+        'fecha_inicio': fecha_inicio,
+        'fecha_final': fecha_final,
+        'pagina': pagina,
+        'error': error,
+        'querystring': parametros.urlencode(),
+    }
+
+    return render(request,'dashboard/analisis_rotacion.html',context,)
+
+
+def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
+    workbook = Workbook()
+    worksheet = workbook.active
+    worksheet.title = 'Rotación'
+
+    color_encabezado = '1F4E78'
+    color_texto = 'FFFFFF'
+
+    # Título
+    worksheet.merge_cells('A1:M1')
+    titulo = worksheet['A1']
+    titulo.value = 'Análisis de rotación de inventario'
+    titulo.font = Font(
+        bold=True,
+        size=14,
+        color=color_texto,
+    )
+    titulo.fill = PatternFill(
+        fill_type='solid',
+        fgColor=color_encabezado,
+    )
+    titulo.alignment = Alignment(
+        horizontal='center',
+        vertical='center',
+    )
+
+    worksheet.row_dimensions[1].height = 24
+
+    # Datos del reporte
+    worksheet['A2'] = 'Almacén'
+    worksheet['B2'] = str(distrito)
+
+    worksheet['A3'] = 'Periodo'
+    worksheet['B3'] = fecha_inicio
+    worksheet['C3'] = fecha_final
+
+    worksheet['B3'].number_format = 'dd/mm/yyyy'
+    worksheet['C3'].number_format = 'dd/mm/yyyy'
+
+    encabezados = [
+        'Producto',
+        'Precio unitario',
+        'Disponible actual',
+        'Apartado actual',
+        'Físico actual',
+        'Entradas posteriores',
+        'Salidas posteriores',
+        'Inventario inicial',
+        'Inventario final',
+        'Inventario promedio',
+        'Valor inventario promedio',
+        'Salidas del periodo',
+        'Rotación',
+    ]
+
+    fila_encabezado = 5
+
+    for numero_columna, encabezado in enumerate(
+        encabezados,
+        start=1,
+    ):
+        celda = worksheet.cell(
+            row=fila_encabezado,
+            column=numero_columna,
+            value=encabezado,
+        )
+
+        celda.font = Font(
+            bold=True,
+            color=color_texto,
+        )
+        celda.fill = PatternFill(
+            fill_type='solid',
+            fgColor=color_encabezado,
+        )
+        celda.alignment = Alignment(
+            horizontal='center',
+            vertical='center',
+            wrap_text=True,
+        )
+
+    worksheet.row_dimensions[fila_encabezado].height = 35
+
+    # Resultados
+    fila_inicial = fila_encabezado + 1
+
+    for numero_fila, resultado in enumerate(
+        resultados,
+        start=fila_inicial,
+    ):
+        valores = [
+            str(resultado['inventario'].producto),
+            resultado['precio_unitario'],
+            resultado['cantidad_disponible'],
+            resultado['cantidad_apartada'],
+            resultado['inventario_fisico_actual'],
+            resultado['entradas_posteriores'],
+            resultado['salidas_posteriores'],
+            resultado['inventario_inicial'],
+            resultado['inventario_final'],
+            resultado['inventario_promedio'],
+            resultado['importe_promedio'],
+            resultado['cantidad_salidas'],
+            resultado['rotacion'],
+        ]
+
+        for numero_columna, valor in enumerate(
+            valores,
+            start=1,
+        ):
+            celda = worksheet.cell(
+                row=numero_fila,
+                column=numero_columna,
+                value=valor,
+            )
+
+            if numero_columna > 1:
+                celda.alignment = Alignment(
+                    horizontal='right'
+                )
+
+    ultima_fila = worksheet.max_row
+
+    formato_cantidad = '#,##0.00'
+    formato_moneda = '"$"#,##0.00'
+    formato_rotacion = '0.00'
+
+    columnas_cantidad = [
+        'C', 'D', 'E', 'F', 'G',
+        'H', 'I', 'J', 'L',
+    ]
+
+    for columna in columnas_cantidad:
+        for fila in range(fila_inicial, ultima_fila + 1):
+            worksheet[f'{columna}{fila}'].number_format = (
+                formato_cantidad
+            )
+
+    for columna in ['B', 'K']:
+        for fila in range(fila_inicial, ultima_fila + 1):
+            worksheet[f'{columna}{fila}'].number_format = (
+                formato_moneda
+            )
+
+    for fila in range(fila_inicial, ultima_fila + 1):
+        worksheet[f'M{fila}'].number_format = formato_rotacion
+
+    # Congelar encabezado y activar filtros
+    worksheet.freeze_panes = 'A6'
+    worksheet.auto_filter.ref = (
+        f'A5:M{ultima_fila}'
+    )
+
+    anchos = {
+        'A': 55,
+        'B': 16,
+        'C': 16,
+        'D': 16,
+        'E': 16,
+        'F': 18,
+        'G': 18,
+        'H': 18,
+        'I': 18,
+        'J': 18,
+        'K': 22,
+        'L': 18,
+        'M': 12,
+    }
+
+    for columna, ancho in anchos.items():
+        worksheet.column_dimensions[columna].width = ancho
+
+    nombre_distrito = (
+        slugify(str(distrito))
+        or 'almacen'
+    )
+
+    nombre_archivo = (
+        f'rotacion_{nombre_distrito}_'
+        f'{fecha_inicio:%Y%m%d}_'
+        f'{fecha_final:%Y%m%d}.xlsx'
+    )
+
+    response = HttpResponse(
+        content_type=(
+            'application/vnd.openxmlformats-'
+            'officedocument.spreadsheetml.sheet'
+        )
+    )
+
+    response['Content-Disposition'] = (
+        f'attachment; filename="{nombre_archivo}"'
+    )
+
+    workbook.save(response)
+
+    return response

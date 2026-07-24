@@ -742,77 +742,48 @@ def update_salida(request):
                     print('cantidad1:',cantidad)
                     if cantidad > 0: #Se cambia producto.cantidad, se tiene que comparar con la cantidad de la salida no contra la cantidad disponible 
                         salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
-                        #Que hace el código a continuación la cantidad de la salida se compara contra la cantidad por surtir de la entrada
-                        #L1 si es mayor la se guarda la cantidad_ant 
-                        #L2 se le resta a la cantidad lo que queda en la entrada, es decir la nueva cantidad es lo que no se pudo surtir con esa entrada(cantidad) 
-                        #L3 la cantidad de la salida es igual a la cantidad original menos la cantidad que no se pudo surtir con esa entrada
-                        #L4 se vacía la entrada y por lo tanto se marca como agotada.
-                        # Y si no la cantidad de la salida es igual a la cantidad(puede ser modificada por el bucle anterior o no) y 
-                        # entrada por surtir es igual a la cantidad por surtir menos la cantidad de la salida y la cantidad se agota 04/12/2024 
-                        print('entrada_res',cantidad)
-                       
-                        if cantidad == entrada.cantidad_por_surtir:
+                        print('entrada_res',entrada_res)
+                        if cantidad <= entrada.cantidad_por_surtir:
+                            print('0')
                             print('cantidad == entrada.cantidad_por_surtir')
                             cantidad_ant = cantidad
-                            cantidad = cantidad - entrada.cantidad_por_surtir
-                            salida.cantidad = cantidad_ant - cantidad
-                            entrada.cantidad_por_surtir = 0
-                            entrada.agotado = True
+                            entrada.cantidad_por_surtir -= cantidad
+                            salida.cantidad = cantidad
+                            cantidad -= cantidad_ant 
                             inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad == entrada.cantidad_por_surtir {salida.id}'
                         elif cantidad > entrada.cantidad_por_surtir:
                             print('1')
                             salida.cantidad = entrada.cantidad_por_surtir
-                            if inv_del_producto.cantidad >= (cantidad - entrada.cantidad_por_surtir):
-                                print('2')
-                                inv_del_producto.cantidad = inv_del_producto.cantidad - (cantidad - entrada.cantidad_por_surtir)
-                                salida_inv, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=True, entrada=0, precio=inv_del_producto.price)
-                                salida_inv.cantidad = cantidad - entrada.cantidad_por_surtir
-                                salida_inv.complete = True
-                                salida_inv.save()
-                                entrada.cantidad_por_surtir = 0
-                                entrada.agotado = True
-                                inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad > entrada.cantidad_por_surtir {salida.id}'
-                                #Se asume que si la cantidad del inventario es mayor o igual a la cantidad que se quiere surtir menos la cantidad de la entrada, entonces se puede surtir el resto desde el inventario
-                                #por tanto al cantidad pasara a ser 0
-                                cantidad = 0
-                            else:
-                                print('1.5')
-                                cantidad = cantidad - entrada.cantidad_por_surtir
-                                entrada.cantidad_por_surtir = 0
-                                entrada.agotado = True
-                                #inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad > entrada.cantidad_por_surtir {salida.id}'
-                                #Se asume que si la cantidad del inventario es mayor o igual a la cantidad que se quiere surtir menos la cantidad de la entrada, entonces se puede surtir el resto desde el inventario
-                                #por tanto al cantidad pasara a ser 0
-                                print('cantidad', cantidad, 'entrada.cantidad_por_surtir', entrada.cantidad_por_surtir)
-                                
-                                print('cantidad_else_inv', cantidad)
-                                if inv_del_producto.cantidad > 0:
-                                    print('3')
-                                    salida_inv, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=True, entrada=0, precio=inv_del_producto.price)
-                                    salida_inv.cantidad = cantidad - entrada.cantidad_por_surtir
-                                    salida_inv.complete = True
-                                    salida_inv.save()
-                                    cantidad = salida_inv.cantidad
-                            
-                        else:
-                            print('4')
-                            salida.cantidad = cantidad
-                            entrada.cantidad_por_surtir = entrada.cantidad_por_surtir - salida.cantidad
-                            cantidad = 0
+                            entrada.cantidad_por_surtir = 0
+                            entrada.agotado = True
+                            inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad > entrada.cantidad_por_surtir {salida.id}'
+                            cantidad -= salida.cantidad
                         producto.cantidad = producto.cantidad - salida.cantidad
+                        print('producto.cantidad: ',producto.cantidad)
                         salida.entrada = entrada.id
                         salida.complete = True
-                        #if producto.cantidad_requisitar <= 0: #Esta línea se considera errónea 04/12/2024
-                        #    producto.requisitar = False  #Esta línea se considera errónea 04/12/2024
+                  
                         if producto.cantidad <= 0:
                             producto.surtir = False
-                        #print(salida)
+                       
                         entrada.save()
                         producto.save()
                         inv_del_producto.cantidad_entradas = inv_del_producto.cantidad_entradas - salida.cantidad
                         
                         salida.precio = entrada.articulo_comprado.precio_unitario
                         salida.save()
+                    print('cantidad:',cantidad)
+                if cantidad > 0:
+                        
+                    producto.cantidad -= cantidad
+                    producto.surtir = False
+                    salida_inv, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=True, entrada=0, precio=inv_del_producto.price)
+                    salida_inv.cantidad = cantidad - entrada.cantidad_por_surtir
+                    salida_inv.entrada = 0
+                    salida_inv.complete = True
+                    salida_inv.save()
+                    cantidad = 0
+                    producto.save()
             else:    #si no hay resurtimiento
                 # Verificar si ya existe un registro similar creado en el último segundo
                 now = timezone.now()
@@ -850,7 +821,7 @@ def update_salida(request):
             entrada.agotado = False
             entrada.save()
         else:
-            inv_del_producto.cantidad += item.cantidad
+            producto.cantidad += item.cantidad
             #if entrada.entrada.oc.req.orden.tipo.tipo == "normal":
             #    inv_del_producto.cantidad_apartada = inv_del_producto.cantidad_apartada + item.cantidad
         if vale_salida.solicitud.tipo.tipo == "normal":

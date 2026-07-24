@@ -584,15 +584,9 @@ def subproyectos_edit(request, pk):
                 # Recalcular el presupuesto con los nuevos montos
                 subproyecto.actualizar_presupuesto()
 
-            messages.success(
-                request,
-                'Has editado correctamente el subproyecto'
-            )
+            messages.success(request,'Has editado correctamente el subproyecto')
 
-            return redirect(
-                'subproyectos',
-                pk=proyecto.id
-            )
+            return redirect('subproyectos', pk=proyecto.id)
 
     context = {
         'form': form,
