@@ -4004,14 +4004,20 @@ def complemento_eliminar(request, pk):
 @perfil_seleccionado_required
 def mis_gastos(request):
     pk_profile = request.session.get('selected_profile_id')
-    usuario = Profile.objects.get(id = pk_profile)
+    usuario_original = Profile.objects.get(id = pk_profile)
+
+    perfiles_consulta = [usuario_original.id]
     
-    if usuario.sustituto:
-        usuario = Profile.objects.filter(staff = usuario.staff, tipo__subdirector = True, st_activo = True).first()
+    if usuario_original.sustituto:
+        usuario_sustituido = Profile.objects.filter(staff = usuario_original.staff, tipo__subdirector = True, st_activo = True).first()
+        if usuario_sustituido:
+            perfiles_consulta.append(usuario_sustituido.id)
+
     gastos = Solicitud_Gasto.objects.filter(
-        Q(staff = usuario) |Q(colaborador = usuario), 
+        Q(staff_id__in = perfiles_consulta) |
+        Q(colaborador_id__in = perfiles_consulta), 
         complete=True
-        ).order_by('-folio')
+        ).distinct().order_by('-folio')
     myfilter = Solicitud_Gasto_Filter(request.GET, queryset=gastos)
     gastos = myfilter.qs
 
