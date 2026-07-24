@@ -2840,18 +2840,16 @@ def analisis_rotacion(request):
             EntradaArticulo.objects
             .filter(
                 **{
-                    f'{ruta_inventario_entrada}__in':
-                        inventario_ids,
+                    f'{ruta_inventario_entrada}__in': inventario_ids,
                 },
                 entrada__completo=True,
                 entrada__cancelada=False,
+                entrada__entrada_date__isnull=False,
                 entrada__entrada_date__gte=inicio_periodo,
                 entrada__entrada_date__lte=ahora,
             )
             .values(
-                inventario_id=F(
-                    ruta_inventario_entrada
-                )
+                inventario_id=F(ruta_inventario_entrada),
             )
             .annotate(
                 posteriores_inicio=Sum('cantidad'),
@@ -2875,6 +2873,106 @@ def analisis_rotacion(request):
             }
             for fila in entradas_query
         }
+
+        # --------------------------------------------------
+        # Query de reposición
+        # --------------------------------------------------
+
+        entradas_reposicion_query = (
+            EntradaArticulo.objects
+            .filter(
+                **{
+                    f"{ruta_inventario_entrada}__in": inventario_ids,
+                },
+                entrada__completo=True,
+                entrada__cancelada=False,
+                entrada__entrada_date__isnull=False,
+                entrada__oc__created_at__isnull=False,
+                entrada__entrada_date__gte=inicio_periodo,
+                entrada__entrada_date__lt=corte_final,
+                cantidad__gt=0,
+            )
+            .values(
+                "id",
+                "entrada_id",
+                "cantidad",
+                "entrada__entrada_date",
+                "entrada__oc__created_at",
+                inventario_id=F(ruta_inventario_entrada),
+            )
+        )
+
+        acumulados_reposicion = {}
+
+        for movimiento in entradas_reposicion_query.iterator():
+            inventario_id = movimiento["inventario_id"]
+            cantidad = movimiento["cantidad"]
+
+            fecha_entrada = movimiento["entrada__entrada_date"]
+            fecha_compra = movimiento["entrada__oc__created_at"]
+
+            fecha_entrada = timezone.localtime(fecha_entrada).date()
+            fecha_compra = timezone.localtime(fecha_compra).date()
+
+            dias_reposicion = (fecha_entrada - fecha_compra).days
+
+            datos = acumulados_reposicion.setdefault(
+                inventario_id,
+                {
+                    "cantidad_recibida": decimal.Decimal("0"),
+                    "dias_ponderados": decimal.Decimal("0"),
+                    "tiempo_minimo": None,
+                    "tiempo_maximo": None,
+                    "entradas": set(),
+                    "registros_inconsistentes": 0,
+                }
+            )
+
+            if dias_reposicion < 0:
+                datos["registros_inconsistentes"] += 1
+                continue
+
+            datos["cantidad_recibida"] += cantidad
+
+            datos["dias_ponderados"] += (
+                decimal.Decimal(dias_reposicion) * cantidad
+            )
+
+            datos["entradas"].add(movimiento["entrada_id"])
+
+            if (
+                datos["tiempo_minimo"] is None
+                or dias_reposicion < datos["tiempo_minimo"]
+            ):
+                datos["tiempo_minimo"] = dias_reposicion
+
+            if (
+                datos["tiempo_maximo"] is None
+                or dias_reposicion > datos["tiempo_maximo"]
+            ):
+                datos["tiempo_maximo"] = dias_reposicion
+
+        tiempos_reposicion = {}
+
+        for inventario_id, datos in acumulados_reposicion.items():
+            if datos["cantidad_recibida"] > 0:
+                tiempo_promedio = (
+                    datos["dias_ponderados"]
+                    / datos["cantidad_recibida"]
+                )
+            else:
+                tiempo_promedio = None
+
+            tiempos_reposicion[inventario_id] = {
+                "tiempo_promedio": tiempo_promedio,
+                "tiempo_minimo": datos["tiempo_minimo"],
+                "tiempo_maximo": datos["tiempo_maximo"],
+                "cantidad_recibida": datos["cantidad_recibida"],
+                "numero_entradas": len(datos["entradas"]),
+                "registros_inconsistentes": datos[
+                    "registros_inconsistentes"
+                ],
+            }
 
         # --------------------------------------------------
         # Salidas del periodo y posteriores a los cortes
@@ -2911,6 +3009,9 @@ def analisis_rotacion(request):
                 ),
             )
         )
+
+
+
 
         salidas = {
             fila['inventario_id']: {
@@ -3039,34 +3140,44 @@ def analisis_rotacion(request):
                 consumo_diario = decimal.Decimal('0')
                 dias_cobertura = None
 
+
+            #################################
+            # Indicador de Reposición 
+            #################################
+            reposicion = tiempos_reposicion.get(
+                inventario.id,
+                {
+                    "tiempo_promedio": None,
+                    "tiempo_minimo": None,
+                    "tiempo_maximo": None,
+                    "cantidad_recibida": decimal.Decimal("0"),
+                    "numero_entradas": 0,
+                    "registros_inconsistentes": 0,
+                }
+            )
+
             resultados.append({
                 'inventario': inventario,
-                'cantidad_disponible':
-                    inventario.cantidad,
-                'cantidad_apartada':
-                    apartado_actual,
-                'inventario_fisico_actual':
-                    inventario_fisico_actual,
-
-                'entradas_posteriores':
-                    entradas_posteriores_inicio,
-                'salidas_posteriores':
-                    salidas_posteriores_inicio,
-
-                'inventario_inicial':
-                    inventario_inicial,
-                'inventario_final':
-                    inventario_final,
-                'inventario_promedio':
-                    inventario_promedio,
-                'cantidad_salidas':
-                    cantidad_salidas_periodo,
+                'cantidad_disponible': inventario.cantidad,
+                'cantidad_apartada': apartado_actual,
+                'inventario_fisico_actual': inventario_fisico_actual,
+                'entradas_posteriores': entradas_posteriores_inicio,
+                'salidas_posteriores': salidas_posteriores_inicio,
+                'inventario_inicial': inventario_inicial,
+                'inventario_final': inventario_final,
+                'inventario_promedio': inventario_promedio,
+                'cantidad_salidas':cantidad_salidas_periodo,
                 'rotacion': rotacion,
-
                 'precio_unitario': precio_unitario,
                 'importe_promedio': importe_promedio,
                 'consumo_diario': consumo_diario,
                 'dias_cobertura': dias_cobertura,
+                "tiempo_reposicion": reposicion["tiempo_promedio"],
+                "tiempo_reposicion_minimo": reposicion["tiempo_minimo"],
+                "tiempo_reposicion_maximo": reposicion["tiempo_maximo"],
+                "cantidad_recibida_periodo": reposicion["cantidad_recibida"],
+                "numero_entradas_periodo": reposicion["numero_entradas"],
+                "reposiciones_inconsistentes": reposicion["registros_inconsistentes"],
             })
 
         # Mayor rotación primero; los productos sin base quedan al final.
@@ -3156,6 +3267,7 @@ def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
         'Rotación',
         'Consumo diario',
         'Días de cobertura',
+         "Tiempo de reposición promedio (días)",
     ]
 
     fila_encabezado = 5
@@ -3209,6 +3321,7 @@ def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
             resultado['rotacion'],
             resultado['consumo_diario'],
             resultado['dias_cobertura'],
+            resultado['tiempo_reposicion'],
         ]
 
         for numero_columna, valor in enumerate(
@@ -3234,7 +3347,7 @@ def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
 
     columnas_cantidad = [
         'C', 'D', 'E', 'F', 'G',
-        'H', 'I', 'J', 'L',
+        'H', 'I', 'J', 'L','M','N','O','P',
     ]
 
     for columna in columnas_cantidad:
@@ -3272,6 +3385,9 @@ def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
         'K': 22,
         'L': 18,
         'M': 12,
+        'N': 12,
+        'O': 12,
+        'P': 20,
     }
 
     for columna, ancho in anchos.items():

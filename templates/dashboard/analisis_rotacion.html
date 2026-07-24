@@ -155,6 +155,8 @@ Análisis de Almacén
                                 <th class="text-end">Valor inventario promedio</th>
                                 <th class="text-end">Consumo diario</th>
                                 <th class="text-end">Cobertura</th>
+                                <th class="text-end">T Reposición Promedio</th>
+                               
                             </tr>
                         </thead>
 
@@ -231,6 +233,13 @@ Análisis de Almacén
                                             <span class="badge bg-secondary">
                                                 Sin consumo
                                             </span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-end align-middle text-nowrap">
+                                        {% if fila.tiempo_reposicion == None %}
+                                            <span class="text-muted">Sin entradas</span>
+                                        {% else %}
+                                            {{ fila.tiempo_reposicion|floatformat:2 }} días
                                         {% endif %}
                                     </td>
                                 </tr>
