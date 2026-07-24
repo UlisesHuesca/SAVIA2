@@ -2718,6 +2718,9 @@ def convert_excel_inventario_xlsxwriter(existencia, valor_inventario, dict_entra
 @login_required(login_url='user-login')
 @perfil_seleccionado_required
 def analisis_rotacion(request):
+    pk = request.session.get('selected_profile_id')
+    perfil = Profile.objects.get(id = pk)
+
     hoy = timezone.localdate()
 
     fecha_inicio_texto = request.GET.get('fecha_inicio',hoy.replace(day=1).isoformat(),)
@@ -2727,10 +2730,21 @@ def analisis_rotacion(request):
     resultados = []
     error = None
     distrito_seleccionado = None
-
+    almacenes_distritos = (
+        perfil.almacen
+            .values_list(
+            'distrito_id',
+            flat=True,
+        )
+        .distinct()
+    )
     # Sustituir este queryset por el filtro de distritos
     # que el usuario tenga autorizado.
-    distritos = Distrito.objects.all().order_by('nombre')
+    distritos =  (
+        Distrito.objects
+        .filter(id__in=almacenes_distritos)
+        .order_by('nombre')
+    )
 
     try:
         fecha_inicio = date.fromisoformat(fecha_inicio_texto)
