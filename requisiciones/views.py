@@ -2494,7 +2494,7 @@ def convert_excel_matriz_requis_productos(requis):
     percent_style = workbook.add_format({'num_format': '0.00%', 'font_name': 'Calibri', 'font_size': 10})
     messages_style = workbook.add_format({'font_name':'Arial Narrow', 'font_size':11})
 
-    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto','Código', 'Producto','Comentario usuario','Unidad', 'Cantidad','Autorización','REQ Status','Product Status']
+    columns = ['Requisición', 'Solicitud', 'Solicitante', 'Proyecto', 'Subproyecto','Código', 'Producto','Comentario usuario','Unidad', 'Cantidad','Autorización','Req. Status','Product Status']
 
     columna_max = len(columns)+2
 
@@ -2502,9 +2502,25 @@ def convert_excel_matriz_requis_productos(requis):
     worksheet.write(1, columna_max - 1, 'Software desarrollado por Grupo Vordcab S.A. de C.V.', messages_style)
     worksheet.set_column(columna_max - 1, columna_max, 30)  # Ajusta el ancho de las columnas nuevas
 
-    for i, column in enumerate(columns):
+    column_widths = [
+        13,  # Requisición
+        12,  # Solicitud
+        25,  # Solicitante
+        30,  # Proyecto
+        25,  # Subproyecto
+        13,  # Código
+        35,  # Producto
+        35,  # Comentario usuario
+        10,  # Unidad
+        10,  # Cantidad
+        16,  # Autorización
+        15,  # REQ Status
+        16,  # Product Status
+    ]
+
+    for i, (column, width) in enumerate(zip(columns, column_widths)):
         worksheet.write(0, i, column, head_style)
-        worksheet.set_column(i, i, 15)  # Ajusta el ancho de las columnas
+        worksheet.set_column(i, i, width)
 
     row_num = 0
     for req in requis:
@@ -2523,6 +2539,8 @@ def convert_excel_matriz_requis_productos(requis):
         else:
             status_prod = 'Pendiente'
 
+        fecha_autorizacion = (req.req.approved_at if req.req.autorizar and req.req.approved_at else None)
+
 
         row = [
             req.req.folio,
@@ -2534,9 +2552,8 @@ def convert_excel_matriz_requis_productos(requis):
             str(req.producto.articulos.producto.producto.nombre) if req.producto.articulos.producto else '',
             str(req.producto.articulos.comentario) if req.producto.articulos.comentario else '',
             str(req.producto.articulos.producto.producto.unidad) if req.producto.articulos.producto else '',
-
             req.cantidad,
-            (str(req.req.approved_at) + str(req.req.approved_at_time)) if req.req.autorizar else '',
+            fecha_autorizacion,
             status,
             status_prod,
         ]
@@ -2544,9 +2561,10 @@ def convert_excel_matriz_requis_productos(requis):
         for col_num, cell_value in enumerate(row):
         # Define el formato por defecto
             cell_format = body_style
-
-            # Finalmente, escribe la celda con el valor y el formato correspondiente
-            worksheet.write(row_num, col_num, cell_value, cell_format)
+            if col_num == 10 and cell_value:
+                worksheet.write(row_num, col_num, cell_value, date_style)
+            else:
+                worksheet.write(row_num, col_num, cell_value, cell_format)
 
       
         #worksheet.write_formula(row_num, 19, f'=IF(ISBLANK(R{row_num+1}), L{row_num+1}, L{row_num+1}*R{row_num+1})', money_style)
