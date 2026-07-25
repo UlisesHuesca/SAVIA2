@@ -3371,7 +3371,7 @@ def exportar_rotacion_excel(resultados,distrito,fecha_inicio,fecha_final,):
     # Congelar encabezado y activar filtros
     worksheet.freeze_panes = 'A6'
     worksheet.auto_filter.ref = (
-        f'A5:M{ultima_fila}'
+        f'A5:P{ultima_fila}'
     )
 
     anchos = {
