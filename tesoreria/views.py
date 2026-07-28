@@ -281,7 +281,7 @@ def compras_autorizadas(request):
             pagada=False,
             cerrar_sin_pago_completo = False,
             autorizado2=True, 
-            tesorero__tipo__finanzas=True,  # 👈 Filtra que quien envió a pago sea Finanzas
+            tesorero__tipo__finanzas=True,  # 👈 Filtra que quien envió a pago sea Finanzas, aquí tengo un error porque por ejemplo Eracilia que dejo el cargo y se le cambió el perfil ya no permite identificar el tipo como finanzas
             req__orden__distrito = usuario.distritos
         ).annotate(
             total_facturas=Count('facturas', filter=Q(facturas__oc__isnull=False)),

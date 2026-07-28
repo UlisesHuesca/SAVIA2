@@ -2210,7 +2210,7 @@ def convert_excel_proveedores(proveedores):
     wb.add_named_style(money_resumen_style)
 
     columns = ['Distrito','Razón Social','RFC','Domicilio','Teléfono','Estado','Contacto','Email','Email Opción',
-               'Banco','Clabe','Cuenta','Financiamiento','Días Crédito','Estatus']
+               'Banco','Clabe','Cuenta','Financiamiento','Días Crédito','Estatus','Aceptación de política']
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -2233,7 +2233,7 @@ def convert_excel_proveedores(proveedores):
 
     rows = proveedores.values_list('distrito__nombre','nombre__razon_social','nombre__rfc','domicilio','telefono','estado__nombre',
                                    'contacto','email','email_opt','banco__nombre','clabe','cuenta','financiamiento','dias_credito',
-                                   'estatus__nombre'
+                                   'estatus__nombre','nombre__fecha_aceptacion_politica'
                               )
 
     
@@ -2242,12 +2242,31 @@ def convert_excel_proveedores(proveedores):
     for row in rows:
         row_num += 1
         #row_with_additional_columns = list(row) + [subtotal, iva, total]  # Agrega el subtotal a la fila existente
-        for col_num in range(len(row)):
-            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num == 5:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = body_style
-            if col_num == 13:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = number_style
+        for col_num, value in enumerate(row, start=1):
+            # Los valores None se muestran como celdas vacías
+            value = '' if value is None else value
+
+            cell = ws.cell(
+                row=row_num,
+                column=col_num,
+                value=value
+            )
+            cell.style = body_style
+
+            # Días de crédito: columna N
+            if col_num == 14:
+                cell.style = number_style
+
+            # Fecha de aceptación: columna P
+            if col_num == 16 and value:
+                if isinstance(value, dt.datetime):
+                    if value.tzinfo is not None:
+                        value = value.replace(tzinfo=None)
+
+                    cell.value = value
+
+                cell.style = date_style
+                
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)

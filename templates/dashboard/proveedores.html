@@ -195,6 +195,7 @@
                         <th scope="col">Domicilio</th>
                         <th scope="col">Nombre Comercial</th>
                         <th scope="col">RFC</th>
+                        <th>Aceptó Políticas</th>
                         {% if usuario.tipo.proveedores_edicion %}
                             <th scope="col">Edición</th>
                         {% endif %}
@@ -222,6 +223,7 @@
                     <td>{{proveedor.nombre_comercial}}</td>
                     {% endif %}
                     <td>{{proveedor.rfc}}</td>
+                    <td>{% if proveedor.fecha_aceptacion_politica %} {{proveedor.fecha_aceptacion_politica}} {% else %} NR {% endif %} </td>
                     {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         <a class="btn btn-outline-info" id="btnActualizar" type="button" href="{% url 'dashboard-proveedores-update' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
@@ -234,6 +236,7 @@
                             <i class="fa-duotone fa-solid fa-location-dot"></i>
                         </a>
                     </td>
+                  
                     {% if usuario.tipo.proveedores_edicion %}
                     <td>
                         <a class="btn btn-outline-info" id="btnProveedorDirecciones" type="button" href="{% url 'documentacion-proveedores' proveedor.id %}?next={{request.path}}?razon_social={{ request.GET.razon_social }}&rfc={{ request.GET.rfc }}">
