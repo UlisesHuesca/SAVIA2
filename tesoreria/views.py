@@ -2956,11 +2956,15 @@ def control_cuentas(request):
                 cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True).exclude(distrito__nombre = "BRASIL")
             elif usuario.tipo.finanzas:
                 cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True).exclude(distrito__nombre = "BRASIL")
+            #print(cuentas)
         else:
             if usuario.tipo.tesoreria:
                 cuentas = Cuenta.objects.filter(Q(encargado=usuario) | Q(visor=usuario))
             elif usuario.tipo.finanzas:
-                cuentas = Cuenta.objects.filter(encargado = usuario)
+                cuentas = Cuenta.objects.filter(Q(encargado = usuario) | Q(visor=usuario))
+            elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
+                cuentas = Cuenta.objects.filter(distrito__nombre = usuario.distritos.nombre)
+
             
     else:
         cuentas = Cuenta.objects.filter(encargado__distritos__nombre = usuario.distritos.nombre)

@@ -81,6 +81,7 @@
             <table class="table table-striped table-hover bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
+                    <th>Distrito</th>
                     <th scope="col">Cuenta</th>
                     <th class="d-none d-md-table-cell">Moneda</th>
                     <th class="d-none d-md-table-cell">Status</th>
@@ -92,6 +93,7 @@
             <tbody>
                 {% for cuenta in cuentas %}
                 <tr>
+                    <th>{{cuenta.distrito}}</th>
                     <th scope="row">{{cuenta.cuenta}}</th>
                     <td class="d-none d-lg-table-cell">{{cuenta.banco.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{cuenta.status}}</td>

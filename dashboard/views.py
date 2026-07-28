@@ -823,6 +823,120 @@ def cancelar_alta_proveedor(request, pk):
             status = Estatus_proveedor.objects.get(nombre="RECHAZADO")
             proveedor_direcciones.estatus = status
             proveedor_direcciones.save()
+
+            # -----------------------------------------------------------------
+            # Aquí empieza el código que envía el correo informando el rechazo
+            # -----------------------------------------------------------------
+
+            jefes_adquisiciones = Profile.objects.filter(
+                tipo__jefe_adquisiciones=True,
+                distritos=usuario.distritos,
+                st_activo=True,
+            )
+
+            correos = [
+                perfil.staff.staff.email
+                for perfil in jefes_adquisiciones
+                if perfil.staff.staff.email
+            ]
+
+            # Correo principal del proveedor
+            correo_proveedor = proveedor_direcciones.email
+
+            if correo_proveedor and correo_proveedor not in correos:
+                correos.append(correo_proveedor)
+
+            # Elimina posibles correos repetidos
+            correos = list(dict.fromkeys(correos))
+
+            fecha_formateada = date.today().strftime('%d/%m/%Y')
+
+            # Ajusta este atributo al nombre real del campo del modelo.
+            comentario_rechazo = (
+                proveedor_direcciones.comentario_status
+                or 'No se especificó un comentario.'
+            )
+
+            if correos:
+                correo_html = f"""
+                    <h3>Rechazo de alta de proveedor</h3>
+
+                    <p>
+                        Se informa que el proceso de alta del siguiente proveedor
+                        fue rechazado:
+                    </p>
+
+                    <p><strong>RFC:</strong> {proveedor.rfc or ''}</p>
+                    <p>
+                        <strong>Proveedor:</strong>
+                        {proveedor.razon_social or ''}
+                    </p>
+                    <p>
+                        <strong>Distrito:</strong>
+                        {proveedor_direcciones.distrito.nombre}
+                    </p>
+                    <p>
+                        <strong>Motivo del rechazo:</strong>
+                        {comentario_rechazo}
+                    </p>
+                    <p>
+                        <strong>Rechazado por:</strong>
+                        {usuario.staff.staff.first_name}
+                        {usuario.staff.staff.last_name}
+                    </p>
+                    <p><strong>Fecha:</strong> {fecha_formateada}</p>
+
+                    <p>
+                        Favor de atender las observaciones indicadas para continuar
+                        con el proceso de alta.
+                    </p>
+
+                    <p>
+                        Atte.<br>
+                        {usuario.staff.staff.first_name}
+                        {usuario.staff.staff.last_name}<br>
+                        GRUPO VORDCAB S.A. de C.V.
+                    </p>
+
+                    <p>
+                        <i>
+                            Este mensaje ha sido generado automáticamente por
+                            SAVIA Proveedores.
+                        </i>
+                    </p>
+                """
+
+                email = EmailMessage(
+                    'Rechazo de alta de proveedor | SAVIA Proveedores',
+                    correo_html,
+                    settings.DEFAULT_FROM_EMAIL,
+                    correos,
+                )
+
+                email.content_subtype = 'html'
+
+                try:
+                    email.send(fail_silently=False)
+
+                    messages.success(
+                        request,
+                        (
+                            f'Has cancelado correctamente el alta del proveedor '
+                            f'{proveedor.razon_social} y se envió la notificación.'
+                        ),
+                    )
+
+                except Exception as error:
+                    print('Error al enviar correo de rechazo:', error)
+
+                    messages.warning(
+                        request,
+                        (
+                            f'El alta de {proveedor.razon_social} fue rechazada, '
+                            f'pero no se pudo enviar el correo de notificación.'
+                        ),
+                    )
+
         
             messages.success(request,f'Has cancelado correctamente el alta del proveedor {proveedor.razon_social}')
             return redirect('proveedores-altas')
@@ -1212,7 +1326,7 @@ def edit_proveedores(request, pk):
                         """
 
                         email = EmailMessage(
-                            'Actualización de datos bancarios de proveedor|PRUEBAS SAVIA',
+                            'Actualización de datos bancarios de proveedor',
                             correo_html,
                             settings.DEFAULT_FROM_EMAIL,
                             correos,
@@ -2266,7 +2380,7 @@ def convert_excel_proveedores(proveedores):
                     cell.value = value
 
                 cell.style = date_style
-                
+
     sheet = wb['Sheet']
     wb.remove(sheet)
     wb.save(response)
