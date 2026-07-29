@@ -5,7 +5,7 @@ import socket
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
-from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F
+from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F, BooleanField
 from django.db.models.functions import Concat, Coalesce
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
@@ -21,7 +21,7 @@ from compras.filters import CompraFilter
 from compras.views import dof, attach_oc_pdf, attach_antisoborno_pdf, attach_codigo_etica_pdf, attach_aviso_privacidad_pdf, attach_politica_proveedor, generar_pdf_nueva #convert_excel_matriz_compras
 from dashboard.models import Subproyecto, Producto_Calidad
 from .models import Pago, Cuenta, Facturas, Comprobante_saldo_favor, Saldo_Cuenta, Tipo_Pago, Complemento_Pago, EstadoCuenta
-from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura
+from gastos.models import Solicitud_Gasto, Articulo_Gasto, Factura, ValeRosa
 from gastos.views import render_pdf_gasto, crear_pdf_cfdi_gasto, generar_pdf_vale_rosa
 from viaticos.views import generar_pdf_viatico
 from viaticos.models import Solicitud_Viatico, Viaticos_Factura, Concepto_Viatico
@@ -1239,6 +1239,16 @@ def matriz_pagos(request):
             Q(gasto__tipo__tipo='NOMINA')
         )
 
+        vales_gasto_aprobados = ValeRosa.objects.filter(
+            gasto_id=OuterRef('gasto_id'),
+            esta_aprobado=True,
+        )
+
+        vales_viatico_aprobados = ValeRosa.objects.filter(
+            viatico_id=OuterRef('viatico_id'),
+            esta_aprobado=True,
+        )
+
 
         facturas_oc = Facturas.objects.filter(
             oc=OuterRef('oc'),
@@ -1291,6 +1301,14 @@ def matriz_pagos(request):
 
             tiene_facturas_viatico=Exists(facturas_viatico),
             pendientes_viatico=Exists(facturas_viatico_pendientes),
+
+              # Vales aprobados, independientemente de su color
+            tiene_vale_gasto_aprobado=Exists(
+                vales_gasto_aprobados
+            ),
+            tiene_vale_viatico_aprobado=Exists(
+                vales_viatico_aprobados
+            ),
         )
         .annotate(
             estado_facturas=Case(
@@ -1332,7 +1350,22 @@ def matriz_pagos(request):
 
                 default=Value('pendientes'),
                 output_field=CharField()
-            )
+            ),
+            tiene_documentos_para_envio=Case(
+                When(
+                    gasto__isnull=False,
+                    tiene_vale_gasto_aprobado=True,
+                    then=Value(True),
+                ),
+                When(
+                    viatico__isnull=False,
+                    tiene_vale_viatico_aprobado=True,
+                    then=Value(True),
+                ),
+                default=Value(False),
+                output_field=BooleanField(),
+            ),
+
         )
             .order_by('-pagado_real')
         )

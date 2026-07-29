@@ -368,6 +368,7 @@
                                         <a type="button" class="btn btn-outline-info" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Todas las Facturas validadas">
                                             <i class="fa-solid fa-file-circle-check"></i>
                                         </a>
+                                    
                                     {% elif pago.estado_facturas == "pendientes" %}
                                         <a type="button" class="btn btn-outline-warning" href="{% url 'matriz-facturas-nomodal' pago.oc.id %}?next={{ request.path }}" data-bs-toggle="tooltip" data-bs-placement="top" title="Facturas no validadas">
                                             <i class="fa-solid fa-file-circle-exclamation"></i>
@@ -473,7 +474,8 @@
                     </td>
                     <td>
                          {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
-                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}"  {% if pago.estado_facturas == 'todas_autorizadas' %}checked disabled{% endif %}>             
+                        
+                        <input  style="transform: scale(2); margin: 5px;" class="validacion_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="pago_ids" value="{{ pago.id|unlocalize }}"  {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}checked disabled{% endif %}>             
                         {% endif %}
                     </td>
                     <td>
@@ -582,10 +584,12 @@
                     </td>
                  
                     <td>
+                        
                         {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
-                            {% if pago.estado_facturas == 'todas_autorizadas' %}
+                            {% if pago.estado_facturas == 'todas_autorizadas' or pago.tiene_documentos_para_envio %}
                                 {% if pago.oc %}
                                 <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}"  type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
+                               
                                 {% elif pago.gasto %}
                                 <input  style="transform: scale(2); margin: 5px;" class="payment_checkbox form-check-input" data-id="{{ pago.id|unlocalize }}" data-monto="{{pago.monto|unlocalize}}" type="checkbox" name="compra_ids" value="{{ pago.id|unlocalize }}">
                                 {% elif pago.viatico %}
