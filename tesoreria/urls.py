@@ -44,4 +44,5 @@ urlpatterns = [
     path("cuentas/<int:pk>/estado-cuenta/subir/", views.subir_estado_cuenta, name="subir-estado-cuenta"),
     path("tesoreria/cuentas/<int:cuenta_id>/estados-cuenta/",views.estados_cuenta,name="estados-cuenta"),
     path('pago/eliminar/<int:pago_id>/', views.eliminar_pago, name='eliminar_pago'),
+    path('pago/<int:pk>/marcar-spei-devuelto/',views.marcar_spei_devuelto,name='marcar-spei-devuelto'),
     ]

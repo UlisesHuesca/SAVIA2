@@ -339,7 +339,8 @@
                     <th>Imprimir</th>
                    
                     <th>Registro</th>
-                     <th scope="col">Pago</th>
+                    <th scope="col">Pago</th>
+                    <th>SPEI Devuelto</th>
                     <th>Control de Documentos</th>
                     <th>Fecha Control</th>
                 </tr>
@@ -458,10 +459,18 @@
                         <td></td>
                     {% endif %}
                     <td>
-                        {% if pago.tipo == "Abono" %}
-                            <span class="badge bg-secondary">Devolución</span>
+                        {% if pago.spei_devuelto %}
+                            <span class="badge bg-danger">
+                                SPEI Devuelto
+                            </span>
+                        {% elif pago.tipo == "Abono" %}
+                            <span class="badge bg-secondary">
+                                Devolución
+                            </span>
                         {% else %}
-                            <span class="badge bg-info">Pago</span>
+                            <span class="badge bg-info">
+                                Pago
+                            </span>
                         {% endif %}
                     </td>
                     <td>${{pago.monto|floatformat:2}}</td>
@@ -569,7 +578,13 @@
                                 <div class="modal-dialog modal-xl">
                                     <div class="modal-content">
                                         <div class="modal-header">
-                                            <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">Comprobante de Pago</h5>
+                                            <h5 class="modal-title" id="pdfModalLabel{{ pago.id|unlocalize }}">  
+                                                {% if pago.spei_devuelto %}
+                                                    Comprobante de SPEI devuelto
+                                                {% else %}
+                                                    Comprobante de pago
+                                                {% endif %}
+                                            </h5>
                                             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                                         </div>
                                         <div class="modal-body">
@@ -581,6 +596,42 @@
                             {% endif %}
                             
                 
+                    </td>
+                    <td class="text-center">
+                        {% if pago.spei_devuelto %}
+                            <span
+                                class="badge bg-danger"
+                                data-bs-toggle="tooltip"
+                                title="El banco receptor devolvió este SPEI"
+                            >
+                                <i class="fa-solid fa-arrow-rotate-left"></i>
+                                SPEI Devuelto
+                            </span>
+
+                            {% if pago.fecha_spei_devuelto %}
+                                <div class="small text-muted mt-1">
+                                    {{ pago.fecha_spei_devuelto|date:"d/m/Y H:i" }}
+                                </div>
+                            {% endif %}
+
+                        {% elif pago.hecho and pago.comprobante_pago %}
+                            {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
+                                <form method="POST" action="{% url 'marcar-spei-devuelto' pago.id %}" class="d-inline"
+                                    onsubmit="return confirm(
+                                        '¿Confirmas que el banco receptor devolvió este SPEI? El folio regresará a Pendientes de Pago.'
+                                    );">
+                                    {% csrf_token %}
+
+                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
+
+                                    <button type="submit" class="btn btn-outline-danger" title="Marcar como SPEI devuelto">
+                                        <i class="fa-solid fa-arrow-rotate-left"></i>
+                                    </button>
+                                </form>
+                            {% endif %}
+                        {% else %}
+                            <span class="text-muted">—</span>
+                        {% endif %}
                     </td>
                  
                     <td>

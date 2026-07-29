@@ -5,6 +5,7 @@ import socket
 from smtplib import SMTPException
 from django.core.paginator import Paginator
 from django.core.files.base import ContentFile
+from django.db import transaction
 from django.db.models import Count, Q, Case, Exists, OuterRef, When, Value, CharField, Sum, DecimalField, F, BooleanField
 from django.db.models.functions import Concat, Coalesce
 from django.contrib import messages
@@ -5934,14 +5935,22 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
             print('pagos_intermedios_count:', pagos_intermedios.count())
 
             total_abonos = sum(
-                p.monto for p in pagos_intermedios
-                if p.tipo is not None and p.tipo.nombre == "ABONO"
+                p.monto
+                for p in pagos_intermedios
+                if not p.spei_devuelto
+                and p.tipo is not None
+                and p.tipo.nombre == "ABONO"
             )
+
             total_cargos = sum(
-                p.monto for p in pagos_intermedios
-                if p.tipo is None 
-                or p.tipo.nombre == "CARGO"
-                or p.tipo.nombre == "TRANSFERENCIA"
+                p.monto
+                for p in pagos_intermedios
+                if not p.spei_devuelto
+                and (
+                    p.tipo is None
+                    or p.tipo.nombre == "CARGO"
+                    or p.tipo.nombre == "TRANSFERENCIA"
+                )
             )
             print('saldo_inicial', saldo_inicial)
             print('total_abonos:', total_abonos)
@@ -6158,14 +6167,26 @@ def convert_excel_control_bancos(cuenta_id, pagos, saldo_inicial_objeto,  start_
         else:
             comentario_pago = 'NO HAY COMENTARIOS DISPONIBLES'
 
+        if pago.spei_devuelto:
+            comentarios = f"SPEI DEVUELTO - {comentarios or ''}"
+
         distrito = pago.oc.req.orden.distrito.nombre if hasattr(pago, 'oc') and pago.oc else (pago.gasto.distrito.nombre if hasattr(pago, 'gasto') and pago.gasto else (pago.viatico.distrito.nombre if hasattr(pago, 'viatico') and pago.viatico else (pago.distrito.nombre if pago.distrito else '')))
         cargo = ''
         abono = ''
-        if pago.tipo == None or pago.tipo.nombre == "CARGO" or pago.tipo.nombre == "TRANSFERENCIA":
+        if pago.spei_devuelto:
+            # El dinero salió y regresó a la misma cuenta.
             cargo = pago.monto
+            abono = pago.monto
+
+        elif (
+            pago.tipo is None
+            or pago.tipo.nombre == "CARGO"
+            or pago.tipo.nombre == "TRANSFERENCIA"
+        ):
+            cargo = pago.monto
+
         elif pago.tipo.nombre == "ABONO":
             abono = pago.monto
-        #saldo = pago.saldo
         
    
 
@@ -6901,3 +6922,55 @@ def estados_cuenta(request, cuenta_id):
         "myfilter": myfilter,
     }
     return render(request, "tesoreria/estados_cuenta.html", context)
+
+@login_required(login_url='user-login')
+@perfil_seleccionado_required
+@require_POST
+def marcar_spei_devuelto(request, pk):
+    usuario = Profile.objects.get(id=request.session.get('selected_profile_id'))
+
+  
+
+    if not (usuario.tipo.tesoreria or usuario.tipo.finanzas):
+        messages.error(request,'No cuentas con permisos para realizar esta operación.')
+        return redirect('matriz-pagos')
+
+    with transaction.atomic():
+
+        pago = get_object_or_404(Pago.objects.select_for_update(),id=pk,eliminado=False)
+        if not pago.hecho:
+            messages.warning(request,'El movimiento todavía no se encuentra realizado.')
+            return redirect('matriz-pagos')
+
+        if pago.spei_devuelto:
+            messages.warning(request,'Este movimiento ya está marcado como SPEI devuelto.')
+            return redirect('matriz-pagos')
+
+        pago.spei_devuelto = True
+        pago.fecha_spei_devuelto = timezone.now()
+
+        pago.save(update_fields=['spei_devuelto','fecha_spei_devuelto',])
+
+        # Regresar el documento relacionado a no pagado
+        if pago.oc:
+            pago.oc.pagada = False
+            pago.oc.save(update_fields=['pagada'])
+
+        elif pago.gasto:
+            pago.gasto.pagada = False
+            pago.gasto.save(update_fields=['pagada'])
+
+        elif pago.viatico:
+            pago.viatico.pagada = False
+            pago.viatico.save(update_fields=['pagada'])
+
+    # notificar_spei_devuelto(pago)
+
+    messages.success(request,'El movimiento fue marcado como SPEI devuelto.')
+
+    siguiente = request.POST.get('next')
+
+    if siguiente:
+        return redirect(siguiente)
+
+    return redirect('matriz-pagos')
