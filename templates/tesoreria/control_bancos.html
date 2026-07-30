@@ -139,6 +139,12 @@
                             </button>
                         </li>
                         <li class="nav-item mx-2">
+                            <button type="submit" name="btnDescargarManuales" class="btn btn-outline-primary" title="Descargar archivos de movimientos manuales">
+                                <i class="fa-solid fa-file-zipper"></i>
+                                    Descargar movimientos manuales
+                            </button>
+                        </li>
+                        <li class="nav-item mx-2">
                         {% if saldo_final is not None %}
                             <table class="table table-sm">
                             <tr><th>Saldo trasladado</th><td class="text-end">{{ saldo_inicial|floatformat:2 }}</td></tr>

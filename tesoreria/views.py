@@ -3021,6 +3021,102 @@ def sum_firmada(qs):
     )), Value(Decimal('0.00'))))['total'] or Decimal('0.00')
 
 
+def limpiar_nombre_descarga(valor, valor_default):
+    nombre = str(valor or '').strip()
+
+    # Eliminar caracteres no permitidos en nombres de Windows
+    nombre = re.sub(r'[<>:"/\\|?*\x00-\x1F]', '_', nombre)
+    nombre = re.sub(r'\s+', ' ', nombre)
+
+    return nombre or valor_default
+
+def descargar_movimientos_manuales(pagos):
+    movimientos = (pagos.filter(oc__isnull=True, gasto__isnull=True, viatico__isnull=True, hecho=True, eliminado=False,)
+        .exclude(comprobante_pago__isnull=True)
+        .exclude(comprobante_pago='')
+        .order_by('pagado_real', 'pagado_hora', 'id')
+    )
+
+    if not movimientos.exists():
+        return None
+
+    zip_buffer = io.BytesIO()
+    carpetas_utilizadas = set()
+    archivos_agregados = 0
+
+    with zipfile.ZipFile(
+        zip_buffer,
+        mode='w',
+        compression=zipfile.ZIP_DEFLATED
+    ) as zip_file:
+
+        for pago in movimientos:
+
+            # Fecha del movimiento
+            if pago.pagado_real:
+                fecha = pago.pagado_real.strftime('%Y-%m-%d')
+
+            elif pago.pagado_date:
+                fecha = timezone.localtime(pago.pagado_date).strftime('%Y-%m-%d')
+
+            else:
+                fecha = 'SIN_FECHA'
+
+            # En movimientos manuales tomaremos este campo
+            proveedor = limpiar_nombre_descarga(pago.empresa_beneficiario,'SIN_PROVEEDOR')
+
+            monto = Decimal(pago.monto or Decimal('0.00'))
+
+            monto_nombre = f'{monto:.2f}'.replace('.', '_')
+
+            nombre_base = (f'{fecha}_{proveedor}_{monto_nombre}')
+
+            nombre_carpeta = nombre_base
+
+            # Evitar carpetas duplicadas
+            if nombre_carpeta in carpetas_utilizadas:
+                nombre_carpeta = (f'{nombre_base}_PAGO_{pago.id}')
+
+            carpetas_utilizadas.add(nombre_carpeta)
+
+            archivo = pago.comprobante_pago
+
+            nombre_archivo = limpiar_nombre_descarga(os.path.basename(archivo.name),f'ARCHIVO_PAGO_{pago.id}')
+
+            ruta_dentro_zip = (f'{nombre_carpeta}/{nombre_archivo}')
+
+            try:
+                archivo.open('rb')
+
+                zip_file.writestr(ruta_dentro_zip,archivo.read())
+
+                archivos_agregados += 1
+
+            except (FileNotFoundError, OSError):
+                continue
+
+            finally:
+                try:
+                    archivo.close()
+                except Exception:
+                    pass
+
+    if archivos_agregados == 0:
+        return None
+
+    zip_buffer.seek(0)
+
+    fecha_descarga = timezone.localdate().strftime('%Y-%m-%d')
+
+    response = HttpResponse(zip_buffer.getvalue(),content_type='application/zip')
+
+    response['Content-Disposition'] = ('attachment; 'f'filename="movimientos_manuales_{fecha_descarga}.zip"')
+
+    return response
+
+
+
+
 @perfil_seleccionado_required
 def control_bancos(request, pk):
     pk_profile = request.session.get('selected_profile_id')
@@ -3115,7 +3211,25 @@ def control_bancos(request, pk):
 
             # 3) SALDO FINAL
             saldo_final = saldo_trasladado - movimientos_cargos + movimientos_abonos
+        elif 'btnDescargarManuales' in request.POST:
+            response = descargar_movimientos_manuales(pagos)
 
+            if response is None:
+                messages.warning(
+                    request,
+                    (
+                        'No se encontraron movimientos manuales '
+                        'con archivos adjuntos para descargar.'
+                    )
+                )
+                return redirect(request.get_full_path())
+
+            response.set_cookie(key='descarga_iniciada', value='true', max_age=60, path='/', httponly=False, samesite='Lax',)
+
+
+            return response
+
+ 
     context= {
         'pagos_list':pagos_list,
         'cuenta': cuenta,
