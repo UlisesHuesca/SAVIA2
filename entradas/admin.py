@@ -24,7 +24,7 @@ class NC_ArticuloAdmin(admin.ModelAdmin):
     search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre',]
     
 class EntradaArticuloAdmin(admin.ModelAdmin):
-    list_display = ('id','get_entrada_folio','articulo_comprado','liberado','cantidad','cantidad_por_surtir','referencia')
+    list_display = ('id','get_entrada_folio','articulo_comprado','liberado','cantidad','cantidad_por_surtir','agotado')
     search_fields = ['articulo_comprado__producto__producto__articulos__producto__producto__nombre', 'entrada__folio','entrada__oc__folio']
     raw_id_fields = ('entrada','articulo_comprado')
 
