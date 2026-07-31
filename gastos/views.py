@@ -239,12 +239,23 @@ def crear_gasto(request):
             distritos = Distrito.objects.filter().exclude(nombre__in=["BRASIL","MATRIZ ALTERNATIVO","ALTAMIRA ALTERNATIVO","VH SECTOR 6"])
         if usuario.tipo.subdirector:
            
-            if usuario.tipo.dg: #Esto es los autorizadores que le deben de aparecer al Director General
-                superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
-            else:
-                superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
+            subdirectores_excluidos = [
+                668,  # Ricardo Mendoza
+                104,  # Felipe Diaz
+                101, #Daniel García
+                1285,  # Melo
+                1101, #Yodak
+            ]
+            superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(id__in=subdirectores_excluidos,)
+            #print(superintendentes)
+            #else:
+            #    superintendentes = colaborador.filter(tipo__dg = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
         else:    
-            superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True) 
+            subdirectores_excluidos = [
+                1101, #Yodak
+            ]
+
+            superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True).exclude(id__in=subdirectores_excluidos,)
     elif usuario.distritos.nombre == "BRASIL":
         superintendentes = colaborador.filter(distritos=usuario.distritos, tipo__supervisor = True, st_activo = True).exclude(tipo__nombre="Admin")
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin" and not usuario.tipo.nombre == "GERENCIA":
@@ -2283,6 +2294,7 @@ def pago_gasto(request, pk):
 
     context= {
         'gasto':gasto,
+        'presupesto_proyecto': presupuesto_proyecto,
         'desglose_proyectos': desglose_proyectos,
         'total_asignado_proyectos': total_asignado_proyectos,
         'cuentas_para_select2':cuentas_para_select2,

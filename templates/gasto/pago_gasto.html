@@ -318,6 +318,7 @@
                                 <tr>
                                     <th>Proyecto</th>
                                     <th class="text-end">Monto asignado</th>
+                                    <th class="importe">Monto total del proyecto</th>
                                     <th class="text-end">Porcentaje</th>
                                 </tr>
                             </thead>
@@ -339,11 +340,27 @@
                                             ${{ detalle.monto|floatformat:2 }}
                                         </td>
 
-                                        <td class="text-end">
-                                            {{ detalle.porcentaje|floatformat:2 }}%
+                                         <td class="importe">
+                                            {% if detalle.presupuesto_proyecto > 0 %}
+                                                ${{ detalle.presupuesto_proyecto|floatformat:2 }}
+                                            {% else %}
+                                                <span class="text-muted">
+                                                    Sin monto registrado
+                                                </span>
+                                            {% endif %}
                                         </td>
-                                    </tr>
-                                {% endfor %}
+
+                                        <td class="importe">
+                                            {% if detalle.presupuesto_proyecto > 0 %}
+                                                {{ detalle.porcentaje|floatformat:2 }}%
+                                            {% else %}
+                                                <span class="text-muted">
+                                                    No calculable
+                                                </span>
+                                             {% endif %}
+                                        </td>
+                                        </tr>
+                                    {% endfor %}
                             </tbody>
 
                             <tfoot>
