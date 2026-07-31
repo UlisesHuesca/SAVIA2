@@ -5291,7 +5291,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
     number_style.font = Font(name ='Calibri', size = 10)
 
     columns = ['Año','Prioridad','Folio OC','Fecha Creación','Fecha Autorización OC','Proyecto','Subproyecto','Distrito',
-               'Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Convenio','Referencia','Moneda','Tipo de cambio','Importe','Total en Pesos','Importe Pagado',
+               'Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Convenio','Referencia','Moneda','Tipo de cambio','Importe', 'Monto autorizado por SIA','Total en Pesos','Importe Pagado',
                'Importe Restante','C. Pago', 'Días de Crédito','Recibida','Fecha Entrada','Factura','Folio UUID', 'Fecha Timbrado']
 
     for col_num in range(len(columns)):
@@ -5316,7 +5316,7 @@ def convert_excel_matriz_compras_tesoreria(compras):
 
     # Asumiendo que las filas de datos comienzan en la fila 2 y terminan en row_num
     ws.cell(row=3, column=columna_max + 1, value=f"=COUNTA(A:A)-1").style = body_style
-    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(U:U)").style = money_resumen_style
+    ws.cell(row=4, column=columna_max + 1, value=f"=SUM(V:V)").style = money_resumen_style
   
     
    
@@ -5384,10 +5384,12 @@ def convert_excel_matriz_compras_tesoreria(compras):
             compra.moneda.nombre,
             compra.tipo_de_cambio if compra.tipo_de_cambio else '',
             compra.costo_plus_adicionales,
+               # Nueva columna
+            compra.parcial or 0,
             # Calcula total en pesos usando la fórmula de Excel
             f'=IF(Q{row_num}="",R{row_num},R{row_num}*Q{row_num})', 
             compra.monto_pagado,
-            f'=S{row_num} - T{row_num}',
+            f'=T{row_num} - U{row_num}',
             compra.cond_de_pago.nombre,
             compra.dias_de_credito if compra.dias_de_credito else '',
             recibida,
@@ -5400,13 +5402,13 @@ def convert_excel_matriz_compras_tesoreria(compras):
 
     
         for col_num in range(len(row)):
-            (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
+            (ws.cell(row = row_num, column = col_num + 1, value=str(row[col_num]))).style = body_style
             if col_num in [0,2]:
-                (ws.cell(row= row_num, column = col_num+1, value=row[col_num])).style = number_style
-            if col_num in [3, 4, 28]:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
-            if col_num in [16, 17,18, 19,20]:
-                (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
+                (ws.cell(row= row_num, column = col_num  +1, value=row[col_num])).style = number_style
+            if col_num in [3, 4, 25]:
+                (ws.cell(row = row_num, column = col_num + 1, value=row[col_num])).style = date_style
+            if col_num in [17,18, 19,20, 21]:
+                (ws.cell(row = row_num, column = col_num + 1, value=row[col_num])).style = money_style
        
     
     sheet = wb['Sheet']
