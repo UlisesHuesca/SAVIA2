@@ -4,8 +4,7 @@ from requisiciones.models import Requis, ArticulosRequisitados
 from user.models import Distrito, Banco, Pais
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
-from datetime import date
-from datetime import datetime
+from datetime import date, datetime
 from dateutil.relativedelta import relativedelta
 import decimal
 from phone_field import PhoneField
@@ -454,9 +453,9 @@ class Compra(models.Model):
 
     @property
     def get_monto_pagos(self):
-        pagos = self.pago_set.all()
+        pagos = self.pagos.filter(hecho = True, eliminado = False)
 
-        total_pagos = 0
+        total_pagos = decimal.Decimal('0.00')
 
         for pago in pagos:
             tipo_de_cambio = pago.tipo_de_cambio or self.tipo_de_cambio
