@@ -10,6 +10,84 @@
 </head>
 <body>
 {% block content %}
+<style>
+    .tabla-finanzas {
+        width: 100%;
+        margin-bottom: 1.5rem;
+        border-collapse: collapse;
+        font-size: 0.95rem;
+    }
+
+    .tabla-finanzas th,
+    .tabla-finanzas td {
+        padding: 10px;
+        vertical-align: middle;
+        border: 1px solid #d5d9dd;
+    }
+
+    .tabla-finanzas thead th {
+        color: #111;
+        font-weight: 700;
+        background-color: #dee0e2;
+        border-bottom: 2px solid #212529;
+    }
+
+    .tabla-finanzas tbody tr:nth-child(odd) th,
+    .tabla-finanzas tbody tr:nth-child(odd) td {
+        background-color: #f1f1f1;
+    }
+
+    .tabla-finanzas tbody tr:nth-child(even) th,
+    .tabla-finanzas tbody tr:nth-child(even) td {
+        background-color: #fff;
+    }
+
+    .tabla-finanzas tfoot th,
+    .tabla-finanzas tfoot td {
+        font-weight: 700;
+        background-color: #fff;
+        border-top: 2px solid #212529;
+    }
+
+    .tabla-finanzas .fila-principal th,
+    .tabla-finanzas .fila-principal td {
+        font-weight: 700;
+        background-color: #fff;
+        border-bottom: 2px solid #212529;
+    }
+
+    .tabla-finanzas .etiqueta {
+        width: 38%;
+        font-weight: 700;
+    }
+
+    .tabla-finanzas .importe {
+        text-align: right;
+        white-space: nowrap;
+    }
+
+    .tabla-finanzas .importe-destacado {
+        color: #278fd5;
+        font-weight: 700;
+    }
+
+    .titulo-tabla-finanzas {
+        margin: 20px 0 12px;
+        font-size: 1rem;
+        font-weight: 700;
+    }
+
+    @media (max-width: 576px) {
+        .tabla-finanzas {
+            font-size: 0.87rem;
+        }
+
+        .tabla-finanzas th,
+        .tabla-finanzas td {
+            padding: 8px;
+        }
+    }
+</style>
 <!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
 <div>
     <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
@@ -61,171 +139,230 @@
                 </ul>
             </div>
             {% endif %}
-             
-                <table class='table table-striped'>
-                    <thead>
+            <!-- Datos del solicitante -->
+            <div class="table-responsive">
+            
+                <table class='tabla-finanzas'>
+                    <tbody>
                         {% if gasto %}
-                        <tr>
-                            <th scope="col">Solicitante:</th>
-                            <th>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</th>
+                        <tr class="fila-principal">
+                            <th class="etiqueta" scope="row">Solicitante:</th>
+                            <td>{{gasto.staff.staff.staff.first_name}} {{gasto.staff.staff.staff.last_name}}</td>
                         </tr>
-                        <tr>
-                            <th>Solicitado para:</th>
+                        <tr class="fila-principal">
+                            <th class="etiqueta" scope="row">Solicitado para:</th>
                            
-                            <th scope="col">
+                            <td scope="col">
                                 {% if gasto.proveedor %}<span class="badge bg-primary"> {{gasto.proveedor}} </span>
                                 {% elif gasto.tipo.familia == "rh_nomina" %}<span class="badge bg-primary"> NOMINA </span>
                                 {% elif gasto.colaborador %}{{gasto.colaborador.staff.staff.first_name}} {{gasto.colaborador.staff.staff.last_name}}
                                 {% else %} NA
                                 {% endif %}
-                            </th>
+                            </td>
                         </tr>
                          {% elif gasto %}
                         <tr>
-                            <th scope="col">Solicitante:</th>
-                            <th>{{objeto.gasto.staff.staff.staff.first_name}} {{objeto.gasto.staff.staff.staff.last_name}}</th>
+                            <th class="etiqueta" scope="row">Solicitante:</th>
+                            <td>{{objeto.gasto.staff.staff.staff.first_name}} {{objeto.gasto.staff.staff.staff.last_name}}</td>
                         </tr>
                         <tr>
-                            <th>Solicitado para:</th>
+                            <th  class="etiqueta" scope="row">Solicitado para:</th>
                            
-                            <th scope="col">
+                            <td scope="col">
                                 {% if objeto.gasto.proveedor %}<span class="badge bg-primary"> {{objeto.gasto.proveedor}} </span>
                                 {% elif objeto.gasto.tipo.familia == "rh_nomina" %}<span class="badge bg-primary"> NOMINA </span>
                                 {% elif objeto.gasto.colaborador %}{{objeto.gasto.colaborador.staff.staff.first_name}} {{objeto.gasto.colaborador.staff.staff.last_name}}
                                 {% else %} NA
                                 {% endif %}
-                            </th>
+                            </td>
                         </tr>
                         {% elif objeto.viatico %}
                          <tr>
-                            <th scope="col">Solicitante:</th>
-                            <th>{{objeto.viatico.staff.staff.staff.first_name}} {{objeto.viatico.staff.staff.staff.last_name}}</th>
+                            <th class="etiqueta" scope="row">Solicitante:</th>
+                            <td>{{objeto.viatico.staff.staff.staff.first_name}} {{objeto.viatico.staff.staff.staff.last_name}}</td>
                         </tr>
                         <tr>
-                            <th>Solicitado para:</th>
+                            <th class="etiqueta" scope="row">Solicitado para:</th>
                            
-                            <th scope="col">
+                            <td scope="col">
                                 {% if objeto.viatico.colaborador %}{{objeto.viatico.colaborador.staff.staff.first_name}} {{objeto.viatico.colaborador.staff.staff.last_name}}
                                 {% else %} NA
                                 {% endif %}
-                            </th>
+                            </td>
                         </tr>
 
                         {% endif %}
-                    </thead>
-                    <tbody>
+                  
+                 
                          {% if gasto.tipo.familia == "rh_nomina" %}
                         <tr>
-                            <th>Distrito</th>
-                            <th>{{gasto.distrito.nombre}}</th>
+                            <th class="etiqueta" scope="row">Distrito</th>
+                            <td>{{gasto.distrito.nombre}}</td>
                         </tr>
                             {% for soporte in gasto.archivosoporte_set.all %}
                                 <tr>
-                                    <th>{{ soporte.tipo.nombre }}:</th>
-                                    <th> <a href="{{ soporte.archivo.url }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa-solid fa-eye"></i></a>
+                                    <th class="etiqueta" scope="row">{{ soporte.tipo.nombre }}:</th>
+                                    <td> <a href="{{ soporte.archivo.url }}" target="_blank" class="btn btn-sm btn-primary"><i class="fa-solid fa-eye"></i></a>
                                         <a href="{{ soporte.archivo.url }}" download class="btn btn-sm btn-success"><i class="fa-solid fa-arrow-down-to-line"></i></a>
-                                    </th>
+                                    </td>
                                 </tr>
                             {% endfor %}
                         {% else %}
                         {% if not modo_vale_azul %}
                         </tr>
-                            <th scope="col">Banco:</th>
-                            <th>{% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
+                            <th class="etiqueta" scope="row">Banco:</th>
+                            <td>{% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
                                  {% elif gasto.colaborador %}{{gasto.colaborador.staff.banco}}
                                  {% else  %}{{gasto.staff.staff.banco}}{% endif %}
-                            </th>
+                            </td>
                            
                         </tr>
 
                         <tr>
                           
-                            <th scope="col">Cuenta:</th>
-                            <th scope="col">
+                            <th class="etiqueta" scope="row">Cuenta:</th>
+                            <td scope="col">
                                 {% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
                                  {% elif gasto.colaborador %}{{gasto.colaborador.staff.cuenta_bancaria}}
                                  {% else %}{{gasto.staff.staff.cuenta_bancaria}}{% endif %}
-                            </th>
+                            </td>
                         </tr>
                         <tr>
-                            <th scope="col">Clabe:</th>
-                            <th scope="col">
+                            <th class="etiqueta" scope="row">Clabe:</th>
+                            <td>
                                {% if gasto.tipo.tipo == "IMPUESTOS" %}De acuerdo a línea de captura
                                  {% elif gasto.colaborador %}{{gasto.colaborador.staff.clabe}}
                                  {% else %}{{gasto.staff.staff.clabe}}{% endif %}
-                            </th>
+                            </td>
                         </tr>
                         {% endif %}
                          {% endif %}
                     </tbody>
                 </table>
-                <hr>
-                <table class='table table-striped'>
+            </div>
+                <table class='tabla-finanzas'>
                     {% if gasto %}
-                    <thead>
-                        <tr>
-                        <th scope="col">Importe Gasto</th>
-                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">${{gasto.get_total_solicitud}}</th>
-                        </tr>
-                    </thead>
                     <tbody>
+                        <tr class="fila-principal">
+                            <th class="etiqueta" scope="row">Importe Gasto</th>
+                            <td id="importe" value={{gasto.get_total_solicitud}} scope="col">${{gasto.get_total_solicitud}}</td>
+                        </tr>
+                   
+                    
                         <tr>
-                            <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{gasto.monto_pagado|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Pagado:</th>
+                            <td id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{gasto.monto_pagado|floatformat:2}}</td>
                         </tr>
                         <tr>
-                            <th>Parcialidad:</th>
-                            <th  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{gasto.parcial|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Parcialidad:</th>
+                            <td  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{gasto.parcial|floatformat:2}}</td>
                         </tr>
                         <tr>
-                            <th>Remanente:</th>
-                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Remanente:</th>
+                            <td id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</td>
                         </tr>
                     </tbody>
                     {% elif objeto.gasto %}
                     <thead>
                         <tr>
-                        <th scope="col">Importe Gasto</th>
-                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">${{objeto.gasto.get_total_solicitud}}</th>
+                        <th class="etiqueta" scope="row">Importe Gasto</th>
+                        <td id="importe" value={{gasto.get_total_solicitud}} scope="col">${{objeto.gasto.get_total_solicitud}}</td>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{objeto.gasto.monto_pagado|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Pagado:</th>
+                            <td id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{objeto.gasto.monto_pagado|floatformat:2}}</td>
                         </tr>
                         <tr>
-                            <th>Parcialidad:</th>
-                            <th  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{objeto.gasto.parcial|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Parcialidad:</th>
+                            <td  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{objeto.gasto.parcial|floatformat:2}}</td>
                         </tr>
                         <tr>
-                            <th>Remanente:</th>
-                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Remanente:</th>
+                            <td id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</td>
                         </tr>
                     </tbody>
                     {% elif objeto.viatico %}
                     <thead>
                         <tr>
-                        <th scope="col">Importe Viático</th>
-                        <th id="importe" value={{gasto.get_total_solicitud}} scope="col">${{objeto.viatico.get_total|floatformat:2}}</th>
+                        <th class="etiqueta" scope="row">Importe Viático</th>
+                        <td id="importe" value={{gasto.get_total_solicitud}} scope="col">${{objeto.viatico.get_total|floatformat:2}}</td>
                         </tr>
                     </thead>
                     <tbody>
                         <tr>
-                            <th scope="col">Pagado:</th>
-                            <th id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{objeto.viatico.monto_pagado|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Pagado:</th>
+                            <td id="total" value={{suma_pagos}} scope="col" style="color:#3e92cc" monto="{{monto}}">${{objeto.viatico.monto_pagado|floatformat:2}}</td>
                         </tr>
                         <tr>
-                            <th>Parcialidad:</th>
-                            <th  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{objeto.viatico.parcial|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Parcialidad:</th>
+                            <td  id="parcialidad" parcialidad="{{gasto.parcial|unlocalize}}" style="color:#3e92cc">${{objeto.viatico.parcial|floatformat:2}}</td>
                         </tr>
                         <tr>
-                            <th>Remanente:</th>
-                            <th id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</th>
+                            <th class="etiqueta" scope="row">Remanente:</th>
+                            <td id="remanente" remanente="{{remanente|unlocalize}}">${{remanente|floatformat:2}}</td>
                         </tr>
                     </tbody>
                     {% endif %}
                 </table>
+                {% if desglose_proyectos %}
+                <div class="mt-4">
+                    <h6 class="fw-bold mb-3">
+                        Distribución del gasto por proyecto
+                    </h6>
+
+                    <div class="table-responsive">
+                        <table class="table table-striped table-bordered align-middle">
+                            <thead class="table-secondary">
+                                <tr>
+                                    <th>Proyecto</th>
+                                    <th class="text-end">Monto asignado</th>
+                                    <th class="text-end">Porcentaje</th>
+                                </tr>
+                            </thead>
+
+                            <tbody>
+                                {% for detalle in desglose_proyectos %}
+                                    <tr>
+                                        <td>
+                                            {% if detalle.proyecto %}
+                                                {{ detalle.proyecto.nombre }}
+                                            {% else %}
+                                                <span class="text-muted">
+                                                    Sin proyecto asignado
+                                                </span>
+                                            {% endif %}
+                                        </td>
+
+                                        <td class="text-end">
+                                            ${{ detalle.monto|floatformat:2 }}
+                                        </td>
+
+                                        <td class="text-end">
+                                            {{ detalle.porcentaje|floatformat:2 }}%
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                            </tbody>
+
+                            <tfoot>
+                                <tr class="fw-bold">
+                                    <td>Total distribuido</td>
+
+                                    <td class="text-end">
+                                        ${{ total_asignado_proyectos|floatformat:2 }}
+                                    </td>
+
+                                    <td class="text-end">
+                                       
+                                    </td>
+                                </tr>
+                            </tfoot>
+                        </table>
+                    </div>
+                </div>
+            {% endif %}
 
                 <table class='table table-striped'>
                     <thead>

@@ -2151,12 +2151,47 @@ def pago_gasto(request, pk):
     usuario = Profile.objects.get(id = pk_usuario)
     gasto = Solicitud_Gasto.objects.get(id=pk)
     cargos = Tipo_Pago.objects.get(id = 1)
-    pagos_alt = Pago.objects.filter(
-        gasto=gasto,
-        hecho=True
-    ).filter(
-    Q(tipo=cargos) | Q(tipo__isnull=True)
-    )
+    pagos_alt = Pago.objects.filter(gasto=gasto,hecho=True).filter(Q(tipo=cargos) | Q(tipo__isnull=True))
+
+    desglose_proyectos = {}
+
+    articulos_gasto = gasto.articulos.select_related('proyecto',).all()
+
+    for articulo in articulos_gasto:
+        proyecto_id = articulo.proyecto_id
+
+        # Utilizamos el mismo cálculo que ya usa cada artículo.
+        monto_articulo = articulo.total_parcial or Decimal('0.00')
+
+        if proyecto_id not in desglose_proyectos:
+            desglose_proyectos[proyecto_id] = {
+                'proyecto': articulo.proyecto,
+                'monto': Decimal('0.00'),
+                'porcentaje': Decimal('0.00'),
+            }
+
+        desglose_proyectos[proyecto_id]['monto'] += monto_articulo
+
+    desglose_proyectos = list(desglose_proyectos.values())
+
+    for detalle in desglose_proyectos:
+        proyecto = detalle['proyecto']
+
+        if proyecto:
+            presupuesto_proyecto = (
+                proyecto.get_projects_total or Decimal('0.00')
+            )
+        else:
+            presupuesto_proyecto = Decimal('0.00')
+
+        detalle['presupuesto_proyecto'] = presupuesto_proyecto
+
+        if presupuesto_proyecto > 0:
+            detalle['porcentaje'] = (detalle['monto'] * Decimal('100') / presupuesto_proyecto).quantize( Decimal('0.01'), rounding=ROUND_HALF_UP,)
+
+
+    total_asignado_proyectos = sum(( detalle['monto'] for detalle in desglose_proyectos), Decimal('0.00'),)
+
 
     if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
         cuentas = Cuenta.objects.filter(distrito__nombre = 'BRASIL')
@@ -2248,7 +2283,8 @@ def pago_gasto(request, pk):
 
     context= {
         'gasto':gasto,
-        #'pago':pago,
+        'desglose_proyectos': desglose_proyectos,
+        'total_asignado_proyectos': total_asignado_proyectos,
         'cuentas_para_select2':cuentas_para_select2,
         'form':form,
         'pagos_alt':pagos_alt,
