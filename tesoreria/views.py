@@ -7070,11 +7070,13 @@ def marcar_spei_devuelto(request, pk):
         # Regresar el documento relacionado a no pagado
         if pago.oc:
             pago.oc.pagada = False
-            pago.oc.save(update_fields=['pagada'])
+            pago.oc.para_pago = False
+            pago.oc.save(update_fields=['pagada','para_pago'])
 
         elif pago.gasto:
             pago.gasto.pagada = False
-            pago.gasto.save(update_fields=['pagada'])
+            pago.gasto.para_pago = False
+            pago.gasto.save(update_fields=['pagada','para_pago'])
 
         elif pago.viatico:
             pago.viatico.pagada = False
