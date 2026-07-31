@@ -260,7 +260,7 @@
                     <td>${{compra.costo_plus_adicionales|floatformat:2}}</td>
                     <td>${{compra.costo_fletes}}</td>
                     <td class="d-none d-md-table-cell">{{compra.moneda}}</td>
-                    <td class="d-none d-md-table-cell">${{compra.monto_pagado}}</td>
+                    <td>${{compra.get_monto_pagos.total_pagos|floatformat:2}}</td>
                     <td class="d-none d-md-table-cell">{{compra.cond_de_pago}}</td>
                     <td class="d-none d-lg-table-cell">
                         {% if compra.no_conformidad.all|length > 0 %}
@@ -347,10 +347,10 @@
                         <td>
                             <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="costo_plus_adicionales" value="{{ compra.costo_plus_adicionales|unlocalize }}">
                             <input type="hidden" data-id="{{ compra.id|unlocalize }}" class="pagado" value="{{ compra.monto_pagado|unlocalize }}">
-                            <input class="form-control diferencia" type="textbox" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
+                            <input class="form-control diferencia" type="number" data-id="{{ compra.id|unlocalize }}" name="parcial_{{ compra.id|unlocalize }}" value="">
                         </td>
                         <td>
-                            <input class="oc_checkbox_accion form-check-input" style="transform: scale(2); margin: 5px;" type="checkbox" name="compra_ids_accion" value="{{ compra.id|unlocalize }}">
+                            <input class="oc_checkbox_accion form-check-input" style="transform: scale(2); margin: 5px;" type="checkbox" name="compra_ids_accion" value="{{ compra.id|unlocalize }}"  step="0.01" min="0">
                         </td>
                         
                     {% endif %}

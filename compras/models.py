@@ -453,7 +453,7 @@ class Compra(models.Model):
 
     @property
     def get_monto_pagos(self):
-        pagos = self.pagos.filter(hecho = True, eliminado = False)
+        pagos = self.pagos.filter(hecho = True, eliminado = False, spei_devuelto = False)
 
         total_pagos = decimal.Decimal('0.00')
 
