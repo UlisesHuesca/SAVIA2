@@ -485,22 +485,34 @@ document.addEventListener('DOMContentLoaded', function() {
             event.preventDefault(); // Detener el envío del formulario por defecto
             const form = document.getElementById('mass_payment_form');  // Asegúrate de tener un id en tu formulario
 
-            selectedPurchases.forEach(purchase => {
-                // Crear inputs ocultos para cada compra_id seleccionada y su parcial
-                const inputCompraId = document.createElement('input');
-                inputCompraId.type = 'hidden';
-                inputCompraId.name = 'compra_ids';  // Debe coincidir con lo que esperas en la vista
-                inputCompraId.value = purchase.id;
+              // Eliminar campos ocultos generados anteriormente.
+        form.querySelectorAll(
+            '.campo-pago-generado'
+        ).forEach(input => input.remove());
 
-                const inputParcial = document.createElement('input');
-                inputParcial.type = 'hidden';
-                inputParcial.name = `parcial_${purchase.id}`;
-                inputParcial.value = purchase.monto;
+        selectedPurchases.forEach(purchase => {
+            const inputCompraId = document.createElement('input');
+            inputCompraId.type = 'hidden';
+            inputCompraId.name = 'compra_ids';
+            inputCompraId.value = purchase.id;
+            inputCompraId.classList.add('campo-pago-generado');
 
-                // Agregar los inputs ocultos al formulario
-                form.appendChild(inputCompraId);
-                form.appendChild(inputParcial);
-            });
+            const diferenciaActual = document.querySelector(
+            `.diferencia[data-id="${purchase.id}"]`
+        );
+
+            const inputParcial = document.createElement('input');
+            inputParcial.type = 'hidden';
+            inputParcial.name = `parcial_${purchase.id}`;
+            inputParcial.classList.add('campo-pago-generado');
+
+            inputParcial.value = diferenciaActual
+                ? (parseFloat(diferenciaActual.value) || 0)
+                : purchase.monto;
+
+            form.appendChild(inputCompraId);
+            form.appendChild(inputParcial);
+        });
         // Limpiar el localStorage después de agregar los datos
         localStorage.removeItem('selectedPurchases');
         // Finalmente enviar el formulario con todos los datos añadidos
