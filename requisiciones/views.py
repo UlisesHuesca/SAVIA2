@@ -743,9 +743,13 @@ def update_salida(request):
                     if cantidad > 0: #Se cambia producto.cantidad, se tiene que comparar con la cantidad de la salida no contra la cantidad disponible 
                         salida, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=False)
                         print('entrada_res',entrada_res)
-                        if entrada.cantidad_por_surtir == 0:
+                        if entrada.cantidad_por_surtir <= 0:
+                            entrada.cantidad_por_surtir = 0
                             entrada.agotado = True
                             entrada.save(update_fields=['agotado'])
+                        if entrada.cantidad_por_surtir > entrada.cantidad:
+                            entrada.cantidad_por_surtir = entrada.cantidad
+                            entrada.save(update_fields=['cantidad_por_surtir'])
                             
                         if cantidad <= entrada.cantidad_por_surtir and cantidad > 0 and entrada.agotado == False:
                             print('0')
