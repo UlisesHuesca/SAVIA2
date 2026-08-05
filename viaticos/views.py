@@ -707,23 +707,39 @@ def viaticos_autorizados(request):
 def asignar_montos(request, pk):
     colaborador = Profile.objects.all()
     pk_perfil = request.session.get('selected_profile_id')
+
     usuario = colaborador.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id = pk)
-    viatico_query= Solicitud_Viatico.objects.filter(id = pk)
-    concepto, created = Concepto_Viatico.objects.get_or_create(completo = False, staff=usuario)
 
-    conceptos = Concepto_Viatico.objects.filter(viatico = viatico, completo = True)
+    viatico_query= Solicitud_Viatico.objects.filter(id = pk)
+    concepto_viatico = Product.objects.filter(viatico = True)
+    conceptos = Concepto_Viatico.objects.filter(viatico = viatico, completo = True).select_related('producto','staff')
+
+    #concepto, created = Concepto_Viatico.objects.get_or_create(completo = False, staff=usuario)
+
+    
     error_messages = {}
 
-    concepto_viatico = Product.objects.filter(viatico = True)
+   
 
     form = Concepto_ViaticoForm()
     form.fields['producto'].queryset = concepto_viatico
 
     if request.method =="POST":
         if "btn_producto" in request.POST:
-            form = Concepto_ViaticoForm(request.POST, instance=concepto)
+            form = Concepto_ViaticoForm(request.POST)
+            form.fields['producto'].queryset = concepto_viatico
             if form.is_valid():
+                producto = form.cleaned_data['producto']
+                producto_duplicado = Concepto_Viatico.objects.filter(
+                    viatico=viatico,
+                    producto=producto,
+                ).exists()
+
+                if producto_duplicado:
+                    messages.warning(request,'Este concepto ya se encuentra agregado al viático.')
+                    return redirect('asignar-montos', pk=viatico.id)
+
                 concepto = form.save(commit=False)
                 concepto.viatico = viatico
                 concepto.completo = True
