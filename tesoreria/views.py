@@ -3353,41 +3353,75 @@ import xml.etree.ElementTree as ET
 
 def extraer_datos_del_complemento(ruta_xml):
     try:
-        # Parsear el archivo XML
         tree = ET.parse(ruta_xml)
         root = tree.getroot()
     except (ET.ParseError, FileNotFoundError) as e:
         print(f"Error al parsear el archivo XML: {e}")
-        return None, None  # Si ocurre un error, devolver None
-    
-    # Definir espacios de nombres
+        return None, [], []
+
     ns = {
         'cfdi': 'http://www.sat.gob.mx/cfd/4',
         'tfd': 'http://www.sat.gob.mx/TimbreFiscalDigital',
-        'pago20': 'http://www.sat.gob.mx/Pagos20'
+        'pago20': 'http://www.sat.gob.mx/Pagos20',
     }
-    
-    # Buscar el UUID en TimbreFiscalDigital
-    uuid = None
-    complemento = root.find('cfdi:Complemento', ns)
-    if complemento is not None:
-        timbre_fiscal = complemento.find('tfd:TimbreFiscalDigital', ns)
-        if timbre_fiscal is not None:
-            uuid = timbre_fiscal.get('UUID', '')
 
-    # Buscar el IdDocumento dentro de DoctoRelacionado
-    # Obtener todos los IdDocumento
+    uuid = None
     ids_documentos = []
-    pagos = complemento.find('pago20:Pagos', ns) if complemento is not None else None
+    fechas_pago = []
+
+    complemento = root.find('cfdi:Complemento', ns)
+
+    if complemento is not None:
+        timbre_fiscal = complemento.find(
+            'tfd:TimbreFiscalDigital',
+            ns
+        )
+
+        if timbre_fiscal is not None:
+            uuid = timbre_fiscal.get('UUID', '').upper()
+
+    pagos = (
+        complemento.find('pago20:Pagos', ns)
+        if complemento is not None
+        else None
+    )
+
     if pagos is not None:
         for pago in pagos.findall('pago20:Pago', ns):
-            doctos = pago.findall('pago20:DoctoRelacionado', ns)
+
+            # Fecha real indicada en el complemento de pago
+            fecha_pago_xml = pago.get('FechaPago')
+
+            if fecha_pago_xml:
+                try:
+                    fecha_pago = datetime.fromisoformat(
+                        fecha_pago_xml.replace('Z', '+00:00')
+                    ).date()
+
+                    if fecha_pago not in fechas_pago:
+                        fechas_pago.append(fecha_pago)
+
+                except (TypeError, ValueError):
+                    print(
+                        f"FechaPago inválida en el XML: {fecha_pago_xml}"
+                    )
+
+            # UUID de las facturas relacionadas
+            doctos = pago.findall(
+                'pago20:DoctoRelacionado',
+                ns
+            )
+
             for docto in doctos:
                 id_doc = docto.get('IdDocumento')
-                if id_doc:
-                    ids_documentos.append(id_doc)
 
-    return uuid, ids_documentos
+                if id_doc:
+                    id_doc = id_doc.upper()
+
+                    if id_doc not in ids_documentos:
+                        ids_documentos.append(id_doc)
+
+    return uuid, ids_documentos, fechas_pago
 
 
 def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, beneficiario, nombre_general, factura):
@@ -3843,7 +3877,7 @@ def complemento_nuevo(request, pk):
 
                         try:
                             # Extraer datos desde el archivo temporal
-                            uuid_complemento, uuids_facturas = extraer_datos_del_complemento(tmp_path)
+                            uuid_complemento, uuids_facturas, fechas_complemento = extraer_datos_del_complemento(tmp_path)
                         finally:
                             # Asegurar que el archivo temporal se borre aunque falle
                             os.remove(tmp_path)
@@ -3851,16 +3885,89 @@ def complemento_nuevo(request, pk):
 
                         # Validaciones de UUID y relación con factura
                         if not uuid_complemento:
-                            complementos_invalidos.append(archivo_xml.name)
+                            complementos_invalidos.append(
+                                f'{archivo_xml.name}: no contiene un UUID válido.'
+                            )
                             continue
 
-                        complemento_existente = Complemento_Pago.objects.filter(uuid=uuid_complemento).first()
-                        print(complemento_existente)
+                        if not fechas_complemento:
+                            complementos_invalidos.append(
+                                f'{archivo_xml.name}: no contiene una FechaPago válida.'
+                            )
+                            continue
+
+                        # Buscar las facturas antes de crear el complemento
+                        facturas_relacionadas = Facturas.objects.filter(
+                            uuid__in=uuids_facturas
+                        )
+
+                        print('facturas_relacionadas:', facturas_relacionadas)
+
+                        if not facturas_relacionadas.exists():
+                            complementos_invalidos.append(
+                                f'{archivo_xml.name}: no se encontraron facturas relacionadas.'
+                            )
+                            continue
+
+                        oc_ids = facturas_relacionadas.exclude(
+                            oc_id__isnull=True
+                        ).values_list(
+                            'oc_id',
+                            flat=True
+                        )
+
+                        fechas_pagos_savia = set(
+                            Pago.objects.filter(
+                                oc_id__in=oc_ids,
+                                hecho=True,
+                                eliminado=False,
+                                pagado_real__isnull=False,
+                            ).values_list(
+                                'pagado_real',
+                                flat=True
+                            )
+                        )
+
+                        fechas_no_coincidentes = [
+                            fecha
+                            for fecha in fechas_complemento
+                            if fecha not in fechas_pagos_savia
+                        ]
+
+                        if fechas_no_coincidentes:
+                            fechas_xml_texto = ', '.join(
+                                fecha.strftime('%d/%m/%Y')
+                                for fecha in fechas_no_coincidentes
+                            )
+
+                            fechas_savia_texto = (
+                                ', '.join(
+                                    fecha.strftime('%d/%m/%Y')
+                                    for fecha in sorted(fechas_pagos_savia)
+                                )
+                                if fechas_pagos_savia
+                                else 'ninguna'
+                            )
+
+                            complementos_invalidos.append(
+                                f'{archivo_xml.name}: la fecha del complemento '
+                                f'({fechas_xml_texto}) no corresponde con ninguno de los pagos. '
+                                f'Fechas registradas de pago: '
+                                f'{fechas_savia_texto}.'
+                            )
+                            continue
+
+                        # Buscar complemento duplicado después de validar las fechas
+                        complemento_existente = Complemento_Pago.objects.filter(
+                            uuid=uuid_complemento
+                        ).first()
+
+                      
                         if complemento_existente:
                             complementos_duplicados.append(uuid_complemento)
-                            complemento_final = complemento_existente  # Reusar complemento existente
+                            complemento_final = complemento_existente
+
                         else:
-                            # Crear nuevo complemento sin facturas aún
                             complemento_final = Complemento_Pago.objects.create(
                                 complemento_xml=archivo_xml,
                                 uuid=uuid_complemento,
@@ -3870,23 +3977,9 @@ def complemento_nuevo(request, pk):
                                 comentario=comentario,
                                 hecho=True
                             )
-                            # Llamar la property que extrae los UUIDs de facturas
-                            #info_xml = complemento_final.emisor
-                            #if info_xml and 'doctos_relacionados_uuids' in info_xml:
-                            #    uuids_facturas = info_xml['doctos_relacionados_uuids']
-                            facturas_relacionadas = Facturas.objects.filter(uuid__in=uuids_facturas)
 
-                            if facturas_relacionadas.exists():
-                                complemento_final.facturas.set(facturas_relacionadas)
-                                complementos_registrados.append(uuid_complemento)
-                            else:
-                                complemento_final.delete()  # limpia si no hay facturas válidas
-                                complementos_invalidos.append(f"No se encontraron facturas relacionadas con UUIDs: {', '.join(uuids_facturas)}")
-                                continue
-                            #else:
-                            #    complemento_final.delete()
-                             #   complementos_invalidos.append(f"{archivo_xml.name} no contiene facturas relacionadas.")
-                             #   continue
+                            complemento_final.facturas.set(facturas_relacionadas)
+                            complementos_registrados.append(uuid_complemento)
 
 
                           
@@ -3910,9 +4003,17 @@ def complemento_nuevo(request, pk):
             if complementos_duplicados:
                 messages.warning(request, f'Los siguientes complementos ya estaban registrados y no se duplicaron: {", ".join(complementos_duplicados)}')
             if complementos_invalidos:
-                messages.error(request, f'Los siguientes archivos no tienen factura relacionada o están mal estructurados: {", ".join(complementos_invalidos)}')
+                messages.error(request,'No se registraron los siguientes complementos: '+ ' | '.join(complementos_invalidos))
             if pdf_sin_complemento:
                 messages.error(request, f'Los siguientes archivos PDF no tienen un complemento de pago asociado y no se guardaron: {", ".join(pdf_sin_complemento)}')
+
+            # Cerrar el modal solamente si hubo registros y no hubo errores
+            if (
+                complementos_registrados
+                and not complementos_invalidos
+                and not pdf_sin_complemento
+            ):
+                return HttpResponse(status=204)
 
         else:
             messages.error(request, 'No se pudo subir tu documento.')

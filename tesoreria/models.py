@@ -9,6 +9,8 @@ from django.core.validators import FileExtensionValidator
 import xml.etree.ElementTree as ET
 from .utils import encontrar_variables, extraer_texto_pdf_prop, extraer_texto_de_pdf
 import os
+from decimal import Decimal, InvalidOperation
+from datetime import datetime
 # Create your models here.
 
 
@@ -425,26 +427,86 @@ class Complemento_Pago(models.Model):
         # Extraer UUID y otros datos del Timbre Fiscal
         complemento = root.find('cfdi:Complemento', ns)
         uuid, sello_cfd, sello_sat, fecha_timbrado, no_certificadoSAT = '', '', '', '', ''
-        fecha_pago = None
-        monto_total_pagos = None
-        imp_saldo_ant = None 
-        imp_pagado = None
+        fecha_pago = []
+        monto_total_pagos = Decimal('0.00')
+        imp_saldo_ant = Decimal('0.00')
+        imp_pagado = Decimal('0.00')
         # Extraer información del complemento de pagos
+
+        fechas_pago = []
         doctos_ids = []
+
+        monto_total_pagos = Decimal('0.00')
+        imp_saldo_ant = Decimal('0.00')
+        imp_pagado = Decimal('0.00')
 
         if complemento is not None:
             pagos = complemento.find('pago20:Pagos', ns)
+
             if pagos is not None:
-                pago = pagos.find('pago20:Pago', ns)
-                if pago is not None:
-                    doctos_relacionados = pago.findall('pago20:DoctoRelacionado', ns)
-                    fecha_pago = pago.get('FechaPago', 'No Disponible')
-                    monto_total_pagos = pago.get('Monto', 'No Disponible')
+                # Puede existir más de un nodo Pago
+                for pago in pagos.findall('pago20:Pago', ns):
+
+                    # Obtener y formatear FechaPago
+                    fecha_pago_xml = pago.get('FechaPago')
+
+                    if fecha_pago_xml:
+                        try:
+                            fecha_formateada = datetime.fromisoformat(
+                                fecha_pago_xml.replace('Z', '+00:00')
+                            ).strftime('%d/%m/%Y')
+
+                            if fecha_formateada not in fechas_pago:
+                                fechas_pago.append(fecha_formateada)
+
+                        except (TypeError, ValueError):
+                            fechas_pago.append(fecha_pago_xml)
+
+                    # Sumar Monto de cada nodo Pago
+                    try:
+                        monto_total_pagos += Decimal(
+                            pago.get('Monto', '0') or '0'
+                        )
+                    except InvalidOperation:
+                        pass
+
+                    # Datos de las facturas relacionadas
+                    doctos_relacionados = pago.findall(
+                        'pago20:DoctoRelacionado',
+                        ns
+                    )
+
                     for docto in doctos_relacionados:
                         docto_id = docto.get('IdDocumento')
-                        if docto_id:
+
+                        if docto_id and docto_id not in doctos_ids:
                             doctos_ids.append(docto_id)
-                            # Puedes extraer imp_pagado y demás si quieres guardar todos
+
+                        try:
+                            imp_saldo_ant += Decimal(
+                                docto.get('ImpSaldoAnt', '0') or '0'
+                            )
+                        except InvalidOperation:
+                            pass
+
+                        try:
+                            imp_pagado += Decimal(
+                                docto.get('ImpPagado', '0') or '0'
+                            )
+                        except InvalidOperation:
+                            pass
+
+        fecha_pago = (
+            ', '.join(fechas_pago)
+            if fechas_pago
+            else 'No disponible'
+        )
+
+        docto_relacionado_id = (
+            ', '.join(doctos_ids)
+            if doctos_ids
+            else 'No disponible'
+        )
         # Extraer conceptos
         conceptos = root.findall('cfdi:Conceptos/cfdi:Concepto', ns)
         resultados = []
@@ -489,6 +551,12 @@ class Complemento_Pago(models.Model):
             'fecha_pago': fecha_pago,
             'monto_total_pagos': monto_total_pagos,
             'imp_saldo_ant': imp_saldo_ant, 
+            'imp_pagado': imp_pagado,
+            'docto_relacionado_id': docto_relacionado_id,
+            'doctos_relacionados_uuids': doctos_ids,
+            'fecha_pago': fecha_pago,
+            'monto_total_pagos': monto_total_pagos,
+            'imp_saldo_ant': imp_saldo_ant,
             'imp_pagado': imp_pagado,
         }
 

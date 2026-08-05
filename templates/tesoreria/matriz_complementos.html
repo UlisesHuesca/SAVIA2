@@ -13,28 +13,31 @@
 {% block content %}
 <!-- Esta es la zona donde se crean los mensajes exitantes con sweet alert -->
 <div>
-    <script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
-        {% if messages %}
+    {% if messages %}
+    <script>
+        document.addEventListener('DOMContentLoaded', async function () {
             {% for message in messages %}
-                {% if message.tags == "error" %}
-                <script>
-                Swal.fire({
-                    "title":"Error",
-                    "text":"{{message}}",
-                    "icon":"error",
-                })
-                </script>
-                {% else %}
-                <script>
-                Swal.fire({
-                    "title":"Excelente",
-                    "text":"{{message}}",
-                    "icon":"success",
-                })
-                </script>
-                {% endif %}
+                await Swal.fire({
+                    {% if message.tags == "error" %}
+                        title: "Error",
+                        icon: "error",
+                    {% elif message.tags == "warning" %}
+                        title: "Advertencia",
+                        icon: "warning",
+                    {% else %}
+                        title: "Excelente",
+                        icon: "success",
+                    {% endif %}
+
+                    text: "{{ message|escapejs }}",
+                    confirmButtonText: "OK",
+                    allowOutsideClick: false,
+                    allowEscapeKey: false
+                });
             {% endfor %}
-        {% endif %}
+        });
+    </script>
+    {% endif %}
 </div>
 <hr>
 <hr>
