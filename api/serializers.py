@@ -405,6 +405,7 @@ class PagoControlBancosSerializer(serializers.ModelSerializer):
 
 class ReporteSolicitudesSerializer(serializers.Serializer):
     salida_id = serializers.IntegerField()
+    folio_salida = serializers.IntegerField(allow_null=True)
     distrito = serializers.CharField(allow_blank=True, required=False)
     quien_solicita = serializers.CharField(allow_blank=True, required=False)
     economico = serializers.CharField(allow_blank=True,allow_null=True,required=False)

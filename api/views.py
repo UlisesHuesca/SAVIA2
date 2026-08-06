@@ -1633,6 +1633,7 @@ def reporte_solicitudes_api(request):
 
         item = {
             "salida_id": salida.id,
+            "folio_salida": salida.vale_salida.folio,
             "distrito": order.distrito.nombre if order and order.distrito else "",
             "material_recibido_por": material_recibido_por,
 
