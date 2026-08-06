@@ -123,7 +123,7 @@ def compras_por_pagar(request):
     
     if request.method == 'POST' and 'btnReporte' in request.POST:
         #if usuario.tipo.tesoreria or usuario.tipo.finanzas:
-        return convert_excel_matriz_compras_tesoreria(compras)
+        return convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False)
         #else:
         #    return convert_excel_matriz_compras_autorizadas(compras)
        
@@ -312,7 +312,7 @@ def compras_autorizadas(request):
     if request.method == 'POST':
         if 'btnReporte' in request.POST:
             if usuario.tipo.tesoreria:
-                return convert_excel_matriz_compras_tesoreria(compras)
+                return convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=True)
             else:
                 return convert_excel_matriz_compras_autorizadas(compras)
         elif 'btnDescargarFacturas' in request.POST:
@@ -5354,7 +5354,7 @@ def convert_excel_matriz_tiempo_proceso(compras):
     return(response)
 
 
-def convert_excel_matriz_compras_tesoreria(compras):
+def convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False):
     response= HttpResponse(content_type = "application/ms-excel")
     response['Content-Disposition'] = 'attachment; filename = Pendientes_de_pago_' + str(dt.date.today())+'.xlsx'
     wb = Workbook()
@@ -5392,8 +5392,11 @@ def convert_excel_matriz_compras_tesoreria(compras):
     number_style.font = Font(name ='Calibri', size = 10)
 
     columns = ['Año','Prioridad','Folio OC','Fecha Creación','Fecha Autorización OC','Proyecto','Subproyecto','Distrito',
-               'Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Convenio','Referencia','Moneda','Tipo de cambio','Importe', 'Monto autorizado por SIA','Total en Pesos','Importe Pagado',
+               'Proveedor','Producto','Banco', 'Cuenta Bancaria','Clabe','Convenio','Referencia','Moneda','Tipo de cambio','Importe','Total en Pesos','Importe Pagado',
                'Importe Restante','C. Pago', 'Días de Crédito','Recibida','Fecha Entrada','Factura','Folio UUID', 'Fecha Timbrado']
+
+    if incluir_monto_sia:
+        columns.insert(18, 'Monto autorizado por SIA')
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -5465,32 +5468,37 @@ def convert_excel_matriz_compras_tesoreria(compras):
             fecha_timbrado_string = ''
 
         recibida = "Recibida" if compra.entrada_completa else "No Recibida"
+        if incluir_monto_sia:
+            formula_restante = f'=T{row_num}-U{row_num}'
+        else:
+            formula_restante = f'=S{row_num}-T{row_num}'
+
 
         row = [
-            año,
-            prioridad,
-            compra.folio,
-            created_at_naive,
-            autorizado_at_2_naive,
-            compra.req.orden.proyecto.nombre,
-            compra.req.orden.subproyecto.nombre,
-            compra.req.orden.distrito.nombre,
-            compra.proveedor.nombre.razon_social,
-            productos_texto,
-            compra.proveedor.banco.nombre,
-            compra.proveedor.cuenta,
-            compra.proveedor.clabe,
-            compra.proveedor.convenio if compra.proveedor.convenio else '',
-            compra.proveedor.referencia if compra.proveedor.referencia else '',
-            compra.moneda.nombre,
-            compra.tipo_de_cambio if compra.tipo_de_cambio else '',
-            compra.costo_plus_adicionales,
+            año,                                  #0
+            prioridad,                            #1
+            compra.folio,                         #2
+            created_at_naive,                     #3
+            autorizado_at_2_naive,                #4
+            compra.req.orden.proyecto.nombre,     #5
+            compra.req.orden.subproyecto.nombre,  #6
+            compra.req.orden.distrito.nombre,     #7
+            compra.proveedor.nombre.razon_social, #8
+            productos_texto,                      #9
+            compra.proveedor.banco.nombre,        #10
+            compra.proveedor.cuenta,              #11
+            compra.proveedor.clabe,               #12
+            compra.proveedor.convenio if compra.proveedor.convenio else '', #13
+            compra.proveedor.referencia if compra.proveedor.referencia else '',  #14
+            compra.moneda.nombre,                 #15
+            compra.tipo_de_cambio if compra.tipo_de_cambio else '', #16
+            compra.costo_plus_adicionales,                          #17
                # Nueva columna
-            compra.parcial or 0,
+            
             # Calcula total en pesos usando la fórmula de Excel
             f'=IF(Q{row_num}="",R{row_num},R{row_num}*Q{row_num})', 
             compra.monto_pagado,
-            f'=T{row_num} - U{row_num}',
+            formula_restante,  # Calcula el restante usando la fórmula de Excel
             compra.cond_de_pago.nombre,
             compra.dias_de_credito if compra.dias_de_credito else '',
             recibida,
@@ -5500,15 +5508,23 @@ def convert_excel_matriz_compras_tesoreria(compras):
             fecha_timbrado_string,
             
         ]
+        if incluir_monto_sia:
+            row.insert(18,compra.parcial or 0)
 
     
         for col_num in range(len(row)):
+            if incluir_monto_sia:
+                date_columns = [3, 4, 25]
+                money_columns = [17, 18, 19, 20, 21]
+            else:
+                date_columns = [3, 4, 24]
+                money_columns = [17, 18, 19, 20]
             (ws.cell(row = row_num, column = col_num + 1, value=str(row[col_num]))).style = body_style
             if col_num in [0,2]:
                 (ws.cell(row= row_num, column = col_num  +1, value=row[col_num])).style = number_style
-            if col_num in [3, 4, 25]:
+            if col_num in date_columns:
                 (ws.cell(row = row_num, column = col_num + 1, value=row[col_num])).style = date_style
-            if col_num in [17,18, 19,20, 21]:
+            if col_num in money_columns:
                 (ws.cell(row = row_num, column = col_num + 1, value=row[col_num])).style = money_style
        
     
