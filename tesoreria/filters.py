@@ -1,5 +1,6 @@
 import django_filters
 from .models import Compra, Pago, EstadoCuenta, Cuenta
+from user.models import Distrito
 from django_filters import CharFilter, DateFilter, ChoiceFilter, BooleanFilter
 from django.db.models import Q
 from django import forms
@@ -39,7 +40,14 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     start_date = DateFilter(field_name ='pagado_real', lookup_expr='gte')
     end_date = DateFilter(field_name='pagado_real', lookup_expr='lte')
     proveedor = CharFilter(method = 'beneficiario_proveedor', lookup_expr='icontains')
-    distrito = CharFilter(method='filter_distrito', label='Distrito')
+    distrito = django_filters.ModelChoiceFilter(method="filter_distrito", queryset=Distrito.objects.none(),label="Distrito",
+        empty_label="Todos los distritos",
+        widget=forms.Select(
+            attrs={
+                "class": "form-control",
+            }
+        ),
+    )
    
 
 
@@ -58,10 +66,13 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     
 
     def filter_distrito(self, queryset, name, value):
+        if not value:
+            return queryset
+
         return queryset.filter(
-            Q(oc__req__orden__distrito__nombre__icontains=value) |
-            Q(viatico__distrito__nombre__icontains=value) |
-            Q(gasto__distrito__nombre__icontains=value)
+            Q(oc__req__orden__distrito__nombre=value) |
+            Q(viatico__distrito__nombre=value) |
+            Q(gasto__distrito__nombre=value)
         )
     
     def __init__(self, *args, tesorero=None, **kwargs):
@@ -69,22 +80,27 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
         if not tesorero:
             cuentas = Cuenta.objects.none()
 
-        elif (
-            tesorero.tipo
-            and tesorero.tipo.nombre == "SUPERINTENDENTE_TES"
-        ):
+        elif (tesorero.tipo and tesorero.tipo.nombre == "SUPERINTENDENTE_TES"):
             cuentas = Cuenta.objects.filter(
-                # Aquí agregaremos las condiciones especiales
             ).exclude(
                 # Aquí puedes colocar las excepciones
             )
+            distritos = Distrito.objects.exclude(
+            nombre__in=[
+                "BRASIL",
+                "ALTAMIRA ALTERNATIVO",
+                "VH SECTOR 6",
+            ]
+        ).order_by("nombre")
 
         else:
             cuentas = Cuenta.objects.filter(
                 encargado=tesorero
             )
+            distritos = Distrito.objects.filter(nombre = tesorero.distritos.nombre)
 
         self.filters["cuenta"].queryset = cuentas
+        self.filters["distrito"].queryset = distritos
 
     def filter_by_tipo(self, queryset, name, value):  # new method
         if value.lower() == 'compra':
