@@ -546,6 +546,9 @@
                            
                             {% if pago.viatico %}
                             <li class="nav-item mx-1">
+                                <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos3' pago.viatico.id %}"><i class="fa-solid fa-person-walking-luggage"></i></a>
+                            </li>
+                            <li class="nav-item mx-1">
                                  <button type = "button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target="#pdfModal{{pago.viatico.id|unlocalize}}" data-pdf-url="{% url 'ver_viatico_pdf' pago.viatico.id %}" title="Registro de viático">
                                     <i class="fa-solid fa-eye"></i>
                                 </button>

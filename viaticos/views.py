@@ -682,7 +682,7 @@ def viaticos_autorizados(request):
     #elif perfil.tipo.supervisor == True:
     #    solicitudes = Solicitud_viatico.objects.filter(complete=True, staff__distrito=perfil.distrito, supervisor=perfil).order_by('-folio')
     #else:
-    viaticos = Solicitud_Viatico.objects.filter(complete=True, distrito = perfil.distritos, autorizar = True, montos_asignados = False).order_by('-folio')
+    viaticos = Solicitud_Viatico.objects.filter(complete=True, distrito = perfil.distritos, autorizar = True, autorizar2 = None).order_by('-folio')
 
     myfilter=Solicitud_Viatico_Filter(request.GET, queryset=viaticos)
     viaticos = myfilter.qs
@@ -692,8 +692,8 @@ def viaticos_autorizados(request):
     page = request.GET.get('page')
     ordenes_list = p.get_page(page)
 
-    if request.method =='POST' and 'btnExcel' in request.POST:
-        return convert_excel_solicitud_matriz(solicitudes)
+    #if request.method =='POST' and 'btnExcel' in request.POST:
+        #return convert_excel_solicitud_matriz(solicitudes)
 
     context= {
         'ordenes_list':ordenes_list,
@@ -710,6 +710,11 @@ def asignar_montos(request, pk):
 
     usuario = colaborador.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id = pk)
+
+     # Si ya tenía montos, comienza el modo de edición.
+    if request.method == "GET" and viatico.montos_asignados:
+        viatico.montos_asignados = False
+        viatico.save(update_fields=["montos_asignados"])
 
     viatico_query= Solicitud_Viatico.objects.filter(id = pk)
     concepto_viatico = Product.objects.filter(viatico = True)

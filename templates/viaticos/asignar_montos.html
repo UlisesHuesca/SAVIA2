@@ -152,7 +152,12 @@
                 </ul>
                 <form method="post">
                     {% csrf_token %}
-                <input class="btn btn-outline-info btn-lg btn-block my-2" name="btn_asignar" id="btn_asignar" type="submit" value="Asignar"> 
+                <input class="btn btn-outline-info btn-lg btn-block my-2" name="btn_asignar" id="btn_asignar" type="submit" value="Asignar"  {% if not conceptos %}disabled{% endif %}>
+                   {% if not conceptos %}
+                        <small class="text-muted d-block">
+                            Agrega al menos un concepto para poder asignar el viático.
+                        </small>
+                    {% endif %} 
                 </form>
             </div>
         </div>

@@ -142,7 +142,8 @@
                     <th scope="col">Proyecto</th>
                     <th scope="col">Subproyecto</th>
                     <th scope="col">Creado</th>
-                    <th scope="col">Detalles</th>
+                    <th>Detalle</th>
+                    <th scope="col">Asignar Montos</th>
                     <th>Cancelar</th>
                 </tr>
             </thead>
@@ -157,9 +158,20 @@
                     <td>{{orden.subproyecto.nombre}}</td>
                     <td>{{orden.created_at}}</td>
                     <td>
-                        <a id="myBtn" type="button" class="btn btn-outline-info btn-lg" href="{% url 'asignar-montos' orden.id %}">
-                            <i class="fa-solid fa-person-walking-luggage"></i>
-                        </a>
+                        <a id="myBtn" type="button" class="btn btn-outline-info" data-bs-toggle="modal" data-bs-target='#dialog' hx-target="#document" hx-get="{% url 'detalles-viaticos3' orden.id %}">Ver</a>
+                    </td>
+                    <td>
+                        {% if orden.montos_asignados %}
+                            <!-- Monto ya asignado -->
+                            <a type="button" class="btn btn-success btn-lg btn-editar-montos" href="{% url 'asignar-montos' orden.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Monto ya asignado">
+                                <i class="fa-solid fa-circle-check"></i>
+                            </a>
+                        {% else %}
+                            <!-- Pendiente de asignar -->
+                            <a type="button" class="btn btn-outline-info btn-lg" href="{% url 'asignar-montos' orden.id %}" data-bs-toggle="tooltip" data-bs-placement="top" title="Asignar monto">
+                                <i class="fa-solid fa-person-walking-luggage"></i>
+                            </a>
+                        {% endif %}
                     </td>
                     <td>
                         <a type="button" class="btn btn-outline-danger btn-lg" data-bs-toggle="modal" data-bs-target="#dialog" hx-target="#document" hx-get="{% url 'cancelar-viaticos' orden.id %}"><i class="fa-solid fa-xmark"></i></a>
@@ -223,6 +235,33 @@ var myModal = document.getElementById('dialog')
 myModal.addEventListener('hidden.bs.modal', function (event) {
   location.reload();
 })
+
+document.addEventListener("DOMContentLoaded", function () {
+    document
+        .querySelectorAll(".btn-editar-montos")
+        .forEach(function (boton) {
+            boton.addEventListener("click", function (event) {
+                event.preventDefault();
+
+                const url = boton.href;
+
+                Swal.fire({
+                    title: "¿Editar monto asignado?",
+                    text: "Este viático ya tiene montos asignados. ¿Deseas continuar?",
+                    icon: "warning",
+                    showCancelButton: true,
+                    confirmButtonText: "Sí, editar",
+                    cancelButtonText: "Cancelar",
+                    confirmButtonColor: "#198754",
+                    cancelButtonColor: "#6c757d"
+                }).then(function (resultado) {
+                    if (resultado.isConfirmed) {
+                        window.location.href = url;
+                    }
+                });
+            });
+        });
+});
 
 
 </script>
