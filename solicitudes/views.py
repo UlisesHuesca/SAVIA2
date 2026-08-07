@@ -2356,18 +2356,132 @@ def status_sol(request, pk):
                 icono='fa-code-branch',
             )
 
+    # =====================================================
+    # RESUMEN SUPERIOR DEL PROCESO
+    # =====================================================
+
+    def obtener_estado_resumen(*tipos):
+        """
+        Obtiene el estado de una etapa para la barra superior.
+
+        Si todavía no existe en trazabilidad, se considera pendiente.
+        También permite agrupar varios registros del mismo tipo.
+        """
+        estados = [
+            etapa.get('estado')
+            for etapa in trazabilidad
+            if etapa.get('tipo') in tipos
+        ]
+
+        if not estados:
+            return 'pendiente'
+
+        # Si existe una cancelación, se destaca en rojo.
+        if 'cancelado' in estados:
+            return 'cancelado'
+
+        # Si algún registro sigue trabajando, se muestra amarillo.
+        if 'proceso' in estados:
+            return 'proceso'
+
+        # Las etapas agregadas como "Siguiente etapa".
+        if 'pendiente' in estados:
+            return 'pendiente'
+
+        # Solamente estará completada si todos sus registros lo están.
+        if all(estado == 'completado' for estado in estados):
+            return 'completado'
+
+        return 'pendiente'
+
+
+    if ruta_almacen:
+        estado_almacen = obtener_estado_resumen(
+            'Surtido de almacén'
+        )
+
+        # Cuando ya existe una salida, almacén ya comenzó
+        # a atender la solicitud.
+        if hay_salidas:
+            estado_almacen = 'completado'
+
+        etapas_resumen = [
+            {
+                'nombre': 'Solicitud',
+                'estado': obtener_estado_resumen('Solicitud'),
+            },
+            {
+                'nombre': 'Almacén',
+                'estado': estado_almacen,
+            },
+            {
+                'nombre': 'Salida',
+                'estado': obtener_estado_resumen(
+                    'Salida de almacén'
+                ),
+            },
+        ]
+
+    elif ruta_compra:
+        etapas_resumen = [
+            {
+                'nombre': 'Solicitud',
+                'estado': obtener_estado_resumen('Solicitud'),
+            },
+            {
+                'nombre': 'Requisición',
+                'estado': obtener_estado_resumen('Requisición'),
+            },
+            {
+                'nombre': 'Compra',
+                'estado': obtener_estado_resumen(
+                    'Orden de compra'
+                ),
+            },
+            {
+                'nombre': 'Pago',
+                'estado': obtener_estado_resumen('Pago'),
+            },
+            {
+                'nombre': 'Entrada',
+                'estado': obtener_estado_resumen(
+                    'Entrada de almacén'
+                ),
+            },
+        ]
+
+        # Las compras de servicios no generan salida de almacén.
+        if not hay_compra_con_servicios:
+            etapas_resumen.append({
+                'nombre': 'Salida',
+                'estado': obtener_estado_resumen(
+                    'Salida de almacén'
+                ),
+            })
+
+    else:
+        etapas_resumen = [
+            {
+                'nombre': 'Solicitud',
+                'estado': obtener_estado_resumen('Solicitud'),
+            },
+            {
+                'nombre': 'Ruta pendiente',
+                'estado': obtener_estado_resumen(
+                    'Definición de surtimiento'
+                ),
+            },
+        ]
+
     context = {
         'solicitud': solicitud,
         'productos_solicitados': solicitud.productos.all(),
         'trazabilidad': trazabilidad,
         'ruta_solicitud': ruta_solicitud,
+        'etapas_resumen': etapas_resumen,
     }
 
-    return render(
-        request,
-        'solicitud/trazabilidad.html',
-        context
-    )
+    return render(request,'solicitud/trazabilidad.html',context)
 
 
 # AJAX

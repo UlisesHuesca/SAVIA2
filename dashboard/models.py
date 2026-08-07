@@ -338,6 +338,7 @@ class Order(models.Model):
     distrito = models.ForeignKey(Distrito, on_delete = models.CASCADE, null=True)
     operacion = models.ForeignKey(Operacion, on_delete = models.CASCADE, null=True)
     sector = models.ForeignKey(Sector, on_delete = models.CASCADE, null=True, blank = True)
+    sector_texto = models.CharField(max_length=150, null=True,blank=True,verbose_name="Sector",)
     superintendente = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='intendente')
     supervisor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='supervisor')
     activo = models.ForeignKey(Activo, on_delete = models.CASCADE, null=True, blank = True)

@@ -39,12 +39,12 @@ class ArticulosOrdenadosComentForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['proyecto','subproyecto', 'operacion','sector','activo','superintendente','supervisor','comentario','soporte']
+        fields = ['proyecto','subproyecto', 'operacion','sector_texto','activo','superintendente','supervisor','comentario','soporte']
         labels = {
             'proyecto': _("Proyecto*"),
             'subproyecto': _("Subproyecto*"),
             'operacion': _("Operación*"),
-            'sector': _("Sector"),
+            'sector_texto': _("Sector"),
             'activo': _("Activo"),
             'superintendente': _("Superintendente*"),
             'supervisor': _("Supervisor*"),
@@ -62,7 +62,7 @@ class OrderForm(forms.ModelForm):
 
         self.fields['proyecto'].queryset = Proyecto.objects.none()
         self.fields['subproyecto'].queryset = Subproyecto.objects.none()
-        self.fields['sector'].queryset = Sector.objects.none()
+        #self.fields['sector'].queryset = Sector.objects.none()
         self.fields['operacion'].queryset = Operacion.objects.none()
         self.fields['activo'].queryset = Activo.objects.none()
         self.fields['superintendente'].queryset = Profile.objects.none()
@@ -78,13 +78,13 @@ class OrderForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
       
-        if 'sector' in self.data:
-            try:
-                seleccion_actual = int(self.data.get('sector'))
+        #if 'sector' in self.data:
+        #    try:
+        #        seleccion_actual = int(self.data.get('sector'))
                 # Lógica para determinar el nuevo queryset basado en la selección actual
-                self.fields['sector'].queryset = Sector.objects.filter(id= seleccion_actual)
-            except (ValueError, TypeError):
-                pass  # Manejo de errores en caso de entrada no válida
+        #        self.fields['sector'].queryset = Sector.objects.filter(id= seleccion_actual)
+        #    except (ValueError, TypeError):
+        #        pass  # Manejo de errores en caso de entrada no válida
         if 'operacion' in self.data:
             try:
                 seleccion_actual = int(self.data.get('operacion'))

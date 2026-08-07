@@ -106,91 +106,54 @@
 
         <div class="modal-body">
 
-            <!-- Resumen del proceso -->
+            <!-- Resumen superior del proceso -->
             <div class="alert alert-light border mb-4">
                 <div class="d-flex align-items-center flex-wrap gap-2">
 
-                    <span class="fw-semibold">
-                        Proceso:    <span class="badge rounded-pill bg-primary"> Solicitud </span>
+                    <span class="fw-semibold me-1">
+                        Proceso:
                     </span>
 
-                    <i class="fa-solid fa-arrow-right text-muted"></i>
+                    {% for etapa in etapas_resumen %}
 
-                    {% if ruta_solicitud == 'Requisición y compra' %}
+                        {% if etapa.estado == 'completado' %}
+                            <span
+                                class="badge rounded-pill bg-success"
+                                title="Completado">
+                                {{ etapa.nombre }}
+                            </span>
 
-                    <span class="badge rounded-pill bg-primary">
-                        Requisición
-                    </span>
+                        {% elif etapa.estado == 'proceso' %}
+                            <span
+                                class="badge rounded-pill bg-warning text-dark"
+                                title="En proceso">
+                                {{ etapa.nombre }}
+                            </span>
 
-                    <i class="fa-solid fa-arrow-right text-muted"></i>
+                        {% elif etapa.estado == 'cancelado' %}
+                            <span
+                                class="badge rounded-pill bg-danger"
+                                title="Cancelado">
+                                {{ etapa.nombre }}
+                            </span>
 
-                    <span class="badge rounded-pill bg-primary">
-                        Compra
-                    </span>
+                        {% else %}
+                            <span
+                                class="badge rounded-pill bg-secondary"
+                                title="Pendiente">
+                                {{ etapa.nombre }}
+                            </span>
+                        {% endif %}
 
-                    <i class="fa-solid fa-arrow-right text-muted"></i>
+                        {% if not forloop.last %}
+                            <i class="fa-solid fa-arrow-right text-muted"></i>
+                        {% endif %}
 
-                    <span class="badge rounded-pill bg-primary">
-                        Pago
-                    </span>
+                    {% endfor %}
 
-                    <i class="fa-solid fa-arrow-right text-muted"></i>
-
-                    <span class="badge rounded-pill bg-primary">
-                        Entrada
-                    </span>
-                 
-                    {% if trazabilidad.compra_con_servicios %}
-                    <i class="fa-solid fa-arrow-right text-muted"></i>
-                   
-                    <span class="badge rounded-pill bg-primary">
-                        Salida
-                    </span>
-                    {% endif %}
-
-                    {% elif ruta_solicitud == 'Surtido por almacén' %}
-
-                        <span class="badge rounded-pill bg-primary">
-                            Requisición
-                        </span>
-
-                        <i class="fa-solid fa-arrow-right text-muted"></i>
-
-                        <span
-                            class="badge rounded-pill bg-info text-dark"
-                            title="Solicitud autorizada y lista para surtirse">
-                            Almacén
-                        </span>
-
-                        <i class="fa-solid fa-arrow-right text-muted"></i>
-
-                        <span class="badge rounded-pill bg-primary">
-                            Salida
-                        </span>
-
-                    {% elif ruta_solicitud == 'Surtido directo por almacén' %}
-
-                        <span
-                            class="badge rounded-pill bg-info text-dark"
-                            title="Solicitud autorizada y lista para surtirse">
-                            Almacén
-                        </span>
-
-                        <i class="fa-solid fa-arrow-right text-muted"></i>
-
-                        <span class="badge rounded-pill bg-primary">
-                            Salida
-                        </span>
-
-                    {% else %}
-
-                    <span class="badge rounded-pill bg-secondary">
-                        Ruta pendiente
-                    </span>
-
-                {% endif %}
-
+               
             </div>
+             
         </div>  
 
             <div class="timeline">
