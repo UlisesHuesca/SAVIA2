@@ -66,11 +66,25 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
     
     def __init__(self, *args, tesorero=None, **kwargs):
         super().__init__(*args, **kwargs)
-        self.filters['cuenta'].queryset = (
-            Cuenta.objects.filter(encargado=tesorero)
-            if tesorero
-            else Cuenta.objects.none()
-        )
+        if not tesorero:
+            cuentas = Cuenta.objects.none()
+
+        elif (
+            tesorero.tipo
+            and tesorero.tipo.nombre == "SUPERINTENDENTE_TES"
+        ):
+            cuentas = Cuenta.objects.filter(
+                # Aquí agregaremos las condiciones especiales
+            ).exclude(
+                # Aquí puedes colocar las excepciones
+            )
+
+        else:
+            cuentas = Cuenta.objects.filter(
+                encargado=tesorero
+            )
+
+        self.filters["cuenta"].queryset = cuentas
 
     def filter_by_tipo(self, queryset, name, value):  # new method
         if value.lower() == 'compra':

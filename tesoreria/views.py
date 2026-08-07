@@ -2313,6 +2313,7 @@ def control_documentos(request):
     distritos = Distrito.objects.filter(id__in=almacenes_distritos)
     tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos","Admin" ], st_activo = True, distritos__in = almacenes_distritos)
     cuentas = Cuenta.objects.filter(distrito__in=almacenes_distritos)
+   
     empresas = Empresa.objects.all()
     #Set up pagination
     p = Paginator(pagos, 50)
