@@ -3149,6 +3149,40 @@ def control_bancos(request, pk):
     start_date = None
     end_date = None
 
+    
+
+    if request.GET.get('btnDescargarManuales') == '1':
+        response = descargar_movimientos_manuales(pagos)
+
+        if response is None:
+            messages.warning(
+                request,
+                (
+                    'No se encontraron movimientos manuales '
+                    'con archivos adjuntos para descargar.'
+                )
+            )
+
+            # Conserva los filtros, pero elimina el parámetro
+            # que activa la descarga.
+            parametros = request.GET.copy()
+            parametros.pop('btnDescargarManuales', None)
+
+            url = request.path
+
+            if parametros:
+                url = f'{url}?{parametros.urlencode()}'
+
+            return redirect(url)
+
+        response.set_cookie(key='descarga_iniciada', value='true', max_age=60, path='/', httponly=False, samesite='Lax',)
+
+        return response
+
+    # ==============================================
+    # PAGINACIÓN
+    # =============================================
+    
     p = Paginator(pagos, 25)
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
@@ -3212,23 +3246,23 @@ def control_bancos(request, pk):
 
             # 3) SALDO FINAL
             saldo_final = saldo_trasladado - movimientos_cargos + movimientos_abonos
-        elif 'btnDescargarManuales' in request.POST:
-            response = descargar_movimientos_manuales(pagos)
+        #elif 'btnDescargarManuales' in request.POST:
+        #    response = descargar_movimientos_manuales(pagos)
 
-            if response is None:
-                messages.warning(
-                    request,
-                    (
-                        'No se encontraron movimientos manuales '
-                        'con archivos adjuntos para descargar.'
-                    )
-                )
-                return redirect(request.get_full_path())
+         #   if response is None:
+         #       messages.warning(
+         #           request,
+         #           (
+         #               'No se encontraron movimientos manuales '
+         #               'con archivos adjuntos para descargar.'
+         #           )
+         #       )
+         #       return redirect(request.get_full_path())
 
-            response.set_cookie(key='descarga_iniciada', value='true', max_age=60, path='/', httponly=False, samesite='Lax',)
+            
 
 
-            return response
+           
 
  
     context= {

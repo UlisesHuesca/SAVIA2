@@ -93,10 +93,18 @@
                             </div>
                         </div>
                     </div>
-
-                    <div class="col-2">
-                        <button class="btn btn-outline-success btn-block btn-lg mt-1" type="submit" value="Buscar"><i class="fa-solid fa-magnifying-glass"></i></button>
-                    </div>
+                    <div class="col-lg-5 col-sm-12">
+                        <div class="d-flex justify-content-lg-end justify-content-start align-items-center flex-wrap gap-2 mb-3">
+                                <button type="submit" class="btn btn-outline-success"  name="btnBuscar" value="1">
+                                    <i class="fa-solid fa-magnifying-glass"></i>Buscar
+                                </button>
+                            
+                           
+                                <button type="submit" name="btnDescargarManuales" class="btn btn-outline-primary" name="btnDescargarManuales" value="1">
+                                    <i class="fa-solid fa-file-zipper"></i>Movimientos manuales
+                                </button>
+                        </div>
+                    </div> 
                 </div>
                 <hr>
                 </form>
@@ -138,12 +146,7 @@
                                 Calcular
                             </button>
                         </li>
-                        <li class="nav-item mx-2">
-                            <button type="submit" name="btnDescargarManuales" class="btn btn-outline-primary" title="Descargar archivos de movimientos manuales">
-                                <i class="fa-solid fa-file-zipper"></i>
-                                    Descargar movimientos manuales
-                            </button>
-                        </li>
+                        
                         <li class="nav-item mx-2">
                         {% if saldo_final is not None %}
                             <table class="table table-sm">
