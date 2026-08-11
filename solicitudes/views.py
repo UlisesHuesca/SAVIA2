@@ -1976,7 +1976,14 @@ def status_sol(request, pk):
 
         for requisicion in requisiciones:
 
-            if requisicion.autorizar is True:
+            # Debe evaluarse antes de autorizar.
+            if requisicion.devuelta is True:
+                estado = 'devuelto'
+                descripcion = 'Requisición devuelta para corrección por parte de usuario solicitante'
+                fecha = None
+                hay_requisicion_devuelta = True
+
+            elif requisicion.autorizar is True:
                 estado = 'completado'
                 descripcion = 'Requisición autorizada'
                 fecha = requisicion.approved_at
@@ -2375,6 +2382,10 @@ def status_sol(request, pk):
 
         if not estados:
             return 'pendiente'
+
+         # Una devolución requiere atención antes de continuar.
+        if 'devuelto' in estados:
+            return 'devuelto'
 
         # Si existe una cancelación, se destaca en rojo.
         if 'cancelado' in estados:

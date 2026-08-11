@@ -78,6 +78,13 @@
 .timeline .card:hover{
     transform:translateY(-2px);
 }
+
+.timeline-devuelto .timeline-marker {
+    background-color: #ffc107;
+    color: #212529;
+    box-shadow: 0 0 0 2px #ffc107;
+}
+
 </style>
 
 <div class="modal-dialog modal-xl" role="document">
@@ -130,6 +137,13 @@
                                 {{ etapa.nombre }}
                             </span>
 
+                        {% elif etapa.estado == 'devuelto' %}
+                        <span
+                            class="badge rounded-pill bg-warning text-dark"
+                            title="Devuelta para corrección">
+                            {{ etapa.nombre }}
+                        </span>
+
                         {% elif etapa.estado == 'cancelado' %}
                             <span
                                 class="badge rounded-pill bg-danger"
@@ -181,6 +195,13 @@
                                                 <h6 class="mb-0 text-dark">
                                                     {{ etapa.tipo }}
                                                 </h6>
+
+                                                {% if etapa.estado == 'devuelto' %}
+                                                    <span class="badge bg-warning text-dark">
+                                                        <i class="fa-solid fa-rotate-left"></i>
+                                                        Devuelta
+                                                    </span>
+                                                {% endif %}
 
                                                 {% if etapa.estado == 'completado' %}
                                                     <span class="badge bg-success">
