@@ -2307,7 +2307,7 @@ def control_documentos(request):
             )
         ),
         ).order_by('-pagado_real')
-    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos, tesorero=usuario)
     pagos = myfilter.qs
     #Los distritos se definen de forma "dinámica" de acuerdo a los almacenes que tiene el usuario en el perfil
     distritos = Distrito.objects.filter(id__in=almacenes_distritos)
@@ -7163,7 +7163,7 @@ def estados_cuenta(request, cuenta_id):
 @require_POST
 def marcar_spei_devuelto(request, pk):
     usuario = Profile.objects.get(id=request.session.get('selected_profile_id'))
-
+    print('Está entrando a marcar_spei_devuelto')
   
 
     if not (usuario.tipo.tesoreria or usuario.tipo.finanzas):
@@ -7189,13 +7189,11 @@ def marcar_spei_devuelto(request, pk):
         # Regresar el documento relacionado a no pagado
         if pago.oc:
             pago.oc.pagada = False
-            pago.oc.para_pago = False
-            pago.oc.save(update_fields=['pagada','para_pago'])
+            pago.oc.save(update_fields=['pagada'])
 
         elif pago.gasto:
             pago.gasto.pagada = False
-            pago.gasto.para_pago = False
-            pago.gasto.save(update_fields=['pagada','para_pago'])
+            pago.gasto.save(update_fields=['pagada'])
 
         elif pago.viatico:
             pago.viatico.pagada = False

@@ -50,10 +50,20 @@
                 <thead>
                     <tr>
                     <th scope="col"><i class="fa-solid fa-person-walking-luggage"></i> Viatico para:</th>
-                    <th scope="col">{{viatico.colaborador.staff.first_name}} {{viatico.colaborador.staff.last_name}}</th>
+                    <th scope="col">
+                        {% if viatico.colaborador %}
+                        {{viatico.colaborador.staff.staff.first_name}} {{viatico.colaborador.staff.staff.last_name}}
+                        {% else %}
+                        {{viatico.staff.staff.staff.first_name}} {{viatico.staff.staff.staff.last_name}}
+                        {% endif %}
+                    </th>
                     </tr>
                 </thead>
                 <tbody>
+                <tr>
+                    <th>Nivel:</th>
+                    <th>{% if viatico.colaborador %} {{viatico.colaborador.staff.nivel}} {% else %} {{viatico.staff.staff.nivel}} {% endif %} </th>
+                </tr>
                 <tr>
                     <th scope="col"><i class="fa-solid fa-diagram-project"></i> Proyecto:</th>
                     <th scope="col">{{viatico.proyecto.nombre}}</th>
@@ -92,7 +102,7 @@
                 </tr>
                 <tr>
                     <th scope="col"><i class="fa-solid fa-comment"></i> Comentario</th>
-                    <th scope="col">{{viatico.comentario}}</th>
+                    <th scope="col">{{viatico.comentario_general}}</th>
                 </tr>
                 </tbody> 
             </table>

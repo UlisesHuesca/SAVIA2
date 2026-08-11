@@ -834,7 +834,7 @@ def viaticos_pagos(request, pk):
     usuario = colaborador.get(id = pk_perfil)
     viatico = Solicitud_Viatico.objects.get(id=pk)
     conceptos = Concepto_Viatico.objects.filter(viatico=viatico)
-    pagos = Pago.objects.filter(viatico=viatico, hecho=True)
+    pagos = Pago.objects.filter(viatico=viatico, hecho=True, spei_devuelto = False)
     if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
         cuentas = Cuenta.objects.filter(distrito__nombre = 'BRASIL')
     else:
