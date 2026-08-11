@@ -3121,7 +3121,7 @@ def descargar_movimientos_manuales(pagos):
 @perfil_seleccionado_required
 def control_bancos(request, pk):
     pk_profile = request.session.get('selected_profile_id')
-    #usuario = Profile.objects.get(id = pk_profile)
+    usuario = Profile.objects.get(id = pk_profile)
     # Obtener la cuenta seleccionada en el filtro
     
     cuenta = Cuenta.objects.get(id=pk)
@@ -3140,7 +3140,7 @@ def control_bancos(request, pk):
         pagos = Pago.objects.filter(cuenta = cuenta, hecho= True, eliminado=False).order_by('pagado_real', 'pagado_hora','-tipo__id')  
     
     
-    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos)
+    myfilter = Matriz_Pago_Filter(request.GET, queryset=pagos, tesorero = usuario)
     pagos = myfilter.qs
     print(pagos)
       # Valores para mostrar solo cuando se calcule
