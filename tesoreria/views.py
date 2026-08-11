@@ -5474,7 +5474,6 @@ def convert_excel_matriz_compras_tesoreria(compras, incluir_monto_sia=False):
         else:
             formula_restante = f'=S{row_num}-T{row_num}'
 
-
         row = [
             año,                                  #0
             prioridad,                            #1
@@ -5587,7 +5586,7 @@ def convert_excel_matriz_pagos(pagos):
     wb.add_named_style(percent_style)
 
     columns = ['Distrito','Folio','Tipo','Solicitado','Autorizado','Fecha Creación','Fecha Autorización','Proyecto','Subproyecto','Proveedor/Colaborador',
-               'Producto/Concepto','Importe', 'Moneda','Tipo de cambio', 'Total en Pesos','Fecha de pago', 'Tiene Facturas','Cuenta',]
+               'Producto/Concepto','Importe', 'Moneda','Tipo de cambio', 'Total en Pesos','Fecha de pago','Fecha de envío a CD', 'Tiene Facturas','Cuenta',]
 
     for col_num in range(len(columns)):
         (ws.cell(row = row_num, column = col_num+1, value=columns[col_num])).style = head_style
@@ -5731,6 +5730,7 @@ def convert_excel_matriz_pagos(pagos):
             #facturas_completas = None
             tipo_de_cambio = ''
 
+        fecha_envio = pago.fecha_control_documentos or ''
 
        
 
@@ -5751,6 +5751,7 @@ def convert_excel_matriz_pagos(pagos):
             tipo_de_cambio,
             f'=IF(N{row_num}="",L{row_num},L{row_num}*N{row_num})',  # Calcula total en pesos usando la fórmula de Excel
             pago.pagado_date.replace(tzinfo=None),
+            fecha_envio, 
             tiene_facturas,
             cuenta,
         ]
@@ -5758,7 +5759,7 @@ def convert_excel_matriz_pagos(pagos):
     
         for col_num in range(len(row)):
             (ws.cell(row = row_num, column = col_num+1, value=str(row[col_num]))).style = body_style
-            if col_num in (5, 6, 15):
+            if col_num in (5, 6, 15, 16):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = date_style
             if col_num in (11, 13, 14):
                 (ws.cell(row = row_num, column = col_num+1, value=row[col_num])).style = money_style
