@@ -694,9 +694,9 @@ def compras_pagos(request, pk):
     compra = Compra.objects.get(id=pk)
     productos = ArticuloComprado.objects.filter(oc=pk)
     productos_criticos = productos.filter(producto__producto__articulos__producto__producto__critico=True)
-    pagos = Pago.objects.filter(oc=compra.id, hecho=True) #.aggregate(Sum('monto'))
+    pagos = Pago.objects.filter(oc=compra.id, hecho=True, spei_devuelto = False) #.aggregate(Sum('monto'))
     sub = Subproyecto.objects.get(id=compra.req.orden.subproyecto.id)
-    pagos_alt = Pago.objects.filter(oc=compra.id, hecho=True)
+    pagos_alt = pagos
     suma_pago = 0
     suma_pago_usd = 0
     
@@ -3182,7 +3182,7 @@ def control_bancos(request, pk):
     # ==============================================
     # PAGINACIÓN
     # =============================================
-    
+
     p = Paginator(pagos, 25)
     page = request.GET.get('page')
     pagos_list = p.get_page(page)
@@ -7223,15 +7223,18 @@ def marcar_spei_devuelto(request, pk):
         # Regresar el documento relacionado a no pagado
         if pago.oc:
             pago.oc.pagada = False
-            pago.oc.save(update_fields=['pagada'])
+            pago.oc.para_pago = True
+            pago.oc.save(update_fields=['pagada','para_pago'])
 
         elif pago.gasto:
             pago.gasto.pagada = False
-            pago.gasto.save(update_fields=['pagada'])
+            pago.gasto.para_pago = True
+            pago.gasto.save(update_fields=['pagada','para_pago'])
 
         elif pago.viatico:
             pago.viatico.pagada = False
-            pago.viatico.save(update_fields=['pagada'])
+            pago.viatico.para_pago = True
+            pago.viatico.save(update_fields=['pagada','para_pago'])
 
     # notificar_spei_devuelto(pago)
 
