@@ -829,7 +829,7 @@ def cancelar_alta_proveedor(request, pk):
             # -----------------------------------------------------------------
 
             jefes_adquisiciones = Profile.objects.filter(
-                tipo__jefe_adquisiciones=True,
+                tipo__nombre="ADQUISICIONES",
                 distritos=usuario.distritos,
                 st_activo=True,
             )

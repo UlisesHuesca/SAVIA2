@@ -82,7 +82,7 @@ class Solicitud_Gasto(models.Model):
     @property
     def monto_pagado(self):
         pagado = self.pagosg.filter(Q(tipo__id = 1)| Q(tipo__isnull=True))
-        pagado= pagado.filter(hecho=True)
+        pagado= pagado.filter(hecho=True, spei_devuelto = False)
         total = sum([pago.monto for pago in pagado])
         return total
     

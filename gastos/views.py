@@ -2162,7 +2162,7 @@ def pago_gasto(request, pk):
     usuario = Profile.objects.get(id = pk_usuario)
     gasto = Solicitud_Gasto.objects.get(id=pk)
     cargos = Tipo_Pago.objects.get(id = 1)
-    pagos_alt = Pago.objects.filter(gasto=gasto,hecho=True).filter(Q(tipo=cargos) | Q(tipo__isnull=True))
+    pagos_alt = Pago.objects.filter(gasto=gasto,hecho=True, spei_devuelto = False).filter(Q(tipo=cargos) | Q(tipo__isnull=True))
 
     desglose_proyectos = {}
 
