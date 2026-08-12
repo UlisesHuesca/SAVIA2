@@ -2558,6 +2558,7 @@ def matriz_gasto_entrada(request):
 
 @perfil_seleccionado_required
 def gasto_entrada(request, pk):
+    
     pk_usuario = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_usuario)
     #Tengo que revisar primero si ya existe una orden pendiente del usuario
@@ -2584,6 +2585,7 @@ def gasto_entrada(request, pk):
         if "input_agregar" in request.POST:
             form = Entrada_Gasto_AjusteForm(request.POST, instance = entrada)
             if form.is_valid():
+                print('estoy entrando al post')
                 #El elemento entrada es el principal y es el objeto 
                 entrada = form.save(commit=False)
                 entrada.completo = True
@@ -2633,16 +2635,18 @@ def gasto_entrada(request, pk):
                         cantidad=item_producto.cantidad,
                         precio = item_producto.precio_unitario,
                         surtir=True,
-                        comentario="esta solicitud es proveniente de un gasto",
+                        comentario=f"GASTO_ENTRADA:{item_producto.id}",
                         created_at=datetime.now(),
                         #created_at_time=datetime.now().time(),
                     )
                     #Calculo el precio  y agrega al inventario
 
-                    if producto_inventario.cantidad == 0 and producto_inventario.price == 0:
+                    if (producto_inventario.cantidad == 0) or (producto_inventario.price == 0):
                         producto_inventario.price = item_producto.precio_unitario
+                        print("1", producto_inventario.price)
                     else:
-                        producto_inventario.price = ((item_producto.precio_unitario * item_producto.cantidad)+ ((producto_inventario.apartada() + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + item_producto.cantidad + producto_inventario.apartada())
+                        producto_inventario.price = (((producto_inventario.apartada() + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + producto_inventario.apartada())
+                        print("2", producto_inventario.price)
                     #La cantidad en inventario + la cantidad del producto en la entrada <-----esta parte es la que no veo sucediendo
                     producto_inventario.cantidad_apartada = producto_inventario.apartada()
                     #producto_inventario.save()
@@ -2684,6 +2688,7 @@ def gasto_entrada(request, pk):
                 
                 return redirect('matriz-gasto-entrada')
         if "input_producto" in request.POST:
+            print('estoy entrando al post producto')
             articulo, created = Conceptos_Entradas.objects.get_or_create(completo = False, entrada = entrada)
             form_product = Conceptos_EntradasForm(request.POST, instance=articulo)
             if form_product.is_valid():
@@ -2711,6 +2716,7 @@ def gasto_entrada(request, pk):
 def delete_articulo_entrada(request, pk):
    
     articulo = Conceptos_Entradas.objects.get(id=pk)
+
     gasto = articulo.entrada.gasto.id
     messages.success(request,f'El articulo {articulo.concepto_material} ha sido eliminado exitosamente')
     articulo.delete()

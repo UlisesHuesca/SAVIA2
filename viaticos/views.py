@@ -197,7 +197,7 @@ def solicitud_viatico(request):
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
-            if usuario.distritos.nombre == "MATRIZ":
+            if usuario.tipo.subdirector :
                 form = Solicitud_Viatico_Tipo_Form(request.POST, instance=viatico)
             else:
                 form = Solicitud_ViaticoForm(request.POST, instance=viatico)
