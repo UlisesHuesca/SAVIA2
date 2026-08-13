@@ -2628,6 +2628,7 @@ def gasto_entrada(request, pk):
                 for item_producto in productos:
 
                     producto_inventario = Inventario.objects.get(producto= item_producto.concepto_material.producto)
+                    apartado_inicial = producto_inventario.apartada()
                     #productos_por_surtir = ArticulosparaSurtir.objects.filter(articulos__producto=producto_inventario, requisitar = True)
                     articulo_ordenado = ArticulosOrdenados.objects.create(producto=producto_inventario, orden = orden_producto, cantidad=item_producto.cantidad)
                     productos_por_surtir = ArticulosparaSurtir.objects.create(
@@ -2641,11 +2642,16 @@ def gasto_entrada(request, pk):
                     )
                     #Calculo el precio  y agrega al inventario
 
-                    if (producto_inventario.cantidad == 0) or (producto_inventario.price == 0):
+                    if (producto_inventario.price == 0):
                         producto_inventario.price = item_producto.precio_unitario
                         print("1", producto_inventario.price)
+
+                    #elif (producto_inventario.cantidad == 0):
+                    #    producto_inventario.price = (producto_inventario.apartada() + producto_inventario.cantidad) * producto_inventario.price
+                    #    print("3", producto_inventario.price)
                     else:
-                        producto_inventario.price = (((producto_inventario.apartada() + producto_inventario.cantidad) * producto_inventario.price))/(producto_inventario.cantidad + producto_inventario.apartada())
+                        print(apartado_inicial, producto_inventario.cantidad, producto_inventario.price)
+                        producto_inventario.price = (((apartado_inicial + producto_inventario.cantidad) * producto_inventario.price)+(item_producto.precio_unitario * item_producto.cantidad))/(producto_inventario.cantidad + apartado_inicial + item_producto.cantidad)
                         print("2", producto_inventario.price)
                     #La cantidad en inventario + la cantidad del producto en la entrada <-----esta parte es la que no veo sucediendo
                     producto_inventario.cantidad_apartada = producto_inventario.apartada()
