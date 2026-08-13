@@ -753,11 +753,13 @@ def update_salida(request):
                             
                         if cantidad <= entrada.cantidad_por_surtir and cantidad > 0 and entrada.agotado == False:
                             print('0')
+                            print('entrada', entrada.id)
                             print('cantidad == entrada.cantidad_por_surtir')
                             cantidad_ant = cantidad
                             entrada.cantidad_por_surtir -= cantidad
                             salida.cantidad = cantidad
                             salida.entrada = entrada.id
+                            salida.complete = True
                             cantidad -= cantidad_ant 
                             inv_del_producto._change_reason = f'Esta es la salida de un artículo desde un resurtimiento de inventario cuando la cantidad == entrada.cantidad_por_surtir {salida.id}'
                            
@@ -774,7 +776,9 @@ def update_salida(request):
                             
                         elif cantidad > entrada.cantidad_por_surtir and entrada.cantidad_por_surtir > 0:
                             print('1')
+                            print('entrada', entrada.id, entrada.cantidad_por_surtir)
                             salida.cantidad = entrada.cantidad_por_surtir
+                            salida.complete = True
                             entrada.cantidad_por_surtir = 0
                             entrada.agotado = True
                             salida.entrada = entrada.id
@@ -800,7 +804,7 @@ def update_salida(request):
                     print('fuera')
                     producto.cantidad -= cantidad
                     producto.surtir = False
-                    salida_inv, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, complete=True, entrada=0, precio=inv_del_producto.price)
+                    salida_inv, created = Salidas.objects.get_or_create(producto=producto, vale_salida = vale_salida, entrada=0, precio=inv_del_producto.price)
                     salida_inv.cantidad = cantidad - entrada.cantidad_por_surtir
                     salida_inv.entrada = 0
                     salida_inv.complete = True
