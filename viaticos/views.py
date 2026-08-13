@@ -159,7 +159,10 @@ def solicitud_viatico(request):
 
     if usuario.distritos.nombre == "MATRIZ":
         superintendentes = colaborador.filter(tipo__subdirector = True, distritos = usuario.distritos, st_activo =True, sustituto__isnull = True)
-        form = Solicitud_Viatico_Tipo_Form(instance = viatico)
+        if usuario.tipo.subdirector:
+            form = Solicitud_Viatico_Tipo_Form(instance = viatico)
+        else:
+            form = Solicitud_ViaticoForm(instance = viatico)
     elif usuario.tipo.superintendente and not usuario.tipo.nombre == "Admin":
         superintendentes = colaborador.filter(tipo__superintendente = True, distritos = usuario.distritos, st_activo = True).exclude(tipo__nombre="Admin")
         form = Solicitud_ViaticoForm(instance = viatico)
@@ -197,7 +200,7 @@ def solicitud_viatico(request):
 
     if request.method =='POST':
         if "btn_agregar" in request.POST:
-            if usuario.tipo.subdirector :
+            if usuario.tipo.subdirector:
                 form = Solicitud_Viatico_Tipo_Form(request.POST, instance=viatico)
             else:
                 form = Solicitud_ViaticoForm(request.POST, instance=viatico)
