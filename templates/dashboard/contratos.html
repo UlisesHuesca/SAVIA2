@@ -81,7 +81,8 @@
                     <th scope="col">Status</th>
                     <th scope="col">Creado por</th>
                     <th scope="col">Fecha</th>
-                    <th scope="col">Proyectos</th>
+                    <th>Editar</th>
+                    <th scope="col">Ver Proyectos</th>
                 </tr>
             </thead>
             <tbody>
@@ -101,7 +102,10 @@
                     <td>{{contrato.created_by}}</td>
                     <td>{{contrato.created_at}}</td>
                     <td>
-                    <a type="button" class="btn btn-outline-info" href="{% url 'proyectos-contrato' contrato.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                        <a type="button" class="btn btn-outline-info" href="{% url 'editar-contrato' contrato.id %}"><i class="fa-solid fa-pen-to-square"></i></a>
+                    </td>
+                    <td>
+                    <a type="button" class="btn btn-outline-info" href="{% url 'proyectos-contrato' contrato.id %}"><i class="fa-solid fa-diagram-project"></i></a>
                     </td>
                 </tr>
                 {% endfor %}

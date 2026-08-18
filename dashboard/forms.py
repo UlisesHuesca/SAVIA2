@@ -160,6 +160,47 @@ class Contrato_form(forms.ModelForm):
         model = Contrato
         fields = ['nombre', 'descripcion',]
 
+class Contrato_Form_Edit(forms.ModelForm):
+
+    class Meta:
+        model = Contrato
+
+        fields = ["nombre", "descripcion", "status_contrato","tiene_pozos",]
+
+        labels = {
+            "nombre": "Nombre*",
+            "descripcion": "Descripción",
+            "status_contrato": "Estatus*",
+            "tiene_pozos": "¿El contrato maneja pozos?",
+        }
+
+        widgets = {
+            "nombre": forms.TextInput(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Nombre del contrato",
+                }
+            ),
+            "descripcion": forms.Textarea(
+                attrs={
+                    "class": "form-control",
+                    "placeholder": "Descripción",
+                    "rows": 3,
+                }
+            ),
+            "status_contrato": forms.Select(
+                attrs={
+                    "class": "form-select",
+                }
+            ),
+          
+            "tiene_pozos": forms.CheckboxInput(
+                attrs={
+                    "class": "form-check-input",
+                }
+            ),
+        }
+
 class Proyectos_Form(forms.ModelForm):
     class Meta:
         model = Proyecto

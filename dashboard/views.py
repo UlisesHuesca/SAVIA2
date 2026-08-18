@@ -23,8 +23,8 @@ from gastos.models import Articulo_Gasto
 from viaticos.models import Concepto_Viatico
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
-from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
-from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form, Comentario_Rechazo_Form
+from .forms import Contrato_form, ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
+from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_Form_Edit, Comentario_Rechazo_Form
 from .forms import PeriodoSubproyectoFormSet
 from solicitudes.forms import PozoForm
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
@@ -570,6 +570,34 @@ def contratos(request):
          }
 
     return render(request,'dashboard/contratos.html', context)
+
+
+
+@perfil_seleccionado_required
+def editar_contrato(request, pk):
+    contrato = get_object_or_404(Contrato,id=pk)
+
+    if request.method == "POST":
+        form = Contrato_Form_Edit(request.POST, instance=contrato)
+
+        if form.is_valid():
+            contrato = form.save()
+
+            messages.success(request,f"El contrato {contrato.nombre} fue actualizado correctamente.")
+
+            return redirect("configuracion-contratos")
+
+    else:
+        form = Contrato_Form_Edit(instance=contrato)
+
+
+    context = {
+        "form": form,
+        "contrato": contrato,
+        "editar_contrato": True,
+    }
+
+    return render(request,"dashboard/add_contratos.html",context)
 
 @perfil_seleccionado_required
 def proyectos_contrato(request, pk):

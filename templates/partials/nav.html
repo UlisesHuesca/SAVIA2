@@ -123,11 +123,7 @@
                                     <a class="dropdown-item" href="{% url 'lista-pozos' %}">Pozos</a>
                                 </div>
                             {% endif %}
-                            {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Administrativo" or usuario.tipo.nombre == "Gerente_compras" %}
-                                <div>
-                                    <a class="dropdown-item" href="{% url 'configuracion-subproyectos' %}">Subproyectos</a>
-                                </div>
-                            {% endif %}
+                          
                             {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Administrativo" or usuario.tipo.nombre == "Gerente_compras" %}
                                 <div>
                                     <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
