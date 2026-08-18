@@ -36,6 +36,7 @@ class Contrato(models.Model):
     created_at = models.DateField(null=True)
     complete = models.BooleanField(default=False)
     created_by = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='contratos')
+    tiene_pozos = models.BooleanField(default=False,verbose_name="¿El contrato maneja pozos?")
 
     def __str__(self):
         return f'{self.nombre}'
@@ -51,6 +52,28 @@ class Clase_Costo_Proyecto(models.Model):
 
     def __str__(self):
         return f'{self.nombre}'
+
+class Pozo(models.Model):
+    distrito = models.ForeignKey(Distrito, on_delete=models.CASCADE, related_name="pozos")
+    nombre = models.CharField(max_length=100)
+    contrato = models.ForeignKey(Contrato,on_delete=models.CASCADE,related_name="pozos")
+    cerrar_pozo = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = "Pozo"
+        verbose_name_plural = "Pozos"
+        ordering = ["nombre"]
+        constraints = [
+            models.UniqueConstraint(
+                fields=["contrato", "nombre"],
+                name="pozo_unico_por_contrato"
+            )
+        ]
+
+    def __str__(self):
+        return f"{self.nombre} | {self.contrato}"
 
 class Proyecto(models.Model):
     nombre = models.CharField(max_length=50, null=True)

@@ -81,6 +81,26 @@
                                     </div>
                                 </div>
                             </div>
+                            <div id="campo-pozo" class="col-12" style="display: none;">
+                            <div class="input-group mb-3">
+                                <span class="input-group-text">
+                                    <i class="fa-solid fa-oil-well"></i>
+                                </span>
+
+                                <div class="form-floating form-floating-group flex-grow-1">
+                                    {{ form.pozo|add_class:"form-select" }}
+
+                                    <label style="color: #121212;" for="{{ form.pozo.id_for_label }}"> Pozo</label>
+                                </div>
+                            </div>
+
+                            {% if form.pozo.errors %}
+                                <div class="text-danger">
+                                    {{ form.pozo.errors }}
+                                </div>
+                            {% endif %}
+                                </div>
+
                             <div class="col-12">
                                 <div class="input-group mb-3">
                                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-comment"></i></span>
@@ -810,6 +830,98 @@ function formatRepo (repo) {
 function formatRepoSelection (repo) {
     return repo.text || repo.id;
 }
+
+$(document).ready(function () {
+    const campoPozo = $("#campo-pozo");
+    const selectPozo = $("#id_pozo");
+    const pozoActual = "{{ form.pozo.value|default:'' }}";
+
+    function ocultarCampoPozo() {
+        campoPozo.hide();
+        selectPozo.prop("required", false);
+
+        selectPozo.empty().append(
+            new Option("Seleccione un pozo", "", true, false)
+        );
+
+        selectPozo.trigger("change");
+    }
+
+    function cargarPozos(proyectoId) {
+        ocultarCampoPozo();
+
+        if (!proyectoId) {
+            return;
+        }
+
+        $.ajax({
+            url: "{% url 'ajax-load-pozos' %}",
+            data: {
+                proyecto_id: proyectoId
+            },
+            dataType: "json",
+
+            success: function (respuesta) {
+                /*
+                 * La vista debe responder:
+                 *
+                 * {
+                 *     "tiene_pozos": true,
+                 *     "pozos": [...]
+                 * }
+                 */
+
+                if (!respuesta.tiene_pozos) {
+                    return;
+                }
+
+                selectPozo.empty().append(
+                    new Option("Seleccione un pozo", "", false, false)
+                );
+
+                $.each(respuesta.pozos, function (indice, pozo) {
+                    const seleccionado =
+                        String(pozo.id) === String(pozoActual);
+
+                    selectPozo.append(
+                        new Option(
+                            pozo.nombre,
+                            pozo.id,
+                            seleccionado,
+                            seleccionado
+                        )
+                    );
+                });
+
+                campoPozo.show();
+                selectPozo.prop("required", true);
+                selectPozo.trigger("change");
+            },
+
+            error: function (xhr) {
+                ocultarCampoPozo();
+                console.error(
+                    "Error al consultar pozos:",
+                    xhr.responseText
+                );
+            }
+        });
+    }
+
+    // Se ejecuta cuando el usuario selecciona otro proyecto
+    $("#id_proyecto").on("change", function () {
+        cargarPozos($(this).val());
+    });
+
+    // Se ejecuta al abrir la página si ya existe un proyecto seleccionado
+    const proyectoInicial = $("#id_proyecto").val();
+
+    if (proyectoInicial) {
+        cargarPozos(proyectoInicial);
+    } else {
+        ocultarCampoPozo();
+    }
+});
 
 </script>
 {% endblock %}

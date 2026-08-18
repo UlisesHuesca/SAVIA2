@@ -1,7 +1,7 @@
 from django.db import models
 # De django.contrib.auth.models estamos importando el modelo de usuarios de la administration
 from user.models import Distrito, Profile, Almacen, Pais
-from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector
+from solicitudes.models import Proyecto, Subproyecto, Operacion, Sector,Pozo
 #from djmoney.models.fields import MoneyField
 from simple_history.models import HistoricalRecords
 from django.core.validators import FileExtensionValidator
@@ -355,6 +355,7 @@ class Order(models.Model):
     #approved_at_time = models.TimeField(null=True)
     comentario =  models.TextField(max_length=400, null=True, blank=True)
     soporte = models.FileField(blank=True, null=True, upload_to='facturas',validators=[FileExtensionValidator(['pdf'])])
+    pozo = models.ForeignKey(Pozo,on_delete=models.SET_NULL,null=True,blank=True,related_name="solicitudes")
    
 
     history = HistoricalRecords(history_change_reason_field=models.TextField(null=True))

@@ -1,0 +1,115 @@
+{% extends "partials/base.html" %}
+{% load static %}
+{% load widget_tweaks %}
+
+{% block title %}
+Agregar pozo
+{% endblock %}
+
+{% block content %}
+
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+<h6>&nbsp;</h6>
+
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    Agregar pozo
+                </h5>
+            </div>
+
+            <div class="card-body">
+
+                <div class="alert alert-light border">
+                    <strong>Distrito:</strong>
+                    {{ distrito.nombre }}
+                </div>
+
+                <form method="POST">
+                    {% csrf_token %}
+
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-file-contract"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.contrato|add_class:"form-select" }}
+
+                                <label
+                                    for="{{ form.contrato.id_for_label }}"
+                                    style="color: #121212;"
+                                >
+                                    Contrato
+                                </label>
+                            </div>
+                        </div>
+
+                        {% if form.contrato.errors %}
+                            <div class="text-danger mb-3">
+                                {{ form.contrato.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="col-12">
+                        <div class="input-group mb-3">
+                            <span class="input-group-text">
+                                <i class="fa-solid fa-oil-well"></i>
+                            </span>
+
+                            <div class="form-floating form-floating-group flex-grow-1">
+                                {{ form.nombre|add_class:"form-control"|append_attr:"placeholder=Nombre del pozo" }}
+
+                                <label
+                                    for="{{ form.nombre.id_for_label }}"
+                                    style="color: #121212;"
+                                >
+                                    Nombre del pozo
+                                </label>
+                            </div>
+                        </div>
+
+                        {% if form.nombre.errors %}
+                            <div class="text-danger mb-3">
+                                {{ form.nombre.errors }}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {{ form.non_field_errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="d-flex justify-content-end gap-2">
+                        <a
+                            href="{% url 'lista-pozos' %}"
+                            class="btn btn-outline-secondary"
+                        >
+                            Cancelar
+                        </a>
+
+                        <button
+                            type="submit"
+                            class="btn btn-success"
+                        >
+                            <i class="fa-solid fa-floppy-disk"></i>
+                            Guardar pozo
+                        </button>
+                    </div>
+                </form>
+
+            </div>
+        </div>
+
+    </div>
+</div>
+
+{% endblock %}

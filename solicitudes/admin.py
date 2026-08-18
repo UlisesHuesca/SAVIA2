@@ -1,5 +1,10 @@
 from django.contrib import admin
-from .models import Proyecto, Subproyecto, Sector, Operacion, St_Entrega, Cliente, Contrato, Status_Contrato, Tipo_Proyecto, Clase_Costo_Proyecto
+from .models import Proyecto, Subproyecto, Sector, Operacion, St_Entrega, Cliente, Contrato, Status_Contrato, Tipo_Proyecto, Clase_Costo_Proyecto, Pozo
+
+class PozoAdmin(admin.ModelAdmin):
+    list_display = ('id', 'nombre', 'distrito', 'contrato', 'cerrar_pozo', 'created_at', 'updated_at')
+    list_filter = ('distrito', 'contrato', 'cerrar_pozo')
+    search_fields = ['nombre', 'distrito__nombre', 'contrato__nombre']
 
 class ProyectoAdmin(admin.ModelAdmin):
     list_display = ('id','nombre','distrito')
@@ -33,4 +38,6 @@ admin.site.register(Subproyecto, SubproyectoAdmin)
 admin.site.register(Sector)
 
 admin.site.register(Operacion)
+
+admin.site.register(Pozo, PozoAdmin)
 

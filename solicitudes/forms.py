@@ -1,5 +1,5 @@
 from django import forms
-from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector
+from solicitudes.models import Subproyecto, Proyecto, Operacion, Sector, Pozo, Contrato
 from dashboard.models import Inventario, Order, Product, ArticulosOrdenados, Plantilla, ArticuloPlantilla, Activo
 from gastos.models import Entrada_Gasto_Ajuste, Conceptos_Entradas 
 from django.utils.translation import gettext_lazy as _
@@ -39,10 +39,11 @@ class ArticulosOrdenadosComentForm(forms.ModelForm):
 class OrderForm(forms.ModelForm):
     class Meta:
         model = Order
-        fields = ['proyecto','subproyecto', 'operacion','sector_texto','activo','superintendente','supervisor','comentario','soporte']
+        fields = ['proyecto','subproyecto','pozo','operacion','sector_texto','activo','superintendente','supervisor','comentario','soporte']
         labels = {
             'proyecto': _("Proyecto*"),
             'subproyecto': _("Subproyecto*"),
+            'pozo': _("Pozo*"),
             'operacion': _("Operación*"),
             'sector_texto': _("Sector"),
             'activo': _("Activo"),
@@ -50,6 +51,8 @@ class OrderForm(forms.ModelForm):
             'supervisor': _("Supervisor*"),
             'comentario': _("Comentario"),
         }
+
+
 
     def __init__(self,*args, **kwargs):
         
@@ -62,11 +65,14 @@ class OrderForm(forms.ModelForm):
 
         self.fields['proyecto'].queryset = Proyecto.objects.none()
         self.fields['subproyecto'].queryset = Subproyecto.objects.none()
-        #self.fields['sector'].queryset = Sector.objects.none()
+        self.fields["pozo"].queryset = Pozo.objects.none()
         self.fields['operacion'].queryset = Operacion.objects.none()
         self.fields['activo'].queryset = Activo.objects.none()
         self.fields['superintendente'].queryset = Profile.objects.none()
         self.fields['supervisor'].queryset = Profile.objects.none()
+
+        # Pozo es obligatorio solamente cuando el contrato tiene pozos
+        self.fields["pozo"].required = False
 
         if 'proyecto' in self.data:
             try:
@@ -78,13 +84,15 @@ class OrderForm(forms.ModelForm):
             except (ValueError, TypeError):
                 pass  # Manejo de errores en caso de entrada no válida
       
-        #if 'sector' in self.data:
-        #    try:
-        #        seleccion_actual = int(self.data.get('sector'))
-                # Lógica para determinar el nuevo queryset basado en la selección actual
-        #        self.fields['sector'].queryset = Sector.objects.filter(id= seleccion_actual)
-        #    except (ValueError, TypeError):
-        #        pass  # Manejo de errores en caso de entrada no válida
+        if "pozo" in self.data:
+            try:
+                pozo_id = int(self.data.get("pozo"))
+
+                self.fields["pozo"].queryset = Pozo.objects.filter(id=pozo_id, cerrar_pozo=False)
+
+            except (ValueError, TypeError):
+                pass
+            
         if 'operacion' in self.data:
             try:
                 seleccion_actual = int(self.data.get('operacion'))
@@ -148,3 +156,55 @@ class ArticuloPlantilla_Form(forms.ModelForm):
     class Meta:
         model = ArticuloPlantilla
         fields = ['producto','cantidad','comentario_articulo','comentario_plantilla']
+
+
+
+
+
+class PozoForm(forms.ModelForm):
+
+    class Meta:
+        model = Pozo
+        fields = ["contrato", "nombre",]
+
+        labels = {
+            "contrato": "Contrato*",
+            "nombre": "Nombre del pozo*",
+        }
+
+        widgets = {
+            "contrato": forms.Select(attrs={"class": "form-select",}),
+            "nombre": forms.TextInput(attrs={"class": "form-control","placeholder": "Nombre del pozo",}),}
+
+    def __init__(self, *args, distrito=None, **kwargs):
+        super().__init__(*args, **kwargs)
+
+        self.distrito = distrito
+
+        # Mostrar únicamente contratos configurados para manejar pozos.
+        self.fields["contrato"].queryset = (Contrato.objects.filter(tiene_pozos=True).order_by("nombre"))
+
+    def clean(self):
+        cleaned_data = super().clean()
+
+        contrato = cleaned_data.get("contrato")
+        nombre = cleaned_data.get("nombre")
+
+        if not contrato or not nombre:
+            return cleaned_data
+
+        nombre = nombre.strip()
+
+        pozo_existente = Pozo.objects.filter(contrato=contrato, nombre__iexact=nombre)
+
+        if self.instance.pk:
+            pozo_existente = pozo_existente.exclude(
+                pk=self.instance.pk
+            )
+
+        if pozo_existente.exists():
+            self.add_error("nombre", "Ya existe un pozo con este nombre para el contrato seleccionado.")
+
+        cleaned_data["nombre"] = nombre
+
+        return cleaned_data

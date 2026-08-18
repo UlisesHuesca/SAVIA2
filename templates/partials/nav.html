@@ -102,6 +102,8 @@
                             {% endif %}
                                     <a class="dropdown-item" href="{% url 'staff' %}">Usuarios</a>
                                     <a class="dropdown-item" href="{% url 'perfiles_rh' %}">Usuarios RH API</a>
+                                    <a class="dropdown-item" href="{% url 'configuracion-contratos' %}">Contratos</a>
+                                   
                                     
                                 </div>
                             {% if usuario.tipo.productos %}
@@ -116,12 +118,34 @@
                                     <a class="dropdown-item" href="{% url 'configuracion-contratos' %}">Contratos</a>
                                 </div>
                             {% endif %}
+                            {% if usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS" %}
+                                <div>
+                                    <a class="dropdown-item" href="{% url 'lista-pozos' %}">Pozos</a>
+                                </div>
+                            {% endif %}
+                            {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Administrativo" or usuario.tipo.nombre == "Gerente_compras" %}
+                                <div>
+                                    <a class="dropdown-item" href="{% url 'configuracion-subproyectos' %}">Subproyectos</a>
+                                </div>
+                            {% endif %}
+                            {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Administrativo" or usuario.tipo.nombre == "Gerente_compras" %}
+                                <div>
+                                    <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
+                                </div>
+                            {% endif %}
+                            {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Subdirector_Administrativo" or usuario.tipo.nombre == "Gerente_compras" %}
+                                <div>
+                                    <a class="dropdown-item" href="{% url 'configuracion-contratos' %}">Contratos</a>
+                                </div>
+                            {% endif %}
                             {% if usuario.tipo.proyectos == True %}
                                 <div>
                             {% else %}
                                 <div class="d-none">
                             {% endif %}
+                                    
                                     <a class="dropdown-item" href="{% url 'configuracion-proyectos' %}">Proyectos</a>
+                                     
                                     
                                 </div>
                             {% if usuario.tipo.nombre == "Admin" or usuario.tipo.nombre == "Gerente_compras" or usuario.tipo.nombre == "Subdirector_Administrativo" %}

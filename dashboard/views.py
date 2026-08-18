@@ -5,6 +5,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.contrib.auth.models import User
 from django.core.mail import EmailMessage
+from django.core.paginator import Paginator
 from django.utils import translation
 from django.utils.dateparse import parse_date
 from django.urls import reverse
@@ -13,21 +14,26 @@ from django.forms import inlineformset_factory
 from django.utils.http import urlencode
 from django.db import transaction
 #from dateutil.relativedelta import relativedelta
-from django.db.models import Sum, Q, Prefetch, Avg, FloatField, Case, When, F,DecimalField, ExpressionWrapper, Max
+from django.db.models import Sum, Q, Prefetch, F, Sum, Value, F,DecimalField, ExpressionWrapper, Max
+from django.db.models.functions import Coalesce
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, InvitacionProveedor
-from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato
+from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato, Pozo
+from gastos.models import Articulo_Gasto 
+from viaticos.models import Concepto_Viatico
 from requisiciones.models import Salidas, ValeSalidas
 from user.models import Profile, Distrito, Banco
 from .forms import ProductForm, Products_BatchForm, AddProduct_Form, Proyectos_Form, ProveedoresForm, Proyectos_Add_Form, Proveedores_BatchForm, ProveedoresDireccionesForm, Proveedores_Direcciones_BatchForm, Subproyectos_Add_Form, ProveedoresExistDireccionesForm, Add_ProveedoresDireccionesForm, DireccionComparativoForm, Profile_Form, PrecioRef_Form
 from .forms import RequerimientoCalidadForm, Add_Product_CriticoForm, Add_ProveedoresDir_Alt_Form, Comentario_Proveedor_Doc_Form, Contrato_form, Comentario_Rechazo_Form
 from .forms import PeriodoSubproyectoFormSet
+from solicitudes.forms import PozoForm
 from user.decorators import perfil_seleccionado_required, tipo_usuario_requerido
 from .filters import ProductFilter, ProyectoFilter, ProveedorFilter, SubproyectoFilter, ProductCalidadFilter, ContratoFilter, PriceRefChangeFilter
 from user.filters import ProfileFilter
 from proveedores_externos.views import extraer_tipo_contribuyente
+from decimal import Decimal 
 import csv
-from django.core.paginator import Paginator
+
 from datetime import date, datetime
 import plotly.express as px
 from plotly.subplots import make_subplots
@@ -177,9 +183,218 @@ def select_profile(request):
     }
     return render(request, 'dashboard/select_profile.html', context)
 
-
 @perfil_seleccionado_required
 def proyectos(request):
+    pk_profile = request.session.get("selected_profile_id")
+
+    usuario = Profile.objects.select_related("distritos").get(
+        id=pk_profile
+    )
+
+    proyectos = Proyecto.objects.filter(
+        distrito=usuario.distritos
+    )
+
+    myfilter = ProyectoFilter(
+        request.GET,
+        queryset=proyectos,
+    )
+    proyectos = myfilter.qs
+
+    # El Excel necesita todos los proyectos filtrados.
+    if request.method == "POST" and "btnReporte" in request.POST:
+        proyectos_ids = list(
+            proyectos.values_list("id", flat=True)
+        )
+
+        dict_salidas, dict_gastos, dict_viaticos = obtener_totales(
+            proyectos_ids
+        )
+
+        proyectos_completos = asignar_totales_proyecto(
+            proyectos,
+            dict_salidas,
+            dict_gastos,
+            dict_viaticos,
+        )
+
+        return convert_excel_matriz_proyectos(
+            proyectos_completos
+        )
+
+    # Pantalla: primero se pagina.
+    paginator = Paginator(proyectos, 10)
+    page_number = request.GET.get("page")
+    proyectos_list = paginator.get_page(page_number)
+
+    # Solamente los IDs de los proyectos de esta página.
+    proyectos_ids_pagina = [
+        proyecto.id
+        for proyecto in proyectos_list.object_list
+    ]
+
+    dict_salidas, dict_gastos, dict_viaticos = obtener_totales(
+        proyectos_ids_pagina
+    )
+
+    asignar_totales_proyecto(
+        proyectos_list.object_list,
+        dict_salidas,
+        dict_gastos,
+        dict_viaticos,
+    )
+
+    context = {
+        "proyectos_list": proyectos_list,
+        "myfilter": myfilter,
+    }
+
+    return render(request,"dashboard/proyectos.html",context,)
+
+
+
+
+
+DECIMAL_FIELD = DecimalField(
+    max_digits=18,
+    decimal_places=2,
+)
+
+VALOR_CERO = Value(
+    Decimal("0.00"),
+    output_field=DECIMAL_FIELD,
+)
+
+
+def obtener_totales(proyectos_ids):
+    if not proyectos_ids:
+        return {}, {}, {}
+
+    salidas = (
+        Salidas.objects
+        .filter(
+            producto__articulos__orden__proyecto_id__in=proyectos_ids
+        )
+        .values(
+            proyecto_id=F(
+                "producto__articulos__orden__proyecto_id"
+            )
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F("cantidad") * F("precio"),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    gastos = (
+        Articulo_Gasto.objects
+        .filter(
+            proyecto_id__in=proyectos_ids
+        )
+        .values("proyecto_id")
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        (
+                            F("cantidad")
+                            * F("precio_unitario")
+                            * Value(Decimal("1.16"))
+                        )
+                        + Coalesce(
+                            F("otros_impuestos"),
+                            Value(Decimal("0.00")),
+                        )
+                        - Coalesce(
+                            F("impuestos_retenidos"),
+                            Value(Decimal("0.00")),
+                        ),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    viaticos = (
+        Concepto_Viatico.objects
+        .filter(
+            viatico__proyecto_id__in=proyectos_ids,
+            completo=True,
+        )
+        .values(
+            proyecto_id=F("viatico__proyecto_id")
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F("cantidad") * F("precio"),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    dict_salidas = {
+        registro["proyecto_id"]: registro["total"]
+        for registro in salidas
+    }
+
+    dict_gastos = {
+        registro["proyecto_id"]: registro["total"]
+        for registro in gastos
+    }
+
+    dict_viaticos = {
+        registro["proyecto_id"]: registro["total"]
+        for registro in viaticos
+    }
+
+    return dict_salidas, dict_gastos, dict_viaticos
+
+def asignar_totales_proyecto(
+    proyectos,
+    dict_salidas,
+    dict_gastos,
+    dict_viaticos,
+):
+    cero = Decimal("0.00")
+
+    for proyecto in proyectos:
+        proyecto.total_salidas = dict_salidas.get(
+            proyecto.id,
+            cero,
+        )
+        proyecto.total_gastos = dict_gastos.get(
+            proyecto.id,
+            cero,
+        )
+        proyecto.total_viaticos = dict_viaticos.get(
+            proyecto.id,
+            cero,
+        )
+
+        proyecto.total_ejercido = (
+            proyecto.total_salidas
+            + proyecto.total_gastos
+            + proyecto.total_viaticos
+        )
+
+    return proyectos
+
+@perfil_seleccionado_required
+def proyectos_anterior(request):
     pk_profile = request.session.get('selected_profile_id')
     usuario = Profile.objects.get(id = pk_profile)
 
@@ -597,6 +812,53 @@ def subproyectos_edit(request, pk):
     }
 
     return render(request,'dashboard/subproyectos_add.html',context)
+
+
+@perfil_seleccionado_required
+def agregar_pozo(request):
+    perfil_id = request.session.get("selected_profile_id")
+
+    usuario = Profile.objects.select_related("distritos").get(id=perfil_id)
+
+    distrito = usuario.distritos
+
+    if request.method == "POST":
+        form = PozoForm(request.POST, distrito=distrito)
+
+        if form.is_valid():
+            pozo = form.save(commit=False)
+            pozo.distrito = distrito
+            pozo.cerrar_pozo = False
+            pozo.save()
+
+            messages.success(request, f"El pozo {pozo.nombre} fue agregado correctamente.")
+
+            return redirect("lista-pozos")
+
+    else:
+        form = PozoForm(distrito=distrito)
+
+    context = {
+        "form": form,
+        "distrito": distrito,
+    }
+
+    return render(request,"dashboard/agregar_pozo.html",context)
+
+@perfil_seleccionado_required
+def lista_pozos(request):
+    perfil_id = request.session.get("selected_profile_id")
+
+    usuario = Profile.objects.select_related("distritos").get(id=perfil_id)
+
+    pozos = Pozo.objects.select_related("distrito","contrato").filter(distrito=usuario.distritos).order_by("cerrar_pozo","nombre")
+
+    context = {
+        "pozos": pozos,
+        "distrito": usuario.distritos,
+    }
+
+    return render(request,"dashboard/lista_pozos.html",context)
 
 
 @login_required(login_url='user-login')

@@ -19,7 +19,7 @@ from requisiciones.models import Requis, ArticulosRequisitados, ValeSalidas, Sal
 from requisiciones.views import get_image_base64
 from compras.models import Compra
 from tesoreria.models import Pago
-from solicitudes.models import Subproyecto, Operacion, Proyecto, Sector
+from solicitudes.models import Subproyecto, Operacion, Proyecto, Sector, Pozo
 from entradas.models import EntradaArticulo, Entrada
 from gastos.models import Entrada_Gasto_Ajuste, Conceptos_Entradas
 from .forms import InventarioForm, OrderForm, Inv_UpdateForm, Inv_UpdateForm_almacenista, ArticulosOrdenadosForm, Conceptos_EntradasForm, Entrada_Gasto_AjusteForm, Order_Resurtimiento_Form, ArticulosOrdenadosComentForm, Plantilla_Form, ArticuloPlantilla_Form
@@ -2504,7 +2504,29 @@ def load_subproyectos(request):
     subproyectos =Subproyecto.objects.filter(proyecto__id = proyecto_id, status__nombre = "Activo" ).values('id','nombre')
     data = list(subproyectos)
     return JsonResponse(data, safe=False)
-    #return render(request, 'solicitud/subproyecto_dropdown_list_options.html',{'subproyectos': subproyectos})
+
+
+
+def load_pozos(request):
+    proyecto_id = request.GET.get("proyecto_id")
+
+    if not proyecto_id:
+        return JsonResponse({"tiene_pozos": False,"pozos": [],})
+
+    proyecto = Proyecto.objects.select_related("contrato","distrito").filter(id=proyecto_id).first()
+
+    if not proyecto or not proyecto.contrato_id:
+        return JsonResponse({"tiene_pozos": False,"pozos": [],})
+
+    print("Proyecto:", proyecto.id, proyecto.nombre, "| Contrato:", proyecto.contrato_id, "| Tiene pozos:", proyecto.contrato.tiene_pozos)
+    
+
+    if not proyecto.contrato.tiene_pozos:
+        return JsonResponse({"tiene_pozos": False,"pozos": [],})
+
+    pozos = Pozo.objects.filter(contrato_id=proyecto.contrato_id, distrito_id=proyecto.distrito_id,cerrar_pozo=False).order_by("nombre").values("id","nombre")
+
+    return JsonResponse({"tiene_pozos": True,"pozos": list(pozos),})
 
 def convert_excel_inventario(existencia, valor_inventario, dict_entradas, dict_resultados):
     response= HttpResponse(content_type = "application/ms-excel")

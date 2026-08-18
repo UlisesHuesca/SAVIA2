@@ -31,6 +31,7 @@ urlpatterns = [
     path('inventario/historico_producto/', views.historico_producto, name='historico-producto'),
     path('detalle_autorizar/<int:pk>', views.detalle_autorizar, name='solicitud-detalle-autorizar'),
     path('ajax/load-subproyectos/', views.load_subproyectos, name='ajax_load_subproyectos'),  # <-- rutina en Ajax
+    path('ajax/load-pozos/',views.load_pozos,name="ajax-load-pozos"),  # <-- rutina en Ajax
     path('update_item/', views.updateItem, name='update-item'),
     path('update_item_res/', views.updateItemRes, name='update-item-res'),
     path('solicitud/status_sol/<int:pk>', views.status_sol, name='status_sol'),
