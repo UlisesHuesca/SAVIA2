@@ -310,6 +310,7 @@ class InvitacionProveedor(models.Model):
     servicio = models.BooleanField(default=False)
     producto = models.BooleanField(default=False)
     arrendamiento = models.BooleanField(default=False)
+    distrito = models.ForeignKey(Distrito,  on_delete=models.PROTECT,null=True,blank=True, related_name='invitaciones_proveedor',)
 
     def __str__(self):
         return f'{self.email} | {self.proveedor}'

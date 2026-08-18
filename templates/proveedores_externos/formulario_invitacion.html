@@ -53,6 +53,24 @@
                     <label for="email">Correo electrónico del contacto</label>
                     <input type="email" name="email" id="email" class="form-control" required>
                 </div>
+                {% if es_gerente_compras %}
+                    <div class="mb-3">
+                        <label for="id_distrito" class="form-label">
+                            Distrito
+                        </label>
+
+                        <select name="distrito" id="id_distrito" class="form-select" required>
+                            <option value="">Selecciona un distrito</option>
+
+                            {% for distrito in distritos %}
+                                <option value="{{ distrito.id }}">
+                                    {{ distrito.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                {% endif %}
+
                 <div class="form-check">
                     <input class="form-check-input" type="checkbox" id="producto" name="producto">
                     <label class="form-check-label" for="producto">Producto</label>

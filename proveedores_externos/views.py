@@ -1008,7 +1008,13 @@ def invitar_proveedor(request):
     print('invitar_proveedor')
     pk_perfil = request.session.get('selected_profile_id')
     perfil = get_object_or_404(Profile, id=pk_perfil)
+    es_gerente_compras = (perfil.tipo.nombre == 'Gerente_compras')
 
+
+     
+    #print('es_gerente_compras:', es_gerente_compras)
+    
+    
     if request.method == 'POST':
         email = (request.POST.get('email') or '').strip()
         rfc   = (request.POST.get('rfc') or '').strip().upper()
@@ -1027,9 +1033,22 @@ def invitar_proveedor(request):
             messages.error(request, 'Tipo de invitación inválido.')
             return redirect('invitar-proveedor')
         
-        # 2) Validaciones según el tipo de invitación
-        distrito = perfil.distritos  # distrito del usuario que invita
+        distrito_id = request.POST.get('distrito')
+
+
+        if es_gerente_compras and distrito_id:
+            distrito = get_object_or_404(
+                Distrito,
+                pk=distrito_id,
+            )
+        else:
+            distrito = perfil.distritos
+
+
+
         ESTATUS_VALIDOS = ['NUEVO', 'APROBADO']
+
+        print('distrito:',distrito)
         print('tipo:',tipo)
         if tipo in ("NUEVA_DIRECCION", "NUEVO_USUARIO"):
             # En estos casos, el proveedor DEBE existir
@@ -1080,6 +1099,7 @@ def invitar_proveedor(request):
                     servicio=servicio,
                     arrendamiento=arrendamiento,
                     usado= False,
+                    distrito=distrito,
                 )
 
                 if tipo == "NUEVA_DIRECCION":
@@ -1105,6 +1125,7 @@ def invitar_proveedor(request):
                 producto=producto,
                 servicio=servicio,
                 arrendamiento=arrendamiento,
+                distrito=distrito,
             )
 
             link = request.build_absolute_uri(
@@ -1117,7 +1138,16 @@ def invitar_proveedor(request):
 
             return render(request, 'proveedores_externos/invitacion_enviada.html', {'link': link})
 
-    return render(request, 'proveedores_externos/formulario_invitacion.html')
+    distritos = Distrito.objects.filter(status = True).exclude(Q(nombre='BRASIL') | Q(nombre='MATRIZ ALTERNATIVO') | Q(nombre='ALTAMIRA ALTERNATIVO')).order_by('nombre')
+
+    context = {
+        'perfil': perfil,
+        'es_gerente_compras': es_gerente_compras,
+        'distritos': distritos,
+    }
+
+    
+    return render(request, 'proveedores_externos/formulario_invitacion.html', context)
 
 
 def check_proveedor_ajax(request):
