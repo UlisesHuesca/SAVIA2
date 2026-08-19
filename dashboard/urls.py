@@ -12,6 +12,7 @@ urlpatterns = [
     path('configuracion/subproyectos/<int:pk>', views.subproyectos, name='subproyectos'),
     path('configuracion/proyectos/editar/<int:pk>', views.proyectos_edit, name='proyectos-edit'),
     path('configuracion/proyectos/add', views.proyectos_add, name='proyectos-add'),
+    path('proyectos/<int:proyecto_id>/desglose-pozos/',views.desglose_pozos_proyecto,name='desglose-pozos-proyecto',),
     path('configuracion/subproyectos_add/<int:pk>', views.subproyectos_add, name='subproyectos-add'),
     path('configuracion/subproyectos_edit/<int:pk>', views.subproyectos_edit, name='subproyectos-edit'),
     path('staff/', views.staff, name='staff'),
@@ -61,6 +62,7 @@ urlpatterns = [
     path('proveedores/direccion/<int:pk>/comentario/', views.actualizar_comentario_status, name='actualizar_comentario_status'), 
     path("pozos/", views.lista_pozos,name="lista-pozos"),
     path("pozos/agregar/", views.agregar_pozo,name="agregar-pozo"),
+
     path("contratos/<int:pk>/editar/", views.editar_contrato,name="editar-contrato"),
     #path("pozos/<int:pk>/editar/",views.editar_pozo, name="editar-pozo"
 

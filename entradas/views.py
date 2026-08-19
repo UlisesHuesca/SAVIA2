@@ -157,6 +157,8 @@ def entrada_servicios(request):
                 compra.save()
 
         compras = compras.filter(solo_servicios = True)  
+    elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
+        compras = compras.filter(solo_servicios = True, req__orden__distrito = usuario.distritos, req__orden__proyecto__contrato__tiene_pozos = True)
     else:
         #Este ciclo solo trae a la compras con servicios igual a false para utilizarla en el ciclo de abajo y ser marcadas como True en caso de que solo tengan servicios
         compras_servicios = compras.filter( req__orden__staff = usuario, solo_servicios= False)

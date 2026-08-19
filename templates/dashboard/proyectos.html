@@ -11,7 +11,7 @@
 {% block content %}
 <hr>
 <hr>
-<hr>
+<h6>&nbsp;</h6>
 <h6>&nbsp;</h6>
 <div class="col">
         <div class="card col-md-12">
@@ -48,15 +48,15 @@
                         </div>
                     </div>
                 </div>
-                <!--<div class="col-md-12 col-lg-3">
+                <div class="col-md-12 col-lg-3">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-solid fa-hashtag"></i></span>
                         <div class="form-floating form-floating-group flex-grow-1">   
-                        {{myfilter.form.factura|add_class:"form-control"|append_attr:"placeholder= Factura"}}
-                        <label style="color: #121212;" for="id_codigo">Factura</label>
+                        {{myfilter.form.contrato|add_class:"form-control"|append_attr:"placeholder= Contrato"}}
+                        <label style="color: #121212;" for="id_codigo">Contrato</label>
                         </div>
                     </div>
-                </div>-->
+                </div>
                 <div id="serie" class="col-lg-2 col-md-auto col-sm-auto">
                     <div class="input-group mb-3">
                     <span class="input-group-text" id="basic-addon1"><i class="fa-regular fa-calendar"></i></span>
@@ -112,23 +112,25 @@
         <table class="table bg-white">
             <thead class="text-black" style="background-color: #F5F5F5;">
                 <tr>
-                    <th scope="col">ID</th>
+                    <th>Contrato</th>
                     <th scope="col">Proyecto</th>
                     <th scope="col">Descripción</th>
                     <th scope="col">Status de entrega</th>
                     <th scope="col">Presupuesto</th>
                     <th scope="col">Salidas de Almacén</th>
+                    <th>Entradas Servicios</th>
                     <th scope="col">Pagos de gastos</th>
                     <th scope="col">Pagos de viáticos</th>
                     <th scope="col">Creado</th>
                     <th scope="col">Editar</th>
                     <th scope="col">Subproyectos</th>
+                    <th>Pozos</th>
                 </tr>
             </thead>
             <tbody>
                 {% for proyecto in proyectos_list %}
                 <tr>
-                    <th scope="row">{{proyecto.id}}</th>
+                    <th scope="row">{% if proyecto.contrato %}{{proyecto.contrato}}{% else %}N/A{% endif %}</th>
                     <td>{{proyecto.nombre}}</td>
                     {% if proyecto.descripcion %}
                     <td>{{proyecto.descripcion}}</td>
@@ -146,6 +148,7 @@
                     <td>$0</td>
                     {% endif %}
                     <td>${{ proyecto.total_salidas|default:0|floatformat:2 }}</td>
+                    <td>${{ proyecto.total_compras_servicios|default:0|floatformat:2 }}</td>
                     <td>${{ proyecto.total_gastos|default:0|floatformat:2 }}</td>
                     <td>${{ proyecto.total_viaticos|default:0|floatformat:2 }}</td>
                     
@@ -155,6 +158,13 @@
                     </td>
                     <td>
                         <a type="button" class="btn btn-outline-info" href="{% url 'subproyectos' proyecto.id %}">Subproyectos</a>
+                    </td>
+                    <td>
+                        {% if proyecto.contrato.tiene_pozos %}
+                        <a href="{% url 'desglose-pozos-proyecto' proyecto.id %}" class="btn btn-outline-info btn-sm" title="Desglose de Pozos">
+                            <i class="fa-solid fa-oil-well"></i>Pozos
+                        </a>
+                        {% endif %}
                     </td>
                 </tr>
                 {% endfor %}

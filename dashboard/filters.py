@@ -26,12 +26,12 @@ class ProductCalidadFilter(django_filters.FilterSet):
 
 
 class ProyectoFilter(django_filters.FilterSet):
-    id = CharFilter(field_name='id', lookup_expr='icontains')
     nombre = CharFilter(field_name='nombre', lookup_expr='icontains')
     descripcion = CharFilter(field_name='descripcion', lookup_expr='icontains')
     cliente = CharFilter(field_name='cliente', lookup_expr='icontains')
     folio_cotizacion = CharFilter(field_name='folio__cotizacion', lookup_expr='icontains')
     factura = CharFilter(field_name='factura', lookup_expr='icontains')
+    contrato = CharFilter(field_name='contrato__nombre', lookup_expr='icontains')
     status_entrega = ModelChoiceFilter(
         field_name='status_de_entrega',
         queryset=St_Entrega.objects.all(),

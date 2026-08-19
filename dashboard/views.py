@@ -18,6 +18,7 @@ from django.db.models import Sum, Q, Prefetch, F, Sum, Value, F,DecimalField, Ex
 from django.db.models.functions import Coalesce
 from .models import Product, Subfamilia, Order, Products_Batch, Familia, Unidad, Inventario, Producto_Calidad, Requerimiento_Calidad, PriceRefChange
 from compras.models import Proveedor, Proveedor_Batch, Proveedor_Direcciones_Batch, Proveedor_direcciones, Estatus_proveedor, Estado, DocumentosProveedor, Debida_Diligencia, InvitacionProveedor
+from entradas.models import EntradaArticulo
 from solicitudes.models import Subproyecto, Proyecto, Contrato, Status_Contrato, Pozo
 from gastos.models import Articulo_Gasto 
 from viaticos.models import Concepto_Viatico
@@ -187,13 +188,16 @@ def select_profile(request):
 def proyectos(request):
     pk_profile = request.session.get("selected_profile_id")
 
-    usuario = Profile.objects.select_related("distritos").get(
-        id=pk_profile
-    )
+    usuario = Profile.objects.select_related("distritos").get(id=pk_profile)
 
-    proyectos = Proyecto.objects.filter(
-        distrito=usuario.distritos
-    )
+    if usuario.tipo.proyectos:
+        if usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
+            proyectos = Proyecto.objects.filter(distrito=usuario.distritos, contrato__tiene_pozos=True)
+        else:
+            proyectos = Proyecto.objects.filter(distrito=usuario.distritos)
+    else:
+        proyectos = Proyecto.objects.none()
+
 
     myfilter = ProyectoFilter(
         request.GET,
@@ -207,7 +211,7 @@ def proyectos(request):
             proyectos.values_list("id", flat=True)
         )
 
-        dict_salidas, dict_gastos, dict_viaticos = obtener_totales(
+        dict_salidas, dict_gastos, dict_viaticos, dict_compras_servicios = obtener_totales(
             proyectos_ids
         )
 
@@ -216,6 +220,7 @@ def proyectos(request):
             dict_salidas,
             dict_gastos,
             dict_viaticos,
+            dict_compras_servicios,
         )
 
         return convert_excel_matriz_proyectos(
@@ -233,7 +238,7 @@ def proyectos(request):
         for proyecto in proyectos_list.object_list
     ]
 
-    dict_salidas, dict_gastos, dict_viaticos = obtener_totales(
+    dict_salidas, dict_gastos, dict_viaticos, dict_compras_servicios = obtener_totales(
         proyectos_ids_pagina
     )
 
@@ -242,6 +247,7 @@ def proyectos(request):
         dict_salidas,
         dict_gastos,
         dict_viaticos,
+        dict_compras_servicios,
     )
 
     context = {
@@ -268,12 +274,14 @@ VALOR_CERO = Value(
 
 def obtener_totales(proyectos_ids):
     if not proyectos_ids:
-        return {}, {}, {}
+        return {}, {}, {}, {}
 
     salidas = (
         Salidas.objects
         .filter(
-            producto__articulos__orden__proyecto_id__in=proyectos_ids
+            producto__articulos__orden__proyecto_id__in=proyectos_ids,
+            complete = True,
+            cancelada = False
         )
         .values(
             proyecto_id=F(
@@ -285,6 +293,33 @@ def obtener_totales(proyectos_ids):
                 Sum(
                     ExpressionWrapper(
                         F("cantidad") * F("precio"),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    compras_servicios = (
+        EntradaArticulo.objects
+        .filter(
+            entrada__oc__req__orden__proyecto_id__in=proyectos_ids,
+            entrada__oc__solo_servicios=True,
+            entrada__completo=True,
+            entrada__cancelada=False,
+        )
+        .values(
+            proyecto_id=F(
+                'entrada__oc__req__orden__proyecto_id'
+            )
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F('cantidad')
+                        * F('articulo_comprado__precio_unitario'),
                         output_field=DECIMAL_FIELD,
                     )
                 ),
@@ -361,13 +396,19 @@ def obtener_totales(proyectos_ids):
         for registro in viaticos
     }
 
-    return dict_salidas, dict_gastos, dict_viaticos
+    dict_compras_servicios = {
+        registro["proyecto_id"]: registro["total"]
+        for registro in compras_servicios
+    }
+
+    return dict_salidas, dict_gastos, dict_viaticos, dict_compras_servicios
 
 def asignar_totales_proyecto(
     proyectos,
     dict_salidas,
     dict_gastos,
     dict_viaticos,
+    dict_compras_servicios,
 ):
     cero = Decimal("0.00")
 
@@ -384,14 +425,150 @@ def asignar_totales_proyecto(
             proyecto.id,
             cero,
         )
+        proyecto.total_compras_servicios = dict_compras_servicios.get(
+            proyecto.id,
+            cero,
+        )
 
         proyecto.total_ejercido = (
             proyecto.total_salidas
             + proyecto.total_gastos
             + proyecto.total_viaticos
+            + proyecto.total_compras_servicios
         )
 
     return proyectos
+
+def obtener_totales_pozos_proyecto(proyecto_id, pozos_ids):
+    if not pozos_ids:
+        return {}, {}
+
+    salidas = (
+        Salidas.objects
+        .filter(
+            producto__articulos__orden__proyecto_id=proyecto_id,
+            producto__articulos__orden__pozo_id__in=pozos_ids,
+            complete=True,
+            cancelada=False,
+        )
+        .values(
+            pozo_id=F(
+                'producto__articulos__orden__pozo_id'
+            )
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F('cantidad') * F('precio'),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    compras_servicios = (
+        EntradaArticulo.objects
+        .filter(
+            entrada__oc__req__orden__proyecto_id=proyecto_id,
+            entrada__oc__req__orden__pozo_id__in=pozos_ids,
+            entrada__oc__solo_servicios=True,
+            entrada__completo=True,
+            entrada__cancelada=False,
+        )
+        .values(
+            pozo_id=F(
+                'entrada__oc__req__orden__pozo_id'
+            )
+        )
+        .annotate(
+            total=Coalesce(
+                Sum(
+                    ExpressionWrapper(
+                        F('cantidad')
+                        * F('articulo_comprado__precio_unitario'),
+                        output_field=DECIMAL_FIELD,
+                    )
+                ),
+                VALOR_CERO,
+            )
+        )
+    )
+
+    dict_salidas = {
+        registro['pozo_id']: registro['total']
+        for registro in salidas
+    }
+
+    dict_compras_servicios = {
+        registro['pozo_id']: registro['total']
+        for registro in compras_servicios
+    }
+
+    return dict_salidas, dict_compras_servicios
+
+@perfil_seleccionado_required
+def desglose_pozos_proyecto(request, proyecto_id):
+
+    
+    proyecto = get_object_or_404(
+        Proyecto.objects.select_related('contrato'),
+        id=proyecto_id,
+    )
+
+    if not proyecto.contrato.tiene_pozos:
+        messages.warning(
+            request,
+            'El contrato de este proyecto no maneja pozos.'
+        )
+        return redirect('lista-proyectos')
+
+    pozos = list(
+        Pozo.objects
+        .filter(
+            contrato=proyecto.contrato,
+        )
+        .select_related('distrito', 'contrato')
+        .order_by('nombre')
+    )
+
+    pozos_ids = [pozo.id for pozo in pozos]
+
+    (
+        dict_salidas,
+        dict_compras_servicios,
+    ) = obtener_totales_pozos_proyecto(
+        proyecto.id,
+        pozos_ids,
+    )
+
+    for pozo in pozos:
+        pozo.total_salidas = dict_salidas.get(
+            pozo.id,
+            Decimal('0.00'),
+        )
+
+        pozo.total_compras_servicios = (
+            dict_compras_servicios.get(
+                pozo.id,
+                Decimal('0.00'),
+            )
+        )
+
+        pozo.total_gastado = (
+            pozo.total_salidas
+            + pozo.total_compras_servicios
+        )
+
+    context = {
+        'proyecto': proyecto,
+        'contrato': proyecto.contrato,
+        'pozos': pozos,
+    }
+
+    return render(request,'dashboard/desglose_pozos.html',context)
 
 @perfil_seleccionado_required
 def proyectos_anterior(request):
