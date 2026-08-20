@@ -28,6 +28,7 @@ class Cuenta(models.Model):
     descripcion = models.CharField(max_length=250, null=True, blank=True)
     empresa = models.ForeignKey(Empresa, on_delete= models.CASCADE, null=True)
     visor = models.ForeignKey(Profile, on_delete = models.CASCADE, null=True, related_name='cuentas_visor')
+    visores = models.ManyToManyField(Profile, blank=True, related_name='cuentas_como_visor',)
 
 
     def __str__(self):
