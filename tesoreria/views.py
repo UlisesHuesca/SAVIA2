@@ -2994,11 +2994,11 @@ def control_cuentas(request):
             #print(cuentas)
         else:
             if usuario.tipo.tesoreria:
-                cuentas = Cuenta.objects.filter(Q(encargado=usuario) | Q(visor=usuario))
+                cuentas = Cuenta.objects.filter(Q(encargado=usuario) | Q(visores=usuario))
             elif usuario.tipo.finanzas:
-                cuentas = Cuenta.objects.filter(Q(encargado = usuario) | Q(visor=usuario))
-            elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
-                cuentas = Cuenta.objects.filter(distrito__nombre = usuario.distritos.nombre)
+                cuentas = Cuenta.objects.filter(Q(encargado = usuario) | Q(visores=usuario))
+    elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
+        cuentas = Cuenta.objects.filter(visores = usuario)
 
             
     else:
