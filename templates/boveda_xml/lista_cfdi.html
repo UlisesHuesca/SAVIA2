@@ -1,0 +1,396 @@
+{% extends 'partials/base.html' %}
+{% load static %}
+
+{% block title %}Bóveda SAVIA XML{% endblock %}
+
+{% block content %}
+
+<br>
+<br>
+<br>
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <div>
+            <h3>Bóveda SAVIA XML</h3>
+            <p class="text-muted mb-0">
+                Consulta y administración de comprobantes fiscales.
+            </p>
+        </div>
+    </div>
+
+    {% if messages %}
+        {% for message in messages %}
+            <div class="alert alert-{{ message.tags }} alert-dismissible fade show">
+                {{ message }}
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="alert">
+                </button>
+            </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <strong>Carga masiva de XML</strong>
+        </div>
+
+        <div class="card-body">
+            <form
+                method="post"
+                enctype="multipart/form-data"
+                action="{% url 'boveda_xml:carga_masiva_xml' %}">
+
+                {% csrf_token %}
+
+                <div class="row align-items-end">
+                    <div class="col-md-9">
+                        <label
+                            for="{{ form_carga.archivos_xml.id_for_label }}"
+                            class="form-label">
+                            Seleccione los archivos XML
+                        </label>
+
+                        {{ form_carga.archivos_xml }}
+
+                        {% if form_carga.archivos_xml.errors %}
+                            <div class="text-danger mt-1">
+                                {{ form_carga.archivos_xml.errors }}
+                            </div>
+                        {% endif %}
+
+                        <small class="text-muted">
+                            Puede seleccionar varios XML al mismo tiempo.
+                        </small>
+                    </div>
+
+                    <div class="col-md-3">
+                        <button
+                            type="submit"
+                            class="btn btn-success w-100">
+                            Cargar XML
+                        </button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card mb-4">
+        <div class="card-header">
+            <strong>Filtros</strong>
+        </div>
+
+        <div class="card-body">
+            <form method="get">
+                <div class="row">
+
+                    {% for campo in filtro.form %}
+                        <div class="col-md-3 mb-3">
+                            <label class="form-label">
+                                {{ campo.label }}
+                            </label>
+
+                            {{ campo }}
+
+                            {% if campo.errors %}
+                                <div class="text-danger">
+                                    {{ campo.errors }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    {% endfor %}
+
+                </div>
+
+                <div class="d-flex justify-content-end gap-2">
+                    <a
+                        href="{% url 'boveda_xml:lista_cfdi' %}"
+                        class="btn btn-outline-secondary">
+                        Limpiar
+                    </a>
+
+                    <button type="submit" class="btn btn-primary">
+                        Buscar
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header d-flex justify-content-between">
+            <strong>CFDI almacenados</strong>
+
+            <span class="badge bg-secondary">
+                {{ pagina.paginator.count }} registros
+            </span>
+        </div>
+
+        <div class="card-body p-0">
+            <div class="table-responsive">
+                <table class="table table-striped table-hover mb-0">
+                    <thead class="table-dark">
+                        <tr>
+                            <th>Timbrado</th>
+                            <th>Proveedor</th>
+                            <th>RFC emisor</th>
+                            <th>Serie/Folio</th>
+                            <th>UUID</th>
+                            <th class="text-end">Total</th>
+                            <th>Moneda</th>
+                            <th>Método de Pago</th>
+                            <th>Tipo</th>
+                            <th>XML</th>
+                            <th>PDF</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                        {% for cfdi in pagina %}
+                            <tr>
+                                <td>
+                                    {{ cfdi.fecha_timbrado|date:"d/m/Y H:i" }}
+                                </td>
+
+                                <td>
+                                    {{ cfdi.nombre_emisor|default:"Sin nombre" }}
+                                </td>
+
+                                <td>{{ cfdi.rfc_emisor }}</td>
+
+                                <td>
+                                    {{ cfdi.serie|default:"" }}
+                                    {{ cfdi.folio|default:"" }}
+                                </td>
+
+                                <td>
+                                    <small>{{ cfdi.uuid }}</small>
+                                </td>
+
+                                <td class="text-end">
+                                    ${{ cfdi.total|floatformat:2 }}
+                                </td>
+
+                                <td>{{ cfdi.moneda|default:"" }}</td>
+
+                                <td>{{cfdi.metodo_pago|default:"" }}</td>
+
+                              <td>
+                                    {% if cfdi.tipo_comprobante == 'I' %}
+                                        <span class="badge bg-success">
+                                            Ingreso
+                                        </span>
+                                    {% elif cfdi.tipo_comprobante == 'P' %}
+                                        <span class="badge bg-primary">
+                                            Pago
+                                        </span>
+                                    {% elif cfdi.tipo_comprobante == 'E' %}
+                                        <span class="badge bg-danger">
+                                            Egreso
+                                        </span>
+                                    {% elif cfdi.tipo_comprobante == 'N' %}
+                                        <span class="badge bg-info text-dark">
+                                            Nómina
+                                        </span>
+                                    {% elif cfdi.tipo_comprobante == 'T' %}
+                                        <span class="badge bg-secondary">
+                                            Traslado
+                                        </span>
+                                    {% else %}
+                                        <span class="badge bg-light text-dark">
+                                            Sin identificar
+                                        </span>
+                                    {% endif %}
+                                </td>
+
+                                <td>
+                                    <a
+                                        href="{{ cfdi.archivo_xml.url }}"
+                                        class="btn btn-sm btn-outline-primary"
+                                        target="_blank">
+                                        Descargar
+                                    </a>
+                                </td>
+                                <td>
+                                {% if cfdi.tipo_comprobante == 'I' or cfdi.tipo_comprobante == 'E' %}
+                                    <button
+                                        type="button"
+                                        class="btn btn-sm btn-outline-danger btn-ver-pdf"
+                                        data-url="{% url 'boveda_xml:generar_cfdi' cfdi.id %}"
+                                        data-uuid="{{ cfdi.uuid }}">
+                                        Ver PDF
+                                    </button>
+                                {% else %}
+                                    —
+                                {% endif %}
+                                </td>
+                            </tr>
+
+                        {% empty %}
+                            <tr>
+                                <td colspan="9" class="text-center py-4">
+                                    No se encontraron CFDI.
+                                </td>
+                            </tr>
+
+                     
+                        {% endfor %}
+
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        {% if pagina.has_other_pages %}
+            <div class="card-footer">
+                <nav>
+                    <ul class="pagination justify-content-center mb-0">
+
+                        {% if pagina.has_previous %}
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.previous_page_number }}">
+                                    Anterior
+                                </a>
+                            </li>
+                        {% endif %}
+
+                        <li class="page-item active">
+                            <span class="page-link">
+                                {{ pagina.number }} de
+                                {{ pagina.paginator.num_pages }}
+                            </span>
+                        </li>
+
+                        {% if pagina.has_next %}
+                            <li class="page-item">
+                                <a
+                                    class="page-link"
+                                    href="?{% if querystring %}{{ querystring }}&{% endif %}page={{ pagina.next_page_number }}">
+                                    Siguiente
+                                </a>
+                            </li>
+                        {% endif %}
+
+                    </ul>
+                </nav>
+            </div>
+        {% endif %}
+    </div>
+</div>
+<div
+    class="modal fade"
+    id="modalPDF"
+    tabindex="-1"
+    aria-labelledby="modalPDFLabel"
+    aria-hidden="true">
+
+    <div class="modal-dialog modal-xl modal-dialog-centered">
+        <div class="modal-content">
+
+            <div class="modal-header">
+                <h5 class="modal-title" id="modalPDFLabel">
+                    Representación impresa del CFDI
+                </h5>
+
+                <button
+                    type="button"
+                    class="btn-close"
+                    data-bs-dismiss="modal"
+                    aria-label="Cerrar">
+                </button>
+            </div>
+
+            <div class="modal-body p-0">
+                <div
+                    id="cargandoPDF"
+                    class="text-center py-5">
+
+                    <div
+                        class="spinner-border text-primary"
+                        role="status">
+                        <span class="visually-hidden">
+                            Generando PDF...
+                        </span>
+                    </div>
+
+                    <p class="mt-3 mb-0">
+                        Generando representación PDF...
+                    </p>
+                </div>
+
+                <iframe
+                    id="visorPDF"
+                    src=""
+                    width="100%"
+                    style="height: 80vh; border: none; display: none;"
+                    title="Representación PDF del CFDI">
+                </iframe>
+            </div>
+
+            <div class="modal-footer">
+                <a
+                    id="descargarPDF"
+                    href="#"
+                    class="btn btn-outline-danger"
+                    download>
+                    Descargar PDF
+                </a>
+
+                <button
+                    type="button"
+                    class="btn btn-secondary"
+                    data-bs-dismiss="modal">
+                    Cerrar
+                </button>
+            </div>
+
+        </div>
+    </div>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const modalElement = document.getElementById('modalPDF');
+    const modalPDF = new bootstrap.Modal(modalElement);
+
+    const visorPDF = document.getElementById('visorPDF');
+    const cargandoPDF = document.getElementById('cargandoPDF');
+    const descargarPDF = document.getElementById('descargarPDF');
+    const modalTitulo = document.getElementById('modalPDFLabel');
+
+    document.querySelectorAll('.btn-ver-pdf').forEach(function (boton) {
+        boton.addEventListener('click', function () {
+            const url = boton.dataset.url;
+            const uuid = boton.dataset.uuid;
+
+            modalTitulo.textContent = `CFDI ${uuid}`;
+            cargandoPDF.style.display = 'block';
+            visorPDF.style.display = 'none';
+
+            visorPDF.src = url;
+            descargarPDF.href = url;
+
+            modalPDF.show();
+        });
+    });
+
+    visorPDF.addEventListener('load', function () {
+        cargandoPDF.style.display = 'none';
+        visorPDF.style.display = 'block';
+    });
+
+    modalElement.addEventListener('hidden.bs.modal', function () {
+        visorPDF.src = '';
+        visorPDF.style.display = 'none';
+        cargandoPDF.style.display = 'block';
+        descargarPDF.href = '#';
+    });
+});
+</script>
+
+{% endblock %}

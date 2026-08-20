@@ -1,0 +1,103 @@
+{% extends 'partials/base.html' %}
+
+{% block title %}Resultado de carga{% endblock %}
+
+{% block content %}
+
+<br>
+<br>
+<br>
+
+<div class="container-fluid">
+
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div>
+            <h3>Resultado de la carga</h3>
+            <p class="text-muted mb-0">
+                Se procesaron {{ total_archivos }} archivos.
+            </p>
+        </div>
+
+        <a
+            href="{% url 'boveda_xml:lista_cfdi' %}"
+            class="btn btn-primary">
+            Regresar a la bóveda
+        </a>
+    </div>
+
+    <div class="row mb-4">
+        <div class="col-md-4">
+            <div class="card border-primary">
+                <div class="card-body text-center">
+                    <h3>{{ total_archivos }}</h3>
+                    <span>Total procesados</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-success">
+                <div class="card-body text-center text-success">
+                    <h3>{{ guardados }}</h3>
+                    <span>Guardados</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="card border-danger">
+                <div class="card-body text-center text-danger">
+                    <h3>{{ rechazados }}</h3>
+                    <span>Rechazados</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-header">
+            <strong>Detalle de archivos procesados</strong>
+        </div>
+
+        <div class="table-responsive">
+            <table class="table table-striped mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Archivo</th>
+                        <th>UUID</th>
+                        <th>Resultado</th>
+                        <th>Mensaje</th>
+                    </tr>
+                </thead>
+
+                <tbody>
+                    {% for resultado in resultados %}
+                        <tr>
+                            <td>{{ resultado.archivo }}</td>
+
+                            <td>
+                                {{ resultado.uuid|default:"—" }}
+                            </td>
+
+                            <td>
+                                {% if resultado.estatus == 'GUARDADO' %}
+                                    <span class="badge bg-success">
+                                        Guardado
+                                    </span>
+                                {% else %}
+                                    <span class="badge bg-danger">
+                                        Rechazado
+                                    </span>
+                                {% endif %}
+                            </td>
+
+                            <td>{{ resultado.mensaje }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+{% endblock %}
