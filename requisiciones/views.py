@@ -800,7 +800,7 @@ def update_salida(request):
                        
                        
                     print('cantidad:',cantidad)
-                if cantidad > 0 and not entrada_res:
+                if cantidad > 0: #Le quito el no entrada_res entendiendo que si hubo resurtimiento y aun así quedó alguna cantidad por surtir, entonces se hace la salida de inventario
                     print('fuera')
                     producto.cantidad -= cantidad
                     producto.surtir = False
