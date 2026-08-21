@@ -42,21 +42,32 @@ def extraer_detalles_pdf(archivo_xml):
         archivo_xml.open('rb')
         archivo_xml.seek(0)
         raiz = ET.parse(archivo_xml).getroot()
+
     except (ET.ParseError, FileNotFoundError, OSError) as error:
         raise ErrorDatosPDF(
             f'No fue posible leer el XML: {error}'
         )
+
     finally:
         try:
             archivo_xml.close()
         except Exception:
             pass
 
-    conceptos_xml = buscar_hijo_directo(raiz, 'Conceptos')
+    # =========================================================
+    # CONCEPTOS
+    # =========================================================
+
+    conceptos_xml = buscar_hijo_directo(
+        raiz,
+        'Conceptos',
+    )
+
     resultados = []
 
     if conceptos_xml is not None:
         for concepto in conceptos_xml:
+
             if nombre_etiqueta(concepto) != 'Concepto':
                 continue
 
@@ -64,6 +75,7 @@ def extraer_detalles_pdf(archivo_xml):
                 concepto,
                 'Impuestos',
             )
+
             traslados = buscar_hijo_directo(
                 impuestos_concepto,
                 'Traslados',
@@ -74,6 +86,7 @@ def extraer_detalles_pdf(archivo_xml):
 
             if traslados is not None:
                 for traslado in traslados:
+
                     if nombre_etiqueta(traslado) != 'Traslado':
                         continue
 
@@ -87,21 +100,79 @@ def extraer_detalles_pdf(archivo_xml):
                         tasas.append(tasa)
 
             resultados.append({
-                'descripcion': concepto.get('Descripcion') or '',
-                'cantidad': concepto.get('Cantidad') or '0',
-                'precio': concepto.get('ValorUnitario') or '0',
-                'importe': concepto.get('Importe') or '0',
+                'descripcion': (
+                    concepto.get('Descripcion') or ''
+                ),
+                'cantidad': (
+                    concepto.get('Cantidad') or '0'
+                ),
+                'precio': (
+                    concepto.get('ValorUnitario') or '0'
+                ),
+                'importe': (
+                    concepto.get('Importe') or '0'
+                ),
                 'unidad': (
                     concepto.get('Unidad') or
                     concepto.get('ClaveUnidad') or
                     ''
                 ),
-                'clave': concepto.get('ClaveProdServ') or '',
+                'clave': (
+                    concepto.get('ClaveProdServ') or ''
+                ),
                 'impuesto': str(importe_impuesto),
-                'tasa_cuota': ', '.join(tasas) if tasas else '0',
+                'tasa_cuota': (
+                    ', '.join(tasas)
+                    if tasas
+                    else '0'
+                ),
             })
 
-    timbre = buscar_elemento(raiz, 'TimbreFiscalDigital')
+    # =========================================================
+    # RETENCIONES GENERALES DEL COMPROBANTE
+    # =========================================================
+
+    impuestos_xml = buscar_hijo_directo(
+        raiz,
+        'Impuestos',
+    )
+
+    retenciones_xml = buscar_hijo_directo(
+        impuestos_xml,
+        'Retenciones',
+    )
+
+    iva_retenido = Decimal('0')
+    isr_retenido = Decimal('0')
+
+    if retenciones_xml is not None:
+        for retencion in retenciones_xml:
+
+            if nombre_etiqueta(retencion) != 'Retencion':
+                continue
+
+            tipo_impuesto = retencion.get('Impuesto')
+
+            importe_retencion = convertir_decimal(
+                retencion.get('Importe')
+            )
+
+            # 001 = ISR
+            if tipo_impuesto == '001':
+                isr_retenido += importe_retencion
+
+            # 002 = IVA
+            elif tipo_impuesto == '002':
+                iva_retenido += importe_retencion
+
+    # =========================================================
+    # TIMBRE FISCAL
+    # =========================================================
+
+    timbre = buscar_elemento(
+        raiz,
+        'TimbreFiscalDigital',
+    )
 
     sello_cfd = ''
     sello_sat = ''
@@ -110,13 +181,29 @@ def extraer_detalles_pdf(archivo_xml):
     if timbre is not None:
         sello_cfd = timbre.get('SelloCFD') or ''
         sello_sat = timbre.get('SelloSAT') or ''
-        certificado_sat = timbre.get('NoCertificadoSAT') or ''
+        certificado_sat = (
+            timbre.get('NoCertificadoSAT') or ''
+        )
+
+    # =========================================================
+    # RESULTADO
+    # =========================================================
 
     return {
         'resultados': resultados,
-        'sello_cfd': sello_cfd or raiz.get('Sello') or '',
+
+        'iva_retenido': iva_retenido,
+        'isr_retenido': isr_retenido,
+
+        'sello_cfd': (
+            sello_cfd or
+            raiz.get('Sello') or
+            ''
+        ),
         'sello_sat': sello_sat,
-        'no_certificado': raiz.get('NoCertificado') or '',
+        'no_certificado': (
+            raiz.get('NoCertificado') or ''
+        ),
         'no_certificadoSAT': certificado_sat,
         'cadena_original': '',
     }

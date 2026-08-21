@@ -414,18 +414,46 @@ def cfdi_pdf(factura):
     c.setFillColor(black)
     c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['impuestos']):,.2f}")
     alineado_y -= line_height
-    #if data['iva_retenido'] > 0:
-    #    c.setFillColor(white)
-    #    c.drawRightString(alineado_x + 500, alineado_y, f"Impuestos retenidos:")
-    #    c.setFillColor(black)
-    #    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['iva_retenido']):,.2f}")
-    #    alineado_y -= line_height
-    #if data['isr_retenido'] > 0:
-     #   c.setFillColor(white)
-     #   c.drawRightString(alineado_x + 500, alineado_y, f"ISR:")
-    #    c.setFillColor(black)
-    #    c.drawRightString(alineado_x + 555, alineado_y, f"{float(data['isr_retenido']):,.2f}")
-    #    alineado_y -= line_height
+  
+
+    iva_retenido = data.get('iva_retenido') or 0
+    isr_retenido = data.get('isr_retenido') or 0
+
+    # IVA retenido
+    if iva_retenido > 0:
+        c.setFillColor(white)
+        c.drawRightString(
+            alineado_x + 500,
+            alineado_y,
+            "IVA retenido:",
+        )
+
+        c.setFillColor(black)
+        c.drawRightString(
+            alineado_x + 555,
+            alineado_y,
+            f"{float(iva_retenido):,.2f}",
+        )
+
+        alineado_y -= line_height
+
+    # ISR retenido
+    if isr_retenido > 0:
+        c.setFillColor(white)
+        c.drawRightString(
+            alineado_x + 500,
+            alineado_y,
+            "ISR retenido:",
+        )
+
+        c.setFillColor(black)
+        c.drawRightString(
+            alineado_x + 555,
+            alineado_y,
+            f"{float(isr_retenido):,.2f}",
+        )
+
+        alineado_y -= line_height
     c.setFillColor(white)
     c.drawRightString(alineado_x + 500, alineado_y, f"Total:")
     c.setFillColor(black)
