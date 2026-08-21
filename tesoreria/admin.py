@@ -1,10 +1,25 @@
 from django.contrib import admin
 from .models import Cuenta, Pago, Facturas, Comprobante_saldo_favor, Tipo_Pago, Saldo_Cuenta, Complemento_Pago, EstadoCuenta
+from user.models import Profile
 
 class CuentaAdmin(admin.ModelAdmin):
     list_display = ('cuenta','banco','distrito','encargado','status')
-    raw_id_fields = ('encargado','visor')
+    raw_id_fields = ('encargado','visor',)
+    filter_horizontal = ('visores',)
     search_fields = ['cuenta','encargado__staff__staff__first_name']
+
+    def formfield_for_manytomany(self, db_field, request, **kwargs):
+        if db_field.name == 'visores':
+            kwargs['queryset'] = Profile.objects.order_by(
+                'staff__staff__first_name',
+                'staff__staff__last_name',
+            )
+
+        return super().formfield_for_manytomany(
+            db_field,
+            request,
+            **kwargs,
+        )
 
 class PagoAdmin(admin.ModelAdmin):
     list_display = ('id','oc','gasto','viatico','tesorero','monto', 'hecho','tipo','cuenta','pagado_real','distrito','control_documentos')
