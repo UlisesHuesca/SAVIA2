@@ -94,9 +94,7 @@ class Matriz_Pago_Filter(django_filters.FilterSet):
         ).order_by("nombre")
 
         else:
-            cuentas = Cuenta.objects.filter(
-                encargado=tesorero
-            )
+            cuentas = Cuenta.objects.filter(Q(encargado=tesorero) |Q(visores=tesorero)).distinct()
             distritos = Distrito.objects.filter(nombre = tesorero.distritos.nombre)
 
         self.filters["cuenta"].queryset = cuentas
