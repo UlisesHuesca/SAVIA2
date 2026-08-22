@@ -476,7 +476,7 @@ function EliminarArticulos(id){
 
 var check_colaborador = document.getElementById("SwitchColaborador");
 
-document.getElementById('SolicitudForm').addEventListener('submit', (event)=>{
+/*document.getElementById('SolicitudForm').addEventListener('submit', (event)=>{
    
     var viatico = document.getElementById('viatico');
     var viatico_id = viatico.getAttribute('viatico_id');
@@ -492,7 +492,7 @@ document.getElementById('SolicitudForm').addEventListener('submit', (event)=>{
           
     } 
          
-});
+});*/
     
 document.getElementById("SwitchColaborador").addEventListener("change", function(element){
 	let colaboradores = document.getElementById('colaborador_parrafo');
@@ -519,6 +519,11 @@ document.addEventListener('DOMContentLoaded', function(){
     var viatico_id = viatico.getAttribute('viatico_id');
     const fechaPartida = document.getElementById('id_fecha_partida');
     const fechaRetorno = document.getElementById('id_fecha_retorno');
+    const formulario = document.getElementById("SolicitudForm");
+    const botonAgregar = document.getElementById("btn_agregar");
+    const checkColaborador = document.getElementById("SwitchColaborador");
+    const selectColaborador = document.getElementById("id_colaborador");
+
     
     fechaPartida.addEventListener('change', function () {
         fechaRetorno.min = fechaPartida.value;
@@ -531,6 +536,50 @@ document.addEventListener('DOMContentLoaded', function(){
     document.getElementById("Lugar_Intermedio").addEventListener("submit", function(event){
      preventDoubleClick(document.getElementById("btn_punto"));
     });
+
+
+    let enviando = false;
+    function actualizarColaboradorRequerido() {
+            selectColaborador.required = checkColaborador.checked;
+        }
+
+        checkColaborador.addEventListener(
+            "change",
+            actualizarColaboradorRequerido
+        );
+    
+    
+    actualizarColaboradorRequerido();
+
+    formulario.addEventListener("submit", function (event) {
+        const opcionSeleccionada =
+            selectColaborador.selectedIndex > 0 &&
+            selectColaborador.value !== "";
+
+        if (checkColaborador.checked && !opcionSeleccionada) {
+            event.preventDefault();
+
+            Swal.fire({
+                title: "Error",
+                text: "Favor de seleccionar un colaborador",
+                icon: "error",
+            }).then(function () {
+                selectColaborador.focus();
+            });
+
+            return;
+        }
+
+        if (enviando) {
+            event.preventDefault();
+            return;
+        }
+
+        enviando = true;
+        preventDoubleClick(botonAgregar);
+    });
+
+
 
     var datos = localStorage.getItem("id_solicitud_"+viatico_id);
     //console.log(datosCompra)
