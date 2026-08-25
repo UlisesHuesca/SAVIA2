@@ -2581,15 +2581,22 @@ def control_documentos(request):
                             texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                             variables_pago = encontrar_variables(texto_pago)
                             fecha_str = variables_pago.get('fecha')
-                            if not pago.pagado_real:
-                                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
-                                if fecha_obj:
+                            fecha_pago = ''
+                            
+                            if not pago.pagado_real and fecha_str and fecha_str != "No disponible":
+                                try:
+                                    fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
+                            
                                     if isinstance(fecha_obj, date):
-                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')
                                     else:
                                         fecha_pago = str(fecha_obj).replace('/', '-')
+                            
                                     pago.pagado_real = fecha_obj
                                     pago.save()
+                            
+                                except ValueError:
+                                    print(f"Fecha inválida encontrada: {fecha_str}")
                             carpeta = f'{pago.pagado_real}_COMPRA_{oc.folio}_{oc.req.orden.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
                             for factura in oc.facturas.all():
@@ -2627,15 +2634,22 @@ def control_documentos(request):
                             texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                             variables_pago = encontrar_variables(texto_pago)
                             fecha_str = variables_pago.get('fecha')
-                            if not pago.pagado_real:
-                                fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
-                                if fecha_obj:
+                            fecha_pago = ''
+                                                       
+                            if not pago.pagado_real and fecha_str and fecha_str != "No disponible":
+                                try:
+                                    fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
+                                                       
                                     if isinstance(fecha_obj, date):
-                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')  # Para usar en nombre de archivo, etc.
+                                        fecha_pago = fecha_obj.strftime('%d-%m-%Y')
                                     else:
                                         fecha_pago = str(fecha_obj).replace('/', '-')
+                                                       
                                     pago.pagado_real = fecha_obj
                                     pago.save()
+                                                       
+                                except ValueError:
+                                    print(f"Fecha inválida encontrada: {fecha_str}")
                             carpeta = f'{pago.pagado_real}_VIATICO_{viatico.folio}_{viatico.distrito.nombre}'
                             #zip_file.mkdir(carpeta)
                             for factura in viatico.facturas.all():
