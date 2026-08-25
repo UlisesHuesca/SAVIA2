@@ -3853,7 +3853,7 @@ def generar_pdf_nueva(compra):
     campo_y = panel_inicio_y - 8
     c.drawString(col_inicio + 3, campo_y, 'Proyecto:')
 
-    nombre_proyecto = (compra.req.orden.proyecto.nombre if compra.req.proyecto else 'SIN PROYECTO')
+    nombre_proyecto = (compra.req.orden.proyecto.nombre if compra.req.orden.proyecto else 'SIN PROYECTO')
     c.drawString(col_inicio + 80, campo_y,nombre_proyecto)
     nombre_subproyecto = (compra.req.orden.subproyecto.nombre if compra.req.orden.subproyecto else 'SIN SUBPROYECTO')
     campo_y -= 12
