@@ -2312,7 +2312,21 @@ def control_documentos(request):
     #Los distritos se definen de forma "dinámica" de acuerdo a los almacenes que tiene el usuario en el perfil
     distritos = Distrito.objects.filter(id__in=almacenes_distritos)
     tesoreros = Profile.objects.filter(tipo__nombre__in = ["Tesoreria","Tesoreria_Documentos","Admin" ], st_activo = True, distritos__in = almacenes_distritos)
-    cuentas = Cuenta.objects.filter(distrito__in=almacenes_distritos)
+
+    if usuario.distritos.nombre == "MATRIZ":
+        if usuario.tipo.supervisor:
+            if usuario.tipo.tesoreria:
+                cuentas = Cuenta.objects.filter(encargado__tipo__tesoreria = True).exclude(distrito__nombre = "BRASIL")
+            elif usuario.tipo.finanzas:
+                cuentas = Cuenta.objects.filter(encargado__tipo__finanzas = True).exclude(distrito__nombre = "BRASIL")
+                #print(cuentas)
+        else:
+            if usuario.tipo.tesoreria:
+                cuentas = Cuenta.objects.filter(Q(encargado=usuario) | Q(visores=usuario))
+            elif usuario.tipo.finanzas:
+                cuentas = Cuenta.objects.filter(Q(encargado = usuario) | Q(visores=usuario))
+    elif usuario.tipo.nombre == "SUPERVISIÓN_PROYECTOS":
+        cuentas = Cuenta.objects.filter(visores = usuario)
    
     empresas = Empresa.objects.all()
     #Set up pagination
@@ -2669,6 +2683,7 @@ def control_documentos(request):
             distrito_id = request.POST.get('distrito')
             tesorero_id = request.POST.get('tesorero')
             folio = request.POST.get('folio')
+            cuenta_id = request.POST.get('cuenta')
             print(folio)
             tipo_documento = request.POST.get('tipo_documento')
 
@@ -2700,6 +2715,18 @@ def control_documentos(request):
                     facturas_gastos = Factura.objects.filter(solicitud_gasto__folio = folio)
                     facturas_compras = Facturas.objects.filter(oc__folio= folio)
                     facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__folio = folio)
+
+                if cuenta_id:
+                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__pagosg__cuenta_id=cuenta_id)
+                
+                    facturas_compras = facturas_compras.filter(oc__pagos__cuenta_id=cuenta_id)
+                
+                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__cuenta_id=cuenta_id)
+                
+                    facturas_gastos = facturas_gastos.distinct()
+                    facturas_compras = facturas_compras.distinct()
+                    facturas_viaticos = facturas_viaticos.distinct()
+                                
                  
 
             else:
@@ -2714,7 +2741,8 @@ def control_documentos(request):
                 #print(ids_viaticos)
 
                 validar_lote_facturas.delay(ids_gastos, ids_compras, ids_viaticos)
-                
+
+        
             else:
                 zip_buffer = BytesIO()
                 processed_ocs = set()  # Mantén un conjunto de OCs procesadas
@@ -2764,6 +2792,10 @@ def control_documentos(request):
                             processed_gastos.add(factura.solicitud_gasto.id)
 
                         pagos = Pago.objects.filter(gasto=factura.solicitud_gasto)
+
+                        if cuenta_id:
+                            pagos = pagos.filter(cuenta_id = cuenta_id)
+
                         for pago in pagos:
                             if pago.comprobante_pago and pago.id not in processed_pagos:
                                 texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
@@ -2826,6 +2858,9 @@ def control_documentos(request):
                         
                         # Incluir la ficha de pago
                         pagos = Pago.objects.filter(oc=factura.oc)
+                        if cuenta_id:
+                            pagos =  pagos = pagos.filter(cuenta_id=cuenta_id)
+
                         for pago in pagos:
                             if pago.comprobante_pago and pago.id not in processed_pagos:
                                 texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
@@ -2899,6 +2934,11 @@ def control_documentos(request):
                     
                         
                         pagos = Pago.objects.filter(viatico=factura.solicitud_viatico)
+
+                        if cuenta_id:
+                            pagos = pagos.filter(cuenta_id=cuenta_id)
+
+
                         for pago in pagos:
                             if pago.comprobante_pago and pago.id not in processed_pagos:
                                 texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)

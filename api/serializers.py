@@ -425,3 +425,6 @@ class ReporteSolicitudesSerializer(serializers.Serializer):
     material_o_servicio_solicitado = serializers.CharField(allow_blank=True, required=False)
     cantidad_de_material = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
     precio_unitario = serializers.DecimalField(max_digits=14, decimal_places=2, required=False)
+
+    comentario_solicitud = serializers.CharField(allow_blank=True, allow_null=True, required=False,)
+    contrato = serializers.CharField(allow_blank=True,allow_null=True,required=False,)

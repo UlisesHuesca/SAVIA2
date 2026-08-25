@@ -1405,7 +1405,7 @@ def render_pdf_view( pk):
     c.drawString(520,caja_iso,'Aprobación')
     c.drawString(520,caja_iso-10,'SUB ADM')
     c.drawString(150,caja_iso-20,'Número de documento')
-    c.drawString(160,caja_iso-30,'F-ADQ-N4-01.02')
+    c.drawString(160,caja_iso-30,'SEOV-ALM-N4-01.01')
     c.drawString(245,caja_iso-20,'Clasificación del documento')
     c.drawString(275,caja_iso-30,'Controlado')
     c.drawString(355,caja_iso-20,'Nivel del documento')

@@ -1484,6 +1484,8 @@ def reporte_solicitudes_api(request):
             "vale_salida__solicitud__distrito",
             "vale_salida__solicitud__staff__staff__staff",
             "vale_salida__solicitud__activo",
+            "vale_salida__solicitud__proyecto",
+            "vale_salida__solicitud__proyecto__contrato",
             "producto__articulos__producto",
             
         )
@@ -1524,6 +1526,9 @@ def reporte_solicitudes_api(request):
         vale = salida.vale_salida
         order = vale.solicitud if vale else None
         material_recibido_por = ""
+
+        proyecto = order.proyecto if order else None
+        contrato = (getattr(proyecto, "contrato", None) if proyecto else None)
 
         if vale and vale.material_recibido_por:
             perfil_recibe = vale.material_recibido_por
@@ -1650,11 +1655,14 @@ def reporte_solicitudes_api(request):
             "fecha_llegada_almacen": entrada.entrada_date.strftime("%d/%m/%Y") if entrada and entrada.entrada_date else "",
             "fecha_entrega_de_almacen": salida.vale_salida.created_at.strftime("%d/%m/%Y") if salida.vale_salida and salida.vale_salida.created_at else "",
 
+            "comentario_solicitud": (order.comentario or "" if order else ""),
+            "contrato": (contrato.nombre or "" if contrato else ""),
+
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
             "precio_unitario": precio_unitario,
         }
-
+        print(item)
         serializer = ReporteSolicitudesSerializer(data=item)
         serializer.is_valid(raise_exception=True)
 
