@@ -1843,7 +1843,7 @@ def matriz_pagos(request):
         
         elif 'btnDescargar' in request.POST:
             validar_sat = request.POST.get('validacion') == 'on'
-            fecha_inicio = parse_date(request.POST.get('fecha_inicio'))
+            fecha_inicio = parsedate(request.POST.get('fecha_inicio'))
             fecha_fin = parse_date(request.POST.get('fecha_fin'))
             distrito_id = request.POST.get('distrito')
             tesorero_id = request.POST.get('tesorero')
@@ -2463,6 +2463,17 @@ def control_documentos(request):
 
                     if tesorero_id:
                         pagos = pagos.filter(tesorero_id=tesorero_id)
+
+                if cuenta_id:
+                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__pagosg__cuenta_id=cuenta_id)
+                                
+                    facturas_compras = facturas_compras.filter(oc__pagos__cuenta_id=cuenta_id)
+                                
+                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__cuenta_id=cuenta_id)
+                                
+                    facturas_gastos = facturas_gastos.distinct()
+                    facturas_compras = facturas_compras.distinct()
+                    facturas_viaticos = facturas_viaticos.distinct()
             else:
                 pagos = pagos.filter(
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
