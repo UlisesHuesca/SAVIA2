@@ -2578,6 +2578,7 @@ def control_documentos(request):
                         
                         elif pago.oc:
                             oc = pago.oc
+                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                             variables_pago = encontrar_variables(texto_pago)
                             fecha_str = variables_pago.get('fecha')
                             if not pago.pagado_real:
@@ -2623,6 +2624,7 @@ def control_documentos(request):
                               
                         elif pago.viatico:
                             viatico = pago.viatico
+                            texto_pago = extraer_texto_pdf_prop(pago.comprobante_pago)
                             variables_pago = encontrar_variables(texto_pago)
                             fecha_str = variables_pago.get('fecha')
                             if not pago.pagado_real:
