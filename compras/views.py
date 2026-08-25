@@ -3852,11 +3852,13 @@ def generar_pdf_nueva(compra):
     c.setFont('Helvetica', 7)  # Tamaño de fuente más pequeño
     campo_y = panel_inicio_y - 8
     c.drawString(col_inicio + 3, campo_y, 'Proyecto:')
-    c.drawString(col_inicio + 80, campo_y,compra.req.orden.proyecto.nombre)
 
+    nombre_proyecto = (compra.req.orden.proyecto.nombre if compra.req.proyecto else 'SIN PROYECTO')
+    c.drawString(col_inicio + 80, campo_y,nombre_proyecto)
+    nombre_subproyecto = (compra.req.orden.subproyecto.nombre if compra.req.orden.subproyecto else 'SIN SUBPROYECTO')
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Subproyecto:')
-    c.drawString(col_inicio + 80, campo_y,compra.req.orden.subproyecto.nombre)
+    c.drawString(col_inicio + 80, campo_y, nombre_subproyecto)
 
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Folio requisición:')
