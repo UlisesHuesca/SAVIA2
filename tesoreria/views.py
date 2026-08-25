@@ -2578,6 +2578,8 @@ def control_documentos(request):
                         
                         elif pago.oc:
                             oc = pago.oc
+                            variables_pago = encontrar_variables(texto_pago)
+                            fecha_str = variables_pago.get('fecha')
                             if not pago.pagado_real:
                                 fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
                                 if fecha_obj:
@@ -2621,6 +2623,8 @@ def control_documentos(request):
                               
                         elif pago.viatico:
                             viatico = pago.viatico
+                            variables_pago = encontrar_variables(texto_pago)
+                            fecha_str = variables_pago.get('fecha')
                             if not pago.pagado_real:
                                 fecha_obj = datetime.strptime(fecha_str, '%d/%m/%Y').date()
                                 if fecha_obj:
