@@ -2421,9 +2421,10 @@ def control_documentos(request):
             tesorero_id = request.POST.get('tesorero')
             empresa_id = request.POST.get('empresa')
             tipo_documento_id = request.POST.get('tipo_documento')
-            cuenta_bancaria_id = request.POST.get('cuenta_bancaria')
+            cuenta_id = request.POST.get('cuenta_bancaria')
             folio = request.POST.get('folio')
             validar_sat = request.POST.get('validacion') == 'on'
+            #cuenta_id = request.POST.get()
             
 
             if usuario.distritos.nombre == "MATRIZ":
@@ -2431,8 +2432,8 @@ def control_documentos(request):
                 if fecha_inicio and fecha_fin:
                     pagos = Pago.objects.filter(Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]), hecho = True, control_documentos = True)
 
-                    if cuenta_bancaria_id:
-                        pagos = pagos.filter(cuenta__id = cuenta_bancaria_id)
+                    if cuenta_id:
+                        pagos = pagos.filter(cuenta__id = cuenta_id)
                     
                     if empresa_id:
                         pagos = pagos.filter(cuenta__empresa__id = empresa_id)
@@ -2464,16 +2465,16 @@ def control_documentos(request):
                     if tesorero_id:
                         pagos = pagos.filter(tesorero_id=tesorero_id)
 
-                if cuenta_id:
-                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__pagosg__cuenta_id=cuenta_id)
+                #if cuenta_id:
+                #    facturas_gastos = facturas_gastos.filter(solicitud_gasto__pagosg__cuenta_id=cuenta_id)
                                 
-                    facturas_compras = facturas_compras.filter(oc__pagos__cuenta_id=cuenta_id)
+                #    facturas_compras = facturas_compras.filter(oc__pagos__cuenta_id=cuenta_id)
                                 
-                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__cuenta_id=cuenta_id)
+                #    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__cuenta_id=cuenta_id)
                                 
-                    facturas_gastos = facturas_gastos.distinct()
-                    facturas_compras = facturas_compras.distinct()
-                    facturas_viaticos = facturas_viaticos.distinct()
+                #    facturas_gastos = facturas_gastos.distinct()
+                #    facturas_compras = facturas_compras.distinct()
+                #    facturas_viaticos = facturas_viaticos.distinct()
             else:
                 pagos = pagos.filter(
                     Q(pagado_real__range=[fecha_inicio, fecha_fin])|Q(pagado_date__range=[fecha_inicio, fecha_fin]),
@@ -2727,16 +2728,16 @@ def control_documentos(request):
                     facturas_compras = Facturas.objects.filter(oc__folio= folio)
                     facturas_viaticos = Viaticos_Factura.objects.filter(solicitud_viatico__folio = folio)
 
-                if cuenta_id:
-                    facturas_gastos = facturas_gastos.filter(solicitud_gasto__pagosg__cuenta_id=cuenta_id)
+                #if cuenta_id:
+                #    facturas_gastos = facturas_gastos.filter(solicitud_gasto__pagosg__cuenta_id=cuenta_id)
                 
-                    facturas_compras = facturas_compras.filter(oc__pagos__cuenta_id=cuenta_id)
+                #    facturas_compras = facturas_compras.filter(oc__pagos__cuenta_id=cuenta_id)
                 
-                    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__cuenta_id=cuenta_id)
+                #    facturas_viaticos = facturas_viaticos.filter(solicitud_viatico__pagosv__cuenta_id=cuenta_id)
                 
-                    facturas_gastos = facturas_gastos.distinct()
-                    facturas_compras = facturas_compras.distinct()
-                    facturas_viaticos = facturas_viaticos.distinct()
+                #    facturas_gastos = facturas_gastos.distinct()
+                #    facturas_compras = facturas_compras.distinct()
+                 #   facturas_viaticos = facturas_viaticos.distinct()
                                 
                  
 
