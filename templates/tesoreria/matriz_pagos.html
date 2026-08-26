@@ -602,13 +602,8 @@
                     </td>
                     <td class="text-center">
                         {% if pago.spei_devuelto %}
-                            <span
-                                class="badge bg-danger"
-                                data-bs-toggle="tooltip"
-                                title="El banco receptor devolvió este SPEI"
-                            >
-                                <i class="fa-solid fa-arrow-rotate-left"></i>
-                                SPEI Devuelto
+                            <span class="badge bg-danger" data-bs-toggle="tooltip" title="El banco receptor devolvió este SPEI">
+                                <i class="fa-solid fa-arrow-rotate-left"></i>SPEI Devuelto
                             </span>
 
                             {% if pago.fecha_spei_devuelto %}
@@ -619,18 +614,10 @@
 
                         {% elif pago.hecho and pago.comprobante_pago %}
                             {% if usuario.tipo.tesoreria or usuario.tipo.finanzas %}
-                                <form method="POST" action="{% url 'marcar-spei-devuelto' pago.id %}" class="d-inline"
-                                    onsubmit="return confirm(
-                                        '¿Confirmas que el banco receptor devolvió este SPEI? El folio regresará a Pendientes de Pago.'
-                                    );">
-                                    {% csrf_token %}
-
-                                    <input type="hidden" name="next" value="{{ request.get_full_path }}">
-
-                                    <button type="submit" class="btn btn-outline-danger" title="Marcar como SPEI devuelto">
-                                        <i class="fa-solid fa-arrow-rotate-left"></i>
-                                    </button>
-                                </form>
+                                <button type="button" class="btn btn-outline-danger" title="Marcar como SPEI devuelto" data-url="{% url 'marcar-spei-devuelto' pago.id %}"
+                                    data-next="{{ request.get_full_path }}" data-csrf="{{ csrf_token }}" onclick="confirmarSpeiDevuelto(this)">
+                                    <i class="fa-solid fa-arrow-rotate-left"></i>
+                                </button>
                             {% endif %}
                         {% else %}
                             <span class="text-muted">—</span>
@@ -726,12 +713,97 @@
 </div>
 <script src="https://code.jquery.com/jquery-3.6.0.min.js" integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+<script src="//cdn.jsdelivr.net/npm/sweetalert2@11"></script>
 <script>
 var dataSpyList = [].slice.call(document.querySelectorAll('[data-bs-spy="scroll"]'))
 dataSpyList.forEach(function (dataSpyEl) {
   bootstrap.ScrollSpy.getInstance(dataSpyEl)
     .refresh()
 });
+
+function confirmarSpeiDevuelto(boton) {
+    Swal.fire({
+        title: "¿Marcar SPEI como devuelto?",
+        icon: "warning",
+
+        html: `
+            <p>
+                El folio regresará a Pendientes de Pago.
+            </p>
+
+            <div class="text-start mt-3">
+                <label for="swal-fecha-spei" class="form-label">
+                    Fecha y hora de devolución
+                </label>
+
+                <input
+                    type="datetime-local"
+                    id="swal-fecha-spei"
+                    class="form-control"
+                >
+
+                <div class="form-text">
+                    Si dejas el campo vacío, se utilizará la fecha y hora actuales.
+                </div>
+            </div>
+        `,
+
+        showCancelButton: true,
+        confirmButtonText: "Sí, marcar como devuelto",
+        cancelButtonText: "Cancelar",
+        confirmButtonColor: "#dc3545",
+        cancelButtonColor: "#6c757d",
+        reverseButtons: true,
+
+        preConfirm: function () {
+            return document
+                .getElementById("swal-fecha-spei")
+                .value;
+        }
+    }).then(function (resultado) {
+        if (!resultado.isConfirmed) {
+            return;
+        }
+
+        const formulario = document.createElement("form");
+
+        formulario.method = "POST";
+        formulario.action = boton.dataset.url;
+        formulario.style.display = "none";
+
+        agregarCampoOculto(
+            formulario,
+            "csrfmiddlewaretoken",
+            boton.dataset.csrf
+        );
+
+        agregarCampoOculto(
+            formulario,
+            "next",
+            boton.dataset.next
+        );
+
+        agregarCampoOculto(
+            formulario,
+            "fecha_spei_devuelto",
+            resultado.value || ""
+        );
+
+        document.body.appendChild(formulario);
+        formulario.submit();
+    });
+}
+
+function agregarCampoOculto(formulario, nombre, valor) {
+    const campo = document.createElement("input");
+
+    campo.type = "hidden";
+    campo.name = nombre;
+    campo.value = valor;
+
+    formulario.appendChild(campo);
+}
+
 document.addEventListener("show.bs.modal", function (event) {
   const modal = event.target;
 

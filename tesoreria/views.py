@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.utils.timezone import localtime
-from django.utils.dateparse import parse_date
+from django.utils.dateparse import parse_date, parse_datetime
 from django.urls import reverse, NoReverseMatch
 from django.views.decorators.http import require_POST
 from user.models import Distrito, Empresa
@@ -7275,6 +7275,29 @@ def marcar_spei_devuelto(request, pk):
     if not (usuario.tipo.tesoreria or usuario.tipo.finanzas):
         messages.error(request,'No cuentas con permisos para realizar esta operación.')
         return redirect('matriz-pagos')
+
+    fecha_ingresada = request.POST.get('fecha_spei_devuelto')
+
+    if fecha_ingresada:
+        fecha_spei_devuelto = parse_datetime(fecha_ingresada)
+
+        if fecha_spei_devuelto is None:
+            messages.error(
+                request,
+                'La fecha de devolución proporcionada no es válida.'
+            )
+            return redirect('matriz-pagos')
+
+        # datetime-local envía una fecha sin zona horaria.
+        if timezone.is_naive(fecha_spei_devuelto):
+            fecha_spei_devuelto = timezone.make_aware(
+                fecha_spei_devuelto,
+                timezone.get_current_timezone()
+            )
+    else:
+        fecha_spei_devuelto = timezone.now()
+
+
 
     with transaction.atomic():
 
