@@ -1256,8 +1256,8 @@ def matriz_pagos(request):
             hecho=True
         )
 
-        facturas_oc_pendientes = facturas_oc.filter(
-            autorizada__isnull=True
+        facturas_oc_pendientes = facturas_oc.exclude(
+            autorizada = True
         )
 
         facturas_gasto = Factura.objects.filter(
@@ -1265,8 +1265,8 @@ def matriz_pagos(request):
             hecho=True
         )
 
-        facturas_gasto_pendientes = facturas_gasto.filter(
-            autorizada__isnull=True
+        facturas_gasto_pendientes = facturas_gasto.exclude(
+            autorizada = True
         )
 
        
@@ -1276,8 +1276,8 @@ def matriz_pagos(request):
             hecho=True
         )
 
-        facturas_viatico_pendientes = facturas_viatico.filter(
-            autorizada__isnull=True
+        facturas_viatico_pendientes = facturas_viatico.exclude(
+            autorizada = True
         )
         
         pagos = (Pago.objects
@@ -1392,8 +1392,8 @@ def matriz_pagos(request):
             hecho=True
         )
 
-        facturas_oc_pendientes = facturas_oc.filter(
-            autorizada__isnull=True
+        facturas_oc_pendientes = facturas_oc.exclude(
+            autorizada=True
         )
 
         facturas_gasto = Factura.objects.filter(
@@ -1401,8 +1401,8 @@ def matriz_pagos(request):
             hecho=True
         )
 
-        facturas_gasto_pendientes = facturas_gasto.filter(
-            autorizada__isnull=True
+        facturas_gasto_pendientes = facturas_gasto.exclude(
+            autorizada=True
         )
 
         
@@ -1412,8 +1412,8 @@ def matriz_pagos(request):
             hecho=True
         )
 
-        facturas_viatico_pendientes = facturas_viatico.filter(
-            autorizada__isnull=True
+        facturas_viatico_pendientes = facturas_viatico.exclude(
+            autorizada=True
         )
 
         pagos = (
@@ -3685,7 +3685,7 @@ def matriz_facturas_nomodal(request, pk):
     }
     # Codificar los parámetros
     query_string = urlencode(filtros)
-    #print('query_string:',filtros)
+    print('query_string_validación')
     
     for pago in pagos:
         fecha_pdf = None
