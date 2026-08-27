@@ -216,7 +216,7 @@
                     {% if usuario.tipo.nombre == "Control" %}
                     <th>{{entrada.entrada.oc.req.orden.distrito.nombre}}</th>
                     {% endif %}
-                    <td class="d-none d-lg-table-cell">{{entrada.created_at}}</td>
+                    <td class="d-none d-lg-table-cell">{{entrada.entrada.entrada_date}}</td>
                     <td class="d-none d-lg-table-cell">{{entrada.articulo_comprado.producto.producto.articulos.orden.staff.staff.staff.first_name}} {{entrada.articulo_comprado.producto.producto.articulos.orden.staff.staff.staff.last_name}}</td>
                     <td>{{entrada.articulo_comprado.producto.producto.articulos.orden.proyecto.nombre}}</td>
                     <td class="d-none d-lg-table-cell">{{entrada.articulo_comprado.producto.producto.articulos.orden.subproyecto.nombre}}</td>

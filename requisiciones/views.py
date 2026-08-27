@@ -1625,6 +1625,10 @@ def reporte_entradas(request):
         entradas = EntradaArticulo.objects.filter(entrada__completo = True, entrada__cancelada = False, articulo_comprado__producto__producto__articulos__producto__producto__servicio = False, entrada__oc__req__orden__distrito = usuario.distritos ).order_by('-entrada__entrada_date')
     
     myfilter = EntradasFilter(request.GET, queryset=entradas)
+    print("GET:", request.GET)
+    print("Errores:", myfilter.form.errors)
+    print("Consulta:", myfilter.qs.query)
+
     entradas = myfilter.qs
    
     entradas_data = list(entradas.values())

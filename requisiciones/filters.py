@@ -1,4 +1,7 @@
 import django_filters
+from datetime import datetime, time, timedelta
+from django.conf import settings
+from django.utils import timezone
 from dashboard.models import ArticulosparaSurtir
 from requisiciones.models import Salidas, Devolucion, Requis, ArticulosRequisitados
 from entradas.models import EntradaArticulo
@@ -99,8 +102,8 @@ class EntradasFilter(django_filters.FilterSet):
     nombre = CharFilter(method ='my_custom_filter', label="Search")
     proyecto = CharFilter(field_name='articulo_comprado__producto__producto__articulos__orden__proyecto__nombre', lookup_expr='icontains')
     subproyecto = CharFilter(field_name='articulo_comprado__producto__producto__articulos__orden__subproyecto__nombre', lookup_expr='icontains')
-    start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
-    end_date = DateFilter(field_name='created_at',lookup_expr='lte')
+    start_date = DateFilter(method="filter_start_date",)
+    end_date = DateFilter(method="filter_end_date",)
 
     class Meta:
         model = EntradaArticulo
@@ -108,6 +111,34 @@ class EntradasFilter(django_filters.FilterSet):
 
     def my_custom_filter(self, queryset, name, value):
         return queryset.filter(Q(articulo_comprado__producto__articulos__orden__staff__staff__first_name__icontains = value) | Q(articulo_comprado__producto__articulos__orden__staff__staff__last_name__icontains=value))
+
+    def convertir_a_datetime(self, fecha):
+        fecha_hora = datetime.combine(fecha, time.min)
+
+        if settings.USE_TZ:
+            fecha_hora = timezone.make_aware(
+                fecha_hora,
+                timezone.get_current_timezone(),
+            )
+
+        return fecha_hora
+
+    def filter_start_date(self, queryset, name, value):
+        inicio = self.convertir_a_datetime(value)
+
+        return queryset.filter(
+            entrada__entrada_date__gte=inicio
+        )
+
+    def filter_end_date(self, queryset, name, value):
+        # El día posterior a las 00:00 funciona como límite exclusivo.
+        fin = self.convertir_a_datetime(
+            value + timedelta(days=1)
+        )
+
+        return queryset.filter(
+            entrada__entrada_date__lt=fin
+        )
 
 class DevolucionFilter(django_filters.FilterSet):
     solicitud = CharFilter(method='solicitante_custom_filter', lookup_expr='icontains')
