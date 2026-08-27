@@ -2683,8 +2683,14 @@ def convert_entradas_to_xls2(entradas):
     )
 
     
-    for row_num in range(2, len(data) + 1):
-        ws[row_num][18].value = f'=IF(P{row_num} = 0, Q{row_num}*M{row_num}, Q{row_num}*P{row_num}*M{row_num})'
+    for row_num in range(2, len(data) + 1):  
+        formula = (
+            f'=IF(AND(P{row_num}=0,(O{row_num}="PESOS")),'
+            f'Q{row_num}*P{row_num}*M{row_num},'
+            f'Q{row_num}*M{row_num})'
+        )
+
+        ws[row_num][18].value = formula
 
     for col_num in range(1, len(columns) + 1):
         if col_num == 5:  # Fecha
@@ -2840,6 +2846,7 @@ def generate_excel_report(salidas):
         if salida.entrada:
             entrada = Entrada.objects.get(id = entrada)
             moneda = str(entrada.oc.moneda.nombre)
+            print(moneda)
             tc = entrada.oc.tipo_de_cambio
         else:
             moneda = "PESOS"
