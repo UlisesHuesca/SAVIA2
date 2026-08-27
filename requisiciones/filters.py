@@ -79,8 +79,8 @@ class SalidasFilter(django_filters.FilterSet):
     nombre = CharFilter(method ='my_custom_filter', label="Search")
     proyecto = CharFilter(field_name='producto__articulos__orden__proyecto__nombre', lookup_expr='icontains')
     subproyecto = CharFilter(field_name='producto__articulos__orden__subproyecto__nombre', lookup_expr='icontains')
-    start_date = DateFilter(field_name = 'created_at', lookup_expr='gte')
-    end_date = DateFilter(field_name='created_at',lookup_expr='lte')
+    start_date = DateFilter(field_name = 'vale_salida__created_at', lookup_expr='gte')
+    end_date = DateFilter(field_name='vale_salida__created_at',lookup_expr='lte')
     distrito = CharFilter(field_name='vale_salida__solicitud__distrito__nombre', lookup_expr='icontains')
 
     class Meta:
