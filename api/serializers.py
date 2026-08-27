@@ -428,3 +428,5 @@ class ReporteSolicitudesSerializer(serializers.Serializer):
 
     comentario_solicitud = serializers.CharField(allow_blank=True, allow_null=True, required=False,)
     contrato = serializers.CharField(allow_blank=True,allow_null=True,required=False,)
+    proyecto = serializers.CharField(allow_blank=True, required=False,)
+    subproyecto = serializers.CharField(allow_blank=True, required=False,)

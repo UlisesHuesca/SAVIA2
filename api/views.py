@@ -1475,6 +1475,7 @@ def reporte_solicitudes_api(request):
     last_id = int(request.query_params.get("last_id", 0))
     limit = int(request.query_params.get("limit", 2000))
     fecha_inicio = request.query_params.get("fecha_inicio")
+    folio = request.query_params.get("folio")
     print(fecha_inicio)
     salidas_qs = (
         Salidas.objects
@@ -1511,7 +1512,16 @@ def reporte_solicitudes_api(request):
             vale_salida__created_at__gte=fecha_inicio
         )
 
-        #print(salidas_qs)
+    if folio:
+        try:
+            salidas_qs = salidas_qs.filter(
+                vale_salida__solicitud__folio=int(folio)
+            )
+        except (TypeError, ValueError):
+            return Response(
+                {"error": "El folio debe ser un número entero."},
+                status=400,
+            )
 
     salidas_qs = salidas_qs.filter(
         id__gt=last_id
@@ -1526,7 +1536,8 @@ def reporte_solicitudes_api(request):
         vale = salida.vale_salida
         order = vale.solicitud if vale else None
         material_recibido_por = ""
-
+        #proyecto, subproyecto, comentarios y observaciones
+        print(order)
         proyecto = order.proyecto if order else None
         contrato = (getattr(proyecto, "contrato", None) if proyecto else None)
 
@@ -1656,7 +1667,10 @@ def reporte_solicitudes_api(request):
             "fecha_entrega_de_almacen": salida.vale_salida.created_at.strftime("%d/%m/%Y") if salida.vale_salida and salida.vale_salida.created_at else "",
 
             "comentario_solicitud": (order.comentario or "" if order else ""),
+            "proyecto": proyecto.nombre if proyecto else "",
+            "subproyecto":(order.subproyecto.nombre if order and order.subproyecto else ""),
             "contrato": (contrato.nombre or "" if contrato else ""),
+
 
             "material_o_servicio_solicitado": material,
             "cantidad_de_material": salida.cantidad or 0,
