@@ -2185,23 +2185,40 @@ def pago_gasto(request, pk):
 
     desglose_proyectos = list(desglose_proyectos.values())
 
-    for detalle in desglose_proyectos:
-        proyecto = detalle['proyecto']
+    # Primero obtenemos el total de todas las líneas distribuidas.
+    total_asignado_proyectos = sum(
+        (
+            detalle['monto']
+            for detalle in desglose_proyectos
+        ),
+        Decimal('0.00'),
+    )
 
-        if proyecto:
-            presupuesto_proyecto = (
-                proyecto.get_projects_total or Decimal('0.00')
+    # En esta tabla, el total del gasto es la suma de las líneas mostradas.
+    total_gasto = total_asignado_proyectos
+
+
+    for detalle in desglose_proyectos:
+        if total_gasto > 0:
+            detalle['porcentaje'] = (
+                detalle['monto']
+                * Decimal('100')
+                / total_gasto
+            ).quantize(
+                Decimal('0.01'),
+                rounding=ROUND_HALF_UP,
             )
         else:
-            presupuesto_proyecto = Decimal('0.00')
+            detalle['porcentaje'] = Decimal('0.00')
 
-        detalle['presupuesto_proyecto'] = presupuesto_proyecto
-
-        if presupuesto_proyecto > 0:
-            detalle['porcentaje'] = (detalle['monto'] * Decimal('100') / presupuesto_proyecto).quantize( Decimal('0.01'), rounding=ROUND_HALF_UP,)
+        print(detalle)
 
 
-    total_asignado_proyectos = sum(( detalle['monto'] for detalle in desglose_proyectos), Decimal('0.00'),)
+    # Si hay importes distribuidos, su porcentaje total es 100%.
+    if total_gasto > 0:
+        porcentaje_total_asignado = Decimal('100.00')
+    else:
+        porcentaje_total_asignado = Decimal('0.00')
 
 
     if usuario.tipo.nombre == "SUPERINTENDENCIA_BRASIL":
@@ -2294,9 +2311,9 @@ def pago_gasto(request, pk):
 
     context= {
         'gasto':gasto,
-        'presupesto_proyecto': presupuesto_proyecto,
         'desglose_proyectos': desglose_proyectos,
         'total_asignado_proyectos': total_asignado_proyectos,
+        'porcentaje_total_asignado': porcentaje_total_asignado,
         'cuentas_para_select2':cuentas_para_select2,
         'form':form,
         'pagos_alt':pagos_alt,
