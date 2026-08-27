@@ -3866,7 +3866,9 @@ def generar_pdf_nueva(compra):
 
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Fecha autorización:')
-    c.drawString(col_inicio + 80, campo_y,compra.req.orden.approved_at.strftime("%d/%m/%Y"))
+    fecha_aprobacion = compra.req.orden.approved_at
+
+    c.drawString(col_inicio + 80, campo_y, fecha_aprobacion.strftime("%d/%m/%Y"))
     campo_y -= 12
     c.drawString(col_inicio + 3, campo_y, 'Solicitado por:')
     c.drawString(col_inicio + 80, campo_y, compra.req.orden.staff.staff.staff.first_name +' '+ compra.req.orden.staff.staff.staff.last_name)
