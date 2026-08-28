@@ -15,6 +15,7 @@ from django.urls import reverse
 from django.views.decorators.http import require_GET
 from django.utils.crypto import get_random_string
 from django import forms  # por si no lo tienes ya importado
+from email.mime.image import MIMEImage
 from compras.models import Compra, Proveedor, Proveedor_direcciones, Evidencia, DocumentosProveedor, InvitacionProveedor, Estatus_proveedor, Debida_Diligencia, Miembro_Alta_Direccion, Funcionario_Publico_Relacionado, Relacion_Servidor_Publico, Responsable_Interaccion
 from user.models import Profile, CustomUser, Tipo_perfil, Distrito, Almacen
 from compras.filters import CompraFilter
@@ -1210,10 +1211,17 @@ def check_proveedor_ajax(request):
 def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
     print(tipo)
     static_path = settings.STATIC_ROOT
-    img_path1 = os.path.join(static_path, 'images', 'SAVIA_Logo.png')
-    img_path2 = os.path.join(static_path, 'images', 'logo_vordcab.jpg')
-    image_base64 = get_image_base64(img_path1)
-    logo_v_base64 = get_image_base64(img_path2)
+    img_path_savia = os.path.join(
+        static_path,
+        'images',
+        'SAVIA_Logo.png',
+    )
+
+    img_path_vordcab = os.path.join(
+        static_path,
+        'images',
+        'logo_vordcab.jpg',
+    )
     link = link
     if tipo == 'NUEVA_DIRECCION':
         titulo = "Agregar nueva dirección de facturación/servicio"
@@ -1278,7 +1286,11 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
                             <table width="600px" cellspacing="0" cellpadding="0" style="background-color: #ffffff; padding: 20px; border-radius: 10px;">
                                 <tr>
                                     <td align="center">
-                                        <img src="data:image/jpeg;base64,{logo_v_base64}" alt="Logo" style="width: 120px;" />
+                                        <img
+                                            src="cid:logo_vordcab"
+                                            alt="Logo Grupo Vordcab"
+                                            style="width: 120px; height: auto;"
+                                        >
                                     </td>
                                 </tr>
                                 <tr>
@@ -1297,10 +1309,31 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
                                                 {texto_boton}
                                             </a>
                                         </p>
+                                        <!-- Botón del tutorial -->
+                                        <p style=" text-align: center; margin: 15px 0 30px 0;">
+                                            <a href="https://youtu.be/fWBc_fR0FqA" target="_blank" title="Subir facturas y complementos de pago"
+                                                style="background-color: #ffffff; color: #dc3545; padding: 11px 22px; text-decoration: none; border: 1px solid #dc3545;
+                                                    border-radius: 5px; display: inline-block; font-size: 14px; font-weight: bold;">
+                                                ▶ Ver tutorial
+                                            </a>
+                                            <br>
+                                            <span style="display: inline-block; margin-top: 8px; color: #666666; font-size: 12px;">
+                                                Cómo subir facturas y complementos de pago
+                                            </span>
+                                        </p>
                                         <p style="font-size: 14px;">Si no esperabas este correo, puedes ignorarlo.</p>
                                         <p style="margin-top: 40px; font-size: 14px;">Atentamente,<br><strong>{creado_por_nombre}</strong></p>
                                         <div style="text-align: center; margin-top: 30px;">
-                                            <img src="data:image/png;base64,{image_base64}" alt="Imagen" style="width: 50px; height: auto; border-radius: 50%;" />
+                                            <img
+                                                src="cid:logo_savia"
+                                                alt="SAVIA 2.0"
+                                                style="
+                                                    width: 50px;
+                                                    height: auto;
+                                                    border-radius: 50%;
+                                                "
+                                            >
+                                            
                                             <p style="font-size: 12px; color: #999;">Este mensaje fue generado por SAVIA 2.0</p>
                                         </div>
                                     </td>
@@ -1321,6 +1354,48 @@ def enviar_correo_invitacion(email_destino, rfc, link, creado_por_nombre, tipo):
             to=[email_destino, "proveedores.sur@grupovordcab.com", "ulises.huesca@grupovordcab.com"],
         )
         email.content_subtype = "html"
+         # Necesario para mostrar las imágenes CID dentro del correo
+        email.mixed_subtype = "related"
+
+        # Adjuntar logo de Grupo Vordcab
+        with open(img_path_vordcab, "rb") as archivo:
+            logo_vordcab = MIMEImage(
+                archivo.read(),
+                _subtype="jpeg",
+            )
+
+            logo_vordcab.add_header(
+                "Content-ID",
+                "<logo_vordcab>",
+            )
+
+            logo_vordcab.add_header(
+                "Content-Disposition",
+                "inline",
+                filename="logo_vordcab.jpg",
+            )
+
+        email.attach(logo_vordcab)
+
+        # Adjuntar logo de SAVIA
+        with open(img_path_savia, "rb") as archivo:
+            logo_savia = MIMEImage(
+                archivo.read(),
+                _subtype="png",
+            )
+
+            logo_savia.add_header(
+                "Content-ID",
+                "<logo_savia>",
+            )
+
+            logo_savia.add_header(
+                "Content-Disposition",
+                "inline",
+                filename="SAVIA_Logo.png",
+            )
+
+        email.attach(logo_savia)
         email.send()
     except Exception as e:
         print(f"Error al enviar el correo: {e}")
