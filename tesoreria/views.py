@@ -3361,7 +3361,7 @@ def generar_excel_xmls(datos_xml_lista):
     columnas = [
         'Distrito', 'Folio', 'Fecha subida', 'Fecha factura', 'Razón Social', 'Folio Fiscal (UUID)',
         'Monto Total Factura', 'Tipo de Moneda', 'Forma de pago', 'Método de Pago',
-        'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento',
+        'Receptor (Empresa) Nombre', 'Beneficiario', 'Archivo', 'Tipo de Documento','RFC Emisor', 'RFC Receptor', 'Total SAT', 
         'Fecha Validación SAT', 'EstadoSAT'
     ]
     ws.append(columnas)
@@ -3559,6 +3559,17 @@ def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, benefici
     complemento = root.find("cfdi:Complemento/tfd:TimbreFiscalDigital", ns)
     pagos = root.find("cfdi:Complemento/pago20:Pagos", ns)
 
+    rfc_emisor = (emisor.get("Rfc", "").strip().upper() if emisor is not None else "")
+    rfc_receptor = (receptor.get("Rfc", "").strip().upper() if receptor is not None else "")
+
+      # Este es el total fiscal que utiliza la consulta SAT.
+    # Para complementos de pago generalmente será 0.
+    try:
+        total_sat = float(root.get("Total", "0"))
+    except (TypeError, ValueError):
+        total_sat = 0
+
+
     # Verificar si es un complemento de pago
     es_complemento_pago = pagos is not None
 
@@ -3597,7 +3608,6 @@ def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, benefici
         'Fecha factura': fecha_emision_excel,
         'Razón Social': emisor.get('Nombre') if emisor is not None else '',
         'Folio Fiscal (UUID)': complemento.get('UUID') if complemento is not None else '',
-        'Monto Total Factura': monto_total,
         'Tipo de Moneda': moneda,
         'Método de Pago': metodo_pago,
         'Forma de pago': forma_pago,
@@ -3605,6 +3615,10 @@ def extraer_datos_xml_carpetas(xml_file, folio, fecha_subida, distrito, benefici
         'Archivo': nombre_general,
         'EstadoSAT': factura.estado_sat or '',
         'Fecha Validación SAT': timezone.localtime(factura.fecha_validacion_sat).strftime("%Y-%m-%d %H:%M:%S") if factura.fecha_validacion_sat else '',
+        'RFC Emisor': rfc_emisor,
+        'RFC Receptor': rfc_receptor,
+        'Total SAT': total_sat,
+        'Monto Total Factura': monto_total,
     }
     return datos
 
