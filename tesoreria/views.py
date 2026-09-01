@@ -48,6 +48,8 @@ from openpyxl.styles import numbers
 from openpyxl.chart import BarChart, Reference
 from .tasks import validar_lote_facturas
 from urllib.parse import urlencode
+import requests
+from xml.sax.saxutils import escape
 
 
 from datetime import date, datetime, timedelta
