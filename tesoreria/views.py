@@ -1585,6 +1585,40 @@ def matriz_pagos(request):
                         fecha_subida = factura.fecha_subido.astimezone(tz=None).replace(tzinfo=None) if factura.fecha_subido else 'No disponible' # Formato YYYY-MM-DD
                         if factura.factura_xml:
                             datos_xml_lista.append(extraer_datos_xml_carpetas(factura.factura_xml.path, f"V{viatico.folio}", fecha_subida, viatico.distrito.nombre, beneficiario, "NA", factura))
+
+            for dato in datos_xml_lista:
+                rfc_emisor = dato.get('RFC Emisor', '')
+                rfc_receptor = dato.get('RFC Receptor', '')
+                total_sat = dato.get('Total SAT', 0)
+                uuid = dato.get('Folio Fiscal (UUID)', '')
+
+                if (
+                    rfc_emisor
+                    and rfc_receptor
+                    and uuid
+                ):
+                    estado_sat = consultar_estatus_sat(
+                        rfc_emisor=rfc_emisor,
+                        rfc_receptor=rfc_receptor,
+                        total=total_sat,
+                        uuid=uuid
+                    )
+
+                    dato['EstadoSAT'] = estado_sat
+
+                    dato['Fecha Validación SAT'] = (
+                        timezone.localtime(
+                            timezone.now()
+                        ).replace(tzinfo=None)
+                    )
+
+                else:
+                    dato['EstadoSAT'] = (
+                        'No fue posible validar: '
+                        'faltan datos del CFDI'
+                    )
+
+                    dato['Fecha Validación SAT'] = ''
             output = generar_excel_xmls(datos_xml_lista)
             response = HttpResponse(
                 output.getvalue(),
@@ -7355,3 +7389,127 @@ def marcar_spei_devuelto(request, pk):
         return redirect(siguiente)
 
     return redirect('matriz-pagos')
+
+
+
+
+SAT_ENDPOINT = "https://consultaqr.facturaelectronica.sat.gob.mx/ConsultaCFDIService.svc"
+
+
+def consultar_estatus_sat(rfc_emisor, rfc_receptor, total, uuid):
+    try:
+
+        # Total fiscal del CFDI
+        total_formateado = f"{float(total):.6f}"
+
+        expresion_impresa = (
+            f"?re={rfc_emisor}"
+            f"&rr={rfc_receptor}"
+            f"&tt={total_formateado}"
+            f"&id={uuid}"
+        )
+
+        # MUY IMPORTANTE:
+        # escapar & como &amp; para que el SOAP sea XML válido
+        expresion_xml = escape(expresion_impresa)
+
+        soap_envelope = f"""<?xml version="1.0" encoding="utf-8"?>
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/">
+    <s:Body>
+        <Consulta xmlns="http://tempuri.org/">
+            <expresionImpresa>{expresion_xml}</expresionImpresa>
+        </Consulta>
+    </s:Body>
+</s:Envelope>"""
+
+        headers = {
+            "Content-Type": "text/xml; charset=utf-8",
+            "SOAPAction": (
+                '"http://tempuri.org/'
+                'IConsultaCFDIService/Consulta"'
+            ),
+        }
+
+        response = requests.post(
+            SAT_ENDPOINT,
+            data=soap_envelope.encode("utf-8"),
+            headers=headers,
+            timeout=30,
+        )
+
+        # Para depuración
+        if response.status_code != 200:
+            print(
+                f"\nError SAT UUID {uuid}"
+            )
+            print(
+                f"HTTP: {response.status_code}"
+            )
+            print(
+                f"Respuesta SAT:\n{response.text[:1000]}"
+            )
+
+            return f"Error SAT HTTP {response.status_code}"
+
+        root = ET.fromstring(response.content)
+
+        namespaces = {
+            "s": (
+                "http://schemas.xmlsoap.org/"
+                "soap/envelope/"
+            ),
+            "a": (
+                "http://schemas.datacontract.org/"
+                "2004/07/"
+                "Sat.Cfdi.Negocio."
+                "ConsultaCfdi.Servicio"
+            ),
+        }
+
+        estado = root.find(
+            ".//a:Estado",
+            namespaces,
+        )
+
+        if (
+            estado is not None
+            and estado.text
+        ):
+            return estado.text.strip()
+
+        # Fallback por si cambia el namespace
+        for elemento in root.iter():
+
+            if (
+                elemento.tag.endswith("Estado")
+                and elemento.text
+            ):
+                return elemento.text.strip()
+
+        return "Sin estado"
+
+    except requests.exceptions.Timeout:
+        print(
+            f"Timeout SAT UUID {uuid}"
+        )
+        return "Error SAT - Timeout"
+
+    except requests.exceptions.RequestException as error:
+        print(
+            f"Error conexión SAT UUID {uuid}: "
+            f"{error}"
+        )
+        return "Error SAT"
+
+    except ET.ParseError as error:
+        print(
+            f"Error XML respuesta SAT UUID {uuid}: "
+            f"{error}"
+        )
+        return "Error SAT - XML inválido"
+
+    except Exception as error:
+        print(
+            f"Error UUID {uuid}: {error}"
+        )
+        return "Error SAT"
